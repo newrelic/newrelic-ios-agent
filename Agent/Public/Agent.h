@@ -17,3 +17,12 @@ FOUNDATION_EXPORT const unsigned char AgentVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <Agent/PublicHeader.h>
 
 #import "NewRelic.h"
+#import "NRConstants.h"
+#import "NewRelicCustomInteractionInterface.h"
+#import "NewRelicFeatureFlags.h"
+#import "NRCustomMetrics.h"
+#import "NRLogger.h"
+#import "NRCustomMetrics.h"
+#import "NRTimer.h"
+#import "NRURLSessionTaskDelegateBase.h"
+#import "NRWKNavigationDelegateBase.h"
