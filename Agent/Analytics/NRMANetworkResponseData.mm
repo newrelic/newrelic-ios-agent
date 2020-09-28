@@ -20,7 +20,7 @@
                     responseTime:(double)timeInSeconds {
     self = [super init];
     if(self) {
-        wrappedNetworkResponseData = new NewRelic::NetworkResponseData(statusCode, bytesReceived, timeInSeconds);
+        wrappedNetworkResponseData = new NewRelic::NetworkResponseData((int)statusCode, (unsigned int)bytesReceived, timeInSeconds);
         if(!wrappedNetworkResponseData)
             self = nil;
     }
@@ -33,8 +33,8 @@
         networkErrorMessage:(NSString*)errorMessage {
      self = [super init];
      if(self) {
-         wrappedNetworkResponseData = new NewRelic::NetworkResponseData(networkErrorCode,
-                                                                        bytesReceived,
+         wrappedNetworkResponseData = new NewRelic::NetworkResponseData((int)networkErrorCode,
+                                                                        (unsigned int)bytesReceived,
                                                                         timeInSeconds,
                                                                         errorMessage.UTF8String);
          if(!wrappedNetworkResponseData)
@@ -57,8 +57,8 @@
             encodedResponseBody = [NRMABase64 encodeFromData:[responseBody dataUsingEncoding:NSUTF8StringEncoding]];
         }
         
-        wrappedNetworkResponseData = new NewRelic::NetworkResponseData(statusCode,
-                                                                       bytesReceived,
+        wrappedNetworkResponseData = new NewRelic::NetworkResponseData((int)statusCode,
+                                                                       (unsigned int)bytesReceived,
                                                                        timeInSeconds,
                                                                        errorMessage.UTF8String,
                                                                        encodedResponseBody.UTF8String,

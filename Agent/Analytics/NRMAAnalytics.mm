@@ -478,7 +478,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     auto attributes = AnalyticsController::fetchDuplicatedAttributes([self attributeDupStore], YES);
     std::stringstream stream;
     stream << std::setprecision(13)<< *attributes;
-    NSError* error;
     
     NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
     if (!jsonString.length) {
@@ -497,7 +496,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
         std::stringstream stream;
         stream << std::setprecision(13) << *events;
-        NSError* error;
         
         NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
         

@@ -23,7 +23,7 @@
 
 - (BOOL) shouldUploadFileWithUniqueIdentifier:(NSString*)path;
 
-- (NSURLRequest*) buildPostFromFilePath:(NSString*)path;
+- (NSURLRequest*) buildPost;
 
 @end
 @interface NRMACrashDataUploaderTest : NRMAAgentTestBase
@@ -52,7 +52,7 @@
                                                                                         useSSL:YES];
     
 
-    NSURLRequest* request = [uploader buildPostFromFilePath:@"helloWorld"];
+    NSURLRequest* request = [uploader buildPost];
 
     XCTAssertTrue(request != nil);
 

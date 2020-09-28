@@ -154,8 +154,8 @@
     result = 31 * result + self.stack_trace_limit;
     result = 31 * result + self.activity_trace_max_size;
     result = 31 * result + self.activity_trace_max_send_attempts;
-    result = 31 * result + self.account_id;
-    result = 31 * result + self.application_id;
+    result = 31 * result + (unsigned int)self.account_id;
+    result = 31 * result + (unsigned int)self.application_id;
     result = 31 * result + self.encoding_key.hash;
     
     return result;

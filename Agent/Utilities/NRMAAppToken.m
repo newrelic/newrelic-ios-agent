@@ -43,7 +43,7 @@
 
     NSString* matchString = [appToken substringWithRange:match.range];
 
-    for (int i = matchString.length-1 ; i >= 0; i--) {
+    for (int i = (int)matchString.length-1 ; i >= 0; i--) {
         if (appToken.UTF8String[i] != 'x') {
             return [matchString substringWithRange:NSMakeRange(0, (NSUInteger)i+1)];
         }

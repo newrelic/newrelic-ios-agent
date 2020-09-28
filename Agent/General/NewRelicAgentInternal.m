@@ -221,6 +221,15 @@ static NewRelicAgentInternal* _sharedInstance;
             /**** Store Data For Crash Reporter ****/
 
             if ([NRMAFlags shouldEnableCrashReporting]) {
+#if __PTRAUTH_INTRINSICS__
+                {
+                NRLOG_VERBOSE(@"__PTRAUTH_INTRINSICS__ is enabled. ARM64e crashes will be properly symbolicated.");
+                }
+#elif __arm64e__
+                {
+                NRLOG_VERSION(@"__arm64e__ detected, but __PTRAUTH_INTRINSICS__ was not enabled. arm64e crashes will not be properly symbolicated.");
+                }
+#endif
                 [NRMAExceptionDataCollectionWrapper startCrashMetaDataMonitors];
                 _startTime_ms = NRMAMillisecondTimestamp();
                 NRMA_setSessionStartTime([NSString stringWithFormat:@"%lld",

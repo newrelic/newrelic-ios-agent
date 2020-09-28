@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -x
 
 ###########################
 #create the script_path var

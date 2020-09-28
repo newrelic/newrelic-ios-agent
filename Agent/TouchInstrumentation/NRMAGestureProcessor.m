@@ -14,7 +14,6 @@
 
 + (NSString*) getLabel:(id)control
 {
-    NSMutableDictionary* dictionary = [NSMutableDictionary new];
     // button
     if([[control class] isSubclassOfClass:[UIButton class]]) {
         NSString* label = ((UIButton*)control).currentTitle;

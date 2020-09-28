@@ -311,9 +311,9 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
      *  push it onto the thread local store. because veriftying 
      *  the trace requires the entryTimestamp being set. */
     newTrace.entryTimestamp = NRMAMillisecondTimestamp();
-
-    BOOL parentIsOnThisThread = [NRMAThreadLocalStore pushChild:newTrace forParent:parentTrace];
-
+    
+    [NRMAThreadLocalStore pushChild:newTrace forParent:parentTrace];
+    
     return YES;
 }
 

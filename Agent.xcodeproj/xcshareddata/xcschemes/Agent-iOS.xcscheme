@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1170"
+   LastUpgradeVersion = "1200"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "NO"
@@ -18,6 +18,20 @@
                BuildableName = "NewRelic.framework"
                BlueprintName = "Agent_iOS"
                ReferencedContainer = "container:Agent.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "020DEB0A2519588A00BF7309"
+               BuildableName = "CrashReporter-iOS-Tests.xctest"
+               BlueprintName = "CrashReporter-iOS-Tests"
+               ReferencedContainer = "container:modular-crash-reporter-ios/CrashReporter.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -42,6 +56,16 @@
                   Identifier = "Agent_Tests">
                </Test>
             </SkippedTests>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "020DEB0A2519588A00BF7309"
+               BuildableName = "CrashReporter-iOS-Tests.xctest"
+               BlueprintName = "CrashReporter-iOS-Tests"
+               ReferencedContainer = "container:modular-crash-reporter-ios/CrashReporter.xcodeproj">
+            </BuildableReference>
          </TestableReference>
       </Testables>
    </TestAction>
