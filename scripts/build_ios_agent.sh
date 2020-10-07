@@ -27,7 +27,7 @@ pushd "${SCRIPT_PATH}/.." || exit 1
 rm -rf "${BUILD_PATH}/iphoneos"
 
 # build device version
-/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphoneos archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES > build.out 2>&1
+/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphoneos clean archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES > build.out 2>&1
 
 if [ $? -ne 0 ]; then
   echo "Xcode build failed."
@@ -44,7 +44,7 @@ source "${BUILD_PATH}/archive_paths.sh"
   cp -p -R "${CODESIGNING_FOLDER_PATH}" "${BUILD_PATH}/iphoneos/${EXECUTABLE_NAME}.framework"
 
 #build simulator version
-/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphonesimulator build > build.out 2>&1
+/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphonesimulator clean build > build.out 2>&1
 
 if [ $? -ne 0 ]; then
   echo "Xcode build failed."

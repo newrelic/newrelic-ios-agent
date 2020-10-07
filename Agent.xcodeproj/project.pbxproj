@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -128,16 +128,6 @@
 		0209ACBC24E7546F00E45C90 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ACBB24E7546F00E45C90 /* CoreData.framework */; };
 		0209ACC124EB015E00E45C90 /* JdAWN9v.png in Resources */ = {isa = PBXBuildFile; fileRef = 0209ACC024EB015D00E45C90 /* JdAWN9v.png */; };
 		021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */ = {isa = PBXBuildFile; fileRef = 021A15BD24C9EEE700E8DFD5 /* Agent.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		022A81CF25030A46003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
-		022A81D025030A46003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
-		022A81D125030A46003748E6 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CB25030A46003748E6 /* json.framework */; };
-		022A81D225030A46003748E6 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CB25030A46003748E6 /* json.framework */; };
-		022A81D325030A46003748E6 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CC25030A46003748E6 /* Connectivity.framework */; };
-		022A81D425030A46003748E6 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CC25030A46003748E6 /* Connectivity.framework */; };
-		022A81D525030A46003748E6 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CD25030A46003748E6 /* Utilities.framework */; };
-		022A81D625030A46003748E6 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CD25030A46003748E6 /* Utilities.framework */; };
-		022A81D725030A46003748E6 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CE25030A46003748E6 /* Analytics.framework */; };
-		022A81D825030A46003748E6 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CE25030A46003748E6 /* Analytics.framework */; };
 		022A81D92507E7CF003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
 		022A81DA2507E7D0003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
 		022A81DB2507E838003748E6 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CB25030A46003748E6 /* json.framework */; };
@@ -1713,14 +1703,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				02FF4B0824DC8F1200115469 /* libCrashReporter.a in Frameworks */,
-				022A81D525030A46003748E6 /* Utilities.framework in Frameworks */,
-				022A81D325030A46003748E6 /* Connectivity.framework in Frameworks */,
 				02FF4AED24DC899500115469 /* SystemConfiguration.framework in Frameworks */,
-				022A81CF25030A46003748E6 /* Hex.framework in Frameworks */,
-				022A81D725030A46003748E6 /* Analytics.framework in Frameworks */,
 				02FF4AEB24DC898900115469 /* CoreTelephony.framework in Frameworks */,
 				02FF4AE924DC898000115469 /* libc++.tbd in Frameworks */,
-				022A81D125030A46003748E6 /* json.framework in Frameworks */,
 				02FF4AE724DC897A00115469 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1757,13 +1742,8 @@
 			files = (
 				0253763124E33E0300BF220A /* libCrashReporter-tvOS-Device.a in Frameworks */,
 				02FF4C9D24E3201400115469 /* SystemConfiguration.framework in Frameworks */,
-				022A81D225030A46003748E6 /* json.framework in Frameworks */,
-				022A81D625030A46003748E6 /* Utilities.framework in Frameworks */,
 				02FF4C9F24E3201400115469 /* libc++.tbd in Frameworks */,
-				022A81D825030A46003748E6 /* Analytics.framework in Frameworks */,
 				02FF4CA024E3201400115469 /* Foundation.framework in Frameworks */,
-				022A81D425030A46003748E6 /* Connectivity.framework in Frameworks */,
-				022A81D025030A46003748E6 /* Hex.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3443,6 +3423,9 @@
 		021A15B124C9EEE700E8DFD5 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					New,
+				);
 				LastUpgradeCheck = 1170;
 				ORGANIZATIONNAME = "New Relic";
 				TargetAttributes = {
@@ -3560,6 +3543,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		0253762B24E33C6A00BF220A /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -3578,6 +3562,7 @@
 		};
 		025658E024ED9C5500FE3125 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -3612,6 +3597,7 @@
 		};
 		02FF4B1024DDF4BB00115469 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -3625,8 +3611,8 @@
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash -x";
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\nif [[ $CONFIGURATION = \"Release\" ]]; then\n    rm -rf ../Frameworks/\n  ./release_build.sh ${PLATFORM_NAME} \"${ARCHS}\"\nelse\n  ./build.sh ${PLATFORM_NAME} \"${ARCHS}\" \nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [[ $? -eq 0 ]]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/${PLATFORM_NAME}/$framework ../Frameworks\n  done\nfi \n";
+			shellPath = /bin/bash;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\nRelease_config=\"Release\"\nif [[ $CONFIGURATION == $Release_config ]]; then\n    echo removing frameworks folder.\n    rm -rf ../Frameworks\n  ./release_build.sh ${PLATFORM_NAME} \"${ARCHS}\"\nelse\n  ./build.sh ${PLATFORM_NAME} \"${ARCHS}\" \nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [[ $? -eq 0 ]]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/${PLATFORM_NAME}/$framework ../Frameworks\n  done\nfi \n";
 		};
 		02FF4B1524E1F04300115469 /* Capture environment variables */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -4549,6 +4535,18 @@
 				);
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
@@ -4595,6 +4593,18 @@
 				);
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
@@ -4853,6 +4863,18 @@
 					"@loader_path/Frameworks",
 				);
 				MODULEMAP_FILE = agent.modulemap;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;
@@ -4898,6 +4920,18 @@
 					"@loader_path/Frameworks",
 				);
 				MODULEMAP_FILE = agent.modulemap;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;
