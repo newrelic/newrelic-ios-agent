@@ -407,7 +407,7 @@
 		02FF491824DC624400115469 /* NRMACrashReport_Exception.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF490424DC624300115469 /* NRMACrashReport_Exception.h */; };
 		02FF491924DC624400115469 /* NRMACrashReport.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF490524DC624300115469 /* NRMACrashReport.h */; };
 		02FF491A24DC624400115469 /* NRMACrashReport_AppInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490624DC624400115469 /* NRMACrashReport_AppInfo.m */; };
-		02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490724DC624400115469 /* NRMACrashReport.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490724DC624400115469 /* NRMACrashReport.m */; };
 		02FF491C24DC624400115469 /* NRMACrashReport_Library.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490824DC624400115469 /* NRMACrashReport_Library.m */; };
 		02FF491D24DC624400115469 /* NRMACrashReport_Thread.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490924DC624400115469 /* NRMACrashReport_Thread.m */; };
 		02FF491E24DC624400115469 /* NRMACrashReport_CodeType.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF490A24DC624400115469 /* NRMACrashReport_CodeType.h */; };

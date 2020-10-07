@@ -97,24 +97,24 @@
 
     NSURLRequest* request = [self buildPost];
 
-    [self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                               if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                                   if(((NSHTTPURLResponse*)response).statusCode == 200 || ((NSHTTPURLResponse*)response).statusCode == 500) {
-                                       NSError* error = nil;
-                                       //stop tracking the file's upload attempts.
-                                       [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
-                                       BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
+    [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                                   if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                                       if(((NSHTTPURLResponse*)response).statusCode == 200 || ((NSHTTPURLResponse*)response).statusCode == 500) {
+                                           NSError* error = nil;
+                                           //stop tracking the file's upload attempts.
+                                           [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
+                                           BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
 
-                                       if (error) {
-                                           NRLOG_ERROR(@"Failed to remove crash file :%@, %@",path.path, error.description);
-                                       } else if (!didRemoveFile) {
-                                           NRLOG_ERROR(@"Failed to remove crash file. Error unknown.");
+                                           if (error) {
+                                               NRLOG_ERROR(@"Failed to remove crash file :%@, %@",path.path, error.description);
+                                           } else if (!didRemoveFile) {
+                                               NRLOG_ERROR(@"Failed to remove crash file. Error unknown.");
+                                           }
+                                       } else {
+                                           NRLOG_VERBOSE(@"failed to upload crash log: %@, to try again later.",path.path);
                                        }
-                                   } else {
-                                       NRLOG_VERBOSE(@"failed to upload crash log: %@, to try again later.",path.path);
                                    }
-                               }
-                           }];
+                               }] resume];
 }
 
 - (NSURLRequest*) buildPost {
