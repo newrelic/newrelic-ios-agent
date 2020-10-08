@@ -23,6 +23,8 @@
 {
             self = [super init];
             if (self) {
+                self.uploadSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+
                 _fileManager = [NSFileManager defaultManager];
                 self.applicationToken = token;
                 self.applicationVersion = connectionInformation.applicationInformation.appVersion;
@@ -93,34 +95,32 @@
         return;
     }
 
-    NSURLRequest* request = [self buildPostFromFilePath:path.path];
+    NSURLRequest* request = [self buildPost];
 
-    [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue]
-                           completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
-                               if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                                   if(((NSHTTPURLResponse*)response).statusCode == 200 || ((NSHTTPURLResponse*)response).statusCode == 500) {
-                                       NSError* error = nil;
-                                       //stop tracking the file's upload attempts.
-                                       [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
-                                       BOOL didRemoveFile = [_fileManager removeItemAtURL:path error:&error];
+    [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                                   if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                                       if(((NSHTTPURLResponse*)response).statusCode == 200 || ((NSHTTPURLResponse*)response).statusCode == 500) {
+                                           NSError* error = nil;
+                                           //stop tracking the file's upload attempts.
+                                           [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
+                                           BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
 
-                                       if (error) {
-                                           NRLOG_ERROR(@"Failed to remove crash file :%@, %@",path.path, error.description);
-                                       } else if (!didRemoveFile) {
-                                           NRLOG_ERROR(@"Failed to remove crash file. Error unknown.");
+                                           if (error) {
+                                               NRLOG_ERROR(@"Failed to remove crash file :%@, %@",path.path, error.description);
+                                           } else if (!didRemoveFile) {
+                                               NRLOG_ERROR(@"Failed to remove crash file. Error unknown.");
+                                           }
+                                       } else {
+                                           NRLOG_VERBOSE(@"failed to upload crash log: %@, to try again later.",path.path);
                                        }
-                                   } else {
-                                       NRLOG_VERBOSE(@"failed to upload crash log: %@, to try again later.",path.path);
                                    }
-                               }
-                           }];
+                               }] resume];
 }
 
-- (NSURLRequest*) buildPostFromFilePath:(NSString*)path {
+- (NSURLRequest*) buildPost {
     NSMutableURLRequest* request = [super newPostWithURI:[NSString stringWithFormat:@"%@%@/%@",_useSSL?@"https://":@"http://",_crashCollectorHost,kNRMA_CR_CrashCollectorPath]];
 
-    NSInputStream* stream = [[NSInputStream alloc] initWithFileAtPath:path];
-    [request setHTTPBodyStream:stream];
+
     return request;
 }
 

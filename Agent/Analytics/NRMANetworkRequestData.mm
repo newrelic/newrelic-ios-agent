@@ -46,7 +46,7 @@
                                                                      requestMethod.UTF8String,
                                                                      connectionType.UTF8String,
                                                                      contentType.UTF8String,
-                                                                     bytesSent);
+                                                                     (unsigned int)bytesSent);
         if(!wrappedNetworkRequestData) self = nil;
     }
     return self;

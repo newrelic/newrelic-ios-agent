@@ -200,12 +200,10 @@
         return NO;
     }
 
-    [[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),kNRMA_CR_ReportPath]
+    if (![[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),kNRMA_CR_ReportPath]
                               withIntermediateDirectories:YES
                                                attributes:nil
-                                                    error:&error];
-
-    if (error) {
+                                                         error:&error]) {
         NRLOG_VERBOSE(@"Failed to create crash report directory:  %@",error.description);
     }
 
@@ -301,7 +299,7 @@
 
 + (NSString*) subtypesForARM64:(uint64_t)subtype
 {
-    switch (subtype) {
+    switch (CPU_SUBTYPE_ARM64_PTR_AUTH_VERSION(subtype)) {
         case CPU_SUBTYPE_ARM64_ALL:
             return @"arm64";
             break;

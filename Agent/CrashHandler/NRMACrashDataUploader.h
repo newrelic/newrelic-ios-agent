@@ -17,6 +17,9 @@
     BOOL _useSSL;
 }
 
+@property(strong) NSURLSession* uploadSession;
+
+
 - (void) uploadCrashReports;
 
 - (instancetype) initWithCrashCollectorURL:(NSString*)url
