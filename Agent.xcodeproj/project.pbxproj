@@ -3435,12 +3435,16 @@
 					};
 					021A15B924C9EEE700E8DFD5 = {
 						CreatedOnToolsVersion = 11.6;
+						LastSwiftMigration = 1200;
 					};
 					025658A724EB2AAC00FE3125 = {
 						CreatedOnToolsVersion = 11.6;
 					};
 					02FF4B0A24DDC68A00115469 = {
 						CreatedOnToolsVersion = 11.6;
+					};
+					02FF4B1824E3201400115469 = {
+						LastSwiftMigration = 1200;
 					};
 				};
 			};
@@ -4502,6 +4506,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
@@ -4551,6 +4556,8 @@
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;
@@ -4562,6 +4569,7 @@
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_CODE_COVERAGE = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
@@ -4609,6 +4617,7 @@
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;
@@ -4835,6 +4844,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
@@ -4881,6 +4891,8 @@
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";
 				SUPPORTED_PLATFORMS = "appletvsimulator appletvos";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "3,5";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;
@@ -4893,6 +4905,7 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_CODE_COVERAGE = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
@@ -4938,6 +4951,7 @@
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";
 				SUPPORTED_PLATFORMS = "appletvsimulator appletvos";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "3,5";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;
