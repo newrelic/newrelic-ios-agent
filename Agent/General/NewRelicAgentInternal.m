@@ -227,7 +227,7 @@ static NewRelicAgentInternal* _sharedInstance;
                 }
 #elif __arm64e__
                 {
-                NRLOG_VERSION(@"__arm64e__ detected, but __PTRAUTH_INTRINSICS__ was not enabled. arm64e crashes will not be properly symbolicated.");
+                NRLOG_VERBOSE(@"__arm64e__ detected, but __PTRAUTH_INTRINSICS__ was not enabled. arm64e crashes will not be properly symbolicated.");
                 }
 #endif
                 [NRMAExceptionDataCollectionWrapper startCrashMetaDataMonitors];
