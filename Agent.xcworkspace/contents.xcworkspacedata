@@ -2,9 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:NewRelic-swiftPackage">
-   </FileRef>
-   <FileRef
-      location = "container:">
+      location = "container:Agent.xcodeproj">
    </FileRef>
 </Workspace>
