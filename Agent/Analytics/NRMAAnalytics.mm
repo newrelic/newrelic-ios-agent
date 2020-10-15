@@ -410,14 +410,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             } else if ([NewRelicInternalUtils isBool:number]) {
                 event->addAttribute(key.UTF8String,number.boolValue);
             } else {
-                NRLOG_ERROR(@"Failed to add event: attribute \"%@\" value is invalid NSNumber with objCType: %s",key,[number objCType]);
-                return NO;
+                NRLOG_ERROR(@"Failed to add attribute \"%@\" value is invalid NSNumber with objCType: %s",key,[number objCType]);
             }
         } else if([value isKindOfClass:[NRMABool class]]) {
             event->addAttribute(key.UTF8String, (bool)((NRMABool*)value).value);
         } else {
-            NRLOG_ERROR(@"Failed to add event: attribute values must be type NSNumber* or NSString*.");
-            return NO;
+            NRLOG_ERROR(@"Failed to add attribute values must be type NSNumber* or NSString*.");
         }
     }
     return YES;
@@ -478,7 +476,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     auto attributes = AnalyticsController::fetchDuplicatedAttributes([self attributeDupStore], YES);
     std::stringstream stream;
     stream << std::setprecision(13)<< *attributes;
-    NSError* error;
     
     NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
     if (!jsonString.length) {
@@ -497,7 +494,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
         std::stringstream stream;
         stream << std::setprecision(13) << *events;
-        NSError* error;
         
         NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
         

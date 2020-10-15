@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -128,16 +128,6 @@
 		0209ACBC24E7546F00E45C90 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ACBB24E7546F00E45C90 /* CoreData.framework */; };
 		0209ACC124EB015E00E45C90 /* JdAWN9v.png in Resources */ = {isa = PBXBuildFile; fileRef = 0209ACC024EB015D00E45C90 /* JdAWN9v.png */; };
 		021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */ = {isa = PBXBuildFile; fileRef = 021A15BD24C9EEE700E8DFD5 /* Agent.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		022A81CF25030A46003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
-		022A81D025030A46003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
-		022A81D125030A46003748E6 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CB25030A46003748E6 /* json.framework */; };
-		022A81D225030A46003748E6 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CB25030A46003748E6 /* json.framework */; };
-		022A81D325030A46003748E6 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CC25030A46003748E6 /* Connectivity.framework */; };
-		022A81D425030A46003748E6 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CC25030A46003748E6 /* Connectivity.framework */; };
-		022A81D525030A46003748E6 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CD25030A46003748E6 /* Utilities.framework */; };
-		022A81D625030A46003748E6 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CD25030A46003748E6 /* Utilities.framework */; };
-		022A81D725030A46003748E6 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CE25030A46003748E6 /* Analytics.framework */; };
-		022A81D825030A46003748E6 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CE25030A46003748E6 /* Analytics.framework */; };
 		022A81D92507E7CF003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
 		022A81DA2507E7D0003748E6 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CA25030A46003748E6 /* Hex.framework */; };
 		022A81DB2507E838003748E6 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 022A81CB25030A46003748E6 /* json.framework */; };
@@ -407,7 +397,7 @@
 		02FF491824DC624400115469 /* NRMACrashReport_Exception.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF490424DC624300115469 /* NRMACrashReport_Exception.h */; };
 		02FF491924DC624400115469 /* NRMACrashReport.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF490524DC624300115469 /* NRMACrashReport.h */; };
 		02FF491A24DC624400115469 /* NRMACrashReport_AppInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490624DC624400115469 /* NRMACrashReport_AppInfo.m */; };
-		02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490724DC624400115469 /* NRMACrashReport.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490724DC624400115469 /* NRMACrashReport.m */; };
 		02FF491C24DC624400115469 /* NRMACrashReport_Library.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490824DC624400115469 /* NRMACrashReport_Library.m */; };
 		02FF491D24DC624400115469 /* NRMACrashReport_Thread.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490924DC624400115469 /* NRMACrashReport_Thread.m */; };
 		02FF491E24DC624400115469 /* NRMACrashReport_CodeType.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF490A24DC624400115469 /* NRMACrashReport_CodeType.h */; };
@@ -1019,6 +1009,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
+		020DEC30251A59A100BF7309 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.proto";
+			fileType = pattern.proxy;
+			inputFiles = (
+			);
+			isEditable = 1;
+			outputFiles = (
+				"${DERIVED_FILES_DIR}/${CURRENT_ARCH}/${INPUT_FILE_BASE}.pb-c.c",
+				"${DERIVED_FILES_DIR}/${CURRENT_ARCH}/${INPUT_FILE_BASE}.pb-c.h",
+			);
+			script = "cd \"${INPUT_FILE_DIR}\" && \"${SRCROOT}/Dependencies/protobuf-2.0.3/bin/protoc-c\" --c_out=\"${DERIVED_FILES_DIR}/${CURRENT_ARCH}\" \"${INPUT_FILE_NAME}\"\n";
+		};
 		02FF4AEE24DC8AD900115469 /* PBXBuildRule */ = {
 			isa = PBXBuildRule;
 			compilerSpec = com.apple.compilers.proxy.script;
@@ -1058,6 +1062,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 021A15B924C9EEE700E8DFD5;
 			remoteInfo = Agent_iOS;
+		};
+		020DEC2E251A59A100BF7309 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 020DEB0B2519588A00BF7309;
+			remoteInfo = "CrashReporter-iOS-Tests";
 		};
 		0253762F24E33C8D00BF220A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1664,7 +1675,6 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		02FF4CAD24E3201600115469 /* tvos-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "tvos-Info.plist"; path = "/Users/bryce/repo/newrelic/mobile/agent/Agent/tvos-Info.plist"; sourceTree = "<absolute>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -1693,14 +1703,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				02FF4B0824DC8F1200115469 /* libCrashReporter.a in Frameworks */,
-				022A81D525030A46003748E6 /* Utilities.framework in Frameworks */,
-				022A81D325030A46003748E6 /* Connectivity.framework in Frameworks */,
 				02FF4AED24DC899500115469 /* SystemConfiguration.framework in Frameworks */,
-				022A81CF25030A46003748E6 /* Hex.framework in Frameworks */,
-				022A81D725030A46003748E6 /* Analytics.framework in Frameworks */,
 				02FF4AEB24DC898900115469 /* CoreTelephony.framework in Frameworks */,
 				02FF4AE924DC898000115469 /* libc++.tbd in Frameworks */,
-				022A81D125030A46003748E6 /* json.framework in Frameworks */,
 				02FF4AE724DC897A00115469 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1737,13 +1742,8 @@
 			files = (
 				0253763124E33E0300BF220A /* libCrashReporter-tvOS-Device.a in Frameworks */,
 				02FF4C9D24E3201400115469 /* SystemConfiguration.framework in Frameworks */,
-				022A81D225030A46003748E6 /* json.framework in Frameworks */,
-				022A81D625030A46003748E6 /* Utilities.framework in Frameworks */,
 				02FF4C9F24E3201400115469 /* libc++.tbd in Frameworks */,
-				022A81D825030A46003748E6 /* Analytics.framework in Frameworks */,
 				02FF4CA024E3201400115469 /* Foundation.framework in Frameworks */,
-				022A81D425030A46003748E6 /* Connectivity.framework in Frameworks */,
-				022A81D025030A46003748E6 /* Hex.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2083,7 +2083,6 @@
 			isa = PBXGroup;
 			children = (
 				022A81C62502F22F003748E6 /* General */,
-				02FF4CAD24E3201600115469 /* tvos-Info.plist */,
 				02FF4AC824DC657100115469 /* Network */,
 				02FF4ABD24DC655900115469 /* Connectivity */,
 				02FF4AB824DC654500115469 /* Vendor */,
@@ -2859,6 +2858,7 @@
 			children = (
 				02FF4AD924DC815400115469 /* libCrashReporter.a */,
 				02FF4D3424E321B300115469 /* libCrashReporter-tvOS-Device.a */,
+				020DEC2F251A59A100BF7309 /* CrashReporter-iOS-Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -3325,6 +3325,7 @@
 				0209ABB624E7054800E45C90 /* Resources */,
 			);
 			buildRules = (
+				020DEC30251A59A100BF7309 /* PBXBuildRule */,
 			);
 			dependencies = (
 				0209ABBF24E7054900E45C90 /* PBXTargetDependency */,
@@ -3422,6 +3423,9 @@
 		021A15B124C9EEE700E8DFD5 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					New,
+				);
 				LastUpgradeCheck = 1170;
 				ORGANIZATIONNAME = "New Relic";
 				TargetAttributes = {
@@ -3431,12 +3435,16 @@
 					};
 					021A15B924C9EEE700E8DFD5 = {
 						CreatedOnToolsVersion = 11.6;
+						LastSwiftMigration = 1200;
 					};
 					025658A724EB2AAC00FE3125 = {
 						CreatedOnToolsVersion = 11.6;
 					};
 					02FF4B0A24DDC68A00115469 = {
 						CreatedOnToolsVersion = 11.6;
+					};
+					02FF4B1824E3201400115469 = {
+						LastSwiftMigration = 1200;
 					};
 				};
 			};
@@ -3471,6 +3479,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		020DEC2F251A59A100BF7309 /* CrashReporter-iOS-Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "CrashReporter-iOS-Tests.xctest";
+			remoteRef = 020DEC2E251A59A100BF7309 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		02FF4AD924DC815400115469 /* libCrashReporter.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -3532,6 +3547,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		0253762B24E33C6A00BF220A /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -3546,10 +3562,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/bash -x";
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\necho CONFIGURATION=${CONFIGURATION}\nif [ $CONFIGURATION = \"Release\" ]; then\n    rm -rf ../Frameworks/\n  ./release_build.sh appletvos \"${VALID_ARCHS}\"\nelse\n  ./build.sh appletvos \"${VALID_ARCHS}\" \nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [ $? -eq 0 ]; then\n  frameworks=$(ls build/appletvos | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/appletvos/$framework ../Frameworks\n  done\nfi \n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\necho CONFIGURATION=${CONFIGURATION}\nif [ $CONFIGURATION = \"Release\" ]; then\n    rm -rf ../Frameworks/\n  ./release_build.sh appletvos \"${ARCHS}\"\nelse\n  ./build.sh appletvos \"${ARCHS}\" \nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [ $? -eq 0 ]; then\n  frameworks=$(ls build/appletvos | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/appletvos/$framework ../Frameworks\n  done\nfi \n";
 		};
 		025658E024ED9C5500FE3125 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -3584,6 +3601,7 @@
 		};
 		02FF4B1024DDF4BB00115469 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -3597,8 +3615,8 @@
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = "/bin/bash -x";
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\nif [[ $CONFIGURATION = \"Release\" ]]; then\n    rm -rf ../Frameworks/\n  ./release_build.sh ${PLATFORM_NAME} \"${VALID_ARCHS}\"\nelse\n  ./build.sh ${PLATFORM_NAME} \"${VALID_ARCHS}\" \nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [[ $? -eq 0 ]]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/${PLATFORM_NAME}/$framework ../Frameworks\n  done\nfi \n";
+			shellPath = /bin/bash;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\nRelease_config=\"Release\"\nif [[ $CONFIGURATION == $Release_config ]]; then\n    echo removing frameworks folder.\n    rm -rf ../Frameworks\n  ./release_build.sh ${PLATFORM_NAME} \"${ARCHS}\"\nelse\n  ./build.sh ${PLATFORM_NAME} \"${ARCHS}\" \nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [[ $? -eq 0 ]]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/${PLATFORM_NAME}/$framework ../Frameworks\n  done\nfi \n";
 		};
 		02FF4B1524E1F04300115469 /* Capture environment variables */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -4250,6 +4268,7 @@
 		0209ABC124E7054900E45C90 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -4270,7 +4289,7 @@
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4300,6 +4319,7 @@
 		0209ABC224E7054900E45C90 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -4314,7 +4334,7 @@
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4344,11 +4364,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = (
+					"$(ARCHS_STANDARD)",
+					arm64e,
+				);
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -4375,11 +4399,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.0.0;
+				CURRENT_PROJECT_VERSION = 7.1.0;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				"EXCLUDED_ARCHS[sdk=appletvsimulator*]" = arm64;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "arm64e arm64";
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -4389,15 +4415,19 @@
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MODULEMAP_FILE = module.modulemap;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-fvisibility=default",
+					"-Wno-varargs",
+				);
 				SDKROOT = iphoneos;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -4408,11 +4438,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = (
+					"$(ARCHS_STANDARD)",
+					arm64e,
+				);
 				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -4439,22 +4473,28 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.0.0;
+				CURRENT_PROJECT_VERSION = 7.1.0;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				"EXCLUDED_ARCHS[sdk=appletvsimulator*]" = arm64;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "arm64 arm64e";
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MODULEMAP_FILE = module.modulemap;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = (
+					"-fvisibility=default",
+					"-Wno-varargs",
+				);
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -4466,11 +4506,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.0.0;
+				DYLIB_CURRENT_VERSION = 7.1.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -4478,24 +4522,42 @@
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/**",
 					"$(SRCROOT)",
 				);
 				INFOPLIST_FILE = Agent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MODULEMAP_FILE = agent.modulemap;
+				OTHER_CFLAGS = "$(inherited";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
+				STRIP_STYLE = "non-global";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;
@@ -4507,34 +4569,55 @@
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_CODE_COVERAGE = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_MODULE_DEBUGGING = NO;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.0.0;
+				DYLIB_CURRENT_VERSION = 7.1.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				HEADER_SEARCH_PATHS = (
 					.,
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/**",
 				);
 				INFOPLIST_FILE = Agent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MODULEMAP_FILE = agent.modulemap;
+				OTHER_CFLAGS = "$(inherited";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
+				STRIP_STYLE = "non-global";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;
@@ -4544,9 +4627,10 @@
 		0253762D24E33C6A00BF220A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
@@ -4556,9 +4640,10 @@
 		0253762E24E33C6A00BF220A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
@@ -4568,6 +4653,7 @@
 		0256585E24EB19BF00FE3125 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -4588,7 +4674,7 @@
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4619,6 +4705,7 @@
 		0256585F24EB19BF00FE3125 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -4633,7 +4720,7 @@
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -4663,6 +4750,7 @@
 		025658AE24EB2AAC00FE3125 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
@@ -4697,6 +4785,7 @@
 		025658AF24EB2AAC00FE3125 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
@@ -4733,7 +4822,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 			};
@@ -4744,7 +4833,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 			};
@@ -4753,38 +4842,57 @@
 		02FF4CAA24E3201400115469 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.0.0;
+				DYLIB_CURRENT_VERSION = 7.1.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/**",
 					"$(SRCROOT)",
 				);
 				INFOPLIST_FILE = "Agent/tvos-info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MODULEMAP_FILE = agent.modulemap;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
+				STRIP_STYLE = "non-global";
 				SUPPORTED_PLATFORMS = "appletvsimulator appletvos";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "3,5";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;
@@ -4794,38 +4902,56 @@
 		02FF4CAB24E3201400115469 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_CODE_COVERAGE = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.0.0;
+				DYLIB_CURRENT_VERSION = 7.1.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/Frameworks",
 				);
-				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					.,
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/**",
 				);
 				INFOPLIST_FILE = "Agent/tvos-info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
 				MODULEMAP_FILE = agent.modulemap;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Analytics,
+					"-framework",
+					json,
+					"-framework",
+					Utilities,
+					"-framework",
+					Connectivity,
+					"-framework",
+					Hex,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
+				STRIP_STYLE = "non-global";
 				SUPPORTED_PLATFORMS = "appletvsimulator appletvos";
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "3,5";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 				WATCHOS_DEPLOYMENT_TARGET = 2.0;

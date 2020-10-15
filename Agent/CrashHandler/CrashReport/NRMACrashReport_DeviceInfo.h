@@ -22,8 +22,8 @@
 #define kNRMA_CR_deviceUuid         @"deviceUuid"
 
 @interface NRMACrashReport_DeviceInfo : NSObject <NRMAJSONABLE>
-@property(strong) NSNumber* memoryUsage; //<long long>
-@property(strong) NSNumber* orientation; //<int>
+@property(strong) NSNumber* memoryUsage; //long long
+@property(strong) NSNumber* orientation; //int
 @property(strong) NSString* networkStatus;
 @property(strong) NSArray* diskUsage; //[<long long>,...];
 @property(strong) NSString* osVersion;

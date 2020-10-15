@@ -32,8 +32,9 @@ void* NRMAReplaceClassMethod(Class class, SEL selector, IMP newImplementation);
  If it's known by the class c, we just exchange the implementation.
  */
 void NRMASwapOrReplaceInstanceMethod(Class c, SEL originalSelector, SEL newSelector);
-/*! 
- @method         NRMASwizzleOrAddMethod
+
+/*!
+ @method NRMASwizzleOrAddMethod
  
  @abstract
  Swaps one method implementation with another if this instance
@@ -43,14 +44,9 @@ void NRMASwapOrReplaceInstanceMethod(Class c, SEL originalSelector, SEL newSelec
  Unlike the two above methods, this method is used to swap methods on classes that are not 
  known until runtime, usually protocol implementations.
  
- @discussion
  
- @param 
- origSelector     The selector for the original method
+ @param  origSelector     The selector for the original method
  newSelector      The selector for the method to be swapped
- 
- 
- @result
  
  YES         if the swizzle was successful
  

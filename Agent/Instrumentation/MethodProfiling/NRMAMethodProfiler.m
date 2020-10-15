@@ -885,9 +885,6 @@ id NRMA__ptrPtrParamHandler(id self, SEL selector, NRMAMethodColor methodColor, 
 
     NRMATrace* trace = nil;
 
-    NSRange rangeOfInit = [NSStringFromSelector(selector) rangeOfString:@"init"];
-    BOOL isInitMethod = rangeOfInit.location == 0;
-
     IMP method = NRMA__beginMethod(self, selector, methodColor, &isTargetColor, &trace);
 
     id retval = ((id(*)(id,SEL,id,id))method)(self, selector, p1, p2);

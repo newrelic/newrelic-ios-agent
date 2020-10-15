@@ -250,6 +250,18 @@
                              withAttributes:@{}]);
 }
 
+- (void ) testBadAttributes {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    XCTAssertTrue([analytics addCustomEvent:@"我々は思い出にわならないさ"
+                             withAttributes:@{@"badAttribute":[NSNull new]}]);
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertTrue(decode[0][@"badAttribute"] == nil);
+    
+}
 
 - (void) testBreadcrumb {
 
