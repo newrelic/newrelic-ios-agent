@@ -17,8 +17,9 @@ If you have previously created a Mobile Application:
 
 UPGRADING
 
-To upgrade New Relic SDK, completely replace the NewRelicAgent.framework folder in your app directory with the version included in this file, then clean and build your app.
+To upgrade the New Relic SDK, completely replace the NewRelicAgent.framework folder in your app directory with the version included in this file, then clean and build your app.
 
 RELEASE NOTES
 
 Please refer to https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes for the latest release notes.
+
