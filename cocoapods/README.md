@@ -22,4 +22,4 @@ To upgrade the New Relic SDK, completely replace the NewRelicAgent.framework fol
 RELEASE NOTES
 
 Please refer to https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes for the latest release notes.
-
+ 
