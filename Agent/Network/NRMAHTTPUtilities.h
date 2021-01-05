@@ -10,6 +10,8 @@
 #import "NRMAPayloadContainer.h"
 
 #define NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY               @"newrelic"
+#define W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY               @"tracestate"
+#define W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY              @"traceparent"
 
 @interface NRMAHTTPUtilities : NSObject
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request;

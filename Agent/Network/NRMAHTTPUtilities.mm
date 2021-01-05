@@ -19,6 +19,8 @@
 #import "NRMAAssociate.h"
 #import "NRMANetworkFacade.h"
 #import "NRMAPayloadContainer.h"
+#import "W3CTraceParent.h"
+#import "W3CTraceState.h"
 
 @implementation NRMAHTTPUtilities
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request
@@ -73,6 +75,23 @@
             if (string.length) {
                 [request setValue:[NRMABase64 encodeFromData:[string dataUsingEncoding:NSUTF8StringEncoding]]
                       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
+            }
+            
+            bool addW3C = true;
+            if (addW3C) {
+                W3CTraceParent *w3cParent = [[W3CTraceParent alloc] initWithPayload:payload];
+                NSString *traceparent = [w3cParent createHeader];
+                if (traceparent.length) {
+                    [request setValue:traceparent
+                          forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                }
+                
+                W3CTraceState *w3cState = [[W3CTraceState alloc] initWithPayload:payload];
+                NSString *tracestate = [w3cState createHeader];
+                if (tracestate.length) {
+                    [request setValue:tracestate
+                          forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
+                }
             }
 
             return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
