@@ -8,14 +8,8 @@
 
 #import "W3CTraceContext.h"
 
-@interface W3CTraceParent : NSObject <W3TraceContext>
+@interface W3CTraceParent
 
-- (id) initWithPayload: (std::unique_ptr<NewRelic::Connectivity::Payload>&)payload;
-- (NSString *) createHeader;
-
-@property(nonatomic)         int        version;
-@property(nonatomic, strong) NSString*  traceId;
-@property(nonatomic, strong) NSString*  parentId;
-@property(nonatomic, strong) NSString*  flags;
++ (NSString *) headerFromContext:(TraceContext*) traceContext;
 
 @end

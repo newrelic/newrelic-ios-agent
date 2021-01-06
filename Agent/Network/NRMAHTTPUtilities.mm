@@ -19,6 +19,7 @@
 #import "NRMAAssociate.h"
 #import "NRMANetworkFacade.h"
 #import "NRMAPayloadContainer.h"
+#import "W3CTraceContext.h"
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
 
@@ -77,23 +78,20 @@
                       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
             }
             
-            bool addW3C = true;
-            if (addW3C) {
-                W3CTraceParent *w3cParent = [[W3CTraceParent alloc] initWithPayload:payload];
-                NSString *traceparent = [w3cParent createHeader];
-                if (traceparent.length) {
-                    [request setValue:traceparent
-                          forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
-                }
-                
-                W3CTraceState *w3cState = [[W3CTraceState alloc] initWithPayload:payload];
-                NSString *tracestate = [w3cState createHeader];
-                if (tracestate.length) {
-                    [request setValue:tracestate
-                          forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
-                }
+            TraceContext *traceContext = [[TraceContext alloc] initWithPayload:payload];
+            
+            NSString *traceparent = [W3CTraceParent createHeaderWithContext: traceContext];
+            if (traceparent.length) {
+                [request setValue:traceparent
+               forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
             }
 
+            NSString *tracestate = [W3CTraceState createHeaderWithContext: traceContext];
+            if (tracestate.length) {
+                [request setValue:tracestate
+               forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
+            }
+            
             return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
         }
     }

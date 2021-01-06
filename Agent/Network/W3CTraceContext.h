@@ -9,9 +9,22 @@
 #import <Foundation/Foundation.h>
 #import "Payload.hpp"
 
-@protocol W3TraceContext <NSObject>
+typedef enum trustedAccountKeys: NSUInteger {
+    NRTraceContext,
+    W3CTraceContext
+} AccountType;
 
-- (id) initWithPayload: (std::unique_ptr<NewRelic::Connectivity::Payload>&)payload;
-- (NSString *) createHeader;
+@interface TraceContext
+
+@property (strong) NSString*   accountId; // from payload
+@property (strong) NSString*   appId; // from payload
+@property (strong) NSString*   spanId; // should match parentId
+@property (strong) NSString*   traceId; // from payload
+@property (strong) NSString*   transactionId; // from payload
+@property          long long   timestamp; // from payload
+@property          AccountType trustedAccount;
+
+- (id) initFromPayload: (std::unique_ptr<NewRelic::Connectivity::Payload>&)payload;
+- (void) setTrustedAccountKey: (AccountType) trustedAccount;
 
 @end
