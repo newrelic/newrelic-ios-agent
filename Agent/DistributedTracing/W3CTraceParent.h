@@ -6,10 +6,10 @@
 //  Copyright © 2020 New Relic. All rights reserved.
 //
 
-#import "W3CTraceContext.h"
+#import "NRMATraceContext.h"
 
-@interface W3CTraceParent
+@interface W3CTraceParent : NSObject
 
-+ (NSString *) headerFromContext:(TraceContext*) traceContext;
++ (NSString *) headerFromContext:(NRMATraceContext*) traceContext;
 
 @end

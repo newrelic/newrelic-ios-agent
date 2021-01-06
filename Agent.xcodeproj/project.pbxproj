@@ -1006,6 +1006,18 @@
 		02FF4C9D24E3201400115469 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AEC24DC899500115469 /* SystemConfiguration.framework */; };
 		02FF4C9F24E3201400115469 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AE824DC898000115469 /* libc++.tbd */; };
 		02FF4CA024E3201400115469 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AE624DC897900115469 /* Foundation.framework */; };
+		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
+		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
+		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
+		F6E79C7625A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
+		F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C7025A65346006277FB /* W3CTraceParent.mm */; };
+		F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C7025A65346006277FB /* W3CTraceParent.mm */; };
+		F6E79C7D25A65347006277FB /* W3CTraceParent.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C7225A65346006277FB /* W3CTraceParent.h */; };
+		F6E79C7E25A65347006277FB /* W3CTraceParent.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C7225A65346006277FB /* W3CTraceParent.h */; };
+		F6E79CEF25A66887006277FB /* NRMATraceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79CED25A66887006277FB /* NRMATraceContext.h */; };
+		F6E79CF025A66887006277FB /* NRMATraceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79CED25A66887006277FB /* NRMATraceContext.h */; };
+		F6E79CF125A66887006277FB /* NRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79CEE25A66887006277FB /* NRMATraceContext.mm */; };
+		F6E79CF225A66887006277FB /* NRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79CEE25A66887006277FB /* NRMATraceContext.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -1677,6 +1689,12 @@
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
+		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
+		F6E79C6E25A65346006277FB /* W3CTraceState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceState.h; sourceTree = "<group>"; };
+		F6E79C7025A65346006277FB /* W3CTraceParent.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceParent.mm; sourceTree = "<group>"; };
+		F6E79C7225A65346006277FB /* W3CTraceParent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceParent.h; sourceTree = "<group>"; };
+		F6E79CED25A66887006277FB /* NRMATraceContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMATraceContext.h; sourceTree = "<group>"; };
+		F6E79CEE25A66887006277FB /* NRMATraceContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMATraceContext.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2085,6 +2103,7 @@
 				022A81C62502F22F003748E6 /* General */,
 				02FF4AC824DC657100115469 /* Network */,
 				02FF4ABD24DC655900115469 /* Connectivity */,
+				F6E79C6C25A65346006277FB /* DistributedTracing */,
 				02FF4AB824DC654500115469 /* Vendor */,
 				02FF4A7C24DC652100115469 /* Utilities */,
 				02FF49F324DC646400115469 /* Measurements */,
@@ -2890,6 +2909,20 @@
 			path = scripts;
 			sourceTree = "<group>";
 		};
+		F6E79C6C25A65346006277FB /* DistributedTracing */ = {
+			isa = PBXGroup;
+			children = (
+				F6E79CED25A66887006277FB /* NRMATraceContext.h */,
+				F6E79CEE25A66887006277FB /* NRMATraceContext.mm */,
+				F6E79C7225A65346006277FB /* W3CTraceParent.h */,
+				F6E79C7025A65346006277FB /* W3CTraceParent.mm */,
+				F6E79C6E25A65346006277FB /* W3CTraceState.h */,
+				F6E79C6D25A65346006277FB /* W3CTraceState.mm */,
+			);
+			name = DistributedTracing;
+			path = Agent/DistributedTracing;
+			sourceTree = SOURCE_ROOT;
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -2909,12 +2942,14 @@
 				02FF48E024DC622700115469 /* NRMAExceptionReportParser.h in Headers */,
 				02FF481D24DB5B8100115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF486224DC615A00115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
+				F6E79CEF25A66887006277FB /* NRMATraceContext.h in Headers */,
 				02FF49DD24DC636100115469 /* NRMAHarvestableProtocol.h in Headers */,
 				02FF4A4F24DC64D500115469 /* NRMAMeasurement.h in Headers */,
 				02FF49C324DC62B800115469 /* NRMAHarvestableVitals.h in Headers */,
 				02FF4A4D24DC64D500115469 /* NRMAMeasurementProtocol.h in Headers */,
 				02FF482824DB5BA500115469 /* NRMAFlags.h in Headers */,
 				02FF4AAA24DC652E00115469 /* NRMAMemoryVitals.h in Headers */,
+				F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */,
 				02FF49BA24DC62B800115469 /* NRMAMetricSet.h in Headers */,
 				02FF491024DC624400115469 /* NRMACrashReport_DeviceInfo.h in Headers */,
 				02FF4A6F24DC64E600115469 /* NRMAProducerProtocol.h in Headers */,
@@ -2970,6 +3005,7 @@
 				02FF488C24DC61B900115469 /* NRMAWebRequestUtil.h in Headers */,
 				02FF48EB24DC622700115469 /* NRMACrashDataUploader.h in Headers */,
 				02FF480E24DB573E00115469 /* NRMAUserActionBuilder.h in Headers */,
+				F6E79C7D25A65347006277FB /* W3CTraceParent.h in Headers */,
 				02FF49C924DC62B800115469 /* NRMAScopedHTTPTransactionMeasurement.h in Headers */,
 				02FF489B24DC61D200115469 /* NRMAURLSessionTaskDelegateBase_Private.h in Headers */,
 				02FF4A5324DC64D500115469 /* NRMAActivityTraceMeasurement.h in Headers */,
@@ -3119,12 +3155,14 @@
 				02FF4B2724E3201400115469 /* NRMAExceptionReportParser.h in Headers */,
 				02FF4B2824E3201400115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF4B2924E3201400115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
+				F6E79CF025A66887006277FB /* NRMATraceContext.h in Headers */,
 				02FF4B2A24E3201400115469 /* NRMAHarvestableProtocol.h in Headers */,
 				02FF4B2B24E3201400115469 /* NRMAMeasurement.h in Headers */,
 				02FF4B2C24E3201400115469 /* NRMAHarvestableVitals.h in Headers */,
 				02FF4B2D24E3201400115469 /* NRMAMeasurementProtocol.h in Headers */,
 				02FF4B2E24E3201400115469 /* NRMAFlags.h in Headers */,
 				02FF4B2F24E3201400115469 /* NRMAMemoryVitals.h in Headers */,
+				F6E79C7625A65347006277FB /* W3CTraceState.h in Headers */,
 				02FF4B3024E3201400115469 /* NRMAMetricSet.h in Headers */,
 				02FF4B3124E3201400115469 /* NRMACrashReport_DeviceInfo.h in Headers */,
 				02FF4B3224E3201400115469 /* NRMAProducerProtocol.h in Headers */,
@@ -3180,6 +3218,7 @@
 				02FF4B6424E3201400115469 /* NRMAWebRequestUtil.h in Headers */,
 				02FF4B6524E3201400115469 /* NRMACrashDataUploader.h in Headers */,
 				02FF4B6624E3201400115469 /* NRMAUserActionBuilder.h in Headers */,
+				F6E79C7E25A65347006277FB /* W3CTraceParent.h in Headers */,
 				02FF4B6724E3201400115469 /* NRMAScopedHTTPTransactionMeasurement.h in Headers */,
 				02FF4B6824E3201400115469 /* NRMAURLSessionTaskDelegateBase_Private.h in Headers */,
 				02FF4B6924E3201400115469 /* NRMAActivityTraceMeasurement.h in Headers */,
@@ -3760,6 +3799,7 @@
 				02FF49CA24DC62B800115469 /* NRMAMetricSet.m in Sources */,
 				02FF48E324DC622700115469 /* NRMAExceptionhandlerConstants.m in Sources */,
 				02FF49DB24DC636100115469 /* NRMATimedTraceSegment.m in Sources */,
+				F6E79CF125A66887006277FB /* NRMATraceContext.mm in Sources */,
 				02FF49CD24DC62B800115469 /* NRMAHarvestableEvent.m in Sources */,
 				02FF49BC24DC62B800115469 /* NRMAScopedHTTPTransactionMeasurement.m in Sources */,
 				02FF48C024DC61F600115469 /* NRMAMethodSwizzling.m in Sources */,
@@ -3876,6 +3916,7 @@
 				02FF482224DB5B8100115469 /* NRMATableViewIntrumentation.m in Sources */,
 				02FF482124DB5B8100115469 /* NRMAApplicationInstrumentation.m in Sources */,
 				02FF484324DC614200115469 /* NRMAInteractionDataStamp.m in Sources */,
+				F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */,
 				02FF486324DC615A00115469 /* NRMAAnalytics.mm in Sources */,
 				02FF4A2624DC648600115469 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
 				02FF4A4824DC64D500115469 /* NRMAMeasurement.m in Sources */,
@@ -3928,6 +3969,7 @@
 				02FF49DF24DC636100115469 /* NRMATraceSegment.m in Sources */,
 				02FF48BB24DC61F600115469 /* NRMAClassNode.m in Sources */,
 				02FF493A24DC625A00115469 /* NRMASessionIdentifierManager.mm in Sources */,
+				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4053,6 +4095,7 @@
 				02FF4BF024E3201400115469 /* NRMAMetricSet.m in Sources */,
 				02FF4BF124E3201400115469 /* NRMAExceptionhandlerConstants.m in Sources */,
 				02FF4BF224E3201400115469 /* NRMATimedTraceSegment.m in Sources */,
+				F6E79CF225A66887006277FB /* NRMATraceContext.mm in Sources */,
 				02FF4BF324E3201400115469 /* NRMAHarvestableEvent.m in Sources */,
 				02FF4BF424E3201400115469 /* NRMAScopedHTTPTransactionMeasurement.m in Sources */,
 				02FF4BF524E3201400115469 /* NRMAMethodSwizzling.m in Sources */,
@@ -4169,6 +4212,7 @@
 				02FF4C6424E3201400115469 /* NRMATableViewIntrumentation.m in Sources */,
 				02FF4C6524E3201400115469 /* NRMAApplicationInstrumentation.m in Sources */,
 				02FF4C6624E3201400115469 /* NRMAInteractionDataStamp.m in Sources */,
+				F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */,
 				02FF4C6724E3201400115469 /* NRMAAnalytics.mm in Sources */,
 				02FF4C6824E3201400115469 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
 				02FF4C6924E3201400115469 /* NRMAMeasurement.m in Sources */,
@@ -4221,6 +4265,7 @@
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */,
+				F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

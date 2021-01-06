@@ -17,7 +17,7 @@
     return @"00";
 }
 
-+ (NSString *) headerFromContext:(TraceContext*) traceContext {
++ (NSString *) headerFromContext:(NRMATraceContext*) traceContext {
     NSString *formatStr = @"%@-%@-%@-%@";
 
     // do not base64 encode

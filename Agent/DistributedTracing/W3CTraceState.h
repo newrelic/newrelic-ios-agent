@@ -10,16 +10,12 @@
 
 
 #import <Foundation/Foundation.h>
-#import "Payload.hpp"
-#import "W3CTraceContext.h"
+#import <Connectivity/Payload.hpp>
+#import "NRMATraceContext.h"
 
-@interface W3CTraceState : NSObject <W3TraceContext>
+@interface W3CTraceState : NSObject
 
-- (id) initWithPayload: (std::unique_ptr<NewRelic::Connectivity::Payload>&)payload;
-
-- (NSString *) createHeader;
-- (NSString *) createHeaderFor:(AccountType) trustedAccount;
-+ (NSString *) headerFromContext:(TraceContext*) traceContext;
++ (NSString *) headerFromContext:(NRMATraceContext*) traceContext;
 
 @property          int        version;
 @property          int        parentType;

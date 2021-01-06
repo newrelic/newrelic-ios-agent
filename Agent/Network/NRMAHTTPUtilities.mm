@@ -19,7 +19,10 @@
 #import "NRMAAssociate.h"
 #import "NRMANetworkFacade.h"
 #import "NRMAPayloadContainer.h"
-#import "W3CTraceContext.h"
+#import "NRMAMetric.h"
+#import "NRMATaskQueue.h"
+#import "NRConstants.h"
+#import "NRMATraceContext.h"
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
 
@@ -78,18 +81,33 @@
                       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
             }
             
-            TraceContext *traceContext = [[TraceContext alloc] initWithPayload:payload];
+            NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload:payload];
             
-            NSString *traceparent = [W3CTraceParent createHeaderWithContext: traceContext];
+            BOOL dtError = false;
+            NSString *traceparent = [W3CTraceParent headerFromContext: traceContext];
             if (traceparent.length) {
                 [request setValue:traceparent
                forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+            } else {
+                dtError = true;
             }
 
-            NSString *tracestate = [W3CTraceState createHeaderWithContext: traceContext];
+            NSString *tracestate = [W3CTraceState headerFromContext: traceContext];
             if (tracestate.length) {
                 [request setValue:tracestate
                forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
+            } else {
+                dtError = true;
+            }
+            
+            if (dtError) {
+                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Exception"
+                                   value:@1
+                               scope:@""]];
+            } else {
+                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Success"
+                                   value:@1
+                               scope:@""]];
             }
             
             return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
