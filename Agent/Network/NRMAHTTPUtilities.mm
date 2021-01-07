@@ -2,7 +2,7 @@
 //  NRMANetworkUtilites.m
 //  NewRelicAgent
 //
-//  Created by Bryce Buchanan on 8/28/14.
+//  Created on 8/28/14.
 //  Copyright (c) 2014 New Relic. All rights reserved.
 //
 

@@ -4,7 +4,7 @@
 //
 //  Implementation of https://w3c.github.io/trace-context/#tracestate-header
 //
-//  Created by Matt Aken on 12/23/20.
+//  Created on 12/23/20.
 //  Copyright © 2020 New Relic. All rights reserved.
 //
 

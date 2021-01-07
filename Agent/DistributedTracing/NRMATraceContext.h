@@ -1,8 +1,8 @@
 //
-//  NRMATraceContextt.h
+//  NRMATraceContext.h
 //  Agent
 //
-//  Created by Matt Aken on 12/23/20.
+//  Created on 12/23/20.
 //  Copyright © 2020 New Relic. All rights reserved.
 //
 

@@ -1018,6 +1018,12 @@
 		F6E79CF025A66887006277FB /* NRMATraceContext.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79CED25A66887006277FB /* NRMATraceContext.h */; };
 		F6E79CF125A66887006277FB /* NRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79CEE25A66887006277FB /* NRMATraceContext.mm */; };
 		F6E79CF225A66887006277FB /* NRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79CEE25A66887006277FB /* NRMATraceContext.mm */; };
+		F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */; };
+		F6E79D1225A7639D006277FB /* TestNRMATraceContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */; };
+		F6E79D1B25A78689006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
+		F6E79D2B25A788AB006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
+		F6E79D3A25A78B42006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
+		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -1695,6 +1701,9 @@
 		F6E79C7225A65346006277FB /* W3CTraceParent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceParent.h; sourceTree = "<group>"; };
 		F6E79CED25A66887006277FB /* NRMATraceContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMATraceContext.h; sourceTree = "<group>"; };
 		F6E79CEE25A66887006277FB /* NRMATraceContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMATraceContext.mm; sourceTree = "<group>"; };
+		F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = TestNRMATraceContext.mm; sourceTree = "<group>"; };
+		F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceParent.mm; sourceTree = "<group>"; };
+		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1808,6 +1817,7 @@
 		0209ABA824E7041900E45C90 /* NewRelicAgentTests */ = {
 			isa = PBXGroup;
 			children = (
+				F6E79CFA25A7590B006277FB /* DistributedTesting-Tests */,
 				0209AC6424E7391000E45C90 /* Uncategorized */,
 				0209ABDD24E706B300E45C90 /* Instrumentation-Tests */,
 				0209ABD024E7069B00E45C90 /* Handled-Exception-Tests */,
@@ -2923,6 +2933,16 @@
 			path = Agent/DistributedTracing;
 			sourceTree = SOURCE_ROOT;
 		};
+		F6E79CFA25A7590B006277FB /* DistributedTesting-Tests */ = {
+			isa = PBXGroup;
+			children = (
+				F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */,
+				F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */,
+				F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */,
+			);
+			path = "DistributedTesting-Tests";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -3701,11 +3721,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
+				F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */,
 				0209AC4B24E7078C00E45C90 /* NRMACrashReportTest.m in Sources */,
 				0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */,
 				0209AC4424E7078000E45C90 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
 				0209AC0024E7070900E45C90 /* NSURLSessionOverrideTest.m in Sources */,
 				0209ABF224E706FA00E45C90 /* NRActivityTracesTest.m in Sources */,
+				F6E79D1B25A78689006277FB /* TestW3CTraceParent.mm in Sources */,
 				0209AC2224E7071F00E45C90 /* NRMeasurementTest.m in Sources */,
 				0209ABE024E706D300E45C90 /* TestUITableViewInstrumentation.m in Sources */,
 				0209ABDA24E706AE00E45C90 /* TestHexUploadPublisher.mm in Sources */,
@@ -3783,6 +3805,7 @@
 				0209AC8C24E7393300E45C90 /* NRMAInternalUtilsTests.m in Sources */,
 				0209ABC424E7058500E45C90 /* NRMeasurementConsumerHelper.m in Sources */,
 				0209AC9324E7393300E45C90 /* NRReachabilityTest.m in Sources */,
+				F6E79D2B25A788AB006277FB /* TestW3CTraceState.mm in Sources */,
 				0209AC1124E7071500E45C90 /* APIInteractionTraceTest.m in Sources */,
 				0209AC9824E7393300E45C90 /* NRNSURLConnectionDelegateBaseTest.m in Sources */,
 				0209AC9424E7393300E45C90 /* NRMethodProfilerTests.m in Sources */,
@@ -3978,6 +4001,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				025657F524EB19BF00FE3125 /* NRMAExceptionMetaDataTest.m in Sources */,
+				F6E79D1225A7639D006277FB /* TestNRMATraceContext.mm in Sources */,
 				025657F624EB19BF00FE3125 /* NRMACrashReportTest.m in Sources */,
 				025657F724EB19BF00FE3125 /* NRMAInternalTests.m in Sources */,
 				025657F824EB19BF00FE3125 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
@@ -4021,6 +4045,7 @@
 				0256581E24EB19BF00FE3125 /* NRMAInteractionDataStampTests.m in Sources */,
 				0256581F24EB19BF00FE3125 /* NRHarvestableVitalsTest.m in Sources */,
 				0256582024EB19BF00FE3125 /* NRMACrashDataUploaderTest.m in Sources */,
+				F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */,
 				0256582124EB19BF00FE3125 /* NRThreadInfoTest.m in Sources */,
 				0256582224EB19BF00FE3125 /* NRGCDOverrideTest.m in Sources */,
 				0256582324EB19BF00FE3125 /* NRAgentTestBase.m in Sources */,
@@ -4043,6 +4068,7 @@
 				0256583524EB19BF00FE3125 /* NRMAAnalyticsTest.mm in Sources */,
 				0256583624EB19BF00FE3125 /* NRHarvesterStateTest.m in Sources */,
 				0256583724EB19BF00FE3125 /* NRMAHarvestableHTTPReqeustTests.m in Sources */,
+				F6E79D3A25A78B42006277FB /* TestW3CTraceParent.mm in Sources */,
 				0256583824EB19BF00FE3125 /* TestHexUploader.m in Sources */,
 				0256583924EB19BF00FE3125 /* NRMeasurementPoolTest.m in Sources */,
 				0256583A24EB19BF00FE3125 /* NRMASessionExclusivityWithDelegateTests.m in Sources */,

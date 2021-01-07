@@ -2,7 +2,7 @@
 //  NRMATraceContext.m
 //  Agent
 //
-//  Created by Matt Aken on 12/23/20.
+//  Created on 12/23/20.
 //  Copyright © 2020 New Relic. All rights reserved.
 //
 
@@ -16,9 +16,13 @@ NSString *DT_FIELD_UNUSED = @"";
 
 - (void) setNewRelicDefaults {
     // always overwriten by C++ Payload
-    self.spanId = INVALID_PARENT_ID;
+    self.accountId = DT_FIELD_UNUSED;
+    self.appId = DT_FIELD_UNUSED;
     self.traceId = INVALID_TRACE_ID;
+    self.spanId = INVALID_PARENT_ID;
     self.TRACE_FIELD_UNUSED = DT_FIELD_UNUSED;
+    self.timestamp = 0;
+    self.trustedAccount = NRTraceContext;
 }
 
 - (void) setTrustedAccountKey: (AccountType) trustedAccount {
