@@ -9,6 +9,7 @@
 #import <XCTest/XCTest.h>
 
 #include <Connectivity/Facade.hpp>
+#include <memory>
 #import "NRMATraceContext.h"
 
 @interface TestNRMATraceContext : XCTestCase
@@ -19,12 +20,6 @@
 
 - (void)setUp {
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    /*std::unique_ptr<NewRelic::Connectivity::Payload> payload = nullptr;
-//    payload = NewRelic::Connectivity::Facade::getInstance().startTrip();
-    payload = NewRelic::Connectivity::Facade::getInstance().newPayload();
-    payload->setAccountId(std::string("matt"));
-    auto theString = payload->getAccountId();
-    return;*/
 }
 
 - (void)tearDown {
