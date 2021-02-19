@@ -27,7 +27,6 @@
                               traceContext.traceId,
                               [W3CTraceParent getParentId],
                               [W3CTraceParent getFlags]];
-    
     return headerString;
 }
 
