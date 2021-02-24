@@ -69,6 +69,7 @@
         payload = NewRelic::Connectivity::Facade::getInstance().startTrip();
 
         if (payload != nullptr) {
+            payload->setDistributedTracing(true);
             auto json = payload->toJSON();
             std::stringstream s;
             s << json;
