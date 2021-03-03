@@ -45,7 +45,7 @@
     [traceContext setTrustedAccount:NRTraceContext];
     
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
-    NSString *desiredHeader = @"00-edd7db371b2faa5b-17172750e6ff8549-00";
+    NSString *desiredHeader = @"00-edd7db371b2faa5b--00";
     
     // assert
     XCTAssert([traceParent isEqualToString: desiredHeader]);
