@@ -2,7 +2,7 @@
 //  NRMANetworkUtilites.m
 //  NewRelicAgent
 //
-//  Created by Bryce Buchanan on 8/28/14.
+//  Created on 8/28/14.
 //  Copyright (c) 2014 New Relic. All rights reserved.
 //
 
@@ -19,6 +19,12 @@
 #import "NRMAAssociate.h"
 #import "NRMANetworkFacade.h"
 #import "NRMAPayloadContainer.h"
+#import "NRMAMetric.h"
+#import "NRMATaskQueue.h"
+#import "NRConstants.h"
+#import "NRMATraceContext.h"
+#import "W3CTraceParent.h"
+#import "W3CTraceState.h"
 
 @implementation NRMAHTTPUtilities
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request
@@ -63,6 +69,7 @@
         payload = NewRelic::Connectivity::Facade::getInstance().startTrip();
 
         if (payload != nullptr) {
+            payload->setDistributedTracing(true);
             auto json = payload->toJSON();
             std::stringstream s;
             s << json;
@@ -74,7 +81,36 @@
                 [request setValue:[NRMABase64 encodeFromData:[string dataUsingEncoding:NSUTF8StringEncoding]]
                       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
             }
+            
+            NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload:payload];
+            
+            BOOL dtError = false;
+            NSString *traceparent = [W3CTraceParent headerFromContext: traceContext];
+            if (traceparent.length) {
+                [request setValue:traceparent
+               forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+            } else {
+                dtError = true;
+            }
 
+            NSString *tracestate = [W3CTraceState headerFromContext: traceContext];
+            if (tracestate.length) {
+                [request setValue:tracestate
+               forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
+            } else {
+                dtError = true;
+            }
+            
+            if (dtError) {
+                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Exception"
+                                   value:@1
+                               scope:@""]];
+            } else {
+                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Success"
+                                   value:@1
+                               scope:@""]];
+            }
+            
             return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
         }
     }
