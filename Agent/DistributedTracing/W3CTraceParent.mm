@@ -25,7 +25,7 @@
     NSString *headerString = [NSString stringWithFormat:formatStr,
                               [W3CTraceParent getVersion],
                               traceContext.traceId,
-                              [W3CTraceParent getParentId],
+                              traceContext.spanId,
                               [W3CTraceParent getFlags]];
     return headerString;
 }
