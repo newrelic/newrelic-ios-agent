@@ -101,6 +101,7 @@ static NSString* _osVersion;
             _agentVersion = @"0";
         }
     }
+    return @"7.3.0";
     return _agentVersion;
 }
 
