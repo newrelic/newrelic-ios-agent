@@ -502,6 +502,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [self.analyticsController setNRSessionAttribute:@"newRelicVersion"
                                               value:[NewRelicInternalUtils agentVersion]];
 
+    [self.analyticsController setNRSessionAttribute:@"nr.skipRateLimiting"
+                                              value:@"true"];
+    
     [self.analyticsController setNRSessionAttribute:@"appBuild"
                                               value:[NRMAAgentConfiguration connectionInformation].applicationInformation.appBuild];
 
