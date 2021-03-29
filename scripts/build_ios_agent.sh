@@ -61,11 +61,11 @@ echo "Copying ${EXECUTABLE_NAME} to build/iphonesimulator"
 cp -p -R "${CODESIGNING_FOLDER_PATH}/" "${BUILD_PATH}/iphonesimulator/${EXECUTABLE_NAME}.framework/"
 
 
-# combine device & simulator artifacts
-echo "Merging iphonesimulator/${EXECUTABLE_NAME} and iphoneos/${EXECUTABLE_NAME} into universal"
-mkdir -p "${BUILD_PATH}/universal"
-cp -p -R "$BUILD_PATH/iphoneos/${EXECUTABLE_NAME}.framework/" "${BUILD_PATH}/universal/${EXECUTABLE_NAME}.framework/"
-/usr/bin/lipo -create "${BUILD_PATH}/iphonesimulator/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}" "${BUILD_PATH}/iphoneos/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}" -o "${BUILD_PATH}/universal/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}"
+# combine device & simulator artifact: unable to combine now that M1 Macs use arm64
+# echo "Merging iphonesimulator/${EXECUTABLE_NAME} and iphoneos/${EXECUTABLE_NAME} into universal"
+#mkdir -p "${BUILD_PATH}/universal"
+# cp -p -R "$BUILD_PATH/iphoneos/${EXECUTABLE_NAME}.framework/" "${BUILD_PATH}/universal/${EXECUTABLE_NAME}.framework/"
+# /usr/bin/lipo -create "${BUILD_PATH}/iphonesimulator/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}" "${BUILD_PATH}/iphoneos/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}" -o "${BUILD_PATH}/universal/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}"
 
 
 
