@@ -37,7 +37,8 @@ static BOOL __saltDeviceUUID = NO;
                               NRFeatureFlag_WebViewInstrumentation |
                               NRFeatureFlag_HandledExceptionEvents |
                               NRFeatureFlag_NetworkRequestEvents | 
-                              NRFeatureFlag_RequestErrorEvents;
+                              NRFeatureFlag_RequestErrorEvents |
+                              NRFeatureFlag_DistributedTracing;
                   });
     return __flags;
 }
