@@ -3606,7 +3606,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = "/bin/bash -x";
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\necho CONFIGURATION=${CONFIGURATION}\nif [ $CONFIGURATION = \"Release\" ]; then\n    rm -rf ../Frameworks/\n  ./release_build.sh  ${PLATFORM_NAME} ${CONFIGURATION}\nelse\n  ./build2021.sh  ${PLATFORM_NAME} ${CONFIGURATION}\nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [ $? -eq 0 ]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/$PLATFORM_NAME/$framework ../Frameworks\n  done\nfi \n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\necho CONFIGURATION=${CONFIGURATION}\nif [ $CONFIGURATION = \"Release\" ]; then\n    rm -rf ../Frameworks/\n  ./release_build.sh  ${PLATFORM_NAME} ${CONFIGURATION}\nelse\n  ./build.sh  ${PLATFORM_NAME} ${CONFIGURATION}\nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [ $? -eq 0 ]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/$PLATFORM_NAME/$framework ../Frameworks\n  done\nfi \n";
 		};
 		025658E024ED9C5500FE3125 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3660,7 +3660,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\nRelease_config=\"Release\"\nif [[ $CONFIGURATION == $Release_config ]]; then\n    echo removing frameworks folder.\n    rm -rf ../Frameworks\n  ./release_build.sh ${PLATFORM_NAME} ${CONFIGURATION}\nelse\n  ./build2021.sh ${PLATFORM_NAME} ${CONFIGURATION}\nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [[ $? -eq 0 ]]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/${PLATFORM_NAME}/$framework ../Frameworks\n  done\nfi \n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\npushd ${PROJECT_DIR}/libMobileAgent\nRelease_config=\"Release\"\nif [[ $CONFIGURATION == $Release_config ]]; then\n    echo removing frameworks folder.\n    rm -rf ../Frameworks\n  ./release_build.sh ${PLATFORM_NAME} ${CONFIGURATION}\nelse\n  ./build.sh ${PLATFORM_NAME} ${CONFIGURATION}\nfi \n\nif [[ ! -z ../Frameworks ]]; then\n    mkdir ../Frameworks\nfi\n\nif [[ $? -eq 0 ]]; then\n  frameworks=$(ls build/$PLATFORM_NAME | grep \\.framework)\n  for framework in ${frameworks} ; do\n  if [ ! -z \"${framework}\" ]; then\n    rm -rf ../Frameworks/$framework\n  fi\n    mv -f build/${PLATFORM_NAME}/$framework ../Frameworks\n  done\nfi \n";
 		};
 		02FF4B1524E1F04300115469 /* Capture environment variables */ = {
 			isa = PBXShellScriptBuildPhase;
