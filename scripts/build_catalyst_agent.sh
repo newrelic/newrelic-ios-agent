@@ -35,6 +35,10 @@ fi
 # insert xcode build environmental vars
 source ${BUILD_PATH}/archive_paths.sh
 
+# change the anatomy of the framework to match Apple specs for OSX
+pushd "${BUILT_PRODUCTS_DIR}"
+${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${PRODUCT_NAME}
+popd
 
 # Copying EXECUTABLE_NAME to build_path/platform folder
   mkdir -p ${BUILD_PATH}/macosx
