@@ -31,6 +31,11 @@ if [ ! -h "${1}.framework/Headers" ]; then
   mv "${1}.framework/Headers" "${1}.framework/Versions/A"
 fi
 
+if [ ! -h "${1}.framework/Resources" ]; then
+  echo mv "${1}.framework/Resources" "${1}.framework/Versions/A"
+  mv "${1}.framework/Resources" "${1}.framework/Versions/A"
+fi
+
 if [ ! -h "${1}.framework/Modules" ]; then
   echo mv "${1}.framework/Modules" "${1}.framework/Versions/A"
   mv "${1}.framework/Modules" "${1}.framework/Versions/A"
