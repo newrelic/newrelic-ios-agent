@@ -40,7 +40,7 @@ source ${BUILD_PATH}/archive_paths.sh
 #${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${PRODUCT_NAME}
 #popd
 
-FINAL_FRAMEWORK="${BUILD_PATH}/macosx/${EXECUTABLE_NAME}.framework"
+FINAL_FRAMEWORK="${BUILD_PATH}/macosx/${EXECUTABLE_NAME}"
 
 # Copying EXECUTABLE_NAME to build_path/platform folder
   mkdir -p ${BUILD_PATH}/macosx
