@@ -36,14 +36,18 @@ fi
 source ${BUILD_PATH}/archive_paths.sh
 
 # change the anatomy of the framework to match Apple specs for OSX
-pushd "${BUILT_PRODUCTS_DIR}"
-${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${PRODUCT_NAME}
-popd
+#pushd "${BUILT_PRODUCTS_DIR}"
+#${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${PRODUCT_NAME}
+#popd
+
+FINAL_FRAMEWORK="${BUILD_PATH}/macosx/${EXECUTABLE_NAME}.framework"
 
 # Copying EXECUTABLE_NAME to build_path/platform folder
   mkdir -p ${BUILD_PATH}/macosx
   echo "copying built ${CODESIGNING_FOLDER_PATH} to build/macosx"
   cp -p -R ${CODESIGNING_FOLDER_PATH} ${BUILD_PATH}/macosx/${EXECUTABLE_NAME}.framework
+
+${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${FINAL_FRAMEWORK}
 
 
 
