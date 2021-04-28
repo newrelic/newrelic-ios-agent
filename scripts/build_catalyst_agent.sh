@@ -40,16 +40,15 @@ source ${BUILD_PATH}/archive_paths.sh
 #${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${PRODUCT_NAME}
 #popd
 
-FINAL_FRAMEWORK="${BUILD_PATH}/macosx/${EXECUTABLE_NAME}"
-
 # Copying EXECUTABLE_NAME to build_path/platform folder
   mkdir -p ${BUILD_PATH}/macosx
   echo "copying built ${CODESIGNING_FOLDER_PATH} to build/macosx"
   cp -p -R ${CODESIGNING_FOLDER_PATH} ${BUILD_PATH}/macosx/${EXECUTABLE_NAME}.framework
 
-${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${FINAL_FRAMEWORK}
-
-
+echo "changing framework anatomy for Mac Catalyst ${EXECUTABLE_NAME}.framework at ${BUILD_PATH}/macosx/"
+pushd "${BUILD_PATH}/macosx/"
+${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${EXECUTABLE_NAME}
+popd
 
 
 
