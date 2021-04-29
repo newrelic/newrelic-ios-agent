@@ -41,17 +41,10 @@ if [ ! -h "${1}.framework/Modules" ]; then
   mv "${1}.framework/Modules" "${1}.framework/Versions/A"
 fi
 
-# adding this line causes "unsealed contents present in the root directory of an embedded framework"
 if [ ! -h "${1}.framework/Info.plist" ]; then
   echo mv "${1}.framework/Info.plist" "${1}.framework/Versions/A/Resources"
   mv "${1}.framework/Info.plist" "${1}.framework/Versions/A/Resources"
 fi
-
-# adding this line causes "bundle format unrecognized, invalid, or unsuitable"
-#if [ ! -h "${1}.framework/Info.plist" ]; then
-#  echo rm "${1}.framework/Info.plist"
-#  rm "${1}.framework/Info.plist"  
-#fi
 
 echo cd "${1}.framework/Versions"
 cd "${1}.framework/Versions"
