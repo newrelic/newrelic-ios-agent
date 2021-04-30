@@ -59,11 +59,11 @@ echo "Copying ${EXECUTABLE_NAME} to build/appletvsimulator"
 cp -p -R ${CODESIGNING_FOLDER_PATH}/ ${BUILD_PATH}/appletvsimulator/${EXECUTABLE_NAME}.framework/
 
 
-# combine device & simulator artifacts
-echo "Merging appletvsimulator/${EXECUTABLE_NAME} and appletvos/${EXECUTABLE_NAME} into universal"
-mkdir -p ${BUILD_PATH}/universal-tvos
-cp -p -R $BUILD_PATH/appletvos/${EXECUTABLE_NAME}.framework/ ${BUILD_PATH}/universal-tvos/${EXECUTABLE_NAME}.framework/
-/usr/bin/lipo -create ${BUILD_PATH}/appletvsimulator/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME} ${BUILD_PATH}/appletvos/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME} -o ${BUILD_PATH}/universal-tvos/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}
+# combine device & simulator artifacts: unable to combine now that M1 Macs use arm64
+#echo "Merging appletvsimulator/${EXECUTABLE_NAME} and appletvos/${EXECUTABLE_NAME} into universal"
+#mkdir -p ${BUILD_PATH}/universal-tvos
+#cp -p -R $BUILD_PATH/appletvos/${EXECUTABLE_NAME}.framework/ ${BUILD_PATH}/universal-tvos/${EXECUTABLE_NAME}.framework/
+#/usr/bin/lipo -create ${BUILD_PATH}/appletvsimulator/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME} ${BUILD_PATH}/appletvos/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME} -o ${BUILD_PATH}/universal-tvos/${EXECUTABLE_NAME}.framework/${EXECUTABLE_NAME}
 
 
 
