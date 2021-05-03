@@ -12,7 +12,6 @@ echo "SCRIPT_PATH: ${SCRIPT_PATH}"
 echo "BUILD_PATH: ${BUILD_PATH}"
 
 
-
 # set version from agvtool
 
 VERSION=`agvtool vers -terse`

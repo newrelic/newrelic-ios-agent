@@ -1,3 +1,6 @@
+# important note: build/macosx/NewRelic.framework has symbolic links so be sure to
+# zip with -y flag whenever compressing that .framework
+
 #!/usr/bin/env bash -x
 xcodebuild -create-xcframework \
 	-framework build/iphoneos/NewRelic.framework \
