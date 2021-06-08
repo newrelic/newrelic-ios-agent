@@ -361,7 +361,7 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
                                            bytesReceived:(NSUInteger)task.countOfBytesReceived];
             }
         } else {
-            NRLOG_VERBOSE(@"New Relic Timer not set for SessionTask with request url: %@. Not recording transaction.",task.originalRequest.URL);
+            NRLOG_VERBOSE(@"New Relic Timer not set for SessionTask with request url. Not recording transaction.");
         }
     } @catch (NSException* exception) {
         [NRMAExceptionHandler logException:exception
