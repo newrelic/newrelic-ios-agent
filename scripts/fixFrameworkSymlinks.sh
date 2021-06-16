@@ -21,6 +21,9 @@ mkdir -p "$1.framework/Versions/A/Resources"
 echo mkdir -p "$1.framework/Versions/A/Modules"
 mkdir -p "$1.framework/Versions/A/Modules"
 
+echo mkdir -p "$1.framework/Versions/A/_CodeSignature"
+mkdir -p "$1.framework/Versions/A/_CodeSignature"
+
 if [ ! -h "${1}.framework/${1}" ]; then
   echo mv "${1}.framework/${1}" "${1}.framework/Versions/A/${1}"
   mv "${1}.framework/${1}" "${1}.framework/Versions/A/${1}"
@@ -39,6 +42,11 @@ fi
 if [ ! -h "${1}.framework/Modules" ]; then
   echo mv "${1}.framework/Modules" "${1}.framework/Versions/A"
   mv "${1}.framework/Modules" "${1}.framework/Versions/A"
+fi
+
+if [ ! -h "${1}.framework/_CodeSignature" ]; then
+  echo mv "${1}.framework/_CodeSignature" "${1}.framework/Versions/A"
+  mv "${1}.framework/_CodeSignature" "${1}.framework/Versions/A"
 fi
 
 if [ ! -h "${1}.framework/Info.plist" ]; then
@@ -65,3 +73,7 @@ ln -fsh Versions/Current/Resources/ Resources
 
 echo ln -fsh Versions/Current/Modules/ Modules
 ln -fsh Versions/Current/Modules/ Modules
+
+echo ln -fsh Versions/Current/_CodeSignature/ _CodeSignature
+ln -fsh Versions/Current/_CodeSignature/ _CodeSignature
+
