@@ -124,7 +124,6 @@
 		0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */; };
 		0209ACC124EB015E00E45C90 /* JdAWN9v.png in Resources */ = {isa = PBXBuildFile; fileRef = 0209ACC024EB015D00E45C90 /* JdAWN9v.png */; };
 		021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */ = {isa = PBXBuildFile; fileRef = 021A15BD24C9EEE700E8DFD5 /* Agent.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0253763124E33E0300BF220A /* libCrashReporter-tvOS-Device.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4D3424E321B300115469 /* libCrashReporter-tvOS-Device.a */; };
 		025657F524EB19BF00FE3125 /* NRMAExceptionMetaDataTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC7224E7392E00E45C90 /* NRMAExceptionMetaDataTest.m */; };
 		025657F624EB19BF00FE3125 /* NRMACrashReportTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC4824E7078C00E45C90 /* NRMACrashReportTest.m */; };
 		025657F724EB19BF00FE3125 /* NRMAInternalTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */; };
@@ -348,14 +347,12 @@
 		02FF48DD24DC622700115469 /* NRMAUncaughtExceptionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48C824DC622400115469 /* NRMAUncaughtExceptionHandler.m */; };
 		02FF48DE24DC622700115469 /* NRMACrashReportFileManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48C924DC622400115469 /* NRMACrashReportFileManager.h */; };
 		02FF48DF24DC622700115469 /* NRMAUncaughtExceptionHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CA24DC622400115469 /* NRMAUncaughtExceptionHandler.h */; };
-		02FF48E024DC622700115469 /* NRMAExceptionReportParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */; };
 		02FF48E124DC622700115469 /* NRMAExceptionHandlerManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48CC24DC622400115469 /* NRMAExceptionHandlerManager.m */; };
 		02FF48E224DC622700115469 /* NRMACrashDataWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CD24DC622400115469 /* NRMACrashDataWriter.h */; };
 		02FF48E324DC622700115469 /* NRMAExceptionhandlerConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48CE24DC622400115469 /* NRMAExceptionhandlerConstants.m */; };
 		02FF48E424DC622700115469 /* NRMAExceptionDataCollectionWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CF24DC622400115469 /* NRMAExceptionDataCollectionWrapper.h */; };
 		02FF48E524DC622700115469 /* NRMAExceptionDataCollectionWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */; };
 		02FF48E624DC622700115469 /* NRMAExceptionhandlerConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D224DC622600115469 /* NRMAExceptionhandlerConstants.h */; };
-		02FF48E724DC622700115469 /* NRMAExceptionReportParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */; };
 		02FF48E824DC622700115469 /* NRMAExceptionHandlerJSONKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D424DC622600115469 /* NRMAExceptionHandlerJSONKeys.h */; };
 		02FF48E924DC622700115469 /* NRMAExceptionHandlerManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */; };
 		02FF48EA24DC622700115469 /* NRMATimestampContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D624DC622700115469 /* NRMATimestampContainer.h */; };
@@ -616,7 +613,6 @@
 		02FF4B2424E3201400115469 /* NRMABase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4A8724DC652C00115469 /* NRMABase64.h */; };
 		02FF4B2524E3201400115469 /* NRMAMethodSwizzling.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48B724DC61F600115469 /* NRMAMethodSwizzling.h */; };
 		02FF4B2624E3201400115469 /* NRMANSURLConnectionSupport.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF487524DC61A100115469 /* NRMANSURLConnectionSupport.h */; };
-		02FF4B2724E3201400115469 /* NRMAExceptionReportParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */; };
 		02FF4B2824E3201400115469 /* NRMACollectionViewInstrumentation.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF481324DB5B8100115469 /* NRMACollectionViewInstrumentation.h */; };
 		02FF4B2924E3201400115469 /* NRMANetworkResponseData+CppInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF485724DC615900115469 /* NRMANetworkResponseData+CppInterface.h */; };
 		02FF4B2A24E3201400115469 /* NRMAHarvestableProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF49D224DC636100115469 /* NRMAHarvestableProtocol.h */; };
@@ -843,7 +839,6 @@
 		02FF4C0D24E3201400115469 /* NRMADEBUG_Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4AB424DC653900115469 /* NRMADEBUG_Reachability.m */; };
 		02FF4C0E24E3201400115469 /* NRMAHTTPTransactionMeasurement.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A4124DC64D500115469 /* NRMAHTTPTransactionMeasurement.m */; };
 		02FF4C0F24E3201400115469 /* NRMACrashReport_AppInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490624DC624400115469 /* NRMACrashReport_AppInfo.m */; };
-		02FF4C1024E3201400115469 /* NRMAExceptionReportParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */; };
 		02FF4C1124E3201400115469 /* NRMAThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF486E24DC618F00115469 /* NRMAThread.m */; };
 		02FF4C1224E3201400115469 /* NRMAExceptionHandlerStartupManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF480024DB56B800115469 /* NRMAExceptionHandlerStartupManager.m */; };
 		02FF4C1324E3201400115469 /* NRMAHTTPTransactionMeasurementProducer.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A5C24DC64E600115469 /* NRMAHTTPTransactionMeasurementProducer.m */; };
@@ -1099,26 +1094,96 @@
 			remoteGlobalIDString = 02FF4B0A24DDC68A00115469;
 			remoteInfo = libMobileAgent;
 		};
-		02FF4D3324E321B300115469 /* PBXContainerItemProxy */ = {
+		344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 02FF4D3124E3216800115469;
-			remoteInfo = "CrashReporter-tvOS-Device";
+			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
+			remoteInfo = "CrashReporter macOS Framework";
 		};
-		02FF4D3524E321B600115469 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 02FF4CAE24E3216800115469;
-			remoteInfo = "CrashReporter-tvOS-Device";
-		};
-		34AFEB86269F93AC0056B40B /* PBXContainerItemProxy */ = {
+		344891D126AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 020DEB0B2519588A00BF7309;
-			remoteInfo = "CrashReporter-iOS-Tests";
+			remoteGlobalIDString = 058812B91040582D009128FB;
+			remoteInfo = "CrashReporter iOS Framework";
+		};
+		344891D326AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D8BB1C4D22E5005A8B4C;
+			remoteInfo = "CrashReporter tvOS Framework";
+		};
+		344891D526AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05E731F30EFA1AAB005EDFB7;
+			remoteInfo = "CrashReporter macOS";
+		};
+		344891D726AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D81B1C4D22D8005A8B4C;
+			remoteInfo = "CrashReporter tvOS";
+		};
+		344891D926AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD32690EE93DC3000FDE88;
+			remoteInfo = "CrashReporter macOS Tests";
+		};
+		344891DB26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD33240EE94439000FDE88;
+			remoteInfo = "CrashReporter iOS Tests";
+		};
+		344891DD26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D9951C4D27E2005A8B4C;
+			remoteInfo = "CrashReporter tvOS Tests";
+		};
+		344891DF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05F40CE70EF7AB80008050CF;
+			remoteInfo = "DemoCrash macOS";
+		};
+		344891E126AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 052A45CF136353FB00987004;
+			remoteInfo = "DemoCrash iOS";
+		};
+		344891E326AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D9A31C4D27E9005A8B4C;
+			remoteInfo = "DemoCrash tvOS";
+		};
+		344891E526AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05E731E30EFA1A3E005EDFB7;
+			remoteInfo = plcrashutil;
+		};
+		344891E726AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 050DE24D0F61B80B00152ED3;
+			remoteInfo = "Fuzz Testing";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1399,14 +1464,12 @@
 		02FF48C824DC622400115469 /* NRMAUncaughtExceptionHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAUncaughtExceptionHandler.m; sourceTree = "<group>"; };
 		02FF48C924DC622400115469 /* NRMACrashReportFileManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMACrashReportFileManager.h; sourceTree = "<group>"; };
 		02FF48CA24DC622400115469 /* NRMAUncaughtExceptionHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAUncaughtExceptionHandler.h; sourceTree = "<group>"; };
-		02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionReportParser.h; sourceTree = "<group>"; };
 		02FF48CC24DC622400115469 /* NRMAExceptionHandlerManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionHandlerManager.m; sourceTree = "<group>"; };
 		02FF48CD24DC622400115469 /* NRMACrashDataWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMACrashDataWriter.h; sourceTree = "<group>"; };
 		02FF48CE24DC622400115469 /* NRMAExceptionhandlerConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionhandlerConstants.m; sourceTree = "<group>"; };
 		02FF48CF24DC622400115469 /* NRMAExceptionDataCollectionWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionDataCollectionWrapper.h; sourceTree = "<group>"; };
 		02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionDataCollectionWrapper.m; sourceTree = "<group>"; };
 		02FF48D224DC622600115469 /* NRMAExceptionhandlerConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionhandlerConstants.h; sourceTree = "<group>"; };
-		02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionReportParser.m; sourceTree = "<group>"; };
 		02FF48D424DC622600115469 /* NRMAExceptionHandlerJSONKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionHandlerJSONKeys.h; sourceTree = "<group>"; };
 		02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionHandlerManager.h; sourceTree = "<group>"; };
 		02FF48D624DC622700115469 /* NRMATimestampContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMATimestampContainer.h; sourceTree = "<group>"; };
@@ -1711,7 +1774,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0253763124E33E0300BF220A /* libCrashReporter-tvOS-Device.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2397,8 +2459,6 @@
 				02FF48D824DC622700115469 /* NRMAExceptionHandlerJSONKeys.m */,
 				02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */,
 				02FF48CC24DC622400115469 /* NRMAExceptionHandlerManager.m */,
-				02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */,
-				02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */,
 				02FF48D624DC622700115469 /* NRMATimestampContainer.h */,
 				02FF48C524DC622400115469 /* NRMATimestampContainer.m */,
 				02FF48CA24DC622400115469 /* NRMAUncaughtExceptionHandler.h */,
@@ -2807,9 +2867,20 @@
 		02FF4AD524DC815300115469 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				344891D026AA0F4E00AADB9D /* CrashReporter.framework */,
+				344891D226AA0F4E00AADB9D /* CrashReporter.framework */,
+				344891D426AA0F4E00AADB9D /* CrashReporter.framework */,
+				344891D626AA0F4E00AADB9D /* libCrashReporter.a */,
 				02FF4AD924DC815400115469 /* libCrashReporter.a */,
-				02FF4D3424E321B300115469 /* libCrashReporter-tvOS-Device.a */,
-				34AFEB87269F93AC0056B40B /* CrashReporter-iOS-Tests.xctest */,
+				344891D826AA0F4E00AADB9D /* libCrashReporter.a */,
+				344891DA26AA0F4E00AADB9D /* Tests macOS.xctest */,
+				344891DC26AA0F4E00AADB9D /* Tests iOS.xctest */,
+				344891DE26AA0F4E00AADB9D /* CrashReporter tvOS Tests.xctest */,
+				344891E026AA0F4E00AADB9D /* DemoCrash macOS.app */,
+				344891E226AA0F4E00AADB9D /* DemoCrash iOS.app */,
+				344891E426AA0F4E00AADB9D /* DemoCrash tvOS.app */,
+				344891E626AA0F4E00AADB9D /* plcrashutil */,
+				344891E826AA0F4E00AADB9D /* Fuzz Testing */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2881,7 +2952,6 @@
 				02FF4AA224DC652E00115469 /* NRMABase64.h in Headers */,
 				02FF48C124DC61F600115469 /* NRMAMethodSwizzling.h in Headers */,
 				02FF487C24DC61A100115469 /* NRMANSURLConnectionSupport.h in Headers */,
-				02FF48E024DC622700115469 /* NRMAExceptionReportParser.h in Headers */,
 				02FF481D24DB5B8100115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF486224DC615A00115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				F6E79CEF25A66887006277FB /* NRMATraceContext.h in Headers */,
@@ -3094,7 +3164,6 @@
 				02FF4B2424E3201400115469 /* NRMABase64.h in Headers */,
 				02FF4B2524E3201400115469 /* NRMAMethodSwizzling.h in Headers */,
 				02FF4B2624E3201400115469 /* NRMANSURLConnectionSupport.h in Headers */,
-				02FF4B2724E3201400115469 /* NRMAExceptionReportParser.h in Headers */,
 				02FF4B2824E3201400115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF4B2924E3201400115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				F6E79CF025A66887006277FB /* NRMATraceContext.h in Headers */,
@@ -3391,7 +3460,6 @@
 			);
 			dependencies = (
 				0253763024E33C8D00BF220A /* PBXTargetDependency */,
-				02FF4D3624E321B600115469 /* PBXTargetDependency */,
 			);
 			name = Agent_tvos;
 			productName = Agent;
@@ -3467,18 +3535,95 @@
 			remoteRef = 02FF4AD824DC815400115469 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		02FF4D3424E321B300115469 /* libCrashReporter-tvOS-Device.a */ = {
+		344891D026AA0F4E00AADB9D /* CrashReporter.framework */ = {
 			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libCrashReporter-tvOS-Device.a";
-			remoteRef = 02FF4D3324E321B300115469 /* PBXContainerItemProxy */;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = 344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		34AFEB87269F93AC0056B40B /* CrashReporter-iOS-Tests.xctest */ = {
+		344891D226AA0F4E00AADB9D /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = 344891D126AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891D426AA0F4E00AADB9D /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = 344891D326AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891D626AA0F4E00AADB9D /* libCrashReporter.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCrashReporter.a;
+			remoteRef = 344891D526AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891D826AA0F4E00AADB9D /* libCrashReporter.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCrashReporter.a;
+			remoteRef = 344891D726AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891DA26AA0F4E00AADB9D /* Tests macOS.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			path = "CrashReporter-iOS-Tests.xctest";
-			remoteRef = 34AFEB86269F93AC0056B40B /* PBXContainerItemProxy */;
+			path = "Tests macOS.xctest";
+			remoteRef = 344891D926AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891DC26AA0F4E00AADB9D /* Tests iOS.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Tests iOS.xctest";
+			remoteRef = 344891DB26AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891DE26AA0F4E00AADB9D /* CrashReporter tvOS Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "CrashReporter tvOS Tests.xctest";
+			remoteRef = 344891DD26AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E026AA0F4E00AADB9D /* DemoCrash macOS.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash macOS.app";
+			remoteRef = 344891DF26AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E226AA0F4E00AADB9D /* DemoCrash iOS.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash iOS.app";
+			remoteRef = 344891E126AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E426AA0F4E00AADB9D /* DemoCrash tvOS.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash tvOS.app";
+			remoteRef = 344891E326AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E626AA0F4E00AADB9D /* plcrashutil */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = plcrashutil;
+			remoteRef = 344891E526AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E826AA0F4E00AADB9D /* Fuzz Testing */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Fuzz Testing";
+			remoteRef = 344891E726AA0F4E00AADB9D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -3774,7 +3919,6 @@
 				02FF4AB624DC653A00115469 /* NRMADEBUG_Reachability.m in Sources */,
 				02FF4A5024DC64D500115469 /* NRMAHTTPTransactionMeasurement.m in Sources */,
 				02FF491A24DC624400115469 /* NRMACrashReport_AppInfo.m in Sources */,
-				02FF48E724DC622700115469 /* NRMAExceptionReportParser.m in Sources */,
 				02FF487324DC618F00115469 /* NRMAThread.m in Sources */,
 				02FF480224DB56B900115469 /* NRMAExceptionHandlerStartupManager.m in Sources */,
 				02FF4A6924DC64E600115469 /* NRMAHTTPTransactionMeasurementProducer.m in Sources */,
@@ -4073,7 +4217,6 @@
 				02FF4C0D24E3201400115469 /* NRMADEBUG_Reachability.m in Sources */,
 				02FF4C0E24E3201400115469 /* NRMAHTTPTransactionMeasurement.m in Sources */,
 				02FF4C0F24E3201400115469 /* NRMACrashReport_AppInfo.m in Sources */,
-				02FF4C1024E3201400115469 /* NRMAExceptionReportParser.m in Sources */,
 				02FF4C1124E3201400115469 /* NRMAThread.m in Sources */,
 				02FF4C1224E3201400115469 /* NRMAExceptionHandlerStartupManager.m in Sources */,
 				02FF4C1324E3201400115469 /* NRMAHTTPTransactionMeasurementProducer.m in Sources */,
@@ -4249,11 +4392,6 @@
 			isa = PBXTargetDependency;
 			target = 02FF4B0A24DDC68A00115469 /* libMobileAgent */;
 			targetProxy = 02FF4B0E24DDC69600115469 /* PBXContainerItemProxy */;
-		};
-		02FF4D3624E321B600115469 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "CrashReporter-tvOS-Device";
-			targetProxy = 02FF4D3524E321B600115469 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
