@@ -976,8 +976,12 @@
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
+		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
+		3478A8A426B36F920056F3B3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A89126B36F920056F3B3 /* SystemConfiguration.framework */; };
+		3478A8A626B36F9C0056F3B3 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
+		3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
+		3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A926B36FB10056F3B3 /* libc++.tbd */; };
 		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
-		34D64BC226B3364500A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -1081,13 +1085,6 @@
 			remoteGlobalIDString = 05CD31520EE936A9000FDE88;
 			remoteInfo = "CrashReporter-iOS-Device";
 		};
-		02FF4B0E24DDC69600115469 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 021A15B124C9EEE700E8DFD5 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 02FF4B0A24DDC68A00115469;
-			remoteInfo = libMobileAgent;
-		};
 		344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
@@ -1179,19 +1176,26 @@
 			remoteGlobalIDString = 050DE24D0F61B80B00152ED3;
 			remoteInfo = "Fuzz Testing";
 		};
+		34731AF426B3722E00CE568A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 021A15B124C9EEE700E8DFD5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 02FF4B0A24DDC68A00115469;
+			remoteInfo = libMobileAgent;
+		};
+		34731AF626B3723500CE568A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 05CD31510EE936A9000FDE88;
+			remoteInfo = "CrashReporter iOS";
+		};
 		34D64BC326B336A600A75A72 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8064D7AD1C4D22D8005A8B4C;
 			remoteInfo = "CrashReporter tvOS";
-		};
-		34D64BC526B336BE00A75A72 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 05CD31510EE936A9000FDE88;
-			remoteInfo = "CrashReporter iOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1729,6 +1733,10 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3478A89126B36F920056F3B3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
+		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		3478A8A926B36FB10056F3B3 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
@@ -1756,7 +1764,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				34D64BC226B3364500A75A72 /* libCrashReporter.a in Frameworks */,
+				3478A8A426B36F920056F3B3 /* SystemConfiguration.framework in Frameworks */,
+				3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */,
+				34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */,
+				3478A8A626B36F9C0056F3B3 /* CoreTelephony.framework in Frameworks */,
+				3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2917,6 +2929,10 @@
 		34D64BA526B3329000A75A72 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3478A8A926B36FB10056F3B3 /* libc++.tbd */,
+				3478A8A726B36FA70056F3B3 /* Foundation.framework */,
+				3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */,
+				3478A89126B36F920056F3B3 /* SystemConfiguration.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -3417,8 +3433,8 @@
 				02FF4AEE24DC8AD900115469 /* PBXBuildRule */,
 			);
 			dependencies = (
-				02FF4B0F24DDC69600115469 /* PBXTargetDependency */,
-				34D64BC626B336BE00A75A72 /* PBXTargetDependency */,
+				34731AF526B3722E00CE568A /* PBXTargetDependency */,
+				34731AF726B3723500CE568A /* PBXTargetDependency */,
 			);
 			name = Agent_iOS;
 			productName = Agent;
@@ -4401,20 +4417,20 @@
 			target = 021A15B924C9EEE700E8DFD5 /* Agent_iOS */;
 			targetProxy = 025658DA24EB34C800FE3125 /* PBXContainerItemProxy */;
 		};
-		02FF4B0F24DDC69600115469 /* PBXTargetDependency */ = {
+		34731AF526B3722E00CE568A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 02FF4B0A24DDC68A00115469 /* libMobileAgent */;
-			targetProxy = 02FF4B0E24DDC69600115469 /* PBXContainerItemProxy */;
+			targetProxy = 34731AF426B3722E00CE568A /* PBXContainerItemProxy */;
+		};
+		34731AF726B3723500CE568A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CrashReporter iOS";
+			targetProxy = 34731AF626B3723500CE568A /* PBXContainerItemProxy */;
 		};
 		34D64BC426B336A600A75A72 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "CrashReporter tvOS";
 			targetProxy = 34D64BC326B336A600A75A72 /* PBXContainerItemProxy */;
-		};
-		34D64BC626B336BE00A75A72 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "CrashReporter iOS";
-			targetProxy = 34D64BC526B336BE00A75A72 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
