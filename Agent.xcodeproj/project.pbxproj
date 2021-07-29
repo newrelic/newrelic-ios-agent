@@ -602,7 +602,6 @@
 		02FF4B0524DC8CB200115469 /* hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AF924DC8CB200115469 /* hash.h */; };
 		02FF4B0624DC8CB200115469 /* reflection.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AFA24DC8CB200115469 /* reflection.h */; };
 		02FF4B0724DC8CB200115469 /* base.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AFB24DC8CB200115469 /* base.h */; };
-		02FF4B0824DC8F1200115469 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
 		02FF4B1124E1CA0F00115469 /* NRMAAnalytics.h in Sources */ = {isa = PBXBuildFile; fileRef = 02FF485A24DC615A00115469 /* NRMAAnalytics.h */; };
 		02FF4B1E24E3201400115469 /* idl.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AF124DC8CB200115469 /* idl.h */; };
 		02FF4B1F24E3201400115469 /* NRMACrashReport_Thread.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48FB24DC624300115469 /* NRMACrashReport_Thread.h */; };
@@ -977,6 +976,8 @@
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
+		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
+		34D64BC226B3364500A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -1080,13 +1081,6 @@
 			remoteGlobalIDString = 05CD31520EE936A9000FDE88;
 			remoteInfo = "CrashReporter-iOS-Device";
 		};
-		02FF4ADA24DC815800115469 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 05CD31510EE936A9000FDE88;
-			remoteInfo = "CrashReporter-iOS-Device";
-		};
 		02FF4B0E24DDC69600115469 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 021A15B124C9EEE700E8DFD5 /* Project object */;
@@ -1184,6 +1178,20 @@
 			proxyType = 2;
 			remoteGlobalIDString = 050DE24D0F61B80B00152ED3;
 			remoteInfo = "Fuzz Testing";
+		};
+		34D64BC326B336A600A75A72 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8064D7AD1C4D22D8005A8B4C;
+			remoteInfo = "CrashReporter tvOS";
+		};
+		34D64BC526B336BE00A75A72 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 05CD31510EE936A9000FDE88;
+			remoteInfo = "CrashReporter iOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1748,7 +1756,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				02FF4B0824DC8F1200115469 /* libCrashReporter.a in Frameworks */,
+				34D64BC226B3364500A75A72 /* libCrashReporter.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1774,6 +1782,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2094,6 +2103,7 @@
 				021A15BB24C9EEE700E8DFD5 /* Products */,
 				59AA4A3EC874908AEE69ECB0 /* scripts */,
 				59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */,
+				34D64BA526B3329000A75A72 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2904,6 +2914,13 @@
 			path = flatbuffers;
 			sourceTree = "<group>";
 		};
+		34D64BA526B3329000A75A72 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		59AA4A3EC874908AEE69ECB0 /* scripts */ = {
 			isa = PBXGroup;
 			children = (
@@ -3401,7 +3418,7 @@
 			);
 			dependencies = (
 				02FF4B0F24DDC69600115469 /* PBXTargetDependency */,
-				02FF4ADB24DC815800115469 /* PBXTargetDependency */,
+				34D64BC626B336BE00A75A72 /* PBXTargetDependency */,
 			);
 			name = Agent_iOS;
 			productName = Agent;
@@ -3460,6 +3477,7 @@
 			);
 			dependencies = (
 				0253763024E33C8D00BF220A /* PBXTargetDependency */,
+				34D64BC426B336A600A75A72 /* PBXTargetDependency */,
 			);
 			name = Agent_tvos;
 			productName = Agent;
@@ -4383,15 +4401,20 @@
 			target = 021A15B924C9EEE700E8DFD5 /* Agent_iOS */;
 			targetProxy = 025658DA24EB34C800FE3125 /* PBXContainerItemProxy */;
 		};
-		02FF4ADB24DC815800115469 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "CrashReporter-iOS-Device";
-			targetProxy = 02FF4ADA24DC815800115469 /* PBXContainerItemProxy */;
-		};
 		02FF4B0F24DDC69600115469 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 02FF4B0A24DDC68A00115469 /* libMobileAgent */;
 			targetProxy = 02FF4B0E24DDC69600115469 /* PBXContainerItemProxy */;
+		};
+		34D64BC426B336A600A75A72 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CrashReporter tvOS";
+			targetProxy = 34D64BC326B336A600A75A72 /* PBXContainerItemProxy */;
+		};
+		34D64BC626B336BE00A75A72 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CrashReporter iOS";
+			targetProxy = 34D64BC526B336BE00A75A72 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
