@@ -977,6 +977,23 @@
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
 		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
+		34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFA26B376A600CE568A /* CoreData.framework */; };
+		34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
+		34731AFD26B376C500CE568A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A89126B36F920056F3B3 /* SystemConfiguration.framework */; };
+		34731B0326B3788900CE568A /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFE26B3788800CE568A /* Hex.framework */; };
+		34731B0426B3788900CE568A /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFF26B3788800CE568A /* Utilities.framework */; };
+		34731B0526B3788900CE568A /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0026B3788800CE568A /* Analytics.framework */; };
+		34731B0626B3788900CE568A /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0126B3788800CE568A /* Connectivity.framework */; };
+		34731B0726B3788900CE568A /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0226B3788900CE568A /* json.framework */; };
+		34731B0926B3789100CE568A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0826B3789000CE568A /* UIKit.framework */; };
+		34731B0B26B378FE00CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0A26B378FE00CE568A /* CoreData.framework */; };
+		34731B0D26B3790600CE568A /* TVUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0C26B3790600CE568A /* TVUIKit.framework */; };
+		34731B0F26B3791000CE568A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0E26B3791000CE568A /* SystemConfiguration.framework */; };
+		34731B1026B3792500CE568A /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0026B3788800CE568A /* Analytics.framework */; };
+		34731B1126B3792500CE568A /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0126B3788800CE568A /* Connectivity.framework */; };
+		34731B1226B3792500CE568A /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFE26B3788800CE568A /* Hex.framework */; };
+		34731B1326B3792500CE568A /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0226B3788900CE568A /* json.framework */; };
+		34731B1426B3792500CE568A /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFF26B3788800CE568A /* Utilities.framework */; };
 		3478A8A426B36F920056F3B3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A89126B36F920056F3B3 /* SystemConfiguration.framework */; };
 		3478A8A626B36F9C0056F3B3 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
 		3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
@@ -1733,6 +1750,16 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
+		34731AFE26B3788800CE568A /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hex.framework; path = Frameworks/Hex.framework; sourceTree = "<group>"; };
+		34731AFF26B3788800CE568A /* Utilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Utilities.framework; path = Frameworks/Utilities.framework; sourceTree = "<group>"; };
+		34731B0026B3788800CE568A /* Analytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Analytics.framework; path = Frameworks/Analytics.framework; sourceTree = "<group>"; };
+		34731B0126B3788800CE568A /* Connectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Connectivity.framework; path = Frameworks/Connectivity.framework; sourceTree = "<group>"; };
+		34731B0226B3788900CE568A /* json.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = json.framework; path = Frameworks/json.framework; sourceTree = "<group>"; };
+		34731B0826B3789000CE568A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		34731B0A26B378FE00CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
+		34731B0C26B3790600CE568A /* TVUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVUIKit.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/TVUIKit.framework; sourceTree = DEVELOPER_DIR; };
+		34731B0E26B3791000CE568A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
 		3478A89126B36F920056F3B3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -1755,6 +1782,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34731B0926B3789100CE568A /* UIKit.framework in Frameworks */,
+				34731B0326B3788900CE568A /* Hex.framework in Frameworks */,
+				34731B0426B3788900CE568A /* Utilities.framework in Frameworks */,
+				34731B0526B3788900CE568A /* Analytics.framework in Frameworks */,
+				34731B0626B3788900CE568A /* Connectivity.framework in Frameworks */,
+				34731B0726B3788900CE568A /* json.framework in Frameworks */,
+				34731AFD26B376C500CE568A /* SystemConfiguration.framework in Frameworks */,
+				34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */,
+				34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */,
 				025658DE24ED97CE00FE3125 /* libOCMock.a in Frameworks */,
 				0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */,
 			);
@@ -1776,6 +1812,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34731B1026B3792500CE568A /* Analytics.framework in Frameworks */,
+				34731B1126B3792500CE568A /* Connectivity.framework in Frameworks */,
+				34731B1226B3792500CE568A /* Hex.framework in Frameworks */,
+				34731B1326B3792500CE568A /* json.framework in Frameworks */,
+				34731B1426B3792500CE568A /* Utilities.framework in Frameworks */,
+				34731B0F26B3791000CE568A /* SystemConfiguration.framework in Frameworks */,
+				34731B0D26B3790600CE568A /* TVUIKit.framework in Frameworks */,
+				34731B0B26B378FE00CE568A /* CoreData.framework in Frameworks */,
 				0256585324EB19BF00FE3125 /* NewRelic.framework in Frameworks */,
 				025658E224EDA93500FE3125 /* libOCMock.a in Frameworks */,
 			);
@@ -2929,6 +2973,16 @@
 		34D64BA526B3329000A75A72 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				34731B0E26B3791000CE568A /* SystemConfiguration.framework */,
+				34731B0C26B3790600CE568A /* TVUIKit.framework */,
+				34731B0A26B378FE00CE568A /* CoreData.framework */,
+				34731B0826B3789000CE568A /* UIKit.framework */,
+				34731B0026B3788800CE568A /* Analytics.framework */,
+				34731B0126B3788800CE568A /* Connectivity.framework */,
+				34731AFE26B3788800CE568A /* Hex.framework */,
+				34731B0226B3788900CE568A /* json.framework */,
+				34731AFF26B3788800CE568A /* Utilities.framework */,
+				34731AFA26B376A600CE568A /* CoreData.framework */,
 				3478A8A926B36FB10056F3B3 /* libc++.tbd */,
 				3478A8A726B36FA70056F3B3 /* Foundation.framework */,
 				3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */,
