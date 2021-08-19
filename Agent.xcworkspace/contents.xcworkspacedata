@@ -2,9 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:../Movies/Movies.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "container:Agent.xcodeproj">
    </FileRef>
 </Workspace>
