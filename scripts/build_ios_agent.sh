@@ -43,6 +43,9 @@ source "${BUILD_PATH}/archive_paths.sh"
   echo "copying built ${CODESIGNING_FOLDER_PATH} to build/iphoneos"
   cp -p -R "${CODESIGNING_FOLDER_PATH}" "${BUILD_PATH}/iphoneos/${EXECUTABLE_NAME}.framework"
 
+  echo "copying build iOS.xcarchive to build/iphoneos"
+  cp -p -R "iOS.xcarchive" "${BUILD_PATH}/iphoneos/iOS.xcarchive"
+
 #build simulator version
 /usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphonesimulator clean build -archivePath sim.xcarchive > build.out 2>&1
 
@@ -59,6 +62,9 @@ source "${BUILD_PATH}/archive_paths.sh"
 mkdir -p "${BUILD_PATH}/iphonesimulator"
 echo "Copying ${EXECUTABLE_NAME} to build/iphonesimulator"
 cp -p -R "${CODESIGNING_FOLDER_PATH}/" "${BUILD_PATH}/iphonesimulator/${EXECUTABLE_NAME}.framework/"
+
+  echo "copying build sim.xcarchive to build/iphonesimulator"
+  cp -p -R "sim.xcarchive" "${BUILD_PATH}/iphonesimulator/sim.xcarchive"
 
 
 # combine device & simulator artifact: unable to combine now that M1 Macs use arm64
