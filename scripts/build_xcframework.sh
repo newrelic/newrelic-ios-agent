@@ -21,7 +21,9 @@ xcodebuild -create-xcframework \
 	-framework build/iphonesimulator/NewRelic.framework \
 	-framework build/appletvsimulator/NewRelic.framework/ \
 	-framework build/appletvos/NewRelic.framework \
+		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/appletvos/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-framework build/macosx/NewRelic.framework 	\
+				-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/macosx/Catalyst.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-output build/NewRelic.xcframework
 
 
