@@ -44,9 +44,6 @@ source ${BUILD_PATH}/archive_paths.sh
   echo "copying built ${CODESIGNING_FOLDER_PATH} to build/macosx"
   cp -p -R ${CODESIGNING_FOLDER_PATH} ${BUILD_PATH}/macosx/${EXECUTABLE_NAME}.framework
 
-  echo "copying build Catalyst.xcarchive to build/macosx"
-  cp -p -R "Catalyst.xcarchive" "${BUILD_PATH}/macosx/Catalyst.xcarchive"
-
 # change the anatomy of the framework to match Apple specs for OSX. Do not use for iOS/tvOS frameworks. 
 # https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPFrameworks/Concepts/FrameworkAnatomy.html
 echo "changing framework anatomy for Mac Catalyst ${EXECUTABLE_NAME}.framework at ${BUILD_PATH}/macosx/"
@@ -55,5 +52,7 @@ ${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${EXECUTABLE_NAME}
 popd
 
 
+  echo "copying build Catalyst.xcarchive to build/macosx"
+  cp -p -R "Catalyst.xcarchive" "${BUILD_PATH}/macosx/Catalyst.xcarchive"
 
 
