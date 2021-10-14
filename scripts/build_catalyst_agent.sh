@@ -23,7 +23,7 @@ pushd ${SCRIPT_PATH}/..
 rm -rf ${BUILD_PATH}/macosx
 
 # build device version
-/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk macosx archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES > build.out 2>&1
+/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk macosx archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES -archivePath Catalyst.xcarchive > build.out 2>&1
 
 if [[ $? != 0 ]]; then
   echo "Xcode build failed."
@@ -43,6 +43,9 @@ source ${BUILD_PATH}/archive_paths.sh
   mkdir -p ${BUILD_PATH}/macosx
   echo "copying built ${CODESIGNING_FOLDER_PATH} to build/macosx"
   cp -p -R ${CODESIGNING_FOLDER_PATH} ${BUILD_PATH}/macosx/${EXECUTABLE_NAME}.framework
+
+  echo "copying build Catalyst.xcarchive to build/macosx"
+  cp -p -R "Catalyst.xcarchive" "${BUILD_PATH}/macosx/Catalyst.xcarchive"
 
 # change the anatomy of the framework to match Apple specs for OSX. Do not use for iOS/tvOS frameworks. 
 # https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPFrameworks/Concepts/FrameworkAnatomy.html

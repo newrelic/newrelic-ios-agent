@@ -24,7 +24,7 @@ pushd ${SCRIPT_PATH}/..
 rm -rf ${BUILD_PATH}/appletvos
 
 # build device version
-/usr/bin/xcodebuild -configuration Release -scheme Agent-tvOS -sdk appletvos archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES > build.out 2>&1
+/usr/bin/xcodebuild -configuration Release -scheme Agent-tvOS -sdk appletvos archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES -archivePath tvOS.xcarchive > build.out 2>&1
 
 if [ $? -ne 0 ]; then
   echo "Xcode build failed."
@@ -40,6 +40,10 @@ source ${BUILD_PATH}/archive_paths.sh
   mkdir -p ${BUILD_PATH}/appletvos
   echo "copying built ${CODESIGNING_FOLDER_PATH} to build/appletvos"
   cp -p -R ${CODESIGNING_FOLDER_PATH} ${BUILD_PATH}/appletvos/${EXECUTABLE_NAME}.framework
+
+  echo "copying build tvOS.xcarchive to build/appletvos"
+  cp -p -R "tvOS.xcarchive" "${BUILD_PATH}/appletvos/tvOS.xcarchive"
+
 
 #build simulator version
 /usr/bin/xcodebuild -configuration Release -scheme Agent-tvOS -sdk appletvsimulator build > build.out 2>&1
