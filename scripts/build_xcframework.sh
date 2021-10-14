@@ -16,7 +16,7 @@ function getiOSBCFiles() {
 
 xcodebuild -create-xcframework \
 	-framework build/iphoneos/NewRelic.framework \
-		-debug-symbols build/iphoneos/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
+		-debug-symbols ($pwd)/build/iphoneos/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
 		$(getiOSBCFiles) \
 	-framework build/iphonesimulator/NewRelic.framework \
 	-framework build/appletvsimulator/NewRelic.framework/ \
