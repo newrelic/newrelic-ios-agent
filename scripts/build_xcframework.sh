@@ -19,7 +19,6 @@ xcodebuild -create-xcframework \
 		-debug-symbols build/iphoneos/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
 		$(getiOSBCFiles) \
 	-framework build/iphonesimulator/NewRelic.framework \
-		-debug-symbols build/iphonesimulator/sim.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-framework build/appletvsimulator/NewRelic.framework/ \
 	-framework build/appletvos/NewRelic.framework \
 	-framework build/macosx/NewRelic.framework 	\
