@@ -35,6 +35,7 @@ xcodebuild -create-xcframework \
 		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/appletvos/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
 		$(gettvOSBCFiles) \
 	-framework build/macosx/NewRelic.framework 	\
+		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/macosx/macosx.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-output build/NewRelic.xcframework
 
 
