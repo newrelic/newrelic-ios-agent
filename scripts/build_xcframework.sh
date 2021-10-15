@@ -14,6 +14,17 @@ function getiOSBCFiles() {
 	echo $IPHONE_BCSYMBOLMAP_COMMANDS
 }
 
+function gettvOSBCFiles() {
+	TVOS_BCSYMBOLMAP_COMMANDS=""
+	TVOS_BCSYMBOLMAP_PATHS="build/appletvos/tvOS.xcarchive/BCSymbolMaps/"
+
+	for path in "${IPHONE_BCSYMBOLMAP_PATHS[@]}"; do
+		TVOS_BCSYMBOLMAP_COMMANDS="${TVOS_BCSYMBOLMAP_COMMANDS} -debug-symbols $path"
+	done
+
+	echo $TVOS_BCSYMBOLMAP_COMMANDS
+}
+
 xcodebuild -create-xcframework \
 	-framework build/iphoneos/NewRelic.framework \
 		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/iphoneos/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
@@ -22,8 +33,8 @@ xcodebuild -create-xcframework \
 	-framework build/appletvsimulator/NewRelic.framework/ \
 	-framework build/appletvos/NewRelic.framework \
 		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/appletvos/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
+		$(gettvOSBCFiles) \
 	-framework build/macosx/NewRelic.framework 	\
-				-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/macosx/Catalyst.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-output build/NewRelic.xcframework
 
 
