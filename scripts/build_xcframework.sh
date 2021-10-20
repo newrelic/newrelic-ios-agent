@@ -31,15 +31,15 @@ IPHONE_BCSYMBOLMAP_COMMANDS=$(getiOSBCFiles)
 TVOS_BCSYMBOLMAP_COMMANDS=$(gettvOSBCFiles)
 xcodebuild -create-xcframework \
 	-framework build/iphoneos/NewRelic.framework \
-		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/iphoneos/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
+		-debug-symbols $(pwd)/build/iphoneos/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
 		$IPHONE_BCSYMBOLMAP_COMMANDS \
 	-framework build/iphonesimulator/NewRelic.framework \
 	-framework build/appletvsimulator/NewRelic.framework \
 	-framework build/appletvos/NewRelic.framework \
-		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/appletvos/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
+		-debug-symbols $(pwd)/build/appletvos/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
 		$TVOS_BCSYMBOLMAP_COMMANDS \
 	-framework build/macosx/NewRelic.framework 	\
-		-debug-symbols /Users/jenkins/workspace/Agent-Generate-XCFramework/build/macosx/macosx.xcarchive/dSYMs/NewRelic.framework.dSYM \
+		-debug-symbols $(pwd)/build/macosx/macosx.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-output build/NewRelic.xcframework
 
 
