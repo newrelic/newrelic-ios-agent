@@ -27,7 +27,7 @@ pushd "${SCRIPT_PATH}/.." || exit 1
 rm -rf "${BUILD_PATH}/iphoneos"
 
 # build device version
-/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphoneos clean archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES > build.out 2>&1
+/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphoneos clean archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES -archivePath iOS.xcarchive > build.out 2>&1
 
 if [ $? -ne 0 ]; then
   echo "Xcode build failed."
@@ -42,6 +42,9 @@ source "${BUILD_PATH}/archive_paths.sh"
   mkdir -p "${BUILD_PATH}/iphoneos"
   echo "copying built ${CODESIGNING_FOLDER_PATH} to build/iphoneos"
   cp -p -R "${CODESIGNING_FOLDER_PATH}" "${BUILD_PATH}/iphoneos/${EXECUTABLE_NAME}.framework"
+
+  echo "copying build iOS.xcarchive to build/iphoneos"
+  cp -p -R "iOS.xcarchive" "${BUILD_PATH}/iphoneos/iOS.xcarchive"
 
 #build simulator version
 /usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk iphonesimulator clean build > build.out 2>&1
@@ -59,7 +62,6 @@ source "${BUILD_PATH}/archive_paths.sh"
 mkdir -p "${BUILD_PATH}/iphonesimulator"
 echo "Copying ${EXECUTABLE_NAME} to build/iphonesimulator"
 cp -p -R "${CODESIGNING_FOLDER_PATH}/" "${BUILD_PATH}/iphonesimulator/${EXECUTABLE_NAME}.framework/"
-
 
 # combine device & simulator artifact: unable to combine now that M1 Macs use arm64
 # echo "Merging iphonesimulator/${EXECUTABLE_NAME} and iphoneos/${EXECUTABLE_NAME} into universal"
