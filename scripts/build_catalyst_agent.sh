@@ -23,7 +23,7 @@ pushd ${SCRIPT_PATH}/..
 rm -rf ${BUILD_PATH}/macosx
 
 # build device version
-/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk macosx archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES > build.out 2>&1
+/usr/bin/xcodebuild -configuration Release -scheme Agent-iOS -sdk macosx archive BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES -archivePath macosx.xcarchive > build.out 2>&1
 
 if [[ $? != 0 ]]; then
   echo "Xcode build failed."
@@ -52,5 +52,7 @@ ${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${EXECUTABLE_NAME}
 popd
 
 
+  echo "copying build Catalyst.xcarchive to build/macosx"
+  cp -p -R "macosx.xcarchive" "${BUILD_PATH}/macosx/macosx.xcarchive"
 
 

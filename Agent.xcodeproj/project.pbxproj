@@ -122,13 +122,8 @@
 		0209ACB024E7394500E45C90 /* NRMAUDIDManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACAB24E7394400E45C90 /* NRMAUDIDManagerTest.m */; };
 		0209ACB124E7394500E45C90 /* NRMAUUIDStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACAC24E7394500E45C90 /* NRMAUUIDStoreTests.m */; };
 		0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */; };
-		0209ACB724E7545A00E45C90 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AEC24DC899500115469 /* SystemConfiguration.framework */; };
-		0209ACB924E7546000E45C90 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ACB824E7546000E45C90 /* UIKit.framework */; };
-		0209ACBA24E7546600E45C90 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AEA24DC898800115469 /* CoreTelephony.framework */; };
-		0209ACBC24E7546F00E45C90 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ACBB24E7546F00E45C90 /* CoreData.framework */; };
 		0209ACC124EB015E00E45C90 /* JdAWN9v.png in Resources */ = {isa = PBXBuildFile; fileRef = 0209ACC024EB015D00E45C90 /* JdAWN9v.png */; };
 		021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */ = {isa = PBXBuildFile; fileRef = 021A15BD24C9EEE700E8DFD5 /* Agent.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0253763124E33E0300BF220A /* libCrashReporter-tvOS-Device.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4D3424E321B300115469 /* libCrashReporter-tvOS-Device.a */; };
 		025657F524EB19BF00FE3125 /* NRMAExceptionMetaDataTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC7224E7392E00E45C90 /* NRMAExceptionMetaDataTest.m */; };
 		025657F624EB19BF00FE3125 /* NRMACrashReportTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC4824E7078C00E45C90 /* NRMACrashReportTest.m */; };
 		025657F724EB19BF00FE3125 /* NRMAInternalTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */; };
@@ -216,9 +211,6 @@
 		0256584B24EB19BF00FE3125 /* NRMethodProfilerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC7624E7392E00E45C90 /* NRMethodProfilerTests.m */; };
 		0256584C24EB19BF00FE3125 /* MachineMeasurementsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC1324E7071D00E45C90 /* MachineMeasurementsTest.m */; };
 		0256584D24EB19BF00FE3125 /* NRThreadInfoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABEC24E706FA00E45C90 /* NRThreadInfoTests.m */; };
-		0256584F24EB19BF00FE3125 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ACBB24E7546F00E45C90 /* CoreData.framework */; };
-		0256585124EB19BF00FE3125 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ACB824E7546000E45C90 /* UIKit.framework */; };
-		0256585224EB19BF00FE3125 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AEC24DC899500115469 /* SystemConfiguration.framework */; };
 		0256585324EB19BF00FE3125 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
 		0256585B24EB19BF00FE3125 /* testUploadFile.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0209ABAE24E7042C00E45C90 /* testUploadFile.txt */; };
 		0256585C24EB19BF00FE3125 /* JdAWN9v.png in Resources */ = {isa = PBXBuildFile; fileRef = 0209ACC024EB015D00E45C90 /* JdAWN9v.png */; };
@@ -355,14 +347,12 @@
 		02FF48DD24DC622700115469 /* NRMAUncaughtExceptionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48C824DC622400115469 /* NRMAUncaughtExceptionHandler.m */; };
 		02FF48DE24DC622700115469 /* NRMACrashReportFileManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48C924DC622400115469 /* NRMACrashReportFileManager.h */; };
 		02FF48DF24DC622700115469 /* NRMAUncaughtExceptionHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CA24DC622400115469 /* NRMAUncaughtExceptionHandler.h */; };
-		02FF48E024DC622700115469 /* NRMAExceptionReportParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */; };
 		02FF48E124DC622700115469 /* NRMAExceptionHandlerManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48CC24DC622400115469 /* NRMAExceptionHandlerManager.m */; };
 		02FF48E224DC622700115469 /* NRMACrashDataWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CD24DC622400115469 /* NRMACrashDataWriter.h */; };
 		02FF48E324DC622700115469 /* NRMAExceptionhandlerConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48CE24DC622400115469 /* NRMAExceptionhandlerConstants.m */; };
 		02FF48E424DC622700115469 /* NRMAExceptionDataCollectionWrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CF24DC622400115469 /* NRMAExceptionDataCollectionWrapper.h */; };
 		02FF48E524DC622700115469 /* NRMAExceptionDataCollectionWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */; };
 		02FF48E624DC622700115469 /* NRMAExceptionhandlerConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D224DC622600115469 /* NRMAExceptionhandlerConstants.h */; };
-		02FF48E724DC622700115469 /* NRMAExceptionReportParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */; };
 		02FF48E824DC622700115469 /* NRMAExceptionHandlerJSONKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D424DC622600115469 /* NRMAExceptionHandlerJSONKeys.h */; };
 		02FF48E924DC622700115469 /* NRMAExceptionHandlerManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */; };
 		02FF48EA24DC622700115469 /* NRMATimestampContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D624DC622700115469 /* NRMATimestampContainer.h */; };
@@ -600,10 +590,6 @@
 		02FF4AD024DC657B00115469 /* NRMANetworkFacade.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4ACB24DC657B00115469 /* NRMANetworkFacade.h */; };
 		02FF4AD124DC657B00115469 /* NRMAHTTPUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4ACC24DC657B00115469 /* NRMAHTTPUtilities.mm */; };
 		02FF4AD224DC657B00115469 /* NRMANetworkFacade.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4ACD24DC657B00115469 /* NRMANetworkFacade.mm */; };
-		02FF4AE724DC897A00115469 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AE624DC897900115469 /* Foundation.framework */; };
-		02FF4AE924DC898000115469 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AE824DC898000115469 /* libc++.tbd */; };
-		02FF4AEB24DC898900115469 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AEA24DC898800115469 /* CoreTelephony.framework */; settings = {ATTRIBUTES = (Required, ); }; };
-		02FF4AED24DC899500115469 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AEC24DC899500115469 /* SystemConfiguration.framework */; };
 		02FF4AFC24DC8CB200115469 /* grpc.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AF024DC8CB200115469 /* grpc.h */; };
 		02FF4AFD24DC8CB200115469 /* idl.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AF124DC8CB200115469 /* idl.h */; };
 		02FF4AFE24DC8CB200115469 /* reflection_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AF224DC8CB200115469 /* reflection_generated.h */; };
@@ -616,7 +602,6 @@
 		02FF4B0524DC8CB200115469 /* hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AF924DC8CB200115469 /* hash.h */; };
 		02FF4B0624DC8CB200115469 /* reflection.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AFA24DC8CB200115469 /* reflection.h */; };
 		02FF4B0724DC8CB200115469 /* base.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AFB24DC8CB200115469 /* base.h */; };
-		02FF4B0824DC8F1200115469 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
 		02FF4B1124E1CA0F00115469 /* NRMAAnalytics.h in Sources */ = {isa = PBXBuildFile; fileRef = 02FF485A24DC615A00115469 /* NRMAAnalytics.h */; };
 		02FF4B1E24E3201400115469 /* idl.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4AF124DC8CB200115469 /* idl.h */; };
 		02FF4B1F24E3201400115469 /* NRMACrashReport_Thread.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48FB24DC624300115469 /* NRMACrashReport_Thread.h */; };
@@ -627,7 +612,6 @@
 		02FF4B2424E3201400115469 /* NRMABase64.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4A8724DC652C00115469 /* NRMABase64.h */; };
 		02FF4B2524E3201400115469 /* NRMAMethodSwizzling.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48B724DC61F600115469 /* NRMAMethodSwizzling.h */; };
 		02FF4B2624E3201400115469 /* NRMANSURLConnectionSupport.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF487524DC61A100115469 /* NRMANSURLConnectionSupport.h */; };
-		02FF4B2724E3201400115469 /* NRMAExceptionReportParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */; };
 		02FF4B2824E3201400115469 /* NRMACollectionViewInstrumentation.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF481324DB5B8100115469 /* NRMACollectionViewInstrumentation.h */; };
 		02FF4B2924E3201400115469 /* NRMANetworkResponseData+CppInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF485724DC615900115469 /* NRMANetworkResponseData+CppInterface.h */; };
 		02FF4B2A24E3201400115469 /* NRMAHarvestableProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF49D224DC636100115469 /* NRMAHarvestableProtocol.h */; };
@@ -854,7 +838,6 @@
 		02FF4C0D24E3201400115469 /* NRMADEBUG_Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4AB424DC653900115469 /* NRMADEBUG_Reachability.m */; };
 		02FF4C0E24E3201400115469 /* NRMAHTTPTransactionMeasurement.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A4124DC64D500115469 /* NRMAHTTPTransactionMeasurement.m */; };
 		02FF4C0F24E3201400115469 /* NRMACrashReport_AppInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF490624DC624400115469 /* NRMACrashReport_AppInfo.m */; };
-		02FF4C1024E3201400115469 /* NRMAExceptionReportParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */; };
 		02FF4C1124E3201400115469 /* NRMAThread.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF486E24DC618F00115469 /* NRMAThread.m */; };
 		02FF4C1224E3201400115469 /* NRMAExceptionHandlerStartupManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF480024DB56B800115469 /* NRMAExceptionHandlerStartupManager.m */; };
 		02FF4C1324E3201400115469 /* NRMAHTTPTransactionMeasurementProducer.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A5C24DC64E600115469 /* NRMAHTTPTransactionMeasurementProducer.m */; };
@@ -993,19 +976,29 @@
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
-		02FF4C9D24E3201400115469 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AEC24DC899500115469 /* SystemConfiguration.framework */; };
-		02FF4C9F24E3201400115469 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AE824DC898000115469 /* libc++.tbd */; };
-		02FF4CA024E3201400115469 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AE624DC897900115469 /* Foundation.framework */; };
-		F6870E57260BCCDC007C3138 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE4260BCC1300F02A7D /* Analytics.framework */; };
-		F6870E58260BCCDC007C3138 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE4260BCC1300F02A7D /* Analytics.framework */; };
-		F6870E59260BCCDF007C3138 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE8260BCC1400F02A7D /* Connectivity.framework */; };
-		F6870E5A260BCCDF007C3138 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE8260BCC1400F02A7D /* Connectivity.framework */; };
-		F6870E5B260BCCE2007C3138 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE6260BCC1400F02A7D /* Hex.framework */; };
-		F6870E5C260BCCE3007C3138 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE6260BCC1400F02A7D /* Hex.framework */; };
-		F6870E5D260BCCE6007C3138 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE7260BCC1400F02A7D /* json.framework */; };
-		F6870E5E260BCCE7007C3138 /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE7260BCC1400F02A7D /* json.framework */; };
-		F6870E5F260BCCEA007C3138 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE5260BCC1400F02A7D /* Utilities.framework */; };
-		F6870E60260BCCEA007C3138 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F635BFE5260BCC1400F02A7D /* Utilities.framework */; };
+		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
+		34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFA26B376A600CE568A /* CoreData.framework */; };
+		34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
+		34731AFD26B376C500CE568A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A89126B36F920056F3B3 /* SystemConfiguration.framework */; };
+		34731B0326B3788900CE568A /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFE26B3788800CE568A /* Hex.framework */; };
+		34731B0426B3788900CE568A /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFF26B3788800CE568A /* Utilities.framework */; };
+		34731B0526B3788900CE568A /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0026B3788800CE568A /* Analytics.framework */; };
+		34731B0626B3788900CE568A /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0126B3788800CE568A /* Connectivity.framework */; };
+		34731B0726B3788900CE568A /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0226B3788900CE568A /* json.framework */; };
+		34731B0926B3789100CE568A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0826B3789000CE568A /* UIKit.framework */; };
+		34731B0B26B378FE00CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0A26B378FE00CE568A /* CoreData.framework */; };
+		34731B0D26B3790600CE568A /* TVUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0C26B3790600CE568A /* TVUIKit.framework */; };
+		34731B0F26B3791000CE568A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0E26B3791000CE568A /* SystemConfiguration.framework */; };
+		34731B1026B3792500CE568A /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0026B3788800CE568A /* Analytics.framework */; };
+		34731B1126B3792500CE568A /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0126B3788800CE568A /* Connectivity.framework */; };
+		34731B1226B3792500CE568A /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFE26B3788800CE568A /* Hex.framework */; };
+		34731B1326B3792500CE568A /* json.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731B0226B3788900CE568A /* json.framework */; };
+		34731B1426B3792500CE568A /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFF26B3788800CE568A /* Utilities.framework */; };
+		3478A8A426B36F920056F3B3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A89126B36F920056F3B3 /* SystemConfiguration.framework */; };
+		3478A8A626B36F9C0056F3B3 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
+		3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
+		3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A926B36FB10056F3B3 /* libc++.tbd */; };
+		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -1109,33 +1102,117 @@
 			remoteGlobalIDString = 05CD31520EE936A9000FDE88;
 			remoteInfo = "CrashReporter-iOS-Device";
 		};
-		02FF4ADA24DC815800115469 /* PBXContainerItemProxy */ = {
+		344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 05CD31510EE936A9000FDE88;
-			remoteInfo = "CrashReporter-iOS-Device";
+			proxyType = 2;
+			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
+			remoteInfo = "CrashReporter macOS Framework";
 		};
-		02FF4B0E24DDC69600115469 /* PBXContainerItemProxy */ = {
+		344891D126AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 058812B91040582D009128FB;
+			remoteInfo = "CrashReporter iOS Framework";
+		};
+		344891D326AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D8BB1C4D22E5005A8B4C;
+			remoteInfo = "CrashReporter tvOS Framework";
+		};
+		344891D526AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05E731F30EFA1AAB005EDFB7;
+			remoteInfo = "CrashReporter macOS";
+		};
+		344891D726AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D81B1C4D22D8005A8B4C;
+			remoteInfo = "CrashReporter tvOS";
+		};
+		344891D926AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD32690EE93DC3000FDE88;
+			remoteInfo = "CrashReporter macOS Tests";
+		};
+		344891DB26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD33240EE94439000FDE88;
+			remoteInfo = "CrashReporter iOS Tests";
+		};
+		344891DD26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D9951C4D27E2005A8B4C;
+			remoteInfo = "CrashReporter tvOS Tests";
+		};
+		344891DF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05F40CE70EF7AB80008050CF;
+			remoteInfo = "DemoCrash macOS";
+		};
+		344891E126AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 052A45CF136353FB00987004;
+			remoteInfo = "DemoCrash iOS";
+		};
+		344891E326AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8064D9A31C4D27E9005A8B4C;
+			remoteInfo = "DemoCrash tvOS";
+		};
+		344891E526AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05E731E30EFA1A3E005EDFB7;
+			remoteInfo = plcrashutil;
+		};
+		344891E726AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 050DE24D0F61B80B00152ED3;
+			remoteInfo = "Fuzz Testing";
+		};
+		34731AF426B3722E00CE568A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 021A15B124C9EEE700E8DFD5 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 02FF4B0A24DDC68A00115469;
 			remoteInfo = libMobileAgent;
 		};
-		02FF4D3324E321B300115469 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 02FF4D3124E3216800115469;
-			remoteInfo = "CrashReporter-tvOS-Device";
-		};
-		02FF4D3524E321B600115469 /* PBXContainerItemProxy */ = {
+		34731AF626B3723500CE568A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 02FF4CAE24E3216800115469;
-			remoteInfo = "CrashReporter-tvOS-Device";
+			remoteGlobalIDString = 05CD31510EE936A9000FDE88;
+			remoteInfo = "CrashReporter iOS";
+		};
+		34D64BC326B336A600A75A72 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8064D7AD1C4D22D8005A8B4C;
+			remoteInfo = "CrashReporter tvOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1278,8 +1355,6 @@
 		0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAInternalTests.m; sourceTree = "<group>"; };
 		0209ACB424E747FA00E45C90 /* NewRelicAgentTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NewRelicAgentTests.m; sourceTree = "<group>"; };
 		0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewRelicAgentTests.h; sourceTree = "<group>"; };
-		0209ACB824E7546000E45C90 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		0209ACBB24E7546F00E45C90 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		0209ACC024EB015D00E45C90 /* JdAWN9v.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = JdAWN9v.png; sourceTree = "<group>"; };
 		021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		021A15BD24C9EEE700E8DFD5 /* Agent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Agent.h; sourceTree = "<group>"; };
@@ -1418,14 +1493,12 @@
 		02FF48C824DC622400115469 /* NRMAUncaughtExceptionHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAUncaughtExceptionHandler.m; sourceTree = "<group>"; };
 		02FF48C924DC622400115469 /* NRMACrashReportFileManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMACrashReportFileManager.h; sourceTree = "<group>"; };
 		02FF48CA24DC622400115469 /* NRMAUncaughtExceptionHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAUncaughtExceptionHandler.h; sourceTree = "<group>"; };
-		02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionReportParser.h; sourceTree = "<group>"; };
 		02FF48CC24DC622400115469 /* NRMAExceptionHandlerManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionHandlerManager.m; sourceTree = "<group>"; };
 		02FF48CD24DC622400115469 /* NRMACrashDataWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMACrashDataWriter.h; sourceTree = "<group>"; };
 		02FF48CE24DC622400115469 /* NRMAExceptionhandlerConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionhandlerConstants.m; sourceTree = "<group>"; };
 		02FF48CF24DC622400115469 /* NRMAExceptionDataCollectionWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionDataCollectionWrapper.h; sourceTree = "<group>"; };
 		02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionDataCollectionWrapper.m; sourceTree = "<group>"; };
 		02FF48D224DC622600115469 /* NRMAExceptionhandlerConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionhandlerConstants.h; sourceTree = "<group>"; };
-		02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionReportParser.m; sourceTree = "<group>"; };
 		02FF48D424DC622600115469 /* NRMAExceptionHandlerJSONKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionHandlerJSONKeys.h; sourceTree = "<group>"; };
 		02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionHandlerManager.h; sourceTree = "<group>"; };
 		02FF48D624DC622700115469 /* NRMATimestampContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMATimestampContainer.h; sourceTree = "<group>"; };
@@ -1664,10 +1737,6 @@
 		02FF4ACC24DC657B00115469 /* NRMAHTTPUtilities.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAHTTPUtilities.mm; sourceTree = "<group>"; };
 		02FF4ACD24DC657B00115469 /* NRMANetworkFacade.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMANetworkFacade.mm; sourceTree = "<group>"; };
 		02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CrashReporter.xcodeproj; path = "modular-crash-reporter-ios/CrashReporter.xcodeproj"; sourceTree = "<group>"; };
-		02FF4AE624DC897900115469 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		02FF4AE824DC898000115469 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
-		02FF4AEA24DC898800115469 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
-		02FF4AEC24DC899500115469 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
 		02FF4AF024DC8CB200115469 /* grpc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = grpc.h; sourceTree = "<group>"; };
 		02FF4AF124DC8CB200115469 /* idl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = idl.h; sourceTree = "<group>"; };
 		02FF4AF224DC8CB200115469 /* reflection_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection_generated.h; sourceTree = "<group>"; };
@@ -1681,13 +1750,22 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
+		34731AFE26B3788800CE568A /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hex.framework; path = Frameworks/Hex.framework; sourceTree = "<group>"; };
+		34731AFF26B3788800CE568A /* Utilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Utilities.framework; path = Frameworks/Utilities.framework; sourceTree = "<group>"; };
+		34731B0026B3788800CE568A /* Analytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Analytics.framework; path = Frameworks/Analytics.framework; sourceTree = "<group>"; };
+		34731B0126B3788800CE568A /* Connectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Connectivity.framework; path = Frameworks/Connectivity.framework; sourceTree = "<group>"; };
+		34731B0226B3788900CE568A /* json.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = json.framework; path = Frameworks/json.framework; sourceTree = "<group>"; };
+		34731B0826B3789000CE568A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		34731B0A26B378FE00CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
+		34731B0C26B3790600CE568A /* TVUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVUIKit.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/TVUIKit.framework; sourceTree = DEVELOPER_DIR; };
+		34731B0E26B3791000CE568A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		3478A89126B36F920056F3B3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
+		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		3478A8A926B36FB10056F3B3 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
-		F635BFE4260BCC1300F02A7D /* Analytics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Analytics.framework; sourceTree = "<group>"; };
-		F635BFE5260BCC1400F02A7D /* Utilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Utilities.framework; sourceTree = "<group>"; };
-		F635BFE6260BCC1400F02A7D /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Hex.framework; sourceTree = "<group>"; };
-		F635BFE7260BCC1400F02A7D /* json.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = json.framework; sourceTree = "<group>"; };
-		F635BFE8260BCC1400F02A7D /* Connectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Connectivity.framework; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
 		F6E79C6E25A65346006277FB /* W3CTraceState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceState.h; sourceTree = "<group>"; };
 		F6E79C7025A65346006277FB /* W3CTraceParent.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceParent.mm; sourceTree = "<group>"; };
@@ -1704,16 +1782,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0209ACBC24E7546F00E45C90 /* CoreData.framework in Frameworks */,
-				F6870E59260BCCDF007C3138 /* Connectivity.framework in Frameworks */,
-				F6870E5B260BCCE2007C3138 /* Hex.framework in Frameworks */,
-				0209ACBA24E7546600E45C90 /* CoreTelephony.framework in Frameworks */,
+				34731B0926B3789100CE568A /* UIKit.framework in Frameworks */,
+				34731B0326B3788900CE568A /* Hex.framework in Frameworks */,
+				34731B0426B3788900CE568A /* Utilities.framework in Frameworks */,
+				34731B0526B3788900CE568A /* Analytics.framework in Frameworks */,
+				34731B0626B3788900CE568A /* Connectivity.framework in Frameworks */,
+				34731B0726B3788900CE568A /* json.framework in Frameworks */,
+				34731AFD26B376C500CE568A /* SystemConfiguration.framework in Frameworks */,
+				34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */,
+				34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */,
 				025658DE24ED97CE00FE3125 /* libOCMock.a in Frameworks */,
-				F6870E57260BCCDC007C3138 /* Analytics.framework in Frameworks */,
-				0209ACB924E7546000E45C90 /* UIKit.framework in Frameworks */,
-				0209ACB724E7545A00E45C90 /* SystemConfiguration.framework in Frameworks */,
-				F6870E60260BCCEA007C3138 /* Utilities.framework in Frameworks */,
-				F6870E5E260BCCE7007C3138 /* json.framework in Frameworks */,
 				0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1722,11 +1800,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				02FF4B0824DC8F1200115469 /* libCrashReporter.a in Frameworks */,
-				02FF4AED24DC899500115469 /* SystemConfiguration.framework in Frameworks */,
-				02FF4AEB24DC898900115469 /* CoreTelephony.framework in Frameworks */,
-				02FF4AE924DC898000115469 /* libc++.tbd in Frameworks */,
-				02FF4AE724DC897A00115469 /* Foundation.framework in Frameworks */,
+				3478A8A426B36F920056F3B3 /* SystemConfiguration.framework in Frameworks */,
+				3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */,
+				34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */,
+				3478A8A626B36F9C0056F3B3 /* CoreTelephony.framework in Frameworks */,
+				3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1734,16 +1812,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0256584F24EB19BF00FE3125 /* CoreData.framework in Frameworks */,
-				0256585124EB19BF00FE3125 /* UIKit.framework in Frameworks */,
-				0256585224EB19BF00FE3125 /* SystemConfiguration.framework in Frameworks */,
+				34731B1026B3792500CE568A /* Analytics.framework in Frameworks */,
+				34731B1126B3792500CE568A /* Connectivity.framework in Frameworks */,
+				34731B1226B3792500CE568A /* Hex.framework in Frameworks */,
+				34731B1326B3792500CE568A /* json.framework in Frameworks */,
+				34731B1426B3792500CE568A /* Utilities.framework in Frameworks */,
+				34731B0F26B3791000CE568A /* SystemConfiguration.framework in Frameworks */,
+				34731B0D26B3790600CE568A /* TVUIKit.framework in Frameworks */,
+				34731B0B26B378FE00CE568A /* CoreData.framework in Frameworks */,
 				0256585324EB19BF00FE3125 /* NewRelic.framework in Frameworks */,
 				025658E224EDA93500FE3125 /* libOCMock.a in Frameworks */,
-				F6870E5F260BCCEA007C3138 /* Utilities.framework in Frameworks */,
-				F6870E5D260BCCE6007C3138 /* json.framework in Frameworks */,
-				F6870E5A260BCCDF007C3138 /* Connectivity.framework in Frameworks */,
-				F6870E5C260BCCE3007C3138 /* Hex.framework in Frameworks */,
-				F6870E58260BCCDC007C3138 /* Analytics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1760,10 +1838,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0253763124E33E0300BF220A /* libCrashReporter-tvOS-Device.a in Frameworks */,
-				02FF4C9D24E3201400115469 /* SystemConfiguration.framework in Frameworks */,
-				02FF4C9F24E3201400115469 /* libc++.tbd in Frameworks */,
-				02FF4CA024E3201400115469 /* Foundation.framework in Frameworks */,
+				34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2080,11 +2155,11 @@
 				0256586424EB284600FE3125 /* Tests */,
 				02FF4AEF24DC8CB200115469 /* flatbuffers */,
 				02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */,
-				02FF47D724DB54E600115469 /* Frameworks */,
 				021A15BC24C9EEE700E8DFD5 /* Agent */,
 				021A15BB24C9EEE700E8DFD5 /* Products */,
 				59AA4A3EC874908AEE69ECB0 /* scripts */,
 				59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */,
+				34D64BA526B3329000A75A72 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2225,24 +2300,6 @@
 				0209ABAA24E7042B00E45C90 /* libOCMock.a */,
 			);
 			path = Shared;
-			sourceTree = "<group>";
-		};
-		02FF47D724DB54E600115469 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				F635BFE4260BCC1300F02A7D /* Analytics.framework */,
-				F635BFE8260BCC1400F02A7D /* Connectivity.framework */,
-				F635BFE6260BCC1400F02A7D /* Hex.framework */,
-				F635BFE7260BCC1400F02A7D /* json.framework */,
-				F635BFE5260BCC1400F02A7D /* Utilities.framework */,
-				0209ACBB24E7546F00E45C90 /* CoreData.framework */,
-				0209ACB824E7546000E45C90 /* UIKit.framework */,
-				02FF4AEC24DC899500115469 /* SystemConfiguration.framework */,
-				02FF4AEA24DC898800115469 /* CoreTelephony.framework */,
-				02FF4AE824DC898000115469 /* libc++.tbd */,
-				02FF4AE624DC897900115469 /* Foundation.framework */,
-			);
-			path = Frameworks;
 			sourceTree = "<group>";
 		};
 		02FF47DC24DB566700115469 /* Public */ = {
@@ -2468,8 +2525,6 @@
 				02FF48D824DC622700115469 /* NRMAExceptionHandlerJSONKeys.m */,
 				02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */,
 				02FF48CC24DC622400115469 /* NRMAExceptionHandlerManager.m */,
-				02FF48CB24DC622400115469 /* NRMAExceptionReportParser.h */,
-				02FF48D324DC622600115469 /* NRMAExceptionReportParser.m */,
 				02FF48D624DC622700115469 /* NRMATimestampContainer.h */,
 				02FF48C524DC622400115469 /* NRMATimestampContainer.m */,
 				02FF48CA24DC622400115469 /* NRMAUncaughtExceptionHandler.h */,
@@ -2878,8 +2933,20 @@
 		02FF4AD524DC815300115469 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				344891D026AA0F4E00AADB9D /* CrashReporter.framework */,
+				344891D226AA0F4E00AADB9D /* CrashReporter.framework */,
+				344891D426AA0F4E00AADB9D /* CrashReporter.framework */,
+				344891D626AA0F4E00AADB9D /* libCrashReporter.a */,
 				02FF4AD924DC815400115469 /* libCrashReporter.a */,
-				02FF4D3424E321B300115469 /* libCrashReporter-tvOS-Device.a */,
+				344891D826AA0F4E00AADB9D /* libCrashReporter.a */,
+				344891DA26AA0F4E00AADB9D /* Tests macOS.xctest */,
+				344891DC26AA0F4E00AADB9D /* Tests iOS.xctest */,
+				344891DE26AA0F4E00AADB9D /* CrashReporter tvOS Tests.xctest */,
+				344891E026AA0F4E00AADB9D /* DemoCrash macOS.app */,
+				344891E226AA0F4E00AADB9D /* DemoCrash iOS.app */,
+				344891E426AA0F4E00AADB9D /* DemoCrash tvOS.app */,
+				344891E626AA0F4E00AADB9D /* plcrashutil */,
+				344891E826AA0F4E00AADB9D /* Fuzz Testing */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2901,6 +2968,27 @@
 				02FF4AFB24DC8CB200115469 /* base.h */,
 			);
 			path = flatbuffers;
+			sourceTree = "<group>";
+		};
+		34D64BA526B3329000A75A72 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				34731B0E26B3791000CE568A /* SystemConfiguration.framework */,
+				34731B0C26B3790600CE568A /* TVUIKit.framework */,
+				34731B0A26B378FE00CE568A /* CoreData.framework */,
+				34731B0826B3789000CE568A /* UIKit.framework */,
+				34731B0026B3788800CE568A /* Analytics.framework */,
+				34731B0126B3788800CE568A /* Connectivity.framework */,
+				34731AFE26B3788800CE568A /* Hex.framework */,
+				34731B0226B3788900CE568A /* json.framework */,
+				34731AFF26B3788800CE568A /* Utilities.framework */,
+				34731AFA26B376A600CE568A /* CoreData.framework */,
+				3478A8A926B36FB10056F3B3 /* libc++.tbd */,
+				3478A8A726B36FA70056F3B3 /* Foundation.framework */,
+				3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */,
+				3478A89126B36F920056F3B3 /* SystemConfiguration.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		59AA4A3EC874908AEE69ECB0 /* scripts */ = {
@@ -2951,7 +3039,6 @@
 				02FF4AA224DC652E00115469 /* NRMABase64.h in Headers */,
 				02FF48C124DC61F600115469 /* NRMAMethodSwizzling.h in Headers */,
 				02FF487C24DC61A100115469 /* NRMANSURLConnectionSupport.h in Headers */,
-				02FF48E024DC622700115469 /* NRMAExceptionReportParser.h in Headers */,
 				02FF481D24DB5B8100115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF486224DC615A00115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				F6E79CEF25A66887006277FB /* NRMATraceContext.h in Headers */,
@@ -3164,7 +3251,6 @@
 				02FF4B2424E3201400115469 /* NRMABase64.h in Headers */,
 				02FF4B2524E3201400115469 /* NRMAMethodSwizzling.h in Headers */,
 				02FF4B2624E3201400115469 /* NRMANSURLConnectionSupport.h in Headers */,
-				02FF4B2724E3201400115469 /* NRMAExceptionReportParser.h in Headers */,
 				02FF4B2824E3201400115469 /* NRMACollectionViewInstrumentation.h in Headers */,
 				02FF4B2924E3201400115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				F6E79CF025A66887006277FB /* NRMATraceContext.h in Headers */,
@@ -3401,8 +3487,8 @@
 				02FF4AEE24DC8AD900115469 /* PBXBuildRule */,
 			);
 			dependencies = (
-				02FF4B0F24DDC69600115469 /* PBXTargetDependency */,
-				02FF4ADB24DC815800115469 /* PBXTargetDependency */,
+				34731AF526B3722E00CE568A /* PBXTargetDependency */,
+				34731AF726B3723500CE568A /* PBXTargetDependency */,
 			);
 			name = Agent_iOS;
 			productName = Agent;
@@ -3461,7 +3547,7 @@
 			);
 			dependencies = (
 				0253763024E33C8D00BF220A /* PBXTargetDependency */,
-				02FF4D3624E321B600115469 /* PBXTargetDependency */,
+				34D64BC426B336A600A75A72 /* PBXTargetDependency */,
 			);
 			name = Agent_tvos;
 			productName = Agent;
@@ -3537,11 +3623,95 @@
 			remoteRef = 02FF4AD824DC815400115469 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		02FF4D3424E321B300115469 /* libCrashReporter-tvOS-Device.a */ = {
+		344891D026AA0F4E00AADB9D /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = 344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891D226AA0F4E00AADB9D /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = 344891D126AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891D426AA0F4E00AADB9D /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = 344891D326AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891D626AA0F4E00AADB9D /* libCrashReporter.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = "libCrashReporter-tvOS-Device.a";
-			remoteRef = 02FF4D3324E321B300115469 /* PBXContainerItemProxy */;
+			path = libCrashReporter.a;
+			remoteRef = 344891D526AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891D826AA0F4E00AADB9D /* libCrashReporter.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCrashReporter.a;
+			remoteRef = 344891D726AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891DA26AA0F4E00AADB9D /* Tests macOS.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Tests macOS.xctest";
+			remoteRef = 344891D926AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891DC26AA0F4E00AADB9D /* Tests iOS.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Tests iOS.xctest";
+			remoteRef = 344891DB26AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891DE26AA0F4E00AADB9D /* CrashReporter tvOS Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "CrashReporter tvOS Tests.xctest";
+			remoteRef = 344891DD26AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E026AA0F4E00AADB9D /* DemoCrash macOS.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash macOS.app";
+			remoteRef = 344891DF26AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E226AA0F4E00AADB9D /* DemoCrash iOS.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash iOS.app";
+			remoteRef = 344891E126AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E426AA0F4E00AADB9D /* DemoCrash tvOS.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash tvOS.app";
+			remoteRef = 344891E326AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E626AA0F4E00AADB9D /* plcrashutil */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = plcrashutil;
+			remoteRef = 344891E526AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		344891E826AA0F4E00AADB9D /* Fuzz Testing */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Fuzz Testing";
+			remoteRef = 344891E726AA0F4E00AADB9D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -3837,7 +4007,6 @@
 				02FF4AB624DC653A00115469 /* NRMADEBUG_Reachability.m in Sources */,
 				02FF4A5024DC64D500115469 /* NRMAHTTPTransactionMeasurement.m in Sources */,
 				02FF491A24DC624400115469 /* NRMACrashReport_AppInfo.m in Sources */,
-				02FF48E724DC622700115469 /* NRMAExceptionReportParser.m in Sources */,
 				02FF487324DC618F00115469 /* NRMAThread.m in Sources */,
 				02FF480224DB56B900115469 /* NRMAExceptionHandlerStartupManager.m in Sources */,
 				02FF4A6924DC64E600115469 /* NRMAHTTPTransactionMeasurementProducer.m in Sources */,
@@ -4136,7 +4305,6 @@
 				02FF4C0D24E3201400115469 /* NRMADEBUG_Reachability.m in Sources */,
 				02FF4C0E24E3201400115469 /* NRMAHTTPTransactionMeasurement.m in Sources */,
 				02FF4C0F24E3201400115469 /* NRMACrashReport_AppInfo.m in Sources */,
-				02FF4C1024E3201400115469 /* NRMAExceptionReportParser.m in Sources */,
 				02FF4C1124E3201400115469 /* NRMAThread.m in Sources */,
 				02FF4C1224E3201400115469 /* NRMAExceptionHandlerStartupManager.m in Sources */,
 				02FF4C1324E3201400115469 /* NRMAHTTPTransactionMeasurementProducer.m in Sources */,
@@ -4303,20 +4471,20 @@
 			target = 021A15B924C9EEE700E8DFD5 /* Agent_iOS */;
 			targetProxy = 025658DA24EB34C800FE3125 /* PBXContainerItemProxy */;
 		};
-		02FF4ADB24DC815800115469 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "CrashReporter-iOS-Device";
-			targetProxy = 02FF4ADA24DC815800115469 /* PBXContainerItemProxy */;
-		};
-		02FF4B0F24DDC69600115469 /* PBXTargetDependency */ = {
+		34731AF526B3722E00CE568A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 02FF4B0A24DDC68A00115469 /* libMobileAgent */;
-			targetProxy = 02FF4B0E24DDC69600115469 /* PBXContainerItemProxy */;
+			targetProxy = 34731AF426B3722E00CE568A /* PBXContainerItemProxy */;
 		};
-		02FF4D3624E321B600115469 /* PBXTargetDependency */ = {
+		34731AF726B3723500CE568A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = "CrashReporter-tvOS-Device";
-			targetProxy = 02FF4D3524E321B600115469 /* PBXContainerItemProxy */;
+			name = "CrashReporter iOS";
+			targetProxy = 34731AF626B3723500CE568A /* PBXContainerItemProxy */;
+		};
+		34D64BC426B336A600A75A72 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CrashReporter tvOS";
+			targetProxy = 34D64BC326B336A600A75A72 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -4451,9 +4619,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.3.1;
+				CURRENT_PROJECT_VERSION = 7.3.2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DYLIB_CURRENT_VERSION = 7.3.1;
+				DYLIB_CURRENT_VERSION = 7.3.2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -4520,9 +4688,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.3.1;
+				CURRENT_PROJECT_VERSION = 7.3.2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DYLIB_CURRENT_VERSION = 7.3.1;
+				DYLIB_CURRENT_VERSION = 7.3.2;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -4557,11 +4725,11 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.1;
+				CURRENT_PROJECT_VERSION = 7.3.2;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.1;
+				DYLIB_CURRENT_VERSION = 7.3.2;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -4586,7 +4754,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.1;
+				MARKETING_VERSION = 7.3.2;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
 				OTHER_LDFLAGS = (
@@ -4623,11 +4791,11 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.1;
+				CURRENT_PROJECT_VERSION = 7.3.2;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.1;
+				DYLIB_CURRENT_VERSION = 7.3.2;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4650,7 +4818,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.1;
+				MARKETING_VERSION = 7.3.2;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
 				OTHER_LDFLAGS = (
@@ -4898,11 +5066,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.1;
+				CURRENT_PROJECT_VERSION = 7.3.2;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.1;
+				DYLIB_CURRENT_VERSION = 7.3.2;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -4925,7 +5093,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.1;
+				MARKETING_VERSION = 7.3.2;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -4961,11 +5129,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.1;
+				CURRENT_PROJECT_VERSION = 7.3.2;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.1;
+				DYLIB_CURRENT_VERSION = 7.3.2;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -4987,7 +5155,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.1;
+				MARKETING_VERSION = 7.3.2;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = (
 					"-framework",

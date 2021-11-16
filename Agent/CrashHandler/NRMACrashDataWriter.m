@@ -231,11 +231,11 @@
         case PLCrashReportOperatingSystemiPhoneSimulator:
             return kNRMASYSOS_Sim;
             break;
-        case PLCrashReportOperatingSystemtvOS:
+        case PLCrashReportOperatingSystemAppleTVOS:
             return kNRMASYSOS_tvOS;
             break;
-        case PLCrashReportOperatingSystemtvSimulator:
-            return kNRMASYSOS_tvSim;
+//        case PLCrashReportOperatingSystemtvSimulator:
+//            return kNRMASYSOS_tvSim;
         default:
             return kNRMASYSOS_Unkwn;
             break;

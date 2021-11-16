@@ -158,28 +158,33 @@
     
     connection.applicationToken = @"AA25e94fba740f136033f66f92099a8eab3ea4bd9b";
     connection.collectorHost= @"staging-mobile-collector.newrelic.com";
-    
+    connection.serverTimestamp = 1234;
+    connection.useSSL = YES;
+
     NSURLRequest* request = [connection createConnectPost:@"Unit Test"];
     XCTAssertNotNil(request, @"");
     
     NRMAHarvestResponse* response = [connection send:request];
     XCTAssertNotNil(response, @"");
     
-    XCTAssertEqual(FORBIDDEN, response.statusCode, @"");
-    XCTAssertTrue([@"DISABLE_NEW_RELIC" isEqualToString:response.responseBody], @"");
+    XCTAssertEqual(UNAUTHORIZED, response.statusCode, @"");
+    XCTAssertTrue([@"{}" isEqualToString:response.responseBody], @"");
 }
+
 - (void) testSendEnabledAppToken
 {
     connection.connectionInformation = [self createConnectionInformation];
     connection.collectorHost = @"staging-mobile-collector.newrelic.com";
     connection.applicationToken = @"AAa2d4baa1094bf9049bb22895935e46f85c45c211";
+    connection.useSSL = YES;
+    connection.serverTimestamp = 1234;
+
     
     NRMAHarvestResponse* response= [connection sendConnect];
     XCTAssertNotNil(response, @"");
     
     XCTAssertEqual(response.statusCode,200, @"");
     XCTAssertTrue([response.responseBody rangeOfString:@"data_token"].location != NSNotFound,@"");
-    	
 }
 
 - (void) testCollectorCompression
