@@ -73,7 +73,12 @@
     if (self) {
 #if !TARGET_OS_TV
         self.networkInfo = [CTTelephonyNetworkInfo new];
-        if ([self.networkInfo respondsToSelector:@selector(currentRadioAccessTechnology)]) {
+        if(@available(iOS 12.0, *)) {
+            if([self.networkInfo respondsToSelector:@selector(serviceCurrentRadioAccessTechnology)]
+               && [self.networkInfo.serviceCurrentRadioAccessTechnology count]) {
+                [self setCurrentWanNetworkType:self.networkInfo.serviceCurrentRadioAccessTechnology.allValues.firstObject];
+            }
+        } else if ([self.networkInfo respondsToSelector:@selector(currentRadioAccessTechnology)]) {
             [self setCurrentWanNetworkType:self.networkInfo.currentRadioAccessTechnology];
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(radioAccessDidChange:)
@@ -87,7 +92,12 @@
 
 - (void)radioAccessDidChange:(NSNotification *)notif {
 #if !TARGET_OS_TV
-    if ([self.networkInfo respondsToSelector:@selector(currentRadioAccessTechnology)]) {
+    if(@available(iOS 12.0, *)) {
+        if([self.networkInfo respondsToSelector:@selector(serviceCurrentRadioAccessTechnology)]
+           && [self.networkInfo.serviceCurrentRadioAccessTechnology count]) {
+            _wanNetworkType = self.networkInfo.serviceCurrentRadioAccessTechnology.allValues.firstObject;
+        }
+    } else if ([self.networkInfo respondsToSelector:@selector(currentRadioAccessTechnology)]) {
         _wanNetworkType = self.networkInfo.currentRadioAccessTechnology;
     }
 #endif
@@ -112,7 +122,8 @@
             return nil;
         }
         
-        if ([self.networkInfo respondsToSelector:@selector(currentRadioAccessTechnology)]) {
+        if ([self.networkInfo respondsToSelector:@selector(currentRadioAccessTechnology)]
+            || [self.networkInfo respondsToSelector:@selector(serviceCurrentRadioAccessTechnology)]) {
             if ([_wanNetworkType isEqualToString:CTRadioAccessTechnologyGPRS]) {return @"GPRS";}
             
             if ([_wanNetworkType isEqualToString:CTRadioAccessTechnologyEdge]) {return @"EDGE";}
