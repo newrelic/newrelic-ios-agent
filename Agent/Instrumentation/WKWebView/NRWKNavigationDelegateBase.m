@@ -10,6 +10,7 @@
 #import "NRMANetworkFacade.h"
 #import <objc/runtime.h>
 #import "NRTimer.h"
+#import "NRLogger.h"
 
 #define kNRWKTimerAssocObject @"com.NewRelic.WKNavigation.Timer"
 #define kNRWKURLAssocObject @"com.NewRelic.WKNavigation.URL"
@@ -22,9 +23,15 @@
 - (instancetype) initWithOriginalDelegate:(NSObject<WKNavigationDelegate>* __nullable __weak)delegate {
     self = [super init];
     if (self) {
+        NSString *res = [NSString stringWithFormat:@"NRMADISNEY  NRMAWKWebViewDelegateBase<%p>::initWithOriginalDelegate WKNavigationDelegate<%p>)", self, delegate];
+        NRLOG_VERBOSE(@"%@", res);
         _realDelegate = delegate;
     }
     return self;
+}
+- (void)dealloc {
+    NSString *res = [NSString stringWithFormat:@"NRMADISNEY  NRMAWKWebViewDelegateBase<%p>::dealloc)", self];
+    NRLOG_VERBOSE(@"%@", res);
 }
 
 #pragma mark - WKNavigationDelegate methods
@@ -39,10 +46,10 @@
 didStartProvisionalNavigation:(WKNavigation*)navigation {
     //record network details
     [NRWKNavigationDelegateBase navigation:navigation setTimer:[NRTimer new]];
-
+  
     NSURL* url = nil;
     Method m = class_getInstanceMethod(objc_getClass("WKWebView"), @selector(URL));
-
+    
     if (m != NULL) {
         url = ((NSURL*(*)(id,SEL))(IMP)method_getImplementation(m))(webView,@selector(URL));;
     }
@@ -52,6 +59,8 @@ didStartProvisionalNavigation:(WKNavigation*)navigation {
         [self.realDelegate performSelector:@selector(webView:didStartProvisionalNavigation:)
                                 withObject:webView
                                 withObject:navigation];
+        NSString *res = [NSString stringWithFormat:@"NRMADISNEY  NRMAWKWebViewDelegateBase<%p>::didStartProvisionalNavigation to %@", self,  url.absoluteString];
+        NRLOG_VERBOSE(@"%@", res);
     }
 }
 
@@ -73,6 +82,9 @@ didFinishNavigation:(WKNavigation*)navigation
                                                                  HTTPVersion:nil
                                                                 headerFields:nil];
 
+        NSString *res = [NSString stringWithFormat:@"NRMADISNEY  NRMAWKWebViewDelegateBase<%p>::didFinishNavigation to %@", self,  url.absoluteString];
+        NRLOG_VERBOSE(@"%@", res);
+        
         [NRMANetworkFacade noticeNetworkRequest:request
                                        response:response
                                       withTimer:timer
@@ -99,6 +111,9 @@ didFailProvisionalNavigation:(WKNavigation*)navigation
 
     NSURL* url = [NRWKNavigationDelegateBase navigationURL:navigation];
 
+    NSString *res = [NSString stringWithFormat:@"NRMADISNEY  NRMAWKWebViewDelegateBase<%p>::didFailProvisionalNavigation to %@", self,  url.absoluteString];
+    NRLOG_VERBOSE(@"%@", res);
+    
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"GET"];
 
@@ -126,6 +141,9 @@ didFailNavigation:(WKNavigation*)navigation
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:@"GET"];
 
+    NSString *res = [NSString stringWithFormat:@"NRMADISNEY  NRMAWKWebViewDelegateBase<%p>::didFailNavigation to %@", self,  url.absoluteString];
+    NRLOG_VERBOSE(@"%@", res);
+    
     [NRMANetworkFacade noticeNetworkFailure:request
                                   withTimer:timer
                                   withError:error];
