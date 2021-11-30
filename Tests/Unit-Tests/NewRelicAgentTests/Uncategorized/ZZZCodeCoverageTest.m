@@ -26,12 +26,12 @@
     [super tearDown];
 }
 
-extern void __gcov_flush();
+extern void  __gcov_dump();
 
 -(void)testThatIsntReallyATest
 {
     NSLog(@"FLUSHING GCOV FILES");
-    __gcov_flush();
+    __gcov_dump();
 }
 
 
