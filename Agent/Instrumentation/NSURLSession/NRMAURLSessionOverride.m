@@ -188,8 +188,9 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     }
     
     if (request.URL == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request has no URL, but still instrumenting request."];
+        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request has no URL. Returning nil."];
         NRLOG_VERBOSE(@"%@", res);
+        return nil;
     } else {
         NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request appears good, instrumenting request: %@", request.URL.absoluteString];
         NRLOG_VERBOSE(@"%@", res);
