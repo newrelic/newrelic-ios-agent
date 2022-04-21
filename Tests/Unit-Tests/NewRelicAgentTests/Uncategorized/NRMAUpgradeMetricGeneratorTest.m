@@ -41,7 +41,7 @@
         __autoreleasing NRMAMetric* metric = nil;
         [invocation getArgument:&metric atIndex:2];
         XCTAssertTrue([metric.name isEqualToString:@"Mobile/App/Upgrade"], @"invalid metric name");
-        XCTAssertEqual(@1, metric.value, @"invalid metric value.");
+        XCTAssertEqual([@1 intValue], metric.value.intValue, @"invalid metric value.");
         didQueue = YES;
     }] queue:OCMOCK_ANY];
 
