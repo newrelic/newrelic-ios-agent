@@ -159,7 +159,8 @@
     __block id mock = [OCMockObject mockForClass:[NRMAHTTPError class]];
     [[[mock stub] andReturn:mock] alloc];
     (void)[[[mock stub] andDo:^(NSInvocation *invocation) {
-        [invocation setReturnValue:(__bridge void * _Nonnull)(mock)];
+        CFRetain(CFAutorelease((__bridge CFTypeRef)(mock)));
+        [invocation setReturnValue:&mock];
         finished = YES;
     }] initWithURL:OCMOCK_ANY
      httpMethod:OCMOCK_ANY
@@ -187,9 +188,8 @@
                                responseData:responseBodyData
                                      params:@{}];
 
-    while (CFRunLoopGetMain() && !finished) {
-        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
-    }
+    while (CFRunLoopGetMain() && !finished) {}
+
     XCTAssertNoThrow([mock verify], @"noticeNetworkRequestForURLHttpUrl: should record a response body");
     [agentMock stopMocking];
     [netFacadeMock stopMocking];
