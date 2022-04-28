@@ -109,7 +109,6 @@
     [super tearDown];
 }
 
-
 - (void) testNSURLConnection
 {
     NSURLRequest* request  = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com"]];
@@ -138,6 +137,7 @@
     
     XCTAssertTrue([helper.result isKindOfClass:[NRMAHTTPTransactionMeasurement class]], @"verify the result is a http transaction");
     XCTAssertTrue([((NRMAHTTPTransactionMeasurement*)helper.result).url isEqualToString:@"http://www.google.com"],@"match url to requested url");
+    XCTAssertTrue(((NRMAHTTPTransactionMeasurement*)helper.result).bytesReceived == 8,@"gzipped bytes received should be 8");
 }
 
 //- (void) testASIConnection
@@ -156,12 +156,14 @@
     id agentMock = [OCMockObject niceMockForClass:[NewRelicAgentInternal class]];
     [[[[netFacadeMock stub] classMethod] andReturnValue:@2048] responseBodyCaptureSizeLimit];
     [[[[agentMock stub] classMethod] andReturn:nil] sharedInstance];
+
     __block id mock = [OCMockObject mockForClass:[NRMAHTTPError class]];
     [[[mock stub] andReturn:mock] alloc];
+    
     (void)[[[mock stub] andDo:^(NSInvocation *invocation) {
         CFRetain(CFAutorelease((__bridge CFTypeRef)(mock)));
         [invocation setReturnValue:&mock];
-        finished = YES;
+        finished = true;
     }] initWithURL:OCMOCK_ANY
      httpMethod:OCMOCK_ANY
      timeOfError:timer.endTimeInMillis
@@ -171,7 +173,6 @@
      wanType:OCMOCK_ANY
      appDataToken:nil
      threadInfo:OCMOCK_ANY];
-
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com/"]];
     [request setHTTPMethod:@"GET"];

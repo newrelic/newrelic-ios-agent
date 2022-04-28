@@ -15,6 +15,7 @@
 #import "NRMAFlags.h"
 #import "NRMAHTTPError.h"
 #import "NRMAHarvestController.h"
+#import "NRMAHarvesterConnection+GZip.h"
 #import <Connectivity/Payload.hpp>
 #import "NRMAPayloadContainer+cppInterface.h"
 #import "NRMAAnalytics+cppInterface.h"
@@ -119,6 +120,12 @@
                                                                                          connectionType:connectionType
                                                                                             contentType:[NRMANetworkFacade contentType:response]
                                                                                               bytesSent:bytesSent];
+        NSUInteger modifiedBytesReceived = bytesReceived;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
+        NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
+        if ([header isEqualToString:@"gzip"]) {
+            modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
+        }
 
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
 
@@ -126,10 +133,9 @@
              * Params
              */
 
-            // our bytesReceived value is not quite correct - it reflects the uncompressed byte length
             NSMutableDictionary* customParams = [@{
                     NRMA_ERROR_CONTENT_TYPE_KEY:[NRMANetworkFacade contentType:response]?:@"",
-                    NRMA_ERROR_CONTENT_LENGTH_KEY:[NRMANetworkFacade contentLength:response] == nil?@(bytesReceived):@([[NRMANetworkFacade contentLength:response] integerValue]),
+                    NRMA_ERROR_CONTENT_LENGTH_KEY:[NRMANetworkFacade contentLength:response] == nil?@(modifiedBytesReceived):@([[NRMANetworkFacade contentLength:response] integerValue]),
                     @"http_method":[request HTTPMethod]?:@"",
                     @"wan_type":connectionType?:@""
             } mutableCopy];
@@ -140,7 +146,7 @@
 
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
                                                                                withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response]
-                                                                                                                                 bytesReceived:bytesReceived
+                                                                                                                                 bytesReceived:modifiedBytesReceived
                                                                                                                                   responseTime:[timer timeElapsedInSeconds]
                                                                                                                            networkErrorMessage:nil
                                                                                                                            encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
@@ -165,7 +171,7 @@
 
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
                                                                                     withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
-                                                                                                                                               bytesReceived:bytesReceived
+                                                                                                                                               bytesReceived:modifiedBytesReceived
                                                                                                                                                 responseTime:[timer timeElapsedInSeconds]]
                                                                                      withPayload:[NRMAHTTPUtilities retreivePayload:request]];
 
@@ -176,7 +182,7 @@
                                                             startTime:startTime
                                                             totalTime:duration
                                                             bytesSent:bytesSent
-                                                        bytesReceived:bytesReceived
+                                                        bytesReceived:modifiedBytesReceived
                                                            statusCode:(int)[NRMANetworkFacade statusCode:response]
                                                           failureCode:0
                                                               appData:[NRMANetworkFacade getAppDataHeader:response]

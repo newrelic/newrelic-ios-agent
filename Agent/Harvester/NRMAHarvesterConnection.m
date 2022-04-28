@@ -12,6 +12,8 @@
 #import <zlib.h>
 #import "NRMATaskQueue.h"
 #import <time.h>
+#import "NRMAHarvesterConnection+GZip.h"
+
 @implementation NRMAHarvesterConnection
 @synthesize connectionInformation = _connectionInformation;
 - (id) init
@@ -37,36 +39,7 @@
 
     NSData* messageData = [message dataUsingEncoding:NSUTF8StringEncoding];
     if ([contentEncoding isEqualToString:@"deflate"]) {
-        z_stream zStream;
-        
-        zStream.zalloc = Z_NULL;
-        zStream.zfree = Z_NULL;
-        zStream.opaque = Z_NULL;
-        zStream.next_in = (Bytef *)messageData.bytes;
-        zStream.avail_in = (uint)messageData.length;
-        zStream.total_out = 0;
-        
-        if (deflateInit(&zStream, Z_DEFAULT_COMPRESSION) == Z_OK) {
-            NSUInteger compressionChunkSize = 16384; // 16Kb
-            NSMutableData *compressedData = [NSMutableData dataWithLength:compressionChunkSize];
-            
-            do {
-                if (zStream.total_out >= [compressedData length]) {
-                    [compressedData increaseLengthBy:compressionChunkSize];
-                }
-                
-                zStream.next_out = [compressedData mutableBytes] + zStream.total_out;
-                zStream.avail_out = (unsigned int)[compressedData length] - (unsigned int)zStream.total_out;
-
-                deflate(&zStream, Z_FINISH);
-                
-            } while (zStream.avail_out == 0);
-            
-            deflateEnd(&zStream);
-            [compressedData setLength:zStream.total_out];
-            
-            messageData = [NSData dataWithData:compressedData];
-        }
+        messageData = [NRMAHarvesterConnection gzipData:messageData];
     }
     [postRequest setHTTPBody:messageData];
     
