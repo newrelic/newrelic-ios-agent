@@ -495,6 +495,7 @@ extern "C" {
 
 
 #pragma mark - Recording custom network events
++  (void)setURLRegexRules:(NSDictionary<NSString *, NSString *> *_Nonnull)regexRules;
 
 /*********************************/
 /**      Network Requests       **/

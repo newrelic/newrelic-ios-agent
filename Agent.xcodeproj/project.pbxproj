@@ -1003,6 +1003,10 @@
 		3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
 		3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A926B36FB10056F3B3 /* libc++.tbd */; };
 		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
+		34DB25372824791B00A5BC45 /* NRMARegexTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMARegexTransformer.h */; };
+		34DB25382824791B00A5BC45 /* NRMARegexTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMARegexTransformer.h */; };
+		34DB25392824791B00A5BC45 /* NRMARegexTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMARegexTransformer.m */; };
+		34DB253A2824791B00A5BC45 /* NRMARegexTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMARegexTransformer.m */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -1217,6 +1221,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 8064D7AD1C4D22D8005A8B4C;
 			remoteInfo = "CrashReporter tvOS";
+		};
+		34DB255328248C0600A5BC45 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34DB254E28248C0600A5BC45 /* APODBrowser.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 3430A69B26CC82A2000BD29D;
+			remoteInfo = APODBrowser;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1770,6 +1781,9 @@
 		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A926B36FB10056F3B3 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		34DB25352824791B00A5BC45 /* NRMARegexTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMARegexTransformer.h; sourceTree = "<group>"; };
+		34DB25362824791B00A5BC45 /* NRMARegexTransformer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMARegexTransformer.m; sourceTree = "<group>"; };
+		34DB254E28248C0600A5BC45 /* APODBrowser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = APODBrowser.xcodeproj; path = ../APODBrowserOLD/APODBrowser.xcodeproj; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
@@ -2157,6 +2171,7 @@
 		021A15B024C9EEE700E8DFD5 = {
 			isa = PBXGroup;
 			children = (
+				34DB254E28248C0600A5BC45 /* APODBrowser.xcodeproj */,
 				0264AB2325080523009E5514 /* agent.modulemap */,
 				0256586424EB284600FE3125 /* Tests */,
 				02FF4AEF24DC8CB200115469 /* flatbuffers */,
@@ -2411,6 +2426,8 @@
 				02FF485524DC615900115469 /* NRMANetworkResponseData.h */,
 				02FF485924DC615A00115469 /* NRMANetworkResponseData.mm */,
 				02FF485724DC615900115469 /* NRMANetworkResponseData+CppInterface.h */,
+				34DB25352824791B00A5BC45 /* NRMARegexTransformer.h */,
+				34DB25362824791B00A5BC45 /* NRMARegexTransformer.m */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -2999,6 +3016,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		34DB254F28248C0600A5BC45 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				34DB255428248C0600A5BC45 /* APODBrowser.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		59AA4A3EC874908AEE69ECB0 /* scripts */ = {
 			isa = PBXGroup;
 			children = (
@@ -3203,6 +3228,7 @@
 				02FF49B624DC62B800115469 /* NRMAHarvestableHTTPErrors.h in Headers */,
 				02FF484224DC614200115469 /* NRMAActivityNameGenerator.h in Headers */,
 				02FF491224DC624400115469 /* NRMACrashReport_Library.h in Headers */,
+				34DB25372824791B00A5BC45 /* NRMARegexTransformer.h in Headers */,
 				02FF4AFC24DC8CB200115469 /* grpc.h in Headers */,
 				02FF491E24DC624400115469 /* NRMACrashReport_CodeType.h in Headers */,
 				02FF49C124DC62B800115469 /* NRMAHarvestableEvent.h in Headers */,
@@ -3416,6 +3442,7 @@
 				02FF4BC024E3201400115469 /* NRMAHarvestableHTTPErrors.h in Headers */,
 				02FF4BC124E3201400115469 /* NRMAActivityNameGenerator.h in Headers */,
 				02FF4BC224E3201400115469 /* NRMACrashReport_Library.h in Headers */,
+				34DB25382824791B00A5BC45 /* NRMARegexTransformer.h in Headers */,
 				02FF4BC324E3201400115469 /* grpc.h in Headers */,
 				02FF4BC424E3201400115469 /* NRMACrashReport_CodeType.h in Headers */,
 				02FF4BC524E3201400115469 /* NRMAHarvestableEvent.h in Headers */,
@@ -3608,6 +3635,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 34DB254F28248C0600A5BC45 /* Products */;
+					ProjectRef = 34DB254E28248C0600A5BC45 /* APODBrowser.xcodeproj */;
+				},
+				{
 					ProductGroup = 02FF4AD524DC815300115469 /* Products */;
 					ProjectRef = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
 				},
@@ -3722,6 +3753,13 @@
 			fileType = "compiled.mach-o.executable";
 			path = "Fuzz Testing";
 			remoteRef = 344891E726AA0F4E00AADB9D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		34DB255428248C0600A5BC45 /* APODBrowser.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = APODBrowser.app;
+			remoteRef = 34DB255328248C0600A5BC45 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -4061,6 +4099,7 @@
 				02FF4AA024DC652E00115469 /* NRMANonARCMethods.m in Sources */,
 				02FF4AAF24DC652E00115469 /* NRMACPUVitals.m in Sources */,
 				02FF484924DC614200115469 /* NRMAActivityTrace.m in Sources */,
+				34DB25392824791B00A5BC45 /* NRMARegexTransformer.m in Sources */,
 				02FF491424DC624400115469 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				02FF491324DC624400115469 /* NRMACrashReport_SignalInfo.m in Sources */,
 				02FF488F24DC61B900115469 /* CacheStoragePolicy.m in Sources */,
@@ -4360,6 +4399,7 @@
 				02FF4C3824E3201400115469 /* NRMANonARCMethods.m in Sources */,
 				02FF4C3924E3201400115469 /* NRMACPUVitals.m in Sources */,
 				02FF4C3A24E3201400115469 /* NRMAActivityTrace.m in Sources */,
+				34DB253A2824791B00A5BC45 /* NRMARegexTransformer.m in Sources */,
 				02FF4C3B24E3201400115469 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				02FF4C3C24E3201400115469 /* NRMACrashReport_SignalInfo.m in Sources */,
 				02FF4C3D24E3201400115469 /* CacheStoragePolicy.m in Sources */,

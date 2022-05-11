@@ -114,8 +114,14 @@
 
         //getCurrentWanType shouldn't be called on the main thread
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
+        
+        NRMARegexTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
+        NSURL *replacedURL = [transformer transformURL:request.URL];
+        if(!replacedURL) {
+            replacedURL = request.URL;
+        }
 
-        NRMANetworkRequestData* networkRequestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:request.URL
+        NRMANetworkRequestData* networkRequestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                              httpMethod:[request HTTPMethod]
                                                                                          connectionType:connectionType
                                                                                             contentType:[NRMANetworkFacade contentType:response]
@@ -157,7 +163,7 @@
             mutableParams[NRMA_ERROR_CUSTOM_PARAMS_KEY] = customParams;
 
 
-            [NRMATaskQueue queue:[[NRMAHTTPError alloc] initWithURL:request.URL.absoluteString
+            [NRMATaskQueue queue:[[NRMAHTTPError alloc] initWithURL:replacedURL.absoluteString
                                                          httpMethod:[request HTTPMethod]
                                                         timeOfError:timer.endTimeMillis
                                                          statusCode:(int)[NRMANetworkFacade statusCode:response]
@@ -177,7 +183,7 @@
 
         }
 
-        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:request.URL.absoluteString
+        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
                                                            httpMethod:[request HTTPMethod]
                                                             startTime:startTime
                                                             totalTime:duration
@@ -211,8 +217,14 @@
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
+        
+        NRMARegexTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
+        NSURL *replacedURL = [transformer transformURL:request.URL];
+        if(!replacedURL) {
+            replacedURL = request.URL;
+        }
 
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:request.URL
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL //request.URL
                                                                                                                                    httpMethod:[request HTTPMethod]
                                                                                                                                connectionType:connectionType
                                                                                                                                   contentType:[request allHTTPHeaderFields][@"Content-Type"]
@@ -224,7 +236,7 @@
                                                                                withPayload:[NRMAHTTPUtilities retreivePayload:request]];
 
 
-        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:request.URL.absoluteString
+        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString //request.URL.absoluteString
                                                            httpMethod:[request HTTPMethod]
                                                             startTime:startTime
                                                             totalTime:duration

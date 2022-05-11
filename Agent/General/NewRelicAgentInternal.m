@@ -92,6 +92,8 @@ NSString* _NRMAAgentApplicationBundleId = nil;
 //in the "onbackground" process after we've come back to the foreground.
 static BOOL didFireEnterForeground;
 
+static NRMARegexTransformer* urlTransformer;
+
 @interface NewRelicConnectInfo : NSObject
 @property(nonatomic, strong) id dataToken;
 @end
@@ -155,6 +157,14 @@ static NewRelicAgentInternal* _sharedInstance;
 
 + (NewRelicAgentInternal*) sharedInstance {
     return _sharedInstance;
+}
+
++ (void)setURLTransformer:(NRMARegexTransformer *)transformer {
+    urlTransformer = transformer;
+}
+
++ (NRMARegexTransformer *)getURLTransformer {
+    return urlTransformer;
 }
 
 - (void) dealloc {
