@@ -224,7 +224,7 @@
             replacedURL = request.URL;
         }
 
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL //request.URL
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                                                                    httpMethod:[request HTTPMethod]
                                                                                                                                connectionType:connectionType
                                                                                                                                   contentType:[request allHTTPHeaderFields][@"Content-Type"]
@@ -236,7 +236,7 @@
                                                                                withPayload:[NRMAHTTPUtilities retreivePayload:request]];
 
 
-        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString //request.URL.absoluteString
+        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
                                                            httpMethod:[request HTTPMethod]
                                                             startTime:startTime
                                                             totalTime:duration
