@@ -26,7 +26,8 @@ extern "C" {
         NRMAPlatform_Xamarin,
         NRMAPlatform_Unity,
         NRMAPlatform_Appcelerator,
-        NRMAPlatform_React
+        NRMAPlatform_ReactNative,
+        NRMAPlatform_Flutter
     };
 
 // these constants are paired with enum values of NRMAApplicationPlatform
@@ -39,7 +40,8 @@ extern "C" {
 #define kNRMAPlatformString_Xamarin      @"Xamarin"
 #define kNRMAPlatformString_Unity        @"Unity"
 #define kNRMAPlatformString_Appcelerator @"Appcelerator"
-#define kNRMAPlatformString_React        @"React"
+#define kNRMAPlatformString_ReactNative  @"ReactNative"
+#define kNRMAPlatformString_Flutter      @"Flutter"
 
 
 //Custom Trace Types
