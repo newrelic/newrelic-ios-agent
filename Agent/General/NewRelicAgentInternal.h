@@ -11,7 +11,7 @@
 #import "NRMAMeasurements.h"
 #import "NRMAHandledExceptions.h"
 #import "NRMAUserActionFacade.h"
-#import "NRMARegexTransformer.h"
+#import "NRMAURLTransformer.h"
 
 #define NEW_RELIC_APP_VERSION_HEADER_KEY        @"X-NewRelic-App-Version"
 #define NEW_RELIC_OS_NAME_HEADER_KEY            @"X-NewRelic-OS-Name"
@@ -73,8 +73,8 @@
 + (BOOL) harvestNow;
 
 // URLTransformer
-+ (void)setURLTransformer:(NRMARegexTransformer *)urlTransformer;
-+ (NRMARegexTransformer *)getURLTransformer;
++ (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
++ (NRMAURLTransformer *)getURLTransformer;
 
 @end
 

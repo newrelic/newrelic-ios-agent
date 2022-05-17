@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMARegexTransformer : NSObject
+@interface NRMAURLTransformer : NSObject
 
 - (instancetype) initWithRegexRules:(NSDictionary<NSString *, NSString *>*)regexRules;
 

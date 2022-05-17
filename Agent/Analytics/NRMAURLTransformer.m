@@ -6,9 +6,9 @@
 //  Copyright © 2022 New Relic. All rights reserved.
 //
 
-#import "NRMARegexTransformer.h"
+#import "NRMAURLTransformer.h"
 
-@implementation NRMARegexTransformer {
+@implementation NRMAURLTransformer {
     NSDictionary<NSString *, NSString *>* _regexRules;
 }
 

@@ -115,7 +115,7 @@
         //getCurrentWanType shouldn't be called on the main thread
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
         
-        NRMARegexTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
+        NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
         NSURL *replacedURL = [transformer transformURL:request.URL];
         if(!replacedURL) {
             replacedURL = request.URL;
@@ -218,7 +218,7 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
         
-        NRMARegexTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
+        NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
         NSURL *replacedURL = [transformer transformURL:request.URL];
         if(!replacedURL) {
             replacedURL = request.URL;
