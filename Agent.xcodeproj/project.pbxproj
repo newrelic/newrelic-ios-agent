@@ -980,6 +980,8 @@
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
+		343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
+		343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
 		34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFA26B376A600CE568A /* CoreData.framework */; };
 		34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
@@ -1760,6 +1762,7 @@
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
+		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
 		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731AFE26B3788800CE568A /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hex.framework; path = Frameworks/Hex.framework; sourceTree = "<group>"; };
 		34731AFF26B3788800CE568A /* Utilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Utilities.framework; path = Frameworks/Utilities.framework; sourceTree = "<group>"; };
@@ -1935,6 +1938,7 @@
 			children = (
 				0209AC4C24E7079400E45C90 /* NRMAAnalyticsTest.mm */,
 				0209AC4D24E7079400E45C90 /* NRMARequestEvents.mm */,
+				343883552834405700B31C2E /* NRMAURLTransformerTests.m */,
 			);
 			path = "Analytics-Tests";
 			sourceTree = "<group>";
@@ -3618,10 +3622,6 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 34DB254F28248C0600A5BC45 /* Products */;
-					ProjectRef = 34DB254E28248C0600A5BC45 /* APODBrowser.xcodeproj */;
-				},
-				{
 					ProductGroup = 02FF4AD524DC815300115469 /* Products */;
 					ProjectRef = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
 				},
@@ -3935,6 +3935,7 @@
 				0209AC3124E7073800E45C90 /* NRMADeviceInformationTests.m in Sources */,
 				0209ABE324E706E600E45C90 /* TestUICollectionViewInstrumentation.m in Sources */,
 				0209AC9724E7393300E45C90 /* NRNSURLConnectionSupportTests.m in Sources */,
+				343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0209AC0C24E7071500E45C90 /* APIMethodTraceTest.m in Sources */,
 				0209ABD824E706AE00E45C90 /* TestRetryTracker.m in Sources */,
 				0209ABEE24E706FA00E45C90 /* NSObject+NRAssociatedObjectTest.m in Sources */,
@@ -4194,6 +4195,7 @@
 				025657FE24EB19BF00FE3125 /* NRMetricTests.m in Sources */,
 				025657FF24EB19BF00FE3125 /* TestSessionIdentifierManger.m in Sources */,
 				0256580024EB19BF00FE3125 /* NRAgentSanityTests.m in Sources */,
+				343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0256580124EB19BF00FE3125 /* NRMAActingClassUtilsTest.m in Sources */,
 				0256580224EB19BF00FE3125 /* NRMeasurementProducerTest.m in Sources */,
 				0256580324EB19BF00FE3125 /* NRMAHTTPErrorTest.m in Sources */,
