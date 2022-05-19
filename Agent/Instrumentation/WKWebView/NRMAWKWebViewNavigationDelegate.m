@@ -9,17 +9,10 @@
 
 #import <Foundation/Foundation.h>
 #import "NRMAWKWebViewNavigationDelegate.h"
-#import "NRLogger.h"
 
 @implementation NRMAWKWebViewNavigationDelegate
 - (BOOL)respondsToSelector:(SEL)aSelector {
     if ([self.realDelegate respondsToSelector:aSelector]){
-        const char* methodName = sel_getName(aSelector);
-        NSString *sMethodName = [NSString stringWithUTF8String:methodName];
-        NSString *res = [NSString stringWithFormat:@"NRMADISNEY::respondsToSelector NRMAWKWebViewNavigationDelegate<%p> responds to %@", self, sMethodName];
-        NRLOG_VERBOSE(@"%@", res);
-        NSString *res1 = [NSString stringWithFormat:@"NRMADISNEY::respondsToSelector realDelegate = %p (this is customer's WKNavigationDelegate)", self.realDelegate];
-        NRLOG_VERBOSE(@"%@", res1);
         return YES;
     }
 
