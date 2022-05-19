@@ -41,10 +41,16 @@
 
 + (BOOL) shouldEnableDistributedTracing;
 
-
+// Private Setting
+// Device Identifier Salting
 // private settings only for VW (jira:MOBILE-6635)
 + (void) setSaltDeviceUUID:(BOOL)enable;
 + (BOOL) shouldSaltDeviceUUID;
 
+// Private Setting
+// Device Identifier Replacement
++ (void) setShouldReplaceDeviceIdentifier:(NSString*)identifier;
++ (BOOL) shouldReplaceDeviceIdentifier;
++ (NSString*) replacementDeviceIdentifier;
 
 @end

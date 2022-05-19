@@ -6,5 +6,6 @@
 #import <Foundation/Foundation.h>
 
 @interface NRMAUDIDManager : NSObject
++ (NSString*) deviceIdentifier;
 + (NSString*) UDID;
 @end
