@@ -109,7 +109,7 @@
 
         //At the point in time this notification is fired, the measurements engine
         //(and the harvester, for that matter) is not yet initialized. The metric will be stored,
-        //and it will be defered to NewRelicAgentInternal.m to queue this object
+        //and it will be deferred to NewRelicAgentInternal.m to queue this object
         //as a harvest listener. Once the harvest listener is fired this metric will be queue
         //from -onHarvestBefore.
         self.installMetric = [[NRMAMetric alloc] initWithName:kNRMAAppInstallMetric
@@ -127,8 +127,8 @@
             //If kNRMADidGenerateNewUDIDNotification is fired this code path will most likely
             //be executed. There should be no situation that kNRMAAnalyticsInitializedNotification
             //is observed before this notification.
-            //To effectively record a session attribute identifying a new install occured,
-            //we must wait for the analytics controller to be initialized. This flag will inidicate
+            //To effectively record a session attribute identifying a new install occurred,
+            //we must wait for the analytics controller to be initialized. This flag will indicate
             //we received the kNRMAAnalyticsInitializedNotification notification when the analytics
             //controller is available  to receive input.
             self.shouldGenerateInstallAttributes = YES;

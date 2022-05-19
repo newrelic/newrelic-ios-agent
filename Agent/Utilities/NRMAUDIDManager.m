@@ -17,6 +17,10 @@ static NSString* const kNRMAVendorIDStore   = @"com.newrelic.vendorID";
 
 @implementation NRMAUDIDManager
 
++ (NSString*) deviceIdentifier {
+    return ![NRMAFlags shouldReplaceDeviceIdentifier] ? [UIDevice currentDevice].identifierForVendor.UUIDString : [NRMAFlags replacementDeviceIdentifier];
+}
+
 + (NSString*) UDID {
     NSString* udid = [NRMAUDIDManager getUDID];
     if (!udid) {
@@ -43,9 +47,9 @@ static __strong NSString* __UDID;
     }
 }
 + (NRMAUUIDStore*) secureUDIDStore {
-static NRMAUUIDStore* __secureUDIDStore;
+    static NRMAUUIDStore* __secureUDIDStore;
     if (!__secureUDIDStore) {
-       __secureUDIDStore = [[NRMAUUIDStore alloc] initWithFilename:kNRMASecureUDIDStore];
+        __secureUDIDStore = [[NRMAUUIDStore alloc] initWithFilename:kNRMASecureUDIDStore];
     }
     return __secureUDIDStore;
 }
@@ -53,38 +57,15 @@ static NRMAUUIDStore* __secureUDIDStore;
 + (NRMAUUIDStore*) identifierForVendorStore {
     static NRMAUUIDStore* __identifierForVendorStore;
     if (!__identifierForVendorStore) {
-       __identifierForVendorStore = [[NRMAUUIDStore alloc] initWithFilename:kNRMAVendorIDStore];
+        __identifierForVendorStore = [[NRMAUUIDStore alloc] initWithFilename:kNRMAVendorIDStore];
     }
     return __identifierForVendorStore;
-}
-
-+ (NSString*) secureUDIDFile {
-    NSString* identifierForVendor = [NRMAUDIDManager getSystemIdentifier];
-    if ([[NRMAUDIDManager identifierForVendorStore] storedUUID]) {
-        if(identifierForVendor.length && ![[[NRMAUDIDManager identifierForVendorStore] storedUUID] isEqualToString:identifierForVendor]) {
-            //detected change in vendorId, replacing secureUDID with vendorID
-
-            //THIS IS A NEW INSTALL
-            [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
-                                                                object:nil
-                                                              userInfo:@{@"UDID" : identifierForVendor}];
-
-            [[NRMAUDIDManager secureUDIDStore] removeStore];
-            [[NRMAUDIDManager identifierForVendorStore] storeUUID:identifierForVendor];
-            return identifierForVendor;
-        }
-    } else {
-        if (identifierForVendor.length) {
-            [[NRMAUDIDManager identifierForVendorStore] storeUUID:identifierForVendor];
-        }
-    }
-    return [[NRMAUDIDManager secureUDIDStore] storedUUID];
 }
 
 + (NSString*) getSystemIdentifier {
     if ([NRMAFlags shouldSaltDeviceUUID]) {
         // use app ID as salt. This will prevent apps across bundle Ids sharing device Ids.
-        NSString* clearStr = [[NRMAUDIDManager saltValue] stringByAppendingString:[UIDevice currentDevice].identifierForVendor.UUIDString];
+        NSString* clearStr = [[NRMAUDIDManager saltValue] stringByAppendingString:[NRMAUDIDManager deviceIdentifier]];
         NSData* clearData = [clearStr dataUsingEncoding:NSUTF8StringEncoding];
         uint8_t digest[CC_SHA1_DIGEST_LENGTH];
         CC_SHA1([clearData bytes],(CC_LONG)clearData.length,digest);
@@ -94,7 +75,7 @@ static NRMAUUIDStore* __secureUDIDStore;
         }
         return output;
     } else {
-        return [UIDevice currentDevice].identifierForVendor.UUIDString;
+        return [NRMAUDIDManager deviceIdentifier];
     }
 }
 
@@ -104,48 +85,47 @@ static NRMAUUIDStore* __secureUDIDStore;
 
 + (NSString*) noSecureUDIDFile {
     NSString* identifierForVendor = [NRMAUDIDManager getSystemIdentifier];
-   if ([[NRMAUDIDManager identifierForVendorStore] storedUUID]) {
-       if(identifierForVendor.length) {
-           if(![[[NRMAUDIDManager identifierForVendorStore] storedUUID] isEqualToString:identifierForVendor]){
-               //the identifier for vendor has changed!
-               [[NRMAUDIDManager identifierForVendorStore] storeUUID:identifierForVendor];
-               [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
-                                                                   object:nil
-                                                                 userInfo:@{ @"UDID" : identifierForVendor }];
-               return identifierForVendor;
-           }
-       }
-       return [[NRMAUDIDManager identifierForVendorStore] storedUUID];
-   } else {
+    if ([[NRMAUDIDManager identifierForVendorStore] storedUUID]) {
+        if(identifierForVendor.length) {
+            if(![[[NRMAUDIDManager identifierForVendorStore] storedUUID] isEqualToString:identifierForVendor]){
+                //the identifier for vendor has changed!
+                [[NRMAUDIDManager identifierForVendorStore] storeUUID:identifierForVendor];
+                [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
+                                                                    object:nil
+                                                                  userInfo:@{ @"UDID" : identifierForVendor }];
+                return identifierForVendor;
+            }
+        }
+        return [[NRMAUDIDManager identifierForVendorStore] storedUUID];
+    } else {
 
-           [[NSNotificationCenter defaultCenter] postNotificationName:kNRMASecureUDIDIsNilNotification
-                                                               object:nil];
-           if (identifierForVendor.length) {
-               //NEW INSTALL
-               [[NRMAUDIDManager identifierForVendorStore] storeUUID:identifierForVendor];
-               [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
-                                                                   object:nil
-                                                                 userInfo:@{ @"UDID" : identifierForVendor }];
-               return identifierForVendor;
-           } else {
-               //NEW INSTALL
+        [[NSNotificationCenter defaultCenter] postNotificationName:kNRMASecureUDIDIsNilNotification
+                                                            object:nil];
+        if (identifierForVendor.length) {
+            //NEW INSTALL
+            [[NRMAUDIDManager identifierForVendorStore] storeUUID:identifierForVendor];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
+                                                                object:nil
+                                                              userInfo:@{ @"UDID" : identifierForVendor }];
+            return identifierForVendor;
+        } else {
+            //NEW INSTALL
 
-               [NRMAMeasurements recordAndScopeMetricNamed:[NSString stringWithFormat:@"%@/%@/%@", kNRAgentHealthPrefix, @"DeviceIdentifier", @"GeneratedUDID"]
-                                                     value:@1];
+            [NRMAMeasurements recordAndScopeMetricNamed:[NSString stringWithFormat:@"%@/%@/%@", kNRAgentHealthPrefix, @"DeviceIdentifier", @"GeneratedUDID"]
+                                                  value:@1];
 
-               CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-               NSString* identifier = (NSString*)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuid));
-               CFRelease(uuid);
+            CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+            NSString* identifier = ![NRMAFlags shouldReplaceDeviceIdentifier] ? (NSString*)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuid)) : [NRMAUDIDManager deviceIdentifier];
+            CFRelease(uuid);
 
-               [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
-                                                                   object:nil
-                                                                 userInfo:@{ @"UDID" : identifier }];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
+                                                                object:nil
+                                                              userInfo:@{ @"UDID" : identifier }];
 
-               [[NRMAUDIDManager secureUDIDStore] storeUUID:identifier];
-               return identifier;
-           }
-
-   }
+            [[NRMAUDIDManager secureUDIDStore] storeUUID:identifier];
+            return identifier;
+        }
+    }
 }
 
 @end

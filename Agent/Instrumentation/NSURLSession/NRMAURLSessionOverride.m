@@ -167,8 +167,15 @@ NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id s
 NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequest* request)
 {
     IMP originalImp = NRMAOriginal__dataTaskWithRequest;
+    
+    NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
 
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,request);
+    
+    [NRMAHTTPUtilities attachPayload:payload
+                                  to:task.originalRequest];
+    
     //try to override the methods of the private class that is returned by this method
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
