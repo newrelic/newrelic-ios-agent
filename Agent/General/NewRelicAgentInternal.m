@@ -160,6 +160,9 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 + (void)setURLTransformer:(NRMAURLTransformer *)transformer {
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/withURLTransformation"
+                                                    value:@1
+                                                    scope:@""]];
     urlTransformer = transformer;
 }
 
