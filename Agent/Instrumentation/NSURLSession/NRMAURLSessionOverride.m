@@ -166,6 +166,36 @@ NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id s
 
 NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequest* request)
 {
+    if (self == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. self is nil. returning nil"];
+        NRLOG_VERBOSE(@"%@", res);
+        return nil;
+    }
+    if (_cmd == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. _cmd is nil. returning nil"];
+        NRLOG_VERBOSE(@"%@", res);
+        return nil;
+    }
+    if (request == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. request is nil. returning nil"];
+        NRLOG_VERBOSE(@"%@", res);
+        return nil;
+    }
+    if (NRMAOriginal__dataTaskWithRequest == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. NRMAOriginal__dataTaskWithRequest is nil. returning nil"];
+        NRLOG_VERBOSE(@"%@", res);
+        return nil;
+    }
+    
+    if (request.URL == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request has no URL. Returning nil."];
+        NRLOG_VERBOSE(@"%@", res);
+        return nil;
+    } else {
+        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request appears good, instrumenting request: %@", request.URL.absoluteString];
+        NRLOG_VERBOSE(@"%@", res);
+    }
+    
     IMP originalImp = NRMAOriginal__dataTaskWithRequest;
     
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
@@ -179,6 +209,9 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     //try to override the methods of the private class that is returned by this method
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
+    NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [end] Leaving after instrumenting request."];
+    NRLOG_VERBOSE(@"%@", res);
+        
     return task;
 }
 
