@@ -7,6 +7,8 @@
 #import "NRMAWKWebViewNavigationDelegate.h"
 #import <UIKit/UIKit.h>
 
+#import "NRLogger.h"
+
 
 //NOTE: this files has ARC disabled.
 
@@ -69,6 +71,8 @@ void (*NRMA__WKWebView_dealloc)(id self, SEL _cmd);
                                                                                 (IMP)navigationDelegate,
                                                                                 method_getTypeEncoding(navigationSelectorMethod));
 
+        NSString *res = [NSString stringWithFormat:@"NRMADISNEY::swizzle setNavigationDelegateSelector = %p", NRMA__WKWebView_navigationDelegate];
+        NRLOG_VERBOSE(@"%@", res);
         SEL setNavigationDelegateSelector = @selector(setNavigationDelegate:);
         Method setNavigationDelegateMethod = class_getInstanceMethod(clazz, setNavigationDelegateSelector);
         NRMA__WKWebView_setNavigationDelegate = (void(*)(id,SEL,id))class_replaceMethod(clazz,
@@ -76,6 +80,9 @@ void (*NRMA__WKWebView_dealloc)(id self, SEL _cmd);
                                                                                         (IMP)setNavigationDelegate,
                                                                                         method_getTypeEncoding(setNavigationDelegateMethod));
 
+        NSString *res2 = [NSString stringWithFormat:@"NRMADISNEY::swizzle setNavigationDelegateMethod =%p", NRMA__WKWebView_setNavigationDelegate];
+        NRLOG_VERBOSE(@"%@", res2);
+        
         SEL deallocSelector = @selector(dealloc);
         Method deallocMethod = class_getInstanceMethod(clazz, deallocSelector);
         NRMA__WKWebView_dealloc = (void(*)(id,SEL))class_replaceMethod(clazz,
@@ -136,6 +143,11 @@ static void setNavigationDelegate(id self, SEL _cmd, id delegate) {
 #if !TARGET_OS_TV
     @autoreleasepool {
         id lastDelegate = NRMA__WKWebView_navigationDelegate(self,_cmd);
+        NSString *res = [NSString stringWithFormat:@"NRMADISNEY::setNavigationDelegate new delegate = WKNavigationDelegate<%p>", delegate];
+        NRLOG_VERBOSE(@"%@", res);
+        NSString *res1 = [NSString stringWithFormat:@"NRMADISNEY::setNavigationDelegate lastDelegate = WKNavigationDelegate<%p> [will probably release soon]", lastDelegate];
+        NRLOG_VERBOSE(@"%@", res1);
+        
         if ([delegate isKindOfClass:[NRMAWKWebViewNavigationDelegate class]]) {
             ((NRMAWKWebViewNavigationDelegate*)delegate).realDelegate = delegate;
         }
@@ -143,6 +155,8 @@ static void setNavigationDelegate(id self, SEL _cmd, id delegate) {
         NRMA__WKWebView_setNavigationDelegate(self, _cmd, value);
         
         if (lastDelegate != nil && lastDelegate != delegate) {
+            NSString *res3 = [NSString stringWithFormat:@"NRMADISNEY::setNavigationDelegate releasing lastDelegate WKNavigationDelegate<%p>", lastDelegate];
+            NRLOG_VERBOSE(@"%@", res3);
             //don't try to release nil
             //don't release the last delegate if the the same object is being passed as the incoming delegate.
             [lastDelegate release];
@@ -155,6 +169,8 @@ static void setNavigationDelegate(id self, SEL _cmd, id delegate) {
 id initWithCoder(id self, SEL _cmd, id coder) {
      id result = NRMA__WKWebView_initWithCoder(self, _cmd, coder);
     NRMA__WKWebView_setNavigationDelegate(result, _cmd, [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:nil]);
+    NSString *res = [NSString stringWithFormat:@"NRMADISNEY::initWithCoder NRMAWKWebViewInstrumentation(%p)", self];
+    NRLOG_VERBOSE(@"%@", res);
     return result;
 }
 #endif
