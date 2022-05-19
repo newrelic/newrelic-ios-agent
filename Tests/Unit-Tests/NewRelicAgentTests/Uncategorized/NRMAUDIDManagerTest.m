@@ -314,5 +314,89 @@
     XCTAssertNoThrow([self.mockVendorStore verify]);
     [self subShutdown];
 }
+
+- (void) testDeviceIdentifierReplacement {
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+
+    [NRMAFlags setShouldReplaceDeviceIdentifier:@"r3plac3m3ntD3v1c31D"];
+    XCTAssertTrue([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertTrue([[NRMAFlags replacementDeviceIdentifier] isEqualToString: @"r3plac3m3ntD3v1c31D"]);
+    XCTAssertTrue([[NRMAUDIDManager deviceIdentifier] isEqualToString: @"r3plac3m3ntD3v1c31D"]);
+    XCTAssertTrue([[NRMAUDIDManager getSystemIdentifier] isEqualToString: @"r3plac3m3ntD3v1c31D"]);
+    [NRMAFlags setShouldReplaceDeviceIdentifier:NULL];
+
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+}
+
+- (void) testDeviceIdentifierReplacementEmptyString {
+    [NRMAFlags setShouldReplaceDeviceIdentifier:@""];
+    XCTAssertTrue([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertTrue([[NRMAFlags replacementDeviceIdentifier] isEqualToString: @"0"]);
+    XCTAssertTrue([[NRMAUDIDManager deviceIdentifier] isEqualToString: @"0"]);
+    XCTAssertTrue([[NRMAUDIDManager getSystemIdentifier] isEqualToString: @"0"]);
+    [NRMAFlags setShouldReplaceDeviceIdentifier:NULL];
+
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+}
+
+- (void) testDeviceIdentifierReplacementBlankString {
+    [NRMAFlags setShouldReplaceDeviceIdentifier:@" "];
+    XCTAssertTrue([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertTrue([[NRMAFlags replacementDeviceIdentifier] isEqualToString: @"0"]);
+    XCTAssertTrue([[NRMAUDIDManager deviceIdentifier] isEqualToString: @"0"]);
+    XCTAssertTrue([[NRMAUDIDManager getSystemIdentifier] isEqualToString: @"0"]);
+    [NRMAFlags setShouldReplaceDeviceIdentifier:NULL];
+
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+}
+
+- (void) testDeviceIdentifierReplacementTrimmed {
+    [NRMAFlags setShouldReplaceDeviceIdentifier:@" abc "];
+    XCTAssertTrue([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertTrue([[NRMAFlags replacementDeviceIdentifier] isEqualToString: @"abc"]);
+    XCTAssertTrue([[NRMAUDIDManager deviceIdentifier] isEqualToString: @"abc"]);
+    XCTAssertTrue([[NRMAUDIDManager getSystemIdentifier] isEqualToString: @"abc"]);
+    [NRMAFlags setShouldReplaceDeviceIdentifier:NULL];
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+}
+
+- (void) testDeviceIdentifierReplacementTrimmedRhs {
+    [NRMAFlags setShouldReplaceDeviceIdentifier:@"abc "];
+    XCTAssertTrue([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertTrue([[NRMAFlags replacementDeviceIdentifier] isEqualToString: @"abc"]);
+    XCTAssertTrue([[NRMAUDIDManager deviceIdentifier] isEqualToString: @"abc"]);
+    XCTAssertTrue([[NRMAUDIDManager getSystemIdentifier] isEqualToString: @"abc"]);
+    [NRMAFlags setShouldReplaceDeviceIdentifier:NULL];
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+}
+
+- (void) testDeviceIdentifierReplacementTrimmedLhs {
+    [NRMAFlags setShouldReplaceDeviceIdentifier:@" abc"];
+    XCTAssertTrue([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertTrue([[NRMAFlags replacementDeviceIdentifier] isEqualToString: @"abc"]);
+    XCTAssertTrue([[NRMAUDIDManager deviceIdentifier] isEqualToString: @"abc"]);
+    XCTAssertTrue([[NRMAUDIDManager getSystemIdentifier] isEqualToString: @"abc"]);
+    [NRMAFlags setShouldReplaceDeviceIdentifier:NULL];
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+}
+
+- (void) testDeviceIdentifierExceedsMaxLength {
+    [NRMAFlags setShouldReplaceDeviceIdentifier:@"11111111111111111111111111111111111111110"];
+    XCTAssertTrue([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertTrue([[NRMAFlags replacementDeviceIdentifier] isEqualToString: @"1111111111111111111111111111111111111111"]);
+    XCTAssertTrue([[NRMAUDIDManager deviceIdentifier] isEqualToString: @"1111111111111111111111111111111111111111"]);
+    XCTAssertTrue([[NRMAUDIDManager getSystemIdentifier] isEqualToString: @"1111111111111111111111111111111111111111"]);
+    [NRMAFlags setShouldReplaceDeviceIdentifier:NULL];
+    XCTAssertFalse([NRMAFlags shouldReplaceDeviceIdentifier]);
+    XCTAssertNil([NRMAFlags replacementDeviceIdentifier]);
+}
+
 @end
 

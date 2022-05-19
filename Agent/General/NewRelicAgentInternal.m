@@ -74,6 +74,7 @@
 #import "NRMAUserActionFacade.h"
 #import "NRMAFileCleanup.h"
 #import "NRMAAppToken.h"
+#import "NRMAUDIDManager.h"
 
 /* Support for teardown and re-setup of the agent within a process lifetime for our test harness
  Enabling this will bypass dispatch_once-style logic and expose more internal state.
@@ -511,8 +512,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [self.analyticsController setNRSessionAttribute:@(__kNRMA_RA_platformVersion)
                                               value:[NRMAAgentConfiguration connectionInformation].deviceInformation.platformVersion];
 
-
-    NSString* vendorId = [UIDevice currentDevice].identifierForVendor.UUIDString;
+    NSString* vendorId = [NRMAUDIDManager deviceIdentifier];
     if (vendorId.length && ![NRMAFlags shouldSaltDeviceUUID]) {
         //allows us to compare with udid.
         // don't record the vendor Id if the device id is salted.
