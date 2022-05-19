@@ -30,6 +30,18 @@ dylib-ios-agent
 ├─ cocoapods/             // Cocoapods files
 ├─ NewRelic-SwiftPackage/ // SPM files
 ```
+## 🎬 Getting Started
+To check out the code run the following git command. Note the recursive submoudle addition to make sure we get the repos git submodules.
+
+`git clone git@source.datanerd.us:mobile/dylib-ios-agent.git --recurse-submodules`
+
+The libMobileAgent Xcode build script requires cmake in order to run. Install it via brew.
+
+`brew install cmake`
+
+Open `dylib-ios-agent/Agent.xcworkspace` using the Finder.
+
+Build `Agent-iOS` by pressing the play button.
 
 ## 📚 Docs
 - [Public Docs on docs.newrelic.com](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/get-started/introduction-new-relic-mobile-ios)
