@@ -60,7 +60,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         if (platform == nil) [missingParams addObject:@"platformName"];
         if (sessionId == nil) [missingParams addObject:@"sessionId"];
         if (analytics == nil) [missingParams addObject:@"AnalyticsController"];
-        if (sessionStartDate == nil) [missingParams addObject:@"SessionStartData"];
+        if (sessionStartDate == nil) [missingParams addObject:@"SessionStartDate"];
         NRLOG_ERROR(@"Failed to create handled exception object. Key parameter(s) are nil: %@. This will prevent handle exception reporting.",  [missingParams componentsJoinedByString:@", "]);
         return nil;
     }
@@ -145,8 +145,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 
-- (void) recordError:(NSError *)error
-          attributes:(NSDictionary*)attributes
+- (void) recordError:(NSError * _Nonnull)error
+          attributes:(NSDictionary* _Nullable)attributes
 {
     void* callstack[1024];
     int frames = backtrace(callstack,1024);

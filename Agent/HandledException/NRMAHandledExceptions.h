@@ -29,7 +29,7 @@ extern const NSString* kHexBackupStoreFolder;
 
 - (void) recordHandledException:(NSException*) exception;
 
-- (void) recordError:(NSError*)error attributes:(NSDictionary*)attributes;
+- (void) recordError:(NSError* _Nonnull)error attributes:(NSDictionary* _Nullable)attributes;
 
 - (void) processAndPublishPersistedReports;
 
