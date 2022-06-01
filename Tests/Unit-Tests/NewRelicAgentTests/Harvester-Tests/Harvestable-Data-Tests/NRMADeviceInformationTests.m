@@ -47,7 +47,9 @@
     NSString* countryCode = @"1";
     NSString* regionCode = @"0";
     NSString* manufacturer = @"Apple, Inc.";
-    NRMAApplicationPlatform platform = NRMAPlatform_React;
+    NSString* expectedPlatformString = @"ReactNative";
+
+    NRMAApplicationPlatform platform = NRMAPlatform_ReactNative;
     NRMADeviceInformation* devInfo = [NRMADeviceInformation new];
 
     devInfo.osName = osName;
@@ -61,8 +63,10 @@
     devInfo.platform = platform;
     devInfo.manufacturer = manufacturer;
     devInfo.misc = [NSMutableDictionary new];
+    NSString* platformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:platform];
     NSDictionary* dict =  @{@(__kNRMA_RA_platform):
-                                [NewRelicInternalUtils stringFromNRMAApplicationPlatform:platform], @(__kNRMA_RA_platformVersion):agentVersion};
+                                platformString, @(__kNRMA_RA_platformVersion):agentVersion};
+    XCTAssertTrue([platformString isEqualToString:expectedPlatformString]);
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoOSName], osName);
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoOSVersion], osVersion);
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoManufacturer], manufacturer);
@@ -73,7 +77,7 @@
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoCountryCode], countryCode);
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoRegionCode], regionCode);
     XCTAssertEqualObjects([devInfo asDictionary][kNRMADeviceInfoMisc],dict);
-    ;
+
     //platform version should be the agent version if not explicitly set
     XCTAssertEqualObjects([devInfo JSONObject][9][@(__kNRMA_RA_platformVersion)], agentVersion);
 
@@ -94,7 +98,11 @@
     XCTAssertEqualObjects([devInfo JSONObject][9][@(__kNRMA_RA_platform)], [NewRelicInternalUtils stringFromNRMAApplicationPlatform:platform]);
     XCTAssertEqualObjects([devInfo JSONObject][9][@(__kNRMA_RA_platformVersion)], @"666");
 
+    NSString* expectedFlutterString = @"Flutter";
 
+    NRMAApplicationPlatform flutter = NRMAPlatform_Flutter;
+    NSString* flutterPlatformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:flutter];
+    XCTAssertTrue([flutterPlatformString isEqualToString:expectedFlutterString]);
 }
 
 

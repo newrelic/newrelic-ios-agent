@@ -976,6 +976,10 @@
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
+		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
+		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
+		2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
+		2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
 		34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFA26B376A600CE568A /* CoreData.framework */; };
 		34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
@@ -1750,6 +1754,8 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
+		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
 		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731AFE26B3788800CE568A /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hex.framework; path = Frameworks/Hex.framework; sourceTree = "<group>"; };
 		34731AFF26B3788800CE568A /* Utilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Utilities.framework; path = Frameworks/Utilities.framework; sourceTree = "<group>"; };
@@ -2608,6 +2614,8 @@
 				02FF494724DC626E00115469 /* NRMAHarvester.mm */,
 				02FF494824DC626E00115469 /* NRMAHarvesterConnection.h */,
 				02FF494224DC626E00115469 /* NRMAHarvesterConnection.m */,
+				2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */,
+				2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */,
 				02FF494124DC626E00115469 /* NRMAHarvestTimer.h */,
 				02FF494A24DC626E00115469 /* NRMAHarvestTimer.m */,
 			);
@@ -3175,6 +3183,7 @@
 				02FF47F124DB567600115469 /* NRConstants.h in Headers */,
 				02FF486824DC617900115469 /* NewRelicAgent+Development.h in Headers */,
 				02FF486024DC615A00115469 /* NRMANetworkResponseData.h in Headers */,
+				2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */,
 				021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */,
 				02FF483E24DC614200115469 /* NRMATraceController.h in Headers */,
 				02FF49B324DC62B800115469 /* NRMAHarvestableMethodMetric.h in Headers */,
@@ -3387,6 +3396,7 @@
 				02FF4BAC24E3201400115469 /* NRConstants.h in Headers */,
 				02FF4BAD24E3201400115469 /* NewRelicAgent+Development.h in Headers */,
 				02FF4BAE24E3201400115469 /* NRMANetworkResponseData.h in Headers */,
+				2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */,
 				02FF4BAF24E3201400115469 /* Agent.h in Headers */,
 				02FF4BB024E3201400115469 /* NRMATraceController.h in Headers */,
 				02FF4BB124E3201400115469 /* NRMAHarvestableMethodMetric.h in Headers */,
@@ -4021,6 +4031,7 @@
 				02FF49A024DC62B800115469 /* NRMAScopedMeasurements.m in Sources */,
 				02FF49A824DC62B800115469 /* NRMAAnalyticsEvents.m in Sources */,
 				02FF480A24DB573E00115469 /* NRMAUserActionFacade.mm in Sources */,
+				2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */,
 				02FF4A9C24DC652E00115469 /* NRMABool.m in Sources */,
 				02FF486F24DC618F00115469 /* NRMAThreadTransition.m in Sources */,
 				02FF47D924DB563600115469 /* NewRelic.m in Sources */,
@@ -4319,6 +4330,7 @@
 				02FF4C1B24E3201400115469 /* NRMAScopedMeasurements.m in Sources */,
 				02FF4C1C24E3201400115469 /* NRMAAnalyticsEvents.m in Sources */,
 				02FF4C1D24E3201400115469 /* NRMAUserActionFacade.mm in Sources */,
+				2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */,
 				02FF4C1E24E3201400115469 /* NRMABool.m in Sources */,
 				02FF4C1F24E3201400115469 /* NRMAThreadTransition.m in Sources */,
 				02FF4C2024E3201400115469 /* NewRelic.m in Sources */,
@@ -4497,9 +4509,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4550,9 +4562,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4624,9 +4636,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -4693,9 +4705,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -4730,11 +4742,11 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -4759,7 +4771,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.5;
+				MARKETING_VERSION = 7.3.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
 				OTHER_LDFLAGS = (
@@ -4796,11 +4808,11 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4823,7 +4835,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.5;
+				MARKETING_VERSION = 7.3.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
 				OTHER_LDFLAGS = (
@@ -4882,9 +4894,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4936,9 +4948,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4982,9 +4994,9 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
@@ -5019,9 +5031,9 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
@@ -5079,11 +5091,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5106,7 +5118,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.5;
+				MARKETING_VERSION = 7.3.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -5142,11 +5154,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.5;
+				CURRENT_PROJECT_VERSION = 7.3.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.5;
+				DYLIB_CURRENT_VERSION = 7.3.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5168,7 +5180,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.5;
+				MARKETING_VERSION = 7.3.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = (
 					"-framework",

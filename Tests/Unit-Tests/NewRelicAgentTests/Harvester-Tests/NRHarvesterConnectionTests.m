@@ -187,15 +187,25 @@
     XCTAssertTrue([response.responseBody rangeOfString:@"data_token"].location != NSNotFound,@"");
 }
 
-- (void) testCollectorCompression
+- (void) testCollectorCompressionGZip
 {
-    //TODO: write test for gzip of posts > 512 bytes.
     NSMutableString* message = [[NSMutableString alloc]initWithCapacity:513];
     for (int i = 0; i < 513; i++)
         [message appendFormat:@"a"];
     NSURLRequest* generatedRequest = [connection createPostWithURI:@"helloworld" message:message];
-    
+
+    XCTAssertEqual([generatedRequest.HTTPBody length],14,@"");
     XCTAssertEqualObjects([generatedRequest.allHTTPHeaderFields objectForKey:@"Content-Encoding"], @"deflate", @"");
+}
+
+- (void) testCollectorCompression
+{
+    NSMutableString* message = [[NSMutableString alloc]initWithCapacity:513];
+    for (int i = 0; i < 28; i++)
+        [message appendFormat:@"a"];
+    NSURLRequest* generatedRequest = [connection createPostWithURI:@"helloworld" message:message];
+
+    XCTAssertEqualObjects([generatedRequest.allHTTPHeaderFields objectForKey:@"Content-Encoding"], @"identity", @"");
 }
 
 - (NRMAConnectInformation*) createConnectionInformation

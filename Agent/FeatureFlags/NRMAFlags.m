@@ -4,11 +4,16 @@
 //
 
 #import "NRMAFlags.h"
+#import "NRConstants.h"
+#import "NRMAMetric.h"
+#import "NRMATaskQueue.h"
 
 @implementation NRMAFlags
 
 static NRMAFeatureFlags __flags;
 static BOOL __saltDeviceUUID = NO;
+
+static NSString* __deviceIdentifierReplacement = NULL;
 
 + (void) enableFeatures:(NRMAFeatureFlags)featureFlags
 {
@@ -57,6 +62,39 @@ static BOOL __saltDeviceUUID = NO;
 + (void) setSaltDeviceUUID:(BOOL)enable {
     __saltDeviceUUID = enable;
 }
+
+#pragma mark Replacement of Device Identifier
+
+/// Returns YES if device identifier should be replaced.
++ (BOOL) shouldReplaceDeviceIdentifier {
+    return __deviceIdentifierReplacement != nil;
+}
+
+/// Allows device identifier to be replaced with a String `identifier`
+/// NOTE: Whitespace and new lines will be trimmed.
+/// If the trimmed device identifier replacement is blank then "0" will be used.
+/// @param identifier  pass replacement String. pass NULL to stop replacing.
++ (void) setShouldReplaceDeviceIdentifier:(NSString*)identifier {
+    if (identifier == nil) {
+        __deviceIdentifierReplacement = nil;
+        return;
+    }
+    NSString *trimmedString = [identifier stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    __deviceIdentifierReplacement = trimmedString.length > 0 ? trimmedString : @"0";
+    if (trimmedString.length > kNRDeviceIDReplacementMaxLength) {
+        __deviceIdentifierReplacement = [trimmedString substringWithRange:NSMakeRange(0, kNRDeviceIDReplacementMaxLength)];
+    }
+}
+
++ (NSString*) replacementDeviceIdentifier {
+
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRMAUUIDOverridden
+                                                    value:@1
+                                                    scope:@""]];
+    return __deviceIdentifierReplacement;
+}
+
+#pragma mark END Replacement of Device Identifier
 
 + (BOOL) shouldEnableHandledExceptionEvents {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_HandledExceptionEvents) != 0;

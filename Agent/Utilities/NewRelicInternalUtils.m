@@ -165,8 +165,10 @@ static NSString* _osVersion;
             return kNRMAPlatformString_Unity;
         case NRMAPlatform_Appcelerator:
             return kNRMAPlatformString_Appcelerator;
-        case NRMAPlatform_React:
-            return kNRMAPlatformString_React;
+        case NRMAPlatform_ReactNative:
+            return kNRMAPlatformString_ReactNative;
+        case NRMAPlatform_Flutter:
+            return kNRMAPlatformString_Flutter;
     }
 }
 

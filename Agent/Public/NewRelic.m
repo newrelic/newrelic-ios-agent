@@ -92,6 +92,16 @@
     [NRMAFlags setSaltDeviceUUID:enabled];
 }
 
+// Hidden API for Private Setting Replace Device Identifier
+
+/// replaceDeviceIdentifier allows device identifier to be replaced with a string `identifier`
+/// NOTE: Whitespace and new lines will be trimmed.
+/// If the timmed device identifier replacement is blank then "0" will be used.
+/// @param identifier  pass replacement String. pass NULL to stop replacing.
++ (void) replaceDeviceIdentifier:(NSString*)identifier {
+    [NRMAFlags setShouldReplaceDeviceIdentifier:identifier];
+}
+
 + (NSString*) currentSessionId {
     return [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
 }
