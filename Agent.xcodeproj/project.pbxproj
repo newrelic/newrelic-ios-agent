@@ -3503,6 +3503,7 @@
 				021A15B824C9EEE700E8DFD5 /* Resources */,
 				02FF4B1524E1F04300115469 /* Capture environment variables */,
 				025658E024ED9C5500FE3125 /* ShellScript */,
+				2B7931142847EBAB003F8895 /* Coverage */,
 			);
 			buildRules = (
 				02FF4AEE24DC8AD900115469 /* PBXBuildRule */,
@@ -3889,6 +3890,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "echo \"||||||\"\necho \"|||||| Generating xcode var list\"\necho \"||||||\"\n\necho config = ${CONFIGURATION}\necho action = $ACTION\nif [ ${CONFIGURATION} = \"Release\" ] && [ ${ACTION} = \"install\" ]; then\n    mkdir ${SRCROOT}/build\n    echo executing: ${SRCROOT}/scripts/generate_environment_items.py\n    python ${SRCROOT}/scripts/generate_environment_items.py\nfi\n\nmkdir -p ${PROJECT_DIR}/build\necho \"PROJECT_DIR='${PROJECT_DIR}'\" > ${PROJECT_DIR}/build/archive_paths.sh\necho \"BUILT_PRODUCTS_DIR='${BUILT_PRODUCTS_DIR}'\" >> ${PROJECT_DIR}/build/archive_paths.sh\necho \"WRAPPER_NAME='${WRAPPER_NAME}'\" >> ${PROJECT_DIR}/build/archive_paths.sh\necho \"EXECUTABLE_PATH='${EXECUTABLE_PATH}'\" >> ${PROJECT_DIR}/build/archive_paths.sh\necho \"EXECUTABLE_NAME='${EXECUTABLE_NAME}'\" >> ${PROJECT_DIR}/build/archive_paths.sh\necho \"CODESIGNING_FOLDER_PATH='${CODESIGNING_FOLDER_PATH}'\" >> ${PROJECT_DIR}/build/archive_paths.sh\n\nif [ ${PLATFORM_NAME} = \"macosx\" ]; then\npushd \"${BUILT_PRODUCTS_DIR}\"\n${PROJECT_DIR}/scripts/fixFrameworkSymlinks.sh ${PRODUCT_NAME}\npopd\nfi\n";
+		};
+		2B7931142847EBAB003F8895 /* Coverage */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = Coverage;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n./XcodeCoverage/exportenv.sh\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -4529,6 +4548,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -4582,6 +4602,7 @@
 					"$(PROJECT_DIR)/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
@@ -4655,6 +4676,7 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -4723,6 +4745,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
