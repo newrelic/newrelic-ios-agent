@@ -23,18 +23,6 @@
 
 @implementation NRMAKeyAttributesTest
 
-- (void)setUp
-{
-    [super setUp];
-    // Put setup code here; it will be run once, before the first test case.
-}
-
-- (void)tearDown
-{
-    // Put teardown code here; it will be run once, after the last test case.
-    [super tearDown];
-}
-
 - (void) testKeyAttributesCorrectness
 {
     NSMutableDictionary* attributes = [NSMutableDictionary new];
@@ -54,8 +42,10 @@
     [keyAttributes setValue:connInfo.applicationInformation.appVersion forKey:APP_VERSION_KEY];
     [keyAttributes setValue:connInfo.deviceInformation.deviceId forKey:UUID_KEY];
 
-    XCTAssertEqualObjects(attributes, keyAttributes);
-    
+    XCTAssertEqualObjects(attributes, keyAttributes, @"Expected keyAttributes to equal the attributes from connection information");
+    XCTAssertNotNil(keyAttributes[@"appName"], @"Key attribute missing: appName");
+    XCTAssertNotNil(keyAttributes[@"appVersion"], @"Key attribute missing: appVersion");
+    XCTAssertNotNil(keyAttributes[@"uuid"], @"Key attribute missing: uuid");
 }
 
 - (NRMAConnectInformation*) createConnectionInformation
