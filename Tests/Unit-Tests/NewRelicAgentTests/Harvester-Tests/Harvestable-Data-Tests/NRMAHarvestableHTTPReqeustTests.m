@@ -123,4 +123,76 @@
     XCTAssertTrue([measurement.url isEqualToString:@"google.com"],@"url %@ doesn't match sent url",measurement.url);
     XCTAssertTrue(measurement.statusCode == 400,@"statusCode %d doesn't match sent status code",measurement.statusCode);
 }
+
+- (void) testNoticeNetworkRequestWithStartAndEndTime
+{
+    __block BOOL completed = NO;
+    __block NRMAHarvestableHTTPTransaction* measurement = nil;
+    id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
+    id mockHarvestableHTTPTransactionGeneration = [OCMockObject mockForClass:[NRMAHarvestController class]];
+
+    [[[[mockHarvestableHTTPTransactionGeneration stub] classMethod] andDo:^(NSInvocation * invoke) {
+        NRMAHarvestableHTTPTransaction* localMeasurement;
+        [invoke getArgument:&localMeasurement atIndex:2];
+        measurement = [localMeasurement retain];
+        completed = YES;
+    }] addHarvestableHTTPTransaction:OCMOCK_ANY];
+
+    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+                              httpMethod:@"post"
+                               startTime:6000
+                                 endTime:10000
+                         responseHeaders:nil
+                              statusCode:200
+                               bytesSent:1024
+                           bytesReceived:1023
+                            responseData:nil
+                               andParams:nil];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        //test timed out.
+        completed = YES;
+    });
+    while (CFRunLoopGetCurrent() && !completed) {
+    }
+    [mockUtils stopMocking];
+    [mockHarvestableHTTPTransactionGeneration stopMocking];
+
+    XCTAssertNotNil(measurement,@"measurement is nil. mockHarvestableHTTPTransactionGeneration is not getting metrics");
+    XCTAssertTrue(measurement.totalTimeSeconds == 4.0,@"totalTimeSeconds %f doesn't equal expected value",measurement.totalTimeSeconds);
+}
+
+- (void) testNoticeNetworkFailureWithStartAndEndTime
+{
+    __block BOOL completed = NO;
+    __block NRMAHarvestableHTTPTransaction* measurement = nil;
+    id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
+    id mockHarvestableHTTPTransactionGeneration = [OCMockObject mockForClass:[NRMAHarvestController class]];
+
+    [[[[mockHarvestableHTTPTransactionGeneration stub] classMethod] andDo:^(NSInvocation * invoke) {
+        NRMAHarvestableHTTPTransaction* localMeasurement;
+        [invoke getArgument:&localMeasurement atIndex:2];
+        measurement = [localMeasurement retain];
+        completed = YES;
+    }] addHarvestableHTTPTransaction:OCMOCK_ANY];
+
+    [NewRelic noticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
+                              httpMethod:@"post"
+                               startTime:6000
+                                 endTime:10000
+                          andFailureCode:-1];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        //test timed out.
+        completed = YES;
+    });
+    while (CFRunLoopGetCurrent() && !completed) {
+    }
+    [mockUtils stopMocking];
+    [mockHarvestableHTTPTransactionGeneration stopMocking];
+
+    XCTAssertNotNil(measurement,@"measurement is nil. mockHarvestableHTTPTransactionGeneration is not getting metrics");
+    XCTAssertTrue(measurement.totalTimeSeconds == 4.0,@"totalTimeSeconds %f doesn't equal expected value",measurement.totalTimeSeconds);
+}
+
 @end
