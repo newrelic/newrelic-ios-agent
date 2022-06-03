@@ -1003,6 +1003,7 @@
 		3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
 		3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A926B36FB10056F3B3 /* libc++.tbd */; };
 		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
+		C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.mm */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -1772,6 +1773,7 @@
 		3478A8A926B36FB10056F3B3 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
+		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAKeyAttributesTest.mm; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
 		F6E79C6E25A65346006277FB /* W3CTraceState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceState.h; sourceTree = "<group>"; };
 		F6E79C7025A65346006277FB /* W3CTraceParent.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceParent.mm; sourceTree = "<group>"; };
@@ -1891,6 +1893,7 @@
 		0209ABA824E7041900E45C90 /* NewRelicAgentTests */ = {
 			isa = PBXGroup;
 			children = (
+				C9C28B8A284A6A750097B433 /* HybridSupport-Tests */,
 				F6E79CFA25A7590B006277FB /* DistributedTesting-Tests */,
 				0209AC6424E7391000E45C90 /* Uncategorized */,
 				0209ABDD24E706B300E45C90 /* Instrumentation-Tests */,
@@ -3007,6 +3010,14 @@
 			path = scripts;
 			sourceTree = "<group>";
 		};
+		C9C28B8A284A6A750097B433 /* HybridSupport-Tests */ = {
+			isa = PBXGroup;
+			children = (
+				C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.mm */,
+			);
+			path = "HybridSupport-Tests";
+			sourceTree = "<group>";
+		};
 		F6E79C6C25A65346006277FB /* DistributedTracing */ = {
 			isa = PBXGroup;
 			children = (
@@ -3930,6 +3941,7 @@
 				0209AC9524E7393300E45C90 /* NRThreadLocalStoreTests.m in Sources */,
 				0209AC4924E7078C00E45C90 /* NRMATimestampContainerTest.m in Sources */,
 				0209ABEF24E706FA00E45C90 /* NRMAInteractionDataStampTests.m in Sources */,
+				C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.mm in Sources */,
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
 				0209ACA224E7393300E45C90 /* NRThreadInfoTest.m in Sources */,
