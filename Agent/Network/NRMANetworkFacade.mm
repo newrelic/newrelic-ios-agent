@@ -151,7 +151,7 @@
                                                                                                                            networkErrorMessage:nil
                                                                                                                            encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
                                                                                                                                  appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
-                                                                                withPayload:[NRMAHTTPUtilities retreivePayload:request]];
+                                                                                withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
             NSMutableDictionary* mutableParams = [[NSMutableDictionary alloc] initWithDictionary:params?:@{}];
             mutableParams[NRMA_ERROR_CUSTOM_PARAMS_KEY] = customParams;
@@ -173,7 +173,7 @@
                                                                                     withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
                                                                                                                                                bytesReceived:modifiedBytesReceived
                                                                                                                                                 responseTime:[timer timeElapsedInSeconds]]
-                                                                                     withPayload:[NRMAHTTPUtilities retreivePayload:request]];
+                                                                                     withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
         }
 
@@ -221,7 +221,7 @@
                                                                                                                                    bytesReceived:0
                                                                                                                                     responseTime:timer.timeElapsedInSeconds
                                                                                                                              networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:[NRMAHTTPUtilities retreivePayload:request]];
+                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
 
         [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:request.URL.absoluteString

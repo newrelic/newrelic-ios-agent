@@ -123,7 +123,7 @@
 }
 
 
-+ (std::unique_ptr<NewRelic::Connectivity::Payload>) retreivePayload:(id)object {
++ (std::unique_ptr<NewRelic::Connectivity::Payload>) retrievePayload:(id)object {
     id associatedObject = [NRMAAssociate retrieveFrom:object
                                     with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
 
