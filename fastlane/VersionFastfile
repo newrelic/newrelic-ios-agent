@@ -1,0 +1,30 @@
+import "ConstantsFastfile"
+
+platform :ios do
+  desc "Set build string based on branch and build number"
+  lane :generateVersion do
+
+    develop = "develop"
+    hotfix = "hotfix"
+    release = "release"
+    master = "master"
+
+    puts "The current branch is #{git_branch}"
+    
+    # Should change based on git_branch.
+    output_branch_name = "dev"
+
+    env_build = ENV["BUILD_NUMBER"]
+    build_number = ".#{env_build}"
+    
+    # Append Version Number and branch prefix
+    project_version_number = get_version_number(xcodeproj: "Agent.xcodeproj", target: "Agent_iOS")
+    version = "NewRelic_XCFramework_Agent_#{project_version_number}-#{output_branch_name}"
+    # Append build number if "BUILD_NUMBER" exists.
+    version = version + build_number if !env_build.to_s.empty?
+
+    sh "echo \"export VERSION=#{version}\" > build_version"
+
+    puts "The current version string is #{version}"
+  end
+end

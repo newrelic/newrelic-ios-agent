@@ -1,0 +1,4 @@
+class Constants
+    DD = "dd"
+    ARCHIVES = "archives"
+end

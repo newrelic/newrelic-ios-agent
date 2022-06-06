@@ -1,0 +1,34 @@
+platform :ios do
+
+  desc "Run Agent tests for iOS and tvOS"
+  lane :runTests do
+
+    deleteBuildArtifacts
+
+    runIOSTests
+
+    deleteBuildArtifacts
+
+    runTVOSTests
+
+    deleteBuildArtifacts
+  end
+
+  lane :runIOSTests do 
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "Agent-iOS",
+      device: "iPhone 8"
+    )
+  end
+
+  lane :runTVOSTests do 
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "Agent-tvOS",
+      device: "Apple TV"
+    )
+  end
+end
