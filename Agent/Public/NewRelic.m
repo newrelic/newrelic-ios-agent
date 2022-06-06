@@ -196,11 +196,36 @@
                                      params:params];
 }
 
++ (void)noticeNetworkRequestForURL:(NSURL *)url
+                        httpMethod:(NSString *)httpMethod
+                         startTime:(double)startTime
+                         endTime:(double)endTime
+                   responseHeaders:(NSDictionary *)headers
+                        statusCode:(NSInteger)httpStatusCode
+                         bytesSent:(NSUInteger)bytesSent
+                     bytesReceived:(NSUInteger)bytesReceived
+                      responseData:(NSData *)responseData
+                         andParams:(NSDictionary *)params {
+
+    NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
+    NSHTTPURLResponse*  response = [[NSHTTPURLResponse alloc] initWithURL:url
+                                                               statusCode:httpStatusCode
+                                                              HTTPVersion:@"1.1"
+                                                             headerFields:headers];
+    [request setHTTPMethod:httpMethod];
+    [NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  bytesSent:bytesSent
+                              bytesReceived:bytesReceived
+                               responseData:responseData
+                                     params:params];
+}
+
 + (void)noticeNetworkFailureForURL:(NSURL *)url
                         httpMethod:(NSString*)httpMethod
                          withTimer:(NRTimer *)timer
-                    andFailureCode:(NSInteger)iOSFailureCode
-{
+                    andFailureCode:(NSInteger)iOSFailureCode {
     NSError* error = [NSError errorWithDomain:NSURLErrorDomain
                                          code:iOSFailureCode
                                      userInfo:nil];
@@ -212,6 +237,24 @@
                                   withTimer:timer
                                   withError:error];
 }
+
++ (void)noticeNetworkFailureForURL:(NSURL *)url
+                        httpMethod:(NSString*)httpMethod
+                         startTime:(double)startTime
+                           endTime:(double)endTime
+                    andFailureCode:(NSInteger)iOSFailureCode {
+    NSError* error = [NSError errorWithDomain:NSURLErrorDomain
+                                         code:iOSFailureCode
+                                     userInfo:nil];
+
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
+    [request setHTTPMethod:httpMethod];
+
+    [NRMANetworkFacade noticeNetworkFailure:request
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  withError:error];
+}
+
 #pragma mark - Interactions
 
 + (NSString*) startInteractionWithName:(NSString*)interactionName

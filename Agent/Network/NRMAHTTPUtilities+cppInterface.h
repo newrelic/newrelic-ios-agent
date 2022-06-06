@@ -3,5 +3,5 @@
 #import "NRMAHTTPUtilities.h"
 
 @interface NRMAHTTPUtilities (cppInterface)
-+ (std::unique_ptr<NewRelic::Connectivity::Payload>) retreivePayload:(NSURLRequest*)request;
++ (std::unique_ptr<NewRelic::Connectivity::Payload>) retrievePayload:(NSURLRequest*)request;
 @end
