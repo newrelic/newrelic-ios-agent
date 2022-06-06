@@ -17,14 +17,29 @@
 #define APP_NAME_KEY    @"appName"
 
 @implementation NRMAKeyAttributes
-+ (NSDictionary*) keyAttributes {
++ (NSDictionary*) keyAttributes: (NRMAConnectInformation*) connectionInfo {
+    if (connectionInfo.applicationInformation.appName == nil ) {
+        @throw [NSException exceptionWithName:NSInvalidArgumentException
+                                       reason:@"appName of connection information is nil"
+                                     userInfo:nil];
+    }
+    if (connectionInfo.applicationInformation.appVersion == nil ) {
+        @throw [NSException exceptionWithName:NSInvalidArgumentException
+                                       reason:@"appVersion of connection information is nil"
+                                     userInfo:nil];
 
+    }
+    if (connectionInfo.deviceInformation.deviceId == nil) {
+        @throw [NSException exceptionWithName:NSInvalidArgumentException
+                                       reason:@"deviceID of connection information is nil"
+                                     userInfo:nil];
+
+    }
     NSMutableDictionary* attributes = [NSMutableDictionary new];
 
-    NRMAConnectInformation* connInfo = [NRMAAgentConfiguration connectionInformation];
-    NSString* appName = connInfo.applicationInformation.appName;
-    NSString* appVersion = connInfo.applicationInformation.appVersion;
-    NSString* uuid = connInfo.deviceInformation.deviceId;
+    NSString* appName = connectionInfo.applicationInformation.appName;
+    NSString* appVersion = connectionInfo.applicationInformation.appVersion;
+    NSString* uuid = connectionInfo.deviceInformation.deviceId;
 
     [attributes setValue:appName forKey:APP_NAME_KEY];
     [attributes setValue:appVersion forKey:APP_VERSION_KEY];

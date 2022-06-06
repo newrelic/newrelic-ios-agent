@@ -454,7 +454,7 @@
  * This function is built for hybird support and bridging with the browser agent
  */
 + (NSDictionary*) keyAttributes {
-    return [NRMAKeyAttributes keyAttributes];
+    return [NRMAKeyAttributes keyAttributes: [NRMAAgentConfiguration connectionInformation]];
 }
 
 
