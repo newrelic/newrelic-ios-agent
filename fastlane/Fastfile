@@ -1,0 +1,49 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+
+import "TestFastfile"
+import "UtilityFastfile"
+import "FrameworkFastfile"
+import "BuildFastfile"
+import "VersionFastfile"
+import "ConstantsFastfile"
+
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Build NewRelic.XCFramework for all platforms"
+  lane :buildFramework do
+
+    deleteBuildArtifacts
+
+    buildIOS
+    buildTVOS
+    buildMacOS
+
+    internalOutputXCFramework
+  end
+
+  desc "Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms"
+  lane :testAndBuild do
+    
+    puts "Running tests 🧪 for iOS and tvOS"
+    
+    runTests
+    
+    # Set the version string based on the current branch and PR.
+    generateVersion
+
+    puts "Successfully ran tests. 🚀 Building NewRelic.XCFramework for all platforms"
+
+    buildFramework
+  end
+end
