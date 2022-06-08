@@ -34,7 +34,6 @@
     [attributes setValue:appName forKey:@"appName"];
     [attributes setValue:appVersion forKey:@"appVersion"];
     [attributes setValue:uuid forKey:@"uuid"];
-    //[[NSDictionary alloc] initWithDictionary:self.producedMeasurements]
     
     NSDictionary* keyAttributes = [NRMAKeyAttributes keyAttributes:[self createValidConnectionInformation]];
     
@@ -45,7 +44,10 @@
 }
 - (void) testKeyAttributesInvalidInput
 {
-    XCTAssertThrows([NRMAKeyAttributes keyAttributes: [self createInvalidConnectionInformation]]);
+    XCTAssertNoThrow([NRMAKeyAttributes keyAttributes: [self createInvalidConnectionInformation]], @"App should not crash when an input is nil");
+    NSDictionary* keyAttributes = [NRMAKeyAttributes keyAttributes:[self createInvalidConnectionInformation]];
+    XCTAssertNotNil(keyAttributes[@"appVersion"]);
+    XCTAssertEqualObjects(@"", keyAttributes[@"appVersion"]);
 }
 
 - (NRMAConnectInformation*) createValidConnectionInformation
