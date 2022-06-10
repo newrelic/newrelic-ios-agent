@@ -6,8 +6,8 @@
 //  Copyright © 2017 New Relic. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "NRMAAgentConfiguration.h"
 
 @interface NRMAKeyAttributes : NSObject
-+ (NSDictionary*) keyAttributes;
++ (NSDictionary*) keyAttributes:(NRMAConnectInformation*)argument;
 @end

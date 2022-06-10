@@ -58,8 +58,7 @@ double NRMA_timeInMillis(double time) {
 @synthesize endTimeMillis = _endTimeMillis;
 @synthesize startTimeMillis = _startTimeMillis;
 
--(id) init
-{
+-(id) init {
     self = [super init];
     if (self) {
         [self restartTimer];
@@ -68,11 +67,18 @@ double NRMA_timeInMillis(double time) {
     return self;
 }
 
-- (void) restartTimer
-{
+-(id) initWithStartTime:(double)startTime andEndTime:(double)endTime {
+    self = [self init];
+    if (self) {
+        self->_startTimeMillis = startTime;
+        self->_endTimeMillis = endTime;
+    }
+    return self;
+}
+
+- (void) restartTimer {
     self->_startTimeMillis = NRMAMillisecondTimestamp();
     self->_endTimeMillis = 0;
-    
 }
 
 - (void) stopTimer {

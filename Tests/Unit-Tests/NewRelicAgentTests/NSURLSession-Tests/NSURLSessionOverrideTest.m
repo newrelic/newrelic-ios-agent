@@ -38,6 +38,11 @@
     IMP methodImplementation = class_getMethodImplementation(clazz, @selector(dataTaskWithRequest:));
     dladdr(methodImplementation, &info);
     XCTAssertTrue(methodImplementation == (IMP)NRMAOverride__dataTaskWithRequest, @"%s doesn't match NRMAOverride",info.dli_sname);
+    
+    NSURLRequest *urlRequest = [NSURLRequest requestWithURL: [NSURL URLWithString:@"https://newrelic.com"]];
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*))methodImplementation)(nil,_cmd,urlRequest));
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*))methodImplementation)(self,nil,urlRequest));
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*))methodImplementation)(self,_cmd,nil));
 
     methodImplementation = class_getMethodImplementation(clazz, @selector(dataTaskWithURL:));
     dladdr(methodImplementation, &info);

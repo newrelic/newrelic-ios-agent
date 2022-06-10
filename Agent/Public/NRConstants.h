@@ -104,6 +104,8 @@ typedef NSString NRMetricUnit;
 #define kNRAgentHealthPrefix             @"Supportability/AgentHealth"
 #define kNRMASessionStartMetric          @"Session/Start"
 
+#define kNRMAUUIDOverridden              @"Supportability/Mobile/iOS/UUID/Overridden"
+
 #define kNRSupportabilityDistributedTracing @"Supportability/TraceContext"
 
 #define kNRMAMetricSuffixCount           @"Count"
@@ -121,6 +123,7 @@ typedef NSString NRMetricUnit;
 #define kNRMAUserActionAppBackground    @"AppBackground"
 #define kNRMAUserActionTap              @"Tap"
 
+#define kNRDeviceIDReplacementMaxLength 40
 
 // Network Failure Codes
 enum NRNetworkFailureCode {

@@ -1,0 +1,2 @@
+${SRCROOT}/Frameworks/*
+${SRCROOT}/flatbuffers/*
