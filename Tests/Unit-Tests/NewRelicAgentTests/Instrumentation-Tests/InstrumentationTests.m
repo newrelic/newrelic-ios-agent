@@ -25,8 +25,6 @@
      XCTAssertTrue([NRMAApplicationInstrumentation instrumentUIApplication], @"should successfully instrument");
      XCTAssertFalse([NRMAApplicationInstrumentation instrumentUIApplication], @"should not instrument already instrumented application");
      XCTAssertTrue([NRMAApplicationInstrumentation deinstrumentUIApplication], @"should successfully deinstrument");
-
-
  }
 
 
