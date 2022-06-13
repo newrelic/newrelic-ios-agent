@@ -197,12 +197,6 @@
 
      XCTAssertNoThrow([fileManagerWithReporter processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
      XCTAssertNoThrow([fileManager processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
-
-
-
-
-
-
  }
 
 @end
