@@ -8,6 +8,8 @@
 
 #import <XCTest/XCTest.h>
 #import "NRMAUncaughtExceptionHandler.h"
+#import "PLCrashReporter.h"
+
 @interface NRMAUncaughtExceptionhandlerTests : XCTestCase
 
 @end
@@ -35,5 +37,13 @@
 {
 //    STAssertTrue([NRMAUncaughtExceptionHandler unregisterUncaughtExceptionHandler],@"failed to unregister uncaught exception handler!");
 }
+- (void) testHandlerBehaviorDuringTesting {
+     PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration: [PLCrashReporterConfig defaultConfiguration]];
+     NRMAUncaughtExceptionHandler* handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:reporter];
+     XCTAssertTrue([handler isExceptionHandlerValid], @"should be true with typical handler declaration case");
+     XCTAssertFalse([handler isActive], @"should not start during testing");
+     XCTAssertFalse([handler start], @"should not start during testing");
+     XCTAssertFalse([handler stop], @"should not have started during testing");
+ }
 
 @end
