@@ -1005,6 +1005,8 @@
 		3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
 		3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A926B36FB10056F3B3 /* libc++.tbd */; };
 		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
+		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
+		C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */; };
 		34DB25372824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
 		34DB25382824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
 		34DB25392824791B00A5BC45 /* NRMAURLTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */; };
@@ -1782,6 +1784,8 @@
 		34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformer.m; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
+		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
+		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
 		F6E79C6E25A65346006277FB /* W3CTraceState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceState.h; sourceTree = "<group>"; };
@@ -2067,6 +2071,7 @@
 			children = (
 				0209ABE124E706D600E45C90 /* UICollectionView-Tests */,
 				0209ABDE24E706C500E45C90 /* UITableView-Tests */,
+				C94F518C28577E0000E81E01 /* InstrumentationTests.m */,
 			);
 			path = "Instrumentation-Tests";
 			sourceTree = "<group>";
@@ -2163,6 +2168,7 @@
 				0209AC6D24E7392D00E45C90 /* NSURLConnectionTests.h */,
 				0209AC8024E7393100E45C90 /* NSURLConnectionTests.m */,
 				0209AC6524E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m */,
+				C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -3940,6 +3946,7 @@
 				F6E79D1B25A78689006277FB /* TestW3CTraceParent.mm in Sources */,
 				0209AC2224E7071F00E45C90 /* NRMeasurementTest.m in Sources */,
 				0209ABE024E706D300E45C90 /* TestUITableViewInstrumentation.m in Sources */,
+				C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */,
 				0209ABDA24E706AE00E45C90 /* TestHexUploadPublisher.mm in Sources */,
 				0209AC2324E7071F00E45C90 /* NRMetricTests.m in Sources */,
 				0209ABDB24E706AE00E45C90 /* TestSessionIdentifierManger.m in Sources */,
@@ -3978,6 +3985,7 @@
 				C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */,
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
+				C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */,
 				0209ACA224E7393300E45C90 /* NRThreadInfoTest.m in Sources */,
 				0209ABF524E706FA00E45C90 /* NRGCDOverrideTest.m in Sources */,
 				0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */,
