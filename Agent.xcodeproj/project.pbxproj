@@ -980,6 +980,8 @@
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
+		343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
+		343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
 		34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFA26B376A600CE568A /* CoreData.framework */; };
 		34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
@@ -1005,6 +1007,10 @@
 		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
 		C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */; };
+		34DB25372824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
+		34DB25382824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
+		34DB25392824791B00A5BC45 /* NRMAURLTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */; };
+		34DB253A2824791B00A5BC45 /* NRMAURLTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */; };
 		C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
@@ -1759,6 +1765,7 @@
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
+		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
 		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731AFE26B3788800CE568A /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hex.framework; path = Frameworks/Hex.framework; sourceTree = "<group>"; };
 		34731AFF26B3788800CE568A /* Utilities.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Utilities.framework; path = Frameworks/Utilities.framework; sourceTree = "<group>"; };
@@ -1773,6 +1780,8 @@
 		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A926B36FB10056F3B3 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLTransformer.h; sourceTree = "<group>"; };
+		34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformer.m; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
@@ -1936,6 +1945,7 @@
 			children = (
 				0209AC4C24E7079400E45C90 /* NRMAAnalyticsTest.mm */,
 				0209AC4D24E7079400E45C90 /* NRMARequestEvents.mm */,
+				343883552834405700B31C2E /* NRMAURLTransformerTests.m */,
 			);
 			path = "Analytics-Tests";
 			sourceTree = "<group>";
@@ -2420,6 +2430,8 @@
 				02FF485524DC615900115469 /* NRMANetworkResponseData.h */,
 				02FF485924DC615A00115469 /* NRMANetworkResponseData.mm */,
 				02FF485724DC615900115469 /* NRMANetworkResponseData+CppInterface.h */,
+				34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */,
+				34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -3220,6 +3232,7 @@
 				02FF49B624DC62B800115469 /* NRMAHarvestableHTTPErrors.h in Headers */,
 				02FF484224DC614200115469 /* NRMAActivityNameGenerator.h in Headers */,
 				02FF491224DC624400115469 /* NRMACrashReport_Library.h in Headers */,
+				34DB25372824791B00A5BC45 /* NRMAURLTransformer.h in Headers */,
 				02FF4AFC24DC8CB200115469 /* grpc.h in Headers */,
 				02FF491E24DC624400115469 /* NRMACrashReport_CodeType.h in Headers */,
 				02FF49C124DC62B800115469 /* NRMAHarvestableEvent.h in Headers */,
@@ -3433,6 +3446,7 @@
 				02FF4BC024E3201400115469 /* NRMAHarvestableHTTPErrors.h in Headers */,
 				02FF4BC124E3201400115469 /* NRMAActivityNameGenerator.h in Headers */,
 				02FF4BC224E3201400115469 /* NRMACrashReport_Library.h in Headers */,
+				34DB25382824791B00A5BC45 /* NRMAURLTransformer.h in Headers */,
 				02FF4BC324E3201400115469 /* grpc.h in Headers */,
 				02FF4BC424E3201400115469 /* NRMACrashReport_CodeType.h in Headers */,
 				02FF4BC524E3201400115469 /* NRMAHarvestableEvent.h in Headers */,
@@ -3958,6 +3972,7 @@
 				0209AC3124E7073800E45C90 /* NRMADeviceInformationTests.m in Sources */,
 				0209ABE324E706E600E45C90 /* TestUICollectionViewInstrumentation.m in Sources */,
 				0209AC9724E7393300E45C90 /* NRNSURLConnectionSupportTests.m in Sources */,
+				343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0209AC0C24E7071500E45C90 /* APIMethodTraceTest.m in Sources */,
 				0209ABD824E706AE00E45C90 /* TestRetryTracker.m in Sources */,
 				0209ABEE24E706FA00E45C90 /* NSObject+NRAssociatedObjectTest.m in Sources */,
@@ -4100,6 +4115,7 @@
 				02FF4AA024DC652E00115469 /* NRMANonARCMethods.m in Sources */,
 				02FF4AAF24DC652E00115469 /* NRMACPUVitals.m in Sources */,
 				02FF484924DC614200115469 /* NRMAActivityTrace.m in Sources */,
+				34DB25392824791B00A5BC45 /* NRMAURLTransformer.m in Sources */,
 				02FF491424DC624400115469 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				02FF491324DC624400115469 /* NRMACrashReport_SignalInfo.m in Sources */,
 				02FF488F24DC61B900115469 /* CacheStoragePolicy.m in Sources */,
@@ -4218,6 +4234,7 @@
 				025657FE24EB19BF00FE3125 /* NRMetricTests.m in Sources */,
 				025657FF24EB19BF00FE3125 /* TestSessionIdentifierManger.m in Sources */,
 				0256580024EB19BF00FE3125 /* NRAgentSanityTests.m in Sources */,
+				343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0256580124EB19BF00FE3125 /* NRMAActingClassUtilsTest.m in Sources */,
 				0256580224EB19BF00FE3125 /* NRMeasurementProducerTest.m in Sources */,
 				0256580324EB19BF00FE3125 /* NRMAHTTPErrorTest.m in Sources */,
@@ -4399,6 +4416,7 @@
 				02FF4C3824E3201400115469 /* NRMANonARCMethods.m in Sources */,
 				02FF4C3924E3201400115469 /* NRMACPUVitals.m in Sources */,
 				02FF4C3A24E3201400115469 /* NRMAActivityTrace.m in Sources */,
+				34DB253A2824791B00A5BC45 /* NRMAURLTransformer.m in Sources */,
 				02FF4C3B24E3201400115469 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				02FF4C3C24E3201400115469 /* NRMACrashReport_SignalInfo.m in Sources */,
 				02FF4C3D24E3201400115469 /* CacheStoragePolicy.m in Sources */,

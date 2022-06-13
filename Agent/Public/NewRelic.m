@@ -26,6 +26,7 @@
 #import "NRMANetworkFacade.h"
 #import "NewRelic.h"
 #import "NRMAHarvestController.h"
+#import "NRMAURLTransformer.h"
 
 #define kNRMA_NAME @"name"
 
@@ -500,5 +501,9 @@
     return [NRMAKeyAttributes keyAttributes: [NRMAAgentConfiguration connectionInformation]];
 }
 
++  (void)setURLRegexRules:(NSDictionary<NSString *, NSString *>*)regexRules {
+    NRMAURLTransformer *transformer = [[NRMAURLTransformer alloc] initWithRegexRules:regexRules];
+    [NewRelicAgentInternal setURLTransformer:transformer];
+}
 
 @end
