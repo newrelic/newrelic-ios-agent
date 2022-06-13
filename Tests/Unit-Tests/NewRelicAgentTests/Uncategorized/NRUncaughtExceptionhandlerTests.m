@@ -58,7 +58,7 @@
             debuggerIsAttached = false;
         }
 
-        if (!debuggerIsAttached && (info.kp_proc.p_flag & P_TRACED) != 0)
+        if (!debuggerIsAttached && (info.kp_proc.p_flag & P_TRACED) != 0) {
             debuggerIsAttached = true;
             PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration: [PLCrashReporterConfig defaultConfiguration]];
             NRMAUncaughtExceptionHandler* handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:reporter];
@@ -67,6 +67,7 @@
             XCTAssertFalse([handler isActive], @"should not start during testing");
             XCTAssertFalse([handler start], @"should not start during testing");
             XCTAssertFalse([handler stop], @"should not have started during testing");
+        }
     });
     
     
