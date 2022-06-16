@@ -1,4 +1,5 @@
 class Constants
-    DD = "dd"
-    ARCHIVES = "archives"
+    DD ||= "dd"
+    ARCHIVES ||= "archives"
+    MODE ||= "Release"
 end

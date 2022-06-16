@@ -9,7 +9,7 @@ platform :ios do
       clean: true,
       archive: true,
       archive_path: "#{Constants::ARCHIVES}/iOS.xcarchive",
-      configuration: "Release",
+      configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "iphoneos",
@@ -19,7 +19,7 @@ platform :ios do
     xcodebuild(
       clean: true, 
       build: true,
-      configuration: "Release",
+      configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "iphonesimulator",
@@ -33,7 +33,7 @@ platform :ios do
     xcodebuild(
       archive: true,
       archive_path: "#{Constants::ARCHIVES}/tvOS.xcarchive",
-      configuration: "Release",
+      configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-tvOS",
       sdk: "appletvos",
@@ -42,7 +42,7 @@ platform :ios do
     # Build Sim
     xcodebuild(
       build: true, 
-      configuration: "Release",
+      configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-tvOS",
       sdk: "appletvsimulator",
@@ -55,7 +55,7 @@ platform :ios do
     xcodebuild(
       archive: true,
       archive_path: "#{Constants::ARCHIVES}/macOS.xcarchive",
-      configuration: "Release",
+      configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "macosx",

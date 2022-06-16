@@ -29,12 +29,36 @@ Run Agent tests for iOS and tvOS
 [bundle exec] fastlane ios runIOSTests
 ```
 
+Run Agent tests for iOS and generate code coverage
 
+### ios internalRunIOSTests
+
+```sh
+[bundle exec] fastlane ios internalRunIOSTests
+```
+
+
+
+### ios runIOSTestsNoCov
+
+```sh
+[bundle exec] fastlane ios runIOSTestsNoCov
+```
+
+Run Agent tests for iOS
 
 ### ios runTVOSTests
 
 ```sh
 [bundle exec] fastlane ios runTVOSTests
+```
+
+Run Agent tests for tvOS
+
+### ios coverage
+
+```sh
+[bundle exec] fastlane ios coverage
 ```
 
 
@@ -54,6 +78,14 @@ Delete derived data and Frameworks and build directory
 ```
 
 Ouput Universal NewRelic.xcframework
+
+### ios internalOutputXCFrameworkIOSOnly
+
+```sh
+[bundle exec] fastlane ios internalOutputXCFrameworkIOSOnly
+```
+
+Ouput Universal NewRelic.xcframework for iOS Only
 
 ### ios buildIOS
 
@@ -94,6 +126,14 @@ Set build string based on branch and build number
 ```
 
 Build NewRelic.XCFramework for all platforms
+
+### ios buildFrameworkIOSOnly
+
+```sh
+[bundle exec] fastlane ios buildFrameworkIOSOnly
+```
+
+Build NewRelic.XCFramework for iOS Only
 
 ### ios testAndBuild
 

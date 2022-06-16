@@ -8,11 +8,18 @@ platform :ios do
       
       # Running in ./fastlane so switch dir to proj root.
       Dir.chdir("..") do
-        sh "rm -rf NewRelic.xcframework"
-        sh "rm -rf #{Constants::DD}"
-        sh "rm -rf #{Constants::ARCHIVES}"
-        sh "rm -rf Frameworks"
-        sh "rm -rf libMobileAgent/build"
+        begin
+          sh "rm -rf NewRelic.xcframework"
+          sh "rm -rf #{Constants::ARCHIVES}"
+          sh "rm -rf Frameworks"
+          sh "rm -rf libMobileAgent/build"
+          sh "rm -rf #{Constants::DD}"
+        rescue => ex
+          # handle error
+        ensure
+          # do something that always run like clean up
+        end
+
       end
   end
 end

@@ -66,7 +66,7 @@ Deployment multijob can be seen in Jenkins here:
 [Jenkins SPM Job Prod](https://mobile-team-build.pdx.vm.datanerd.us/view/Agent%20-%20iOS%20Dylib/job/Agent-Production-Release_XCFramework-SPM/)
 
 ## 🎤 Testing
-- Run the Unit Tests using Xcode by selecting Agent-iOS scheme and Product -> Test
+- Option 1: Run the Unit Tests using Xcode by selecting Agent-iOS scheme and Product -> Test
 - View Code Coverage report by running `./XcodeCoverage/getcov -s -v`
     - Note: If you are on a pre M1 architecture then please uncomment the x86 line and remove the arm64 line in the file `XcodeCoverage/envcov.sh`
     ```
@@ -76,6 +76,24 @@ Deployment multijob can be seen in Jenkins here:
     # M1
     ARCHITECTURE="arm64"
     ```
+    - Note: Run `./XcodeCoverage/covlcean` in between test runs to make sure latest code coverage data is used.
+- Option 2: Running tests using [Fastlane](https://docs.fastlane.tools/)
+    - Prerequisites:
+        - Requires ruby (ruby 2.6.8p205 was used) 
+        - Requires Bundler (use gem install bundler) (Bundler 2.3.13 was used)
+        - Requires running bundle install before fastlane
+    - `bundle exec fastlane runIOSTests`
+        - Run above command to delete build artifacts and run tests on iOS. Upon completion code coverage will be generated.
+    - `bundle exec fastlane runTests`
+        - To run the Agent iOS Tests and tvOS Tests run the above command.
+- Building NewRelic.XCFramework using Fastlane
+    - `bundle exec fastlane testAndBuild`
+        - To run tests and then build the framework run above command.
+    - `bundle exec fastlane buildFramework`
+        - To build the framework run above command.
+- Utilities:
+    - `bundle exec fastlane deleteBuildArtifacts` Run this command to nuke the projects build caches.
+
 ## ⁉️ Troubleshooting
 - If you encounter a build error then try deleting the `libMobileAgent/build` and `Frameworks` folders and trying another build.
 - Xcode must have default name of `Xcode.app`
