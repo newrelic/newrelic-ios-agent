@@ -25,6 +25,7 @@ using namespace NewRelic;
 {
     std::shared_ptr<AnalyticsController> _analyticsController;
     BOOL _sessionWillEnd;
+    NSRegularExpression* __eventTypeRegex;
 }
 
 static PersistentStore<std::string,BaseValue>* __attributeStore;
@@ -93,6 +94,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) dealloc {
+    __eventTypeRegex = nil;
 
     [super dealloc];
 }
@@ -360,31 +362,38 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
          withAttributes:(NSDictionary*)attributes {
 
     try {
+        @autoreleasepool {
+            if (!__eventTypeRegex) {
+                NSError* error = nil;
+                __eventTypeRegex = [[NSRegularExpression alloc] initWithPattern:@"^[\\p{L}\\p{Nd} _:.]+$"
+                                                                        options:NSRegularExpressionUseUnicodeWordBoundaries
+                                                                          error:&error];
+                if (error != nil) {
+                    NRLOG_ERROR(@"addCustomEvent failed with error: %@",error);
+                    return false;
+                }
+            }
 
-        NSError* error;
-        NSRegularExpression* eventTypeRegex = [NSRegularExpression regularExpressionWithPattern:@"^[\\p{L}\\p{Nd} _:.]+$"
-                                                                                        options:NSRegularExpressionUseUnicodeWordBoundaries
-                                                                                          error:&error];
+            NSArray* textCheckingResults = [__eventTypeRegex matchesInString:eventType
+                                                                     options:NSMatchingReportCompletion
+                                                                       range:NSMakeRange(0, eventType.length)];
 
-        NSArray* textCheckingResults = [eventTypeRegex matchesInString:eventType
-                                                               options:NSMatchingReportCompletion
-                                                                 range:NSMakeRange(0, eventType.length)];
-
-        if (!(textCheckingResults.count > 0 && ((NSTextCheckingResult*)textCheckingResults[0]).range.length == eventType.length)) {
-            NRLOG_ERROR(@"Failed to add event type: %@. EventType is may only contain word characters, numbers, spaces, colons, underscores, and periods.",eventType);
-            return NO;
-        }
+            if (!(textCheckingResults.count > 0 && ((NSTextCheckingResult*)textCheckingResults[0]).range.length == eventType.length)) {
+                NRLOG_ERROR(@"Failed to add event type: %@. EventType is may only contain word characters, numbers, spaces, colons, underscores, and periods.",eventType);
+                return NO;
+            }
 
 
-        auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
+            auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
 
-        if (event == nullptr) {
-            NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
-            return NO;
-        }
+            if (event == nullptr) {
+                NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
+                return NO;
+            }
 
-        if([self event:event withAttributes:attributes]) {
-            return _analyticsController->addEvent(event);
+            if([self event:event withAttributes:attributes]) {
+                return _analyticsController->addEvent(event);
+            }
         }
     } catch (std::exception& e){
         NRLOG_ERROR(@"Failed to add event: %s",e.what());
