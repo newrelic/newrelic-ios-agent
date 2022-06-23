@@ -32,16 +32,6 @@ platform :ios do
     internalOutputXCFramework
   end
 
-  desc "Build NewRelic.XCFramework for iOS Only"
-  lane :buildFrameworkIOSOnly do
-
-    deleteBuildArtifacts
-
-    buildIOS
-
-    internalOutputXCFrameworkIOSOnly
-  end
-
   desc "Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms"
   lane :testAndBuild do
     
@@ -55,5 +45,17 @@ platform :ios do
     puts "Successfully ran tests. 🚀 Building NewRelic.XCFramework for all platforms"
 
     buildFramework
+  end
+
+    # DEBUG LANES
+
+  desc "Build NewRelic.XCFramework for iOS Only"
+  lane :buildFrameworkIOSOnly do
+
+    deleteBuildArtifacts
+
+    buildIOS
+
+    internalOutputXCFrameworkIOSOnly
   end
 end

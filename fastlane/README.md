@@ -79,6 +79,14 @@ Delete derived data and Frameworks and build directory
 
 Ouput Universal NewRelic.xcframework
 
+### ios cpDsymToolsToFramework
+
+```sh
+[bundle exec] fastlane ios cpDsymToolsToFramework
+```
+
+Copy dsym-upload-tools to xcframework
+
 ### ios internalOutputXCFrameworkIOSOnly
 
 ```sh
@@ -127,14 +135,6 @@ Set build string based on branch and build number
 
 Build NewRelic.XCFramework for all platforms
 
-### ios buildFrameworkIOSOnly
-
-```sh
-[bundle exec] fastlane ios buildFrameworkIOSOnly
-```
-
-Build NewRelic.XCFramework for iOS Only
-
 ### ios testAndBuild
 
 ```sh
@@ -142,6 +142,14 @@ Build NewRelic.XCFramework for iOS Only
 ```
 
 Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms
+
+### ios buildFrameworkIOSOnly
+
+```sh
+[bundle exec] fastlane ios buildFrameworkIOSOnly
+```
+
+Build NewRelic.XCFramework for iOS Only
 
 ----
 

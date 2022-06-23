@@ -30,8 +30,20 @@ platform :ios do
         macOSArchive => { dsyms: macOSDsym }
       }, output: "dylib-ios-agent/NewRelic.xcframework")
     end
+
+    cpDsymToolsToFramework
   end
 
+  desc "Copy dsym-upload-tools to xcframework"
+  lane :cpDsymToolsToFramework do 
+    Dir.chdir("..") do
+      sh("mkdir -p NewRelic.xcframework/Resources/")
+      sh("cp -r dsym-upload-tools/ NewRelic.xcframework/Resources/")
+    end
+  end
+
+  # DEBUG LANES
+  
   desc "Ouput Universal NewRelic.xcframework for iOS Only"
   lane :internalOutputXCFrameworkIOSOnly do 
     Dir.chdir("..") do
@@ -47,5 +59,8 @@ platform :ios do
         iosSimArchive => {},
       }, output: "dylib-ios-agent/NewRelic.xcframework")
     end
+
+    cpDsymToolsToFramework
   end
+
 end
