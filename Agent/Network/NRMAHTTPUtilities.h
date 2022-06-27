@@ -19,4 +19,6 @@
 + (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest*)request;
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request;
 + (void) attachPayload:(NRMAPayloadContainer*)payload to:(id)object;
++ (NRMAPayloadContainer *)generatePayload;
++ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer;
 @end

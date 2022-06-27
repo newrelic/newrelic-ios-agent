@@ -34,7 +34,7 @@ NSString *DT_FIELD_UNUSED = @"";
     return self;
 }
 
-- (id) initWithPayload: (std::unique_ptr<NewRelic::Connectivity::Payload>&)payload{
+- (id) initWithPayload: (const std::unique_ptr<NewRelic::Connectivity::Payload>&)payload{
     [self setNewRelicDefaults];
 
     self.accountId = [NSString stringWithCString:payload->getAccountId().c_str()

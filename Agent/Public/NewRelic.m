@@ -27,6 +27,7 @@
 #import "NewRelic.h"
 #import "NRMAHarvestController.h"
 #import "NRMAURLTransformer.h"
+#import "NRMAHTTPUtilities.h"
 
 #define kNRMA_NAME @"name"
 
@@ -254,6 +255,10 @@
     [NRMANetworkFacade noticeNetworkFailure:request
                                   withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
                                   withError:error];
+}
+
++ (NSDictionary<NSString*,NSString*>*)generateDistributedTracingHeaders {
+    return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
 }
 
 #pragma mark - Interactions

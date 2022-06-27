@@ -593,6 +593,11 @@ extern "C" {
                            endTime:(double)endTime
                     andFailureCode:(NSInteger)iOSFailureCode;
 
+/*******************************************************************************
+ * Generates Distributed Tracing headers for use if not
+ * automatically instrumenting network connections
+ *******************************************************************************/
++ (NSDictionary<NSString*,NSString*>* _Nonnull)generateDistributedTracingHeaders;
 #pragma mark - Recording custom events
 
 /*!
