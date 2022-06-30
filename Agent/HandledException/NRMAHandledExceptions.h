@@ -33,4 +33,6 @@ extern const NSString* kHexBackupStoreFolder;
 
 - (void) processAndPublishPersistedReports;
 
+
+- (void) recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary;
 @end

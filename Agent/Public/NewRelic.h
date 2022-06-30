@@ -745,6 +745,8 @@ extern "C" {
 + (void) recordHandledException:(NSException* _Nonnull)exception
            withAttributes:(NSDictionary* _Nullable)attributes;
 
++ (void) recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary;
+
 #pragma mark - Handled Errors
 
 

@@ -68,6 +68,11 @@
                                                                                     attributes:attributes];
 }
 
++ (void) recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
+
+}
+
 + (void) recordError:(NSError* _Nonnull)error {
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:nil];
