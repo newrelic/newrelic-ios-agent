@@ -139,6 +139,29 @@
                                                 attributes:dict]);
 }
 
+- (void) testHandleExceptionWithStackTrace {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
+                                                                          collectorAddress:nil
+                                                                              crashAddress:nil];
+    agentConfig.sessionIdentifier = @"1234-567-890";
+
+    NRMAHandledExceptions* hexController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                                                     sessionStartTime:[NSDate new]
+                                                                                   agentConfiguration:agentConfig
+                                                                                             platform:[NewRelicInternalUtils osName]
+                                                                                            sessionId:@"sessionId"];
+
+    id dict = @{@"name": @"Exception name not found",
+                @"reason": @"Reason not found",
+                @"cause": @"Reason not found",
+                @"fatal": @false,
+                @"stackTraceElements": @[@{@"class": @"className", @"method": @"methodName", @"file": @"fileName", @"line": @"1"}],
+                @"appBuild": @"8",
+                @"appVersion": @"8"};
+
+    XCTAssertNoThrow([hexController recordHandledExceptionWithStackTrace:dict]);
+}
 
 - (void) testPlatform {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
