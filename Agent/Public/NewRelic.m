@@ -181,6 +181,7 @@
                          bytesSent:(NSUInteger)bytesSent
                      bytesReceived:(NSUInteger)bytesReceived
                       responseData:(NSData *)responseData
+                      traceHeaders:(NSDictionary<NSString*,NSString*>*)traceHeaders
                          andParams:(NSDictionary *)params {
 
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -195,6 +196,7 @@
                                   bytesSent:bytesSent
                               bytesReceived:bytesReceived
                                responseData:responseData
+                               traceHeaders:traceHeaders
                                      params:params];
 }
 
@@ -207,6 +209,7 @@
                          bytesSent:(NSUInteger)bytesSent
                      bytesReceived:(NSUInteger)bytesReceived
                       responseData:(NSData *)responseData
+                      traceHeaders:(NSDictionary*)traceHeaders
                          andParams:(NSDictionary *)params {
 
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -221,6 +224,7 @@
                                   bytesSent:bytesSent
                               bytesReceived:bytesReceived
                                responseData:responseData
+                               traceHeaders:traceHeaders
                                      params:params];
 }
 

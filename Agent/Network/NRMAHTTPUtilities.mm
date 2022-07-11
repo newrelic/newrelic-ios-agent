@@ -129,8 +129,9 @@
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload:payload];
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
+    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[payloadHeader dataUsingEncoding:NSUTF8StringEncoding]];
     
-    return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:payloadHeader,
+    return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:encodedPayloadHeader,
              W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
              W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY:traceState};
 }
