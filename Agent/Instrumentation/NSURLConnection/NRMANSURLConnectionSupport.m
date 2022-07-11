@@ -333,6 +333,7 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
                                   bytesSent:sent
                               bytesReceived:received
                                responseData:body
+                               traceHeaders:nil
                                      params:nil];
 }
 

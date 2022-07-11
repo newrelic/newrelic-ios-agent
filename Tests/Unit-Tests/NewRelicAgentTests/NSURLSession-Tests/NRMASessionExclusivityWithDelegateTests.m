@@ -42,6 +42,7 @@
                   bytesSent:0
               bytesReceived:0
                responseData:OCMOCK_ANY
+               traceHeaders:OCMOCK_ANY
                      params:OCMOCK_ANY];
 }
 
