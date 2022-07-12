@@ -165,6 +165,7 @@
                                        bytesSent:200
                                    bytesReceived:200
                                     responseData:nil
+                                    traceHeaders:nil
                                        andParams:nil];
             break;
         case 2:
@@ -177,6 +178,7 @@
                                        bytesSent:200
                                    bytesReceived:200
                                     responseData:nil
+                                    traceHeaders:nil
                                        andParams:nil];
             break;
         default:
