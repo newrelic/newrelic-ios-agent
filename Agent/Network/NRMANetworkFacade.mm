@@ -17,6 +17,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConnection+GZip.h"
 #import <Connectivity/Payload.hpp>
+#include <Connectivity/Facade.hpp>
 #import "NRMAPayloadContainer+cppInterface.h"
 #import "NRMAAnalytics+cppInterface.h"
 #import "NewRelicAgentInternal.h"
@@ -96,6 +97,7 @@
                     bytesSent:(NSUInteger)bytesSent
                 bytesReceived:(NSUInteger)bytesReceived
                  responseData:(NSData*)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
                        params:(NSDictionary*)params {
 
     [timer stopTimer];
@@ -175,11 +177,25 @@
 
         } else {
 
+            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
+            if(traceHeaders) {
+                if(retrievedPayload == nullptr) {
+                    retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+                }
+                
+                NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                NSLog(@"Trace parent components: %@", traceParentComponents);
+                retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
+                retrievedPayload->setParentId(@"0".UTF8String);
+                retrievedPayload->setId(traceParentComponents[2].UTF8String);
+                retrievedPayload->setDistributedTracing(true);
+            }
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
                                                                                     withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
                                                                                                                                                bytesReceived:modifiedBytesReceived
                                                                                                                                                 responseTime:[timer timeElapsedInSeconds]]
-                                                                                     withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+                                                                                     withPayload:std::move(retrievedPayload)];
 
         }
 

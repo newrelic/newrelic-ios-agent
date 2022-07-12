@@ -26,4 +26,8 @@
     return std::move(_payload);
 }
 
+- (const std::unique_ptr<NewRelic::Connectivity::Payload>&) getReference {
+    return const_cast<std::unique_ptr<NewRelic::Connectivity::Payload>&>(_payload);
+}
+
 @end

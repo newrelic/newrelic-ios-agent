@@ -79,6 +79,7 @@ didFinishNavigation:(WKNavigation*)navigation
                                       bytesSent:0
                                   bytesReceived:0
                                    responseData:nil
+                                   traceHeaders:nil
                                          params:nil];
     }
 

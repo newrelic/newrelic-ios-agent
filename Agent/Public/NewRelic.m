@@ -27,6 +27,7 @@
 #import "NewRelic.h"
 #import "NRMAHarvestController.h"
 #import "NRMAURLTransformer.h"
+#import "NRMAHTTPUtilities.h"
 
 #define kNRMA_NAME @"name"
 
@@ -185,6 +186,7 @@
                          bytesSent:(NSUInteger)bytesSent
                      bytesReceived:(NSUInteger)bytesReceived
                       responseData:(NSData *)responseData
+                      traceHeaders:(NSDictionary<NSString*,NSString*>*)traceHeaders
                          andParams:(NSDictionary *)params {
 
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -199,6 +201,7 @@
                                   bytesSent:bytesSent
                               bytesReceived:bytesReceived
                                responseData:responseData
+                               traceHeaders:traceHeaders
                                      params:params];
 }
 
@@ -211,6 +214,7 @@
                          bytesSent:(NSUInteger)bytesSent
                      bytesReceived:(NSUInteger)bytesReceived
                       responseData:(NSData *)responseData
+                      traceHeaders:(NSDictionary*)traceHeaders
                          andParams:(NSDictionary *)params {
 
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -225,6 +229,7 @@
                                   bytesSent:bytesSent
                               bytesReceived:bytesReceived
                                responseData:responseData
+                               traceHeaders:traceHeaders
                                      params:params];
 }
 
@@ -259,6 +264,10 @@
     [NRMANetworkFacade noticeNetworkFailure:request
                                   withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
                                   withError:error];
+}
+
++ (NSDictionary<NSString*,NSString*>*)generateDistributedTracingHeaders {
+    return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
 }
 
 #pragma mark - Interactions
