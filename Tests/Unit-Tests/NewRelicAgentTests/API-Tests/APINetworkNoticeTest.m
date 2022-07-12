@@ -55,6 +55,7 @@
                                   bytesSent:0
                               bytesReceived:0
                                responseData:nil
+                               traceHeaders:nil
                                      params:nil];
 
     while(CFRunLoopGetCurrent() && !helper.result) {}
@@ -81,6 +82,7 @@
                                                    bytesSent:0
                                                bytesReceived:0
                                                 responseData:nil
+                                                traceHeaders:nil
                                                       params:nil], @"crashed because of nil values");
 }
 
@@ -99,6 +101,7 @@
                                   bytesSent:0
                               bytesReceived:0
                                responseData:nil
+                               traceHeaders:nil 
                                      params:nil];
 
     while(CFRunLoopGetCurrent() && !helper.result) {}

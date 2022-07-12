@@ -541,6 +541,7 @@ extern "C" {
                          bytesSent:(NSUInteger)bytesSent
                      bytesReceived:(NSUInteger)bytesReceived
                       responseData:(NSData * _Null_unspecified)responseData
+                      traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
                          andParams:(NSDictionary * _Nullable)params;
 
 /*******************************************************************************
@@ -560,6 +561,7 @@ extern "C" {
                          bytesSent:(NSUInteger)bytesSent
                      bytesReceived:(NSUInteger)bytesReceived
                       responseData:(NSData * _Null_unspecified)responseData
+                      traceHeaders:(NSDictionary* _Nullable)traceHeaders
                          andParams:(NSDictionary * _Nullable)params;
 
 /*******************************************************************************
@@ -593,6 +595,11 @@ extern "C" {
                            endTime:(double)endTime
                     andFailureCode:(NSInteger)iOSFailureCode;
 
+/*******************************************************************************
+ * Generates Distributed Tracing headers for use if not
+ * automatically instrumenting network connections
+ *******************************************************************************/
++ (NSDictionary<NSString*,NSString*>* _Nonnull)generateDistributedTracingHeaders;
 #pragma mark - Recording custom events
 
 /*!

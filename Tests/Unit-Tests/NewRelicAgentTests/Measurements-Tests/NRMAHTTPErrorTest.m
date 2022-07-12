@@ -56,6 +56,7 @@
                                bytesSent:100
                            bytesReceived:100
                             responseData:[@"hello, world" dataUsingEncoding:NSUTF8StringEncoding]
+                            traceHeaders:nil
                                andParams:@{}];
 
     while (CFRunLoopGetCurrent() && !finished) {

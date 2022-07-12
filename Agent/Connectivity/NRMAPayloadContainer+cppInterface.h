@@ -14,6 +14,7 @@
 @interface NRMAPayloadContainer (cppInterface)
 - (instancetype) initWithPayload:(std::unique_ptr<NewRelic::Connectivity::Payload>)payload;
 - (std::unique_ptr<NewRelic::Connectivity::Payload>) pullPayload;
+- (std::unique_ptr<NewRelic::Connectivity::Payload>&) getReference;
 @end
 
 
