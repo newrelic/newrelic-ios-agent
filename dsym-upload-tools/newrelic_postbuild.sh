@@ -30,7 +30,7 @@ not_in_xcode_env() {
 }
 
 bitcode_enabled() {
-    echo "New Relic: Build is Bitcode enabled. No dSYM has been uploaded. Bitcode enabled apps require dSYM files to be downloaded from iTunes Connect.
+    echo "New Relic: Build is Bitcode enabled. No dSYM has been uploaded. Bitcode enabled apps require dSYM files to be downloaded from App Store Connect.
 For more information please review https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/install-configure/retrieve-upload-dsyms"
     exit 0
 }
