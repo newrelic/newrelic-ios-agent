@@ -26,6 +26,8 @@
 #import "NRMANetworkFacade.h"
 #import "NewRelic.h"
 #import "NRMAHarvestController.h"
+#import "NRMAURLTransformer.h"
+#import "NRMAHTTPUtilities.h"
 
 #define kNRMA_NAME @"name"
 
@@ -65,6 +67,11 @@
            withAttributes:(NSDictionary*)attributes {
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
                                                                                     attributes:attributes];
+}
+
++ (void) recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
+
 }
 
 + (void) recordError:(NSError* _Nonnull)error {
@@ -179,6 +186,7 @@
                          bytesSent:(NSUInteger)bytesSent
                      bytesReceived:(NSUInteger)bytesReceived
                       responseData:(NSData *)responseData
+                      traceHeaders:(NSDictionary<NSString*,NSString*>*)traceHeaders
                          andParams:(NSDictionary *)params {
 
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -193,14 +201,42 @@
                                   bytesSent:bytesSent
                               bytesReceived:bytesReceived
                                responseData:responseData
+                               traceHeaders:traceHeaders
+                                     params:params];
+}
+
++ (void)noticeNetworkRequestForURL:(NSURL *)url
+                        httpMethod:(NSString *)httpMethod
+                         startTime:(double)startTime
+                         endTime:(double)endTime
+                   responseHeaders:(NSDictionary *)headers
+                        statusCode:(NSInteger)httpStatusCode
+                         bytesSent:(NSUInteger)bytesSent
+                     bytesReceived:(NSUInteger)bytesReceived
+                      responseData:(NSData *)responseData
+                      traceHeaders:(NSDictionary*)traceHeaders
+                         andParams:(NSDictionary *)params {
+
+    NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
+    NSHTTPURLResponse*  response = [[NSHTTPURLResponse alloc] initWithURL:url
+                                                               statusCode:httpStatusCode
+                                                              HTTPVersion:@"1.1"
+                                                             headerFields:headers];
+    [request setHTTPMethod:httpMethod];
+    [NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  bytesSent:bytesSent
+                              bytesReceived:bytesReceived
+                               responseData:responseData
+                               traceHeaders:traceHeaders
                                      params:params];
 }
 
 + (void)noticeNetworkFailureForURL:(NSURL *)url
                         httpMethod:(NSString*)httpMethod
                          withTimer:(NRTimer *)timer
-                    andFailureCode:(NSInteger)iOSFailureCode
-{
+                    andFailureCode:(NSInteger)iOSFailureCode {
     NSError* error = [NSError errorWithDomain:NSURLErrorDomain
                                          code:iOSFailureCode
                                      userInfo:nil];
@@ -212,6 +248,28 @@
                                   withTimer:timer
                                   withError:error];
 }
+
++ (void)noticeNetworkFailureForURL:(NSURL *)url
+                        httpMethod:(NSString*)httpMethod
+                         startTime:(double)startTime
+                           endTime:(double)endTime
+                    andFailureCode:(NSInteger)iOSFailureCode {
+    NSError* error = [NSError errorWithDomain:NSURLErrorDomain
+                                         code:iOSFailureCode
+                                     userInfo:nil];
+
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
+    [request setHTTPMethod:httpMethod];
+
+    [NRMANetworkFacade noticeNetworkFailure:request
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  withError:error];
+}
+
++ (NSDictionary<NSString*,NSString*>*)generateDistributedTracingHeaders {
+    return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
+}
+
 #pragma mark - Interactions
 
 + (NSString*) startInteractionWithName:(NSString*)interactionName
@@ -454,8 +512,12 @@
  * This function is built for hybird support and bridging with the browser agent
  */
 + (NSDictionary*) keyAttributes {
-    return [NRMAKeyAttributes keyAttributes];
+    return [NRMAKeyAttributes keyAttributes: [NRMAAgentConfiguration connectionInformation]];
 }
 
++  (void)setURLRegexRules:(NSDictionary<NSString *, NSString *>*)regexRules {
+    NRMAURLTransformer *transformer = [[NRMAURLTransformer alloc] initWithRegexRules:regexRules];
+    [NewRelicAgentInternal setURLTransformer:transformer];
+}
 
 @end

@@ -24,6 +24,7 @@
                     bytesSent:(NSUInteger)bytesSent
                 bytesReceived:(NSUInteger)bytesReceived
                  responseData:(NSData*)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
                        params:(NSDictionary*)params;
 
 + (void) noticeNetworkFailure:(NSURLRequest*)request

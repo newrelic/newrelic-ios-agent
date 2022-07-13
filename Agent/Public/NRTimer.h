@@ -36,6 +36,9 @@ x / 1000000000
 @property (nonatomic, readonly) double endTimeMillis;
 //Absolute time isn't useful from this timer.
 //it uses relative time since last reboot.
+
+-(id) initWithStartTime:(double)startTime andEndTime:(double)endTime;
+
 - (double) startTimeInMillis;
 - (double) endTimeInMillis;
 - (void) restartTimer;

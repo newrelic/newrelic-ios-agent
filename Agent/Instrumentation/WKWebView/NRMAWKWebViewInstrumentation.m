@@ -27,7 +27,7 @@ id (*NRMA__WKWebView_initWithCoder)(id self,
                                       NSCoder* coder);
 
 
-// IMPORTANTE: calling this method seems to increment the retain count by 1.
+// IMPORTANT: calling this method seems to increment the retain count by 1.
 //ensure that this method is wrapped inside an autorelease pool whenever used.
 id (*NRMA__WKWebView_navigationDelegate)(id self,
                                          SEL _cmd);

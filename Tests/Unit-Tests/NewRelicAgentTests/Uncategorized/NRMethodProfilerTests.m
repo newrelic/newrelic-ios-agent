@@ -19,6 +19,8 @@
 #import "NRMATraceController.h"
 #import "NRMAClassDataContainer.h"
 #import "NewRelicAgentInternal.h"
+#import "NewRelic/NewRelic.h"
+
 #ifdef NRNonJenkinsTests
 #import "NewRelicNonJenkinsTests-Swift.h"
 #endif
@@ -175,6 +177,7 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
 
 @interface NRMAMethodProfiler ()
 + (NSMutableDictionary*)blackWhiteDictionary;
++ (NSMutableDictionary*)actualTraceList;
 @end
 @implementation NRMAMethodProfiler (test)
 
@@ -579,6 +582,20 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
 #else
     XCTAssertNil(dict[@"NewRelicAgentTests.NRMA__asdfasdf"], "");
 #endif
+}
+
+- (void) testDefaultTracingEnabled
+{
+    XCTAssertNotEqual([[NRMAMethodProfiler actualTraceList] count], 0);
+}
+
+- (void) testDefaultTracingDisabled
+{
+    [NewRelic disableFeatures:NRFeatureFlag_DefaultInteractions];
+
+    XCTAssertEqual([[NRMAMethodProfiler actualTraceList] count], 0);
+
+    [NewRelic enableFeatures:NRFeatureFlag_DefaultInteractions];
 }
 
 @end

@@ -26,10 +26,10 @@
 
 @implementation NRMACrashDataWriter
 
-+ (BOOL) writeCrashReport:(PLCrashReport*)report
-             withMetaData:(NSDictionary*)metaDictionary
-        sessionAttributes:(NSDictionary*)attributes
-          analyticsEvents:(NSArray*)events
++ (BOOL) writeCrashReport:(PLCrashReport* _Nonnull)report
+             withMetaData:(NSDictionary* _Nonnull)metaDictionary
+        sessionAttributes:(NSDictionary* _Nonnull)attributes
+          analyticsEvents:(NSArray* _Nonnull)events
 {
 
     NSNumber* diskUsage = [metaDictionary objectForKey:@kNRMAMetaKey_DiskFree];

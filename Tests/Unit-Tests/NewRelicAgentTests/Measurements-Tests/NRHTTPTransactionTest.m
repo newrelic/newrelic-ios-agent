@@ -187,6 +187,7 @@
                                   bytesSent:0
                               bytesReceived:responseBodyData.length
                                responseData:responseBodyData
+                               traceHeaders:nil
                                      params:@{}];
 
     while (CFRunLoopGetMain() && !finished) {}
@@ -239,6 +240,7 @@
                                   bytesSent:0
                               bytesReceived:responseBodyData.length
                                responseData:responseBodyData
+                               traceHeaders:nil 
                                      params:@{}];
     
     XCTAssertNoThrow([mock verify], @"noticeNetworkRequestForURLHttpUrl: should NOT record a response body");

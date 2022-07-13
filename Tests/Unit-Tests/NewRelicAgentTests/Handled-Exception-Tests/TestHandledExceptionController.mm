@@ -117,7 +117,7 @@
     agentConfig.sessionIdentifier = @"1234-567-890";
 
     NRMAHandledExceptions* hexController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
-                                                                                     sessionStartTime:0
+                                                                                     sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
                                                                                             sessionId:@"sessionId"];
@@ -139,6 +139,29 @@
                                                 attributes:dict]);
 }
 
+- (void) testHandleExceptionWithStackTrace {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
+                                                                          collectorAddress:nil
+                                                                              crashAddress:nil];
+    agentConfig.sessionIdentifier = @"1234-567-890";
+
+    NRMAHandledExceptions* hexController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                                                     sessionStartTime:[NSDate new]
+                                                                                   agentConfiguration:agentConfig
+                                                                                             platform:[NewRelicInternalUtils osName]
+                                                                                            sessionId:@"sessionId"];
+
+    id dict = @{@"name": @"Exception name not found",
+                @"reason": @"Reason not found",
+                @"cause": @"Reason not found",
+                @"fatal": @false,
+                @"stackTraceElements": @[@{@"class": @"className", @"method": @"methodName", @"file": @"fileName", @"line": @"1"}],
+                @"appBuild": @"8",
+                @"appVersion": @"8"};
+
+    XCTAssertNoThrow([hexController recordHandledExceptionWithStackTrace:dict]);
+}
 
 - (void) testPlatform {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
@@ -190,6 +213,36 @@
     XCTAssertNoThrow([mockLogger verify]);
     
     [mockLogger stopMocking];
+    
+}
+
+- (void) testRecordError {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
+                                                                          collectorAddress:nil
+                                                                              crashAddress:nil];
+    agentConfig.sessionIdentifier = @"1234-567-890";
+
+    NRMAHandledExceptions* hexController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                                                     sessionStartTime:[NSDate new]
+                                                                                   agentConfiguration:agentConfig
+                                                                                             platform:[NewRelicInternalUtils osName]
+                                                                                            sessionId:@"sessionId"];
+    
+    
+    NSError* error = [NSError errorWithDomain:@"" code:NSURLErrorUnknown userInfo:@{}];
+    
+    XCTAssertNoThrow([hexController recordError:error attributes:@{@"":[NSNull new]}]);
+    
+    // Error.Domain being nil should be throwing an exception (declared as NONNULL)
+    XCTAssertThrowsSpecificNamed([NSError errorWithDomain:nil code:NSURLErrorUnknown userInfo:@{}], NSException, NSInvalidArgumentException);
+    
+    // Error.localizedDescription being nil should be throwing an exception (declared as NONNULL)
+    error = [NSError errorWithDomain:@"Unknown" code:NSURLErrorUnknown userInfo:@{NSLocalizedDescriptionKey:[NSNull new]}];
+    XCTAssertThrowsSpecificNamed([hexController recordError:error attributes:nil], NSException, NSInvalidArgumentException);
+    
+    // User should not have access to call recordError:nil, will crash if nil is passed (warning will be given)
+    //[hexController recordError:nil attributes:nil]
     
 }
 @end

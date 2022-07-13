@@ -9,6 +9,29 @@
 #import <XCTest/XCTest.h>
 #import "NewRelicInternalUtils.h"
 #import "NRMACrashReport.h"
+#import "NRMACrashDataWriter.h"
+
+ #import "NRMAExceptionDataCollectionWrapper.h"
+ #import "PLCrashTestThread.h"
+ #import "PLCrashReport.h"
+ #import "PLCrashReporter.h"
+ #import "PLCrashFrameWalker.h"
+
+ #import "NRMAUncaughtExceptionHandler.h"
+ #import "NRMAExceptionHandlerManager.h"
+ #import "NRMAExceptionHandlerStartupManager.h"
+ #import "NewRelicAgentInternal.h"
+ #import "NRMACrashDataUploader.h"
+
+ #import "NRMACrashReportFileManager.h"
+
+ #if __has_include(<CrashReporter/CrashReporter.h>)
+ #import <CrashReporter/CrashReporter.h>
+ #import <CrashReporter/PLCrashReporter.h>
+ #else
+ #import "CrashReporter.h"
+ #import "PLCrashReporter.h"
+ #endif
 
 @interface NRMACrashReportTest : XCTestCase
 
@@ -122,5 +145,58 @@
 
     XCTAssertNoThrow([report JSONObject]);
 }
+-(void) testCrashDataWriter {
+
+     NSError *error;
+     PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration: [PLCrashReporterConfig defaultConfiguration]];
+     NSData *reportData = [reporter generateLiveReportAndReturnError: &error];
+     XCTAssertNotNil(reportData, @"Failed to generate live report: %@", error);
+
+     PLCrashReport *report = [[PLCrashReport alloc] initWithData: reportData error: &error];
+     XCTAssertNotNil(report, @"Could not parse geneated live report: %@", error);
+
+     XCTAssertEqualObjects([[report signalInfo] name], @"SIGTRAP", @"Incorrect signal name");
+     XCTAssertEqualObjects([[report signalInfo] code], @"TRAP_TRACE", @"Incorrect signal code");
+
+     XCTAssertNoThrow([NRMACrashDataWriter writeCrashReport:report withMetaData:Nil sessionAttributes:Nil analyticsEvents:Nil], @"should not throw exception even with missing data.");
+
+ }
+
+ -(void) testExceptionHandlerManager {
+     NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
+     NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:nil
+                                                                               applicationToken:@"token"
+                                                                          connectionInformation:[NRMAAgentConfiguration connectionInformation]
+                                                                                         useSSL:YES];
+
+     XCTAssertNoThrow([exceptionHandlerStartupManager startExceptionHandler:uploader]);
+
+     NRMACrashDataUploader* badUploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:nil
+                                                                               applicationToken:nil
+                                                                          connectionInformation:[NRMAAgentConfiguration connectionInformation]
+                                                                                         useSSL:YES];
+
+
+     XCTAssertNoThrow([exceptionHandlerStartupManager startExceptionHandler:badUploader], @"missing application token should not throw exception");
+
+ }
+
+ -(void) testNRMACrashReportFileManager{
+     PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration: [PLCrashReporterConfig defaultConfiguration]];
+     NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
+     NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"google.com"
+                                                                               applicationToken:@"token"
+                                                                          connectionInformation:[NRMAAgentConfiguration connectionInformation]
+                                                                                         useSSL:YES];
+
+     [exceptionHandlerStartupManager startExceptionHandler:uploader];
+
+
+     NRMACrashReportFileManager* fileManager = [[NRMACrashReportFileManager alloc] init];
+     NRMACrashReportFileManager* fileManagerWithReporter = [[NRMACrashReportFileManager alloc] initWithCrashReporter:reporter];
+
+     XCTAssertNoThrow([fileManagerWithReporter processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
+     XCTAssertNoThrow([fileManager processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
+ }
 
 @end

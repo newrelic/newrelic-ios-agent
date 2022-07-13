@@ -71,6 +71,15 @@
     XCTAssertNoThrow([uploader uploadCrashReports], @"this should fail without crashing");
 
     XCTAssertNoThrow([uploader uploadFileAtPath:nil], @"this should fail without crashing");
+    
+    NRMACrashDataUploader* uploaderWithCrashCollector = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"test.com"
+                                                                               applicationToken:@"token"
+                                                                          connectionInformation:[NRMAAgentConfiguration connectionInformation]
+                                                                                         useSSL:YES];
+
+     XCTAssertNoThrow([uploaderWithCrashCollector uploadCrashReports], @"this should fail without crashing");
+
+     XCTAssertNoThrow([uploaderWithCrashCollector uploadFileAtPath:nil], @"this should fail without crashing");
 }
 
 - (void) testLimitUploads{

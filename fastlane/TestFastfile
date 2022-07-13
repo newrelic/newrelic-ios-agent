@@ -1,0 +1,62 @@
+platform :ios do
+
+  desc "Run Agent tests for iOS and tvOS"
+  lane :runTests do
+
+    runIOSTests
+
+    runTVOSTests
+
+    deleteBuildArtifacts
+  end
+
+  # iOS Tests
+
+  desc "Run Agent tests for iOS and generate code coverage"
+  lane :runIOSTests do 
+
+    deleteBuildArtifacts
+    
+    internalRunIOSTests
+
+    coverage
+  end
+  
+  lane :internalRunIOSTests do
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "Agent-iOS",
+      device: "iPhone 8"
+    )
+  end
+  
+  desc "Run Agent tests for iOS"
+  lane :runIOSTestsNoCov do 
+
+    deleteBuildArtifacts
+    
+    internalRunIOSTests
+  end
+
+  # tvOS Tests
+  
+  desc "Run Agent tests for tvOS"
+  lane :runTVOSTests do 
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "Agent-tvOS",
+      device: "Apple TV"
+    )
+  end
+
+  lane :coverage do 
+    Dir.chdir("..") do
+      sh("./XcodeCoverage/getcov -s -v")
+    end
+  end
+end

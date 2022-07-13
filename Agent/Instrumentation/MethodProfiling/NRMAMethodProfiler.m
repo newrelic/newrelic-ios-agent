@@ -163,15 +163,21 @@ static NRMAMethodProfiler *_sharedInstance;
     return __traceMethodList;
 }
 
++ (NSDictionary*) actualTraceList
+{
+    return [NRMAFlags shouldEnableDefaultInteractions] ? [NRMAMethodProfiler instrumentForTraceList] : @{};
+}
+
 + (enum NRTraceType) categoryForSelector:(SEL)selector
 {
     static NSMutableDictionary* __categoryMethodDictionary;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         __categoryMethodDictionary = [[NSMutableDictionary alloc] init];
-        NSDictionary* classMethodDictioanry = [NRMAMethodProfiler instrumentForTraceList];
-        for (NSString* objectName in classMethodDictioanry){
-            [__categoryMethodDictionary addEntriesFromDictionary:[NRMAMethodProfiler dictionaryWithKeys:[classMethodDictioanry objectForKey:objectName]
+
+        NSDictionary* classMethodDictionary = [NRMAMethodProfiler actualTraceList];
+        for (NSString* objectName in classMethodDictionary){
+            [__categoryMethodDictionary addEntriesFromDictionary:[NRMAMethodProfiler dictionaryWithKeys:[classMethodDictionary objectForKey:objectName]
                                                                                                 value:[NSNumber numberWithInt:[NRMAMethodProfiler traceTypeForClass:objectName]]]];
 
         }
@@ -262,8 +268,10 @@ static NRMAMethodProfiler *_sharedInstance;
 {
     dispatch_once(&methodReplacementOnceToken, ^{
         NRTimer *timer = [[NRTimer alloc] init];
-        NSMutableDictionary* classTree = NRMA__generateClassTrees([NSSet setWithArray:[[NRMAMethodProfiler instrumentForTraceList] allKeys]]);
-        tracingObjects = NRMA__generateSwizzleList(classTree, [NRMAMethodProfiler instrumentForTraceList]);
+
+        id traceList = [NRMAMethodProfiler actualTraceList];
+        NSMutableDictionary* classTree = NRMA__generateClassTrees([NSSet setWithArray:[traceList allKeys]]);
+        tracingObjects = NRMA__generateSwizzleList(classTree, traceList);
         self.collectedMetrics = [[[NRMAMetricSet alloc] init] autorelease];
         [self initializeProfilers];
         [timer stopTimer];

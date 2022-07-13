@@ -17,6 +17,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConnection+GZip.h"
 #import <Connectivity/Payload.hpp>
+#include <Connectivity/Facade.hpp>
 #import "NRMAPayloadContainer+cppInterface.h"
 #import "NRMAAnalytics+cppInterface.h"
 #import "NewRelicAgentInternal.h"
@@ -96,6 +97,7 @@
                     bytesSent:(NSUInteger)bytesSent
                 bytesReceived:(NSUInteger)bytesReceived
                  responseData:(NSData*)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
                        params:(NSDictionary*)params {
 
     [timer stopTimer];
@@ -114,8 +116,14 @@
 
         //getCurrentWanType shouldn't be called on the main thread
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
+        
+        NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
+        NSURL *replacedURL = [transformer transformURL:request.URL];
+        if(!replacedURL) {
+            replacedURL = request.URL;
+        }
 
-        NRMANetworkRequestData* networkRequestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:request.URL
+        NRMANetworkRequestData* networkRequestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                              httpMethod:[request HTTPMethod]
                                                                                          connectionType:connectionType
                                                                                             contentType:[NRMANetworkFacade contentType:response]
@@ -151,13 +159,13 @@
                                                                                                                            networkErrorMessage:nil
                                                                                                                            encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
                                                                                                                                  appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
-                                                                                withPayload:[NRMAHTTPUtilities retreivePayload:request]];
+                                                                                withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
             NSMutableDictionary* mutableParams = [[NSMutableDictionary alloc] initWithDictionary:params?:@{}];
             mutableParams[NRMA_ERROR_CUSTOM_PARAMS_KEY] = customParams;
 
 
-            [NRMATaskQueue queue:[[NRMAHTTPError alloc] initWithURL:request.URL.absoluteString
+            [NRMATaskQueue queue:[[NRMAHTTPError alloc] initWithURL:replacedURL.absoluteString
                                                          httpMethod:[request HTTPMethod]
                                                         timeOfError:timer.endTimeMillis
                                                          statusCode:(int)[NRMANetworkFacade statusCode:response]
@@ -169,15 +177,29 @@
 
         } else {
 
+            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
+            if(traceHeaders) {
+                if(retrievedPayload == nullptr) {
+                    retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+                }
+                
+                NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                NSLog(@"Trace parent components: %@", traceParentComponents);
+                retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
+                retrievedPayload->setParentId(@"0".UTF8String);
+                retrievedPayload->setId(traceParentComponents[2].UTF8String);
+                retrievedPayload->setDistributedTracing(true);
+            }
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
                                                                                     withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
                                                                                                                                                bytesReceived:modifiedBytesReceived
                                                                                                                                                 responseTime:[timer timeElapsedInSeconds]]
-                                                                                     withPayload:[NRMAHTTPUtilities retreivePayload:request]];
+                                                                                     withPayload:std::move(retrievedPayload)];
 
         }
 
-        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:request.URL.absoluteString
+        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
                                                            httpMethod:[request HTTPMethod]
                                                             startTime:startTime
                                                             totalTime:duration
@@ -211,8 +233,14 @@
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
+        
+        NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
+        NSURL *replacedURL = [transformer transformURL:request.URL];
+        if(!replacedURL) {
+            replacedURL = request.URL;
+        }
 
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:request.URL
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                                                                    httpMethod:[request HTTPMethod]
                                                                                                                                connectionType:connectionType
                                                                                                                                   contentType:[request allHTTPHeaderFields][@"Content-Type"]
@@ -221,10 +249,10 @@
                                                                                                                                    bytesReceived:0
                                                                                                                                     responseTime:timer.timeElapsedInSeconds
                                                                                                                              networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:[NRMAHTTPUtilities retreivePayload:request]];
+                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
 
-        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:request.URL.absoluteString
+        [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
                                                            httpMethod:[request HTTPMethod]
                                                             startTime:startTime
                                                             totalTime:duration

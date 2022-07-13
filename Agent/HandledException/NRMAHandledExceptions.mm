@@ -60,7 +60,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         if (platform == nil) [missingParams addObject:@"platformName"];
         if (sessionId == nil) [missingParams addObject:@"sessionId"];
         if (analytics == nil) [missingParams addObject:@"AnalyticsController"];
-        if (sessionStartDate == nil) [missingParams addObject:@"SessionStartData"];
+        if (sessionStartDate == nil) [missingParams addObject:@"SessionStartDate"];
         NRLOG_ERROR(@"Failed to create handled exception object. Key parameter(s) are nil: %@. This will prevent handle exception reporting.",  [missingParams componentsJoinedByString:@", "]);
         return nil;
     }
@@ -145,8 +145,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 
-- (void) recordError:(NSError *)error
-          attributes:(NSDictionary*)attributes
+- (void) recordError:(NSError * _Nonnull)error
+          attributes:(NSDictionary* _Nullable)attributes
 {
     void* callstack[1024];
     int frames = backtrace(callstack,1024);
@@ -256,5 +256,46 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     });
 }
 
-@end
+- (void) recordHandledExceptionWithStackTrace:(NSDictionary*)exceptionDictionary {
 
+    NSString* eName = exceptionDictionary[@"name"];
+    NSString* eReason = exceptionDictionary[@"reason"];
+    NSMutableArray* stackTraceElements = exceptionDictionary[@"stackTraceElements"];
+
+    // Begin: Assemble threadVector from the stackTraceElements dict.
+    std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>> threadVector;
+    std::vector<NewRelic::Hex::Report::Frame> frameVector;
+
+    for (NSDictionary* frameDict in stackTraceElements) {
+        NSString* className = frameDict[@"class"];
+        if (!className) className = @" ";
+        NSString* methodName = frameDict[@"method"];
+        if (!methodName) methodName = @" ";
+        NSString* fileName = frameDict[@"file"];
+        if (!fileName) fileName = @" ";
+
+        NSString* lineNumber = frameDict[@"line"];
+        if (!lineNumber) lineNumber = @"1";
+        frameVector.push_back(NewRelic::Hex::Report::Frame(className.UTF8String, methodName.UTF8String, fileName.UTF8String, (int64_t) [lineNumber intValue]));
+    }
+
+    threadVector.push_back(std::make_shared<NewRelic::Hex::Report::Thread>(frameVector));
+    // END: Assemble threadVector from the stackTraceElements dict.
+
+    auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
+                                            eReason.UTF8String,
+                                            eName.UTF8String,
+                                            threadVector);
+
+    report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+
+    NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report] autorelease];
+
+    if (exceptionDictionary != nil) {
+        [contextAdapter addAttributes:exceptionDictionary];
+    }
+
+    _controller->submit(report);
+}
+
+@end
