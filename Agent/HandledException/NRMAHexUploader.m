@@ -10,6 +10,7 @@
 #import "NRMARetryTracker.h"
 #import "NRLogger.h"
 #include <libkern/OSAtomic.h>
+#import "NRMASupportMetricHelper.h"
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
 
@@ -98,9 +99,13 @@ didCompleteWithError:(nullable NSError*)error {
         NRLOG_ERROR(@"failed to upload handled exception report: %@", httpResponse.description);
         [self handledErroredRequest:dataTask.originalRequest];
     }
-
+    else {
+        // Enqueue Data Usage Supportability Metric for /f if request is successful.
+        [NRMASupportMetricHelper enqueueDataUseMetric:@"f"
+                                                 size:[[[dataTask originalRequest] HTTPBody] length]
+                                             received:response.expectedContentLength];
+    }
     completionHandler(NSURLSessionResponseCancel);
-
 }
 
 - (void) handledErroredRequest:(NSURLRequest*)request {

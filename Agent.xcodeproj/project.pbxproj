@@ -977,6 +977,10 @@
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
+		2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
+		2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
+		2B5CCB1E287DE5E400A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
 		2B81E34C28624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */; };
 		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
@@ -1778,6 +1782,8 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelper.m; sourceTree = "<group>"; };
+		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
@@ -2797,6 +2803,8 @@
 				02FF49FB24DC647200115469 /* NRMAMeasurementType.h */,
 				02FF49F824DC647200115469 /* NRMAMeasurementType.m */,
 				02FF49FA24DC647200115469 /* NRMAThreadInfo.h */,
+				2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */,
+				2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */,
 				02FF49FC24DC647200115469 /* NRMAThreadInfo.m */,
 			);
 			path = Measurements;
@@ -3274,6 +3282,7 @@
 				02FF489E24DC61D200115469 /* NRMAURLSessionTaskOverride.h in Headers */,
 				02FF481F24DB5B8100115469 /* NRMAGestureRecognizerInstrumentation.h in Headers */,
 				02FF493B24DC625A00115469 /* NRMARetryTracker.h in Headers */,
+				2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */,
 				02FF49DE24DC636100115469 /* NRMAHarvestable.h in Headers */,
 				02FF4AC624DC656900115469 /* NRMAPayloadContainer.h in Headers */,
 				02FF4AB024DC652E00115469 /* NRMAFileCleanup.h in Headers */,
@@ -3488,6 +3497,7 @@
 				02FF4BD924E3201400115469 /* NRMAURLSessionTaskOverride.h in Headers */,
 				02FF4BDA24E3201400115469 /* NRMAGestureRecognizerInstrumentation.h in Headers */,
 				02FF4BDB24E3201400115469 /* NRMARetryTracker.h in Headers */,
+				2B5CCB1E287DE5E400A88F5C /* NRMASupportMetricHelper.h in Headers */,
 				02FF4BDC24E3201400115469 /* NRMAHarvestable.h in Headers */,
 				02FF4BDD24E3201400115469 /* NRMAPayloadContainer.h in Headers */,
 				02FF4BDE24E3201400115469 /* NRMAFileCleanup.h in Headers */,
@@ -4153,6 +4163,7 @@
 				02FF49AF24DC62B800115469 /* NRMAApplicationInformation.m in Sources */,
 				02FF4A4A24DC64D500115469 /* NRMANamedValueMeasurement.m in Sources */,
 				02FF4A7024DC64E600115469 /* NRMAMeasurementProducer.m in Sources */,
+				2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */,
 				02FF49B824DC62B800115469 /* NRMADataToken.m in Sources */,
 				02FF482024DB5B8100115469 /* NRMAGestureProcessor.m in Sources */,
 				02FF495224DC626E00115469 /* NRMAHarvester.mm in Sources */,
@@ -4455,6 +4466,7 @@
 				02FF4C4B24E3201400115469 /* NRMAApplicationInformation.m in Sources */,
 				02FF4C4C24E3201400115469 /* NRMANamedValueMeasurement.m in Sources */,
 				02FF4C4D24E3201400115469 /* NRMAMeasurementProducer.m in Sources */,
+				2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */,
 				02FF4C4E24E3201400115469 /* NRMADataToken.m in Sources */,
 				02FF4C4F24E3201400115469 /* NRMAGestureProcessor.m in Sources */,
 				02FF4C5024E3201400115469 /* NRMAHarvester.mm in Sources */,

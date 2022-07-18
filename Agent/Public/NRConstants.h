@@ -106,6 +106,16 @@ typedef NSString NRMetricUnit;
 
 #define kNRMAUUIDOverridden              @"Supportability/Mobile/iOS/UUID/Overridden"
 
+// Defines Format string where 4 arguments are NativePlatform, Platform, Destination and DestinationSubArea.
+#define kNRMABytesOutSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/%@/Output/Bytes"
+// Defines Format string where 3 arguments are NativePlatform, Platform, and Destination.
+#define kNRMABytesOutSupportabilityRollUpFormatString  @"Supportability/Mobile/%@/%@/%@/Output/Bytes"
+
+#define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
+#define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"
+#define kNRMABytesOutFAPIString           @"/f/Output/Bytes"
+#define kNRMABytesOutMobileCrashAPIString @"/mobile_crash/Output/Bytes"
+
 #define kNRSupportabilityDistributedTracing @"Supportability/TraceContext"
 
 #define kNRMAMetricSuffixCount           @"Count"
@@ -124,6 +134,12 @@ typedef NSString NRMetricUnit;
 #define kNRMAUserActionTap              @"Tap"
 
 #define kNRDeviceIDReplacementMaxLength 40
+
+#define kNRMAContentEncodingHeader      @"Content-Encoding"
+#define kNRMAGZipHeader                 @"deflate"
+#define kNRMAIdentityHeader             @"identity"
+#define kNRMAActualSizeHeader           @"actual-size"
+#define kNRMACollectorDest              @"Collector"
 
 // Network Failure Codes
 enum NRNetworkFailureCode {

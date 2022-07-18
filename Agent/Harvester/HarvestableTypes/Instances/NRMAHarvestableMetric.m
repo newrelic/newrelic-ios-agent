@@ -62,6 +62,10 @@
                                       kEndDateKey:@(NRMAMillisecondTimestamp())}];
 }
 
+- (void)addAdditionalValue:(NSNumber *)additionalValue {
+    self.additionalValue = additionalValue;
+}
+
 - (void) incrementCount
 {
     [self addValue:@1];
@@ -79,8 +83,40 @@
     double_t min = 0;
     double_t max = 0;
     double_t sum_of_squares = 0;
-    
+
     NSDictionary* nameScopeDictionary = @{@"name":self.metricName,@"scope":self.scope};
+
+    /*
+     The value _additionalValue being non-nil means that this is a Data Use Supportability Metric.
+     -NRMAHarvestableMetric is being reused for a new type of support metric.
+     Data format for these metrics should be:
+     [Interaction Count, Uncompressed Bytes Sent, Bytes Received, 0, 0, 0]
+
+     where this Metric Time Slice Data was previously used for data of form
+     [Count, Total Time, Exclusive Time, Min, Max, Sum of Sq]
+     */
+    if (_additionalValue != nil) {
+        if (_collectedValues.count > 0) {
+            for (NSDictionary *dictionary in self.collectedValues) {
+
+                NSNumber* value = dictionary[kValueKey];
+
+                total += [value doubleValue];
+            }
+        }
+
+        double_t exclusive = [_additionalValue doubleValue];
+
+        NSDictionary* value = @{
+            kCountKey    : @(count),
+            kTotalKey    : @(total),
+            kMinKey      : @(min),
+            kMaxKey      : @(max),
+            kSumOfSqKey  : @(sum_of_squares),
+            kExclusiveKey: @(exclusive)
+        };
+        return [@[nameScopeDictionary,value] mutableCopy];
+    }
 
     if (count > 0) {
         BOOL set = NO;
@@ -105,11 +141,11 @@
         }
     }
     NSDictionary* value = @{
-            @"count" : @(count),
-            @"total" : @(total),
-            @"min"   : @(min),
-            @"max"   : @(max),
-            @"sum_of_squares" : @(sum_of_squares)
+        kCountKey   : @(count),
+        kTotalKey   : @(total),
+        kMinKey     : @(min),
+        kMaxKey     : @(max),
+        kSumOfSqKey : @(sum_of_squares)
     };
 
     return [@[nameScopeDictionary,value] mutableCopy];

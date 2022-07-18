@@ -96,18 +96,19 @@
 
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {
-            #endif
-        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"%@/%@",NRMAMeasurementMetricName,category]
-                                value:@((normalizedValue*totalTimeMillis)/(double)1000)
-                            scope:scope
-                         produceUnscoped:YES]];
+#endif
+            [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"%@/%@",NRMAMeasurementMetricName,category]
+                                                            value:@((normalizedValue*totalTimeMillis)/(double)1000)
+                                                            scope:scope
+                                                  produceUnscoped:YES
+                                                  additionalValue:nil]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         } @catch (NSException* exception) {
             [NRMAExceptionHandler logException:exception
-                                       class:NSStringFromClass([self class])
-                                    selector:NSStringFromSelector(_cmd)];
+                                         class:NSStringFromClass([self class])
+                                      selector:NSStringFromSelector(_cmd)];
         }
-        #endif
+#endif
     }
 }
 

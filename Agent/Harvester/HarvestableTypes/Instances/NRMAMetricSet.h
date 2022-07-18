@@ -12,10 +12,14 @@
 @interface NRMAMetricSet : NRMAHarvestable <NRMAHarvestAware>
 
 - (void)addValue:(NSNumber *)value forMetric:(NSString *)metricName;
+
 - (void) addValue:(NSNumber *)value
         forMetric:(NSString *)metricName
-        withScope:(NSString*)scope;
+        withScope:(NSString*)scope
+  additionalValue:(NSNumber *)additionalValue;
+
 - (void)reset;
+
 - (void) addMetrics:(NRMAMetricSet*)metricSet;
 
 - (void) addExclusiveTime:(NSNumber*)exclusiveTime

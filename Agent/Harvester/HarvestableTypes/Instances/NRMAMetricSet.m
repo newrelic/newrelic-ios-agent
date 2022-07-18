@@ -69,6 +69,7 @@
 - (void) addValue:(NSNumber *)value
         forMetric:(NSString *)metricName
         withScope:(NSString*)scope
+  additionalValue:(NSNumber *)additionalValue
 {
     scope = scope?:@"";
     
@@ -86,6 +87,7 @@
             self.metrics[key] = metric;
         }
         [metric addValue:value];
+        [metric addAdditionalValue:additionalValue];
     }
 }
 
@@ -100,7 +102,7 @@
         NRLOG_WARNING(@"Attempting to add nil metric name.");
         return;
     }
-    [self addValue:value forMetric:metricName withScope:@""];
+    [self addValue:value forMetric:metricName withScope:@"" additionalValue:nil];
 }
 
 - (void)reset
@@ -114,13 +116,54 @@
 - (id) JSONObject
 {
     @synchronized(self) {
-        NSMutableArray* output = [[NSMutableArray alloc] initWithCapacity:self.metrics.count];
-        
+        NSMutableArray* output = [[NSMutableArray alloc] init];
+        NSMutableArray *dataUseSupportMetrics = [[NSMutableArray alloc] init];
+
         for (NSString *metricName in self.metrics) {
             NRMAHarvestableMetric *metric = self.metrics[metricName];
+            NSRange rangeOfFAPI = [metricName rangeOfString:kNRMABytesOutFAPIString];
+            NSRange rangeOfMobileCrashAPI = [metricName rangeOfString:kNRMABytesOutMobileCrashAPIString];
+            NSRange rangeOfDataAPI = [metricName rangeOfString:kNRMABytesOutDataAPIString];
+            NSRange rangeOfConnectAPI = [metricName rangeOfString:kNRMABytesOutConnectAPIString];
+
+            if (rangeOfFAPI.location != NSNotFound ||
+                rangeOfMobileCrashAPI.location != NSNotFound ||
+                rangeOfDataAPI.location != NSNotFound ||
+                rangeOfConnectAPI.location != NSNotFound) {
+                [dataUseSupportMetrics addObject:metric];
+            }
+
             [output addObject:[metric JSONObject]];
         }
-        
+
+        // If this harvest contains Data Usage Support Metrics then add the rollup supportability metric based on all existing Data Usage Supportability Metric values.
+        if ([dataUseSupportMetrics count] > 0) {
+            double_t totalBytesSent = 0;
+            double_t totalBytesReceived = 0;
+            double_t totalInteractionCount = 0;
+
+            for (NRMAHarvestableMetric *dataUseMetric in dataUseSupportMetrics) {
+                double_t bytesSent = [[[dataUseMetric JSONObject][1] objectForKey:kTotalKey] doubleValue];
+                double_t bytesReceived = [[[dataUseMetric JSONObject][1] objectForKey:kExclusiveKey] doubleValue];
+                double_t interactionCount = [[[dataUseMetric JSONObject][1] objectForKey:kCountKey] doubleValue];
+                totalBytesSent += bytesSent;
+                totalBytesReceived += bytesReceived;
+                totalInteractionCount += interactionCount;
+            }
+            NSString* nativePlatform = [NewRelicInternalUtils osName];
+            NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+
+            // Create a Data Use supportability metric
+            NRMAHarvestableMetric *rollUpMetric = [[NRMAHarvestableMetric alloc] initWithMetricName:
+                                                   [NSString stringWithFormat:kNRMABytesOutSupportabilityRollUpFormatString, nativePlatform, platform, kNRMACollectorDest] scope:@""];
+            for (int i = 0; i < totalInteractionCount - 1; i++) {
+                [rollUpMetric incrementCount];
+            }
+            [rollUpMetric addValue:[NSNumber numberWithDouble:totalBytesSent]];
+            [rollUpMetric addAdditionalValue:[NSNumber numberWithDouble:totalBytesReceived]];
+            [output addObject:[rollUpMetric JSONObject]];
+        }
+
         return output;
     }
 }

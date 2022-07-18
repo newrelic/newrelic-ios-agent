@@ -16,6 +16,8 @@
 #define NRMA_ERROR_CONTENT_LENGTH_KEY     @"content_length"
 #define DEFAULT_RESPONSE_CONTENT_TYPE_LIMIT 256
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NRMANetworkFacade : NSObject
 
 + (void) noticeNetworkRequest:(NSURLRequest*)request
@@ -23,11 +25,14 @@
                     withTimer:(NRTimer*)timer
                     bytesSent:(NSUInteger)bytesSent
                 bytesReceived:(NSUInteger)bytesReceived
-                 responseData:(NSData*)responseData
+                 responseData:(NSData* _Nullable)responseData
                  traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
-                       params:(NSDictionary*)params;
+                       params:(NSDictionary* _Nullable)params;
 
 + (void) noticeNetworkFailure:(NSURLRequest*)request
                     withTimer:(NRTimer*)timer
                     withError:(NSError*)error;
 @end
+
+
+NS_ASSUME_NONNULL_END

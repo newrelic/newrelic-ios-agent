@@ -12,11 +12,13 @@
 
 @class NRMAAgentConfiguration;
 
+NS_ASSUME_NONNULL_BEGIN
+
 extern const NSString* kHexBackupStoreFolder;
 
 @interface NRMAHandledExceptions : NSObject <NRMAHarvestAware>
-@property (strong) NSString* sessionId;
-@property(strong) NSDate* sessionStartDate;
+@property (strong) NSString* _Nullable sessionId;
+@property(strong) NSDate* _Nullable sessionStartDate;
 
 - (instancetype) initWithAnalyticsController:(NRMAAnalytics*)analytics
                             sessionStartTime:(NSDate*)sessionStartDate
@@ -25,7 +27,7 @@ extern const NSString* kHexBackupStoreFolder;
                                    sessionId:(NSString*)sessionId;
 
 - (void) recordHandledException:(NSException*) exception
-                     attributes:(NSDictionary*)attributes;
+                     attributes:(NSDictionary* _Nullable)attributes;
 
 - (void) recordHandledException:(NSException*) exception;
 
@@ -36,3 +38,5 @@ extern const NSString* kHexBackupStoreFolder;
 
 - (void) recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary;
 @end
+
+NS_ASSUME_NONNULL_END

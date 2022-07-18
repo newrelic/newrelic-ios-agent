@@ -163,12 +163,16 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
 #endif
         if (metric.produceUnscopedMetrics) {
             NRMANamedValueMeasurement* namedValue = [[NRMANamedValueMeasurement alloc] initWithName:metric.name
-                                                                                              value:metric.value];
+                                                                                              value:metric.value
+                                                                                    additionalValue:metric.additionalValue];
+
             [[NRMAMeasurements engine].machineMeasurementsProducer produceMeasurement:namedValue];
         }
         if ([metric.scope length]) {
             NRMANamedValueMeasurement* namedValue = [[NRMANamedValueMeasurement alloc] initWithName:metric.name
-                                                                                              value:metric.value];
+                                                                                              value:metric.value
+                                                                                    additionalValue:metric.additionalValue];
+
             namedValue.scope = metric.scope;
             [[NRMAMeasurements engine].machineMeasurementsProducer produceMeasurement:namedValue];
         }

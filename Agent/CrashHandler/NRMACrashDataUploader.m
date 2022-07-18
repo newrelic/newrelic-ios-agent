@@ -13,6 +13,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAHarvestController.h"
 #import "NRMATaskQueue.h"
+#import "NRMASupportMetricHelper.h"
 
 @implementation NRMACrashDataUploader
 
@@ -94,12 +95,23 @@
         [_fileManager removeItemAtURL:path error:nil];
         return;
     }
-
+    // Get the size in bytes of the crash report to be uploaded via below uploadTaskWithRequest:fromFile call.
+    __block NSData* reqData = [NSData dataWithContentsOfURL:path options:0 error:nil];
     NSURLRequest* request = [self buildPost];
 
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
                                    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+
+                                       unsigned long long requestLength = [reqData length];
+                                       reqData = nil;
+
                                        if(((NSHTTPURLResponse*)response).statusCode == 200 || ((NSHTTPURLResponse*)response).statusCode == 500) {
+
+                                           // Enqueue Data Usage Supportability Metric for /mobile_crash is request successful.
+                                           [NRMASupportMetricHelper enqueueDataUseMetric:@"mobile_crash"
+                                                                                    size:requestLength
+                                                                                received:response.expectedContentLength];
+
                                            NSError* error = nil;
                                            //stop tracking the file's upload attempts.
                                            [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];

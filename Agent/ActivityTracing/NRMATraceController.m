@@ -515,7 +515,8 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"%@/ExclusiveTime", metricName]
                                    value:[NSNumber numberWithDouble:trace.exclusiveTimeMillis / 1000] //convert to seconds from milliseconds
                                scope:scope
-                         produceUnscoped:YES]];
+                         produceUnscoped:YES
+                         additionalValue:nil]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
         recordSummaryTimes = NO;

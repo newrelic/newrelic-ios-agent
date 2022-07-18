@@ -302,7 +302,8 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
         @synchronized(harvestData) {
             [harvestData.metrics addValue:namedValue.value
                                 forMetric:namedValue.name
-                                withScope:namedValue.scope];
+                                withScope:namedValue.scope
+                          additionalValue:namedValue.additionalValue];
         }
     }
 
