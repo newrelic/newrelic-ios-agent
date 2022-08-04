@@ -1015,6 +1015,8 @@
 		34DB25382824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
 		34DB25392824791B00A5BC45 /* NRMAURLTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */; };
 		34DB253A2824791B00A5BC45 /* NRMAURLTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */; };
+		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
+		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
 		C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */; };
 		C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */; };
@@ -3993,6 +3995,7 @@
 				0209ACAF24E7394500E45C90 /* NRMAInstallMetricGeneratorTest.m in Sources */,
 				0209AC0124E7070900E45C90 /* NRURLSessionTaskOverrideTests.m in Sources */,
 				0209AC1024E7071500E45C90 /* NRMAAppTokenTest.m in Sources */,
+				C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */,
 				0209ABDC24E706AE00E45C90 /* TestContextAdapter.mm in Sources */,
 				0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */,
 				0209ABF124E706FA00E45C90 /* NRMALastActivityTraceControllerTest.m in Sources */,
@@ -4030,6 +4033,7 @@
 				0209AC6624E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m in Sources */,
 				0209AC3024E7073800E45C90 /* NRMAHarvestableEventsTest.m in Sources */,
 				0209AC0F24E7071500E45C90 /* NewRelicAPITest.m in Sources */,
+				C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */,
 				0209AC0D24E7071500E45C90 /* NewRelicTests.m in Sources */,
 				0209ABF324E706FA00E45C90 /* NRTraceTest.m in Sources */,
 				0209AC0224E7070900E45C90 /* NRURLSessionTaskOverrideWithDelegateTest.m in Sources */,
@@ -4594,6 +4598,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -4637,7 +4642,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicNonJenkinsTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4648,6 +4653,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -4685,7 +4691,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicNonJenkinsTests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
