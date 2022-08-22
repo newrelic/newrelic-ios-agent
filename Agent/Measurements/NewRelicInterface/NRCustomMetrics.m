@@ -23,7 +23,7 @@ NRMAMetricSet* __metrics;
 
 @implementation NRCustomMetrics
 
-//set the metric name and it's category
+// Set the metric name and metric category
 + (void) recordMetricWithName:(NSString *)name
                      category:(NSString *)category
 {

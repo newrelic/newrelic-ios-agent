@@ -280,7 +280,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (void) didReceiveInteractionCompleteNotification:(NSNotification*)notif {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^() {
-        //this prevents a race condition between the the asynchonous behavior or the interaction events
+        //this prevents a race condition between the the asynchronous behavior or the interaction events
         //and the termination of the application.
         @synchronized(kNRMA_BGFG_MUTEX) {
             @synchronized(kNRMA_APPLICATION_WILL_TERMINATE) {

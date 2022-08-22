@@ -614,7 +614,7 @@ void NRMA__generateAndSwizzleMethod(NSString *className, NSString *methodName)
 
     IMP methodIMP = nil;
     BOOL isBlack = (color == NRMAMethodColorBlack);
-    //the case statement starts at 2 because all methods have two arguements:
+    //the case statement starts at 2 because all methods have two arguments:
     // self and _cmd
     switch (method_getNumberOfArguments(m)-2) {
         case 0: //void
