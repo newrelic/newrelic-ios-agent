@@ -977,6 +977,10 @@
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
+		2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
+		2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
+		2B5CCB1E287DE5E400A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
 		2B81E34C28624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */; };
 		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
@@ -1011,6 +1015,8 @@
 		34DB25382824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
 		34DB25392824791B00A5BC45 /* NRMAURLTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */; };
 		34DB253A2824791B00A5BC45 /* NRMAURLTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */; };
+		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
+		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
 		C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */; };
 		C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */; };
@@ -1778,6 +1784,8 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelper.m; sourceTree = "<group>"; };
+		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
@@ -2797,6 +2805,8 @@
 				02FF49FB24DC647200115469 /* NRMAMeasurementType.h */,
 				02FF49F824DC647200115469 /* NRMAMeasurementType.m */,
 				02FF49FA24DC647200115469 /* NRMAThreadInfo.h */,
+				2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */,
+				2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */,
 				02FF49FC24DC647200115469 /* NRMAThreadInfo.m */,
 			);
 			path = Measurements;
@@ -3274,6 +3284,7 @@
 				02FF489E24DC61D200115469 /* NRMAURLSessionTaskOverride.h in Headers */,
 				02FF481F24DB5B8100115469 /* NRMAGestureRecognizerInstrumentation.h in Headers */,
 				02FF493B24DC625A00115469 /* NRMARetryTracker.h in Headers */,
+				2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */,
 				02FF49DE24DC636100115469 /* NRMAHarvestable.h in Headers */,
 				02FF4AC624DC656900115469 /* NRMAPayloadContainer.h in Headers */,
 				02FF4AB024DC652E00115469 /* NRMAFileCleanup.h in Headers */,
@@ -3488,6 +3499,7 @@
 				02FF4BD924E3201400115469 /* NRMAURLSessionTaskOverride.h in Headers */,
 				02FF4BDA24E3201400115469 /* NRMAGestureRecognizerInstrumentation.h in Headers */,
 				02FF4BDB24E3201400115469 /* NRMARetryTracker.h in Headers */,
+				2B5CCB1E287DE5E400A88F5C /* NRMASupportMetricHelper.h in Headers */,
 				02FF4BDC24E3201400115469 /* NRMAHarvestable.h in Headers */,
 				02FF4BDD24E3201400115469 /* NRMAPayloadContainer.h in Headers */,
 				02FF4BDE24E3201400115469 /* NRMAFileCleanup.h in Headers */,
@@ -3983,6 +3995,7 @@
 				0209ACAF24E7394500E45C90 /* NRMAInstallMetricGeneratorTest.m in Sources */,
 				0209AC0124E7070900E45C90 /* NRURLSessionTaskOverrideTests.m in Sources */,
 				0209AC1024E7071500E45C90 /* NRMAAppTokenTest.m in Sources */,
+				C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */,
 				0209ABDC24E706AE00E45C90 /* TestContextAdapter.mm in Sources */,
 				0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */,
 				0209ABF124E706FA00E45C90 /* NRMALastActivityTraceControllerTest.m in Sources */,
@@ -4020,6 +4033,7 @@
 				0209AC6624E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m in Sources */,
 				0209AC3024E7073800E45C90 /* NRMAHarvestableEventsTest.m in Sources */,
 				0209AC0F24E7071500E45C90 /* NewRelicAPITest.m in Sources */,
+				C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */,
 				0209AC0D24E7071500E45C90 /* NewRelicTests.m in Sources */,
 				0209ABF324E706FA00E45C90 /* NRTraceTest.m in Sources */,
 				0209AC0224E7070900E45C90 /* NRURLSessionTaskOverrideWithDelegateTest.m in Sources */,
@@ -4153,6 +4167,7 @@
 				02FF49AF24DC62B800115469 /* NRMAApplicationInformation.m in Sources */,
 				02FF4A4A24DC64D500115469 /* NRMANamedValueMeasurement.m in Sources */,
 				02FF4A7024DC64E600115469 /* NRMAMeasurementProducer.m in Sources */,
+				2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */,
 				02FF49B824DC62B800115469 /* NRMADataToken.m in Sources */,
 				02FF482024DB5B8100115469 /* NRMAGestureProcessor.m in Sources */,
 				02FF495224DC626E00115469 /* NRMAHarvester.mm in Sources */,
@@ -4455,6 +4470,7 @@
 				02FF4C4B24E3201400115469 /* NRMAApplicationInformation.m in Sources */,
 				02FF4C4C24E3201400115469 /* NRMANamedValueMeasurement.m in Sources */,
 				02FF4C4D24E3201400115469 /* NRMAMeasurementProducer.m in Sources */,
+				2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */,
 				02FF4C4E24E3201400115469 /* NRMADataToken.m in Sources */,
 				02FF4C4F24E3201400115469 /* NRMAGestureProcessor.m in Sources */,
 				02FF4C5024E3201400115469 /* NRMAHarvester.mm in Sources */,
@@ -4582,12 +4598,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4625,7 +4642,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicNonJenkinsTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -4636,12 +4653,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -4673,7 +4691,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicNonJenkinsTests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -4714,9 +4732,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -4784,9 +4802,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -4822,11 +4840,11 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -4851,7 +4869,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.7;
+				MARKETING_VERSION = 7.3.8;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
 				OTHER_LDFLAGS = (
@@ -4888,11 +4906,11 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4915,7 +4933,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.7;
+				MARKETING_VERSION = 7.3.8;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
 				OTHER_LDFLAGS = (
@@ -4945,9 +4963,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				ENABLE_BITCODE = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -4960,9 +4978,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				ENABLE_BITCODE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -4978,9 +4996,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -5032,9 +5050,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -5078,9 +5096,9 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
@@ -5115,9 +5133,9 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
@@ -5150,9 +5168,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
@@ -5163,9 +5181,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TVOS_DEPLOYMENT_TARGET = 9.0;
@@ -5179,11 +5197,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5206,7 +5224,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.7;
+				MARKETING_VERSION = 7.3.8;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -5242,11 +5260,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.3.7;
+				CURRENT_PROJECT_VERSION = 7.3.8;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.3.7;
+				DYLIB_CURRENT_VERSION = 7.3.8;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5268,7 +5286,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.3.7;
+				MARKETING_VERSION = 7.3.8;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = (
 					"-framework",

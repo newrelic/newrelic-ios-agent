@@ -3,7 +3,7 @@
 //
 
 
-#import  "NRMAMethodProfiler.h"
+#import "NRMAMethodProfiler.h"
 #import "NRMAClassDataContainer.h"
 #import "NRMethodProfilerTests.h"
 #import "NRMA_Swift_Trouble_Class.h"

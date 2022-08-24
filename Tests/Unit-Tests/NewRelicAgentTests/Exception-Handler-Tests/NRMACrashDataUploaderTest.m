@@ -95,4 +95,7 @@
     XCTAssertFalse([uploader shouldUploadFileWithUniqueIdentifier:@"helloWorld"]);
 }
 
+// TODO: Add test
+// Test supportability metric upon successful /mobile_crash request.
+
 @end

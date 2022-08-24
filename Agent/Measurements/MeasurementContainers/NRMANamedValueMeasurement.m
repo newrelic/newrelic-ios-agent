@@ -11,11 +11,13 @@
 @implementation NRMANamedValueMeasurement
 - (instancetype) initWithName:(NSString*)name
                         value:(NSNumber*)value
+              additionalValue:(NSNumber*)additionalValue;
 {
     self = [super initWithType:NRMAMT_NamedValue];
     if (self) {
         _name = name;
         _value = value;
+        _additionalValue = additionalValue;
         self.startTime = NRMAMillisecondTimestamp();
         self.endTime = self.startTime;
     }

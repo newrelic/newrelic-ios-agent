@@ -13,6 +13,7 @@
 #import "NRMATaskQueue.h"
 #import <time.h>
 #import "NRMAHarvesterConnection+GZip.h"
+#import "NRMASupportMetricHelper.h"
 
 @implementation NRMAHarvesterConnection
 @synthesize connectionInformation = _connectionInformation;
@@ -28,9 +29,9 @@
 {
     NSMutableURLRequest * postRequest = [super newPostWithURI:url];
 
-    NSString* contentEncoding = message.length <= 512 ? @"identity" : @"deflate";
+    NSString* contentEncoding = message.length <= 512 ? kNRMAIdentityHeader : kNRMAGZipHeader;
 
-    [postRequest addValue:contentEncoding forHTTPHeaderField:@"Content-Encoding"];
+    [postRequest addValue:contentEncoding forHTTPHeaderField:kNRMAContentEncodingHeader];
 
     if (self.serverTimestamp != 0) {
         [postRequest addValue:[NSString stringWithFormat:@"%lld",self.serverTimestamp]
@@ -38,7 +39,10 @@
     }
 
     NSData* messageData = [message dataUsingEncoding:NSUTF8StringEncoding];
-    if ([contentEncoding isEqualToString:@"deflate"]) {
+    unsigned long size = [messageData length];
+    [postRequest setValue:[NSString stringWithFormat:@"%lu", size] forHTTPHeaderField:kNRMAActualSizeHeader];
+
+    if ([contentEncoding isEqualToString:kNRMAGZipHeader]) {
         messageData = [NRMAHarvesterConnection gzipData:messageData];
     }
     [postRequest setHTTPBody:messageData];
@@ -63,6 +67,15 @@
             error = berror;
             response = (NSHTTPURLResponse*)bresponse;
             dispatch_semaphore_signal(harvestRequestSemaphore);
+
+            // Enqueue Data Usage Supportability Metric for /data or /connect if the harvest request was successful.
+            if (!error) {
+                BOOL wasCompressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
+                long size = wasCompressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
+                NSString* subDest = [[post URL] lastPathComponent];
+
+                [NRMASupportMetricHelper enqueueDataUseMetric:subDest size:size received:responseBody.length];
+            }
         }
     }] resume];
 
@@ -73,19 +86,20 @@
 
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {
-            #endif
-        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRSupportabilityPrefix@"/Collector/ResponseErrorCodes/%"NRMA_NSI,[error code]]
-                                   value:@1
-                               scope:@""]];
+#endif
+            [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRSupportabilityPrefix@"/Collector/ResponseErrorCodes/%"NRMA_NSI,[error code]]
+                                                            value:@1
+                                                            scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         } @catch (NSException* exception) {
             [NRMAExceptionHandler logException:exception
-                                       class:NSStringFromClass([self class])
-                                    selector:NSStringFromSelector(_cmd)];
+                                         class:NSStringFromClass([self class])
+                                      selector:NSStringFromSelector(_cmd)];
         }
-        #endif
+#endif
         harvestResponse.error = error;
     }
+
     harvestResponse.statusCode = (int)response.statusCode;
     harvestResponse.responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     return harvestResponse;
@@ -164,4 +178,5 @@
     NSString* protocol = self.useSSL ? @"https://":@"http://";
     return [NSString stringWithFormat:@"%@%@%@",protocol,self.collectorHost,resource];
 }
+
 @end

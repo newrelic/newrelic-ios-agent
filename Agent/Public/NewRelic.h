@@ -2,10 +2,10 @@
 //  New Relic for Mobile -- iOS edition
 //
 //  See:
-//    https://docs.newrelic.com/docs/mobile-apps for information
-//    https://docs.newrelic.com/docs/releases/ios for release notes
+//    https://docs.newrelic.com/docs/mobile-monitoring for information
+//    https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes/ for release notes
 //
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright (c) 2022 New Relic. All rights reserved.
 //  See https://docs.newrelic.com/docs/licenses/ios-agent-licenses for license details
 //
 
@@ -15,12 +15,12 @@
  *  data collection.
  */
 
-#import "NewRelicFeatureFlags.h"
-#import "NRConstants.h"
-#import "NRTimer.h"
-#import "NRLogger.h"
-#import "NewRelicCustomInteractionInterface.h"
-#import "NRGCDOverride.h"
+#import <NewRelic/NewRelicFeatureFlags.h>
+#import <NewRelic/NRConstants.h>
+#import <NewRelic/NRTimer.h>
+#import <NewRelic/NRLogger.h>
+#import <NewRelic/NewRelicCustomInteractionInterface.h>
+#import <NewRelic/NRGCDOverride.h>
 
 #ifdef __cplusplus
 extern "C" {

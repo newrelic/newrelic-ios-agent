@@ -94,7 +94,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) dealloc {
-    __eventTypeRegex = nil;
+    [__eventTypeRegex release];
 
     [super dealloc];
 }
@@ -362,38 +362,36 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
          withAttributes:(NSDictionary*)attributes {
 
     try {
-        @autoreleasepool {
-            if (!__eventTypeRegex) {
-                NSError* error = nil;
-                __eventTypeRegex = [[NSRegularExpression alloc] initWithPattern:@"^[\\p{L}\\p{Nd} _:.]+$"
-                                                                        options:NSRegularExpressionUseUnicodeWordBoundaries
-                                                                          error:&error];
-                if (error != nil) {
-                    NRLOG_ERROR(@"addCustomEvent failed with error: %@",error);
-                    return false;
-                }
+        if (!__eventTypeRegex) {
+            NSError* error = nil;
+            __eventTypeRegex = [[NSRegularExpression alloc] initWithPattern:@"^[\\p{L}\\p{Nd} _:.]+$"
+                                                                     options:NSRegularExpressionUseUnicodeWordBoundaries
+                                                                       error:&error];
+            if (error != nil) {
+                NRLOG_ERROR(@"addCustomEvent failed with error: %@",error);
+                return false;
             }
+        }
 
-            NSArray* textCheckingResults = [__eventTypeRegex matchesInString:eventType
-                                                                     options:NSMatchingReportCompletion
-                                                                       range:NSMakeRange(0, eventType.length)];
+        NSArray* textCheckingResults = [__eventTypeRegex matchesInString:eventType
+                                                                 options:NSMatchingReportCompletion
+                                                                   range:NSMakeRange(0, eventType.length)];
 
-            if (!(textCheckingResults.count > 0 && ((NSTextCheckingResult*)textCheckingResults[0]).range.length == eventType.length)) {
-                NRLOG_ERROR(@"Failed to add event type: %@. EventType is may only contain word characters, numbers, spaces, colons, underscores, and periods.",eventType);
-                return NO;
-            }
+        if (!(textCheckingResults.count > 0 && ((NSTextCheckingResult*)textCheckingResults[0]).range.length == eventType.length)) {
+            NRLOG_ERROR(@"Failed to add event type: %@. EventType is may only contain word characters, numbers, spaces, colons, underscores, and periods.",eventType);
+            return NO;
+        }
 
 
-            auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
+        auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
 
-            if (event == nullptr) {
-                NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
-                return NO;
-            }
+        if (event == nullptr) {
+            NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
+            return NO;
+        }
 
-            if([self event:event withAttributes:attributes]) {
-                return _analyticsController->addEvent(event);
-            }
+        if([self event:event withAttributes:attributes]) {
+            return _analyticsController->addEvent(event);
         }
     } catch (std::exception& e){
         NRLOG_ERROR(@"Failed to add event: %s",e.what());
@@ -572,10 +570,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (void) onHarvestBefore {
     if (_sessionWillEnd || _analyticsController->didReachMaxEventBufferTime()) {
         
-        NRMAHarvestableAnalytics* harvestableAnalytics = [[[NRMAHarvestableAnalytics alloc] initWithAttributeJSON:[self sessionAttributeJSONString]
-                                                                                                        EventJSON:[self analyticsJSONString]]autorelease];
+        NRMAHarvestableAnalytics* harvestableAnalytics = [[NRMAHarvestableAnalytics alloc] initWithAttributeJSON:[self sessionAttributeJSONString]
+                                                                                                        EventJSON:[self analyticsJSONString]];
 
         [NRMAHarvestController addHarvestableAnalytics:harvestableAnalytics];
+        [harvestableAnalytics release];
     }
 }
 @end

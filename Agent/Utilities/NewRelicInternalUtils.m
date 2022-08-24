@@ -118,12 +118,15 @@ static NSString* _osVersion;
     return _osVersion;
 }
 
-
 + (NSString*) osName {
     //we do this to retain the "iOS" value. +systemName returns "iphone OS" for iOS now.
     if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_TVOS]) {
         return NRMA_OSNAME_TVOS;
     }
+    else if([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_WATCHOS]) {
+        return NRMA_OSNAME_WATCHOS;
+    }
+    
     return NRMA_OSNAME_IOS;
 }
 

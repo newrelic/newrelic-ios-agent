@@ -41,7 +41,8 @@
 
     if (memoryUsage != 0) {
        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_MEMORY_USAGE
-                                                value:[NSNumber numberWithDouble:memoryUsage]]];
+                                                                                  value:[NSNumber numberWithDouble:memoryUsage]
+                                                                        additionalValue:nil]];
 
     }
 
@@ -72,11 +73,14 @@
 
     NSMutableSet *measurements = [[NSMutableSet alloc] initWithObjects:
                                   [[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_USER_CPU_TIME
-                                                                          value:[NSNumber numberWithDouble:userUtilization]],
+                                                                          value:[NSNumber numberWithDouble:userUtilization]
+                                                                  additionalValue:nil],
                                   [[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_SYSTEM_CPU_TIME
-                                                                          value:[NSNumber numberWithDouble:systemUtilization]],
+                                                                          value:[NSNumber numberWithDouble:systemUtilization]
+                                                                  additionalValue:nil],
                                   [[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_TOTAL_CPU_TIME
-                                                                          value:[NSNumber numberWithDouble:totalUtilization]],
+                                                                          value:[NSNumber numberWithDouble:totalUtilization]
+                                                                  additionalValue:nil],
                                   nil];
 
     return measurements;

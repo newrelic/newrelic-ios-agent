@@ -20,6 +20,7 @@
 
 #define NRMA_OSNAME_IOS  @"iOS"
 #define NRMA_OSNAME_TVOS @"tvOS"
+#define NRMA_OSNAME_WATCHOS @"watchOS"
 
 #define NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD 400
 

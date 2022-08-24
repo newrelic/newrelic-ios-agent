@@ -34,7 +34,7 @@
     
     NSMutableDictionary* dictionary = [NSMutableDictionary dictionaryWithDictionary:[array objectAtIndex:1]];
     [dictionary setObject:[NSNumber numberWithDouble:totalExclusiveTime]
-                   forKey:@"exclusive"];
+                   forKey:kExclusiveKey];
     return [NSMutableArray arrayWithObjects:[array objectAtIndex:0],dictionary, nil];
 }
 @end

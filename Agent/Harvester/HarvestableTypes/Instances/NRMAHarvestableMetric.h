@@ -8,13 +8,22 @@
 
 #import <Foundation/Foundation.h>
 #import "NRMAHarvestable.h"
-#define kEndDateKey  @"endDate"
-#define kValueKey    @"value"
+
+#define kEndDateKey   @"endDate"
+#define kValueKey     @"value"
+#define kExclusiveKey @"exclusive"
+#define kCountKey     @"count"
+#define kTotalKey     @"total"
+#define kMinKey       @"min"
+#define kMaxKey       @"max"
+#define kSumOfSqKey   @"sum_of_squares"
+
 @interface NRMAHarvestableMetric : NRMAHarvestable
 {
     long long lastUpdateMillis;
 }
 @property (nonatomic, strong) NSString *metricName;
+@property(strong,nonatomic) NSNumber* additionalValue;
 
 - (NSArray*) allValues;
 
@@ -46,6 +55,8 @@
  */
 - (void) addValue:(NSNumber *)value;
 
+// Call this with non-null number for Data Use Supportability Metrics
+- (void) addAdditionalValue:(NSNumber *)additionalValue;
 
 /*
  * FUNCTION   : - (void) reset;

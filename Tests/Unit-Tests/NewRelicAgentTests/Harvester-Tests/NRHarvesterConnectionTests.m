@@ -11,14 +11,31 @@
 #import "NRTestConstants.h"
 #import "NewRelicAgentInternal.h"
 #import <OCMock/OCMock.h>
+#import "NRMANamedValueMeasurement.h"
+#import "NRMATaskQueue.h"
+
 @implementation NRMAHarvesterConnectionTests
 
 - (void) setUp
 {
     [super setUp];
+
+    helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+
     connection = [[NRMAHarvesterConnection alloc] init];
     connection.applicationToken = @"app token";
     connection.connectionInformation = [NRMAAgentConfiguration connectionInformation];
+}
+
+- (void) tearDown
+{
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+    helper = nil;
+
+    [NRMAMeasurements shutdown];
+    [super tearDown];
 }
 
 - (void) testCreatePost
@@ -48,6 +65,7 @@
     XCTAssertNotNil(request, @"");
     XCTAssertTrue([[request.URL.absoluteString substringWithRange:NSMakeRange(0, 5)] rangeOfString:@"https"].location != NSNotFound,@"");
 }
+
 - (void) testSend {
     __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://mobile-collector.newrelic.com"] statusCode:404 HTTPVersion:@"1.1" headerFields:nil];
     id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
@@ -69,67 +87,27 @@
     }] resume];
     
     connection.serverTimestamp = 1234;
-     connection.collectorHost = @"mobile-collector.newrelic.com";
-     
-     NSURLRequest* request = [connection createConnectPost:@"unit tests"];
-     XCTAssertNotNil(request, @"");
-     
-     NRMAHarvestResponse* response = [connection send:request];
-     XCTAssertNotNil(response, @"");
-     XCTAssertEqual(404, response.statusCode, @"we should be not found!");
-     XCTAssertTrue([response.responseBody isEqualToString:@""], @"");
-     
-     XCTAssertTrue([response isError], @"");
-     XCTAssertTrue(response.statusCode == NOT_FOUND, @"");
-     
-     [mockUploadTask stopMocking];
-     [mockNSURLSession stopMocking];
-}
-//
-//- (void) testSend
-//{
-//    @autoreleasepool {
-//
-//    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://mobile-collector.newrelic.com"] statusCode:404 HTTPVersion:@"1.1" headerFields:nil];
-//    id mockConnection = [OCMockObject mockForClass:NSURLConnection.class];
-//
-//    [[[[mockConnection stub] classMethod] andDo:^(NSInvocation* invoke){
-//        @autoreleasepool {
-//
-//        NSURLResponse* __autoreleasing * response_ptr;
-//
-//        [invoke getArgument:&response_ptr atIndex:3];
-//
-//        *response_ptr = bresponse;
-//        }
-//
-//    }]   sendSynchronousRequest:OCMOCK_ANY
-//              returningResponse:[OCMArg anyObjectRef]
-//                          error:[OCMArg anyObjectRef]];
-//
-//    connection.serverTimestamp = 1234;
-//    connection.collectorHost = @"mobile-collector.newrelic.com";
-//
-//    NSURLRequest* request = [connection createConnectPost:@"unit tests"];
-//    XCTAssertNotNil(request, @"");
-//
-//    NRMAHarvestResponse* response = [connection send:request];
-//    XCTAssertNotNil(response, @"");
-//    XCTAssertEqual(404, response.statusCode, @"we should be not found!");
-//    XCTAssertTrue([response.responseBody isEqualToString:@""], @"");
-//
-//    XCTAssertTrue([response isError], @"");
-//    XCTAssertTrue(response.statusCode == NOT_FOUND, @"");
-//
-//    [mockConnection stopMocking];
-//    }
-//}
+    connection.collectorHost = @"mobile-collector.newrelic.com";
 
+    NSURLRequest* request = [connection createConnectPost:@"unit tests"];
+    XCTAssertNotNil(request, @"");
+
+    NRMAHarvestResponse* response = [connection send:request];
+    XCTAssertNotNil(response, @"");
+    XCTAssertEqual(404, response.statusCode, @"we should be not found!");
+    XCTAssertTrue([response.responseBody isEqualToString:@""], @"");
+
+    XCTAssertTrue([response isError], @"");
+    XCTAssertTrue(response.statusCode == NOT_FOUND, @"");
+
+    [mockUploadTask stopMocking];
+    [mockNSURLSession stopMocking];
+}
 
 - (NRMAConnectInformation*) testSendConnect
 {
     connection.serverTimestamp =1234;
-    connection.connectionInformation = [self createConnectionInformation];
+    connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
     
     connection.collectorHost = @"mobile-collector.newrelic.com";
     
@@ -144,12 +122,12 @@
     connection.serverTimestamp = 1234;
     connection.collectorHost = @"mobile-collector.newrelic.com";
     
-    NRMAHarvestResponse* response = [connection sendData:[self createConnectionInformation]];
+    NRMAHarvestResponse* response = [connection sendData:[self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native]];
     XCTAssertNotNil(response, @"");
     XCTAssertEqual(FORBIDDEN, response.statusCode, @"");
     //API changed, and is now returning a response. Though it's not imparative this repsonse is empty.
     //nothing in the harvester depends on it, so this test is not needed.
-//    XCTAssertTrue([response.responseBody isEqualToString:@""], @"");
+    //    XCTAssertTrue([response.responseBody isEqualToString:@""], @"");
 }
 
 
@@ -173,7 +151,7 @@
 
 - (void) testSendEnabledAppToken
 {
-    connection.connectionInformation = [self createConnectionInformation];
+    connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
     connection.collectorHost = @"staging-mobile-collector.newrelic.com";
     connection.applicationToken = @"AAa2d4baa1094bf9049bb22895935e46f85c45c211";
     connection.useSSL = YES;
@@ -208,26 +186,54 @@
     XCTAssertEqualObjects([generatedRequest.allHTTPHeaderFields objectForKey:@"Content-Encoding"], @"identity", @"");
 }
 
-- (NRMAConnectInformation*) createConnectionInformation
+- (void) testSendSupportMetric {
+
+    connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
+    connection.collectorHost = @"staging-mobile-collector.newrelic.com";
+    connection.applicationToken = @"AAa2d4baa1094bf9049bb22895935e46f85c45c211";
+    connection.useSSL = YES;
+    connection.serverTimestamp = 1234;
+
+    [connection sendData: [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native]];
+    
+    XCTestExpectation *expectation = [[XCTestExpectation  alloc] initWithDescription:@"Wait for n/w request"];
+    [expectation setInverted:YES];
+    (void)[XCTWaiter waitForExpectations:@[expectation] timeout:5];
+
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([helper.result isKindOfClass:[NRMANamedValueMeasurement class]], @"The result is not a named value.");
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+
+    NSString* fullMetricName = [NSString stringWithFormat:@"Supportability/Mobile/%@/Native/Collector/data/Output/Bytes", [NewRelicInternalUtils osName]];
+    XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
+
+    // Expected byte count should not be 0.
+    XCTAssertNotEqual(measurement.value.longLongValue, 0, @"Byte value doesn't match expected.");
+}
+
+- (NRMAConnectInformation*) createConnectionInformationWithOsName:(NSString*)osName platform:(NRMAApplicationPlatform)platform
 {
     NSString* appName = @"test";
-    NSString* appversion = @"1.0";
+    NSString* appVersion = @"1.0";
     NSString* packageId = @"com.test";
-    NRMAApplicationInformation* appinfo = [[NRMAApplicationInformation alloc] initWithAppName:appName
-                                                                               appVersion:appversion
-                                                                                 bundleId:packageId];
+    NRMAApplicationInformation* appInfo = [[NRMAApplicationInformation alloc] initWithAppName:appName
+                                             appVersion:appVersion
+                                               bundleId:packageId];
+
     NRMADeviceInformation* devInfo = [[NRMADeviceInformation alloc] init];
-    devInfo.osName = [NewRelicInternalUtils osName];
+    devInfo.osName = osName;
     devInfo.osVersion = [NewRelicInternalUtils osVersion];
     devInfo.manufacturer = @"Apple Inc.";
     devInfo.model = [NewRelicInternalUtils deviceModel];
     devInfo.agentName = [NewRelicInternalUtils agentName];
     devInfo.agentVersion = @"2.123";
     devInfo.deviceId =@"389C9738-A761-44DE-8A66-1668CFD67DA1";
-    
+    devInfo.platform = platform;
     NRMAConnectInformation* connectionInformation = [[NRMAConnectInformation alloc] init];
     
-    connectionInformation.applicationInformation = appinfo;
+    connectionInformation.applicationInformation = appInfo;
     connectionInformation.deviceInformation = devInfo;
     return connectionInformation;
 }

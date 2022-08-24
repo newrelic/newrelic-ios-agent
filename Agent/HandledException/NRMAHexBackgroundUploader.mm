@@ -13,8 +13,6 @@
 
 @implementation NRMAHexBackgroundUploader
 
-
-
 - (instancetype) initWithHexHost:(NSString*)hexHost {
     self = [super init];
     if (self) {
@@ -44,12 +42,11 @@
 
 - (void) dealloc {
     [self.session invalidateAndCancel];
-    self.session = nil;
-    self.hexHost = nil;
-    self.sessionIdManager = nil;
+    [self.session release];
+    [self.hexHost release];
+    [self.sessionIdManager release];
+
     [super dealloc];
 }
-
-
 
 @end

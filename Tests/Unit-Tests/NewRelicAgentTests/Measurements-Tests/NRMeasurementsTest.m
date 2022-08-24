@@ -114,7 +114,7 @@
                                                                                   threadInfo:[NRMAThreadInfo new]];
 
     //this should not get captured.
-    NRMANamedValueMeasurement* t4 = [[NRMANamedValueMeasurement alloc] initWithName:@"blah" value:@1];
+    NRMANamedValueMeasurement* t4 = [[NRMANamedValueMeasurement alloc] initWithName:@"blah" value:@1 additionalValue:nil];
     t4.startTime = 0;
     t4.endTime = 999;
 
@@ -209,7 +209,7 @@
 
     @try {
 
-        [NRMAMeasurements recordMetric:[[NRMAMetric alloc] initWithName:name value:myvalue scope:scope produceUnscoped:YES]];
+        [NRMAMeasurements recordMetric:[[NRMAMetric alloc] initWithName:name value:myvalue scope:scope produceUnscoped:YES additionalValue:nil]];
 
     } @catch (NSException *exception) {
         XCTAssertTrue([exception.name isEqualToString:kNRMAMetricException], @"assert the kind of exception we see is a metric exception.");

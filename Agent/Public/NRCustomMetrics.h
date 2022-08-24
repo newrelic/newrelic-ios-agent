@@ -1,4 +1,7 @@
 //
+// NRCustomMetrics
+// NewRelic
+//
 //  New Relic for Mobile -- iOS edition
 //
 //  See:
@@ -10,7 +13,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "NRConstants.h"
+#import <NewRelic/NRConstants.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +28,7 @@ extern "C" {
  */
 
 
-//set the metric name and it's category
+// Set the metric name and metric category
 + (void) recordMetricWithName:(NSString *)name
                      category:(NSString *)category;
 
@@ -34,7 +37,7 @@ extern "C" {
                      category:(NSString *)category
                         value:(NSNumber *)value;
 
-// adds a unit for the value
+// Adds a unit for the value
 /*
  * while there are a few pre-defined units please feel free to add your own by
  * typecasting an NSString.
