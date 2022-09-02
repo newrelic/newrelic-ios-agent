@@ -75,6 +75,7 @@
 #import "NRMAFileCleanup.h"
 #import "NRMAAppToken.h"
 #import "NRMAUDIDManager.h"
+#import "NRMAStartTimer.h"
 
 /* Support for teardown and re-setup of the agent within a process lifetime for our test harness
  Enabling this will bypass dispatch_once-style logic and expose more internal state.
@@ -360,6 +361,11 @@ static NewRelicAgentInternal* _sharedInstance;
      * initialization.
      */
     [NRMAMeasurements initializeMeasurements];
+
+    if ([NRMAFlags shouldEnableAppStartMetrics]) {
+        [[NRMAStartTimer sharedInstance] start];
+    }
+
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
         [NRMAHarvestController start];
     }

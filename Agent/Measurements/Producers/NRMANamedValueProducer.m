@@ -10,6 +10,8 @@
 
 #import "NRMANamedValueMeasurement.h"
 #import "NRMAMemoryVitals.h"
+#import "NRMAStartTimer.h"
+
 @implementation NRMANamedValueProducer
 
 
@@ -27,7 +29,7 @@
 
 - (void) generateMachineMeasurements
 {
-    NSMutableSet* machineMeasurementSet = [[NSMutableSet alloc] initWithCapacity:4];
+    NSMutableSet* machineMeasurementSet = [[NSMutableSet alloc] init];
     CPUTime currentCPUTime;
 
     int code = [NRMACPUVitals cpuTime:&currentCPUTime];
@@ -43,20 +45,31 @@
        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_MEMORY_USAGE
                                                                                   value:[NSNumber numberWithDouble:memoryUsage]
                                                                         additionalValue:nil]];
+    }
 
+    if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {
+        NSString *metricName = [[NRMAStartTimer sharedInstance] isWarmLaunch] ? NRMA_METRIC_APP_LAUNCH_WARM : NRMA_METRIC_APP_LAUNCH_COLD;
+        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:metricName
+                                                value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] appLaunchDuration]]
+                                                                         additionalValue:nil]];
+        [NRMAStartTimer sharedInstance].appLaunchDuration = 0;
+    }
+
+    if ([[NRMAStartTimer sharedInstance] appResumeDuration] != 0) {
+        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_APP_LAUNCH_RESUME
+                                                value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] appResumeDuration]]
+                                                                         additionalValue:nil]];
+        [NRMAStartTimer sharedInstance].appResumeDuration = 0;
     }
 
     if (machineMeasurementSet != nil) {
         [self produceMeasurements:@{[NSNumber numberWithInt:NRMAMT_NamedValue]:machineMeasurementSet}];
     }
 
-
     if (code == 0) {
         lastCPUTime = currentCPUTime;
         lastCPUTimeIsValid = YES;
     }
-
-
 }
 
 

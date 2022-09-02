@@ -200,4 +200,21 @@ static NRMAFeatureFlags __originalFlags;
     XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
 }
 
+- (void) testShouldEnableAppLaunchMetrics
+{
+    XCTAssertFalse([NRMAFlags shouldEnableAppStartMetrics], @"since no flags have been set this should be false!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_AppStartMetrics];
+
+    XCTAssertFalse([NRMAFlags shouldEnableAppStartMetrics], @"this should now be disabled");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_AppStartMetrics];
+
+    XCTAssertTrue([NRMAFlags shouldEnableAppStartMetrics], @"this again be true!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_AppStartMetrics];
+
+    XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
+}
+
 @end

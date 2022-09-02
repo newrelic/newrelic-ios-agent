@@ -43,7 +43,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_HandledExceptionEvents |
                               NRFeatureFlag_NetworkRequestEvents | 
                               NRFeatureFlag_RequestErrorEvents |
-                              NRFeatureFlag_DistributedTracing;
+                              NRFeatureFlag_DistributedTracing |
+                              NRFeatureFlag_AppStartMetrics;
                   });
     return __flags;
 }
@@ -153,6 +154,11 @@ static NSString* __deviceIdentifierReplacement = NULL;
 
 + (BOOL) shouldEnableDistributedTracing {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_DistributedTracing) != 0;
+}
+
++ (BOOL) shouldEnableAppStartMetrics
+{
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_AppStartMetrics) != 0;
 }
 
 @end

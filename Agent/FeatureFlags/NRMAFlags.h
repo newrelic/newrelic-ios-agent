@@ -41,6 +41,8 @@
 
 + (BOOL) shouldEnableDistributedTracing;
 
++ (BOOL) shouldEnableAppStartMetrics;
+
 // Private Setting
 // Device Identifier Salting
 // private settings only for VW (jira:MOBILE-6635)

@@ -977,6 +977,7 @@
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
@@ -986,6 +987,15 @@
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
+		2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
+		2BF42C6428B80B82006E9C27 /* NRMASysctlBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */; };
+		2BF42C6528B80B82006E9C27 /* NRMASysctlBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */; };
+		2BF42C6628B80B82006E9C27 /* NRMASysctlBinding.c in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */; };
+		2BF42C6728B80B82006E9C27 /* NRMASysctlBinding.c in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */; };
+		2BF42C6928B81031006E9C27 /* NRMAStartTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6828B81031006E9C27 /* NRMAStartTimer.h */; };
+		2BF42C6A28B81031006E9C27 /* NRMAStartTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6828B81031006E9C27 /* NRMAStartTimer.h */; };
+		2BF42C6C28B8106F006E9C27 /* NRMAStartTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */; };
+		2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */; };
 		343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
@@ -1789,6 +1799,12 @@
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
+		2BBBE6FA28BD528F003CADF3 /* NRMAStartTimerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAStartTimerTests.h; sourceTree = "<group>"; };
+		2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimerTests.m; sourceTree = "<group>"; };
+		2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASysctlBinding.h; sourceTree = "<group>"; };
+		2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NRMASysctlBinding.c; sourceTree = "<group>"; };
+		2BF42C6828B81031006E9C27 /* NRMAStartTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAStartTimer.h; sourceTree = "<group>"; };
+		2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimer.m; sourceTree = "<group>"; };
 		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
 		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731AFE26B3788800CE568A /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hex.framework; path = Frameworks/Hex.framework; sourceTree = "<group>"; };
@@ -2193,6 +2209,8 @@
 				0209AC8024E7393100E45C90 /* NSURLConnectionTests.m */,
 				0209AC6524E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m */,
 				C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */,
+				2BBBE6FA28BD528F003CADF3 /* NRMAStartTimerTests.h */,
+				2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -2233,6 +2251,7 @@
 				F6E79C6C25A65346006277FB /* DistributedTracing */,
 				02FF4AB824DC654500115469 /* Vendor */,
 				02FF4A7C24DC652100115469 /* Utilities */,
+				2BF42C4928B80936006E9C27 /* NRMAStartTimer */,
 				02FF49F324DC646400115469 /* Measurements */,
 				02FF49E924DC644D00115469 /* InstallsAndUpgrades */,
 				02FF49E424DC643C00115469 /* HybridSupport */,
@@ -3026,6 +3045,17 @@
 			path = flatbuffers;
 			sourceTree = "<group>";
 		};
+		2BF42C4928B80936006E9C27 /* NRMAStartTimer */ = {
+			isa = PBXGroup;
+			children = (
+				2BF42C6828B81031006E9C27 /* NRMAStartTimer.h */,
+				2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */,
+				2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */,
+				2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */,
+			);
+			path = NRMAStartTimer;
+			sourceTree = "<group>";
+		};
 		34D64BA526B3329000A75A72 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -3122,6 +3152,7 @@
 				02FF49FE24DC647200115469 /* NRMAMeasurementPool.h in Headers */,
 				02FF485D24DC615A00115469 /* NRMALoggerBridge.hpp in Headers */,
 				02FF48AC24DC61E900115469 /* NRMAWKWebViewNavigationDelegate.h in Headers */,
+				2BF42C6928B81031006E9C27 /* NRMAStartTimer.h in Headers */,
 				02FF4AA124DC652E00115469 /* NRMANonARCMethods.h in Headers */,
 				02FF4A2F24DC64AE00115469 /* NRMAHTTPTransaction.h in Headers */,
 				02FF4AFE24DC8CB200115469 /* reflection_generated.h in Headers */,
@@ -3284,6 +3315,7 @@
 				02FF489E24DC61D200115469 /* NRMAURLSessionTaskOverride.h in Headers */,
 				02FF481F24DB5B8100115469 /* NRMAGestureRecognizerInstrumentation.h in Headers */,
 				02FF493B24DC625A00115469 /* NRMARetryTracker.h in Headers */,
+				2BF42C6428B80B82006E9C27 /* NRMASysctlBinding.h in Headers */,
 				2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */,
 				02FF49DE24DC636100115469 /* NRMAHarvestable.h in Headers */,
 				02FF4AC624DC656900115469 /* NRMAPayloadContainer.h in Headers */,
@@ -3337,6 +3369,7 @@
 				02FF4B3624E3201400115469 /* NRMAMeasurementPool.h in Headers */,
 				02FF4B3724E3201400115469 /* NRMALoggerBridge.hpp in Headers */,
 				02FF4B3824E3201400115469 /* NRMAWKWebViewNavigationDelegate.h in Headers */,
+				2BF42C6A28B81031006E9C27 /* NRMAStartTimer.h in Headers */,
 				02FF4B3924E3201400115469 /* NRMANonARCMethods.h in Headers */,
 				02FF4B3A24E3201400115469 /* NRMAHTTPTransaction.h in Headers */,
 				02FF4B3B24E3201400115469 /* reflection_generated.h in Headers */,
@@ -3499,6 +3532,7 @@
 				02FF4BD924E3201400115469 /* NRMAURLSessionTaskOverride.h in Headers */,
 				02FF4BDA24E3201400115469 /* NRMAGestureRecognizerInstrumentation.h in Headers */,
 				02FF4BDB24E3201400115469 /* NRMARetryTracker.h in Headers */,
+				2BF42C6528B80B82006E9C27 /* NRMASysctlBinding.h in Headers */,
 				2B5CCB1E287DE5E400A88F5C /* NRMASupportMetricHelper.h in Headers */,
 				02FF4BDC24E3201400115469 /* NRMAHarvestable.h in Headers */,
 				02FF4BDD24E3201400115469 /* NRMAPayloadContainer.h in Headers */,
@@ -3967,6 +4001,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
+				2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */,
 				F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */,
 				0209AC4B24E7078C00E45C90 /* NRMACrashReportTest.m in Sources */,
 				0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */,
@@ -4134,6 +4169,7 @@
 				02FF488B24DC61B900115469 /* CanonicalRequest.m in Sources */,
 				02FF487E24DC61A100115469 /* NRMANSURLConnectionSupport.m in Sources */,
 				02FF4A1824DC648600115469 /* NRMAHarvestableHTTPTransactionGeneration.m in Sources */,
+				2BF42C6C28B8106F006E9C27 /* NRMAStartTimer.m in Sources */,
 				02FF4A6C24DC64E600115469 /* NRMANamedValueProducer.m in Sources */,
 				02FF4A7924DC64FC00115469 /* NRCustomMetrics.m in Sources */,
 				02FF48E124DC622700115469 /* NRMAExceptionHandlerManager.m in Sources */,
@@ -4142,6 +4178,7 @@
 				02FF480C24DB573E00115469 /* NRMAUserAction.m in Sources */,
 				02FF489D24DC61D200115469 /* NRMAURLSessionTaskOverride.m in Sources */,
 				02FF491C24DC624400115469 /* NRMACrashReport_Library.m in Sources */,
+				2BF42C6628B80B82006E9C27 /* NRMASysctlBinding.c in Sources */,
 				02FF49D924DC636100115469 /* NRMAHarvestable.m in Sources */,
 				02FF496424DC629000115469 /* NRMAHarvestData.m in Sources */,
 				02FF4AA024DC652E00115469 /* NRMANonARCMethods.m in Sources */,
@@ -4262,6 +4299,7 @@
 				025657F924EB19BF00FE3125 /* NSURLSessionOverrideTest.m in Sources */,
 				025657FA24EB19BF00FE3125 /* NRActivityTracesTest.m in Sources */,
 				025657FB24EB19BF00FE3125 /* NRMeasurementTest.m in Sources */,
+				2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */,
 				025657FC24EB19BF00FE3125 /* TestUITableViewInstrumentation.m in Sources */,
 				025657FD24EB19BF00FE3125 /* TestHexUploadPublisher.mm in Sources */,
 				025657FE24EB19BF00FE3125 /* NRMetricTests.m in Sources */,
@@ -4437,6 +4475,7 @@
 				02FF4C2B24E3201400115469 /* CanonicalRequest.m in Sources */,
 				02FF4C2C24E3201400115469 /* NRMANSURLConnectionSupport.m in Sources */,
 				02FF4C2D24E3201400115469 /* NRMAHarvestableHTTPTransactionGeneration.m in Sources */,
+				2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */,
 				02FF4C2E24E3201400115469 /* NRMANamedValueProducer.m in Sources */,
 				02FF4C2F24E3201400115469 /* NRCustomMetrics.m in Sources */,
 				02FF4C3024E3201400115469 /* NRMAExceptionHandlerManager.m in Sources */,
@@ -4445,6 +4484,7 @@
 				02FF4C3324E3201400115469 /* NRMAUserAction.m in Sources */,
 				02FF4C3424E3201400115469 /* NRMAURLSessionTaskOverride.m in Sources */,
 				02FF4C3524E3201400115469 /* NRMACrashReport_Library.m in Sources */,
+				2BF42C6728B80B82006E9C27 /* NRMASysctlBinding.c in Sources */,
 				02FF4C3624E3201400115469 /* NRMAHarvestable.m in Sources */,
 				02FF4C3724E3201400115469 /* NRMAHarvestData.m in Sources */,
 				02FF4C3824E3201400115469 /* NRMANonARCMethods.m in Sources */,
