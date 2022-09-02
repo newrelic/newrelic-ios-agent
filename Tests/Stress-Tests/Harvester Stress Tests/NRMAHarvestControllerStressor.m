@@ -18,7 +18,6 @@
 {
     NRMAAgentConfiguration* config;
     NRMAHarvestableActivity* activity;
-    NRMAHarvestableHTTPError* httpError;
     NRMAHarvestableHTTPTransaction* trans;
 }
 @property(atomic) unsigned long long asyncStartedCounter;

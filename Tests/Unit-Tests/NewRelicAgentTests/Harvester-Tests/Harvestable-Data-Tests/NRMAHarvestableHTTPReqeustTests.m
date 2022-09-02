@@ -80,51 +80,52 @@
     XCTAssertTrue([measurement.wanType isEqualToString:@"CDMA"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
 }
 
-- (void) testConnectionErrorInHarvestController
-{
-    __block BOOL completed = NO;
-    NRTimer* timer = [NewRelic createAndStartTimer];
-    __block NRMAHarvestableHTTPError* measurement = nil;
-
-    id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
-    [[[[mockUtils stub] classMethod] andReturn:@"CDMA"] getCurrentWanType];
-
-    id harvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
-
-    [[[[harvestController stub] classMethod] andDo:^(NSInvocation *invoke) {
-        NRMAHarvestableHTTPError* localError;
-        [invoke getArgument:&localError atIndex:2];
-        measurement = [localError retain];
-        completed = YES;
-    }] addHarvestableHTTPError:OCMOCK_ANY];
-
-
-    [[[harvestController stub] andReturn:[NRMAHarvesterConfiguration defaultHarvesterConfiguration] ] configuration];
-    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
-                              httpMethod:@"post"
-                               withTimer:timer
-                         responseHeaders:nil
-                              statusCode:400
-                               bytesSent:1024
-                           bytesReceived:1023
-                            responseData:nil
-                            traceHeaders:nil
-                               andParams:nil];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        //test timed out.
-        completed = YES;
-    });
-    while (CFRunLoopGetCurrent() && !completed) {}
-
-    [harvestController stopMocking];
-    [mockUtils stopMocking];
-
-    XCTAssertNotNil(measurement,@"measurement is nil. mockHarvestableHTTPTransactionGeneration is not getting metrics");
-    XCTAssertTrue(((NSString*)measurement.parameters[@"custom_params"][@"wan_type"]).length > 0 );
-    XCTAssertTrue([measurement.url isEqualToString:@"google.com"],@"url %@ doesn't match sent url",measurement.url);
-    XCTAssertTrue(measurement.statusCode == 400,@"statusCode %d doesn't match sent status code",measurement.statusCode);
-}
+// TODO: Rewrite this test without HTTPError
+//- (void) testConnectionErrorInHarvestController
+//{
+//    __block BOOL completed = NO;
+//    NRTimer* timer = [NewRelic createAndStartTimer];
+//    __block NRMAHarvestableHTTPError* measurement = nil;
+//
+//    id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
+//    [[[[mockUtils stub] classMethod] andReturn:@"CDMA"] getCurrentWanType];
+//
+//    id harvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+//
+//    [[[[harvestController stub] classMethod] andDo:^(NSInvocation *invoke) {
+//        NRMAHarvestableHTTPError* localError;
+//        [invoke getArgument:&localError atIndex:2];
+//        measurement = [localError retain];
+//        completed = YES;
+//    }] addHarvestableHTTPError:OCMOCK_ANY];
+//
+//
+//    [[[harvestController stub] andReturn:[NRMAHarvesterConfiguration defaultHarvesterConfiguration] ] configuration];
+//    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+//                              httpMethod:@"post"
+//                               withTimer:timer
+//                         responseHeaders:nil
+//                              statusCode:400
+//                               bytesSent:1024
+//                           bytesReceived:1023
+//                            responseData:nil
+//                            traceHeaders:nil
+//                               andParams:nil];
+//
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        //test timed out.
+//        completed = YES;
+//    });
+//    while (CFRunLoopGetCurrent() && !completed) {}
+//
+//    [harvestController stopMocking];
+//    [mockUtils stopMocking];
+//
+//    XCTAssertNotNil(measurement,@"measurement is nil. mockHarvestableHTTPTransactionGeneration is not getting metrics");
+//    XCTAssertTrue(((NSString*)measurement.parameters[@"custom_params"][@"wan_type"]).length > 0 );
+//    XCTAssertTrue([measurement.url isEqualToString:@"google.com"],@"url %@ doesn't match sent url",measurement.url);
+//    XCTAssertTrue(measurement.statusCode == 400,@"statusCode %d doesn't match sent status code",measurement.statusCode);
+//}
 
 - (void) testNoticeNetworkRequestWithStartAndEndTime
 {

@@ -274,14 +274,6 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
     }
 }
 
-+ (void) addHarvestableHTTPError:(NRMAHarvestableHTTPError*)error
-{
-    NRMAHarvestData* harvestData = [[self class] harvestData];
-    @synchronized(harvestData) {
-        [harvestData.httpErrors addHTTPError:error];
-    }
-}
-
 + (void) addNamedValue:(NRMANamedValueMeasurement*)measurement
 {
 

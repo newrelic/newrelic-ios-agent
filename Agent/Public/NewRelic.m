@@ -18,7 +18,6 @@
 #import "NRMAExceptionHandler.h"
 #import "NRMATaskQueue.h"
 #import "NRMAHTTPTransaction.h"
-#import "NRMAHTTPError.h"
 #import "NRMATraceMachineAgentUserInterface.h"
 #import "NRMAThreadInfo.h"
 #import "NRMAAnalytics.h"

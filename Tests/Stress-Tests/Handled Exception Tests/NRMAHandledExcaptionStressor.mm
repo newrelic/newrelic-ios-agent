@@ -74,7 +74,7 @@ void NR__OVERRIDE_NRMAHexUploader_sendData(id self, SEL _cmd, id data) {
     //one final process clean up all files.
     [self.handled processAndPublishPersistedReports];
 
-        [self restoreNetCalls];
+    [self restoreNetCalls];
     [super tearDown];
 }
 
@@ -107,6 +107,9 @@ void NR__OVERRIDE_NRMAHexUploader_sendData(id self, SEL _cmd, id data) {
 - (void) stress {
     int interactions = kNRMAIterations;
     for (int i = 0; i < interactions; i++) {
+        if(i  % 1000 == 0) {
+            NSLog(@"iteration: %d", i);
+        }
         //TESTING STRESSFULLY !!?!?!?!?!
         [self incrementAsyncCounter];
         dispatch_semaphore_wait(self.semaphore , DISPATCH_TIME_FOREVER);

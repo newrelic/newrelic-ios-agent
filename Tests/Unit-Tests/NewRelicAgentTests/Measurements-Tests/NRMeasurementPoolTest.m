@@ -119,13 +119,13 @@
 
 - (void) testRemoveMeasurementConsumer
 {
-    NRMAMeasurementConsumer *consumer = [[NRMAMeasurementConsumer alloc] initWithType:NRMAMT_HTTPError];
+    NRMAMeasurementConsumer *consumer = [[NRMAMeasurementConsumer alloc] initWithType:NRMAMT_NamedValue];
     [pool addMeasurementConsumer:consumer];
 
-    XCTAssertTrue([[pool.consumers objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError]] containsObject:consumer], @"");
+    XCTAssertTrue([[pool.consumers objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue]] containsObject:consumer], @"");
     [pool removeMeasurementConsumer:consumer];
 
-    XCTAssertFalse([[pool.consumers objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError]] containsObject:consumer], @"");
+    XCTAssertFalse([[pool.consumers objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue]] containsObject:consumer], @"");
 }
 
 static bool consumerfinished;
@@ -137,12 +137,12 @@ static const int totalMeasurements = 1000;
     producerfinished = NO;
     int numProducers = 1;
     for (int i=0; i < numProducers; i++) {
-        [pool addMeasurementProducer:[[CountingMeasurementProducer alloc] initWithType:NRMAMT_HTTPError]];
+        [pool addMeasurementProducer:[[CountingMeasurementProducer alloc] initWithType:NRMAMT_NamedValue]];
     }
 
     int numConsumer = 5;
     for (int i = 0; i <numConsumer; i++) {
-        [pool addMeasurementConsumer:[[CountingMeasurementConsumer alloc] initWithType:NRMAMT_HTTPError]];
+        [pool addMeasurementConsumer:[[CountingMeasurementConsumer alloc] initWithType:NRMAMT_NamedValue]];
     }
     [[[NSThread alloc] initWithTarget:self selector:@selector(concurrencyHelpConsumerThread) object:nil] start];
     [[[NSThread alloc] initWithTarget:self selector:@selector(concurrencyHelpProducerThread) object:nil]start];
@@ -153,7 +153,7 @@ static const int totalMeasurements = 1000;
     long producedMeasurements = 0;
 
     // for (NSNumber* key in pool.producers.allKeys) {
-    for (CountingMeasurementProducer* producer in [pool.producers objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError]]) {
+    for (CountingMeasurementProducer* producer in [pool.producers objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue]]) {
         producedMeasurements += [producer producedMeasurementsCount];
     }
     //}
@@ -183,9 +183,9 @@ static const int totalMeasurements = 1000;
                 numMeasurments = totalMeasurements - measurementCount;
             }
 
-            for (NRMAMeasurementProducer* producer in [pool.producers objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError]]) {
+            for (NRMAMeasurementProducer* producer in [pool.producers objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue]]) {
                 for (int i = 0; i < numMeasurments ; i ++) {
-                    NRMAMeasurement *measurement = [[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError];
+                    NRMAMeasurement *measurement = [[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue];
                     [producer produceMeasurement:measurement];
                 }
                 measurementCount += numMeasurments;
@@ -203,7 +203,7 @@ static const int totalMeasurements = 1000;
             long consumedMeasurementCount = 0;
 
             //for (NSNumber* key in pool.producers.allKeys) {
-            for(CountingMeasurementProducer* producer in [pool.producers objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError ]]) {
+            for(CountingMeasurementProducer* producer in [pool.producers objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue ]]) {
                 producedMeasurementCount += [producer producedMeasurementsCount];
             }
             //}
@@ -230,7 +230,7 @@ static const int totalMeasurements = 1000;
 }
 - (void) testSimpleProcessMeasurements
 {
-    NRMATestHelperConsumer* consumer = [[NRMATestHelperConsumer alloc] initWithType:NRMAMT_HTTPError];
+    NRMATestHelperConsumer* consumer = [[NRMATestHelperConsumer alloc] initWithType:NRMAMT_NamedValue];
     NRMAMeasurementProducer* producer = [[NRMAMeasurementProducer alloc] initWithType:NRMAMT_Any];
     NRMAMeasurementProducer* producer2 = [[NRMAMeasurementProducer alloc] initWithType:NRMAMT_Method];
 
@@ -243,10 +243,9 @@ static const int totalMeasurements = 1000;
     for (int i = 0; i < numMeasurements; i++){
         [producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue]];
         [producer2 produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_Method]]; //we wont see these again
-        [producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError]];
     }
 
-    XCTAssertTrue([[[producer producedMeasurements] objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError
+    XCTAssertTrue([[[producer producedMeasurements] objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue
                                                                  ]] count] == numMeasurements,@"");
 
     [pool broadcastMeasurements];
@@ -254,13 +253,13 @@ static const int totalMeasurements = 1000;
     XCTAssertTrue([[producer2 producedMeasurements]  count] == 0, @"producer should be empty");
     XCTAssertTrue([[producer producedMeasurements] count] == 0, @"producer should be empty");
     XCTAssertTrue([consumer.consumedmeasurements count] == 1, @"we should only be consuming one time");
-    XCTAssertTrue([[consumer.consumedmeasurements objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError] ] count] == numMeasurements, @"we should have the expected type");
+    XCTAssertTrue([[consumer.consumedmeasurements objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue] ] count] == numMeasurements, @"we should have the expected type");
 
 }
 
 - (void) testConsumingProducesMeasurement
 {
-    NRMAMeasurement* measurement = [[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError];
+    NRMAMeasurement* measurement = [[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue];
     [pool consumeMeasurement:measurement];
 
     NSDictionary* producedmeasurements = [pool drainMeasurements];
@@ -270,22 +269,22 @@ static const int totalMeasurements = 1000;
     }
 
     XCTAssertTrue(count == 1,@"");
-    XCTAssertEqualObjects(measurement, ([(NSSet*)[producedmeasurements objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError]] anyObject]),@"there should only be one object and it should be the measurement");
+    XCTAssertEqualObjects(measurement, ([(NSSet*)[producedmeasurements objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue]] anyObject]),@"there should only be one object and it should be the measurement");
 }
 
 - (void) testMeasurementPoolFillsFromAnotherPool {
-    NRMAMeasurementProducer* producer = [[NRMAMeasurementProducer alloc] initWithType:NRMAMT_HTTPError];
+    NRMAMeasurementProducer* producer = [[NRMAMeasurementProducer alloc] initWithType:NRMAMT_NamedValue];
     NRMAMeasurementPool* activePool = [[NRMAMeasurementPool alloc] init];
     [pool addMeasurementProducer:producer];
     [pool addMeasurementConsumer:activePool];
     for (int i = 0 ; i < 1000; i++) {
-        [producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError]];
+        [producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue]];
     }
 
     [pool broadcastMeasurements];
 
     NSDictionary* dict = [activePool drainMeasurements];
-    XCTAssertTrue([[dict objectForKey:[NSNumber numberWithInt:NRMAMT_HTTPError]]count] == 1000, @"activePool should get broadcasted measurements");
+    XCTAssertTrue([[dict objectForKey:[NSNumber numberWithInt:NRMAMT_NamedValue]]count] == 1000, @"activePool should get broadcasted measurements");
 }
 - (void) testEmptyBroadcast
 {

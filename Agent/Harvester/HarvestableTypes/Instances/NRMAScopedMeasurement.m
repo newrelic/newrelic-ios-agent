@@ -9,9 +9,9 @@
 #import "NRMAScopedMeasurement.h"
 #import "NRMAHarvestableHTTPError.h"
 #import "NRMAHarvestableHTTPTransaction.h"
-#import "NRMAHTTPErrorMeasurement.h"
 #import "NRMAHTTPTransactionMeasurement.h"
 #import "NRMAHarvestableHTTPTransaction.h"
+
 @interface NRMAScopedMeasurement (private)
 @end
 @implementation NRMAScopedMeasurement

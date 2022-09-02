@@ -10,7 +10,7 @@
 
 typedef enum {
     NRMAMT_Network = 0,
-    NRMAMT_HTTPError,
+    NRMAMT_HTTPError, // Removed from Agent
     NRMAMT_HTTPTransaction,
     NRMAMT_Method,
     NRMAMT_Activity,

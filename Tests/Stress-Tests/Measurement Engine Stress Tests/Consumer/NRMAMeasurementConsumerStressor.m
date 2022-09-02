@@ -24,7 +24,7 @@
     [super setUp];
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
     self.semaphore = dispatch_semaphore_create(procCount*kNRMASemaphoreMultiplier);
-    self.consumer = [[NRMAMeasurementConsumer alloc] initWithType:NRMAMT_HTTPError];
+    self.consumer = [[NRMAMeasurementConsumer alloc] initWithType:NRMAMT_NamedValue];
 }
 
 - (void)tearDown
@@ -81,7 +81,7 @@
             dispatch_async([NRMAStressTestHelper randomDispatchQueue],^(){
                 @autoreleasepool {
                     self.consumer = nil;
-                    self.consumer = [[NRMAMeasurementConsumer alloc] initWithType:NRMAMT_HTTPError];
+                    self.consumer = [[NRMAMeasurementConsumer alloc] initWithType:NRMAMT_NamedValue];
                     [self incrementAsyncEndedCounter];
                     dispatch_semaphore_signal(self.semaphore);
                 }
@@ -98,11 +98,11 @@
     @autoreleasepool {
         switch (rand() % options) {
             case 0:
-                [self.consumer consumeMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError]];
+                [self.consumer consumeMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue]];
                 break;
             case 1:
-                [self.consumer consumeMeasurements:@{[NSNumber numberWithInt:NRMAMT_HTTPError]
-                                                     :[[NSMutableSet alloc] initWithObjects:[[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError],nil]}];
+                [self.consumer consumeMeasurements:@{[NSNumber numberWithInt:NRMAMT_NamedValue]
+                                                     :[[NSMutableSet alloc] initWithObjects:[[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue],nil]}];
                 break;
             default:
                 break;

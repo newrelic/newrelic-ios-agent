@@ -261,42 +261,6 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
 
 }
 
-#pragma mark - HTTPError
-
-+ (void) recordHTTPError:(NRMAHTTPError*)error
-{
-    [NRMAMeasurements recordHTTPError:error.url
-                       httpMethod:error.httpMethod
-                      timeOfError:error.timeOfErrorMillis
-                       statusCode:error.statusCode
-                     responseBody:error.response
-                       parameters:error.parameters
-                          wanType:error.wanType
-                          appData:error.appData
-                       threadInfo:error.threadInfo];
-}
-
-+ (void) recordHTTPError:(NSString*)url
-              httpMethod:(NSString*)httpMethod
-             timeOfError:(double)toe
-              statusCode:(int)statusCode
-            responseBody:(NSString*)response
-              parameters:(NSDictionary*)parameters
-                 wanType:(NSString*)wanType
-                 appData:(NSString*)appData
-              threadInfo:(NRMAThreadInfo*)threadInfo
-{
-    [[NRMAMeasurements engine].httpErrorMeasurementProducer produceMeasurementWithURL:url
-                                                                       httpMethod:httpMethod
-                                                                      timeOfError:toe
-                                                                       statusCode:statusCode
-                                                                         response:response
-                                                                          wanType:wanType
-                                                                          appData:appData
-                                                                       parameters:parameters];
-    [NRMAMeasurements broadcastMeasurements];
-}
-
 #pragma mark - HTTP Transaction
 
 + (void) recordHTTPTransaction:(NRMAHTTPTransaction*)transaction

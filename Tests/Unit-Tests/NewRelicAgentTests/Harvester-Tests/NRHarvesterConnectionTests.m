@@ -13,6 +13,7 @@
 #import <OCMock/OCMock.h>
 #import "NRMANamedValueMeasurement.h"
 #import "NRMATaskQueue.h"
+#import "NRMAMeasurementEngine.h"
 
 @implementation NRMAHarvesterConnectionTests
 
@@ -29,8 +30,7 @@
     connection.connectionInformation = [NRMAAgentConfiguration connectionInformation];
 }
 
-- (void) tearDown
-{
+- (void) tearDown {
     [NRMAMeasurements removeMeasurementConsumer:helper];
     helper = nil;
 
@@ -125,16 +125,31 @@
     NRMAHarvestResponse* response = [connection sendData:[self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native]];
     XCTAssertNotNil(response, @"");
     XCTAssertEqual(FORBIDDEN, response.statusCode, @"");
-    //API changed, and is now returning a response. Though it's not imparative this repsonse is empty.
-    //nothing in the harvester depends on it, so this test is not needed.
-    //    XCTAssertTrue([response.responseBody isEqualToString:@""], @"");
 }
 
 
-- (void) testSendDisabledAppToken
-{
-    
-    connection.applicationToken = @"AA25e94fba740f136033f66f92099a8eab3ea4bd9b";
+- (void) testSendDisabledAppToken {
+    // Set up stub for /data endpoint.
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:UNAUTHORIZED HTTPVersion:@"1.1" headerFields:nil];
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    connection.harvestSession = mockNSURLSession;
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler([NSData data], bresponse, nil);
+    }] resume];
+    // End set up stub for /data endpoint.
+
+    connection.applicationToken = @"disabled-app-token";
     connection.collectorHost= @"staging-mobile-collector.newrelic.com";
     connection.serverTimestamp = 1234;
     connection.useSSL = YES;
@@ -146,14 +161,33 @@
     XCTAssertNotNil(response, @"");
     
     XCTAssertEqual(UNAUTHORIZED, response.statusCode, @"");
-    XCTAssertTrue([@"{}" isEqualToString:response.responseBody], @"");
 }
 
-- (void) testSendEnabledAppToken
-{
+- (void) testSendEnabledAppToken {
+
+    // Set up stub for /data endpoint.
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    connection.harvestSession = mockNSURLSession;
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler([NSData data], bresponse, nil);
+    }] resume];
+    // End set up stub for /data endpoint.
+
     connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
     connection.collectorHost = @"staging-mobile-collector.newrelic.com";
-    connection.applicationToken = @"AAa2d4baa1094bf9049bb22895935e46f85c45c211";
+    connection.applicationToken = @"app-token";
     connection.useSSL = YES;
     connection.serverTimestamp = 1234;
 
@@ -162,7 +196,6 @@
     XCTAssertNotNil(response, @"");
     
     XCTAssertEqual(response.statusCode,200, @"");
-    XCTAssertTrue([response.responseBody rangeOfString:@"data_token"].location != NSNotFound,@"");
 }
 
 - (void) testCollectorCompressionGZip
@@ -186,19 +219,38 @@
     XCTAssertEqualObjects([generatedRequest.allHTTPHeaderFields objectForKey:@"Content-Encoding"], @"identity", @"");
 }
 
+// Is this test failing for you? Do you have Charles running? Try with it turned off.
 - (void) testSendSupportMetric {
+    connection.collectorHost = @"staging-mobile-collector.newrelic.com";
+    connection.applicationToken = @"app-token";
 
+    // Set up stub for /data endpoint.
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    connection.harvestSession = mockNSURLSession;
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler([NSData data], bresponse, nil);
+    }] resume];
+    // End set up stub for /data endpoint.
+    
     connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
     connection.collectorHost = @"staging-mobile-collector.newrelic.com";
-    connection.applicationToken = @"AAa2d4baa1094bf9049bb22895935e46f85c45c211";
+    connection.applicationToken = @"app-token";
     connection.useSSL = YES;
     connection.serverTimestamp = 1234;
 
     [connection sendData: [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native]];
-    
-    XCTestExpectation *expectation = [[XCTestExpectation  alloc] initWithDescription:@"Wait for n/w request"];
-    [expectation setInverted:YES];
-    (void)[XCTWaiter waitForExpectations:@[expectation] timeout:5];
 
     [NRMATaskQueue synchronousDequeue];
 
@@ -219,8 +271,8 @@
     NSString* appVersion = @"1.0";
     NSString* packageId = @"com.test";
     NRMAApplicationInformation* appInfo = [[NRMAApplicationInformation alloc] initWithAppName:appName
-                                             appVersion:appVersion
-                                               bundleId:packageId];
+                                                                                   appVersion:appVersion
+                                                                                     bundleId:packageId];
 
     NRMADeviceInformation* devInfo = [[NRMADeviceInformation alloc] init];
     devInfo.osName = osName;

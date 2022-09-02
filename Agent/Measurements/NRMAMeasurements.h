@@ -7,13 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "NRMAHTTPErrorCountingMeasurementProducer.h"
-#import "NRMAHTTPErrorMeasurementProducer.h"
 #import "NRMAHarvester.h"
 #import "NRMAActivityTrace.h"
 #import "NRMAMetric.h"
 #import "NRMAHTTPTransaction.h"
-#import "NRMAHTTPError.h"
+#import "NRMAConsumerProtocol.h"
+#import "NRMAProducerProtocol.h"
 
 #define kNRMAMetricException @"NRMARecordMetricException"
 
