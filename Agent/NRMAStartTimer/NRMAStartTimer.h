@@ -10,7 +10,6 @@
 
 @property (nonatomic) NSTimeInterval appLaunchDuration;
 @property (nonatomic) NSTimeInterval appResumeDuration;
-@property (nonatomic) BOOL isWarmLaunch;
 
 + (NRMAStartTimer *)sharedInstance;
 

@@ -48,8 +48,7 @@
     }
 
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {
-        NSString *metricName = [[NRMAStartTimer sharedInstance] isWarmLaunch] ? NRMA_METRIC_APP_LAUNCH_WARM : NRMA_METRIC_APP_LAUNCH_COLD;
-        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:metricName
+        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_APP_LAUNCH_COLD
                                                 value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] appLaunchDuration]]
                                                                          additionalValue:nil]];
         [NRMAStartTimer sharedInstance].appLaunchDuration = 0;

@@ -19,7 +19,6 @@ static BOOL isPrewarmLaunch = false;
 static const NSTimeInterval maxAppLaunchDuration = 180.0;
 static const NSTimeInterval maxAppResumeDuration = 60.0;
 static NSString* prewarmEnvVar = @"ActivePrewarm";
-static NSString* systemBootTimestampKey = @"systemBootTimestamp";
 
 @interface
 NRMAStartTimer ()
@@ -99,18 +98,6 @@ static NRMAStartTimer *_sharedInstance;
     // If the app was running in the background. Skip recording this launch.
     if (self.wasInBackground) { return; }
 
-    // Based on whether or not we've saved a boot timestamp and whether or not the app has been launched this boot we can determine whether or not this is a warm start.
-    NSDate *previousBootTime = [[NSUserDefaults standardUserDefaults] objectForKey:systemBootTimestampKey];
-    NSDate* bootTime = self.systemBootTime;
-    if (previousBootTime != nil) {
-        NSTimeInterval timeSincePreviousBoot = [previousBootTime timeIntervalSinceDate:bootTime];
-        if (timeSincePreviousBoot == 0) {
-            self.isWarmLaunch = true;
-        }
-    }
-    // Save this system boot time to disk.
-    [[NSUserDefaults standardUserDefaults] setObject:bootTime forKey:systemBootTimestampKey];
-
     // App Launch Time: Cold is time between now and when process started.
     NSTimeInterval calculatedAppLaunchDuration = [[NSDate date] timeIntervalSinceDate:self.processStartTime];
 
@@ -165,12 +152,6 @@ static NRMAStartTimer *_sharedInstance;
 - (NSDate *)processStartTime {
     struct timeval processStart = processStartTime();
     NSDate *date = [NSDate dateWithTimeIntervalSince1970:processStart.tv_sec + processStart.tv_usec / 1E6];
-    return date;
-}
-
-- (NSDate *)systemBootTime {
-    struct timeval bootTime = timeVal(CTL_KERN, KERN_BOOTTIME);
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:bootTime.tv_sec + bootTime.tv_usec / 1E6];
     return date;
 }
 

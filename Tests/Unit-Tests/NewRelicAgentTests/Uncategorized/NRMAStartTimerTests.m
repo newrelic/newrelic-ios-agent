@@ -41,9 +41,7 @@
     NSArray *measurements = [(NSMutableSet*)[NRMAMeasurements engine].machineMeasurementsProducer.producedMeasurements[[NSNumber numberWithInt:NRMAMT_NamedValue]] allObjects];
 
     for (NRMANamedValueMeasurement *measurement in measurements) {
-        if ([measurement.name isEqualToString:NRMA_METRIC_APP_LAUNCH_WARM] || [measurement.name isEqualToString:NRMA_METRIC_APP_LAUNCH_COLD]) {
-            return;
-        }
+        if ([measurement.name isEqualToString:NRMA_METRIC_APP_LAUNCH_COLD]) { return; }
     }
 
     XCTFail("Could not find expected AppLaunch metric.");

@@ -10,18 +10,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-struct timeval timeVal(const int majorCommand, const int minorCommand) {
-    int cmd[2] = { majorCommand, minorCommand };
-    struct timeval value = { 0 };
-    size_t size = sizeof(value);
-
-    if (0 != sysctl(cmd, sizeof(cmd) / sizeof(*cmd), &value, &size, NULL, 0)) {
-        // ERROR
-    }
-
-    return value;
-}
-
 struct timeval processStartTime() {
     size_t length = 4;
     int mib[length];
