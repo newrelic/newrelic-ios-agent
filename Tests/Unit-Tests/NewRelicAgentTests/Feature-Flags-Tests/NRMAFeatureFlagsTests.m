@@ -8,8 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import "NRMAFLags.h"
-
-
+#import "NRMASupportMetricHelper.h"
 
 static NRMAFeatureFlags __originalFlags;
 @interface NRMAFeatureFlagsTests : XCTestCase
@@ -19,22 +18,23 @@ static NRMAFeatureFlags __originalFlags;
 
 - (void)setUp
 {
+    [super setUp];
+
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         __originalFlags = [NRMAFlags featureFlags];
     });
     [NRMAFlags setFeatureFlags:0];
-
-    [super setUp];
 }
 
 - (void)tearDown
 {
+    [NRMASupportMetricHelper processDeferredMetrics];
+
     [NRMAFlags setFeatureFlags:__originalFlags];
+
     [super tearDown];
 }
-
-
 
 - (void) testOriginalFlags
 {
@@ -43,8 +43,6 @@ static NRMAFeatureFlags __originalFlags;
     XCTAssertFalse(featureFlag & NRFeatureFlag_NetworkRequestEvents, @"Network requests events should be disabled by default!!");
     XCTAssertTrue(featureFlag & NRFeatureFlag_RequestErrorEvents, @"request error events should be enabled by default!!");
 }
-
-
 
 - (void) testNetworkRequestEventsFlags {
     NRMAFeatureFlags flags = [NRMAFlags featureFlags];
@@ -216,5 +214,6 @@ static NRMAFeatureFlags __originalFlags;
 
     XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
 }
+
 
 @end

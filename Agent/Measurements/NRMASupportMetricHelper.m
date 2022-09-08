@@ -10,6 +10,7 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
+#import "NRMAFlags.h"
 
 @implementation NRMASupportMetricHelper
 
@@ -25,6 +26,35 @@
                                                     scope:@""
                                           produceUnscoped:YES
                                           additionalValue:[NSNumber numberWithLongLong:received]]];
+}
+
++ (void) enqueueFeatureFlagMetric:(BOOL)enabled features:(NRMAFeatureFlags)features {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+
+    for (NSString *name in [NRMAFlags namesForFlags:features]) {
+        NSString* featureFlagString = [NSString stringWithFormat:@"Supportability/Mobile/%@/%@/API/%@/%@",
+                                       nativePlatform, platform, enabled ? @"enableFeature" : @"disableFeature", name];
+        if (deferredMetrics == nil) {
+            deferredMetrics = [NSMutableArray array];
+        }
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:featureFlagString
+                                                              value:[NSNumber numberWithLongLong:1]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
++ (void) processDeferredMetrics {
+    if (deferredMetrics == nil) { return; }
+
+    for (NRMAMetric *metric in deferredMetrics) {
+        [NRMATaskQueue queue:metric];
+    }
+
+    [deferredMetrics removeAllObjects];
+    deferredMetrics = nil;
 }
 
 @end

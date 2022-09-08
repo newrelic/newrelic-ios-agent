@@ -14,6 +14,8 @@
 #import "NRMAFlags.h"
 #import "NRMABool.h"
 #import "NRLogger.h"
+#import "NRMASupportMetricHelper.h"
+
 @interface NRMAAnalyticsTest : XCTestCase
 {
 }
@@ -38,6 +40,8 @@
 }
 
 - (void)tearDown {
+    [NRMASupportMetricHelper processDeferredMetrics];
+
     [super tearDown];
 }
 - (void) testLargeNumbers {
@@ -104,9 +108,9 @@
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
 
-         [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
-
+    [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
 }
+
 - (void) testRequestEventHTTPError {
     NRTimer* timer = [NRTimer new];
 

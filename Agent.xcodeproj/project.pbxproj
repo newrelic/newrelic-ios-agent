@@ -974,6 +974,8 @@
 		2BF42C6A28B81031006E9C27 /* NRMAStartTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6828B81031006E9C27 /* NRMAStartTimer.h */; };
 		2BF42C6C28B8106F006E9C27 /* NRMAStartTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */; };
 		2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */; };
+		2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
+		2BFFB1EC28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
 		343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
@@ -1772,6 +1774,8 @@
 		2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NRMASysctlBinding.c; sourceTree = "<group>"; };
 		2BF42C6828B81031006E9C27 /* NRMAStartTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAStartTimer.h; sourceTree = "<group>"; };
 		2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimer.m; sourceTree = "<group>"; };
+		2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelperTests.h; sourceTree = "<group>"; };
+		2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelperTests.m; sourceTree = "<group>"; };
 		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
 		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731AFE26B3788800CE568A /* Hex.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Hex.framework; path = Frameworks/Hex.framework; sourceTree = "<group>"; };
@@ -2177,6 +2181,8 @@
 				C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */,
 				2BBBE6FA28BD528F003CADF3 /* NRMAStartTimerTests.h */,
 				2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */,
+				2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */,
+				2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -3947,6 +3953,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
+				2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,
 				2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */,
 				F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */,
 				0209AC4B24E7078C00E45C90 /* NRMACrashReportTest.m in Sources */,
@@ -4286,6 +4293,7 @@
 				0256582624EB19BF00FE3125 /* NRMAUpgradeMetricGeneratorTest.m in Sources */,
 				0256582724EB19BF00FE3125 /* NRHarvesterConnectionTests.m in Sources */,
 				0256582824EB19BF00FE3125 /* NRCPUVitalsTest.m in Sources */,
+				2BFFB1EC28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,
 				0256582924EB19BF00FE3125 /* NRMAAPIHelperTests.m in Sources */,
 				0256582A24EB19BF00FE3125 /* NRMAFeatureFlagsTests.m in Sources */,
 				0256582B24EB19BF00FE3125 /* NRMAHarvestableAnalyticsTest.m in Sources */,

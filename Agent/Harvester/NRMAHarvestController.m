@@ -274,8 +274,7 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
     }
 }
 
-+ (void) addNamedValue:(NRMANamedValueMeasurement*)measurement
-{
++ (void) addNamedValue:(NRMANamedValueMeasurement*)measurement {
 
     NRMAHarvestData* harvestData = [[self class] harvestData];
 

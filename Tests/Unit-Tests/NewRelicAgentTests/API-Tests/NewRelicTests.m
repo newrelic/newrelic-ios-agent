@@ -121,8 +121,8 @@
     XCTAssertFalse(flags & ~NRFeatureFlag_InteractionTracing , @"flags shouldn't have any other bit enabled.");
     
     XCTAssertNotNil([NewRelic startInteractionWithName:@"test"]);
-    
 }
+
 - (void) testRecordMetricsConsistency
 {
     NRMAMeasurementConsumerHelper* metricHelper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];

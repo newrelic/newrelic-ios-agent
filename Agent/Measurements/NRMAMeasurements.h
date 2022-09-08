@@ -44,8 +44,6 @@
 
 + (NSString*) recordAndScopeMetricNamed:(NSString *)name
                              value:(NSNumber *)value;
-
-
 + (void) process;
 + (void) addMeasurementConsumer:(id<NRMAConsumerProtocol>) consumer;
 + (void) removeMeasurementConsumer:(id<NRMAConsumerProtocol>)consumer;
