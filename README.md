@@ -1,7 +1,7 @@
 # 🍏 dylib-ios-agent 🍎
 Xcode workspace containing New Relic iOS Agent source code. Agent is packaged as a XCFramework.  Framework is available as a zip download, via cocoapods, and via Swift Package Manager.
 
-Agent supports tvOS 📺, macOS 💻, and iOS 📱.
+Agent supports tvOS 📺, macOS (Catalyst) 💻, and iOS 📱.
 ***
 
 ## 🏡 Tour of this Repository
@@ -31,18 +31,14 @@ dylib-ios-agent
 ├─ NewRelic-SwiftPackage/ // SPM files
 ```
 ## 🎬 Getting Started
-To check out the code run the following git command. Note the recursive submodule addition to make sure we get the repos git submodules.
+- To check out the code run the following git command. Note the recursive submodule addition to make sure we get the repos git submodules.
+    - `git clone git@source.datanerd.us:mobile/dylib-ios-agent.git --recurse-submodules`
+- The libMobileAgent Xcode build script requires cmake in order to run. Install it via brew.
+    - `brew install cmake`
+- See below note in Testing section on building/running on pre-Apple Silicon machines.
+- Open `dylib-ios-agent/Agent.xcworkspace` using the Finder.
 
-`git clone git@source.datanerd.us:mobile/dylib-ios-agent.git --recurse-submodules`
-
-The libMobileAgent Xcode build script requires cmake in order to run. Install it via brew.
-
-`brew install cmake`
-
-Open `dylib-ios-agent/Agent.xcworkspace` using the Finder.
-
-Build `Agent-iOS` by pressing the play button.
-
+- Build `Agent-iOS` by pressing the play button.
 ## 📚 Docs
 - [Public Docs on docs.newrelic.com](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/get-started/introduction-new-relic-mobile-ios)
 
@@ -68,12 +64,12 @@ Deployment multijob can be seen in Jenkins here:
 ## 🎤 Testing
 - Option 1: Run the Unit Tests using Xcode by selecting Agent-iOS scheme and Product -> Test
 - View Code Coverage report by running `./XcodeCoverage/getcov -s -v`
-    - Note: If you are on a pre M1 architecture then please uncomment the x86 line and remove the arm64 line in the file `XcodeCoverage/envcov.sh`
+    - Note: If you are on a pre M1 / Apple Silicon architecture then please uncomment the x86 line and remove the arm64 line in the file `XcodeCoverage/envcov.sh`
     ```
-    # PRE M1
+    # PRE M1 / Apple Silicon
     #ARCHITECTURE="x86_64"
 
-    # M1
+    # M1 / Apple Silicon
     ARCHITECTURE="arm64"
     ```
     - Note: Run `./XcodeCoverage/covlcean` in between test runs to make sure latest code coverage data is used.
@@ -101,6 +97,28 @@ Deployment multijob can be seen in Jenkins here:
 ## 🦅 History
 Development on the New Relic iOS Agent began in late May 2012. Development continued in the [ios_agent](https://source.datanerd.us/mobile/ios_agent) repository until August 2020. At this point the source was moved into this repository dylib-ios-agent.
 
+## ⬆️ dSYM Upload Tools
+- Swift system:
+    - `dsym-upload-tools/run-symbol-tool`: Shell script which is used to bootstrap Swift script.
+    - `dsym-upload-tools/run-symbol-tool.swift`: Swift script which converts dSYMs to map files and uploads to New Relic.
+
+    - Run Script should be added to Xcode build targets build steps. (See `run-symbol-tool.swift` for more)
+
+    - Staging SPM:
+    ```
+    export DSYM_UPLOAD_URL="https://staging-mobile-symbol-upload.newrelic.com"
+    "${BUILD_DIR%/Build/*}/SourcePackages/artifacts/newrelicagent-spm/NewRelic.xcframework/Resources/run-symbol-tool" "APP_TOKEN"
+    ```
+    - Prod SPM:
+    ```
+    "${BUILD_DIR%/Build/*}/SourcePackages/artifacts/newrelic-ios-agent-spm/NewRelic.xcframework/Resources/run-symbol-tool" "APP_TOKEN"
+    ```
+    - Add `--debug` as additional argument after the app token to write additional details to the `upload_dsym_results.log` file.
+- Legacy Python system:
+    - `dsym-upload-tools/newrelic_postbuild.sh`
+    - `dsym-upload-tools/generateMap.py`
+    - `dsym-upload-tools/generateMapPython2.py`
+    - README for legacy dSYM upload system: - `README-DSYM-UPLOAD-TOOLS` below.
 ## 🔗 Links
 - [libMobileAgent](https://source.datanerd.us/mobile/libMobileAgent) C++ Project containing 4 libraries.
 - [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting brought in as a submodule using this library.
