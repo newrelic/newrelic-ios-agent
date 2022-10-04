@@ -265,13 +265,6 @@ static NewRelicAgentInternal* _sharedInstance;
                 NRMACrashReporterRecorder* crashReportRecorder = [[NRMACrashReporterRecorder alloc] init];
                 [NRMAHarvestController addHarvestListener:crashReportRecorder];
             }
-
-            //appInstallMetricGenerator will receive the 'new install' notification
-            //before the harvester is setup and before the task queue is set up.
-            //by adding the appInstallMetricGenerator to the harvestAwareListener
-            //it will be signaled when the harvester is definitively available.
-            [NRMAHarvestController addHarvestListener:self.appInstallMetricGenerator];
-            [NRMAHarvestController addHarvestListener:self.appUpgradeMetricGenerator];
         } else {
             NRLOG_INFO(@"Agent disabled");
         }
@@ -602,6 +595,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         [self.gestureFacade recordUserAction:foregroundGesture];
     }
 
+    //appInstallMetricGenerator will receive the 'new install' notification
+    //before the harvester is setup and before the task queue is set up.
+    //by adding the appInstallMetricGenerator to the harvestAwareListener
+    //it will be signaled when the harvester is definitively available.
+    [NRMAHarvestController addHarvestListener:self.appInstallMetricGenerator];
+    [NRMAHarvestController addHarvestListener:self.appUpgradeMetricGenerator];
 }
 
 static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";

@@ -144,6 +144,8 @@ typedef NSString NRMetricUnit;
 #define kNRMAActualSizeHeader           @"actual-size"
 #define kNRMACollectorDest              @"Collector"
 
+#define kPlatformPlaceholder            @"[PLATFORM]"
+
 // Network Failure Codes
 enum NRNetworkFailureCode {
         NRURLErrorUnknown = -1,
