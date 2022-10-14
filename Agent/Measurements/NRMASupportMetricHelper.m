@@ -45,6 +45,24 @@
     }
 }
 
++ (void) enqueueInstallMetric {
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
+    }
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAAppInstallMetric
+                                                          value:@1
+                                                          scope:nil]];
+}
+
++ (void) enqueueUpgradeMetric {
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
+    }
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAAppUpgradeMetric
+                                                          value:@1
+                                                          scope:nil]];
+}
+
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {

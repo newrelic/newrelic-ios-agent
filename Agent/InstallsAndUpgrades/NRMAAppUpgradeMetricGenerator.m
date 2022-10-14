@@ -13,6 +13,7 @@
 #import "NRMAAnalytics.h"
 #import "NRMABool.h"
 #import <Analytics/Constants.hpp>
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAAppUpgradeMetricGenerator ()
 @property(strong) NRMAMetric* upgradeMetric;
@@ -137,7 +138,7 @@
     //per install, and doesn't need to hang around.
     @synchronized(self) {
         if (self.upgradeMetric) {
-            [NRMATaskQueue queue:self.upgradeMetric];
+            [NRMASupportMetricHelper enqueueUpgradeMetric];
             self.upgradeMetric = nil;
         }
     }

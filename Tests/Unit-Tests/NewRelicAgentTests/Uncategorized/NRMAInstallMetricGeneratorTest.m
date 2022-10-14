@@ -15,6 +15,7 @@
 #import "NRMAAnalytics.h"
 #import <Analytics/Constants.hpp>
 #import "NRMABool.h"
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAInstallMetricGeneratorTest : XCTestCase
 
@@ -39,7 +40,7 @@
     [[[[mockQueue expect] classMethod] andDo:^(NSInvocation *invocation) {
         __autoreleasing NRMAMetric* metric = nil;
         [invocation getArgument:&metric atIndex:2];
-        XCTAssertTrue([@"Mobile/App/Install" isEqualToString:metric.name], @"invalid metric name");
+        XCTAssertTrue([@"Mobile/App/Install" isEqualToString:metric.name], @"invalid metric name %@", metric.name);
         XCTAssertEqual([@1 intValue], metric.value.intValue, @"invalid metric value.");
         didQueue = YES;
     }] queue:OCMOCK_ANY];
@@ -50,9 +51,10 @@
     [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
                                                         object:nil
                                                       userInfo:@{@"UDID" : @"blah"}];
-
     //simulate a harvest
     [metricGenerator onHarvestBefore];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
 
     while (!didQueue && CFRunLoopGetCurrent()) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];

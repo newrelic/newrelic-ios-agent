@@ -14,6 +14,7 @@
 #import "NRMAAnalytics.h"
 #import "NRMABool.h"
 #import <Analytics/Constants.hpp>
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAAppInstallMetricGenerator ()
 @property(strong) NRMAMetric* installMetric;
@@ -179,7 +180,7 @@
     //per install, and doesn't need to hang around.
     @synchronized(self) {
         if (self.installMetric) {
-            [NRMATaskQueue queue:self.installMetric];
+            [NRMASupportMetricHelper enqueueInstallMetric];
             self.installMetric = nil;
         }
     }
