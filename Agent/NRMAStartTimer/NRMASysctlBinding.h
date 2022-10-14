@@ -13,6 +13,7 @@ extern "C" {
 #include <stdint.h>
 #include <sys/sysctl.h>
 
+struct timeval timeVal(int major_cmd, int minor_cmd);
 struct timeval processStartTime(void);
 
 #ifdef __cplusplus

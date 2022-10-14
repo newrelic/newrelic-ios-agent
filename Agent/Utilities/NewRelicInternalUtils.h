@@ -103,5 +103,7 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 
 + (BOOL)isDebuggerAttached;
 
++ (BOOL)isSimulator;
+
 @end
 

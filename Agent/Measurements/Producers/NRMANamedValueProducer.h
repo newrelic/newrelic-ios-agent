@@ -15,9 +15,6 @@
 #define NRMA_METRIC_TOTAL_CPU_TIME        @"CPU/Total/Utilization"
 #define NRMA_METRIC_SESSION_DURATION      @"Session/Duration"
 
-#define NRMA_METRIC_APP_LAUNCH_COLD        @"AppLaunch/Cold"
-#define NRMA_METRIC_APP_LAUNCH_RESUME      @"AppLaunch/Hot"
-
 @interface NRMANamedValueProducer : NRMAMeasurementProducer <NRMAHarvestAware> {
     NSTimeInterval lastDataSendTimestamp;
     CPUTime lastCPUTime;

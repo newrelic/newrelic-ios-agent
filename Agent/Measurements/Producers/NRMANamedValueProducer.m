@@ -10,7 +10,6 @@
 
 #import "NRMANamedValueMeasurement.h"
 #import "NRMAMemoryVitals.h"
-#import "NRMAStartTimer.h"
 
 @implementation NRMANamedValueProducer
 
@@ -45,20 +44,6 @@
        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_MEMORY_USAGE
                                                                                   value:[NSNumber numberWithDouble:memoryUsage]
                                                                         additionalValue:nil]];
-    }
-
-    if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {
-        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_APP_LAUNCH_COLD
-                                                value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] appLaunchDuration]]
-                                                                         additionalValue:nil]];
-        [NRMAStartTimer sharedInstance].appLaunchDuration = 0;
-    }
-
-    if ([[NRMAStartTimer sharedInstance] appResumeDuration] != 0) {
-        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_APP_LAUNCH_RESUME
-                                                value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] appResumeDuration]]
-                                                                         additionalValue:nil]];
-        [NRMAStartTimer sharedInstance].appResumeDuration = 0;
     }
 
     if (machineMeasurementSet != nil) {

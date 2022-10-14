@@ -550,6 +550,8 @@
                 [self disconnected];
                 break;
             case NRMA_HARVEST_CONNECTED:
+                [NRMASupportMetricHelper processDeferredMetrics];
+
                 [self fireOnHarvestBefore];
                 [self fireOnHarvest];
                 [self connected];

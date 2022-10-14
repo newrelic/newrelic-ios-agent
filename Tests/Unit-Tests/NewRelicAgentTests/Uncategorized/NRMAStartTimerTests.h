@@ -8,9 +8,11 @@
 
 #import <XCTest/XCTest.h>
 #import "NRAgentTestBase.h"
+#import "NRMeasurementConsumerHelper.h"
 
 @interface NRMAStartTimerTests : NRMAAgentTestBase
 {
+    NRMAMeasurementConsumerHelper* helper;
 
 }
 @end

@@ -60,7 +60,8 @@
     Disabled by default.
 
  - NRFeatureFlag_AppStartMetrics
-    Enable (default)or disable flag for automatic calculation of app start metrics.
+    Enable (default)or disable flag for automatic calculation of app start metrics. Cold and Hot(Resume) start times only.
+    Note: App Launch start are not reported when using Simulators or during debugging.
 */
 
 

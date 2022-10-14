@@ -11,6 +11,7 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMAFlags.h"
+#import "NRMAStartTimer.h"
 
 @implementation NRMASupportMetricHelper
 
@@ -45,6 +46,26 @@
 }
 
 + (void) processDeferredMetrics {
+    // Handle any deferred app start metrics
+    if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:NRMA_METRIC_APP_LAUNCH_COLD
+                                                        value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] appLaunchDuration]]
+                                                        scope:@""
+                                              produceUnscoped:YES
+                                              additionalValue:nil]];
+        [NRMAStartTimer sharedInstance].appLaunchDuration = 0;
+    }
+
+    if ([[NRMAStartTimer sharedInstance] appResumeDuration] != 0) {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:NRMA_METRIC_APP_LAUNCH_RESUME
+                                                        value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] appResumeDuration]]
+                                                        scope:@""
+                                              produceUnscoped:YES
+                                              additionalValue:nil]];
+        [NRMAStartTimer sharedInstance].appResumeDuration = 0;
+    }
+
+    // Handle any deferred supportability metrics.
     if (deferredMetrics == nil) { return; }
 
     for (NRMAMetric *metric in deferredMetrics) {

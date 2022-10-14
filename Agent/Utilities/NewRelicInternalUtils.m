@@ -599,4 +599,11 @@ static NSString* __mach_model;
     return debuggerIsAttached;
 }
 
++ (BOOL) isSimulator {
+    NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+    NSDictionary<NSString *, NSString *> *environment = [processInfo environment];
+    NSString *simulator = [environment objectForKey:@"SIMULATOR_DEVICE_NAME"];
+    return simulator != nil;
+}
+
 @end

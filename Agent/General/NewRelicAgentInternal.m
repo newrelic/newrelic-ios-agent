@@ -204,6 +204,10 @@ static NewRelicAgentInternal* _sharedInstance;
         self.appInstallMetricGenerator = [NRMAAppInstallMetricGenerator new];
         self.appUpgradeMetricGenerator = [NRMAAppUpgradeMetricGenerator new];
 
+        if ([NRMAFlags shouldEnableAppStartMetrics]) {
+            [[NRMAStartTimer sharedInstance] start];
+        }
+
         self->_lifetimeRequestCount = 0;
         self->_lifetimeErrorCount = 0;
         self.appSessionStartDate = [NSDate date];
@@ -354,10 +358,6 @@ static NewRelicAgentInternal* _sharedInstance;
      * initialization.
      */
     [NRMAMeasurements initializeMeasurements];
-
-    if ([NRMAFlags shouldEnableAppStartMetrics]) {
-        [[NRMAStartTimer sharedInstance] start];
-    }
 
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
         [NRMAHarvestController start];

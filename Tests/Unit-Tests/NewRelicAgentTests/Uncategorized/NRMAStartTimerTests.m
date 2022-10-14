@@ -11,10 +11,13 @@
 #import "NRMANamedValueMeasurement.h"
 #import "NRMAMeasurements.h"
 #import "NRMAMeasurementEngine.h"
+#import "NRMATaskQueue.h"
+#import "NRMASupportMetricHelper.h"
 
-@interface NRMAMeasurements (tests)
-+ (NRMAMeasurementEngine*) engine;
+@interface NRMATaskQueue (tests)
++ (void) clear;
 @end
+
 @interface NRMAStartTimer ()
 - (void)createDurationMetric;
 @end
@@ -24,27 +27,33 @@
 - (void) setUp {
     [super setUp];
 
+    [NRMATaskQueue clear];
+
+    helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+
 }
 
 - (void) tearDown {
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+    helper = nil;
     [NRMAMeasurements shutdown];
     
     [super tearDown];
 }
 
 -(void)test {
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"systemBootTimestamp"];
+
     [[NRMAStartTimer sharedInstance] createDurationMetric];
 
-    [[NRMAMeasurements engine].machineMeasurementsProducer generateMachineMeasurements];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
 
-    NSArray *measurements = [(NSMutableSet*)[NRMAMeasurements engine].machineMeasurementsProducer.producedMeasurements[[NSNumber numberWithInt:NRMAMT_NamedValue]] allObjects];
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
 
-    for (NRMANamedValueMeasurement *measurement in measurements) {
-        if ([measurement.name isEqualToString:NRMA_METRIC_APP_LAUNCH_COLD]) { return; }
-    }
-
-    XCTFail("Could not find expected AppLaunch metric.");
+    XCTAssertTrue([measurement.name isEqualToString:NRMA_METRIC_APP_LAUNCH_COLD], @"%@ does not equal AppLaunch/Cold", measurement.name);
 }
 
 @end
