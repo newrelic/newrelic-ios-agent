@@ -158,16 +158,17 @@ static NRMAStartTimer *_sharedInstance;
 }
 
 - (void)didBecomeActive {
-
-    if (self.wasInBackground) {
+    if (self.wasInBackground && self.willEnterForegroundTimestamp != nil) {
         NSTimeInterval calculatedAppResumeDuration = [[NSDate date] timeIntervalSinceDate:self.willEnterForegroundTimestamp];
 
         if (calculatedAppResumeDuration >= maxAppResumeDuration) {
-            NRLOG_INFO(@"New Relic: Skipping app start resume metric since %f > allowed.", calculatedAppResumeDuration);
+            NRLOG_INFO(@"New Relic: Skipping app start resume (Hot launch) metric since %f > allowed.", calculatedAppResumeDuration);
             return;
         }
 
         self.appResumeDuration = calculatedAppResumeDuration;
+        self.wasInBackground = false;
+        self.willEnterForegroundTimestamp = nil;
     }
 }
 
