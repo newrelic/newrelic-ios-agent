@@ -12,9 +12,9 @@ struct EnvironmentDetails {
     let apiKey: String
 }
 
-struct SystemConfigurationBody:Codable {
+struct SystemConfigurationBody: Codable {
     let systemConfiguration: SystemConfiguration
-    struct SystemConfiguration:Codable {
+    struct SystemConfiguration: Codable {
         var key = "ios_agent_version"
         let value: String
     }
@@ -64,9 +64,9 @@ let productionEUEnvironment = EnvironmentDetails(host: PRODUCTION_EU_HOST, apiKe
 let environments = [stagingEnvironment, productionEnvironment, productionEUEnvironment]
 let urlDispatchGroup = DispatchGroup()
 let urlDispatchQueue = DispatchQueue(label: "update config queue")
-var results = [URL:Int]()
+var results = [URL: Int]()
 
-environments.forEach { (environment) in
+environments.forEach { environment in
     urlDispatchGroup.enter()
     let request = buildRequest(environment: environment)
 
@@ -95,14 +95,14 @@ urlDispatchGroup.notify(queue: DispatchQueue.global()) {
 }
 
 func completion(statusCodes: [URL:Int]) {
-    if(statusCodes.count != environments.count) {
+    if statusCodes.count != environments.count {
         print("Expected ")
         exit(-1)
     }
     
     for (url, statusCode) in statusCodes {
         print ("Status Code is \(statusCode)")
-        if (statusCode != 200) && (statusCode != 201) {
+        if statusCode != 200 && statusCode != 201 {
             print("Error trying to update to \(url)")
             exit(-1)
         }
