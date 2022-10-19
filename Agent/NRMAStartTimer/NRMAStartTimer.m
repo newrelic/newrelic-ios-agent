@@ -109,7 +109,7 @@ static NRMAStartTimer *_sharedInstance;
 
     // For now we'll skip recording active prewarm launches since in iOS 15+ we can't be sure it wasn't warmed long before user started app.
     // Since in iOS 15 the OS may launch apps before the user selects them. (This would create app launch times of minutes or even days.)
-    if (([self isPrewarmAvailable] && isPrewarmLaunch) && self.isWarmLaunch) {
+    if ([self isPrewarmAvailable] && isPrewarmLaunch) {
         NRLOG_INFO(@"New Relic: Skipping App Start Time because iOS prewarmed this launch.");
 
         return;
