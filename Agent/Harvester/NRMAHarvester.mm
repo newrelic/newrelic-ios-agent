@@ -18,6 +18,8 @@
 #import "NRConstants.h"
 #import "NRMAAppToken.h"
 #include <Utilities/Application.hpp>
+#import "NRMASupportMetricHelper.h"
+
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
 @interface NRMAHarvester (privateMethods)
@@ -373,6 +375,8 @@
     // if we have a data token (config is valid), then skip the connect call.
     if (configuration.isValid && [configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
         [NRMAMeasurements recordSessionStartMetric];
+        [NRMASupportMetricHelper processDeferredMetrics];
+
         [self transitionToConnected:configuration];
         return;
     } else {
@@ -411,6 +415,9 @@
         //save config
         configuration.application_token = connection.applicationToken;
         [self saveHarvesterConfiguration:configuration];
+
+        [NRMASupportMetricHelper processDeferredMetrics];
+
         [self transitionToConnected:configuration];
         
         [connectionTimer stopTimer];
@@ -543,6 +550,8 @@
                 [self disconnected];
                 break;
             case NRMA_HARVEST_CONNECTED:
+                [NRMASupportMetricHelper processDeferredMetrics];
+
                 [self fireOnHarvestBefore];
                 [self fireOnHarvest];
                 [self connected];

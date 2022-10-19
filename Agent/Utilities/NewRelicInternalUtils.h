@@ -100,5 +100,10 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 + (NSString*) stringFromNRMAApplicationPlatform:(NRMAApplicationPlatform) applicationPlatform;
 
 + (NSString*) getStorePath;
+
++ (BOOL)isDebuggerAttached;
+
++ (BOOL)isSimulator;
+
 @end
 

@@ -63,6 +63,14 @@ Run Agent tests for tvOS
 
 
 
+### ios runDsymUploadToolsTests
+
+```sh
+[bundle exec] fastlane ios runDsymUploadToolsTests
+```
+
+Run dSYM Upload Tools test
+
 ### ios deleteBuildArtifacts
 
 ```sh

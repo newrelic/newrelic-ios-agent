@@ -55,6 +55,13 @@
  - NRFeatureFlag_DistributedTracing
     Enabled by default. Enables distributed tracing support for network
     requests.
+
+ - NRFeatureFlag_GestureInstrumentation
+    Disabled by default.
+
+ - NRFeatureFlag_AppStartMetrics
+    Enable (default)or disable flag for automatic calculation of app start metrics. Cold and Hot(Resume) start times only.
+    Note: App Launch start are not reported when using Simulators or during debugging.
 */
 
 
@@ -73,4 +80,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_ExperimentalNetworkingInstrumentation = 1 << 13, // Disabled by default
     NRFeatureFlag_DistributedTracing                    = 1 << 14,
     NRFeatureFlag_GestureInstrumentation                = 1 << 15, // Disabled by default
+    NRFeatureFlag_AppStartMetrics                       = 1 << 16,
 };

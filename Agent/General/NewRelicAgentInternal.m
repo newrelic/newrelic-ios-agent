@@ -75,6 +75,7 @@
 #import "NRMAFileCleanup.h"
 #import "NRMAAppToken.h"
 #import "NRMAUDIDManager.h"
+#import "NRMAStartTimer.h"
 
 /* Support for teardown and re-setup of the agent within a process lifetime for our test harness
  Enabling this will bypass dispatch_once-style logic and expose more internal state.
@@ -203,6 +204,10 @@ static NewRelicAgentInternal* _sharedInstance;
         self.appInstallMetricGenerator = [NRMAAppInstallMetricGenerator new];
         self.appUpgradeMetricGenerator = [NRMAAppUpgradeMetricGenerator new];
 
+        if ([NRMAFlags shouldEnableAppStartMetrics]) {
+            [[NRMAStartTimer sharedInstance] start];
+        }
+
         self->_lifetimeRequestCount = 0;
         self->_lifetimeErrorCount = 0;
         self.appSessionStartDate = [NSDate date];
@@ -264,13 +269,6 @@ static NewRelicAgentInternal* _sharedInstance;
                 NRMACrashReporterRecorder* crashReportRecorder = [[NRMACrashReporterRecorder alloc] init];
                 [NRMAHarvestController addHarvestListener:crashReportRecorder];
             }
-
-            //appInstallMetricGenerator will receive the 'new install' notification
-            //before the harvester is setup and before the task queue is set up.
-            //by adding the appInstallMetricGenerator to the harvestAwareListener
-            //it will be signaled when the harvester is definitively available.
-            [NRMAHarvestController addHarvestListener:self.appInstallMetricGenerator];
-            [NRMAHarvestController addHarvestListener:self.appUpgradeMetricGenerator];
         } else {
             NRLOG_INFO(@"Agent disabled");
         }
@@ -360,6 +358,7 @@ static NewRelicAgentInternal* _sharedInstance;
      * initialization.
      */
     [NRMAMeasurements initializeMeasurements];
+
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
         [NRMAHarvestController start];
     }
@@ -596,6 +595,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         [self.gestureFacade recordUserAction:foregroundGesture];
     }
 
+    //appInstallMetricGenerator will receive the 'new install' notification
+    //before the harvester is setup and before the task queue is set up.
+    //by adding the appInstallMetricGenerator to the harvestAwareListener
+    //it will be signaled when the harvester is definitively available.
+    [NRMAHarvestController addHarvestListener:self.appInstallMetricGenerator];
+    [NRMAHarvestController addHarvestListener:self.appUpgradeMetricGenerator];
 }
 
 static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";

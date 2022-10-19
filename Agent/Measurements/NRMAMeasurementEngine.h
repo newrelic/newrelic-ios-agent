@@ -12,8 +12,6 @@
 #import "NRMAHarvestAware.h"
 
 #import "NRMAHTTPTransactionMeasurementProducer.h"
-#import "NRMAHTTPErrorCountingMeasurementProducer.h"
-#import "NRMAHTTPErrorMeasurementProducer.h"
 #import "NRMAActivityTraceMeasurementCreator.h"
 #import "NRMAActivityTraceMeasurementProducer.h"
 #import "NRMAMethodMeasurementProducer.h"
@@ -28,8 +26,6 @@
 @property(strong, atomic) NRMAMeasurementPool* rootMeasurementPool;
 
 @property(strong, atomic) NRMAHTTPTransactionMeasurementProducer* httpTransactionMeasurementProducer;
-@property(strong, atomic) NRMAHTTPErrorCountingMeasurementProducer* httpErrorCountingMeasurementsProducer;
-@property(strong, atomic) NRMAHTTPErrorMeasurementProducer* httpErrorMeasurementProducer;
 @property(strong, atomic) NRMAActivityTraceMeasurementCreator* activityTraceMeasurementCreator;
 @property(strong, atomic) NRMAActivityTraceMeasurementProducer* activityTraceMeasurementProducer;
 @property(strong, atomic) NRMAMethodMeasurementProducer* summaryMeasurementProducer;

@@ -8,8 +8,8 @@
 
 #import "NRMAHarvestableTrace.h"
 #import "NRMAScopedMeasurement.h"
-#import "NRMAScopedHTTPErrorMeasurement.h"
 #import "NRMAScopedHTTPTransactionMeasurement.h"
+
 @implementation NRMAHarvestableTrace
 - (id) initWithTrace:(NRMATrace*)trace
 {
@@ -32,15 +32,10 @@
                 NRMAScopedMeasurement* scopedMeasurement = [[NRMAScopedHTTPTransactionMeasurement alloc] initWithMeasurement:measurement];
                 scopedMeasurement.threadInfo = self.threadInfo;
                 [self.network addScopedMeasurement:scopedMeasurement];
-            } else if ( measurement.type == NRMAMT_HTTPError) {
-                // error stuff.
-                NRMAScopedMeasurement* scopedMeasurement = [[NRMAScopedHTTPErrorMeasurement alloc] initWithMeasurement:measurement];
-                scopedMeasurement.threadInfo = self.threadInfo;
-                [self.network addScopedMeasurement:scopedMeasurement];
-            }  else if ( measurement.type == NRMAMT_NamedEvent) {
+            }
+            else if ( measurement.type == NRMAMT_NamedEvent) {
                 [self.events addScopedMeasurement:[[NRMAScopedMeasurement alloc] initWithMeasurement:measurement]];
             }
-            
         }
     }
     return self;

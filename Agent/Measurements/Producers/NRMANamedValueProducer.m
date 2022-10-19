@@ -10,6 +10,7 @@
 
 #import "NRMANamedValueMeasurement.h"
 #import "NRMAMemoryVitals.h"
+
 @implementation NRMANamedValueProducer
 
 
@@ -27,7 +28,7 @@
 
 - (void) generateMachineMeasurements
 {
-    NSMutableSet* machineMeasurementSet = [[NSMutableSet alloc] initWithCapacity:4];
+    NSMutableSet* machineMeasurementSet = [[NSMutableSet alloc] init];
     CPUTime currentCPUTime;
 
     int code = [NRMACPUVitals cpuTime:&currentCPUTime];
@@ -43,20 +44,16 @@
        [machineMeasurementSet addObject:[[NRMANamedValueMeasurement alloc] initWithName:NRMA_METRIC_MEMORY_USAGE
                                                                                   value:[NSNumber numberWithDouble:memoryUsage]
                                                                         additionalValue:nil]];
-
     }
 
     if (machineMeasurementSet != nil) {
         [self produceMeasurements:@{[NSNumber numberWithInt:NRMAMT_NamedValue]:machineMeasurementSet}];
     }
 
-
     if (code == 0) {
         lastCPUTime = currentCPUTime;
         lastCPUTimeIsValid = YES;
     }
-
-
 }
 
 

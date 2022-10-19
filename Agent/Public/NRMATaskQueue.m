@@ -11,7 +11,6 @@
 #import "NRMAActivityTraceMeasurement.h"
 #import  "NRMANamedValueMeasurement.h"
 #import "NRMAHTTPTransactionMeasurement.h"
-#import "NRMAHTTPErrorMeasurement.h"
 #include <libkern/OSAtomic.h>
 #import "NRMAHarvester.h"
 #import "NRMAMethodSummaryMeasurement.h"
@@ -19,7 +18,6 @@
 #import "NRMAHarvestableHTTPError.h"
 #import "NRMAMeasurements.h"
 #import "NRMAMetric.h"
-#import "NRMAHTTPError.h"
 #import "NRMAHTTPTransaction.h"
 
 static double kNRMA_DEQUEUE_PERIOD_SEC = 1;
@@ -35,8 +33,6 @@ static __strong NRMATaskQueue* __taskQueue;
 + (void) recordActivityTrace:(NRMAActivityTrace*) activityTrace;
 
 + (void) recordSummaryMeasurements:(NRMATrace*)trace;
-
-+ (void) recordHTTPError:(NRMAHTTPError*)error;
 
 + (void) recordMetric:(NRMAMetric*)metric;
 
@@ -142,10 +138,7 @@ static __strong NRMATaskQueue* __taskQueue;
                 [NRMAMeasurements recordSummaryMeasurements:object];
                 continue;
             }
-            if ([object isKindOfClass:[NRMAHTTPError class]]) {
-                [NRMAMeasurements recordHTTPError:object];
-                continue;
-            }
+
             if ([object isKindOfClass:[NRMAHTTPTransaction class]]) {
                 [NRMAMeasurements recordHTTPTransaction:object];
                 continue;

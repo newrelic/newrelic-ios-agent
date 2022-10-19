@@ -9,6 +9,8 @@
 #import <XCTest/XCTest.h>
 #import "NRMAAnalytics+cppInterface.h"
 #import "NRMAFlags.h"
+#import "NRMASupportMetricHelper.h"
+
 @interface NRMARequestEvents : XCTestCase
 
 @end
@@ -33,6 +35,9 @@ static NRMAFeatureFlags __originalFlags;
 
 - (void)tearDown {
     [NRMAFlags setFeatureFlags:__originalFlags];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    
     [super tearDown];
 }
 

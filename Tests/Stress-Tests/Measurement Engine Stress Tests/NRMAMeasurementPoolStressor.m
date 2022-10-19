@@ -85,7 +85,6 @@
             dispatch_semaphore_wait(self.semaphore, DISPATCH_TIME_FOREVER);
             dispatch_async([NRMAStressTestHelper randomDispatchQueue], ^{
                 @autoreleasepool {
-                    [self.producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError]];
                     [self.producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_Method]];
                     [self.producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_NamedEvent]];
                     [self incrementAsyncEndedCounter];

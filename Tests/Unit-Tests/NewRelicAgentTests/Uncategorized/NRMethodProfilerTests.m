@@ -32,6 +32,9 @@
 //    #endif
 //#endif
 #import "NRMAMethodProfiler.h"
+
+#import "NRMASupportMetricHelper.h"
+
 @interface NRMATraceController ()
 + (void) exitMethod;
 @end
@@ -240,6 +243,9 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
 #ifdef DEBUG
     [NRMAMethodProfiler resetskipInstrumentationOnceToken];
 #endif
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+
     [super tearDown];
 
 }

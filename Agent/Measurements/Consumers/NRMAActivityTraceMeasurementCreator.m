@@ -10,7 +10,6 @@
 #import "NRMATraceSegment.h"
 #import "NRMAHarvestableTrace.h"
 #import "NRMAHarvestableActivity.h"
-#import "NRMAHarvestableHTTPError.h"
 #import "NRMAActivityTraces.h"
 #import "NRMAActivityTraceMeasurement.h"
 #import "NRMAAgentConfiguration.h"

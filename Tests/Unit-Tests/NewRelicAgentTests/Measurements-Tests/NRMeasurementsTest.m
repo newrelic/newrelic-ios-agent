@@ -17,7 +17,6 @@
 #import "NRMAHarvestController.h"
 #import "NRMAMethodSummaryMeasurement.h"
 #import "NRMAHTTPTransactionMeasurementProducer.h"
-#import "NRMAHarvestableHTTPErrors.h"
 #import "NRMATaskQueue.h"
 #import "NRMAHTTPTransactionMeasurement.h"
 
@@ -45,16 +44,6 @@
 + (void)recordActivityTrace:(NRMAActivityTrace *)trace;
 
 + (void)recordSummaryMeasurements:(NRMATrace *)trace;
-@end
-
-@interface NRMAHarvestableHTTPErrors (test)
-- (NSMutableDictionary *)dictionary;
-@end
-
-@implementation NRMAHarvestableHTTPErrors (test)
-- (NSMutableDictionary *)dictionary {
-    return httpErrors;
-}
 @end
 
 @implementation NRMAMeasurementsTest

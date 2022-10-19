@@ -98,7 +98,7 @@
                 [self.consumer consumeMeasurement:measurement];
                 break;
             case 1:
-                [self.consumer consumeMeasurements:@{[NSNumber numberWithInt:NRMAMT_HTTPError]
+                [self.consumer consumeMeasurements:@{[NSNumber numberWithInt:NRMAMT_NamedValue]
                                                      :[[NSMutableSet alloc] initWithObjects:measurement,nil]}];
                 break;
             default:

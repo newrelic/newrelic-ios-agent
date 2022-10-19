@@ -24,8 +24,6 @@
 
 + (void)recordSummaryMeasurements:(NRMATrace *)trace;
 
-+ (void)recordHTTPError:(NRMAHTTPError *)error;
-
 + (void)recordMetric:(NRMAMetric *)metric;
 
 + (void)recordHTTPTransaction:(NRMAHTTPTransaction *)transaction;
@@ -121,7 +119,7 @@
 {
     @autoreleasepool {
 
-        int options = 11;
+        int options = 10;
         switch (rand() % options) {
             case 0:
                 [NRMAMeasurements recordSessionStartMetric];
@@ -170,17 +168,6 @@
                 break;
             case 9:
                 [NRMAMeasurements process];
-                break;
-            case 10:
-                [NRMAMeasurements recordHTTPError:[[NRMAHTTPError alloc] initWithURL:@"ffefef"
-                                                                          httpMethod:nil
-                                                                         timeOfError:123123123
-                                                                          statusCode:1234
-                                                                        responseBody:@""
-                                                                          parameters:nil
-                                                                             wanType:nil
-                                                                        appDataToken:nil
-                                                                          threadInfo:[NRMAThreadInfo new]]];
                 break;
             default:
                 break;

@@ -7,8 +7,8 @@
 //
 
 #import "NRMAMeasurementTransmitter.h"
-#import "NRMAHTTPErrorMeasurement.h"
 #import "NRMAActivityTrace.h"
+
 @implementation NRMAMeasurementTransmitter
 - (id) initWithType:(NRMAMeasurementType)type
     destinationPool:(NRMAMeasurementPool*)pool
@@ -20,20 +20,4 @@
     return self;
 }
 
-- (void) consumeMeasurement:(NRMAMeasurement *)measurement
-{
-    [self.destinationPool produceMeasurement:measurement];
-    [self.destinationPool broadcastMeasurements];
-}
-
-- (void) consumeMeasurements:(NSDictionary *)measurements
-{
-    NSNumber* key = [NSNumber numberWithInt:_measurementType];
-    NSSet*  measurementSet = [measurements objectForKey:key];
-    if (![measurementSet count])
-        return;
-    
-    [self.destinationPool produceMeasurements:@{key:measurementSet}];
-    [self.destinationPool broadcastMeasurements];
-}
 @end

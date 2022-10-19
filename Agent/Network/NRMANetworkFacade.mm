@@ -13,7 +13,6 @@
 #import "NRMATaskQueue.h"
 #import "NRMAHTTPTransaction.h"
 #import "NRMAFlags.h"
-#import "NRMAHTTPError.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConnection+GZip.h"
 #import <Connectivity/Payload.hpp>
@@ -137,21 +136,6 @@
 
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
 
-            /*
-             * Params
-             */
-
-            NSMutableDictionary* customParams = [@{
-                    NRMA_ERROR_CONTENT_TYPE_KEY:[NRMANetworkFacade contentType:response]?:@"",
-                    NRMA_ERROR_CONTENT_LENGTH_KEY:[NRMANetworkFacade contentLength:response] == nil?@(modifiedBytesReceived):@([[NRMANetworkFacade contentLength:response] integerValue]),
-                    @"http_method":[request HTTPMethod]?:@"",
-                    @"wan_type":connectionType?:@""
-            } mutableCopy];
-
-            /*
-             * \Params
-             */
-
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
                                                                                withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response]
                                                                                                                                  bytesReceived:modifiedBytesReceived
@@ -160,21 +144,6 @@
                                                                                                                            encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
                                                                                                                                  appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
                                                                                 withPayload:[NRMAHTTPUtilities retrievePayload:request]];
-
-            NSMutableDictionary* mutableParams = [[NSMutableDictionary alloc] initWithDictionary:params?:@{}];
-            mutableParams[NRMA_ERROR_CUSTOM_PARAMS_KEY] = customParams;
-
-
-            [NRMATaskQueue queue:[[NRMAHTTPError alloc] initWithURL:replacedURL.absoluteString
-                                                         httpMethod:[request HTTPMethod]
-                                                        timeOfError:timer.endTimeMillis
-                                                         statusCode:(int)[NRMANetworkFacade statusCode:response]
-                                                       responseBody:[NRMANetworkFacade responseBodyForMetrics:responseData]
-                                                         parameters:mutableParams
-                                                            wanType:connectionType
-                                                       appDataToken:[NRMANetworkFacade getAppDataHeader:response]
-                                                         threadInfo:threadInfo]];
-
         } else {
 
             std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];

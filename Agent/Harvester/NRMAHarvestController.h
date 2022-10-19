@@ -38,7 +38,6 @@
 
 - (void) deinitialize;
 
-//+ (BOOL) shouldCollectNetworkTraces;
 + (BOOL) shouldNotCollectTraces;
 
 #pragma mark - HarvestController interface
@@ -64,8 +63,6 @@
 #pragma mark - harvest data interface
 
 + (void) addHarvestableHTTPTransaction:(NRMAHarvestableHTTPTransaction*)transaction;
-
-+ (void) addHarvestableHTTPError:(NRMAHarvestableHTTPError*)error;
 
 + (void) addNamedValue:(NRMANamedValueMeasurement*)measurement;
 

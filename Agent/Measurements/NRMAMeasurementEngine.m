@@ -15,8 +15,6 @@
         [self.rootMeasurementPool removeMeasurementProducer:self.rootMeasurementPool];
         self.rootMeasurementPool = nil;
 
-        [self removeMeasurementProducer:self.httpErrorMeasurementProducer];
-        self.httpErrorMeasurementProducer = nil;
         [self removeMeasurementProducer:self.httpTransactionMeasurementProducer];
         self.httpTransactionMeasurementProducer = nil;
         [self removeMeasurementProducer:self.activityTraceMeasurementProducer];
@@ -24,8 +22,6 @@
         [self removeMeasurementProducer:self.summaryMeasurementProducer];
         self.summaryMeasurementProducer = nil;
 
-        [self removeMeasurementConsumer:self.httpErrorCountingMeasurementsProducer];
-        self.httpErrorCountingMeasurementsProducer = nil;
         [self removeMeasurementConsumer:self.activityTraceMeasurementCreator];
         self.activityTraceMeasurementCreator = nil;
         [self removeMeasurementConsumer:self.harvestableHTTPTransactionGenerator];
@@ -41,9 +37,6 @@
     if (self) {
         self.activities = [NSMutableDictionary dictionary];
         self.rootMeasurementPool = [[NRMAMeasurementPool alloc] init];
-
-        self.httpErrorMeasurementProducer = [[NRMAHTTPErrorMeasurementProducer alloc] init];
-        [self addMeasurementProducer:self.httpErrorMeasurementProducer];
 
         self.activityTraceMeasurementProducer = [[NRMAActivityTraceMeasurementProducer alloc] init];
         [self addMeasurementProducer:self.activityTraceMeasurementProducer];
@@ -63,9 +56,6 @@
 
         self.activityTraceMeasurementCreator = [[NRMAActivityTraceMeasurementCreator alloc] init];
         [self addMeasurementConsumer:self.activityTraceMeasurementCreator];
-
-        self.httpErrorCountingMeasurementsProducer = [[NRMAHTTPErrorCountingMeasurementProducer alloc] init];
-        [self addMeasurementConsumer:self.httpErrorCountingMeasurementsProducer];
 
         self.harvestableHTTPTransactionGenerator = [[NRMAHarvestableHTTPTransactionGeneration alloc] init];
         [self addMeasurementConsumer:self.harvestableHTTPTransactionGenerator];

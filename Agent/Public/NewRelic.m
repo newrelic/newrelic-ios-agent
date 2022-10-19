@@ -18,7 +18,6 @@
 #import "NRMAExceptionHandler.h"
 #import "NRMATaskQueue.h"
 #import "NRMAHTTPTransaction.h"
-#import "NRMAHTTPError.h"
 #import "NRMATraceMachineAgentUserInterface.h"
 #import "NRMAThreadInfo.h"
 #import "NRMAAnalytics.h"
@@ -103,7 +102,7 @@
 
 /// replaceDeviceIdentifier allows device identifier to be replaced with a string `identifier`
 /// NOTE: Whitespace and new lines will be trimmed.
-/// If the timmed device identifier replacement is blank then "0" will be used.
+/// If the trimmed device identifier replacement is blank then "0" will be used.
 /// @param identifier  pass replacement String. pass NULL to stop replacing.
 + (void) replaceDeviceIdentifier:(NSString*)identifier {
     [NRMAFlags setShouldReplaceDeviceIdentifier:identifier];

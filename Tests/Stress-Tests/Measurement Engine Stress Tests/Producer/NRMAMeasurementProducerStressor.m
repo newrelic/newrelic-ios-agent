@@ -98,11 +98,11 @@
     @autoreleasepool {
         switch (rand() % options) {
             case 0:
-                [self.producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError]];
+                [self.producer produceMeasurement:[[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue]];
                 break;
             case 1:
-                [self.producer produceMeasurements:@{[NSNumber numberWithInt:NRMAMT_HTTPError]:
-                                                         [[NSMutableSet alloc] initWithObjects:[[NRMAMeasurement alloc] initWithType:NRMAMT_HTTPError],nil]}];
+                [self.producer produceMeasurements:@{[NSNumber numberWithInt:NRMAMT_NamedValue]:
+                                                         [[NSMutableSet alloc] initWithObjects:[[NRMAMeasurement alloc] initWithType:NRMAMT_NamedValue],nil]}];
                 break;
             case 2:
                 [self.producer drainMeasurements];

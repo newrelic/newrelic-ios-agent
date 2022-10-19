@@ -15,6 +15,7 @@
 #import "NRMABool.h"
 #import "NRMAAnalytics.h"
 #import <Analytics/Constants.hpp>
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAUpgradeMetricGeneratorTest : XCTestCase
 
@@ -40,7 +41,7 @@
     [[[[mockQueue expect] classMethod] andDo:^(NSInvocation *invocation) {
         __autoreleasing NRMAMetric* metric = nil;
         [invocation getArgument:&metric atIndex:2];
-        XCTAssertTrue([metric.name isEqualToString:@"Mobile/App/Upgrade"], @"invalid metric name");
+        XCTAssertTrue([metric.name isEqualToString:@"Mobile/App/Upgrade"], @"invalid metric name %@", metric.name);
         XCTAssertEqual([@1 intValue], metric.value.intValue, @"invalid metric value.");
         didQueue = YES;
     }] queue:OCMOCK_ANY];
@@ -56,6 +57,8 @@
 
     //simulate a harvest
     [metricGenerator onHarvestBefore];
+    
+    [NRMASupportMetricHelper processDeferredMetrics];
 
     while (!didQueue && CFRunLoopGetCurrent()) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];

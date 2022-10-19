@@ -41,6 +41,10 @@
 
 + (BOOL) shouldEnableDistributedTracing;
 
++ (BOOL) shouldEnableAppStartMetrics;
+
++ (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
+
 // Private Setting
 // Device Identifier Salting
 // private settings only for VW (jira:MOBILE-6635)
