@@ -8,8 +8,15 @@
 
 @interface NRMAStartTimer: NSObject
 
+// Cold launch
 @property (nonatomic) NSTimeInterval appLaunchDuration;
+// Hot launch
 @property (nonatomic) NSTimeInterval appResumeDuration;
+// Warm launch
+@property (nonatomic) NSTimeInterval warmAppLaunchDuration;
+// Extended launch
+@property (nonatomic) NSTimeInterval extendedAppLaunchDuration;
+
 @property (nonatomic) BOOL isWarmLaunch;
 
 + (NRMAStartTimer *)sharedInstance;

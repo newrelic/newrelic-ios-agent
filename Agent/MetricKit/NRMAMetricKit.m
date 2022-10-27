@@ -10,6 +10,7 @@
 #import "NRMAAgentConfiguration.h"
 #import "NRLogger.h"
 #import "NewRelic/NewRelic.h"
+#import "NRMAStartTimer.h"
 
 static NRMAMetricKit *_sharedInstance;
 
@@ -104,8 +105,7 @@ static NRMAMetricKit *_sharedInstance;
 
             if (averageExtendedLaunchTime > 0) {
                 NRLOG_INFO(@"~~ AVERAGE EXTENDED LAUNCH TIME: %fms",averageExtendedLaunchTime);
-
-                [NewRelic recordMetricWithName:@"AppLaunchExtended" category:@"AppLaunch" value:[NSNumber numberWithDouble:averageExtendedLaunchTime / 1000] valueUnits:kNRMetricUnitSeconds];
+                [NRMAStartTimer sharedInstance].extendedAppLaunchDuration = averageExtendedLaunchTime / 1000;
             }
         }
 
@@ -113,9 +113,12 @@ static NRMAMetricKit *_sharedInstance;
         NSArray<MXHistogramBucket*> * coldLaunchBuckets =
             [payload.applicationLaunchMetrics.histogrammedTimeToFirstDraw.bucketEnumerator allObjects];
         double averageColdLaunchTime = [self averageForBuckets:coldLaunchBuckets];
-        NRLOG_INFO(@"~~ AVERAGE COLD LAUNCH TIME: %fms",averageColdLaunchTime);
 
-        [NewRelic recordMetricWithName:@"AppLaunchCold" category:@"AppLaunch" value:[NSNumber numberWithDouble:averageColdLaunchTime / 1000] valueUnits:kNRMetricUnitSeconds];
+        if (averageColdLaunchTime > 0) {
+            NRLOG_INFO(@"~~ AVERAGE COLD LAUNCH TIME: %fms",averageColdLaunchTime);
+
+            [NRMAStartTimer sharedInstance].appLaunchDuration = averageColdLaunchTime / 1000;
+        }
 
         if (@available(iOS 15.2, *)) {
             // WARM app launch time
@@ -126,7 +129,7 @@ static NRMAMetricKit *_sharedInstance;
             if (averageWarmLaunchTime > 0) {
                 NRLOG_INFO(@"~~ AVERAGE WARM LAUNCH TIME: %fms",averageWarmLaunchTime);
 
-                [NewRelic recordMetricWithName:@"AppLaunchWarm" category:@"AppLaunch" value:[NSNumber numberWithDouble:averageWarmLaunchTime / 1000] valueUnits:kNRMetricUnitSeconds];
+                [NRMAStartTimer sharedInstance].warmAppLaunchDuration = averageWarmLaunchTime / 1000;
             }
 
         } else {
@@ -141,8 +144,7 @@ static NRMAMetricKit *_sharedInstance;
 
         if (averageResumeTime > 0) {
             NRLOG_INFO(@"~~ AVERAGE RESUME TIME: %fms",averageResumeTime);
-
-            [NewRelic recordMetricWithName:@"AppResume" category:@"AppLaunch" value:[NSNumber numberWithDouble:averageResumeTime / 1000] valueUnits:kNRMetricUnitSeconds];
+            [NRMAStartTimer sharedInstance].appResumeDuration  = averageResumeTime / 1000;
         }
     }
 }
@@ -156,16 +158,15 @@ static NRMAMetricKit *_sharedInstance;
 
         if (@available(iOS 16.0, *)) {
             double totalDurations = 0;
-
+            // The app launch duration diagnostic payload is returned in seconds.
             for (MXAppLaunchDiagnostic *diagnostic in [payload appLaunchDiagnostics]) {
                 totalDurations += diagnostic.launchDuration.doubleValue;
             }
             double averageLaunchTime = totalDurations / [[payload appLaunchDiagnostics] count];
             
             if (averageLaunchTime > 0) {
-                NRLOG_INFO(@"~~ AVERAGE LAUNCH TIME (includes extended launch tasks): %fms",averageLaunchTime);
-
-                [NewRelic recordMetricWithName:@"AppLaunchDiagnostic" category:@"AppLaunch" value:[NSNumber numberWithDouble:averageLaunchTime / 1000] valueUnits:kNRMetricUnitSeconds];
+                NRLOG_INFO(@"~~ AVERAGE LAUNCH TIME (includes extended launch tasks): %fs",averageLaunchTime);
+                [NRMAStartTimer sharedInstance].extendedAppLaunchDuration = averageLaunchTime;
             }
 
         } else {

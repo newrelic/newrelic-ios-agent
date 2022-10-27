@@ -162,6 +162,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
         if ([NRMAFlags shouldEnableAppStartMetrics]) {
             [[NRMAStartTimer sharedInstance] start];
+            [[NRMAMetricKit sharedInstance] start];
         }
 
         self->_lifetimeRequestCount = 0;

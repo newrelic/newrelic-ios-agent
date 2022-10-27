@@ -153,6 +153,8 @@ typedef NSString NRMetricUnit;
 #define kPlatformPlaceholder            @"[PLATFORM]"
 #define NRMA_METRIC_APP_LAUNCH_COLD        @"AppLaunch/Cold"
 #define NRMA_METRIC_APP_LAUNCH_RESUME      @"AppLaunch/Hot"
+#define NRMA_METRIC_APP_LAUNCH_WARM        @"AppLaunch/Warm"
+#define NRMA_METRIC_APP_LAUNCH_EXTENDED    @"AppLaunch/Extended"
 
 // Network Failure Codes
 enum NRNetworkFailureCode {

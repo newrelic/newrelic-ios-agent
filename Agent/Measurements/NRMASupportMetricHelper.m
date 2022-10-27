@@ -88,6 +88,24 @@
         [NRMAStartTimer sharedInstance].appResumeDuration = 0;
     }
 
+    if ([[NRMAStartTimer sharedInstance] warmAppLaunchDuration] != 0) {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:NRMA_METRIC_APP_LAUNCH_WARM
+                                                        value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] warmAppLaunchDuration]]
+                                                        scope:@""
+                                              produceUnscoped:YES
+                                              additionalValue:nil]];
+        [NRMAStartTimer sharedInstance].warmAppLaunchDuration = 0;
+    }
+
+    if ([[NRMAStartTimer sharedInstance] extendedAppLaunchDuration] != 0) {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:NRMA_METRIC_APP_LAUNCH_EXTENDED
+                                                        value:[NSNumber numberWithDouble:[[NRMAStartTimer sharedInstance] extendedAppLaunchDuration]]
+                                                        scope:@""
+                                              produceUnscoped:YES
+                                              additionalValue:nil]];
+        [NRMAStartTimer sharedInstance].extendedAppLaunchDuration = 0;
+    }
+
     // Handle any deferred supportability metrics.
     if (deferredMetrics == nil) { return; }
 
