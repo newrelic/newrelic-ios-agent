@@ -1,0 +1,12 @@
+test/
+build/
+.gitignore
+.gitmodules
+CMakeLists.txt
+README.md
+ext/gtest/CmakeLists.txt
+src/Utilities/CMakeLists.txt
+build.sh
+src/Analytics/CMakeLists.txt
+LicenseData/
+src/CMakeLists.txt

@@ -1,0 +1,65 @@
+import "ConstantsFastfile"
+
+platform :ios do
+
+  desc "Build iOS.xcarchive / iOS Sim framework"
+  lane :buildIOS do 
+    # Build Device
+    xcodebuild(
+      clean: true,
+      archive: true,
+      archive_path: "#{Constants::ARCHIVES}/iOS.xcarchive",
+      configuration: "#{Constants::MODE}",
+      workspace: "Agent.xcworkspace",
+      scheme: "Agent-iOS",
+      sdk: "iphoneos",
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES"
+    )
+    # Build Sim
+    xcodebuild(
+      clean: true, 
+      build: true,
+      configuration: "#{Constants::MODE}",
+      workspace: "Agent.xcworkspace",
+      scheme: "Agent-iOS",
+      sdk: "iphonesimulator",
+      derivedDataPath: Constants::DD
+    )
+  end
+
+  desc "Build tvOS.xcarchive / tvOS Sim framework"
+  lane :buildTVOS do 
+    # Build Device
+    xcodebuild(
+      archive: true,
+      archive_path: "#{Constants::ARCHIVES}/tvOS.xcarchive",
+      configuration: "#{Constants::MODE}",
+      workspace: "Agent.xcworkspace",
+      scheme: "Agent-tvOS",
+      sdk: "appletvos",
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES"
+    )
+    # Build Sim
+    xcodebuild(
+      build: true, 
+      configuration: "#{Constants::MODE}",
+      workspace: "Agent.xcworkspace",
+      scheme: "Agent-tvOS",
+      sdk: "appletvsimulator",
+      derivedDataPath: Constants::DD
+    )
+  end 
+
+  desc "Build macOS.xcarchive"
+  lane :buildMacOS do 
+    xcodebuild(
+      archive: true,
+      archive_path: "#{Constants::ARCHIVES}/macOS.xcarchive",
+      configuration: "#{Constants::MODE}",
+      workspace: "Agent.xcworkspace",
+      scheme: "Agent-iOS",
+      sdk: "macosx",
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES"
+    )
+  end
+end

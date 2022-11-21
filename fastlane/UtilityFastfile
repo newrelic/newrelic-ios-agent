@@ -1,0 +1,25 @@
+import "ConstantsFastfile"
+
+platform :ios do
+  desc "Delete derived data and Frameworks and build directory"
+  lane :deleteBuildArtifacts do
+
+      clear_derived_data
+      
+      # Running in ./fastlane so switch dir to proj root.
+      Dir.chdir("..") do
+        begin
+          sh "rm -rf NewRelic.xcframework"
+          sh "rm -rf #{Constants::ARCHIVES}"
+          sh "rm -rf Frameworks"
+          sh "rm -rf libMobileAgent/build"
+          sh "rm -rf #{Constants::DD}"
+        rescue => ex
+          # handle error
+        ensure
+          # do something that always run like clean up
+        end
+
+      end
+  end
+end

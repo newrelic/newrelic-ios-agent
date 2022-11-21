@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:src/Hex/Hex.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:src/Analytics/Analytics.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:src/Connectivity/Connectivity.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:ext/JSON/JSON.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:src/Utilities/Utilities/Utilities.xcodeproj">
+   </FileRef>
+</Workspace>
