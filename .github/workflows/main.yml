@@ -14,17 +14,17 @@ jobs:
     - name: Install gems
       run: bundle install
 
-    - name: Run iOS tests using only Xcode build.
-      run: xcodebuild -workspace Agent.xcworkspace -scheme "Agent-iOS" -destination name="iPhone 14" -derivedDataPath="dd" clean test
+    # - name: Run iOS tests using only Xcode build.
+    #   run: xcodebuild -workspace Agent.xcworkspace -scheme "Agent-iOS" -destination name="iPhone 14" -derivedDataPath="dd" clean test
 
-    - name: Run tvOS tests using only Xcode build.
-      run: xcodebuild -workspace Agent.xcworkspace -scheme "Agent-tvOS" -destination name="Apple TV" -derivedDataPath="dd" clean test
+    # - name: Run tvOS tests using only Xcode build.
+    #   run: xcodebuild -workspace Agent.xcworkspace -scheme "Agent-tvOS" -destination name="Apple TV" -derivedDataPath="dd" clean test
     
     # - name: Run tests on iOS. (Using fastlane)
     #   run: bundle exec fastlane runIOSTests
 
-    # - name: Run tests and build NewRelic.xcframework (using fastlane)
-    #   run: bundle exec fastlane testAndBuild
+    - name: Run tests and build NewRelic.xcframework (using fastlane)
+      run: bundle exec fastlane testAndBuild
 
     # - name: run the Agent iOS Tests and tvOS Tests (using fastlane)
     #   run: bundle exec fastlane runTests
