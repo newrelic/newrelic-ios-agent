@@ -1081,6 +1081,13 @@
 			remoteGlobalIDString = 05CD31520EE936A9000FDE88;
 			remoteInfo = "CrashReporter-iOS-Device";
 		};
+		2B40AD29292D6E6C00047D73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 32CF777F26DFBB080087748A;
+			remoteInfo = "CrashReporter macOS Static Framework";
+		};
 		344891CF26AA0F4E00AADB9D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02FF4AD424DC815300115469 /* CrashReporter.xcodeproj */;
@@ -3045,6 +3052,7 @@
 			isa = PBXGroup;
 			children = (
 				344891D026AA0F4E00AADB9D /* CrashReporter.framework */,
+				2B40AD2A292D6E6C00047D73 /* CrashReporter.framework */,
 				344891D226AA0F4E00AADB9D /* CrashReporter.framework */,
 				344891D426AA0F4E00AADB9D /* CrashReporter.framework */,
 				344891D626AA0F4E00AADB9D /* libCrashReporter.a */,
@@ -3814,6 +3822,13 @@
 			remoteRef = 02FF4AD824DC815400115469 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		2B40AD2A292D6E6C00047D73 /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = 2B40AD29292D6E6C00047D73 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		344891D026AA0F4E00AADB9D /* CrashReporter.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
@@ -4005,6 +4020,7 @@
 		};
 		025658E424EDAAE100FE3125 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -4022,6 +4038,7 @@
 		};
 		02FF4B1524E1F04300115469 /* Capture environment variables */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -4040,6 +4057,7 @@
 		};
 		02FF4CA724E3201400115469 /* Capture environment variables */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -4058,6 +4076,7 @@
 		};
 		2B7931142847EBAB003F8895 /* Coverage */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -4072,7 +4091,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n./XcodeCoverage/exportenv.sh\n";
+			shellScript = "\nif [ \"${CONFIGURATION}\" = \"Debug\" ]; then\n# Type a script or drag a script file from your workspace to insert its path.\n    ./XcodeCoverage/exportenv.sh\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -5030,11 +5049,13 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_MODULE_DEBUGGING = NO;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
 				CURRENT_PROJECT_VERSION = 7.4.1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 7.4.1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -5305,11 +5326,12 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_CODE_COVERAGE = NO;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
 				CURRENT_PROJECT_VERSION = 7.4.1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				"DEVELOPMENT_TEAM[sdk=appletvos*]" = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 7.4.1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
