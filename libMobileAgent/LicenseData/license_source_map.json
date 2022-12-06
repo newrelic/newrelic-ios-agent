@@ -1,0 +1,200 @@
+{
+    "src/Analytics/AnalyticsController.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/AnalyticsController.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Attribute.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Attribute.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/AttributeBase.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/AttributeBase.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/AttributeValidator.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/AttributeValidator.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/EventManager.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/EventManager.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/AnalyticEvent.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/AnalyticEvent.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/CrashAnalyticEvent.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/CrashAnalyticEvent.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/CustomAnalyticEvent.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/CustomAnalyticEvent.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/InteractionAnalyticEvent.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/InteractionAnalyticEvent.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/NamedAnalyticEvent.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/NamedAnalyticEvent.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/SessionAnalyticEvent.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/Events/SessionAnalyticEvent.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/SessionAttributeManager.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/SessionAttributeManager.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Analytics/SessionAttributeStore.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/BaseValue.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/BaseValue.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/Number.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/Number.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/String.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/String.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/Value.cxx": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    },
+    "src/Utilities/src/Value.hpp": {
+        "hash": "n/a",
+        "libraries": [
+            "New Relic"
+        ]
+    }
+}

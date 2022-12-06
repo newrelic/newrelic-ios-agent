@@ -1,0 +1,630 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		34666ABB2922FEFF005A7010 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34666ABA2922FEFF005A7010 /* Connectivity.framework */; };
+		34666ABE2922FF05005A7010 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34666ABD2922FF05005A7010 /* JSON.framework */; };
+		34BF4F512911BF5800E4D170 /* session-attributes_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1C2911BF5800E4D170 /* session-attributes_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F522911BF5800E4D170 /* agent-data_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1D2911BF5800E4D170 /* agent-data_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F532911BF5800E4D170 /* agent-data-bundle_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1E2911BF5800E4D170 /* agent-data-bundle_generated.h */; };
+		34BF4F542911BF5800E4D170 /* hex_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1F2911BF5800E4D170 /* hex_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F552911BF5800E4D170 /* ios_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F202911BF5800E4D170 /* ios_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F562911BF5800E4D170 /* HexContext.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F212911BF5800E4D170 /* HexContext.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F572911BF5800E4D170 /* HexReportContext.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F222911BF5800E4D170 /* HexReportContext.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F582911BF5800E4D170 /* HexStore.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F232911BF5800E4D170 /* HexStore.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F592911BF5800E4D170 /* HexPublisher.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F242911BF5800E4D170 /* HexPublisher.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F5A2911BF5800E4D170 /* HexPersistenceManager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F252911BF5800E4D170 /* HexPersistenceManager.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F5B2911BF5800E4D170 /* HexController.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F262911BF5800E4D170 /* HexController.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F5C2911BF5800E4D170 /* ApplicationLicense.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F282911BF5800E4D170 /* ApplicationLicense.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F5D2911BF5800E4D170 /* DoubleAttributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F2A2911BF5800E4D170 /* DoubleAttributes.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F5E2911BF5800E4D170 /* Attributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F2B2911BF5800E4D170 /* Attributes.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F5F2911BF5800E4D170 /* LongAttributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F2C2911BF5800E4D170 /* LongAttributes.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F602911BF5800E4D170 /* BooleanAttributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F2D2911BF5800E4D170 /* BooleanAttributes.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F612911BF5800E4D170 /* StringAttributes.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F2E2911BF5800E4D170 /* StringAttributes.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F622911BF5800E4D170 /* AgentData.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F2F2911BF5800E4D170 /* AgentData.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F632911BF5800E4D170 /* AppInfo.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F302911BF5800E4D170 /* AppInfo.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F642911BF5800E4D170 /* Library.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F322911BF5800E4D170 /* Library.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F652911BF5800E4D170 /* Thread.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F332911BF5800E4D170 /* Thread.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F662911BF5800E4D170 /* HandledException.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F342911BF5800E4D170 /* HandledException.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F672911BF5800E4D170 /* Frame.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F352911BF5800E4D170 /* Frame.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F682911BF5800E4D170 /* HexReport.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F362911BF5800E4D170 /* HexReport.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F692911BF5800E4D170 /* LibraryController.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F372911BF5800E4D170 /* LibraryController.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
+		34BF4F6A2911BF5800E4D170 /* HexAuditor.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F382911BF5800E4D170 /* HexAuditor.hpp */; };
+		34BF4F6B2911BF5800E4D170 /* HexReportContext.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3A2911BF5800E4D170 /* HexReportContext.cxx */; };
+		34BF4F6C2911BF5800E4D170 /* HexContext.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3B2911BF5800E4D170 /* HexContext.cxx */; };
+		34BF4F6D2911BF5800E4D170 /* HexPublisher.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3C2911BF5800E4D170 /* HexPublisher.cxx */; };
+		34BF4F6E2911BF5800E4D170 /* HexStore.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3D2911BF5800E4D170 /* HexStore.cxx */; };
+		34BF4F6F2911BF5800E4D170 /* HexController.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3E2911BF5800E4D170 /* HexController.cxx */; };
+		34BF4F702911BF5800E4D170 /* HexPersistenceManager.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3F2911BF5800E4D170 /* HexPersistenceManager.cxx */; };
+		34BF4F712911BF5800E4D170 /* ApplicationLicense.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F412911BF5800E4D170 /* ApplicationLicense.cxx */; };
+		34BF4F722911BF5800E4D170 /* AppInfo.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F422911BF5800E4D170 /* AppInfo.cxx */; };
+		34BF4F732911BF5800E4D170 /* AgentData.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F432911BF5800E4D170 /* AgentData.cxx */; };
+		34BF4F742911BF5800E4D170 /* DoubleAttributes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F452911BF5800E4D170 /* DoubleAttributes.cxx */; };
+		34BF4F752911BF5800E4D170 /* LongAttributes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F462911BF5800E4D170 /* LongAttributes.cxx */; };
+		34BF4F762911BF5800E4D170 /* StringAttributes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F472911BF5800E4D170 /* StringAttributes.cxx */; };
+		34BF4F772911BF5800E4D170 /* BooleanAttributes.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F482911BF5800E4D170 /* BooleanAttributes.cxx */; };
+		34BF4F782911BF5800E4D170 /* HexReport.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F492911BF5800E4D170 /* HexReport.cxx */; };
+		34BF4F792911BF5800E4D170 /* Library.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F4B2911BF5800E4D170 /* Library.cxx */; };
+		34BF4F7A2911BF5800E4D170 /* Frame.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F4C2911BF5800E4D170 /* Frame.cxx */; };
+		34BF4F7B2911BF5800E4D170 /* HandledException.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F4D2911BF5800E4D170 /* HandledException.cxx */; };
+		34BF4F7C2911BF5800E4D170 /* Thread.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F4E2911BF5800E4D170 /* Thread.cxx */; };
+		34BF4F7D2911BF5800E4D170 /* HexAuditor.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F4F2911BF5800E4D170 /* HexAuditor.cxx */; };
+		34BF4F7E2911BF5800E4D170 /* LibraryController.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F502911BF5800E4D170 /* LibraryController.cxx */; };
+		34BF4F812911C02B00E4D170 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4F802911C02B00E4D170 /* Utilities.framework */; };
+		34BF4F852911C4A700E4D170 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4F842911C4A700E4D170 /* Analytics.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		34666ABA2922FEFF005A7010 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34666ABD2922FF05005A7010 /* JSON.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = JSON.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34666B0029244735005A7010 /* Analytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Analytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34666B0229244735005A7010 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34666B0429244735005A7010 /* JSON.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = JSON.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34666B0629244735005A7010 /* Utilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Utilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34BF4F0F2911BF0A00E4D170 /* Hex.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Hex.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34BF4F1C2911BF5800E4D170 /* session-attributes_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "session-attributes_generated.h"; sourceTree = "<group>"; };
+		34BF4F1D2911BF5800E4D170 /* agent-data_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "agent-data_generated.h"; sourceTree = "<group>"; };
+		34BF4F1E2911BF5800E4D170 /* agent-data-bundle_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "agent-data-bundle_generated.h"; sourceTree = "<group>"; };
+		34BF4F1F2911BF5800E4D170 /* hex_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hex_generated.h; sourceTree = "<group>"; };
+		34BF4F202911BF5800E4D170 /* ios_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_generated.h; sourceTree = "<group>"; };
+		34BF4F212911BF5800E4D170 /* HexContext.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexContext.hpp; sourceTree = "<group>"; };
+		34BF4F222911BF5800E4D170 /* HexReportContext.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexReportContext.hpp; sourceTree = "<group>"; };
+		34BF4F232911BF5800E4D170 /* HexStore.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexStore.hpp; sourceTree = "<group>"; };
+		34BF4F242911BF5800E4D170 /* HexPublisher.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexPublisher.hpp; sourceTree = "<group>"; };
+		34BF4F252911BF5800E4D170 /* HexPersistenceManager.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexPersistenceManager.hpp; sourceTree = "<group>"; };
+		34BF4F262911BF5800E4D170 /* HexController.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexController.hpp; sourceTree = "<group>"; };
+		34BF4F282911BF5800E4D170 /* ApplicationLicense.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ApplicationLicense.hpp; sourceTree = "<group>"; };
+		34BF4F2A2911BF5800E4D170 /* DoubleAttributes.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = DoubleAttributes.hpp; sourceTree = "<group>"; };
+		34BF4F2B2911BF5800E4D170 /* Attributes.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Attributes.hpp; sourceTree = "<group>"; };
+		34BF4F2C2911BF5800E4D170 /* LongAttributes.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = LongAttributes.hpp; sourceTree = "<group>"; };
+		34BF4F2D2911BF5800E4D170 /* BooleanAttributes.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = BooleanAttributes.hpp; sourceTree = "<group>"; };
+		34BF4F2E2911BF5800E4D170 /* StringAttributes.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = StringAttributes.hpp; sourceTree = "<group>"; };
+		34BF4F2F2911BF5800E4D170 /* AgentData.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AgentData.hpp; sourceTree = "<group>"; };
+		34BF4F302911BF5800E4D170 /* AppInfo.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AppInfo.hpp; sourceTree = "<group>"; };
+		34BF4F322911BF5800E4D170 /* Library.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Library.hpp; sourceTree = "<group>"; };
+		34BF4F332911BF5800E4D170 /* Thread.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Thread.hpp; sourceTree = "<group>"; };
+		34BF4F342911BF5800E4D170 /* HandledException.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HandledException.hpp; sourceTree = "<group>"; };
+		34BF4F352911BF5800E4D170 /* Frame.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Frame.hpp; sourceTree = "<group>"; };
+		34BF4F362911BF5800E4D170 /* HexReport.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexReport.hpp; sourceTree = "<group>"; };
+		34BF4F372911BF5800E4D170 /* LibraryController.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = LibraryController.hpp; sourceTree = "<group>"; };
+		34BF4F382911BF5800E4D170 /* HexAuditor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexAuditor.hpp; sourceTree = "<group>"; };
+		34BF4F3A2911BF5800E4D170 /* HexReportContext.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexReportContext.cxx; sourceTree = "<group>"; };
+		34BF4F3B2911BF5800E4D170 /* HexContext.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexContext.cxx; sourceTree = "<group>"; };
+		34BF4F3C2911BF5800E4D170 /* HexPublisher.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexPublisher.cxx; sourceTree = "<group>"; };
+		34BF4F3D2911BF5800E4D170 /* HexStore.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexStore.cxx; sourceTree = "<group>"; };
+		34BF4F3E2911BF5800E4D170 /* HexController.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexController.cxx; sourceTree = "<group>"; };
+		34BF4F3F2911BF5800E4D170 /* HexPersistenceManager.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexPersistenceManager.cxx; sourceTree = "<group>"; };
+		34BF4F412911BF5800E4D170 /* ApplicationLicense.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ApplicationLicense.cxx; sourceTree = "<group>"; };
+		34BF4F422911BF5800E4D170 /* AppInfo.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AppInfo.cxx; sourceTree = "<group>"; };
+		34BF4F432911BF5800E4D170 /* AgentData.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AgentData.cxx; sourceTree = "<group>"; };
+		34BF4F452911BF5800E4D170 /* DoubleAttributes.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DoubleAttributes.cxx; sourceTree = "<group>"; };
+		34BF4F462911BF5800E4D170 /* LongAttributes.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LongAttributes.cxx; sourceTree = "<group>"; };
+		34BF4F472911BF5800E4D170 /* StringAttributes.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StringAttributes.cxx; sourceTree = "<group>"; };
+		34BF4F482911BF5800E4D170 /* BooleanAttributes.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BooleanAttributes.cxx; sourceTree = "<group>"; };
+		34BF4F492911BF5800E4D170 /* HexReport.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexReport.cxx; sourceTree = "<group>"; };
+		34BF4F4B2911BF5800E4D170 /* Library.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Library.cxx; sourceTree = "<group>"; };
+		34BF4F4C2911BF5800E4D170 /* Frame.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Frame.cxx; sourceTree = "<group>"; };
+		34BF4F4D2911BF5800E4D170 /* HandledException.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HandledException.cxx; sourceTree = "<group>"; };
+		34BF4F4E2911BF5800E4D170 /* Thread.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thread.cxx; sourceTree = "<group>"; };
+		34BF4F4F2911BF5800E4D170 /* HexAuditor.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = HexAuditor.cxx; sourceTree = "<group>"; };
+		34BF4F502911BF5800E4D170 /* LibraryController.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LibraryController.cxx; sourceTree = "<group>"; };
+		34BF4F802911C02B00E4D170 /* Utilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Utilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		34BF4F842911C4A700E4D170 /* Analytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Analytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		34BF4F0C2911BF0A00E4D170 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34BF4F812911C02B00E4D170 /* Utilities.framework in Frameworks */,
+				34666ABE2922FF05005A7010 /* JSON.framework in Frameworks */,
+				34666ABB2922FEFF005A7010 /* Connectivity.framework in Frameworks */,
+				34BF4F852911C4A700E4D170 /* Analytics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		34BF4F052911BF0A00E4D170 = {
+			isa = PBXGroup;
+			children = (
+				34BF4F192911BF5800E4D170 /* include */,
+				34BF4F392911BF5800E4D170 /* src */,
+				34BF4F102911BF0A00E4D170 /* Products */,
+				34BF4F7F2911C02B00E4D170 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		34BF4F102911BF0A00E4D170 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F0F2911BF0A00E4D170 /* Hex.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		34BF4F192911BF5800E4D170 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F1A2911BF5800E4D170 /* Hex */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		34BF4F1A2911BF5800E4D170 /* Hex */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F1B2911BF5800E4D170 /* generated */,
+				34BF4F212911BF5800E4D170 /* HexContext.hpp */,
+				34BF4F222911BF5800E4D170 /* HexReportContext.hpp */,
+				34BF4F232911BF5800E4D170 /* HexStore.hpp */,
+				34BF4F242911BF5800E4D170 /* HexPublisher.hpp */,
+				34BF4F252911BF5800E4D170 /* HexPersistenceManager.hpp */,
+				34BF4F262911BF5800E4D170 /* HexController.hpp */,
+				34BF4F272911BF5800E4D170 /* report */,
+				34BF4F372911BF5800E4D170 /* LibraryController.hpp */,
+				34BF4F382911BF5800E4D170 /* HexAuditor.hpp */,
+			);
+			path = Hex;
+			sourceTree = "<group>";
+		};
+		34BF4F1B2911BF5800E4D170 /* generated */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F1C2911BF5800E4D170 /* session-attributes_generated.h */,
+				34BF4F1D2911BF5800E4D170 /* agent-data_generated.h */,
+				34BF4F1E2911BF5800E4D170 /* agent-data-bundle_generated.h */,
+				34BF4F1F2911BF5800E4D170 /* hex_generated.h */,
+				34BF4F202911BF5800E4D170 /* ios_generated.h */,
+			);
+			path = generated;
+			sourceTree = "<group>";
+		};
+		34BF4F272911BF5800E4D170 /* report */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F282911BF5800E4D170 /* ApplicationLicense.hpp */,
+				34BF4F292911BF5800E4D170 /* attributes */,
+				34BF4F2F2911BF5800E4D170 /* AgentData.hpp */,
+				34BF4F302911BF5800E4D170 /* AppInfo.hpp */,
+				34BF4F312911BF5800E4D170 /* exception */,
+				34BF4F362911BF5800E4D170 /* HexReport.hpp */,
+			);
+			path = report;
+			sourceTree = "<group>";
+		};
+		34BF4F292911BF5800E4D170 /* attributes */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F2A2911BF5800E4D170 /* DoubleAttributes.hpp */,
+				34BF4F2B2911BF5800E4D170 /* Attributes.hpp */,
+				34BF4F2C2911BF5800E4D170 /* LongAttributes.hpp */,
+				34BF4F2D2911BF5800E4D170 /* BooleanAttributes.hpp */,
+				34BF4F2E2911BF5800E4D170 /* StringAttributes.hpp */,
+			);
+			path = attributes;
+			sourceTree = "<group>";
+		};
+		34BF4F312911BF5800E4D170 /* exception */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F322911BF5800E4D170 /* Library.hpp */,
+				34BF4F332911BF5800E4D170 /* Thread.hpp */,
+				34BF4F342911BF5800E4D170 /* HandledException.hpp */,
+				34BF4F352911BF5800E4D170 /* Frame.hpp */,
+			);
+			path = exception;
+			sourceTree = "<group>";
+		};
+		34BF4F392911BF5800E4D170 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F3A2911BF5800E4D170 /* HexReportContext.cxx */,
+				34BF4F3B2911BF5800E4D170 /* HexContext.cxx */,
+				34BF4F3C2911BF5800E4D170 /* HexPublisher.cxx */,
+				34BF4F3D2911BF5800E4D170 /* HexStore.cxx */,
+				34BF4F3E2911BF5800E4D170 /* HexController.cxx */,
+				34BF4F3F2911BF5800E4D170 /* HexPersistenceManager.cxx */,
+				34BF4F402911BF5800E4D170 /* report */,
+				34BF4F4F2911BF5800E4D170 /* HexAuditor.cxx */,
+				34BF4F502911BF5800E4D170 /* LibraryController.cxx */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		34BF4F402911BF5800E4D170 /* report */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F412911BF5800E4D170 /* ApplicationLicense.cxx */,
+				34BF4F422911BF5800E4D170 /* AppInfo.cxx */,
+				34BF4F432911BF5800E4D170 /* AgentData.cxx */,
+				34BF4F442911BF5800E4D170 /* attributes */,
+				34BF4F492911BF5800E4D170 /* HexReport.cxx */,
+				34BF4F4A2911BF5800E4D170 /* exception */,
+			);
+			path = report;
+			sourceTree = "<group>";
+		};
+		34BF4F442911BF5800E4D170 /* attributes */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F452911BF5800E4D170 /* DoubleAttributes.cxx */,
+				34BF4F462911BF5800E4D170 /* LongAttributes.cxx */,
+				34BF4F472911BF5800E4D170 /* StringAttributes.cxx */,
+				34BF4F482911BF5800E4D170 /* BooleanAttributes.cxx */,
+			);
+			path = attributes;
+			sourceTree = "<group>";
+		};
+		34BF4F4A2911BF5800E4D170 /* exception */ = {
+			isa = PBXGroup;
+			children = (
+				34BF4F4B2911BF5800E4D170 /* Library.cxx */,
+				34BF4F4C2911BF5800E4D170 /* Frame.cxx */,
+				34BF4F4D2911BF5800E4D170 /* HandledException.cxx */,
+				34BF4F4E2911BF5800E4D170 /* Thread.cxx */,
+			);
+			path = exception;
+			sourceTree = "<group>";
+		};
+		34BF4F7F2911C02B00E4D170 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				34666B0029244735005A7010 /* Analytics.framework */,
+				34666B0229244735005A7010 /* Connectivity.framework */,
+				34666B0429244735005A7010 /* JSON.framework */,
+				34666B0629244735005A7010 /* Utilities.framework */,
+				34666ABD2922FF05005A7010 /* JSON.framework */,
+				34666ABA2922FEFF005A7010 /* Connectivity.framework */,
+				34BF4F842911C4A700E4D170 /* Analytics.framework */,
+				34BF4F802911C02B00E4D170 /* Utilities.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		34BF4F0A2911BF0A00E4D170 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34BF4F522911BF5800E4D170 /* agent-data_generated.h in Headers */,
+				34BF4F622911BF5800E4D170 /* AgentData.hpp in Headers */,
+				34BF4F632911BF5800E4D170 /* AppInfo.hpp in Headers */,
+				34BF4F5C2911BF5800E4D170 /* ApplicationLicense.hpp in Headers */,
+				34BF4F5E2911BF5800E4D170 /* Attributes.hpp in Headers */,
+				34BF4F602911BF5800E4D170 /* BooleanAttributes.hpp in Headers */,
+				34BF4F5D2911BF5800E4D170 /* DoubleAttributes.hpp in Headers */,
+				34BF4F672911BF5800E4D170 /* Frame.hpp in Headers */,
+				34BF4F662911BF5800E4D170 /* HandledException.hpp in Headers */,
+				34BF4F542911BF5800E4D170 /* hex_generated.h in Headers */,
+				34BF4F562911BF5800E4D170 /* HexContext.hpp in Headers */,
+				34BF4F5B2911BF5800E4D170 /* HexController.hpp in Headers */,
+				34BF4F5A2911BF5800E4D170 /* HexPersistenceManager.hpp in Headers */,
+				34BF4F592911BF5800E4D170 /* HexPublisher.hpp in Headers */,
+				34BF4F682911BF5800E4D170 /* HexReport.hpp in Headers */,
+				34BF4F572911BF5800E4D170 /* HexReportContext.hpp in Headers */,
+				34BF4F582911BF5800E4D170 /* HexStore.hpp in Headers */,
+				34BF4F552911BF5800E4D170 /* ios_generated.h in Headers */,
+				34BF4F642911BF5800E4D170 /* Library.hpp in Headers */,
+				34BF4F692911BF5800E4D170 /* LibraryController.hpp in Headers */,
+				34BF4F5F2911BF5800E4D170 /* LongAttributes.hpp in Headers */,
+				34BF4F512911BF5800E4D170 /* session-attributes_generated.h in Headers */,
+				34BF4F612911BF5800E4D170 /* StringAttributes.hpp in Headers */,
+				34BF4F652911BF5800E4D170 /* Thread.hpp in Headers */,
+				34BF4F6A2911BF5800E4D170 /* HexAuditor.hpp in Headers */,
+				34BF4F532911BF5800E4D170 /* agent-data-bundle_generated.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		34BF4F0E2911BF0A00E4D170 /* Hex */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 34BF4F162911BF0A00E4D170 /* Build configuration list for PBXNativeTarget "Hex" */;
+			buildPhases = (
+				34BF4F0A2911BF0A00E4D170 /* Headers */,
+				34BF4F0B2911BF0A00E4D170 /* Sources */,
+				34BF4F0C2911BF0A00E4D170 /* Frameworks */,
+				34BF4F0D2911BF0A00E4D170 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Hex;
+			productName = Hex;
+			productReference = 34BF4F0F2911BF0A00E4D170 /* Hex.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		34BF4F062911BF0A00E4D170 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1400;
+				TargetAttributes = {
+					34BF4F0E2911BF0A00E4D170 = {
+						CreatedOnToolsVersion = 14.0.1;
+					};
+				};
+			};
+			buildConfigurationList = 34BF4F092911BF0A00E4D170 /* Build configuration list for PBXProject "Hex" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 34BF4F052911BF0A00E4D170;
+			productRefGroup = 34BF4F102911BF0A00E4D170 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				34BF4F0E2911BF0A00E4D170 /* Hex */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		34BF4F0D2911BF0A00E4D170 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		34BF4F0B2911BF0A00E4D170 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				34BF4F732911BF5800E4D170 /* AgentData.cxx in Sources */,
+				34BF4F792911BF5800E4D170 /* Library.cxx in Sources */,
+				34BF4F712911BF5800E4D170 /* ApplicationLicense.cxx in Sources */,
+				34BF4F7E2911BF5800E4D170 /* LibraryController.cxx in Sources */,
+				34BF4F722911BF5800E4D170 /* AppInfo.cxx in Sources */,
+				34BF4F762911BF5800E4D170 /* StringAttributes.cxx in Sources */,
+				34BF4F7C2911BF5800E4D170 /* Thread.cxx in Sources */,
+				34BF4F7A2911BF5800E4D170 /* Frame.cxx in Sources */,
+				34BF4F742911BF5800E4D170 /* DoubleAttributes.cxx in Sources */,
+				34BF4F6B2911BF5800E4D170 /* HexReportContext.cxx in Sources */,
+				34BF4F6D2911BF5800E4D170 /* HexPublisher.cxx in Sources */,
+				34BF4F782911BF5800E4D170 /* HexReport.cxx in Sources */,
+				34BF4F772911BF5800E4D170 /* BooleanAttributes.cxx in Sources */,
+				34BF4F752911BF5800E4D170 /* LongAttributes.cxx in Sources */,
+				34BF4F6C2911BF5800E4D170 /* HexContext.cxx in Sources */,
+				34BF4F6E2911BF5800E4D170 /* HexStore.cxx in Sources */,
+				34BF4F7B2911BF5800E4D170 /* HandledException.cxx in Sources */,
+				34BF4F6F2911BF5800E4D170 /* HexController.cxx in Sources */,
+				34BF4F702911BF5800E4D170 /* HexPersistenceManager.cxx in Sources */,
+				34BF4F7D2911BF5800E4D170 /* HexAuditor.cxx in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		34BF4F142911BF0A00E4D170 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACH_O_TYPE = staticlib;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		34BF4F152911BF0A00E4D170 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MACH_O_TYPE = staticlib;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		34BF4F172911BF0A00E4D170 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = ../../ext/flatbuffers/include;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 9;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Hex;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
+				TVOS_DEPLOYMENT_TARGET = 9;
+			};
+			name = Debug;
+		};
+		34BF4F182911BF0A00E4D170 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = ../../ext/flatbuffers/include;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 9;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Hex;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,3";
+				TVOS_DEPLOYMENT_TARGET = 9;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		34BF4F092911BF0A00E4D170 /* Build configuration list for PBXProject "Hex" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				34BF4F142911BF0A00E4D170 /* Debug */,
+				34BF4F152911BF0A00E4D170 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		34BF4F162911BF0A00E4D170 /* Build configuration list for PBXNativeTarget "Hex" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				34BF4F172911BF0A00E4D170 /* Debug */,
+				34BF4F182911BF0A00E4D170 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 34BF4F062911BF0A00E4D170 /* Project object */;
+}

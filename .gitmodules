@@ -1,0 +1,6 @@
+[submodule "modular-crash-reporter-ios"]
+	path = modular-crash-reporter-ios
+	url = https://github.com/microsoft/plcrashreporter.git
+[submodule "libMobileAgent/ext/flatbuffers"]
+	path = libMobileAgent/ext/flatbuffers
+	url = https://github.com/google/flatbuffers.git

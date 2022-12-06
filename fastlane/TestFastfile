@@ -1,0 +1,80 @@
+platform :ios do
+
+  desc "Run Agent tests for iOS and tvOS"
+  lane :runTests do
+
+    runIOSTests
+
+    runTVOSTests
+
+    deleteBuildArtifacts
+  end
+
+  # iOS Tests
+
+  desc "Run Agent tests for iOS and generate code coverage"
+  lane :runIOSTests do 
+
+    deleteBuildArtifacts
+    
+    internalRunIOSTests
+
+    coverage
+  end
+  
+  lane :internalRunIOSTests do
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "Agent-iOS",
+      device: "iPhone 8"
+    )
+  end
+  
+  desc "Run Agent tests for iOS"
+  lane :runIOSTestsNoCov do 
+
+    deleteBuildArtifacts
+    
+    internalRunIOSTests
+  end
+
+  # tvOS Tests
+  
+  desc "Run Agent tests for tvOS"
+  lane :runTVOSTests do 
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "Agent-tvOS",
+      device: "Apple TV"
+    )
+  end
+
+  lane :coverage do 
+    Dir.chdir("..") do
+      begin
+        sh("./XcodeCoverage/getcov -s -v")
+      rescue => ex
+        # handle error
+      ensure
+        # do something that always run like clean up
+      end
+    end
+  end
+
+  # Note: Please copy your own .dSYM into the 'dylib-ios-agent' root for this test.
+  desc "Run dSYM Upload Tools test"
+  lane :runDsymUploadToolsTests do
+    Dir.chdir("..") do
+        # shouldn't fail with non-0 exit code, but will get a 401 due to invalid app token.
+        sh("export DWARF_DSYM_FOLDER_PATH=\".\" && /usr/bin/xcrun --sdk macosx swift \"./dsym-upload-tools/run-symbol-tool.swift\" \"API-KEY\" --debug")
+
+        # shouldn't fail
+        sh("./dsym-upload-tools/run-symbol-tool \"API-KEY\"")        
+    end
+  end
+end

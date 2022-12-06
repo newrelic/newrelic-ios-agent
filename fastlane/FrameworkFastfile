@@ -1,0 +1,66 @@
+import "ConstantsFastfile"
+
+platform :ios do
+
+  desc "Ouput Universal NewRelic.xcframework"
+  lane :internalOutputXCFramework do 
+    # Now that we have the iOS.xcarchive, tvOS.xcarchive, and macOS.xcarchive 
+    # and the iOS and tvOS Sim Frameworks built in archives and dd folder we can create the xcframework.
+    Dir.chdir("..") do
+      wd = Dir.pwd
+      iosArchive = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
+      iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
+      iosSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-iphonesimulator/NewRelic.framework"
+
+      tvOSArchive = "#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
+      tvOSDsym = "#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
+      tvOSSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-appletvsimulator/NewRelic.framework"
+
+      macOSArchive = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
+      macOSDsym = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
+
+      iosDsyms = [iosDsym] + Dir.glob("#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/BCSymbolMaps/*")
+      tvOSDsyms = [tvOSDsym] + Dir.glob("#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/BCSymbolMaps/*")
+
+      create_xcframework(frameworks_with_dsyms: {
+        iosArchive => { dsyms: iosDsyms.join("\" -debug-symbols \"") },
+        iosSimArchive => {},
+        tvOSArchive => { dsyms: tvOSDsyms.join("\" -debug-symbols \"") },
+        tvOSSimArchive => {},
+        macOSArchive => { dsyms: macOSDsym }
+      }, output: "dylib-ios-agent/NewRelic.xcframework")
+    end
+
+    cpDsymToolsToFramework
+  end
+
+  desc "Copy dsym-upload-tools to xcframework"
+  lane :cpDsymToolsToFramework do 
+    Dir.chdir("..") do
+      sh("mkdir -p NewRelic.xcframework/Resources/")
+      sh("cp -r dsym-upload-tools/ NewRelic.xcframework/Resources/")
+    end
+  end
+
+  # DEBUG LANES
+  
+  desc "Ouput Universal NewRelic.xcframework for iOS Only"
+  lane :internalOutputXCFrameworkIOSOnly do 
+    Dir.chdir("..") do
+      wd = Dir.pwd
+      iosArchive = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
+      iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
+      iosSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-iphonesimulator/NewRelic.framework"
+
+      iosDsyms = [iosDsym] + Dir.glob("#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/BCSymbolMaps/*")
+
+      create_xcframework(frameworks_with_dsyms: {
+        iosArchive => { dsyms: iosDsyms.join("\" -debug-symbols \"") },
+        iosSimArchive => {},
+      }, output: "dylib-ios-agent/NewRelic.xcframework")
+    end
+
+    cpDsymToolsToFramework
+  end
+
+end
