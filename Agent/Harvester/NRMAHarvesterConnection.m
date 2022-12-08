@@ -58,6 +58,16 @@
     __block NSData* data;
 
     __block dispatch_semaphore_t harvestRequestSemaphore = dispatch_semaphore_create(0);
+    
+    BOOL wasCompressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
+    long size = wasCompressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
+    if (size > kNRMAMaxPayloadSizeLimit) {
+        NSString* subDest = [[post URL] lastPathComponent];
+        NRLOG_ERROR(@"Unable to send %@ harvest because payload is larger than 1 MB.", subDest);
+        [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:subDest];
+        harvestResponse.statusCode = ENTITY_TOO_LARGE;
+        return harvestResponse;
+   }
 
     [[self.harvestSession uploadTaskWithRequest:post
                                        fromData:post.HTTPBody

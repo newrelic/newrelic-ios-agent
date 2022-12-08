@@ -51,6 +51,14 @@
                                                           scope:nil]];
 }
 
++ (void) enqueueMaxPayloadSizeLimitMetric:(NSString*)endpoint {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, endpoint]
+                                                    value:@1
+                                                    scope:nil]];
+}
+
 + (void) enqueueUpgradeMetric {
     if (deferredMetrics == nil) {
         deferredMetrics = [NSMutableArray array];

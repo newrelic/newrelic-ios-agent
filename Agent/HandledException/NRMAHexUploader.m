@@ -13,6 +13,7 @@
 #import "NRMASupportMetricHelper.h"
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
+#define kNRMAMaxPayloadSizeLimit 1000000
 
 @interface NRMAHexUploader()
 @property(strong) NSString* host;
@@ -48,9 +49,16 @@
     request.HTTPMethod = @"POST";
     request.HTTPBody = data;
 
-    [request setValue:@"application/octet-stream"
-   forHTTPHeaderField:@"Content-Type"];
+    [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu",(unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
+    
+    if([[request HTTPBody] length] > kNRMAMaxPayloadSizeLimit) {
+        NRLOG_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
+        [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
+        return;
+    }
+    
+    
     NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
     [self.taskStore track:uploadTask.originalRequest];
     [uploadTask resume];

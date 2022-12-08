@@ -14,6 +14,7 @@
 #import "NRMANamedValueMeasurement.h"
 #import "NRMATaskQueue.h"
 #import "NRMAMeasurementEngine.h"
+#import "NRMAFakeDataHelper.h"
 
 @implementation NRMAHarvesterConnectionTests
 
@@ -106,7 +107,7 @@
 
 - (NRMAConnectInformation*) testSendConnect
 {
-    connection.serverTimestamp =1234;
+    connection.serverTimestamp = 1234;
     connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
     
     connection.collectorHost = @"mobile-collector.newrelic.com";
@@ -115,6 +116,38 @@
     XCTAssertNotNil(response, @"");
     XCTAssertEqual(FORBIDDEN,response.statusCode, @"");
     XCTAssertTrue([response.responseBody isEqualToString:@""],@"");
+}
+
+- (void) testMaxPayloadSizeLimitSendConnect {
+    [helper.consumedMeasurements removeAllObjects];
+
+    connection.serverTimestamp = 1234;
+    NRMAConnectInformation *connectInfo = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
+    connectInfo.applicationInformation.appName = [NRMAFakeDataHelper makeStringOfSizeInBytes:1000000];
+    connection.connectionInformation = connectInfo;
+    
+    connection.collectorHost = @"mobile-collector.newrelic.com";
+    
+    NRMAHarvestResponse* response = [connection sendConnect];
+    XCTAssertNotNil(response, @"");
+    XCTAssertEqual(ENTITY_TOO_LARGE,response.statusCode, @"");
+    
+    [NRMATaskQueue synchronousDequeue];
+    
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    NSString* fullMetricName = [NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, @"connect"];
+    
+    NRMANamedValueMeasurement* foundMeasurement;
+    
+    for (id measurement in helper.consumedMeasurements) {
+        if([((NRMANamedValueMeasurement*)measurement).name isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+    
+    XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
 }
 
 - (void) testSendData
@@ -127,6 +160,36 @@
     XCTAssertEqual(FORBIDDEN, response.statusCode, @"");
 }
 
+- (void) testMaxPayloadSizeLimitSendData {
+    [helper.consumedMeasurements removeAllObjects];
+
+    connection.serverTimestamp = 1234;
+    connection.collectorHost = @"mobile-collector.newrelic.com";
+    
+    NRMAConnectInformation *connectInfo = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
+    connectInfo.applicationInformation.appName = [NRMAFakeDataHelper makeStringOfSizeInBytes:1000000];
+    
+    NRMAHarvestResponse* response = [connection sendData:connectInfo];
+    XCTAssertNotNil(response, @"");
+    XCTAssertEqual(ENTITY_TOO_LARGE, response.statusCode, @"");
+    
+    [NRMATaskQueue synchronousDequeue];
+    
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    NSString* fullMetricName = [NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, @"data"];
+    
+    NRMANamedValueMeasurement* foundMeasurement;
+    
+    for (id measurement in helper.consumedMeasurements) {
+        if([((NRMANamedValueMeasurement*)measurement).name isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+    
+    XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
+}
 
 - (void) testSendDisabledAppToken {
     // Set up stub for /data endpoint.

@@ -97,7 +97,15 @@
     // Get the size in bytes of the crash report to be uploaded via below uploadTaskWithRequest:fromFile call.
     __block NSData* reqData = [NSData dataWithContentsOfURL:path options:0 error:nil];
     NSURLRequest* request = [self buildPost];
-
+    
+    if ([reqData length] > kNRMAMaxPayloadSizeLimit) {
+        NRLOG_ERROR(@"Unable to upload crash log because payload is larger than 1 MB, discarding crash report");
+        [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"mobile_crash"];
+        // Remove the crash log even though we couldn't upload so we don't try every time.
+        [self removeCrashLogAtpath:path];
+        return;
+   }
+    
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
 
@@ -111,21 +119,25 @@
                                                          size:requestLength
                                                      received:response.expectedContentLength];
 
-                NSError* error = nil;
-                //stop tracking the file's upload attempts.
-                [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
-                BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
-
-                if (error) {
-                    NRLOG_ERROR(@"Failed to remove crash file :%@, %@",path.path, error.description);
-                } else if (!didRemoveFile) {
-                    NRLOG_ERROR(@"Failed to remove crash file. Error unknown.");
-                }
+                [self removeCrashLogAtpath:path];
             } else {
                 NRLOG_VERBOSE(@"failed to upload crash log: %@, to try again later.",path.path);
             }
         }
     }] resume];
+}
+
+- (void) removeCrashLogAtpath:(NSURL*) path {
+    NSError* error = nil;
+    //stop tracking the file's upload attempts.
+    [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
+    BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
+
+    if (error) {
+        NRLOG_ERROR(@"Failed to remove crash file :%@, %@",path.path, error.description);
+    } else if (!didRemoveFile) {
+        NRLOG_ERROR(@"Failed to remove crash file. Error unknown.");
+    }
 }
 
 - (NSURLRequest*) buildPost {

@@ -10,4 +10,5 @@
 
 @interface NRMAMeasurementConsumerHelper : NRMAMeasurementConsumer
 @property(nonatomic,strong) id result;
+@property(nonatomic,strong) NSMutableArray<id>* consumedMeasurements;
 @end

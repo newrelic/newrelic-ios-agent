@@ -114,6 +114,10 @@ typedef NSString NRMetricUnit;
 // Defines Format string where 3 arguments are NativePlatform, Platform, and Destination.
 #define kNRMABytesOutSupportabilityRollUpFormatString  @"Supportability/Mobile/%@/%@/%@/Output/Bytes"
 
+// Defines Format string where 4 arguments are NativePlatform, Platform, Destination and Endpoint.
+#define kNRMAMaxPayloadSizeLimitSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/MaxPayloadSizeLimit/%@"
+#define kNRMAMaxPayloadSizeLimit         1000000 // bytes
+
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"
 #define kNRMABytesOutFAPIString           @"/f/Output/Bytes"

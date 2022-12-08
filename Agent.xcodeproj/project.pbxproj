@@ -1003,6 +1003,8 @@
 		F6E79D2B25A788AB006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F6E79D3A25A78B42006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
+		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
+		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -1879,6 +1881,8 @@
 		F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = TestNRMATraceContext.mm; sourceTree = "<group>"; };
 		F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceParent.mm; sourceTree = "<group>"; };
 		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
+		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
+		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2263,6 +2267,8 @@
 				2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */,
 				2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */,
 				2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */,
+				F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */,
+				F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -4172,6 +4178,7 @@
 				0209ABF324E706FA00E45C90 /* NRTraceTest.m in Sources */,
 				0209AC0224E7070900E45C90 /* NRURLSessionTaskOverrideWithDelegateTest.m in Sources */,
 				0209ABD924E706AE00E45C90 /* TestHandledExceptionController.mm in Sources */,
+				F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */,
 				0209AC4E24E7079400E45C90 /* NRMAAnalyticsTest.mm in Sources */,
 				0209AC3F24E7075200E45C90 /* NRHarvesterStateTest.m in Sources */,
 				0209AC2F24E7073800E45C90 /* NRMAHarvestableHTTPReqeustTests.m in Sources */,
@@ -4389,6 +4396,7 @@
 				025657F724EB19BF00FE3125 /* NRMAInternalTests.m in Sources */,
 				025657F824EB19BF00FE3125 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
 				025657F924EB19BF00FE3125 /* NSURLSessionOverrideTest.m in Sources */,
+				F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */,
 				025657FA24EB19BF00FE3125 /* NRActivityTracesTest.m in Sources */,
 				025657FB24EB19BF00FE3125 /* NRMeasurementTest.m in Sources */,
 				2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */,

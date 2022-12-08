@@ -11,8 +11,18 @@
 
 @implementation NRMAMeasurementConsumerHelper
 
+- (id) initWithType:(NRMAMeasurementType)type {
+    self = [super initWithType:type];
+    
+    if(self) {
+        self.consumedMeasurements = [[NSMutableArray alloc] init];
+    }
+    return self;
+}
+
 - (void) consumeMeasurement:(NRMAMeasurement *)measurement {
     NRLOG_VERBOSE(@"Measurement: %@",measurement);
     self.result = measurement;
+    [self.consumedMeasurements addObject:measurement];
 }
 @end
