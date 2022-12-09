@@ -33,5 +33,19 @@ jobs:
     - name: Run tests and build NewRelic.xcframework (using fastlane)
       run: bundle exec fastlane testAndBuild
 
-    # - name: run the Agent iOS Tests and tvOS Tests (using fastlane)
-    #   run: bundle exec fastlane runTests
+    - id: build
+      name: Get name
+      run: echo "::set-output name=version::$(cat fastlane/build_version)"
+
+    # # In real GHA this step doesn't just output the zip file name, it uploads it to s3 as well.
+    # - id: outputZippedName
+    #   name: Print name
+    #   run: echo "${{ steps.build.outputs.version }}"
+
+    - uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source:  ${{ steps.build.outputs.version }}
+        destination: s3://nr-downloads-main/ios-v5/
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_KEY }}

@@ -151,6 +151,22 @@ Build NewRelic.XCFramework for all platforms
 
 Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms
 
+### ios buildAndZip
+
+```sh
+[bundle exec] fastlane ios buildAndZip
+```
+
+
+
+### ios zipFramework
+
+```sh
+[bundle exec] fastlane ios zipFramework
+```
+
+
+
 ### ios buildFrameworkIOSOnly
 
 ```sh

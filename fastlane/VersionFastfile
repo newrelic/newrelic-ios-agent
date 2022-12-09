@@ -3,7 +3,6 @@ import "ConstantsFastfile"
 platform :ios do
   desc "Set build string based on branch and build number"
   lane :generateVersion do
-
     develop = "develop"
     hotfix = "hotfix"
     release = "release"
@@ -23,7 +22,7 @@ platform :ios do
     # Append build number if "BUILD_NUMBER" exists.
     version = version + build_number if !env_build.to_s.empty?
 
-    sh "echo \"export VERSION=#{version}\" > build_version"
+    sh "printf \"#{version}.zip\" > build_version"
 
     puts "The current version string is #{version}"
   end
