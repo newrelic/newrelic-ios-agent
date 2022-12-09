@@ -17,7 +17,7 @@ jobs:
 
     - name: Install gems
       run: bundle install
-      
+
     # - name: Run iOS tests using only Xcode build.
     #   run: xcodebuild -workspace Agent.xcworkspace -scheme "Agent-iOS" -destination name="iPhone 14" -derivedDataPath="dd" clean test
 
@@ -45,4 +45,3 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: us-west-1
