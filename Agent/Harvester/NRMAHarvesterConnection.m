@@ -67,7 +67,10 @@
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:subDest];
         harvestResponse.statusCode = ENTITY_TOO_LARGE;
         return harvestResponse;
-   }
+    }
+    
+    NRLOG_VERBOSE(@"NEWRELIC - REQUEST: %@", post);
+    NRLOG_VERBOSE(@"NEWRELIC - REQUEST BODY: %@", post.HTTPBody);
 
     [[self.harvestSession uploadTaskWithRequest:post
                                        fromData:post.HTTPBody
@@ -77,7 +80,9 @@
             error = berror;
             response = (NSHTTPURLResponse*)bresponse;
             dispatch_semaphore_signal(harvestRequestSemaphore);
-
+            
+            NRLOG_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
+            
             // Enqueue Data Usage Supportability Metric for /data or /connect if the harvest request was successful.
             if (!error) {
                 BOOL wasCompressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
@@ -92,7 +97,7 @@
     dispatch_semaphore_wait(harvestRequestSemaphore, dispatch_time(DISPATCH_TIME_NOW,  (uint64_t)(post.timeoutInterval*(double)(NSEC_PER_SEC))));
     
     if (error) {
-        NRLOG_ERROR(@"Failed to retrieve collector response: %@",error);
+        NRLOG_ERROR(@"NEWRELIC CONNECT - Failed to retrieve collector response: %@",error);
 
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {
@@ -112,6 +117,7 @@
 
     harvestResponse.statusCode = (int)response.statusCode;
     harvestResponse.responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NRLOG_VERBOSE(@"NEWRELIC CONNECT - RESPONSE DATA: %@", harvestResponse.responseBody);
     return harvestResponse;
 }
 
@@ -131,6 +137,9 @@
         NRLOG_ERROR(@"Failed to create connect POST");
         return nil;
     }
+    
+    NRLOG_VERBOSE(@"NEWRELIC - CONNECTION BODY: %@", self.connectionInformation.JSONObject);
+    
     return [self send:post];
 }
 
@@ -161,6 +170,9 @@
         NRLOG_ERROR(@"Failed to create data POST");
         return nil;
     }
+    
+    NRLOG_VERBOSE(@"NEWRELIC - HARVEST DATA: %@", harvestable.JSONObject);
+    
     return [self send:post];
 }
 
