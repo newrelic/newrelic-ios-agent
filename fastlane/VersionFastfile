@@ -13,12 +13,13 @@ platform :ios do
     # Should change based on git_branch.
     output_branch_name = "dev"
 
-    env_build = ENV["BUILD_NUMBER"]
+    # could be using $GITHUB_RUN_NUMBER, or a new numbering scheme based off another saved state between builds.
+    env_build = ENV["GITHUB_RUN_NUMBER"]
     build_number = ".#{env_build}"
     
     # Append Version Number and branch prefix
     project_version_number = get_version_number(xcodeproj: "Agent.xcodeproj", target: "Agent_iOS")
-    version = "NewRelic_XCFramework_Agent_#{project_version_number}-#{output_branch_name}"
+    version = "NewRelic_iOS_Agent_GH_#{project_version_number}-#{output_branch_name}"
     # Append build number if "BUILD_NUMBER" exists.
     version = version + build_number if !env_build.to_s.empty?
 
