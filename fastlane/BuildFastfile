@@ -13,7 +13,9 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "iphoneos",
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES"
+      derivedDataPath: Constants::DD,
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
+      xcodebuild_formatter: ""
     )
     # Build Sim
     xcodebuild(
@@ -23,7 +25,8 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "iphonesimulator",
-      derivedDataPath: Constants::DD
+      derivedDataPath: Constants::DD,
+      xcodebuild_formatter: ""
     )
   end
 
@@ -37,7 +40,9 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       scheme: "Agent-tvOS",
       sdk: "appletvos",
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES"
+      derivedDataPath: Constants::DD,
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
+      xcodebuild_formatter: ""
     )
     # Build Sim
     xcodebuild(
@@ -46,7 +51,8 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       scheme: "Agent-tvOS",
       sdk: "appletvsimulator",
-      derivedDataPath: Constants::DD
+      derivedDataPath: Constants::DD,
+      xcodebuild_formatter: ""
     )
   end 
 
@@ -59,7 +65,9 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "macosx",
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES"
+      derivedDataPath: Constants::DD,
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES",
+      xcodebuild_formatter: ""
     )
   end
 end

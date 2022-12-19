@@ -57,7 +57,7 @@ platform :ios do
   lane :coverage do 
     Dir.chdir("..") do
       begin
-        sh("./XcodeCoverage/getcov -s -v")
+        sh("./XcodeCoverage/getcov -s -v -x")
       rescue => ex
         # handle error
       ensure

@@ -8,11 +8,8 @@ source "${scripts}/env.sh"
 # For New Build System, hard-code to 64-bit simulator
 if [ ${CURRENT_ARCH}  = "undefined_arch" ]
 then
-    # PRE M1
-    #ARCHITECTURE="x86_64"
-
-    # M1
-    ARCHITECTURE="arm64"
+    # SHOULD Return x86_64 or arm64 (supported)
+    ARCHITECTURE="$(uname -m)"
 else
     ARCHITECTURE=${CURRENT_ARCH}
 fi

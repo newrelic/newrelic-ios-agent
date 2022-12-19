@@ -39,15 +39,33 @@ platform :ios do
     
     runTests
     
-    # Set the version string based on the current branch and PR.
-    generateVersion
+    puts "Successfully ran tests. 🚀 Building NewRelic.xcframework for all platforms"
 
-    puts "Successfully ran tests. 🚀 Building NewRelic.XCFramework for all platforms"
-
-    buildFramework
+    buildAndZip
   end
 
-    # DEBUG LANES
+lane :buildAndZip do 
+    # Set the version string based on the current branch and PR.
+    generateVersion
+    
+    buildFramework
+
+    zipFramework
+end
+
+  # zip cocoapods/LICENSE, cocoapods/README, cocoapods/README.md, and NewRelic.xcframework 
+  # => into NewRelic_XCFramework_Agent_Version.zip
+  lane :zipFramework do
+    version = File.read("build_version")
+    Dir.chdir("..") do
+        sh("mv NewRelic.xcframework cocoapods")
+        Dir.chdir("cocoapods") do
+            sh("zip -r -y ../#{version} LICENSE README README.md NewRelic.xcframework")
+        end
+    end
+  end
+
+  # DEBUG LANES
 
   desc "Build NewRelic.XCFramework for iOS Only"
   lane :buildFrameworkIOSOnly do

@@ -7,6 +7,8 @@ platform :ios do
     # Now that we have the iOS.xcarchive, tvOS.xcarchive, and macOS.xcarchive 
     # and the iOS and tvOS Sim Frameworks built in archives and dd folder we can create the xcframework.
     Dir.chdir("..") do
+      dirName = File.basename(Dir.getwd)
+
       wd = Dir.pwd
       iosArchive = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
       iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
@@ -28,7 +30,7 @@ platform :ios do
         tvOSArchive => { dsyms: tvOSDsyms.join("\" -debug-symbols \"") },
         tvOSSimArchive => {},
         macOSArchive => { dsyms: macOSDsym }
-      }, output: "dylib-ios-agent/NewRelic.xcframework")
+      }, output: "#{dirName}/NewRelic.xcframework")
     end
 
     cpDsymToolsToFramework
