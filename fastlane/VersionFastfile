@@ -8,22 +8,41 @@ platform :ios do
     release = "release"
     master = "master"
 
-    puts "The current branch is #{git_branch}"
-    
-    # Should change based on git_branch.
-    output_branch_name = "dev"
+    currentBranch = git_branch
 
-    # could be using $GITHUB_RUN_NUMBER, or a new numbering scheme based off another saved state between builds.
+    puts "The current branch is #{currentBranch}"
+    
+    # Should change based on currentBranch.
+    output_branch_name = "-dev"
+
+    case currentBranch
+    when develop
+        output_branch_name = "-dev"
+    when hotfix
+        output_branch_name = "-hf"
+    when release
+        output_branch_name = "-rc"
+    when master
+        output_branch_name = ""
+    end
+    
+    # Currently we are using $GITHUB_RUN_NUMBER which is the GHA action number for this run.
     env_build = ENV["GITHUB_RUN_NUMBER"]
     build_number = ".#{env_build}"
     
     # Append Version Number and branch prefix
     project_version_number = get_version_number(xcodeproj: "Agent.xcodeproj", target: "Agent_iOS")
-    version = "NewRelic_iOS_Agent_GH_#{project_version_number}-#{output_branch_name}"
-    # Append build number if "BUILD_NUMBER" exists.
+
+    version = "#{project_version_number}#{output_branch_name}"
+    # Append build number if "env_build" exists.
     version = version + build_number if !env_build.to_s.empty?
 
-    sh "printf \"#{version}.zip\" > build_version"
+    # Set the Agent/Public/NRMAAgentVersion.h file up.
+    Dir.chdir("..") do
+        sh("./scripts/generate_version_header.sh #{version}")
+    end
+
+    sh "printf \"NewRelic_iOS_Agent_GH_#{version}.zip\" > build_version"
 
     puts "The current version string is #{version}"
   end

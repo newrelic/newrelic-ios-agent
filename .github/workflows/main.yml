@@ -32,6 +32,12 @@ jobs:
 
     - name: Run tests and build NewRelic.xcframework (using fastlane)
       run: bundle exec fastlane testAndBuild
+    
+    - name: Display coverage
+      uses: ewjoachim/coverage-comment-action@v1
+      with:
+        GITHUB_TOKEN: ${{ github.token }}
+        COVERAGE_FILE: "${BUILT_PRODUCTS_DIR}/lcov/coverage.xml"
 
     - name: Get name
       run: echo "version=$(cat fastlane/build_version)" >> $GITHUB_ENV
