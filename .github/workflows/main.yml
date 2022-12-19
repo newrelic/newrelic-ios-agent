@@ -3,6 +3,7 @@ on: push
 
 jobs:
   test:
+    name : Test 
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: macos-latest 
@@ -18,31 +19,36 @@ jobs:
     - name: Install gems
       run: bundle install
 
-    # - name: Run iOS tests using only Xcode build.
-    #   run: xcodebuild -workspace Agent.xcworkspace -scheme "Agent-iOS" -destination name="iPhone 14" -derivedDataPath="dd" clean test
-
-    # - name: Run tvOS tests using only Xcode build.
-    #   run: xcodebuild -workspace Agent.xcworkspace -scheme "Agent-tvOS" -destination name="Apple TV" -derivedDataPath="dd" clean test
+    - name: Run tests on iOS and tvOS (using fastlane)
+      run: bundle exec fastlane runTests
     
-    # - name: Run tests on iOS. (Using fastlane)
-    #   run: bundle exec fastlane runIOSTests
-
-    # - name: Archive iOS. (Using xcodebuild)
-    #   run: xcodebuild clean archive -archivePath "archives/iOS.xcarchive" -configuration "Release" -workspace "Agent.xcworkspace" -scheme "Agent-iOS" -sdk "iphoneos" SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES 
-
-    - name: Run tests and build NewRelic.xcframework (using fastlane)
-      run: bundle exec fastlane testAndBuild
+  deploy:
+    name: Deploy
+    # runs-on: will be set to macos-latest when running on actual GHA. 
+    # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
+    runs-on: macos-latest 
+    needs: [test]
+    if:
+      github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/release' || github.ref == 'refs/heads/main'
     
-    - name: Display coverage
-      uses: ewjoachim/coverage-comment-action@v1
+    steps:
+    - uses: actions/checkout@v3
+      with: 
+        submodules: true
+    
+    - uses: maxim-lobanov/setup-xcode@v1
       with:
-        GITHUB_TOKEN: ${{ github.token }}
-        COVERAGE_FILE: "${BUILT_PRODUCTS_DIR}/lcov/coverage.xml"
+        xcode-version: '14.1'
+
+    - name: Install gems
+      run: bundle install
+
+    - name: Build NewRelic.xcframework (using fastlane)
+      run: bundle exec fastlane buildAndZip
 
     - name: Get name
       run: echo "version=$(cat fastlane/build_version)" >> $GITHUB_ENV
 
-    # # In real GHA this step doesn't just output the zip file name, it uploads it to s3 as well.
     - name: Print name
       run: echo "${{ env.version }}" 
 
