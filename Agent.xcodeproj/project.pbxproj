@@ -919,12 +919,18 @@
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492C24DC625A00115469 /* NRMASessionIdentifierManager.mm */; };
+		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
+		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
 		2B5CCB1E287DE5E400A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
+		2B706113293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
+		2B706114293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
+		2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
+		2B706116293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
 		2B81E34C28624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */; };
 		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
@@ -1832,8 +1838,11 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelper.m; sourceTree = "<group>"; };
 		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
+		2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAURLSessionTaskSearch.h; sourceTree = "<group>"; };
+		2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionTaskSearch.m; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
@@ -2128,6 +2137,7 @@
 				0209ABFA24E7070800E45C90 /* NRURLSessionTaskOverrideTests.m */,
 				0209ABFB24E7070800E45C90 /* NRURLSessionTaskOverrideWithDelegateTest.m */,
 				0209ABF924E7070800E45C90 /* NSURLSessionOverrideTest.m */,
+				2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */,
 			);
 			path = "NSURLSession-Tests";
 			sourceTree = "<group>";
@@ -2594,6 +2604,8 @@
 		02FF489024DC61C500115469 /* NSURLSession */ = {
 			isa = PBXGroup;
 			children = (
+				2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */,
+				2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */,
 				02FF489724DC61D200115469 /* NRMAURLSessionOverride.h */,
 				02FF489424DC61D200115469 /* NRMAURLSessionOverride.m */,
 				02FF489824DC61D200115469 /* NRMAURLSessionTaskDelegate.h */,
@@ -3320,6 +3332,7 @@
 				02FF48DE24DC622700115469 /* NRMACrashReportFileManager.h in Headers */,
 				02FF487024DC618F00115469 /* NRMAThreadTransition.h in Headers */,
 				02FF4ABC24DC654D00115469 /* NRMAReachability.h in Headers */,
+				2B706113293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */,
 				02FF4AA624DC652E00115469 /* NRMAUUIDStore.h in Headers */,
 				02FF48DF24DC622700115469 /* NRMAUncaughtExceptionHandler.h in Headers */,
 				02FF48F724DC623400115469 /* NRMAExceptionMetaDataStore.h in Headers */,
@@ -3530,6 +3543,7 @@
 				02FF4B8624E3201400115469 /* NRMACrashReportFileManager.h in Headers */,
 				02FF4B8724E3201400115469 /* NRMAThreadTransition.h in Headers */,
 				02FF4B8824E3201400115469 /* NRMAReachability.h in Headers */,
+				2B706114293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */,
 				02FF4B8924E3201400115469 /* NRMAUUIDStore.h in Headers */,
 				02FF4B8A24E3201400115469 /* NRMAUncaughtExceptionHandler.h in Headers */,
 				02FF4B8B24E3201400115469 /* NRMAExceptionMetaDataStore.h in Headers */,
@@ -3763,6 +3777,9 @@
 					021A15B924C9EEE700E8DFD5 = {
 						CreatedOnToolsVersion = 11.6;
 						LastSwiftMigration = 1200;
+					};
+					025657F124EB19BF00FE3125 = {
+						LastSwiftMigration = 1410;
 					};
 					025658A724EB2AAC00FE3125 = {
 						CreatedOnToolsVersion = 11.6;
@@ -4167,6 +4184,7 @@
 				0209AC9B24E7393300E45C90 /* NRCPUVitalsTest.m in Sources */,
 				0209AC1224E7071500E45C90 /* NRMAAPIHelperTests.m in Sources */,
 				0209AC4524E7078000E45C90 /* NRMAFeatureFlagsTests.m in Sources */,
+				2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */,
 				0209AC3224E7073800E45C90 /* NRMAHarvestableAnalyticsTest.m in Sources */,
 				0209AC9924E7393300E45C90 /* NSURLConnectionTests.m in Sources */,
 				0209ABFE24E7070900E45C90 /* NRURLSessionDelegateTests.m in Sources */,
@@ -4355,6 +4373,7 @@
 				02FF49B024DC62B800115469 /* NRMAActivityTraces.m in Sources */,
 				02FF49C824DC62B800115469 /* NRMAHarvestableAnalytics.m in Sources */,
 				02FF493324DC625A00115469 /* NRMAHexUploader.m in Sources */,
+				2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */,
 				02FF49B224DC62B800115469 /* NRMADeviceInformation.m in Sources */,
 				02FF48F824DC623400115469 /* NRMAInteractionHistoryObjCInterface.m in Sources */,
 				02FF4A6A24DC64E600115469 /* NRMAActivityTraceMeasurementProducer.m in Sources */,
@@ -4410,6 +4429,7 @@
 				0256580424EB19BF00FE3125 /* NRMeasurementsTest.m in Sources */,
 				0256580524EB19BF00FE3125 /* NRMAWebRequestUtilTest.m in Sources */,
 				0256580624EB19BF00FE3125 /* NRMARequestEvents.mm in Sources */,
+				2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */,
 				0256580724EB19BF00FE3125 /* NRMemoryVitalsTest.m in Sources */,
 				0256580824EB19BF00FE3125 /* NRMASessionExclusivityWithoutDelegateTests.m in Sources */,
 				0256580924EB19BF00FE3125 /* NRMAUDIDManagerTest.m in Sources */,
@@ -4654,6 +4674,7 @@
 				02FF4C7D24E3201400115469 /* NRMAActivityTraces.m in Sources */,
 				02FF4C7E24E3201400115469 /* NRMAHarvestableAnalytics.m in Sources */,
 				02FF4C7F24E3201400115469 /* NRMAHexUploader.m in Sources */,
+				2B706116293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */,
 				02FF4C8024E3201400115469 /* NRMADeviceInformation.m in Sources */,
 				02FF4C8124E3201400115469 /* NRMAInteractionHistoryObjCInterface.m in Sources */,
 				02FF4C8224E3201400115469 /* NRMAActivityTraceMeasurementProducer.m in Sources */,
@@ -5148,7 +5169,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicNonJenkinsTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -5197,7 +5218,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicNonJenkinsTests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 9;

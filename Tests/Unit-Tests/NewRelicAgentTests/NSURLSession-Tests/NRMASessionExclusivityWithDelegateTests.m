@@ -26,7 +26,6 @@
     [NRMAURLSessionOverride beginInstrumentation];
 
     self.queue = [[NSOperationQueue alloc] init];
-//    self.queue = [NSOperationQueue
     NSURLSession* session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:self.queue];
     self.mockSession = [OCMockObject partialMockForObject:session];
     self.networkFinished = NO;

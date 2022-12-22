@@ -154,7 +154,7 @@
                 
                 NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
                 NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
-                NSLog(@"Trace parent components: %@", traceParentComponents);
+                NRLOG_VERBOSE(@"Trace parent components: %@", traceParentComponents);
                 retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
                 retrievedPayload->setParentId(@"0".UTF8String);
                 retrievedPayload->setId(traceParentComponents[2].UTF8String);

@@ -63,12 +63,7 @@
                traceHeaders:OCMOCK_ANY
                      params:OCMOCK_ANY];
 
-
-    __block NSURLSessionDataTask* task = [self.session dataTaskWithURL:[NSURL URLWithString:@"http://google.com"] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        NRTimer* timer = NRMA__getTimerForSessionTask(task);
-        XCTAssertNotNil(timer, @"timer was not set for task!");
-
-    }];
+    __block NSURLSessionDataTask* task = [self.session dataTaskWithURL:[NSURL URLWithString:@"http://google.com"] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {} ];
 
     XCTAssertTrue([self verifyTaskSwizzled:task],@"task's method 'resume' was not instrumented!");
 
@@ -129,7 +124,7 @@
     [mockURLConnectionSupport stopMocking];
 }
 
-
+// Is this test failing for you? Do you have Charles running? Try with it turned off.
 - (void) testRecordNetworkFailure
 {
     NSLog(@"did this (^) test hang? do you have charles running? ಠ_ಠ");

@@ -9,5 +9,11 @@
 #import "NRMA_Swift_Trouble_Class.h"
 #import "NewRelicAgentInternal.h"
 #import <OCMock/OCMock.h>
+#import "NRMAURLSessionOverride.h"
+#import "NRMeasurementConsumerHelper.h"
+#import "NRMAMeasurements.h"
+#import "NRMAHTTPTransactionMeasurement.h"
+#import "NRMATaskQueue.h"
+
 extern BOOL NRMA__isSwiftClass(NRMAClassDataContainer* classData);
 

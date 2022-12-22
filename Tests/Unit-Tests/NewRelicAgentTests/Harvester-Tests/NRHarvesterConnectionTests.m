@@ -284,6 +284,9 @@
 
 // Is this test failing for you? Do you have Charles running? Try with it turned off.
 - (void) testSendSupportMetric {
+
+    NSLog(@"did this (^) test hang? do you have charles running? ಠ_ಠ");
+
     connection.collectorHost = @"staging-mobile-collector.newrelic.com";
     connection.applicationToken = @"app-token";
 
