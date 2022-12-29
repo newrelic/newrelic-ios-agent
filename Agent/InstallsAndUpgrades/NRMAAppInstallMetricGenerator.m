@@ -115,6 +115,9 @@
         self.installMetric = [[NRMAMetric alloc] initWithName:kNRMAAppInstallMetric
                                                         value:@1
                                                         scope:nil];
+
+        [NRMASupportMetricHelper enqueueInstallMetric];
+
         if (self.analyticsController) {
             // This code path is unlikely to ever occur. The analytics engine will
             // most likely never be initialized at the time of this execution.
@@ -135,8 +138,6 @@
         }
     }
 }
-
-
 
 - (void) sendInstallAttributeToAnalytics:(NRMAAnalytics*)analytics {
     [analytics setNRSessionAttribute:@(__kNRMA_RA_install)
@@ -166,16 +167,6 @@
         // execute. However, this path will execute for most app sessions when there is already a valid UDID.
         // There should be no issue with holding onto this weak reference, as the property will be niled out when the ref is deallocated.
         self.analyticsController = analytics;
-    }
-}
-
-- (void) onHarvestBefore {
-    // Harvest listener once it queues the metric. This will only be called once per install, and doesn't need to hang around.
-    @synchronized(self) {
-        if (self.installMetric) {
-            [NRMASupportMetricHelper enqueueInstallMetric];
-            self.installMetric = nil;
-        }
     }
 }
 

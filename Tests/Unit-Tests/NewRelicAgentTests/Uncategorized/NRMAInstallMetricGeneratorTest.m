@@ -51,8 +51,6 @@
     [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
                                                         object:nil
                                                       userInfo:@{@"UDID" : @"blah"}];
-    //simulate a harvest
-    [metricGenerator onHarvestBefore];
 
     [NRMASupportMetricHelper processDeferredMetrics];
 
