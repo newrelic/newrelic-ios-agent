@@ -60,7 +60,7 @@ end
     Dir.chdir("..") do
         sh("mv NewRelic.xcframework cocoapods")
         Dir.chdir("cocoapods") do
-            sh("zip -r -y ../#{version} LICENSE README README.md NewRelic.xcframework")
+            sh("zip -r -y ../NewRelic_XCFramework_Agent_#{version}.zip LICENSE README README.md NewRelic.xcframework")
         end
     end
   end

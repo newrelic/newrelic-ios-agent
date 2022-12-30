@@ -42,7 +42,7 @@ platform :ios do
         sh("./scripts/generate_version_header.sh #{version}")
     end
 
-    sh "printf \"NewRelic_iOS_Agent_GH_#{version}.zip\" > build_version"
+    sh "printf \"#{version}\" > build_version"
 
     puts "The current version string is #{version}"
   end
