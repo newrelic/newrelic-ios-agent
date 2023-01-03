@@ -116,13 +116,11 @@ jobs:
 
     - name: Create Package.swift for XCFramework version
       run: |
-        mkdir -p "release/spm/${{ env.version }}"
-
-        cp NewRelic-SwiftPackage/Package.swift.template "release/spm/${{ env.version }}/Package.swift"
-        cp cocoapods/README.md "release/spm/${{ env.version }}/"
+        cp NewRelic-SwiftPackage/Package.swift.template Package.swift
+        ## Below README required for prod spm repo.
+        # cp cocoapods/README.md README.md
         REPLACEVER={{VERSION}}
         REPLACECHECKSUM={{CHECKSUM}}
-        pushd "release/spm/${{ env.version }}"
 
         XCFRAMEWORK_NAME="NewRelic_XCFramework_Agent_${{ env.version }}.zip"
         curl https://download.newrelic.com/ios-v5/$XCFRAMEWORK_NAME -o $XCFRAMEWORK_NAME
