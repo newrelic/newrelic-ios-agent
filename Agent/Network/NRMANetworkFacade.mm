@@ -134,6 +134,8 @@
             modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
         }
 
+        std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
+
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
 
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
@@ -143,10 +145,9 @@
                                                                                                                            networkErrorMessage:nil
                                                                                                                            encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
                                                                                                                                  appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
-                                                                                withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+                                                                                withPayload:std::move(retrievedPayload)];
         } else {
 
-            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
             if(traceHeaders) {
                 if(retrievedPayload == nullptr) {
                     retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
@@ -208,6 +209,7 @@
         if(!replacedURL) {
             replacedURL = request.URL;
         }
+        std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
         [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                                                                    httpMethod:[request HTTPMethod]
@@ -218,7 +220,7 @@
                                                                                                                                    bytesReceived:0
                                                                                                                                     responseTime:timer.timeElapsedInSeconds
                                                                                                                              networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+                                                                               withPayload:std::move(retrievedPayload)];
 
         // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags
         [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
