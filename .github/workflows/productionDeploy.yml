@@ -1,0 +1,127 @@
+name: productionDeploy
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+
+jobs:
+  # The deployS3Production job copies the existing build from staging download location to the production download location.
+  # The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
+  # inputs: version (String): The version number to promote to production. (ex 7.4.0)
+  deployS3Production:
+    name: deployS3Production
+    runs-on: macos-latest 
+    outputs:
+      version: ${{ steps.setOutput.outputs.version }}
+    steps:
+    - uses: actions/checkout@v3
+      with: 
+        submodules: true
+
+    - name: Install gems
+      run: bundle install
+
+    - name: Get name
+      run: echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+    - id: setOutput
+      name: Print name
+      run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
+    
+    - name: Deploy to production S3
+      run: "aws s3 cp s3://nr-downloads-main/ios-v5/NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios_agent/"
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  
+  # The deployCocoapodsProduction job creates the prod Podspec from template and pushes to cp trunk.
+  deployCocoapodsProduction:
+    name: deployCocoapodsProduction
+    runs-on: macos-latest 
+    needs: [deployS3Production]
+    steps:
+    - uses: actions/checkout@v3
+      with: 
+        submodules: true
+
+    - name: Install gems
+      run: bundle install
+
+    - name: Get name
+      run: echo "version=${{needs.deployS3Production.outputs.version}}" >> $GITHUB_ENV
+
+    - name: Print XCFramework name
+      run: echo "${{ env.version }}" 
+
+    - name: Create Prod Podspec for XCFramework version
+      run: |
+        mkdir -p "release/cocoapods/${{ env.version }}"
+        cp cocoapods/NewRelicAgent.podspec.template "release/cocoapods/${{ env.version }}/NewRelicAgent.podspec"
+        REPLACE=X.XX
+        pushd "release/cocoapods/${{ env.version }}"
+        sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
+      
+        rm NewRelicAgent.podspec-e
+        rm NewRelicAgent.podspecbak
+        cat NewRelicAgent.podspec
+
+        pod trunk push --allow-warnings NewRelicAgent.podspec
+      env:
+        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+
+  # The deploySPMProduction job creates the prod Package.swift from template and pushes it to the old prod SPM url.
+  deploySPMProduction:
+    name: deploySPMProduction
+    runs-on: macos-latest 
+    needs: [deployS3Production]
+    steps:
+    - uses: actions/checkout@v3
+      with: 
+        submodules: true
+
+    - name: Install gems
+      run: bundle install
+
+    - name: Get name
+      run: echo "version=${{needs.deployS3Production.outputs.version}}" >> $GITHUB_ENV
+
+    - name: Print XCFramework name
+      run: echo "${{ env.version }}" 
+
+    - name: Create Prod Package.swift for XCFramework version
+      run: |
+        cp NewRelic-SwiftPackage/Package.swift.template Package.swift
+        ## Below README required for prod spm repo.
+        # cp cocoapods/README.md README.md
+        REPLACEVER={{VERSION}}
+        REPLACECHECKSUM={{CHECKSUM}}
+
+        XCFRAMEWORK_NAME="NewRelic_XCFramework_Agent_${{ env.version }}.zip"
+        curl https://download.newrelic.com/ios_agent/$XCFRAMEWORK_NAME -o $XCFRAMEWORK_NAME
+        SPM_CHECKSUM=`swift package compute-checksum  ${XCFRAMEWORK_NAME}`
+
+        sed -i bak "s/$REPLACEVER/${{ env.version }}/g" Package.swift
+        sed -i -e "s/$REPLACECHECKSUM/$SPM_CHECKSUM/g" Package.swift
+
+        rm Package.swift-e
+        rm Package.swiftbak
+
+        rm $XCFRAMEWORK_NAME
+
+        cat Package.swift
+
+        git remote add origin ${{ secrets.PROD_SPM_URL }}
+        git remote -v
+        git add Package.swift
+        git commit -m "Added build ${{ env.version }}" --author "smalsam-newr <smalsam@newrelic.com>"
+        git tag ${{ env.version }}
+        git push origin main --tags
+  
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        title: "[${{ env.version }}] Production SPM"
+        branch: "auto-spm-release-${{ env.version }}"
+        base: main
