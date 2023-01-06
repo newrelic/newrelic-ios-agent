@@ -1,6 +1,10 @@
 name: CI
-on: push
-      
+on:  
+  push:
+    branches: 
+      - staging
+  pull_request:
+
 jobs:
   test:
     name : Test 
@@ -27,7 +31,8 @@ jobs:
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: macos-latest 
-    # needs: [test]
+    needs: [test]
+    if: github.ref == 'refs/heads/staging'
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
@@ -63,6 +68,7 @@ jobs:
     name: DeployCocoapods
     runs-on: macos-latest 
     needs: [deployS3]
+    if: github.ref == 'refs/heads/staging'
     steps:
     - uses: actions/checkout@v3
       with: 
@@ -86,6 +92,7 @@ jobs:
         rm NewRelicAgent.podspec-e
         rm NewRelicAgent.podspecbak
 
+    # Use git-auto-commit-action to push NewRelicAgent.podspec up to root of newrelic-ios-agent branch: staging.
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "[${{ env.version }}] Staging Cocoapods"
@@ -95,6 +102,7 @@ jobs:
     name: deploySPM
     runs-on: macos-latest 
     needs: [deployS3]
+    if: github.ref == 'refs/heads/staging'
     steps:
     - uses: actions/checkout@v3
       with: 
@@ -129,6 +137,7 @@ jobs:
 
         rm $XCFRAMEWORK_NAME
 
+    # Use git-auto-commit-action to push Package.swift up to root of newrelic-ios-agent branch: staging.
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: "[${{ env.version }}] Staging SPM"
