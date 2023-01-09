@@ -3,26 +3,27 @@ import "ConstantsFastfile"
 platform :ios do
   desc "Set build string based on branch and build number"
   lane :generateVersion do
+
     develop = "develop"
-    hotfix = "hotfix"
-    release = "release"
-    master = "master"
+    staging = "staging"
+    main = "main"
 
     currentBranch = git_branch
 
     puts "The current branch is #{currentBranch}"
     
     # Should change based on currentBranch.
+    # For unknown branches and normal feature branches -dev is used.
+    # For staing branch -rc is used.
+    # For the main branch the version number string is equal to just the numeric component of the version string. ex: 7.4.0
     output_branch_name = "-dev"
 
     case currentBranch
     when develop
         output_branch_name = "-dev"
-    when hotfix
-        output_branch_name = "-hf"
-    when release
+    when staging
         output_branch_name = "-rc"
-    when master
+    when main
         output_branch_name = ""
     end
     
@@ -34,8 +35,8 @@ platform :ios do
     project_version_number = get_version_number(xcodeproj: "Agent.xcodeproj", target: "Agent_iOS")
 
     version = "#{project_version_number}#{output_branch_name}"
-    # Append build number if "env_build" exists.
-    version = version + build_number if !env_build.to_s.empty?
+    # Append build number if "env_build" and "output_branch_name" exists.
+    version = version + build_number if !env_build.to_s.empty? && !output_branch_name.empty?
 
     # Set the Agent/Public/NRMAAgentVersion.h file up.
     Dir.chdir("..") do
