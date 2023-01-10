@@ -170,6 +170,8 @@ static NSString* _osVersion;
             return kNRMAPlatformString_ReactNative;
         case NRMAPlatform_Flutter:
             return kNRMAPlatformString_Flutter;
+        case NRMAPlatform_Capacitor:
+            return kNRMAPlatformString_Capacitor;
     }
 }
 

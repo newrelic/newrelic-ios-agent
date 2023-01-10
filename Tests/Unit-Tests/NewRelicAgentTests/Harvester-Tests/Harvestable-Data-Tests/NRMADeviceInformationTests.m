@@ -103,6 +103,12 @@
     NRMAApplicationPlatform flutter = NRMAPlatform_Flutter;
     NSString* flutterPlatformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:flutter];
     XCTAssertTrue([flutterPlatformString isEqualToString:expectedFlutterString]);
+    
+    NSString* expectedCapacitorString = @"Capacitor";
+
+    NRMAApplicationPlatform capacitor = NRMAPlatform_Capacitor;
+    NSString* capacitorPlatformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:capacitor];
+    XCTAssertTrue([capacitorPlatformString isEqualToString:expectedCapacitorString]);
 }
 
 
