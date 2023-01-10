@@ -23,6 +23,7 @@
 #import "NRMAMeasurements.h"
 #import "NewRelicAgentInternal.h"
 #import "NewRelicAgentTests.h"
+#import "NRMAHarvestController.h"
 
 @interface NewRelicTests : XCTestCase {
 }
@@ -267,6 +268,8 @@
     XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
                                                                               reason:@"testing"
                                                                             userInfo:@{}] withAttributes: nil]);
+    NSDictionary *dict = @{ @"name" : @"test name", @"reason" : @"test reason"};
+    XCTAssertNoThrow([NewRelic recordHandledExceptionWithStackTrace: dict]);
 }
 - (void) testRecordError {
     XCTAssertNoThrow([NewRelic recordError:[NSError errorWithDomain:@"Unknown" code:NSURLErrorCancelled userInfo:nil]]);
@@ -292,12 +295,46 @@
     XCTAssertNil([NewRelicAgentInternal sharedInstance], @"Should not start agent without application token");
 }
 
+// XCode will run tests in alphabetical order, so the sharedInstance will exist for any tests alphabetically after this
 -(void) testSetApplicationBuildAndVersionPostSessionStart {
     [NewRelic startWithApplicationToken:@"test"];
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
     XCTAssertThrows([NewRelic setApplicationBuild:@"1.0"], @"Should throw if a session has already been started. Application Version must be set first.");
     XCTAssertThrows([NewRelic setApplicationVersion:@"1.0"], @"Should throw if a session has already been started. Application Version must be set first.");
     [[NewRelicAgentInternal sharedInstance] destroyAgent];
+}
+
+
+// testGenerateDistributedTracingHeaders
+-(void) testTracingHeaders {
+    XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
+    XCTAssertNotNil([NewRelic generateDistributedTracingHeaders]);
+}
+
+-(void) testCrossProcessId {
+    XCTAssertEqual([[[[NRMAHarvestController harvestController] harvester] crossProcessID] copy], [NewRelic crossProcessId]);
+}
+
+-(void) testCurrentSessionId {
+    XCTAssertEqual([[[NewRelicAgentInternal sharedInstance] currentSessionId] copy], [NewRelic currentSessionId]);
+}
+
+-(void) testRecordBreadcrumb {
+    NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
+    XCTAssertEqual([analytics addBreadcrumb:@"test" withAttributes:nil], [NewRelic recordBreadcrumb:@"test" attributes:nil]);
+}
+
+-(void) testURLRegexRules {
+    NSDictionary<NSString *, NSString *> *regexs =
+    @{ @"^http(s{0,1})://(http).*/(\\d)\\d*" : @"https://httpbin.org/status/418"
+    };
+    
+    [NewRelic setURLRegexRules:regexs];
+    NRMAURLTransformer *regexTransformer = [[NRMAURLTransformer alloc] initWithRegexRules:regexs];
+    NRMAURLTransformer *internalTransformer = [NewRelicAgentInternal getURLTransformer];
+    NSURL *test1 = [regexTransformer transformURL:[NSURL URLWithString:@"https://httpstat.us/200"]];
+    NSURL *test2 = [internalTransformer transformURL:[NSURL URLWithString:@"https://httpstat.us/200"]];
+    XCTAssertEqualObjects(test1, test2);
 }
 @end
 
