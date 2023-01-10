@@ -3,7 +3,7 @@
 //  NewRelic
 //
 //  Created by Bryce Buchanan on 7/24/17.
-//  Copyright (c) 2017 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>

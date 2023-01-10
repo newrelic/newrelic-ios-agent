@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 //reserved attributes
 #include "Analytics/Constants.hpp"
 const char* __kNRMA_RA_eventType          = "eventType";

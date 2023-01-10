@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #ifndef LIBMOBILEAGENT_NETWORKERROREVENT_HPP
 #define LIBMOBILEAGENT_NETWORKERROREVENT_HPP
 

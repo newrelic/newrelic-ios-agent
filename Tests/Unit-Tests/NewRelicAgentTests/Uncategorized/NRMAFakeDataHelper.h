@@ -3,7 +3,7 @@
 //  Agent
 //
 //  Created by Mike Bruin on 12/1/22.
-//  Copyright © 2022 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 @interface NRMAFakeDataHelper : NSObject

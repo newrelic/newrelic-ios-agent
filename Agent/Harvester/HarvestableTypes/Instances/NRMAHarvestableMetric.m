@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Jonathan Karon on 5/23/13.
-//  Copyright (c) 2013 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <objc/runtime.h>

@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Chris Dillard on 12/5/22.
-//  Copyright (c) 2022 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 import Foundation

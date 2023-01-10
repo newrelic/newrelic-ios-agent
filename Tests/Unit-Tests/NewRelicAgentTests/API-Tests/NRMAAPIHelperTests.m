@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Paul Knudsen on 11/28/16.
-//  Copyright © 2016 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
