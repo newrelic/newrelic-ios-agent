@@ -1,6 +1,7 @@
 name: productionDeploy
 on: 
   workflow_dispatch:
+    # The input version number (ex: 7.4.0) and branch: main are required for the production build.
     inputs:
       version:
         required: true
@@ -11,7 +12,8 @@ jobs:
   # inputs: version (String): The version number to promote to production. (ex 7.4.0)
   deployS3Production:
     name: deployS3Production
-    runs-on: macos-latest 
+    runs-on: macos-latest
+    if: github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
@@ -41,6 +43,7 @@ jobs:
     name: deployCocoapodsProduction
     runs-on: macos-latest 
     needs: [deployS3Production]
+    if: github.ref == 'refs/heads/main'
     steps:
     - uses: actions/checkout@v3
       with: 
@@ -57,25 +60,32 @@ jobs:
 
     - name: Create Prod Podspec for XCFramework version
       run: |
-        mkdir -p "release/cocoapods/${{ env.version }}"
-        cp cocoapods/NewRelicAgent.podspec.template "release/cocoapods/${{ env.version }}/NewRelicAgent.podspec"
+        cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
         REPLACE=X.XX
-        pushd "release/cocoapods/${{ env.version }}"
         sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
-      
         rm NewRelicAgent.podspec-e
         rm NewRelicAgent.podspecbak
-        cat NewRelicAgent.podspec
 
         pod trunk push --allow-warnings NewRelicAgent.podspec
       env:
         COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
-  # The deploySPMProduction job creates the prod Package.swift from template and pushes it to the old prod SPM url.
+     # At this point we have NewRelicAgent.podspec corresponding to the production build sitting at the repo root.
+     # The following step creates a PR containing that new NewRelicAgent.podspec file at the root of the repo.
+     # Since production builds are infrequent this creates a PR that must be manually approved and merged.
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        title: "[${{ env.version }}] Production Cocoapods"
+        branch: "auto-cocoapods-release-${{ env.version }}"
+        base: main
+
+  # The deploySPMProduction job creates the prod Package.swift from template and pushes it to the prod SPM url.
   deploySPMProduction:
     name: deploySPMProduction
     runs-on: macos-latest 
     needs: [deployS3Production]
+    if: github.ref == 'refs/heads/main'
     steps:
     - uses: actions/checkout@v3
       with: 
@@ -93,8 +103,7 @@ jobs:
     - name: Create Prod Package.swift for XCFramework version
       run: |
         cp NewRelic-SwiftPackage/Package.swift.template Package.swift
-        ## Below README required for prod spm repo.
-        # cp cocoapods/README.md README.md
+
         REPLACEVER={{VERSION}}
         REPLACECHECKSUM={{CHECKSUM}}
 
@@ -110,15 +119,17 @@ jobs:
 
         rm $XCFRAMEWORK_NAME
 
-        cat Package.swift
-
+        # The following git cmd adds remote https://github.com/newrelic/newrelic-ios-agent-spm.
         git remote add origin ${{ secrets.PROD_SPM_URL }}
         git remote -v
         git add Package.swift
-        git commit -m "Added build ${{ env.version }}" --author "smalsam-newr <smalsam@newrelic.com>"
+        git commit -m "Added build ${{ env.version }}"
         git tag ${{ env.version }}
         git push origin main --tags
   
+    # At this point we have Package.swift corresponding to the production build sitting at the repo root.
+    # The following step creates a PR containing that new Package.swift.
+    # Since production builds are infrequent this creates a PR that must be manually approved and merged.
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
