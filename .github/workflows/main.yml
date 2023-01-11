@@ -3,6 +3,8 @@ on:
   push:
     branches: 
       - staging
+      - main
+      - develop
   pull_request:
 
 jobs:
@@ -32,7 +34,7 @@ jobs:
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: macos-latest 
     needs: [test]
-    if: github.ref == 'refs/heads/staging'
+    if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:

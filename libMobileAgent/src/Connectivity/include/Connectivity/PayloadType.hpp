@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #ifndef LIBMOBILEAGENT_PAYLOADTYPE_H
 #define LIBMOBILEAGENT_PAYLOADTYPE_H
 

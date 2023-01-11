@@ -1,3 +1,4 @@
+//  Copyright © 2023 New Relic. All rights reserved.
 
 #include "CustomEvent.hpp"
 namespace NewRelic {

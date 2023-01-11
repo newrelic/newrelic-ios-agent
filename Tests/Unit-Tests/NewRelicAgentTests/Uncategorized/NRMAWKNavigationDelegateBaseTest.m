@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Austin Washington on 7/26/17.
-//  Copyright © 2017 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

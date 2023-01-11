@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Jonathan Karon on 9/21/12.
-//
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 #import "NRMAAgentVersion.h"
 #import "NewRelicInternalUtils.h"
@@ -170,6 +170,8 @@ static NSString* _osVersion;
             return kNRMAPlatformString_ReactNative;
         case NRMAPlatform_Flutter:
             return kNRMAPlatformString_Flutter;
+        case NRMAPlatform_Capacitor:
+            return kNRMAPlatformString_Capacitor;
     }
 }
 

@@ -1,3 +1,4 @@
+//  Copyright © 2023 New Relic. All rights reserved.
 
 #ifndef __SessionAttributeManager_H_
 #define __SessionAttributeManager_H_

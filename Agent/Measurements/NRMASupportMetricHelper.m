@@ -3,7 +3,7 @@
 //  Agent
 //
 //  Created by Chris Dillard on 7/12/22.
-//  Copyright © 2022 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMASupportMetricHelper.h"
@@ -49,6 +49,14 @@
     [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAAppInstallMetric
                                                           value:@1
                                                           scope:nil]];
+}
+
++ (void) enqueueMaxPayloadSizeLimitMetric:(NSString*)endpoint {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, endpoint]
+                                                    value:@1
+                                                    scope:nil]];
 }
 
 + (void) enqueueUpgradeMetric {

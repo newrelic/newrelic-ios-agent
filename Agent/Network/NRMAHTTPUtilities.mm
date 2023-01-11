@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created on 8/28/14.
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #include <iostream>

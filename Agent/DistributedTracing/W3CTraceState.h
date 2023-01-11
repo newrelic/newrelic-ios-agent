@@ -5,7 +5,7 @@
 //  Implementation of https://w3c.github.io/trace-context/#tracestate-header
 //
 //  Created on 12/23/20.
-//  Copyright © 2020 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 

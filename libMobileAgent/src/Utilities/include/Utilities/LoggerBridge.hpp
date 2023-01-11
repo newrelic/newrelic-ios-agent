@@ -1,5 +1,6 @@
 //
 // Created by Bryce Buchanan on 1/4/16.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #ifndef LIBMOBILEAGENT_LOGGERBRIDGE_HPP

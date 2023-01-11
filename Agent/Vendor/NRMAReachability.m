@@ -163,50 +163,26 @@
 + (NRMAReachability*)reachability
 {
     NRMAReachability* retVal = NULL;
-    
-    struct addrinfo hints;
-    struct addrinfo* result;
-    int error = 0;
-    
-    memset(&hints, 0, sizeof(struct addrinfo));
-    // Using this should result in either a family of AF_INET or AF_INET6.
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE;
-    hints.ai_protocol = 0;
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
-    hints.ai_next = NULL;
-    
-    // Passing NULL as the node to getaddrinfo() results in using the link local address.
-    error = getaddrinfo(NULL, "80", &hints, &result);
-    if (error != 0) {
-        NRLOG_VERBOSE(@"Reachability failed with error: \"%s\". New Relic may be unable to get details regarding network connectivity and carrier information.",gai_strerror(error));
-        return retVal;
-    }
-    
-    SCNetworkReachabilityRef reachability = NULL;
-    
-    // Detect if we are using IPv4 or IPv6.
-    if (result->ai_family != AF_INET && result->ai_family != AF_INET6 ) {
-        freeaddrinfo(result);
-        NRLOG_VERBOSE(@"Reachability recieved an unexpected ai family. New Relic may be unable to get details regarding network connectivity and carrier information.");
-        return retVal;
-    }
+
+    struct sockaddr_in zeroAddress;
+    bzero(&zeroAddress, sizeof(zeroAddress));
+    zeroAddress.sin_len = sizeof(zeroAddress);
+    zeroAddress.sin_family = AF_INET;
+
     // The Apple recommended method, SCNetworkReachabilityCreateWithName(),
     // makes a DNS request which will block while the request occurs.
     // SCNetworkReachabilityCreateWithAddress gets us all the information we need
     // and won't block when there is a poor network quality.
-    reachability = SCNetworkReachabilityCreateWithAddress(NULL, (const struct sockaddr*)result->ai_addr);
-    
+
+    SCNetworkReachabilityRef reachability = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (const struct sockaddr *)&zeroAddress);
+
     if (reachability != NULL) {
         retVal = [[self alloc] init];
         if (retVal != NULL) {
             retVal->reachabilityRef = reachability;
         }
     }
-    
-    freeaddrinfo(result);
+
     return retVal;
 }
 

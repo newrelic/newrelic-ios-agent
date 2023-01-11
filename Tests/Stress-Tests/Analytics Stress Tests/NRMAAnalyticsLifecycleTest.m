@@ -3,7 +3,7 @@
 //  NewRelic
 //
 //  Created by Bryce Buchanan on 5/8/15.
-//  Copyright (c) 2015 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

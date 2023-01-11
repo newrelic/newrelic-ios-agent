@@ -1,6 +1,7 @@
 
 //
 // Created by Bryce Buchanan on 9/25/17.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #include "HexPersistenceManager.hpp"

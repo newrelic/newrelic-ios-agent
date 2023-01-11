@@ -1,6 +1,6 @@
 
 // Created by Bryce Buchanan on 1/14/16.
-// Copyright (c) 2016 New Relic. All rights reserved.
+// Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMAApplicationInstrumentation.h"

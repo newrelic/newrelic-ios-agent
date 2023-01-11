@@ -3,24 +3,20 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 3/20/14.
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMAURLSessionTaskOverride.h"
+#import "NRMAURLSessionOverride.h"
 #import "NRTimer.h"
 #import "NRMAMethodSwizzling.h"
 #import <objc/runtime.h>
-
-
-#define kNRTimerAssociatedObject @"com.NewRelic.NRSessionTask.Timer"
-#define kNRSessionDataAssociatedObject @"com.NewRelic.NRSessionTask.Data"
+#import "NRLogger.h"
+#import "NRMAHTTPUtilities.h"
 
 static IMP NRMAOriginal__resume;
+static IMP NRMAOriginal__urlSessionTask_SetState;
 static Class __NRMAConcreteClass;
-
-
-
-void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer);
 
 @implementation NRMAURLSessionTaskOverride
 
@@ -28,20 +24,36 @@ void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer);
 static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock";
 + (void) instrumentConcreteClass:(Class)clazz
 {
-    //we can avoid a synchronization block if we check to make sure it's nil first!
+    // Instrument NSURLSessionTask resume.
+    // we can avoid a synchronization block if we check to make sure it's nil first!
     if (clazz && NRMAOriginal__resume == nil) {
         //replace NSURLSessionTask -resume method
         @synchronized(lock) {
             if ([clazz instancesRespondToSelector:@selector(resume)] && NRMAOriginal__resume == nil) {
                 
-                __NRMAConcreteClass = clazz; //save the class we sizzled so we can de-swizzle
+                __NRMAConcreteClass = clazz; //save the class we swizzled so we can de-swizzle
                 
-                NRMAOriginal__resume =  NRMASwapImplementations(clazz, @selector(resume), (IMP)NRMAOverride__resume);
+                NRMAOriginal__resume = NRMASwapImplementations(clazz, @selector(resume), (IMP)NRMAOverride__resume);
+            }
+        }
+    }
+
+    // In iOS 13+ we instrument NSURLSessionTask:setState && NSURLSessionTaskDelegate:_didReceiveData
+    if (@available(iOS 13, tvOS 13, *)) {
+        // Instrument NSURLSession setState
+        if (clazz && NRMAOriginal__urlSessionTask_SetState == nil) {
+            //replace NSURLSessionTask -setState: method
+            @synchronized(lock) {
+                if ([clazz instancesRespondToSelector:@selector(setState:)] && NRMAOriginal__urlSessionTask_SetState == nil) {
+                    
+                    __NRMAConcreteClass = clazz; //save the class we swizzled so we can de-swizzle
+                    
+                    NRMAOriginal__urlSessionTask_SetState = NRMASwapImplementations(clazz, @selector(setState:), (IMP)NRMAOverride__urlSessionTask_SetState);
+                }
             }
         }
     }
 }
-
 
 + (void) deinstrument
 {
@@ -54,6 +66,28 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
             NRMAOriginal__resume = nil;
         }
     }
+    
+    // In iOS 13+ we instrument NSURLSessionTask:setState && NSURLSessionTaskDelegate:_didReceiveData
+    if (@available(iOS 13, tvOS 13, *)) {
+        if (NRMAOriginal__urlSessionTask_SetState != nil) {
+            if (sizeof(__NRMAConcreteClass) == sizeof(Class)) {
+                //verify __NRConcreteClass is a Class struct
+                Class clazz = __NRMAConcreteClass;
+                NRMASwapImplementations(clazz, @selector(setState:), (IMP)NRMAOriginal__urlSessionTask_SetState);
+
+                NRMAOriginal__urlSessionTask_SetState = nil;
+            }
+        }
+    }
+}
+
++ (NSInteger) statusCode:(NSURLResponse*)response {
+    return [response isKindOfClass:[NSHTTPURLResponse class]] ? [((NSHTTPURLResponse*)response) statusCode] : -1;
+}
+
+// Currently we support NSURLSessionDataTask, NSURLSessionDownloadTask, and NSURLSessionUploadTask.
++ (bool) isSupportedTaskType:(NSURLSessionTask*) task {
+    return [task isKindOfClass:[NSURLSessionDataTask class]] || [task isKindOfClass:[NSURLSessionDownloadTask class]] || [task isKindOfClass:[NSURLSessionUploadTask class]];
 }
 
 @end
@@ -61,9 +95,14 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
 void NRMAOverride__resume(id self, SEL _cmd)
 {
     if (((NSURLSessionTask*)self).state == NSURLSessionTaskStateSuspended) {
+
+        NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:((NSURLSessionTask*)self).originalRequest];
+        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+        [NRMAHTTPUtilities attachPayload:payload
+                                      to:((NSURLSessionTask*)self).originalRequest];
         //the only state resume will start a task is from Suspended.
         //and since we are only instrumenting NSURLSessionUploadTask and
-        //NSURLSessionDataTask we only need to start a new timer on this transision
+        //NSURLSessionDataTask we only need to start a new timer on this transmission
         //since those two restart if they are suspended.
         NRMA__setTimerForSessionTask(self, [NRTimer new]);
     }
@@ -71,30 +110,30 @@ void NRMAOverride__resume(id self, SEL _cmd)
     ((void(*)(id,SEL))NRMAOriginal__resume)(self,_cmd);
 }
 
-NRTimer* NRMA__getTimerForSessionTask(NSURLSessionTask* task)
+void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSURLSessionTaskState *newState)
 {
-    return objc_getAssociatedObject(task, kNRTimerAssociatedObject);
-}
+    @synchronized(lock) {
+        @synchronized(task) {
+            if ([NRMAURLSessionTaskOverride isSupportedTaskType: task]) {
 
-void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer)
-{
-    objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
-    if (timer == nil) {
-        assocPolicy = OBJC_ASSOCIATION_ASSIGN;
+                NSURL *url = [[task currentRequest] URL];
+
+                if (url != nil &&
+                    newState != NSURLSessionTaskStateRunning && task.state == NSURLSessionTaskStateRunning) {
+                    // get response code
+                    NSUInteger responseCode = [NRMAURLSessionTaskOverride statusCode:task.response];
+                    if (responseCode != -1) {
+                        NSData *data = NRMA__getDataForSessionTask(task);
+                        NRMA__recordTask(task, data, task.response, task.error);
+                    }
+                }
+            }
+        }
     }
-    objc_setAssociatedObject(task, kNRTimerAssociatedObject, timer, assocPolicy);
-}
-
-void NRMA__setDataForSessionTask(NSURLSessionTask* task, NSData* data)
-{
-    objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
-    if (data == nil) {
-        assocPolicy = OBJC_ASSOCIATION_ASSIGN;
+    if (NRMAOriginal__urlSessionTask_SetState!= nil) {
+        // Call original setState function.
+        ((void(*)(NSURLSessionTask *,SEL,NSURLSessionTaskState *))NRMAOriginal__urlSessionTask_SetState)(task, _cmd, newState);
     }
-    objc_setAssociatedObject(task, kNRSessionDataAssociatedObject, data, assocPolicy);
 }
 
-NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task)
-{
-    return objc_getAssociatedObject(task, kNRSessionDataAssociatedObject);
-}
+

@@ -8,7 +8,7 @@
 //    https://docs.newrelic.com/docs/mobile-monitoring for information
 //    https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes/ for release notes
 //
-//  Copyright (c) 2022 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //  See https://docs.newrelic.com/docs/licenses/ios-agent-licenses for license details
 //
 
@@ -30,7 +30,8 @@ extern "C" {
         NRMAPlatform_Unity,
         NRMAPlatform_Appcelerator,
         NRMAPlatform_ReactNative,
-        NRMAPlatform_Flutter
+        NRMAPlatform_Flutter,
+        NRMAPlatform_Capacitor
     };
 
 // these constants are paired with enum values of NRMAApplicationPlatform
@@ -45,6 +46,7 @@ extern "C" {
 #define kNRMAPlatformString_Appcelerator @"Appcelerator"
 #define kNRMAPlatformString_ReactNative  @"ReactNative"
 #define kNRMAPlatformString_Flutter      @"Flutter"
+#define kNRMAPlatformString_Capacitor    @"Capacitor"
 
 
 //Custom Trace Types
@@ -113,6 +115,10 @@ typedef NSString NRMetricUnit;
 #define kNRMABytesOutSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/%@/Output/Bytes"
 // Defines Format string where 3 arguments are NativePlatform, Platform, and Destination.
 #define kNRMABytesOutSupportabilityRollUpFormatString  @"Supportability/Mobile/%@/%@/%@/Output/Bytes"
+
+// Defines Format string where 4 arguments are NativePlatform, Platform, Destination and Endpoint.
+#define kNRMAMaxPayloadSizeLimitSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/MaxPayloadSizeLimit/%@"
+#define kNRMAMaxPayloadSizeLimit         1000000 // bytes
 
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"

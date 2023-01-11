@@ -3,12 +3,13 @@
 //  NewRelic
 //
 //  Created by Bryce Buchanan on 7/24/17.
-//  Copyright (c) 2017 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
 #import "NRMAHexUploader.h"
 #import <OCMock/OCMock.h>
+#import "NRMAFakeDataHelper.h"
 #import "NRMeasurementConsumerHelper.h"
 #import "NRMANamedValueMeasurement.h"
 #import "NRMATaskQueue.h"
@@ -178,6 +179,38 @@
     // Expected byte count should be 0.
     XCTAssertEqual(measurement.value.longLongValue, 0, @"Byte value doesn't match expected.");
 
+    [mockUploader stopMocking];
+}
+
+- (void) testMaxPayloadSizeLimit {
+    [helper.consumedMeasurements removeAllObjects];
+
+    self.hexUploader.applicationToken = @"IMTHETOKENNOW";
+    id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
+    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    
+    XCTAssertThrows([mockUploader verify]);
+
+    NSData *fakeData = [NRMAFakeDataHelper makeDataDictionary:21000];
+    XCTAssertNoThrow([(NRMAHexUploader*)mockUploader sendData:fakeData]);
+    
+    [NRMATaskQueue synchronousDequeue];
+    
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    NSString* fullMetricName = [NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, @"f"];
+    
+    NRMANamedValueMeasurement* foundMeasurement;
+    
+    for (id measurement in helper.consumedMeasurements) {
+        if([((NRMANamedValueMeasurement*)measurement).name isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+    
+    XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
+    
     [mockUploader stopMocking];
 }
 

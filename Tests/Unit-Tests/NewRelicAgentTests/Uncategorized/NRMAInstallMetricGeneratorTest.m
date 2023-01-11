@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 10/22/15.
-//  Copyright © 2015 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
@@ -51,8 +51,6 @@
     [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidGenerateNewUDIDNotification
                                                         object:nil
                                                       userInfo:@{@"UDID" : @"blah"}];
-    //simulate a harvest
-    [metricGenerator onHarvestBefore];
 
     [NRMASupportMetricHelper processDeferredMetrics];
 
