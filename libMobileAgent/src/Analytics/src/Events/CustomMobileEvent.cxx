@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #include "CustomMobileEvent.hpp"
 namespace NewRelic {
     const std::string& CustomMobileEvent::__category = std::string("Custom");

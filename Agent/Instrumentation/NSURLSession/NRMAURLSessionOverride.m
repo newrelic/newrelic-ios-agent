@@ -3,14 +3,13 @@
 //  NSURLSessionExperiment
 //
 //  Created by Bryce Buchanan on 3/14/14.
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMAURLSessionOverride.h"
 #import "NRMAMethodSwizzling.h"
 #import <objc/runtime.h>
 #import "NRMAMethodSwizzling.h"
-#import "NRTimer.h"
 #import "NRMAMeasurements.h"
 #import "NRMAURLSessionTaskOverride.h"
 #import "NewRelicInternalUtils.h"
@@ -19,6 +18,7 @@
 #import "NRMANSURLConnectionSupport+private.h"
 #import "NRMAHTTPUtilities.h"
 #import "NRMAAssociate.h"
+#import "NRMAURLSessionTaskSearch.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
 
@@ -35,8 +35,8 @@ IMP NRMAOriginal__uploadTaskWithRequest_fromData;
 IMP NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler;
 IMP NRMAOriginal__uploadTaskWithStreamedRequest;
 
+IMP NRMAOriginal__didReceiveData;
 
-void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error);
 void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplementation);
 
 @interface NRMAIMPContainer : NSObject
@@ -61,7 +61,6 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
 {
     id clazz = objc_getClass("NSURLSession");
     if (clazz) {
-
         //session task overrides
         NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue = NRMASwapImplementations(clazz,@selector(sessionWithConfiguration:delegate:delegateQueue:), (IMP)NRMAOverride__sessionWithConfiguration_delegate_delegateQueue);
 
@@ -95,6 +94,9 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
         
         NRMAOriginal__uploadTaskWithStreamedRequest=NRMASwapImplementations(clazz,@selector(uploadTaskWithStreamedRequest:),(IMP)NRMAOverride__uploadTaskWithStreamedRequest);
     }
+
+    [self swizzleURLSessionTask];
+    [self swizzleDidReceiveData];
 }
 
 + (void) deinstrument
@@ -142,11 +144,42 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
     }
 
     [NRMAURLSessionTaskOverride deinstrument];
-    
+    [self deinstrumentDidReceiveData];
+}
+
++ (void)swizzleURLSessionTask
+{
+    NSArray<Class> *classesToSwizzle = [NRMAURLSessionTaskSearch urlSessionTaskClasses];
+    for (Class classToSwizzle in classesToSwizzle) {
+        [NRMAURLSessionTaskOverride instrumentConcreteClass:classToSwizzle];
+    }
+}
+
++ (void)swizzleDidReceiveData
+{
+    if (@available(iOS 13, tvOS 13, *)) {
+
+        id clazz = objc_getClass("__NSCFURLLocalSessionConnection");
+        if (clazz) {
+            NRMAOriginal__didReceiveData = NRMASwapImplementations(clazz, @selector(_didReceiveData:), (IMP)NRMAOverride__didReceiveData);
+        }
+    }
+}
+
++ (void)deinstrumentDidReceiveData
+{
+    if (@available(iOS 13, tvOS 13, *)) {
+        
+        id clazz = objc_getClass("__NSCFURLLocalSessionConnection");
+        if (clazz) {
+            NRMASwapImplementations(clazz,@selector(_didReceiveData:), (IMP)NRMAOriginal__didReceiveData);
+            NRMAOriginal__didReceiveData = nil;
+        }
+    }
 }
 
 @end
-//NSURLSession -sessionWithConfiguration:delegate:delegateQueue
+
 NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id self,
                                                                           SEL _cmd,
                                                                           NSURLSessionConfiguration* configuration,
@@ -379,16 +412,38 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     return task;
 }
 
+void NRMAOverride__didReceiveData(id self, SEL _cmd, NSData* data) {
+
+    NSURLSessionTask* task = [self valueForKey:@"task"];
+
+    NSData *currentData = NRMA__getDataForSessionTask(task);
+
+    if (currentData == nil) {
+        // First time we've seen this tasks data.
+        currentData = data;
+    }
+    else {
+        // Data already exists for this tasks data.
+        NSMutableData *currentDataCopy = [currentData mutableCopy];
+        [currentDataCopy appendData:data];
+        currentData = currentDataCopy;
+    }
+
+    NRMA__setDataForSessionTask(task, currentData);
+
+    ((void(*)(id,SEL, NSData*))NRMAOriginal__didReceiveData)(self,_cmd, data);
+}
 
 void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error)
 {
     @try {
         NRTimer* timer = NRMA__getTimerForSessionTask(task);
-        if (timer) {//if there is no timer, let's not record this network activity.
-            //this could mean a session executed before task was instrumented
-            // no biggie
+        // If there is no timer, let's not record this network activity. this could mean a session executed before task was instrumented or the request has already been instrumented by another handler.
+        if (timer) {
+
+            [timer stopTimer];
+
             if (error) {
-                //log error
                 [NRMANSURLConnectionSupport noticeError:error
                                            forRequest:task.originalRequest
                                             withTimer:timer];
@@ -400,12 +455,42 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
                                                bytesSent:(NSUInteger)task.countOfBytesSent
                                            bytesReceived:(NSUInteger)task.countOfBytesReceived];
             }
-        } else {
-            NRLOG_VERBOSE(@"New Relic Timer not set for SessionTask with request url. Not recording transaction.");
+            // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
+            NRMA__setTimerForSessionTask(task, nil);
+            NRMA__setDataForSessionTask(task, nil);
         }
+
     } @catch (NSException* exception) {
         [NRMAExceptionHandler logException:exception
                                    class:@"NSURLSessionOverride"
                                 selector:@"recordTask"];
     }
+}
+
+NRTimer* NRMA__getTimerForSessionTask(NSURLSessionTask* task)
+{
+    return objc_getAssociatedObject(task, kNRTimerAssociatedObject);
+}
+
+void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer)
+{
+    objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
+    if (timer == nil) {
+        assocPolicy = OBJC_ASSOCIATION_ASSIGN;
+    }
+    objc_setAssociatedObject(task, kNRTimerAssociatedObject, timer, assocPolicy);
+}
+
+void NRMA__setDataForSessionTask(NSURLSessionTask* task, NSData* data)
+{
+    objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
+    if (data == nil) {
+        assocPolicy = OBJC_ASSOCIATION_ASSIGN;
+    }
+    objc_setAssociatedObject(task, kNRSessionDataAssociatedObject, data, assocPolicy);
+}
+
+NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task)
+{
+    return objc_getAssociatedObject(task, kNRSessionDataAssociatedObject);
 }

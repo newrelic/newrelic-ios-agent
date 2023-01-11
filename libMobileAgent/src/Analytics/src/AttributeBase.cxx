@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #include "Analytics/AttributeBase.hpp"
 #include <Utilities/Util.hpp>
 namespace NewRelic {

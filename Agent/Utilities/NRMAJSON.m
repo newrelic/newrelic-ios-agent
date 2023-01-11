@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Jonathan Karon on 4/8/13.
-//  Copyright (c) 2013 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMAJSON.h"

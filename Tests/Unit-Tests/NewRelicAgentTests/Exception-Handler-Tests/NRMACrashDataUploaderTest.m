@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 7/10/14.
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
@@ -11,6 +11,11 @@
 #import "NRAgentTestBase.h"
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
+
+#import "NRMAFakeDataHelper.h"
+#import "NRMeasurementConsumerHelper.h"
+#import "NRMANamedValueMeasurement.h"
+#import "NRMATaskQueue.h"
 
 @interface NRMACrashDataUploader ()
 
@@ -29,6 +34,7 @@
 @interface NRMACrashDataUploaderTest : NRMAAgentTestBase
 {
     NRMACrashDataUploader* crashUploader;
+    NRMAMeasurementConsumerHelper* helper;
 }
 @end
 
@@ -36,12 +42,21 @@
 
 - (void)setUp
 {
+    helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+    
     [super setUp];
 }
 
 - (void)tearDown
 {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+    helper = nil;
+
+    [NRMAMeasurements shutdown];
+
     [super tearDown];
 }
 
@@ -93,6 +108,36 @@
         XCTAssertTrue([uploader shouldUploadFileWithUniqueIdentifier:@"helloWorld"]);
     }
     XCTAssertFalse([uploader shouldUploadFileWithUniqueIdentifier:@"helloWorld"]);
+}
+
+-(void) testCrashReportMaxPayloadSizeLimitUpload {
+    [helper.consumedMeasurements removeAllObjects];
+    
+    NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"google.com"
+                                                                              applicationToken:@"token"
+                                                                         connectionInformation:[NRMAAgentConfiguration connectionInformation]
+                                                                                        useSSL:YES];
+    
+    [NRMAFakeDataHelper makeFakeCrashReport:21000];
+
+    XCTAssertNoThrow([uploader uploadCrashReports], @"this should fail without crashing");
+    
+    [NRMATaskQueue synchronousDequeue];
+    
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    NSString* fullMetricName = [NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, @"mobile_crash"];
+    
+    NRMANamedValueMeasurement* foundMeasurement;
+    
+    for (id measurement in helper.consumedMeasurements) {
+        if([((NRMANamedValueMeasurement*)measurement).name isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+
+    XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
 }
 
 // TODO: Add test

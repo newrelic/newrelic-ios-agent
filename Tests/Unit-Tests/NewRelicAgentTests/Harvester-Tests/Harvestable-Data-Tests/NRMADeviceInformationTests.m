@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 4/11/16.
-//  Copyright © 2016 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
@@ -103,6 +103,12 @@
     NRMAApplicationPlatform flutter = NRMAPlatform_Flutter;
     NSString* flutterPlatformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:flutter];
     XCTAssertTrue([flutterPlatformString isEqualToString:expectedFlutterString]);
+    
+    NSString* expectedCapacitorString = @"Capacitor";
+
+    NRMAApplicationPlatform capacitor = NRMAPlatform_Capacitor;
+    NSString* capacitorPlatformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:capacitor];
+    XCTAssertTrue([capacitorPlatformString isEqualToString:expectedCapacitorString]);
 }
 
 

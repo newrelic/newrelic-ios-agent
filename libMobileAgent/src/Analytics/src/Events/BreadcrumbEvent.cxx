@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #include <Analytics/Constants.hpp>
 #include "BreadcrumbEvent.hpp"
 

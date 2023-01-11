@@ -1,4 +1,4 @@
-
+//  Copyright © 2023 New Relic. All rights reserved.
 
 #ifndef __AnalyticEvent_H_
 #define __AnalyticEvent_H_

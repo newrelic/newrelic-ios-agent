@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Saxon D'Aubin on 5/24/12.
-//  Copyright (c) 2012 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <mach/mach.h>

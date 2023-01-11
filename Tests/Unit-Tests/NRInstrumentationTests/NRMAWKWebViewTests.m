@@ -3,7 +3,7 @@
 //  NRInstrumentationTests
 //
 //  Created by Bryce Buchanan on 7/8/19.
-//  Copyright © 2019 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>

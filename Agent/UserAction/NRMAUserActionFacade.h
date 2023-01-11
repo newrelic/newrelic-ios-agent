@@ -1,6 +1,7 @@
 //
 //  NRMAUserActionFacade.h
 //  NewRelicAgent
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMAUserAction.h"

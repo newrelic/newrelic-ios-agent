@@ -1,5 +1,6 @@
 //
 // Created by Bryce Buchanan on 6/13/17.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #ifndef LIBMOBILEAGENT_THREAD_HPP

@@ -3,7 +3,7 @@
 //  Agent_Tests
 //
 //  Created by Anna Huller on 6/13/22.
-//  Copyright © 2022 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
