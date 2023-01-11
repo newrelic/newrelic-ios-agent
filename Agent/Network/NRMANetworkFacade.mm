@@ -70,13 +70,7 @@
     return nil;
 }
 
-+ (NSString*) responseBodyForMetrics:(NSData*)responseData {
-    if ([NRMAFlags shouldEnableHttpResponseBodyCapture] && responseData) {
-        return [NRMANetworkFacade generateResponseBody:responseData
-                                             sizeLimit:[NRMANetworkFacade responseBodyCaptureSizeLimit]];
-    }
-    return @"";
-}
+
 
 + (NSString*) responseBodyForEvents:(NSData*)responseData {
     if ([NRMAFlags shouldEnableHttpResponseBodyCapture] && responseData) {

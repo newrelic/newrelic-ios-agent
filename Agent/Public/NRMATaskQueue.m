@@ -15,7 +15,6 @@
 #import "NRMAHarvester.h"
 #import "NRMAMethodSummaryMeasurement.h"
 #import "NRMAExceptionHandler.h"
-#import "NRMAHarvestableHTTPError.h"
 #import "NRMAMeasurements.h"
 #import "NRMAMetric.h"
 #import "NRMAHTTPTransaction.h"

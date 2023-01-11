@@ -9,7 +9,6 @@
 #import "NRMAHarvestableArray.h"
 #import "NRMADeviceInformation.h"
 #import "NRMAHTTPTransactions.h"
-#import "NRMAHarvestableHTTPErrors.h"
 #import "NRMADataToken.h"
 #import "NRMAMetricSet.h"
 #import "NRMAAgentConfiguration.h"
@@ -23,7 +22,6 @@
 @property(atomic,assign) long long harvestTimeDelta;
 @property(atomic,strong) NRMAHTTPTransactions* httpTransactions;
 @property(atomic,strong) NRMAMetricSet* metrics;
-@property(atomic,strong) NRMAHarvestableHTTPErrors* httpErrors;
 @property(atomic,strong) NRMAActivityTraces* activityTraces;
 @property(atomic,strong) NSDictionary* analyticsAttributes;
 @property(atomic,strong) NRMAAnalyticsEvents* analyticsEvents;

@@ -20,10 +20,7 @@
         
         self.httpTransactions = [[NRMAHTTPTransactions alloc] init];
         [NRMAHarvestController addHarvestListener:self.httpTransactions];
-        
-        self.httpErrors = [[NRMAHarvestableHTTPErrors alloc] init];
-        [NRMAHarvestController addHarvestListener:self.httpErrors];
-        
+
         self.metrics = [[NRMAMetricSet alloc] init];
         [NRMAHarvestController addHarvestListener:self.metrics];
         
@@ -47,7 +44,8 @@
     [jsonArray addObject:[NSNumber numberWithLongLong:self.harvestTimeDelta]];
     [jsonArray addObject:[self.httpTransactions JSONObject]];
     [jsonArray addObject:[self.metrics JSONObject]];
-    [jsonArray addObject:[self.httpErrors JSONObject]];
+    // EMPTY NODE is Required by spec! Removing the following line will cause all metrics to fail to be sent to NR.(Historically this was the HTTPErrors.
+    [jsonArray addObject:@[]];
     [jsonArray addObject:[self.activityTraces JSONObject]];
     // Agent health node.
     [jsonArray addObject:@[]];
@@ -58,7 +56,6 @@
 
 - (void) clear
 {
-    [self.httpErrors clear];
     [self.httpTransactions clear];
     [self.metrics reset];
     [self.activityTraces clear];
@@ -74,7 +71,6 @@
 
 - (void) dealloc {
     [NRMAHarvestController removeHarvestListener:self.metrics];
-    [NRMAHarvestController removeHarvestListener:self.httpErrors];
     [NRMAHarvestController removeHarvestListener:self.httpTransactions];
     [NRMAHarvestController removeHarvestListener:self.activityTraces];
     [NRMAHarvestController removeHarvestListener:self.analyticsEvents];

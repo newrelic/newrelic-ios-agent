@@ -7,7 +7,6 @@
 //
 
 #import "NRMAScopedMeasurement.h"
-#import "NRMAHarvestableHTTPError.h"
 #import "NRMAHarvestableHTTPTransaction.h"
 #import "NRMAHTTPTransactionMeasurement.h"
 #import "NRMAHarvestableHTTPTransaction.h"
