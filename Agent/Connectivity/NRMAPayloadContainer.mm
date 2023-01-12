@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 2/6/18.
-//  Copyright © 2018 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <c++/v1/memory>

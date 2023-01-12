@@ -1,3 +1,4 @@
+//  Copyright © 2023 New Relic. All rights reserved.
 
 #ifndef LIBMOBILEAGENT_INTRINSICEVENT_HPP
 #define LIBMOBILEAGENT_INTRINSICEVENT_HPP

@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 1/5/15.
-//  Copyright (c) 2015 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -26,7 +26,6 @@
     [NRMAURLSessionOverride beginInstrumentation];
 
     self.queue = [[NSOperationQueue alloc] init];
-//    self.queue = [NSOperationQueue
     NSURLSession* session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:self.queue];
     self.mockSession = [OCMockObject partialMockForObject:session];
     self.networkFinished = NO;

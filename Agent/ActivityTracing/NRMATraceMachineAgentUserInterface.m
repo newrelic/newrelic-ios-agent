@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 7/9/14.
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMATraceMachineAgentUserInterface.h"

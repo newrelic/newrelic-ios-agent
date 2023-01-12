@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #include "SessionAnalyticEvent.hpp"
 
 namespace NewRelic {

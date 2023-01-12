@@ -1,5 +1,6 @@
 //
 // Created by Bryce Buchanan on 11/2/15.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #include "Utilities/Boolean.hpp"

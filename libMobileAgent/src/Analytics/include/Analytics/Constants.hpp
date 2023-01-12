@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #ifndef __CONSTANTS_H_
 #define __CONSTANTS_H_
 //reserved attributes

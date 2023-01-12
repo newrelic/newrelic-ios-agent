@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 2/18/14.
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMATaskQueue.h"
@@ -15,7 +15,6 @@
 #import "NRMAHarvester.h"
 #import "NRMAMethodSummaryMeasurement.h"
 #import "NRMAExceptionHandler.h"
-#import "NRMAHarvestableHTTPError.h"
 #import "NRMAMeasurements.h"
 #import "NRMAMetric.h"
 #import "NRMAHTTPTransaction.h"

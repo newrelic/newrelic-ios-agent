@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #ifndef JSON_ST_HH
 #define JSON_ST_HH
 

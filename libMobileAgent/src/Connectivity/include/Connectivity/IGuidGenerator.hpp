@@ -1,3 +1,4 @@
+//  Copyright © 2023 New Relic. All rights reserved.
 
 #ifndef LIBMOBILEAGENT_IGUIDGENERATOR_HPP
 #define LIBMOBILEAGENT_IGUIDGENERATOR_HPP

@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #ifndef __EventBufferConfig_H_
 #define __EventBufferConfig_H_
 namespace NewRelic {
