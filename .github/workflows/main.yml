@@ -65,9 +65,10 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-  
-  deployCocoapods:
-    name: DeployCocoapods
+
+  # Create NewRelicAgent.podspec & Package.swift with new version number and checksum.
+  deployStagingSpecs:
+    name: DeployStagingSpecs
     runs-on: macos-latest 
     needs: [deployS3]
     if: github.ref == 'refs/heads/staging'
@@ -94,31 +95,6 @@ jobs:
         rm NewRelicAgent.podspec-e
         rm NewRelicAgent.podspecbak
 
-    # Use git-auto-commit-action to push NewRelicAgent.podspec up to root of newrelic-ios-agent branch: staging.
-    - uses: stefanzweifel/git-auto-commit-action@v4
-      with:
-        commit_message: "[${{ env.version }}] Staging Cocoapods"
-        branch: staging
-
-  deploySPM:
-    name: deploySPM
-    runs-on: macos-latest 
-    needs: [deployS3]
-    if: github.ref == 'refs/heads/staging'
-    steps:
-    - uses: actions/checkout@v3
-      with: 
-        submodules: true
-
-    - name: Install gems
-      run: bundle install
-
-    - name: Get name
-      run: echo "version=${{needs.deployS3.outputs.version}}" >> $GITHUB_ENV
-
-    - name: Print XCFramework name
-      run: echo "${{ env.version }}" 
-
     - name: Create Package.swift for XCFramework version
       run: |
         cp NewRelic-SwiftPackage/Package.swift.template Package.swift
@@ -139,9 +115,11 @@ jobs:
 
         rm $XCFRAMEWORK_NAME
 
-    # Use git-auto-commit-action to push Package.swift up to root of newrelic-ios-agent branch: staging.
+    # Use git-auto-commit-action to push NewRelicAgent.podspec & Package.swift up to root of newrelic-ios-agent branch: staging.
+    # This should also tag the staging release branch w/ version number tag.
     - uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: "[${{ env.version }}] Staging SPM"
+        commit_message: "[${{ env.version }}] Staging Release"
         branch: staging
+        tagging_message: "${{ env.version }}"
 
