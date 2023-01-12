@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #import "Analytics/NetworkResponseData.hpp"
 
 namespace NewRelic {

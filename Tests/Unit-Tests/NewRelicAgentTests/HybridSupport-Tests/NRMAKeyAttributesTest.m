@@ -3,7 +3,7 @@
 //  Agent_Tests
 //
 //  Created on 6/3/22.
-//  Copyright © 2022 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
@@ -44,10 +44,37 @@
 }
 - (void) testKeyAttributesInvalidInput
 {
-    XCTAssertNoThrow([NRMAKeyAttributes keyAttributes: [self createInvalidConnectionInformation]], @"App should not crash when an input is nil");
-    NSDictionary* keyAttributes = [NRMAKeyAttributes keyAttributes:[self createInvalidConnectionInformation]];
-    XCTAssertNotNil(keyAttributes[@"appVersion"]);
-    XCTAssertEqualObjects(@"", keyAttributes[@"appVersion"]);
+    XCTAssertNoThrow([NRMAKeyAttributes keyAttributes: [self createInvalidConnectionInformation:nil
+                                                                                     appVersion:@"123"
+                                                                                      packageId:@"com.test"
+                                                                               useValidDeviceId: true]], @"App should not crash when an appName is nil");
+    XCTAssertNoThrow([NRMAKeyAttributes keyAttributes: [self createInvalidConnectionInformation:@"test"
+                                                                                     appVersion:nil
+                                                                                      packageId:@"com.test"
+                                                                               useValidDeviceId: true]], @"App should not crash when an appVersion is nil");
+    XCTAssertNoThrow([NRMAKeyAttributes keyAttributes: [self createInvalidConnectionInformation:@"test"
+                                                                                     appVersion:@"123"
+                                                                                      packageId:nil
+                                                                               useValidDeviceId: true]], @"App should not crash when a bundleId is nil");
+    XCTAssertNoThrow([NRMAKeyAttributes keyAttributes: [self createInvalidConnectionInformation:@"test"
+                                                                                     appVersion:@"123"
+                                                                                      packageId:@"com.test"
+                                                                               useValidDeviceId: false]], @"App should not crash when device id is nil");
+    
+    
+    NSDictionary* keyAttributesNoName = [NRMAKeyAttributes keyAttributes:[self createInvalidConnectionInformation:nil
+                                                                                                       appVersion:@"123"
+                                                                                                        packageId:@"com.test"
+                                                                                                 useValidDeviceId: true]];
+    XCTAssertNotNil(keyAttributesNoName[@"appName"]);
+    XCTAssertEqualObjects(@"", keyAttributesNoName[@"appName"]);
+    
+    NSDictionary* keyAttributesNoVersion = [NRMAKeyAttributes keyAttributes:[self createInvalidConnectionInformation:@"test"
+                                                                                                       appVersion:nil
+                                                                                                        packageId:@"com.test"
+                                                                                                 useValidDeviceId: true]];
+    XCTAssertNotNil(keyAttributesNoVersion[@"appVersion"]);
+    XCTAssertEqualObjects(@"", keyAttributesNoVersion[@"appVersion"]);
 }
 
 - (NRMAConnectInformation*) createValidConnectionInformation
@@ -77,13 +104,13 @@
     return connectionInformation;
 }
 
-- (NRMAConnectInformation*) createInvalidConnectionInformation
+- (NRMAConnectInformation*) createInvalidConnectionInformation:(NSString *) appName
+                                                    appVersion:(NSString *) appVersion
+                                                     packageId:(NSString *) packageId
+                                              useValidDeviceId:(BOOL) useValidDeviceId
 {
-    NSString* appName = @"test";
-    NSString* appversion;
-    NSString* packageId = @"com.test";
     NRMAApplicationInformation* appinfo = [[NRMAApplicationInformation alloc] initWithAppName:appName
-                                                                               appVersion:appversion
+                                                                               appVersion:appVersion
                                                                                  bundleId:packageId];
     NSDictionary* deviceInfo = [NSMutableDictionary new];
     [deviceInfo setValue:[NewRelicInternalUtils osName] forKey:kNRMADeviceInfoOSName];
@@ -92,7 +119,9 @@
     [deviceInfo setValue:[NewRelicInternalUtils deviceModel] forKey:kNRMADeviceInfoModel];
     [deviceInfo setValue:[NewRelicInternalUtils agentName] forKey:kNRMADeviceInfoAgentName];
     [deviceInfo setValue:@"2.123" forKey:kNRMADeviceInfoAgentVersion];
-    [deviceInfo setValue:@"389C9738-A761-44DE-8A66-1668CFD67DA1" forKey:kNRMADeviceInfoDeviceId];
+    if (useValidDeviceId) {
+        [deviceInfo setValue:@"389C9738-A761-44DE-8A66-1668CFD67DA1" forKey:kNRMADeviceInfoDeviceId];
+    }
     
     NRMADeviceInformation* devInfo = [[NRMADeviceInformation alloc] initWithDictionary:deviceInfo];
     NRMAConnectInformation* connectionInformation = [[NRMAConnectInformation alloc] init];

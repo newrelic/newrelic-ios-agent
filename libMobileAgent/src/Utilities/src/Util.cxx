@@ -1,5 +1,6 @@
 //
 // Created by Bryce Buchanan on 8/10/15.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #include "Utilities/Util.hpp"

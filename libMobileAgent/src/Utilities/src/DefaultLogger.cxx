@@ -1,6 +1,8 @@
 //
 // Created by Bryce Buchanan on 1/4/16.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
+
 #include "Utilities/LoggerBridge.hpp"
 #include <stdio.h>
 #include <stdarg.h>

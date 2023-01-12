@@ -1,3 +1,4 @@
+//  Copyright © 2023 New Relic. All rights reserved.
 
 #import "NRMAAnalytics.h"
 #import "NRMAAnalytics+cppInterface.h"

@@ -1,7 +1,7 @@
 //
 //  NewRelicAgent+Development.h
 //
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NewRelic.h"

@@ -1,5 +1,6 @@
 //
 // Created by Jared Stanbrough on 6/26/17.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #ifndef LIBMOBILEAGENT_LIBRARYCONTROLLER_HPP
