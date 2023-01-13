@@ -31,7 +31,7 @@ jobs:
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: "$BUILD_DIR/lcov/coverage.xml"
+        files: ${BUILD_DIR}/lcov/coverage.xml
 
   testTVOS:
     name : TestTVOS
