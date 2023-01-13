@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "container:Agent.xcodeproj">
+      location = "group:../../../Agent.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "container:Test Harness/NRTestApp/NRTestApp.xcodeproj">
    </FileRef>
 </Workspace>
