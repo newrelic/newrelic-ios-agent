@@ -14,7 +14,7 @@ jobs:
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: macos-latest 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@master
       with: 
         submodules: true
     
@@ -27,6 +27,12 @@ jobs:
 
     - name: Run tests on iOS (using fastlane)
       run: bundle exec fastlane runIOSTests
+
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: "$BUILD_DIR/lcov/coverage.xml"
+
   testTVOS:
     name : TestTVOS
     # runs-on: will be set to macos-latest when running on actual GHA. 
