@@ -144,4 +144,3 @@ jobs:
         commit_message: "[${{ env.version }}] Staging Release"
         branch: staging
         tagging_message: "${{ env.version }}"
-
