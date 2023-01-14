@@ -27,12 +27,11 @@ jobs:
     - name: Install gems
       run: bundle install
 
-    - name: Run tests on iOS (using fastlane)
-      run: bundle exec fastlane runIOSTests
-    
     - id: setCoverageXMLPath
-      name: Set path to coverage.xml
-      run: echo coverageXMLPath=${BUILD_DIR}/lcov/coverage.xml >> $GITHUB_OUTPUT
+      name: Run tests on iOS (using fastlane)
+      run: | 
+        bundle exec fastlane runIOSTests
+        echo coverageXMLPath=${BUILD_DIR}/lcov/coverage.xml >> $GITHUB_OUTPUT
 
     - uses: codecov/codecov-action@v3
       with:
