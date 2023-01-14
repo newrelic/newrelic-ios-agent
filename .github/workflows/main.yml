@@ -13,6 +13,8 @@ jobs:
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
     runs-on: macos-latest 
+    outputs:
+      coverageXMLPath: ${{ steps.setCoverageXMLPath.outputs.coverageXMLPath }}
     steps:
     - uses: actions/checkout@master
       with: 
@@ -27,11 +29,15 @@ jobs:
 
     - name: Run tests on iOS (using fastlane)
       run: bundle exec fastlane runIOSTests
+    
+    - id: setCoverageXMLPath
+      name: Set path to coverage.xml
+      run: echo coverageXMLPath=${BUILD_DIR}/lcov/coverage.xml >> $GITHUB_OUTPUT
 
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ${BUILD_DIR}/lcov/coverage.xml
+        files: ${{ steps.setCoverageXMLPath.outputs.coverageXMLPath }}
 
   testTVOS:
     name : TestTVOS
