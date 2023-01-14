@@ -31,7 +31,7 @@ jobs:
       name: Run tests on iOS (using fastlane)
       run: | 
         bundle exec fastlane runIOSTests
-        echo coverageXMLPath=${BUILD_DIR}/lcov/coverage.xml >> $GITHUB_OUTPUT
+        echo coverageXMLPath=${BUILT_PRODUCTS_DIR}/lcov/coverage.xml >> $GITHUB_OUTPUT
 
     - uses: codecov/codecov-action@v3
       with:
