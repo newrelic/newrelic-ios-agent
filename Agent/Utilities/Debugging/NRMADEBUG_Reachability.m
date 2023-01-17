@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Bryce Buchanan on 12/11/14.
-//  Copyright (c) 2014 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMADEBUG_Reachability.h"

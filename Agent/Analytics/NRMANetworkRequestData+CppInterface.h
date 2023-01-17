@@ -1,5 +1,5 @@
 //
-//  Copyright © 2018 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMANetworkRequestData.h"

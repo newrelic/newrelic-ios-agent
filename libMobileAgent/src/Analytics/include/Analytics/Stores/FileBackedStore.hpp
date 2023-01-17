@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #include <unistd.h>
 #include "CacheBackedStore.hpp"
 #include <Utilities/libLogger.hpp>
