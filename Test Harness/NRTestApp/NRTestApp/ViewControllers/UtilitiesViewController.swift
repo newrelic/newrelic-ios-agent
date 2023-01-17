@@ -49,10 +49,13 @@ extension UtilitiesViewController: UITableViewDelegate, UITableViewDataSource {
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "utilitiesCell", for: indexPath)
 
-        var content = cell.defaultContentConfiguration()
-        content.text = viewModel.options[indexPath.row].title
-        
-        cell.contentConfiguration = content
+        if #available(iOS 14.0, *) {
+            var content = cell.defaultContentConfiguration()
+            content.text = viewModel.options[indexPath.row].title
+            cell.contentConfiguration = content
+        } else {
+            cell.textLabel?.text = viewModel.options[indexPath.row].title
+        }
         
         return cell
     }

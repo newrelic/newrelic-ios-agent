@@ -47,6 +47,7 @@ class UtilViewModel {
     }
 
     func crash() {
+        // This will cause a crash to test the crash uploader, crash files may not get recorded if the debugger is running.
         NewRelic.crashNow("New Relic intentionally crashed to test Utils")
     }
     
