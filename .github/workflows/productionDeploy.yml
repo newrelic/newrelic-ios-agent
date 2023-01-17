@@ -1,0 +1,121 @@
+name: productionDeploy
+on: 
+  workflow_dispatch:
+    # The input version number (ex: 7.4.0) and branch: main are required for the production build.
+    inputs:
+      version:
+        required: true
+
+jobs:
+  # The deployS3Production job copies the existing build from staging download location to the production download location.
+  # The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
+  # inputs: version (String): The version number to promote to production. (ex 7.4.0)
+  deployS3Production:
+    name: deployS3Production
+    runs-on: macos-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      version: ${{ steps.setOutput.outputs.version }}
+    steps:
+    - uses: actions/checkout@v3
+      with: 
+        submodules: true
+
+    - name: Install gems
+      run: bundle install
+
+    - name: Get name
+      run: echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+    - id: setOutput
+      name: Print name
+      run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
+    
+    - name: Deploy to production S3
+      run: "aws s3 cp s3://nr-downloads-main/ios-v5/NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios_agent/"
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+  
+  # The deployProductionSpecs job creates the prod Podspec and Prod Package.swift from template and pushes to cp trunk.
+  deployProductionSpecs:
+    name: deployProductionSpecs
+    runs-on: macos-latest 
+    needs: [deployS3Production]
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v3
+      with: 
+        submodules: true
+
+    - name: Install gems
+      run: bundle install
+
+    - name: Get name
+      run: echo "version=${{needs.deployS3Production.outputs.version}}" >> $GITHUB_ENV
+
+    - name: Print XCFramework name
+      run: echo "${{ env.version }}" 
+
+    - name: Create Prod Podspec for XCFramework version
+      run: |
+        cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
+        REPLACE=X.XX
+        sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
+        rm NewRelicAgent.podspec-e
+        rm NewRelicAgent.podspecbak
+        
+        # added for dry run
+        cat NewRelicAgent.podspec
+        # added for dry run
+        pod trunk me
+
+        # COMMENTED FOR DRY RUN
+        # pod trunk push --allow-warnings NewRelicAgent.podspec
+      env:
+        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+
+    - name: Create Prod Package.swift for XCFramework version
+      run: |
+        cp NewRelic-SwiftPackage/Package.swift.template Package.swift
+
+        REPLACEVER={{VERSION}}
+        REPLACECHECKSUM={{CHECKSUM}}
+
+        XCFRAMEWORK_NAME="NewRelic_XCFramework_Agent_${{ env.version }}.zip"
+        curl https://download.newrelic.com/ios_agent/$XCFRAMEWORK_NAME -o $XCFRAMEWORK_NAME
+        SPM_CHECKSUM=`swift package compute-checksum  ${XCFRAMEWORK_NAME}`
+
+        sed -i bak "s/$REPLACEVER/${{ env.version }}/g" Package.swift
+        sed -i -e "s/$REPLACECHECKSUM/$SPM_CHECKSUM/g" Package.swift
+
+        rm Package.swift-e
+        rm Package.swiftbak
+
+        rm $XCFRAMEWORK_NAME
+
+        # added for dry run
+        cat Package.swift
+
+        # COMMENTED FOR DRY RUN
+        # # The following git cmd adds remote https://github.com/newrelic/newrelic-ios-agent-spm.
+        # # The subsequent git commands push the Package.swift up to that repo. URL is prepended with GHA PAT.
+
+        git remote add origin ${{ secrets.PROD_SPM_URL }}
+        git remote -v
+
+        # git add Package.swift
+        # git commit -m "Added build ${{ env.version }}"
+        # git tag ${{ env.version }}
+        # git push origin main --tags
+
+     # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
+     # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
+     # Since production builds are infrequent this creates a PR that must be manually approved and merged.
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        title: "[${{ env.version }}] Production Release"
+        branch: "auto-production-release-${{ env.version }}"
+        base: main
