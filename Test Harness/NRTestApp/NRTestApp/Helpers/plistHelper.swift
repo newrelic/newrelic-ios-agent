@@ -1,5 +1,5 @@
 //
-//  PlistHelper.swift
+//  plistHelper.swift
 //  NRTestApp
 //
 //  Created by Mike Bruin on 1/17/23.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class PlistHelper {
+class plistHelper {
     
     static func objectFor(key: String, plist: String) -> Any? {
         if let plistPath = Bundle.main.url(forResource: plist, withExtension: ".plist") {

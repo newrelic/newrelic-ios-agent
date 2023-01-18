@@ -33,7 +33,7 @@
 		F864284C2971DFA5002ABA01 /* triggerException.m in Sources */ = {isa = PBXBuildFile; fileRef = F864284B2971DFA5002ABA01 /* triggerException.m */; };
 		F864284F2971E254002ABA01 /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864284E2971E254002ABA01 /* WebViewController.swift */; };
 		F864286129774E2D002ABA01 /* NRAPIInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = F864286029774E2D002ABA01 /* NRAPIInfo.plist */; };
-		F864286329775023002ABA01 /* PlistHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864286229775023002ABA01 /* PlistHelper.swift */; };
+		F864286329775023002ABA01 /* plistHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864286229775023002ABA01 /* plistHelper.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,7 +134,7 @@
 		F864284D2971DFC9002ABA01 /* triggerException.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = triggerException.h; sourceTree = "<group>"; };
 		F864284E2971E254002ABA01 /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
 		F864286029774E2D002ABA01 /* NRAPIInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = NRAPIInfo.plist; sourceTree = "<group>"; };
-		F864286229775023002ABA01 /* PlistHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlistHelper.swift; sourceTree = "<group>"; };
+		F864286229775023002ABA01 /* plistHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = plistHelper.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -293,7 +293,7 @@
 				F8302B972970ADA7003EC291 /* Extensions */,
 				F8302B95297093FF003EC291 /* Variable.swift */,
 				F8302B9C2970B3E0003EC291 /* ApodURL.swift */,
-				F864286229775023002ABA01 /* PlistHelper.swift */,
+				F864286229775023002ABA01 /* plistHelper.swift */,
 				F864284B2971DFA5002ABA01 /* triggerException.m */,
 				F864284D2971DFC9002ABA01 /* triggerException.h */,
 				F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */,
@@ -518,7 +518,7 @@
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
-				F864286329775023002ABA01 /* PlistHelper.swift in Sources */,
+				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
