@@ -17,7 +17,6 @@ class UtilViewModel {
         
     var options =  [UtilOption]()
             
-    let title = "Utility"
     var numBreadcrumbs = 0
     var goodAttribute = false
     var badAttribute = false
@@ -31,15 +30,15 @@ class UtilViewModel {
     func createUtilOptions() {
         options.append(UtilOption(title: "Add Valid Breadcrumb", handler: { [self] in makeValidBreadcrumb()}))
         options.append(UtilOption(title: "Add Invalid Breadcrumb", handler: { [self] in makeInvalidBreadcrumb()}))
-        options.append(UtilOption(title: "Set Attributes!", handler: { [self] in setAttributes()}))
-        options.append(UtilOption(title: "Remove Attributes!", handler: { [self] in removeAttributes()}))
+        options.append(UtilOption(title: "Set Attributes", handler: { [self] in setAttributes()}))
+        options.append(UtilOption(title: "Remove Attributes", handler: { [self] in removeAttributes()}))
         options.append(UtilOption(title: "Crash Now!", handler: { [self] in crash()}))
         options.append(UtilOption(title: "Record Error", handler: { [self] in makeError()}))
         options.append(UtilOption(title: "Record Handled Exception", handler: { triggerException.testing()}))
         options.append(UtilOption(title: "Set UserID", handler: { [self] in changeUserID()}))
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
-        options.append(UtilOption(title: "END Interaction Trace", handler: { [self] in stopInteractionTrace()}))
+        options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Send Redirect Request", handler: { [self] in sendRedirectRequest()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))

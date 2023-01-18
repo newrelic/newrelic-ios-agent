@@ -8,6 +8,8 @@
 import UIKit
 import NewRelic
 
+// For more info on installing the New Relic agent go to https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/installation/spm-installation/#configure-using-swift-package-manager
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -17,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
 #endif
         
-        // To enable or disable  feature flags in New Relic iOS Agent.
+        // To enable or disable feature flags in New Relic iOS Agent.
 #if DISABLE_FEATURES
         NewRelic.disableFeatures([
             NRMAFeatureFlags.NRFeatureFlag_CrashReporting,
@@ -29,8 +31,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing,
         ])
 #endif
-        
-        NewRelic.start(withApplicationToken:"TEST-TOKEN")
+        // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
+        guard let apiKey = PlistHelper.objectFor(key: "NRAPIKey", plist: "NRAPIInfo") as? String else {return true}
+        NewRelic.start(withApplicationToken:apiKey)
         
         // These must be called after Agent.start() aka NewRelic.start(withApplicationToken)
         NewRelic.setMaxEventPoolSize(5000)
