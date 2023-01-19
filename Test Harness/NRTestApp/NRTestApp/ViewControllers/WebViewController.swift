@@ -9,7 +9,7 @@ import UIKit
 #if os(iOS)
 import WebKit
 
-class WebViewController: UIViewController, WKUIDelegate {
+class WebViewController: UIViewController {
     let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
     
     override func viewDidLoad() {
@@ -22,7 +22,6 @@ class WebViewController: UIViewController, WKUIDelegate {
     
     override func loadView() {
         super.loadView()
-        webView.uiDelegate = self
 
         if let url = URL(string: "https://www.newrelic.com") {
             webView.load(URLRequest(url: url))

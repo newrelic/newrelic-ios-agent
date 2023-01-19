@@ -12,6 +12,8 @@ class ViewController: UIViewController {
     weak var coordinator: MainCoordinator?
     var viewModel: ApodViewModel!
     
+    var options =  [UtilOption]()
+    
     var spaceImageView = UIImageView()
     var spaceLabel = UILabel()
     var spaceStack = UIStackView()
@@ -19,7 +21,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        
+        self.view.backgroundColor = .white
+
         setupSpaceStack()
         setupButtonsStack()
         
@@ -49,10 +52,11 @@ class ViewController: UIViewController {
                                 
         //Text Label
         spaceLabel.widthAnchor.constraint(equalToConstant: self.view.frame.width).isActive = true
-        spaceLabel.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        spaceLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
         spaceLabel.text  = ""
         spaceLabel.textAlignment = .center
-
+        spaceLabel.textColor = .black
+        
         //Stack View
         spaceStack.axis = .vertical
         spaceStack.distribution = .equalSpacing
@@ -71,43 +75,39 @@ class ViewController: UIViewController {
     }
     
     func setupButtonsStack() {
-        let utilities = makeButton(title: "Utilities")
-        utilities.addTarget(self, action: #selector(utilitiesAction(_:)), for: .touchUpInside)
+        let tableView = UITableView()
         
-        let webView = makeButton(title: "WebView")
-        webView.addTarget(self, action: #selector(webViewAction(_:)), for: .touchUpInside)
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.estimatedRowHeight = 140
+        tableView.bounces = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "utilitiesCell")
         
-        let refresh = makeButton(title: "Change Image")
-        refresh.addTarget(self, action: #selector(refreshAction(_:)), for: .touchUpInside)
+        self.view.addSubview(tableView)
         
-        //Stack View
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.distribution = .equalSpacing
-        stackView.alignment = .center
-        stackView.spacing = 16.0
+        tableView.topAnchor.constraint(equalTo: spaceStack.bottomAnchor, constant: 30.0).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
-        stackView.addArrangedSubview(utilities)
-        stackView.addArrangedSubview(webView)
-        stackView.addArrangedSubview(refresh)
-
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-
-        self.view.addSubview(stackView)
-        
-        stackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
-        stackView.topAnchor.constraint(equalTo: self.spaceStack.bottomAnchor, constant: 50).isActive = true
+        options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
+#if os(iOS)
+        options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
+#endif
+        options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
     }
     
-    @objc func utilitiesAction(_ sender: UIButton!) {
+    func utilitiesAction() {
         coordinator?.showUtilitiesViewController()
     }
-    
-    @objc func webViewAction(_ sender: UIButton!) {
-        coordinator?.showWebViewController()
+  
+#if os(iOS)
+    func webViewAction() {
+        self.coordinator?.showWebViewController()
     }
-    
-    @objc func refreshAction(_ sender: UIButton!) {
+#endif
+    func refreshAction() {
         viewModel.loadImage()
     }
     
@@ -118,5 +118,36 @@ class ViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         return button
+    }
+}
+
+extension ViewController: UITableViewDelegate, UITableViewDataSource {
+
+    func tableView(_ tableView: UITableView,
+                   numberOfRowsInSection section: Int) -> Int {
+        return options.count
+    }
+    
+    func tableView(_ tableView: UITableView,
+                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "utilitiesCell", for: indexPath)
+
+        if #available(iOS 14.0, tvOS 14.0, *) {
+            var content = cell.defaultContentConfiguration()
+            content.text = options[indexPath.row].title
+            content.textProperties.alignment = .center
+            content.textProperties.color = .black
+            cell.contentConfiguration = content
+        } else {
+            cell.textLabel?.text = options[indexPath.row].title
+            cell.textLabel?.textColor = .black
+        }
+        
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        options[indexPath.row].handler()
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 }

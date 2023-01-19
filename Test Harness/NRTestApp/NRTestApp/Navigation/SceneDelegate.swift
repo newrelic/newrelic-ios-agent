@@ -23,7 +23,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // Capture the navigation controller to use in the coordinator
         let navigationController = UINavigationController()
+#if os(iOS)
         navigationController.navigationBar.prefersLargeTitles = true
+#endif
         coordinator = MainCoordinator(navigationController: navigationController)
 
         // Start to present the initial view controller

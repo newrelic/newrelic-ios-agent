@@ -27,9 +27,10 @@ class MainCoordinator: Coordinator {
         let utilitiesViewController = ViewControllerProvider.utilitiesViewController
         navigationController.pushViewController(utilitiesViewController, animated: true)
     }
-    
+#if os(iOS)
     func showWebViewController() {
         let webViewController = ViewControllerProvider.webViewController
         navigationController.pushViewController(webViewController, animated: true)
     }
+#endif
 }

@@ -10,8 +10,7 @@ import UIKit
 enum ViewControllerProvider {
     // Provides an AllCatsViewController
     static var viewController: ViewController {
-        let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let viewController = storyboard.instantiateViewController(withIdentifier: "ViewController") as! ViewController
+        let viewController = ViewController()
         viewController.viewModel = ApodViewModel()
         return viewController
     }
@@ -20,10 +19,11 @@ enum ViewControllerProvider {
         let viewController = UtilitiesViewController()
         return viewController
     }
-    
+#if os(iOS)
     static var webViewController : WebViewController {
         let viewController = WebViewController()
         return viewController
     }
+#endif
 }
 
