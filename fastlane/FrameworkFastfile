@@ -21,13 +21,10 @@ platform :ios do
       macOSArchive = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
       macOSDsym = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
 
-      iosDsyms = [iosDsym] + Dir.glob("#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/BCSymbolMaps/*")
-      tvOSDsyms = [tvOSDsym] + Dir.glob("#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/BCSymbolMaps/*")
-
       create_xcframework(frameworks_with_dsyms: {
-        iosArchive => { dsyms: iosDsyms.join("\" -debug-symbols \"") },
+        iosArchive => { dsyms: iosDsym },
         iosSimArchive => {},
-        tvOSArchive => { dsyms: tvOSDsyms.join("\" -debug-symbols \"") },
+        tvOSArchive => { dsyms: tvOSDsym },
         tvOSSimArchive => {},
         macOSArchive => { dsyms: macOSDsym }
       }, output: "#{dirName}/NewRelic.xcframework")
@@ -54,10 +51,8 @@ platform :ios do
       iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
       iosSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-iphonesimulator/NewRelic.framework"
 
-      iosDsyms = [iosDsym] + Dir.glob("#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/BCSymbolMaps/*")
-
       create_xcframework(frameworks_with_dsyms: {
-        iosArchive => { dsyms: iosDsyms.join("\" -debug-symbols \"") },
+        iosArchive => { dsyms: iosDsym },
         iosSimArchive => {},
       }, output: "dylib-ios-agent/NewRelic.xcframework")
     end
