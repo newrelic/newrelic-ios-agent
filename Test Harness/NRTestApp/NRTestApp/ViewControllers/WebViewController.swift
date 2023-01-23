@@ -16,8 +16,6 @@ class WebViewController: UIViewController {
         super.viewDidLoad()
         
         self.title = "Web View"
-        self.view.backgroundColor = .white
-
     }
     
     override func loadView() {

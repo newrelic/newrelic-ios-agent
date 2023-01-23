@@ -15,7 +15,6 @@ class UtilitiesViewController: UIViewController {
         
         viewModel.createUtilOptions()
         
-        self.view.backgroundColor = .white
         self.title = "Utilities"
         
         let tableView = UITableView()
@@ -52,7 +51,6 @@ extension UtilitiesViewController: UITableViewDelegate, UITableViewDataSource {
         if #available(iOS 14.0, tvOS 14.0, *) {
             var content = cell.defaultContentConfiguration()
             content.text = viewModel.options[indexPath.row].title
-            content.textProperties.color = .black
             cell.contentConfiguration = content
         } else {
             cell.textLabel?.text = viewModel.options[indexPath.row].title

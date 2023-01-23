@@ -21,8 +21,9 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        self.view.backgroundColor = .white
-
+#if os(iOS)
+        self.view.backgroundColor = .systemBackground
+#endif
         setupSpaceStack()
         setupButtonsStack()
         
@@ -52,10 +53,9 @@ class ViewController: UIViewController {
                                 
         //Text Label
         spaceLabel.widthAnchor.constraint(equalToConstant: self.view.frame.width).isActive = true
-        spaceLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        spaceLabel.heightAnchor.constraint(equalToConstant: 40).isActive = true
         spaceLabel.text  = ""
         spaceLabel.textAlignment = .center
-        spaceLabel.textColor = .black
         
         //Stack View
         spaceStack.axis = .vertical
@@ -136,7 +136,6 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
             var content = cell.defaultContentConfiguration()
             content.text = options[indexPath.row].title
             content.textProperties.alignment = .center
-            content.textProperties.color = .black
             cell.contentConfiguration = content
         } else {
             cell.textLabel?.text = options[indexPath.row].title
