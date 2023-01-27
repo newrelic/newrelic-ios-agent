@@ -1,17 +1,21 @@
 //
-//  NRTestAppUITests.swift
-//  NRTestAppUITests
+//  NRTestAppNavigationTests.swift
+//  NRTestAppTests
 //
-//  Created by Mike Bruin on 1/11/23.
+//  Created by Mike Bruin on 1/27/23.
 //
 
 import XCTest
+@testable import NRTestApp
 
 final class NRTestAppUITests: XCTestCase {
+    
+    var mainCoordinator: MainCoordinator!
+
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
-
+        mainCoordinator = MainCoordinator(navigationController: UINavigationController())
         // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
         try super.setUpWithError()
@@ -20,23 +24,20 @@ final class NRTestAppUITests: XCTestCase {
 
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
+        mainCoordinator = nil
         try super.tearDownWithError()
     }
-
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
-        app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    
+    func testNavigation() throws {
+                
+        mainCoordinator.start()
+        sleep(2)
+        
+        mainCoordinator.showUtilitiesViewController()
+        sleep(2)
+        
+        mainCoordinator.showWebViewController()
+        sleep(2)
     }
-
-    func testLaunchPerformance() throws {
-        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
-            // This measures how long it takes to launch your application.
-            measure(metrics: [XCTApplicationLaunchMetric()]) {
-                XCUIApplication().launch()
-            }
-        }
-    }
+    
 }

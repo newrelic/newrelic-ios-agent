@@ -24,6 +24,13 @@
 
 #pragma mark - NSURLSessionDataDelegate Methods
 
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
+    if ([self.realDelegate respondsToSelector:@selector(URLSession:dataTask:didReceiveResponse:completionHandler:)]) {
+        [self.realDelegate URLSession:session
+                             dataTask:dataTask
+                   didReceiveResponse:response completionHandler:completionHandler];
+    }
+}
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
 {

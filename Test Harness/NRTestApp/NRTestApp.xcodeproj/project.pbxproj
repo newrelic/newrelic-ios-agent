@@ -54,9 +54,20 @@
 		F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9329708027003EC291 /* ApodResult.swift */; };
 		F86429442979CE31002ABA01 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; };
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		F86429552979E66F002ABA01 /* NRTestApp__tvOS_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86429002979CDB0002ABA01 /* NRTestApp__tvOS_Tests.swift */; };
 		F86429562979E67B002ABA01 /* NRTestApp__tvOS_UITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864290C2979CDB1002ABA01 /* NRTestApp__tvOS_UITestsLaunchTests.swift */; };
 		F86429572979E67B002ABA01 /* NRTestApp__tvOS_UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864290A2979CDB1002ABA01 /* NRTestApp__tvOS_UITests.swift */; };
+		F86429692979EAB7002ABA01 /* expectedRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86429612979EAB7002ABA01 /* expectedRequests.swift */; };
+		F864296E2979EAB7002ABA01 /* matchRequestBodies.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429662979EAB7002ABA01 /* matchRequestBodies.json */; };
+		F8642972297ADF1D002ABA01 /* crashReport.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429602979EAB7002ABA01 /* crashReport.json */; };
+		F8642974297ADF21002ABA01 /* crashReport.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429602979EAB7002ABA01 /* crashReport.json */; };
+		F8642975297ADF25002ABA01 /* handledException.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429652979EAB7002ABA01 /* handledException.json */; };
+		F8642976297ADF26002ABA01 /* handledException.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429652979EAB7002ABA01 /* handledException.json */; };
+		F8642977297ADF29002ABA01 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429622979EAB7002ABA01 /* harvestCollector.json */; };
+		F8642978297ADF2A002ABA01 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429622979EAB7002ABA01 /* harvestCollector.json */; };
+		F8642979297ADF2D002ABA01 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429632979EAB7002ABA01 /* harvestConnector.json */; };
+		F864297B297ADF31002ABA01 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429632979EAB7002ABA01 /* harvestConnector.json */; };
+		F864297C297ADF42002ABA01 /* matchRequestBodies.json in Resources */ = {isa = PBXBuildFile; fileRef = F86429662979EAB7002ABA01 /* matchRequestBodies.json */; };
+		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -185,11 +196,18 @@
 		F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (tvOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F86428F62979CDB0002ABA01 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F86428FC2979CDB0002ABA01 /* NRTestApp (tvOS)Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (tvOS)Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F86429002979CDB0002ABA01 /* NRTestApp__tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__tvOS_Tests.swift; sourceTree = "<group>"; };
 		F86429062979CDB0002ABA01 /* NRTestApp (tvOS)UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (tvOS)UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F864290A2979CDB1002ABA01 /* NRTestApp__tvOS_UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__tvOS_UITests.swift; sourceTree = "<group>"; };
 		F864290C2979CDB1002ABA01 /* NRTestApp__tvOS_UITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__tvOS_UITestsLaunchTests.swift; sourceTree = "<group>"; };
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
+		F86429602979EAB7002ABA01 /* crashReport.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = crashReport.json; sourceTree = "<group>"; };
+		F86429612979EAB7002ABA01 /* expectedRequests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = expectedRequests.swift; sourceTree = "<group>"; };
+		F86429622979EAB7002ABA01 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
+		F86429632979EAB7002ABA01 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
+		F86429642979EAB7002ABA01 /* HTTPDynamicStubs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPDynamicStubs.swift; sourceTree = "<group>"; };
+		F86429652979EAB7002ABA01 /* handledException.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = handledException.json; sourceTree = "<group>"; };
+		F86429662979EAB7002ABA01 /* matchRequestBodies.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = matchRequestBodies.json; sourceTree = "<group>"; };
+		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -285,8 +303,9 @@
 		F8302B0E296F5EFB003EC291 /* NRTestAppTests */ = {
 			isa = PBXGroup;
 			children = (
+				F864295F2979EA6E002ABA01 /* Stubs */,
 				F8302B0F296F5EFB003EC291 /* NRTestAppTests.swift */,
-				F86429002979CDB0002ABA01 /* NRTestApp__tvOS_Tests.swift */,
+				F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */,
 			);
 			path = NRTestAppTests;
 			sourceTree = "<group>";
@@ -399,6 +418,20 @@
 				F86428F52979CDB0002ABA01 /* LaunchScreen.storyboard */,
 			);
 			path = "NRTestApp (tvOS)";
+			sourceTree = "<group>";
+		};
+		F864295F2979EA6E002ABA01 /* Stubs */ = {
+			isa = PBXGroup;
+			children = (
+				F86429602979EAB7002ABA01 /* crashReport.json */,
+				F86429652979EAB7002ABA01 /* handledException.json */,
+				F86429622979EAB7002ABA01 /* harvestCollector.json */,
+				F86429632979EAB7002ABA01 /* harvestConnector.json */,
+				F86429662979EAB7002ABA01 /* matchRequestBodies.json */,
+				F86429642979EAB7002ABA01 /* HTTPDynamicStubs.swift */,
+				F86429612979EAB7002ABA01 /* expectedRequests.swift */,
+			);
+			path = Stubs;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -630,6 +663,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8642975297ADF25002ABA01 /* handledException.json in Resources */,
+				F8642979297ADF2D002ABA01 /* harvestConnector.json in Resources */,
+				F8642972297ADF1D002ABA01 /* crashReport.json in Resources */,
+				F8642977297ADF29002ABA01 /* harvestCollector.json in Resources */,
+				F864296E2979EAB7002ABA01 /* matchRequestBodies.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -644,6 +682,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8642978297ADF2A002ABA01 /* harvestCollector.json in Resources */,
+				F8642976297ADF26002ABA01 /* handledException.json in Resources */,
 				F86428F72979CDB0002ABA01 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -652,6 +692,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8642974297ADF21002ABA01 /* crashReport.json in Resources */,
+				F864297C297ADF42002ABA01 /* matchRequestBodies.json in Resources */,
+				F864297B297ADF31002ABA01 /* harvestConnector.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -716,8 +759,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F86429692979EAB7002ABA01 /* expectedRequests.swift in Sources */,
 				F8302B10296F5EFB003EC291 /* NRTestAppTests.swift in Sources */,
-				F86429552979E66F002ABA01 /* NRTestApp__tvOS_Tests.swift in Sources */,
+				F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
