@@ -3,7 +3,7 @@
 //  NewRelic
 //
 //  Created by Bryce Buchanan on 7/25/17.
-//  Copyright (c) 2017 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRMAHexUploader.h"
@@ -13,6 +13,7 @@
 #import "NRMASupportMetricHelper.h"
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
+#define kNRMAMaxPayloadSizeLimit 1000000
 
 @interface NRMAHexUploader()
 @property(strong) NSString* host;
@@ -48,9 +49,16 @@
     request.HTTPMethod = @"POST";
     request.HTTPBody = data;
 
-    [request setValue:@"application/octet-stream"
-   forHTTPHeaderField:@"Content-Type"];
+    [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu",(unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
+    
+    if([[request HTTPBody] length] > kNRMAMaxPayloadSizeLimit) {
+        NRLOG_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
+        [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
+        return;
+    }
+    
+    
     NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
     [self.taskStore track:uploadTask.originalRequest];
     [uploadTask resume];
@@ -83,8 +91,10 @@
 didCompleteWithError:(nullable NSError*)error {
     // We cancel http errors in other delegate method.
     if (error && error.code != kCFURLErrorCancelled) {
-        NRLOG_ERROR(@"failed to upload handled exception report: %@", [error localizedDescription]);
+        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
         [self handledErroredRequest:task.originalRequest];
+    } else {
+        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload cancelled: %@", error);
     }
 }
 
@@ -97,8 +107,10 @@ didCompleteWithError:(nullable NSError*)error {
 
     NSInteger statusCode = httpResponse.statusCode;
 
+    NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", httpResponse);
+    
     if (statusCode >= 400) {
-        NRLOG_ERROR(@"failed to upload handled exception report: %@", httpResponse.description);
+        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", httpResponse.description);
         [self handledErroredRequest:dataTask.originalRequest];
     }
     else {
@@ -112,13 +124,13 @@ didCompleteWithError:(nullable NSError*)error {
 
 - (void) handledErroredRequest:(NSURLRequest*)request {
     if ([self.taskStore shouldRetryTask:request]) {
-        NRLOG_VERBOSE(@"retrying handled exception report upload");
+        NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
         NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
         @synchronized(self.retryQueue) {
             [self.retryQueue addObject:uploadTask];
         }
     } else {
-        NRLOG_VERBOSE(@"Handled exception report max upload attempts reached. abandoning report.");
+        NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
         [self.taskStore untrack:request];
     }
 }

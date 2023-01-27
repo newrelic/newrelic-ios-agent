@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #ifndef __BaseValue_H_
 #define __BaseValue_H_
 

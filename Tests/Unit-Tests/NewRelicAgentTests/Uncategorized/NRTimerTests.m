@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by Saxon D'Aubin on 6/26/12.
-//  Copyright (c) 2012 New Relic. All rights reserved.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import "NRTimerTests.h"

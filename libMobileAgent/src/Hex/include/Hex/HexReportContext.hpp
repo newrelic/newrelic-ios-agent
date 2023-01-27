@@ -1,5 +1,6 @@
 //
 // Created by Bryce Buchanan on 9/22/17.
+//  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #ifndef LIBMOBILEAGENT_HEXREPORTCONTEXT_HPP

@@ -1,3 +1,5 @@
+//  Copyright © 2023 New Relic. All rights reserved.
+
 #include "MobileEvent.hpp"
 #include "Analytics/AttributeValidator.hpp"
 #include "NamedAnalyticEvent.hpp"
