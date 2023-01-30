@@ -42,7 +42,7 @@ class ViewController: UIViewController {
             }
         }
         
-        viewModel.loadImage()
+        viewModel.loadApodData()
     }
     
     func setupSpaceStack() {
@@ -108,7 +108,7 @@ class ViewController: UIViewController {
     }
 #endif
     func refreshAction() {
-        viewModel.loadImage()
+        viewModel.loadApodData()
     }
     
     func makeButton(title: String) -> UIButton {

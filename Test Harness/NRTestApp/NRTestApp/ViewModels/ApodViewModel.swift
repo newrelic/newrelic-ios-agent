@@ -13,14 +13,14 @@ class ApodViewModel {
     
     private let service = ApodService()
     
-    func loadImage() {
+    func loadApodData() {
         let nasaUrl = ApodURL(date: Date.randomBetween(start: "2015-10-31", end: Date().dateString()))
         service.getApod(nasaURL: URL(string: nasaUrl.url)!, completion: { [weak self] result in
             switch result {
             case .success(let response):
                 // We do not want a video, so if we get one try again
                 if response.media_type == "video"{
-                    self?.loadImage()
+                    self?.loadApodData()
                     return
                 }
                 self?.apodResponse.value = response

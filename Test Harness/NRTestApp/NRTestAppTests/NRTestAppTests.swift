@@ -36,7 +36,7 @@ final class NRTestAppTests: XCTestCase {
             }
         }
         
-        viewModel.loadImage()
+        viewModel.loadApodData()
         wait(for: [promise], timeout: 5)
     }
     
@@ -76,10 +76,6 @@ final class NRTestAppTests: XCTestCase {
         XCTAssertNoThrow(utilViewModel.startInteractionTrace())
         sleep(1)
         XCTAssertNoThrow(utilViewModel.stopInteractionTrace())
-    }
-    
-    func testUtilSendRedirectRequest() throws {
-        XCTAssertNoThrow(utilViewModel.sendRedirectRequest())
     }
     
     func testUtilNoticeNWRequest() throws {

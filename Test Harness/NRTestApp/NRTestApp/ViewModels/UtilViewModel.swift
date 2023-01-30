@@ -39,7 +39,6 @@ class UtilViewModel {
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
-        options.append(UtilOption(title: "Send Redirect Request", handler: { [self] in sendRedirectRequest()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
@@ -104,18 +103,6 @@ class UtilViewModel {
         for _ in 0...100 {
             NewRelic.recordCustomEvent("ButtonPress")
         }
-    }
-
-    func sendRedirectRequest() {
-        guard let url = URL(string: "https://easynvest.com.br") else { return }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            print("ok")
-        }
-        task.resume()
     }
     
     func stopInteractionTrace() {

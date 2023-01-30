@@ -34,13 +34,12 @@ extension UIImageView {
                     activityIndicator.stopAnimating()
                     activityIndicator.removeFromSuperview()
                     
-                    if let image = UIImage(data: data) {
-                        self.image = image
-                        
-                        // Stop the timer to record the stop time, and the difference can be passed in as a value in a custom metric
-                        timer.stop()
-                        NewRelic.recordMetric(withName: "SpaceImageDownloadAndDecode", category: "CustomMetricCategory", value: NSNumber(value: timer.timeElapsedInMilliSeconds()))
-                    }
+                    guard let image = UIImage(data: data) else { return }
+                    self.image = image
+                    
+                    // Stop the timer to record the stop time, and the difference can be passed in as a value in a custom metric
+                    timer.stop()
+                    NewRelic.recordMetric(withName: "SpaceImageDownloadAndDecode", category: "CustomMetricCategory", value: NSNumber(value: timer.timeElapsedInMilliSeconds()))
                 }
             } catch {
                 NewRelic.recordError(error)
