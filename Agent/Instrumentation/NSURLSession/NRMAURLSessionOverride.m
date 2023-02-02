@@ -259,6 +259,9 @@ NSURLSessionTask* NRMAOverride__dataTaskWithURL_completionHandler(id self, SEL _
 NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, SEL _cmd,NSURLRequest* request , void (^completionHandler)(NSData*,NSURLResponse*,NSError*))
 {
     IMP originalImp = NRMAOriginal__dataTaskWithRequest_completionHandler;
+
+    if (originalImp == nil) { return nil; }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
 
