@@ -298,6 +298,9 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
 NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
 {
     IMP originalImp = NRMAOriginal__dataTaskWithURL;
+
+    if (originalImp == nil) { return nil; }
+
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURL*))originalImp)(self,_cmd,url);
     
     //try to override the methods of the private class that is returned by this method
@@ -326,6 +329,8 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithRequest_fromData;
 
+    if (originalImp == nil) { return nil; }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
 
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
@@ -342,6 +347,8 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithStreamedRequest;
 
+    if (originalImp == nil) { return nil; }
+
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*))originalImp)(self, _cmd,request);
     
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -352,6 +359,9 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
 NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler(id self, SEL _cmd, NSURLRequest* request, NSURL* fileURL, void (^completionHandler)(NSData*,NSURLResponse*,NSError*))
 {
     IMP originalIMP = NRMAOriginal__uploadTaskWithRequest_fromFile_completionHandler;
+
+    if (originalIMP == nil) { return nil; }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
 
@@ -387,6 +397,9 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
 NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionHandler(id self, SEL _cmd, NSURLRequest* request, NSData* bodyData, void (^completionHandler)(NSData*,NSURLResponse*,NSError*))
 {
     IMP originalIMP = NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler;
+
+    if (originalIMP == nil) { return nil; }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
     if (completionHandler == nil) {
@@ -434,7 +447,9 @@ void NRMAOverride__didReceiveData(id self, SEL _cmd, NSData* data) {
 
     NRMA__setDataForSessionTask(task, currentData);
 
-    ((void(*)(id,SEL, NSData*))NRMAOriginal__didReceiveData)(self,_cmd, data);
+    if (NRMAOriginal__didReceiveData != nil) {
+        ((void(*)(id,SEL, NSData*))NRMAOriginal__didReceiveData)(self,_cmd, data);
+    }
 }
 
 void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error)
@@ -477,6 +492,8 @@ NRTimer* NRMA__getTimerForSessionTask(NSURLSessionTask* task)
 
 void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer)
 {
+    if (task == nil) return;
+
     objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
     if (timer == nil) {
         assocPolicy = OBJC_ASSOCIATION_ASSIGN;
@@ -486,6 +503,8 @@ void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer)
 
 void NRMA__setDataForSessionTask(NSURLSessionTask* task, NSData* data)
 {
+    if (task == nil) return;
+
     objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
     if (data == nil) {
         assocPolicy = OBJC_ASSOCIATION_ASSIGN;
@@ -495,5 +514,7 @@ void NRMA__setDataForSessionTask(NSURLSessionTask* task, NSData* data)
 
 NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task)
 {
+    if (task == nil) return nil;
+
     return objc_getAssociatedObject(task, kNRSessionDataAssociatedObject);
 }
