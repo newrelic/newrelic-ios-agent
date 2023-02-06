@@ -5,7 +5,7 @@
 
 #include "HexReportContext.hpp"
 #include <Utilities/libLogger.hpp>
-#include "agent-data-bundle_generated.h"
+#include "hex-agent-data-bundle_generated.h"
 
 using namespace NewRelic::Hex;
 using namespace com::newrelic::mobile;
@@ -18,7 +18,7 @@ HexReportContext::HexReportContext(const std::shared_ptr<Report::AppInfo>& appli
 
 void HexReportContext::finalize() {
     std::unique_lock<std::mutex> finalizeLock(reportMutex);
-    std::vector<flatbuffers::Offset<fbs::AgentData>> agentDataList;
+    std::vector<flatbuffers::Offset<fbs::HexAgentData>> agentDataList;
     for (auto& it : reportList) {
         try {
             agentDataList.push_back(it->finalize(*getBuilder()));
@@ -30,8 +30,8 @@ void HexReportContext::finalize() {
     }
     getBuilder()->CreateVector(agentDataList);
 
-    auto bundle = fbs::CreateAgentDataBundle(*getBuilder(), getBuilder()->CreateVector(agentDataList));
-    FinishAgentDataBundleBuffer(*getBuilder(), bundle);
+    auto bundle = fbs::CreateHexAgentDataBundle(*getBuilder(), getBuilder()->CreateVector(agentDataList));
+    FinishHexAgentDataBundleBuffer(*getBuilder(), bundle);
 
 }
 

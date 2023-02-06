@@ -11,11 +11,11 @@ using namespace com::newrelic::mobile;
 
 void HexAuditor::audit(uint8_t* buf) {
     ss.str(std::string()); // clear
-    auto agentDataBundle = com::newrelic::mobile::fbs::GetAgentDataBundle(buf);
+    auto hexAgentDataBundle = com::newrelic::mobile::fbs::GetHexAgentDataBundle(buf);
     int indentations = 0;
     printStringWithIndentation("AgentDataBundle:\n[", indentations);
     indentations++;
-    for (auto it = agentDataBundle->agentData()->begin(); it != agentDataBundle->agentData()->end(); it++) {
+    for (auto it = hexAgentDataBundle->hexAgentData()->begin(); it != hexAgentDataBundle->hexAgentData()->end(); it++) {
         printStringWithIndentation("{", indentations);
         printApplicationinfo(it->applicationInfo(), indentations);
         printStringAttributes(it->stringAttributes(), indentations);

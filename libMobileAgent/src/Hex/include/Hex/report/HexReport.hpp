@@ -5,7 +5,7 @@
 #include "ios_generated.h"
 #include "hex_generated.h"
 #include "session-attributes_generated.h"
-#include "agent-data_generated.h"
+#include "hex-agent-data_generated.h"
 #include <Analytics/AttributeValidator.hpp>
 #include <Analytics/AttributeBase.hpp>
 #include "HandledException.hpp"
@@ -25,7 +25,7 @@ namespace NewRelic {
         namespace Report {
             class HexReport {
             public:
-                flatbuffers::Offset<fbs::AgentData> finalize(FlatBufferBuilder& builder) const; //throws
+                flatbuffers::Offset<fbs::HexAgentData> finalize(FlatBufferBuilder& builder) const; //throws
 
                 HexReport(std::shared_ptr<Report::HandledException> exception,
                           const std::shared_ptr<AppInfo>& applicationInfo,

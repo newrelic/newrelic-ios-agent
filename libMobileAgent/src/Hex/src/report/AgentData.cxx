@@ -21,7 +21,7 @@ NewRelic::Hex::Report::AgentData::AgentData(const std::shared_ptr<StringAttribut
           _applicationInfo(applicationInfo),
           _handledException(std::move(handledException)) {}
 
-Offset<fbs::AgentData> NewRelic::Hex::Report::AgentData::serialize(flatbuffers::FlatBufferBuilder& builder) const {
+Offset<fbs::HexAgentData> NewRelic::Hex::Report::AgentData::serialize(flatbuffers::FlatBufferBuilder& builder) const {
 
     auto serializedHandledException = _handledException->serialize(builder);
     auto serializedApplicationInformation = _applicationInfo->serialize(builder);
@@ -31,12 +31,12 @@ Offset<fbs::AgentData> NewRelic::Hex::Report::AgentData::serialize(flatbuffers::
     auto serializedStringAttributes = _stringAttributes->serialize(builder);
 
 
-    auto agentDataBuilder = fbs::AgentDataBuilder(builder);
-    agentDataBuilder.add_handledExceptions(serializedHandledException);
-    agentDataBuilder.add_applicationInfo(serializedApplicationInformation);
-    agentDataBuilder.add_boolAttributes(serializedBooleanAttributes);
-    agentDataBuilder.add_doubleAttributes(serializedDoubleAttributes);
-    agentDataBuilder.add_longAttributes(serializedLongAttributes);
-    agentDataBuilder.add_stringAttributes(serializedStringAttributes);
-    return agentDataBuilder.Finish();
+    auto hexAgentDataBuilder = fbs::HexAgentDataBuilder(builder);
+    hexAgentDataBuilder.add_handledExceptions(serializedHandledException);
+    hexAgentDataBuilder.add_applicationInfo(serializedApplicationInformation);
+    hexAgentDataBuilder.add_boolAttributes(serializedBooleanAttributes);
+    hexAgentDataBuilder.add_doubleAttributes(serializedDoubleAttributes);
+    hexAgentDataBuilder.add_longAttributes(serializedLongAttributes);
+    hexAgentDataBuilder.add_stringAttributes(serializedStringAttributes);
+    return hexAgentDataBuilder.Finish();
 }

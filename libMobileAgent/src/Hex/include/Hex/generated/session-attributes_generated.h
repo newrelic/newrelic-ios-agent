@@ -6,182 +6,192 @@
 
 #include "flatbuffers/flatbuffers.h"
 
+// Ensure the included flatbuffers.h is the same version as when this file was
+// generated, otherwise it may not be compatible.
+static_assert(FLATBUFFERS_VERSION_MAJOR == 23 &&
+              FLATBUFFERS_VERSION_MINOR == 1 &&
+              FLATBUFFERS_VERSION_REVISION == 21,
+             "Non-compatible flatbuffers version included");
+
 namespace com {
 namespace newrelic {
 namespace mobile {
 namespace fbs {
 
 struct StringSessionAttribute;
+struct StringSessionAttributeBuilder;
 struct StringSessionAttributeT;
 
 struct LongSessionAttribute;
+struct LongSessionAttributeBuilder;
 struct LongSessionAttributeT;
 
 struct DoubleSessionAttribute;
+struct DoubleSessionAttributeBuilder;
 struct DoubleSessionAttributeT;
 
 struct BoolSessionAttribute;
+struct BoolSessionAttributeBuilder;
 struct BoolSessionAttributeT;
 
-struct StringSessionAttributeT : public flatbuffers::NativeTable {
+struct StringSessionAttributeT : public ::flatbuffers::NativeTable {
   typedef StringSessionAttribute TableType;
-  std::string name;
-  std::string value;
-  StringSessionAttributeT() {
-  }
+  std::string name{};
+  std::string value{};
 };
 
-struct StringSessionAttribute FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+struct StringSessionAttribute FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef StringSessionAttributeT NativeTableType;
-  enum {
+  typedef StringSessionAttributeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NAME = 4,
     VT_VALUE = 6
   };
-  const flatbuffers::String *name() const {
-    return GetPointer<const flatbuffers::String *>(VT_NAME);
+  const ::flatbuffers::String *name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
   }
-  flatbuffers::String *mutable_name() {
-    return GetPointer<flatbuffers::String *>(VT_NAME);
+  ::flatbuffers::String *mutable_name() {
+    return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
-  bool KeyCompareLessThan(const StringSessionAttribute *o) const {
+  bool KeyCompareLessThan(const StringSessionAttribute * const o) const {
     return *name() < *o->name();
   }
-  int KeyCompareWithValue(const char *val) const {
-    return strcmp(name()->c_str(), val);
+  int KeyCompareWithValue(const char *_name) const {
+    return strcmp(name()->c_str(), _name);
   }
-  const flatbuffers::String *value() const {
-    return GetPointer<const flatbuffers::String *>(VT_VALUE);
+  const ::flatbuffers::String *value() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_VALUE);
   }
-  flatbuffers::String *mutable_value() {
-    return GetPointer<flatbuffers::String *>(VT_VALUE);
+  ::flatbuffers::String *mutable_value() {
+    return GetPointer<::flatbuffers::String *>(VT_VALUE);
   }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_NAME) &&
-           verifier.Verify(name()) &&
+           verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_VALUE) &&
-           verifier.Verify(value()) &&
+           verifier.VerifyString(value()) &&
            verifier.EndTable();
   }
-  StringSessionAttributeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(StringSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<StringSessionAttribute> Pack(flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+  StringSessionAttributeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(StringSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<StringSessionAttribute> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct StringSessionAttributeBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_name(flatbuffers::Offset<flatbuffers::String> name) {
+  typedef StringSessionAttribute Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(StringSessionAttribute::VT_NAME, name);
   }
-  void add_value(flatbuffers::Offset<flatbuffers::String> value) {
+  void add_value(::flatbuffers::Offset<::flatbuffers::String> value) {
     fbb_.AddOffset(StringSessionAttribute::VT_VALUE, value);
   }
-  StringSessionAttributeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit StringSessionAttributeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  StringSessionAttributeBuilder &operator=(const StringSessionAttributeBuilder &);
-  flatbuffers::Offset<StringSessionAttribute> Finish() {
-    const auto end = fbb_.EndTable(start_, 2);
-    auto o = flatbuffers::Offset<StringSessionAttribute>(end);
+  ::flatbuffers::Offset<StringSessionAttribute> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<StringSessionAttribute>(end);
     fbb_.Required(o, StringSessionAttribute::VT_NAME);
     return o;
   }
 };
 
-inline flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttribute(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> name = 0,
-    flatbuffers::Offset<flatbuffers::String> value = 0) {
+inline ::flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttribute(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> value = 0) {
   StringSessionAttributeBuilder builder_(_fbb);
   builder_.add_value(value);
   builder_.add_name(name);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttributeDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttributeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *name = nullptr,
     const char *value = nullptr) {
+  auto name__ = name ? _fbb.CreateString(name) : 0;
+  auto value__ = value ? _fbb.CreateString(value) : 0;
   return com::newrelic::mobile::fbs::CreateStringSessionAttribute(
       _fbb,
-      name ? _fbb.CreateString(name) : 0,
-      value ? _fbb.CreateString(value) : 0);
+      name__,
+      value__);
 }
 
-flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+::flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-struct LongSessionAttributeT : public flatbuffers::NativeTable {
+struct LongSessionAttributeT : public ::flatbuffers::NativeTable {
   typedef LongSessionAttribute TableType;
-  std::string name;
-  int64_t value;
-  LongSessionAttributeT()
-      : value(0) {
-  }
+  std::string name{};
+  int64_t value = 0;
 };
 
-struct LongSessionAttribute FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+struct LongSessionAttribute FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef LongSessionAttributeT NativeTableType;
-  enum {
+  typedef LongSessionAttributeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NAME = 4,
     VT_VALUE = 6
   };
-  const flatbuffers::String *name() const {
-    return GetPointer<const flatbuffers::String *>(VT_NAME);
+  const ::flatbuffers::String *name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
   }
-  flatbuffers::String *mutable_name() {
-    return GetPointer<flatbuffers::String *>(VT_NAME);
+  ::flatbuffers::String *mutable_name() {
+    return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
-  bool KeyCompareLessThan(const LongSessionAttribute *o) const {
+  bool KeyCompareLessThan(const LongSessionAttribute * const o) const {
     return *name() < *o->name();
   }
-  int KeyCompareWithValue(const char *val) const {
-    return strcmp(name()->c_str(), val);
+  int KeyCompareWithValue(const char *_name) const {
+    return strcmp(name()->c_str(), _name);
   }
   int64_t value() const {
     return GetField<int64_t>(VT_VALUE, 0);
   }
-  bool mutate_value(int64_t _value) {
+  bool mutate_value(int64_t _value = 0) {
     return SetField<int64_t>(VT_VALUE, _value, 0);
   }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_NAME) &&
-           verifier.Verify(name()) &&
-           VerifyField<int64_t>(verifier, VT_VALUE) &&
+           verifier.VerifyString(name()) &&
+           VerifyField<int64_t>(verifier, VT_VALUE, 8) &&
            verifier.EndTable();
   }
-  LongSessionAttributeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(LongSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<LongSessionAttribute> Pack(flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+  LongSessionAttributeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(LongSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<LongSessionAttribute> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct LongSessionAttributeBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_name(flatbuffers::Offset<flatbuffers::String> name) {
+  typedef LongSessionAttribute Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(LongSessionAttribute::VT_NAME, name);
   }
   void add_value(int64_t value) {
     fbb_.AddElement<int64_t>(LongSessionAttribute::VT_VALUE, value, 0);
   }
-  LongSessionAttributeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit LongSessionAttributeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  LongSessionAttributeBuilder &operator=(const LongSessionAttributeBuilder &);
-  flatbuffers::Offset<LongSessionAttribute> Finish() {
-    const auto end = fbb_.EndTable(start_, 2);
-    auto o = flatbuffers::Offset<LongSessionAttribute>(end);
+  ::flatbuffers::Offset<LongSessionAttribute> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<LongSessionAttribute>(end);
     fbb_.Required(o, LongSessionAttribute::VT_NAME);
     return o;
   }
 };
 
-inline flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> name = 0,
+inline ::flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     int64_t value = 0) {
   LongSessionAttributeBuilder builder_(_fbb);
   builder_.add_value(value);
@@ -189,88 +199,87 @@ inline flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttributeDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttributeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *name = nullptr,
     int64_t value = 0) {
+  auto name__ = name ? _fbb.CreateString(name) : 0;
   return com::newrelic::mobile::fbs::CreateLongSessionAttribute(
       _fbb,
-      name ? _fbb.CreateString(name) : 0,
+      name__,
       value);
 }
 
-flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+::flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-struct DoubleSessionAttributeT : public flatbuffers::NativeTable {
+struct DoubleSessionAttributeT : public ::flatbuffers::NativeTable {
   typedef DoubleSessionAttribute TableType;
-  std::string name;
-  double value;
-  DoubleSessionAttributeT()
-      : value(0.0) {
-  }
+  std::string name{};
+  double value = 0.0;
 };
 
-struct DoubleSessionAttribute FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+struct DoubleSessionAttribute FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef DoubleSessionAttributeT NativeTableType;
-  enum {
+  typedef DoubleSessionAttributeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NAME = 4,
     VT_VALUE = 6
   };
-  const flatbuffers::String *name() const {
-    return GetPointer<const flatbuffers::String *>(VT_NAME);
+  const ::flatbuffers::String *name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
   }
-  flatbuffers::String *mutable_name() {
-    return GetPointer<flatbuffers::String *>(VT_NAME);
+  ::flatbuffers::String *mutable_name() {
+    return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
-  bool KeyCompareLessThan(const DoubleSessionAttribute *o) const {
+  bool KeyCompareLessThan(const DoubleSessionAttribute * const o) const {
     return *name() < *o->name();
   }
-  int KeyCompareWithValue(const char *val) const {
-    return strcmp(name()->c_str(), val);
+  int KeyCompareWithValue(const char *_name) const {
+    return strcmp(name()->c_str(), _name);
   }
   double value() const {
     return GetField<double>(VT_VALUE, 0.0);
   }
-  bool mutate_value(double _value) {
+  bool mutate_value(double _value = 0.0) {
     return SetField<double>(VT_VALUE, _value, 0.0);
   }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_NAME) &&
-           verifier.Verify(name()) &&
-           VerifyField<double>(verifier, VT_VALUE) &&
+           verifier.VerifyString(name()) &&
+           VerifyField<double>(verifier, VT_VALUE, 8) &&
            verifier.EndTable();
   }
-  DoubleSessionAttributeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(DoubleSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<DoubleSessionAttribute> Pack(flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+  DoubleSessionAttributeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(DoubleSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<DoubleSessionAttribute> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct DoubleSessionAttributeBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_name(flatbuffers::Offset<flatbuffers::String> name) {
+  typedef DoubleSessionAttribute Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(DoubleSessionAttribute::VT_NAME, name);
   }
   void add_value(double value) {
     fbb_.AddElement<double>(DoubleSessionAttribute::VT_VALUE, value, 0.0);
   }
-  DoubleSessionAttributeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit DoubleSessionAttributeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  DoubleSessionAttributeBuilder &operator=(const DoubleSessionAttributeBuilder &);
-  flatbuffers::Offset<DoubleSessionAttribute> Finish() {
-    const auto end = fbb_.EndTable(start_, 2);
-    auto o = flatbuffers::Offset<DoubleSessionAttribute>(end);
+  ::flatbuffers::Offset<DoubleSessionAttribute> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<DoubleSessionAttribute>(end);
     fbb_.Required(o, DoubleSessionAttribute::VT_NAME);
     return o;
   }
 };
 
-inline flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> name = 0,
+inline ::flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     double value = 0.0) {
   DoubleSessionAttributeBuilder builder_(_fbb);
   builder_.add_value(value);
@@ -278,88 +287,87 @@ inline flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttributeDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttributeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *name = nullptr,
     double value = 0.0) {
+  auto name__ = name ? _fbb.CreateString(name) : 0;
   return com::newrelic::mobile::fbs::CreateDoubleSessionAttribute(
       _fbb,
-      name ? _fbb.CreateString(name) : 0,
+      name__,
       value);
 }
 
-flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+::flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-struct BoolSessionAttributeT : public flatbuffers::NativeTable {
+struct BoolSessionAttributeT : public ::flatbuffers::NativeTable {
   typedef BoolSessionAttribute TableType;
-  std::string name;
-  bool value;
-  BoolSessionAttributeT()
-      : value(false) {
-  }
+  std::string name{};
+  bool value = false;
 };
 
-struct BoolSessionAttribute FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+struct BoolSessionAttribute FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef BoolSessionAttributeT NativeTableType;
-  enum {
+  typedef BoolSessionAttributeBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
     VT_NAME = 4,
     VT_VALUE = 6
   };
-  const flatbuffers::String *name() const {
-    return GetPointer<const flatbuffers::String *>(VT_NAME);
+  const ::flatbuffers::String *name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
   }
-  flatbuffers::String *mutable_name() {
-    return GetPointer<flatbuffers::String *>(VT_NAME);
+  ::flatbuffers::String *mutable_name() {
+    return GetPointer<::flatbuffers::String *>(VT_NAME);
   }
-  bool KeyCompareLessThan(const BoolSessionAttribute *o) const {
+  bool KeyCompareLessThan(const BoolSessionAttribute * const o) const {
     return *name() < *o->name();
   }
-  int KeyCompareWithValue(const char *val) const {
-    return strcmp(name()->c_str(), val);
+  int KeyCompareWithValue(const char *_name) const {
+    return strcmp(name()->c_str(), _name);
   }
   bool value() const {
     return GetField<uint8_t>(VT_VALUE, 0) != 0;
   }
-  bool mutate_value(bool _value) {
+  bool mutate_value(bool _value = 0) {
     return SetField<uint8_t>(VT_VALUE, static_cast<uint8_t>(_value), 0);
   }
-  bool Verify(flatbuffers::Verifier &verifier) const {
+  bool Verify(::flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffsetRequired(verifier, VT_NAME) &&
-           verifier.Verify(name()) &&
-           VerifyField<uint8_t>(verifier, VT_VALUE) &&
+           verifier.VerifyString(name()) &&
+           VerifyField<uint8_t>(verifier, VT_VALUE, 1) &&
            verifier.EndTable();
   }
-  BoolSessionAttributeT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  void UnPackTo(BoolSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
-  static flatbuffers::Offset<BoolSessionAttribute> Pack(flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+  BoolSessionAttributeT *UnPack(const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(BoolSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static ::flatbuffers::Offset<BoolSessionAttribute> Pack(::flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 };
 
 struct BoolSessionAttributeBuilder {
-  flatbuffers::FlatBufferBuilder &fbb_;
-  flatbuffers::uoffset_t start_;
-  void add_name(flatbuffers::Offset<flatbuffers::String> name) {
+  typedef BoolSessionAttribute Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
     fbb_.AddOffset(BoolSessionAttribute::VT_NAME, name);
   }
   void add_value(bool value) {
     fbb_.AddElement<uint8_t>(BoolSessionAttribute::VT_VALUE, static_cast<uint8_t>(value), 0);
   }
-  BoolSessionAttributeBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  explicit BoolSessionAttributeBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  BoolSessionAttributeBuilder &operator=(const BoolSessionAttributeBuilder &);
-  flatbuffers::Offset<BoolSessionAttribute> Finish() {
-    const auto end = fbb_.EndTable(start_, 2);
-    auto o = flatbuffers::Offset<BoolSessionAttribute>(end);
+  ::flatbuffers::Offset<BoolSessionAttribute> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<BoolSessionAttribute>(end);
     fbb_.Required(o, BoolSessionAttribute::VT_NAME);
     return o;
   }
 };
 
-inline flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttribute(
-    flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::String> name = 0,
+inline ::flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttribute(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
     bool value = false) {
   BoolSessionAttributeBuilder builder_(_fbb);
   builder_.add_name(name);
@@ -367,66 +375,69 @@ inline flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttribute(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttributeDirect(
-    flatbuffers::FlatBufferBuilder &_fbb,
+inline ::flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttributeDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
     const char *name = nullptr,
     bool value = false) {
+  auto name__ = name ? _fbb.CreateString(name) : 0;
   return com::newrelic::mobile::fbs::CreateBoolSessionAttribute(
       _fbb,
-      name ? _fbb.CreateString(name) : 0,
+      name__,
       value);
 }
 
-flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+::flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
-inline StringSessionAttributeT *StringSessionAttribute::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new StringSessionAttributeT();
-  UnPackTo(_o, _resolver);
-  return _o;
+inline StringSessionAttributeT *StringSessionAttribute::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<StringSessionAttributeT>(new StringSessionAttributeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
 }
 
-inline void StringSessionAttribute::UnPackTo(StringSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+inline void StringSessionAttribute::UnPackTo(StringSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = name(); if (_e) _o->name = _e->str(); };
-  { auto _e = value(); if (_e) _o->value = _e->str(); };
+  { auto _e = name(); if (_e) _o->name = _e->str(); }
+  { auto _e = value(); if (_e) _o->value = _e->str(); }
 }
 
-inline flatbuffers::Offset<StringSessionAttribute> StringSessionAttribute::Pack(flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<StringSessionAttribute> StringSessionAttribute::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   return CreateStringSessionAttribute(_fbb, _o, _rehasher);
 }
 
-inline flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<StringSessionAttribute> CreateStringSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const StringSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   (void)_rehasher;
   (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const StringSessionAttributeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _name = _fbb.CreateString(_o->name);
-  auto _value = _o->value.size() ? _fbb.CreateString(_o->value) : 0;
+  auto _value = _o->value.empty() ? 0 : _fbb.CreateString(_o->value);
   return com::newrelic::mobile::fbs::CreateStringSessionAttribute(
       _fbb,
       _name,
       _value);
 }
 
-inline LongSessionAttributeT *LongSessionAttribute::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new LongSessionAttributeT();
-  UnPackTo(_o, _resolver);
-  return _o;
+inline LongSessionAttributeT *LongSessionAttribute::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<LongSessionAttributeT>(new LongSessionAttributeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
 }
 
-inline void LongSessionAttribute::UnPackTo(LongSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+inline void LongSessionAttribute::UnPackTo(LongSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = name(); if (_e) _o->name = _e->str(); };
-  { auto _e = value(); _o->value = _e; };
+  { auto _e = name(); if (_e) _o->name = _e->str(); }
+  { auto _e = value(); _o->value = _e; }
 }
 
-inline flatbuffers::Offset<LongSessionAttribute> LongSessionAttribute::Pack(flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<LongSessionAttribute> LongSessionAttribute::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   return CreateLongSessionAttribute(_fbb, _o, _rehasher);
 }
 
-inline flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const LongSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   (void)_rehasher;
   (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const LongSessionAttributeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _name = _fbb.CreateString(_o->name);
   auto _value = _o->value;
   return com::newrelic::mobile::fbs::CreateLongSessionAttribute(
@@ -435,26 +446,27 @@ inline flatbuffers::Offset<LongSessionAttribute> CreateLongSessionAttribute(flat
       _value);
 }
 
-inline DoubleSessionAttributeT *DoubleSessionAttribute::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new DoubleSessionAttributeT();
-  UnPackTo(_o, _resolver);
-  return _o;
+inline DoubleSessionAttributeT *DoubleSessionAttribute::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<DoubleSessionAttributeT>(new DoubleSessionAttributeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
 }
 
-inline void DoubleSessionAttribute::UnPackTo(DoubleSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+inline void DoubleSessionAttribute::UnPackTo(DoubleSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = name(); if (_e) _o->name = _e->str(); };
-  { auto _e = value(); _o->value = _e; };
+  { auto _e = name(); if (_e) _o->name = _e->str(); }
+  { auto _e = value(); _o->value = _e; }
 }
 
-inline flatbuffers::Offset<DoubleSessionAttribute> DoubleSessionAttribute::Pack(flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<DoubleSessionAttribute> DoubleSessionAttribute::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   return CreateDoubleSessionAttribute(_fbb, _o, _rehasher);
 }
 
-inline flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const DoubleSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   (void)_rehasher;
   (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const DoubleSessionAttributeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _name = _fbb.CreateString(_o->name);
   auto _value = _o->value;
   return com::newrelic::mobile::fbs::CreateDoubleSessionAttribute(
@@ -463,26 +475,27 @@ inline flatbuffers::Offset<DoubleSessionAttribute> CreateDoubleSessionAttribute(
       _value);
 }
 
-inline BoolSessionAttributeT *BoolSessionAttribute::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
-  auto _o = new BoolSessionAttributeT();
-  UnPackTo(_o, _resolver);
-  return _o;
+inline BoolSessionAttributeT *BoolSessionAttribute::UnPack(const ::flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<BoolSessionAttributeT>(new BoolSessionAttributeT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
 }
 
-inline void BoolSessionAttribute::UnPackTo(BoolSessionAttributeT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+inline void BoolSessionAttribute::UnPackTo(BoolSessionAttributeT *_o, const ::flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = name(); if (_e) _o->name = _e->str(); };
-  { auto _e = value(); _o->value = _e; };
+  { auto _e = name(); if (_e) _o->name = _e->str(); }
+  { auto _e = value(); _o->value = _e; }
 }
 
-inline flatbuffers::Offset<BoolSessionAttribute> BoolSessionAttribute::Pack(flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<BoolSessionAttribute> BoolSessionAttribute::Pack(::flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT* _o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   return CreateBoolSessionAttribute(_fbb, _o, _rehasher);
 }
 
-inline flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttribute(flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+inline ::flatbuffers::Offset<BoolSessionAttribute> CreateBoolSessionAttribute(::flatbuffers::FlatBufferBuilder &_fbb, const BoolSessionAttributeT *_o, const ::flatbuffers::rehasher_function_t *_rehasher) {
   (void)_rehasher;
   (void)_o;
+  struct _VectorArgs { ::flatbuffers::FlatBufferBuilder *__fbb; const BoolSessionAttributeT* __o; const ::flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
   auto _name = _fbb.CreateString(_o->name);
   auto _value = _o->value;
   return com::newrelic::mobile::fbs::CreateBoolSessionAttribute(

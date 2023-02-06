@@ -11,8 +11,8 @@
 #include <ios_generated.h>
 #include <hex_generated.h>
 #include <session-attributes_generated.h>
-#include <agent-data_generated.h>
-#include <agent-data-bundle_generated.h>
+#include <hex-agent-data_generated.h>
+#include <hex-agent-data-bundle_generated.h>
 #include <sstream>
 
 using namespace com::newrelic::mobile;

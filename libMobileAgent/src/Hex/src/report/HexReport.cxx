@@ -108,7 +108,7 @@ void HexReport::setAttribute(const char* key,
     }
 }
 
-flatbuffers::Offset<com::newrelic::mobile::fbs::AgentData>
+flatbuffers::Offset<com::newrelic::mobile::fbs::HexAgentData>
 HexReport::finalize(flatbuffers::FlatBufferBuilder& builder) const {
     if (_exception == nullptr) throw std::invalid_argument("Handled Exception not present.");
     if (_applicationInfo == nullptr) throw std::invalid_argument("application information no present.");

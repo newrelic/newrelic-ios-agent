@@ -13,7 +13,7 @@
 #include "LongAttributes.hpp"
 #include "ios_generated.h"
 #include "hex_generated.h"
-#include "agent-data_generated.h"
+#include "hex-agent-data_generated.h"
 #include "AppInfo.hpp"
 #include "HandledException.hpp"
 
@@ -30,7 +30,7 @@ namespace NewRelic {
                           const std::shared_ptr<AppInfo>& applicationInfo,
                           std::shared_ptr<HandledException> handledException);
 
-                Offset<fbs::AgentData> serialize(flatbuffers::FlatBufferBuilder& builder) const;
+                Offset<fbs::HexAgentData> serialize(flatbuffers::FlatBufferBuilder& builder) const;
 
             private:
                 const std::shared_ptr<StringAttributes>& _stringAttributes;
