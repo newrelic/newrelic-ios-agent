@@ -13,8 +13,6 @@
 		F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8302B01296F5EFB003EC291 /* Assets.xcassets */; };
 		F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */; };
 		F8302B10296F5EFB003EC291 /* NRTestAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B0F296F5EFB003EC291 /* NRTestAppTests.swift */; };
-		F8302B1A296F5EFB003EC291 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B19296F5EFB003EC291 /* NRTestAppUITests.swift */; };
-		F8302B1C296F5EFB003EC291 /* NRTestAppUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B1B296F5EFB003EC291 /* NRTestAppUITestsLaunchTests.swift */; };
 		F8302B8229705B28003EC291 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		F8302B8329705B28003EC291 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B8529707695003EC291 /* ViewControllerProvider.swift */; };
@@ -54,20 +52,12 @@
 		F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9329708027003EC291 /* ApodResult.swift */; };
 		F86429442979CE31002ABA01 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; };
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		F8B6F20429886CFF00D09B30 /* NRTestApp__tvOS_UITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B6F20329886CFF00D09B30 /* NRTestApp__tvOS_UITests.swift */; };
-		F8B6F20629886CFF00D09B30 /* NRTestApp__tvOS_UITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B6F20529886CFF00D09B30 /* NRTestApp__tvOS_UITestsLaunchTests.swift */; };
+		F8B6F22F298C51D100D09B30 /* NRAPIInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = F864286029774E2D002ABA01 /* NRAPIInfo.plist */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		F8302B0C296F5EFB003EC291 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F8302AF4296F5EFA003EC291;
-			remoteInfo = NRTestApp;
-		};
-		F8302B16296F5EFB003EC291 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
 			proxyType = 1;
@@ -109,13 +99,6 @@
 			remoteGlobalIDString = 025658A824EB2AAC00FE3125;
 			remoteInfo = "Stress Tests";
 		};
-		F8B6F20729886CFF00D09B30 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F86428E92979CDAF002ABA01;
-			remoteInfo = "NRTestApp (tvOS)";
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -153,9 +136,6 @@
 		F8302B06296F5EFB003EC291 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F8302B0B296F5EFB003EC291 /* NRTestAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NRTestAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8302B0F296F5EFB003EC291 /* NRTestAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppTests.swift; sourceTree = "<group>"; };
-		F8302B15296F5EFB003EC291 /* NRTestAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NRTestAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F8302B19296F5EFB003EC291 /* NRTestAppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppUITests.swift; sourceTree = "<group>"; };
-		F8302B1B296F5EFB003EC291 /* NRTestAppUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		F8302B5229705766003EC291 /* Agent.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Agent.xcodeproj; path = ../../Agent.xcodeproj; sourceTree = "<group>"; };
 		F8302B8529707695003EC291 /* ViewControllerProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewControllerProvider.swift; sourceTree = "<group>"; };
 		F8302B88297076E9003EC291 /* Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coordinator.swift; sourceTree = "<group>"; };
@@ -178,9 +158,6 @@
 		F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (tvOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F86428F62979CDB0002ABA01 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
-		F8B6F20129886CFF00D09B30 /* NRTestApp (tvOS)UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (tvOS)UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		F8B6F20329886CFF00D09B30 /* NRTestApp__tvOS_UITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__tvOS_UITests.swift; sourceTree = "<group>"; };
-		F8B6F20529886CFF00D09B30 /* NRTestApp__tvOS_UITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__tvOS_UITestsLaunchTests.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -200,25 +177,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F8302B12296F5EFB003EC291 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		F86428E72979CDAF002ABA01 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				F86429442979CE31002ABA01 /* NewRelic.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F8B6F1FE29886CFF00D09B30 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -231,9 +194,7 @@
 				F8302B5229705766003EC291 /* Agent.xcodeproj */,
 				F8302AF7296F5EFA003EC291 /* NRTestApp */,
 				F8302B0E296F5EFB003EC291 /* NRTestAppTests */,
-				F8302B18296F5EFB003EC291 /* NRTestAppUITests */,
 				F86428EB2979CDAF002ABA01 /* NRTestApp (tvOS) */,
-				F8B6F20229886CFF00D09B30 /* NRTestApp (tvOS)UITests */,
 				F8302AF6296F5EFA003EC291 /* Products */,
 				F8302B8129705B28003EC291 /* Frameworks */,
 			);
@@ -244,9 +205,7 @@
 			children = (
 				F8302AF5296F5EFA003EC291 /* NRTestApp.app */,
 				F8302B0B296F5EFB003EC291 /* NRTestAppTests.xctest */,
-				F8302B15296F5EFB003EC291 /* NRTestAppUITests.xctest */,
 				F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */,
-				F8B6F20129886CFF00D09B30 /* NRTestApp (tvOS)UITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -274,15 +233,6 @@
 				F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */,
 			);
 			path = NRTestAppTests;
-			sourceTree = "<group>";
-		};
-		F8302B18296F5EFB003EC291 /* NRTestAppUITests */ = {
-			isa = PBXGroup;
-			children = (
-				F8302B19296F5EFB003EC291 /* NRTestAppUITests.swift */,
-				F8302B1B296F5EFB003EC291 /* NRTestAppUITestsLaunchTests.swift */,
-			);
-			path = NRTestAppUITests;
 			sourceTree = "<group>";
 		};
 		F8302B5329705766003EC291 /* Products */ = {
@@ -384,15 +334,6 @@
 			path = "NRTestApp (tvOS)";
 			sourceTree = "<group>";
 		};
-		F8B6F20229886CFF00D09B30 /* NRTestApp (tvOS)UITests */ = {
-			isa = PBXGroup;
-			children = (
-				F8B6F20329886CFF00D09B30 /* NRTestApp__tvOS_UITests.swift */,
-				F8B6F20529886CFF00D09B30 /* NRTestApp__tvOS_UITestsLaunchTests.swift */,
-			);
-			path = "NRTestApp (tvOS)UITests";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -433,24 +374,6 @@
 			productReference = F8302B0B296F5EFB003EC291 /* NRTestAppTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		F8302B14296F5EFB003EC291 /* NRTestAppUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F8302B25296F5EFB003EC291 /* Build configuration list for PBXNativeTarget "NRTestAppUITests" */;
-			buildPhases = (
-				F8302B11296F5EFB003EC291 /* Sources */,
-				F8302B12296F5EFB003EC291 /* Frameworks */,
-				F8302B13296F5EFB003EC291 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F8302B17296F5EFB003EC291 /* PBXTargetDependency */,
-			);
-			name = NRTestAppUITests;
-			productName = NRTestAppUITests;
-			productReference = F8302B15296F5EFB003EC291 /* NRTestAppUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 		F86428E92979CDAF002ABA01 /* NRTestApp (tvOS) */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F86429192979CDB1002ABA01 /* Build configuration list for PBXNativeTarget "NRTestApp (tvOS)" */;
@@ -459,6 +382,7 @@
 				F86428E72979CDAF002ABA01 /* Frameworks */,
 				F86428E82979CDAF002ABA01 /* Resources */,
 				F86429462979CE31002ABA01 /* Embed Frameworks */,
+				F8B6F230298C51EB00D09B30 /* Run New Relic dSYM Upload Tool */,
 			);
 			buildRules = (
 			);
@@ -468,24 +392,6 @@
 			productName = "NRTestApp (tvOS)";
 			productReference = F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */;
 			productType = "com.apple.product-type.application";
-		};
-		F8B6F20029886CFF00D09B30 /* NRTestApp (tvOS)UITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F8B6F20929886CFF00D09B30 /* Build configuration list for PBXNativeTarget "NRTestApp (tvOS)UITests" */;
-			buildPhases = (
-				F8B6F1FD29886CFF00D09B30 /* Sources */,
-				F8B6F1FE29886CFF00D09B30 /* Frameworks */,
-				F8B6F1FF29886CFF00D09B30 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F8B6F20829886CFF00D09B30 /* PBXTargetDependency */,
-			);
-			name = "NRTestApp (tvOS)UITests";
-			productName = "NRTestApp (tvOS)UITests";
-			productReference = F8B6F20129886CFF00D09B30 /* NRTestApp (tvOS)UITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -505,16 +411,8 @@
 						CreatedOnToolsVersion = 14.2;
 						TestTargetID = F8302AF4296F5EFA003EC291;
 					};
-					F8302B14296F5EFB003EC291 = {
-						CreatedOnToolsVersion = 14.2;
-						TestTargetID = F8302AF4296F5EFA003EC291;
-					};
 					F86428E92979CDAF002ABA01 = {
 						CreatedOnToolsVersion = 14.2;
-					};
-					F8B6F20029886CFF00D09B30 = {
-						CreatedOnToolsVersion = 14.2;
-						TestTargetID = F86428E92979CDAF002ABA01;
 					};
 				};
 			};
@@ -540,8 +438,6 @@
 				F8302AF4296F5EFA003EC291 /* NRTestApp */,
 				F86428E92979CDAF002ABA01 /* NRTestApp (tvOS) */,
 				F8302B0A296F5EFB003EC291 /* NRTestAppTests */,
-				F8302B14296F5EFB003EC291 /* NRTestAppUITests */,
-				F8B6F20029886CFF00D09B30 /* NRTestApp (tvOS)UITests */,
 			);
 		};
 /* End PBXProject section */
@@ -602,25 +498,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F8302B13296F5EFB003EC291 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		F86428E82979CDAF002ABA01 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8B6F22F298C51D100D09B30 /* NRAPIInfo.plist in Resources */,
 				F86428F72979CDB0002ABA01 /* LaunchScreen.storyboard in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F8B6F1FF29886CFF00D09B30 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -644,7 +527,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#\"${BUILD_DIR%/Build/*}/SourcePackages/artifacts/newrelic-ios-agent-spm/NewRelic.xcframework/Resources/run-symbol-tool\" \"APP_TOKEN\"\n";
+			shellScript = "SCRIPT=`/usr/bin/find \"${SRCROOT}/../..\" -name run-symbol-tool | head -n 1`\n\nif [ -z \"${SCRIPT}\"]; then\n ARTIFACT_DIR=\"${BUILD_DIR%Build/*}SourcePackages/artifacts\"\n SCRIPT=`/usr/bin/find \"${ARTIFACT_DIR}\" -name run-symbol-tool | head -n 1`\nfi\n\n/bin/sh \"${SCRIPT}\" \"APP_TOKEN\"\n";
+		};
+		F8B6F230298C51EB00D09B30 /* Run New Relic dSYM Upload Tool */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run New Relic dSYM Upload Tool";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SCRIPT=`/usr/bin/find \"${SRCROOT}/../..\" -name run-symbol-tool | head -n 1`\n\nif [ -z \"${SCRIPT}\"]; then\n ARTIFACT_DIR=\"${BUILD_DIR%Build/*}SourcePackages/artifacts\"\n SCRIPT=`/usr/bin/find \"${ARTIFACT_DIR}\" -name run-symbol-tool | head -n 1`\nfi\n\n/bin/sh \"${SCRIPT}\" \"APP_TOKEN\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -683,15 +585,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F8302B11296F5EFB003EC291 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				F8302B1C296F5EFB003EC291 /* NRTestAppUITestsLaunchTests.swift in Sources */,
-				F8302B1A296F5EFB003EC291 /* NRTestAppUITests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		F86428E62979CDAF002ABA01 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -717,15 +610,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F8B6F1FD29886CFF00D09B30 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				F8B6F20629886CFF00D09B30 /* NRTestApp__tvOS_UITestsLaunchTests.swift in Sources */,
-				F8B6F20429886CFF00D09B30 /* NRTestApp__tvOS_UITests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -733,16 +617,6 @@
 			isa = PBXTargetDependency;
 			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
 			targetProxy = F8302B0C296F5EFB003EC291 /* PBXContainerItemProxy */;
-		};
-		F8302B17296F5EFB003EC291 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
-			targetProxy = F8302B16296F5EFB003EC291 /* PBXContainerItemProxy */;
-		};
-		F8B6F20829886CFF00D09B30 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F86428E92979CDAF002ABA01 /* NRTestApp (tvOS) */;
-			targetProxy = F8B6F20729886CFF00D09B30 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -981,42 +855,6 @@
 			};
 			name = Release;
 		};
-		F8302B26296F5EFB003EC291 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestAppUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = NRTestApp;
-			};
-			name = Debug;
-		};
-		F8302B27296F5EFB003EC291 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestAppUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = NRTestApp;
-			};
-			name = Release;
-		};
 		F864290E2979CDB1002ABA01 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1073,44 +911,6 @@
 			};
 			name = Release;
 		};
-		F8B6F20A29886CFF00D09B30 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "newrelic.NRTestApp--tvOS-UITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = appletvos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TEST_TARGET_NAME = "NRTestApp (tvOS)";
-				TVOS_DEPLOYMENT_TARGET = 16.1;
-			};
-			name = Debug;
-		};
-		F8B6F20B29886CFF00D09B30 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "newrelic.NRTestApp--tvOS-UITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = appletvos;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TEST_TARGET_NAME = "NRTestApp (tvOS)";
-				TVOS_DEPLOYMENT_TARGET = 16.1;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1141,29 +941,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F8302B25296F5EFB003EC291 /* Build configuration list for PBXNativeTarget "NRTestAppUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F8302B26296F5EFB003EC291 /* Debug */,
-				F8302B27296F5EFB003EC291 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		F86429192979CDB1002ABA01 /* Build configuration list for PBXNativeTarget "NRTestApp (tvOS)" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F864290E2979CDB1002ABA01 /* Debug */,
 				F864290F2979CDB1002ABA01 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		F8B6F20929886CFF00D09B30 /* Build configuration list for PBXNativeTarget "NRTestApp (tvOS)UITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F8B6F20A29886CFF00D09B30 /* Debug */,
-				F8B6F20B29886CFF00D09B30 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
