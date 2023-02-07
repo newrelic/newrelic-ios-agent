@@ -34,12 +34,11 @@
     for (int i = 0; i < 1000; i++) {
         [blah setObject:@"asd" forKey:[NSString stringWithFormat:@"%d",i]];
     }
+    __block NRMAHarvestableVitals* vitals = [[NRMAHarvestableVitals alloc] initWithCPUVitals:blah memoryVitals:blub];
+
     dispatch_queue_t queue = dispatch_queue_create("blah_queue", NULL);
     dispatch_async(queue, ^{
-        NRMAHarvestableVitals* vitals = [[NRMAHarvestableVitals alloc] initWithCPUVitals:blah memoryVitals:blub];
         XCTAssertNoThrow([vitals JSONObject], @"");;
-
-
     });
 
     for (int i = 1000; i < 2000; i++) {
