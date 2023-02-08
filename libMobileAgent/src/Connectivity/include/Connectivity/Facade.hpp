@@ -12,10 +12,6 @@
 namespace NewRelic {
 namespace Connectivity {
 class Facade : public IFacade {
-    /*
-     * spec doc:
-     * https://source.datanerd.us/earnold/agent-specs/blob/new-connectivity/Distributed-Tracing.md
-     */
 private:
     std::string _currentTraceId;
     std::string _currentParentId;
