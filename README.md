@@ -5,15 +5,14 @@ New Relic's mobile monitoring capabilities help you gain deeper visibility into 
 
 **New Relic iOS Agent supports iOS 📱, tvOS 📺, and macOS (Catalyst) 💻.**
 
-This repository consists of an Xcode workspace containing New Relic iOS Agent source code. Agent is packaged as a XCFramework.  Framework is available via **Swift Package Manager (preferred installation method)**, Cocoapods, and as a zip  file download.
+This repository consists of an Xcode workspace containing New Relic iOS Agent source code. Agent is packaged as a XCFramework.  Framework is available via **Swift Package Manager (preferred installation method)**, Cocoapods, and as a zip file download.
 
-See the [XCFramework agent release notes](https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes/) for latest release information.
+See the [XCFramework agent release notes](https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes/) for latest release information. These release notes contain the link to the XCFramework zip file download.
 
-## 📚 Docs
-- [Public Docs on docs.newrelic.com](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/get-started/introduction-new-relic-mobile-ios)
+## Documentation
+- [Public Documentation on docs.newrelic.com](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/get-started/introduction-new-relic-mobile-ios)
 
 ## Installation
-
 1. From Xcode Select **File > Swift Packages > Add Package Dependency...**.
 2. Add the Github URL of the Package file:
   
@@ -23,9 +22,6 @@ See the [XCFramework agent release notes](https://docs.newrelic.com/docs/release
 See Docs for more installation methods.
 
 ## Getting Started
-
-[🚧UNDER CONSTRUCTION🚧]
-
 If you have not created a Mobile Application in New Relic:
 
 * Click "+ Add data" in the top right,
@@ -41,26 +37,29 @@ If you have previously created a Mobile Application in New Relic:
 * Install the New Relic iOS Agent to your supported application. This should be an iOS, tvOS, or Catalyst app. Follow the instructions to install via the Swift Package Manager
 
 ## Usage
+An example app which demonstrates usage of the New Relic iOS Agent is included in the Agent workspace. 
 
-[🚧UNDER CONSTRUCTION🚧]
+- From Xcode Change to the NRTestApp scheme to run the example app.
+- Add your New Relic application token to `NRAPIInfo.plist` as a String under the key `NRAPIKey`.
 
->[**Optional** - Include more thorough instructions on how to use the software. This section might not be needed if the Getting Started section is enough. Remove this section if it's not needed.]
 
-An example app which demonstrates usage of the New Relic iOS Agent is included in the Agent workspace.
+## dSYM Upload Tools
 
 By default the New Relic iOS Agent will report crashes to New Relic. In order to view the crashes symbolicated your app must upload its debugging symbols to New Relic. The Agent contains the run-symbol-tool script for this purpose.
 
+- Xcode Run Script: Copy and Paste the following line, replacing `APP_TOKEN` with your [application token](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile/maintenance/viewing-your-application-token):
+```
+"${BUILD_DIR%/Build/*}/SourcePackages/artifacts/newrelic-ios-agent-spm/NewRelic.xcframework/Resources/run-symbol-tool" "APP_TOKEN"
+```
+- Remove `-spm` from path if using this `newrelic-ios-agent` repo for SPM url.
+- Add `--debug` as additional argument after the app token to write additional details to the `upload_dsym_results.log` file.
+
 The run-symbol-tool Run script must be added to your apps Xcode projects build phases.
-## ⬆️ dSYM Upload Tools
+
 - `dsym-upload-tools/run-symbol-tool`: Shell script which is used to bootstrap Swift script.
 - `dsym-upload-tools/run-symbol-tool.swift`: Swift script which converts dSYMs to map files and uploads to New Relic.
 
-    - Xcode Run Script: Copy and Paste the following line, replacing `APP_TOKEN` with your [application token](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile/maintenance/viewing-your-application-token):
-    ```
-    "${BUILD_DIR%/Build/*}/SourcePackages/artifacts/newrelic-ios-agent-spm/NewRelic.xcframework/Resources/run-symbol-tool" "APP_TOKEN"
-    ```
-    - Remove `-spm` from path if using this `newrelic-ios-agent` repo for SPM url.
-    - Add `--debug` as additional argument after the app token to write additional details to the `upload_dsym_results.log` file.
+
 
 ## Building
 - To check out the code run the following git command. Note the recursive submodule addition to make sure we get the repos git submodules.
@@ -78,7 +77,7 @@ The run-symbol-tool Run script must be added to your apps Xcode projects build p
     - `bundle exec fastlane runIOSTests`
         - Run above command to run tests on iOS. Upon completion code coverage will be generated.
 
-## 🔗 Links
+## Links
 - [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) The repo release builds publish swift packages to.
 - [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting brought in as a submodule using this library.
 
