@@ -5,9 +5,9 @@ New Relic's mobile monitoring capabilities help you gain deeper visibility into 
 
 **New Relic iOS Agent supports iOS 📱, tvOS 📺, and macOS (Catalyst) 💻.**
 
-This repository consists of an Xcode workspace containing New Relic iOS Agent source code. Agent is packaged as a XCFramework.  Framework is available via **Swift Package Manager (preferred installation method)**, Cocoapods, and as a zip file download.
+This repository consists of an Xcode workspace containing the New Relic iOS Agent source code. The Agent is packaged as an XCFramework.  The framework is available via **Swift Package Manager (preferred installation method)**, Cocoapods, and as a zip file download.
 
-See the [XCFramework agent release notes](https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes/) for latest release information. These release notes contain the link to the XCFramework zip file download.
+See the [XCFramework agent release notes](https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes/) for the latest release information. These release notes contain the link to the XCFramework zip file download.
 
 ## Documentation
 - [Public Documentation on docs.newrelic.com](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/get-started/introduction-new-relic-mobile-ios)
@@ -45,7 +45,7 @@ An example app which demonstrates usage of the New Relic iOS Agent is included i
 
 ## dSYM Upload Tools
 
-By default the New Relic iOS Agent will report crashes to New Relic. In order to view the crashes symbolicated your app must upload its debugging symbols to New Relic. The Agent contains the run-symbol-tool script for this purpose.
+By default, the New Relic iOS Agent will report crashes to New Relic. In order to view symbolicated crashes, your app must upload its debugging symbols to New Relic. The Agent contains the run-symbol-tool script for this purpose.
 
 - Xcode Run Script: Copy and Paste the following line, replacing `APP_TOKEN` with your [application token](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile/maintenance/viewing-your-application-token):
 ```
@@ -54,7 +54,7 @@ By default the New Relic iOS Agent will report crashes to New Relic. In order to
 - Remove `-spm` from path if using this `newrelic-ios-agent` repo for SPM url.
 - Add `--debug` as additional argument after the app token to write additional details to the `upload_dsym_results.log` file.
 
-The run-symbol-tool Run script must be added to your apps Xcode projects build phases.
+The run-symbol-tool Run script must be added to your app's Xcode project build phases.
 
 - `dsym-upload-tools/run-symbol-tool`: Shell script which is used to bootstrap Swift script.
 - `dsym-upload-tools/run-symbol-tool.swift`: Swift script which converts dSYMs to map files and uploads to New Relic.
@@ -62,7 +62,7 @@ The run-symbol-tool Run script must be added to your apps Xcode projects build p
 
 
 ## Building
-- To check out the code run the following git command. Note the recursive submodule addition to make sure we get the repos git submodules.
+- To check out the code, run the following git command. Note the recursive submodule addition to make sure we get the repo's git submodules.
     - `git clone git@github.com:newrelic/newrelic-ios-agent.git --recurse-submodules`
 
 - Open `newrelic-ios-agent/Agent.xcworkspace` using the Finder.
@@ -75,10 +75,10 @@ The run-symbol-tool Run script must be added to your apps Xcode projects build p
 - Option 1: Run the Unit Tests using Xcode by selecting Agent-iOS scheme and Product -> Test
 - Option 2: Running tests using [Fastlane](https://docs.fastlane.tools/)
     - `bundle exec fastlane runIOSTests`
-        - Run above command to run tests on iOS. Upon completion code coverage will be generated.
+        - Run above command to run tests on iOS. Upon completion, code coverage will be generated.
 
 ## Links
-- [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) The repo release builds publish swift packages to.
+- [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Released Swift packages are published here. 
 - [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting brought in as a submodule using this library.
 
 ## Support
@@ -90,7 +90,7 @@ New Relic hosts and moderates an online forum where customers can interact with 
 
 ## Contribute
 
-We encourage your contributions to improve New Relic iOS Agent Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
+We encourage your contributions to improve New Relic iOS Agent! Keep in mind that, when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
 
 If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
 
