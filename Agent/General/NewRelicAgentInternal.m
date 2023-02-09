@@ -429,12 +429,13 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                               value:[NewRelicInternalUtils deviceModel]];
     [self.analyticsController setNRSessionAttribute:@"newRelicVersion"
                                               value:[NewRelicInternalUtils agentVersion]];
+    NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
     [self.analyticsController setNRSessionAttribute:@"appBuild"
-                                              value:[NRMAAgentConfiguration connectionInformation].applicationInformation.appBuild];
+                                              value:info.applicationInformation.appBuild];
     [self.analyticsController setNRSessionAttribute:@(__kNRMA_RA_platform)
-                                              value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform]];
+                                              value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:info.deviceInformation.platform]];
     [self.analyticsController setNRSessionAttribute:@(__kNRMA_RA_platformVersion)
-                                              value:[NRMAAgentConfiguration connectionInformation].deviceInformation.platformVersion];
+                                              value:info.deviceInformation.platformVersion ?: info.deviceInformation.agentVersion];
 
     NSString* vendorId = [NRMAUDIDManager deviceIdentifier];
     if (vendorId.length && ![NRMAFlags shouldSaltDeviceUUID]) {
