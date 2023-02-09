@@ -16,7 +16,6 @@
  *
  * @property: regionCode
  * the region code used to identify the sub-domain for collector address on region-aware tokens
- * spec: https://source.datanerd.us/agents/agent-specs/blob/master/License-Keys.md
  */
 @property (readonly, strong) NSString* value;
 @property (readonly, strong) NSString* regionCode;
