@@ -52,6 +52,7 @@
     [NRMATraceController completeActivityTrace];
 
 }
+
 - (void) testCrashNow {
     XCTAssertThrowsSpecific([NewRelic crashNow], NSException);
 }
@@ -73,6 +74,7 @@
     flags = [NRMAFlags featureFlags];
     XCTAssertFalse(flags & NRFeatureFlag_CrashReporting, @"flags should have Crash Reporting disabled");
 }
+
 - (void) testSetPlatform {
     NRMAConnectInformation* config = [NRMAAgentConfiguration connectionInformation];
     NRMAApplicationPlatform currentPlatform = config.deviceInformation.platform;
@@ -83,6 +85,7 @@
     XCTAssertEqual(currentPlatform, NRMAPlatform_Flutter);
     
 }
+
 - (void) testNoticeNetworkFailureForURLWithTimer {
     NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_HTTPTransaction];
     [NRMAMeasurements initializeMeasurements];
@@ -108,6 +111,7 @@
     [NRMAMeasurements removeMeasurementConsumer:helper];
     [NRMAMeasurements shutdown];
 }
+
 - (void) testEnableStartInteraction {
     [NRMAFlags setFeatureFlags:0];
     NRMAFeatureFlags flags = [NRMAFlags featureFlags];
@@ -208,6 +212,7 @@
     XCTAssertEqualObjects(measurement.name, fullMetricName, @"Names should match");
     done = YES;
 }
+
 - (void) testRecordMetricWithValueUnits
 {
     NRMAMeasurementConsumerHelper* metricHelper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
@@ -304,8 +309,6 @@
     [[NewRelicAgentInternal sharedInstance] destroyAgent];
 }
 
-
-// testGenerateDistributedTracingHeaders
 -(void) testTracingHeaders {
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
     XCTAssertNotNil([NewRelic generateDistributedTracingHeaders]);
@@ -335,6 +338,62 @@
     NSURL *test1 = [regexTransformer transformURL:[NSURL URLWithString:@"https://httpstat.us/200"]];
     NSURL *test2 = [internalTransformer transformURL:[NSURL URLWithString:@"https://httpstat.us/200"]];
     XCTAssertEqualObjects(test1, test2);
+}
+
+// XCode will run tests in alphabetical order, so the sharedInstance will exist for any tests alphabetically after this
+-(void) testAShutdownBeforeEnable {
+    XCTAssertNil([NewRelicAgentInternal sharedInstance]);
+
+    [NewRelic shutdown];
+}
+
+-(void) testSetShutdown {
+
+    XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
+
+    [NewRelic shutdown];
+    // Test double shutdown call
+    [NewRelic shutdown];
+    // Test log when agent is shutdown.
+    [NewRelic startWithApplicationToken:@"TOKEN"];
+
+    // Can't assert
+    [NewRelic startTracingMethod:NSSelectorFromString(@"methodName")
+                          object:self
+                           timer:[[NRTimer alloc] init]
+                        category:NRTraceTypeDatabase];
+
+    // NR shouldn't crash if agent is shutdown.
+    [NewRelic crashNow];
+
+    // Can't assert.
+    [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]];
+    NSDictionary* dict = @{@"string":@"string",
+            @"num":@1};
+    [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"
+                                                                                   reason:@"the tea is too hot"
+                                                                                 userInfo:nil]
+                                                withAttributes:dict];
+    [NewRelic recordHandledExceptionWithStackTrace:dict];
+
+    [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}]];
+
+    [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}] attributes:dict];
+
+    XCTAssertFalse([NewRelic startInteractionWithName:@"InteractionName"]);
+    [NewRelic stopCurrentInteraction:@"InteractionName"];
+
+    [NewRelic endTracingMethodWithTimer:[[NRTimer alloc] init]];
+
+    XCTAssertFalse([NewRelic setAttribute:@"attr" value:@5]);
+
+    XCTAssertFalse([NewRelic removeAttribute: @"attr"]);
+
+    XCTAssertFalse([NewRelic recordCustomEvent:@"asdf"
+                                         name:@"blah"
+                                   attributes:@{@"name":@"unblah"}]);
+
+    XCTAssertFalse([NewRelic recordBreadcrumb:@"test" attributes:dict]);
 }
 @end
 
