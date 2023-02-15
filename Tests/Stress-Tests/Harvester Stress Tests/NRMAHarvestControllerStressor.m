@@ -32,7 +32,7 @@
     [super setUp];
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
     self.semaphore = dispatch_semaphore_create(procCount*kNRMASemaphoreMultiplier);
-    config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"AAd75d4d5a3045711bd5ae829d0f043b1fbf893152"] collectorAddress:@"staging-mobile-collector.newrelic.com" crashAddress:nil];
+    config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"APP_TOKEN"] collectorAddress:@"staging-mobile-collector.newrelic.com" crashAddress:nil];
     
     activity = [[NRMAHarvestableActivity alloc] init];
     activity.childSegments = [[NSMutableArray alloc] init];

@@ -29,7 +29,7 @@
     self.agentInternal = [[NewRelicAgentInternal alloc] init];
 
 
-    NRMAAgentConfiguration* _agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"AAd75d4d5a3045711bd5ae829d0f043b1fbf893152"]
+    NRMAAgentConfiguration* _agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"APP_TOKEN"]
                                                                                   collectorAddress:@"staging-mobile-collector.newrelic.com" crashAddress:nil];
     
     [NRMAHarvestController initialize:_agentConfiguration];

@@ -35,7 +35,7 @@ void NR__OVERRIDE_NRMAHexUploader_sendData(id self, SEL _cmd, id data) {
 - (void)setUp {
     [super setUp];
     [self replaceNetCalls];
-    NRMAAgentConfiguration* _agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"AAc7b6ef0d0fac0a8c802f74343f23cb47f0dd0ccb"] collectorAddress:@"staging-mobile-collector.newrelic.com" crashAddress:nil];
+    NRMAAgentConfiguration* _agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"APP_TOKEN"] collectorAddress:@"staging-mobile-collector.newrelic.com" crashAddress:nil];
 
     self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     self.handled = [[NRMAHandledExceptions alloc] initWithAnalyticsController:_analytics

@@ -330,27 +330,6 @@
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 }
 
-//- (void) testUninitializedToDisabled
-//{
-//
-//    agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"AA06d1964231f6c881cedeaa44e837bde4079c683d"]
-//                                                  collectorAddress:nil
-//                                                      crashAddress:nil];
-//
-//    [harvester setAgentConfiguration:agentConfig];
-//
-//    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_UNINITIALIZED, @"expected uninitizlized");
-//    [harvester execute];
-//
-//
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
-//    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
-//
-//    [harvester execute];
-//
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
-//    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISABLED, @"expected disabled");
-//}
 
 - (void) testAppVersionUsesCFBundleShortVersionString
 {
