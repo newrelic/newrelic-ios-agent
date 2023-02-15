@@ -51,8 +51,11 @@ func start() {
 
     let directory = environment["DWARF_DSYM_FOLDER_PATH"]
     let platformName = environment["EFFECTIVE_PLATFORM_NAME"]
-    // TODO: Handle simulator skipping
-    // If platform == -iphonesimulator then skip the symbol upload.
+
+    if platformName == "-iphonesimulator" {
+        print("New Relic: Skipping automatic upload of simulator build symbols")
+        exit(0)
+    }
 
     guard CommandLine.arguments.count > 1 else {
         // Must contain at least one argument: $APP_TOKEN. (--debug is optional)
