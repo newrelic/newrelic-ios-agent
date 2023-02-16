@@ -52,6 +52,7 @@
 #import "NRMAAppToken.h"
 #import "NRMAUDIDManager.h"
 #import "NRMAStartTimer.h"
+#import "NRMAUDIDManager.h"
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
 // Enabling this will bypass dispatch_once-style logic and expose more internal state.
@@ -778,12 +779,16 @@ static UIBackgroundTaskIdentifier background_task;
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:kNRInteractionDidCompleteNotification
                                                    object:nil];
+        // Delete stored device ID.
+        [NRMAUDIDManager deleteStoredID];
 
+        // Stored device data, Metadata and crash file are cleared when crash upload.
         [NRMATraceController cleanup];
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
-        [NRMAAnalytics clearDuplicationStores];
 
-        // TODO: Delete stored Events, Crashes, Metadata files?
+        // Clear stored Events and stored attributes.
+        [NRMAAnalytics clearDuplicationStores];
+        [_sharedInstance.analyticsController clearLastSessionsAnalytics];
 
         if (background_task != UIBackgroundTaskInvalid) {
             [[UIApplication sharedApplication] endBackgroundTask:background_task];
