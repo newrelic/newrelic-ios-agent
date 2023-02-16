@@ -1,37 +1,95 @@
-[![Community Project header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Community_Project.png)](https://opensource.newrelic.com/oss-category/#community-project)
+[![Community Plus header](https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
 
-# [Name of Project] [build badges go here when available]
+# New Relic iOS Agent
+New Relic's mobile monitoring capabilities help you gain deeper visibility into how to analyze your iOS application performance and troubleshoot crashes. You can also examine HTTP and other network performance for unexpected lag, which will in turn help you collaborate more efficiently with your backend teams.
 
->[Brief description - what is the project and value does it provide? How often should users expect to get releases? How is versioning set up? Where does this project want to go?]
+**New Relic iOS Agent supports iOS 📱, tvOS 📺, and macOS (Catalyst) 💻.**
+
+This repository consists of an Xcode workspace containing the New Relic iOS Agent source code. The Agent is packaged as an XCFramework.  The framework is available via **Swift Package Manager (preferred installation method)**, Cocoapods, and as a zip file download.
+
+See the [XCFramework agent release notes](https://docs.newrelic.com/docs/release-notes/mobile-release-notes/xcframework-release-notes/) for the latest release information. These release notes contain the link to the XCFramework zip file download.
+
+## Documentation
+- [Public Documentation on docs.newrelic.com](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/get-started/introduction-new-relic-mobile-ios)
 
 ## Installation
+1. From Xcode select **File > Swift Packages > Add Package Dependency...**.
+2. Add the Github URL of the Package file:
+  
+  ```
+  https://github.com/newrelic/newrelic-ios-agent
+  ```
+See Swift Package Manager agent installation [instructions](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/installation/spm-installation/) for more info.
 
-> [Include a step-by-step procedure on how to get your code installed. Be sure to include any third-party dependencies that need to be installed separately]
+View the docs for more installation methods.
 
 ## Getting Started
->[Simple steps to start working with the software similar to a "Hello World"]
+If you have not created a Mobile Application in New Relic:
+
+* Click "+ Add data" in the top right,
+* In the Browser & Mobile section - please select the iOS tile, Select your Account
+* Name your app
+* Install the New Relic iOS Agent to your supported application. This should be an iOS, tvOS, or Catalyst app. Follow the instructions to install via the Swift Package Manager
+* You can also select the "+ Add data" option from the user menu in the upper right corner of the top navigation, then the iOS button to access the installation page.
+
+If you have previously created a Mobile Application in New Relic:
+
+* Click the name of your mobile app,
+* Choose Installation from the Settings section in the left nav, and
+* Install the New Relic iOS Agent to your supported application. This should be an iOS, tvOS, or Catalyst app. Follow the instructions to install via the Swift Package Manager
 
 ## Usage
->[**Optional** - Include more thorough instructions on how to use the software. This section might not be needed if the Getting Started section is enough. Remove this section if it's not needed.]
+An example app which demonstrates usage of the New Relic iOS Agent is included in the Agent workspace. 
 
+- From Xcode change to the NRTestApp scheme to run the example app.
+- Add your New Relic application token to `NRAPIInfo.plist` as a String under the key `NRAPIKey`.
+
+## dSYM Upload Tools
+
+By default, the New Relic iOS Agent will report crashes to New Relic. In order to view symbolicated crashes, your app must upload its debugging symbols to New Relic. The Agent contains the run-symbol-tool script for this purpose.
+
+- Xcode Run Script: Copy and paste the following line, replacing `APP_TOKEN` with your [application token](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile/maintenance/viewing-your-application-token):
+```
+"${BUILD_DIR%/Build/*}/SourcePackages/artifacts/newrelic-ios-agent/NewRelic.xcframework/Resources/run-symbol-tool" "APP_TOKEN"
+```
+- Add `-spm` to path if using the `newrelic-ios-agent-spm` repo for SPM url.
+- Add `--debug` as additional argument after the app token to write additional details to the `upload_dsym_results.log` file.
+
+The run-symbol-tool Run script must be added to your app's Xcode project build phases.
+
+- `dsym-upload-tools/run-symbol-tool`: Shell script which is used to bootstrap Swift script.
+- `dsym-upload-tools/run-symbol-tool.swift`: Swift script which converts dSYMs to map files and uploads to New Relic.
 
 ## Building
+- To check out the code, run the following git command. Note the recursive submodule addition to make sure we get the repo's git submodules.
+    - `git clone git@github.com:newrelic/newrelic-ios-agent.git --recurse-submodules`
 
->[**Optional** - Include this section if users will need to follow specific instructions to build the software from source. Be sure to include any third party build dependencies that need to be installed separately. Remove this section if it's not needed.]
+- Open `newrelic-ios-agent/Agent.xcworkspace` using the Finder.
+- Option 1: Build using Xcode.
+- Option 2: Build using [Fastlane](https://docs.fastlane.tools/)
+    - `bundle exec fastlane buildFramework`
+        - Run the above command to create the New Relic iOS Agent XCFramework.
 
 ## Testing
+- Option 1: Run the Unit Tests using Xcode by selecting Agent-iOS scheme and Product -> Test
+- Option 2: Running tests using [Fastlane](https://docs.fastlane.tools/)
+    - `bundle exec fastlane runIOSTests`
+        - Run above command to run tests on iOS. Upon completion, code coverage will be generated.
 
->[**Optional** - Include instructions on how to run tests if we include tests with the codebase. Remove this section if it's not needed.]
+## Links
+- [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Released Swift packages are published here. 
+- [modular-crash-reporter-ios (aka PLCrashReporter)](https://github.com/microsoft/plcrashreporter) Crash reporting brought in as a submodule using this library.
 
 ## Support
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
 
+[🚧UNDER CONSTRUCTION🚧]
 >Add the url for the support thread here: discuss.newrelic.com
 
 ## Contribute
 
-We encourage your contributions to improve [project name]! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
+We encourage your contributions to improve New Relic iOS Agent! Keep in mind that, when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
 
 If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
 
@@ -43,8 +101,9 @@ If you believe you have found a security vulnerability in this project or any of
 
 If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
 
+[🚧UNDER CONSTRUCTION🚧]
 To all contributors, we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to [Project Name](<LINK TO https://opensource.newrelic.com/projects/... PAGE>).
 
 ## License
-[Project Name] is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
->[If applicable: The [project name] also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.]
+New Relic iOS Agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
+The New Relic iOS agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found  in the [third-party notices](./THIRD_PARTY_NOTICES.md).

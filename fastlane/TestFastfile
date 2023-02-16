@@ -58,6 +58,8 @@ platform :ios do
     Dir.chdir("..") do
       begin
         sh("./XcodeCoverage/getcov -s -v -x")
+        # move the XML file to the root of repo
+        sh("source ./XcodeCoverage/env.sh && cp $BUILT_PRODUCTS_DIR/lcov/coverage.xml coverage.xml")
       rescue => ex
         # handle error
       ensure
