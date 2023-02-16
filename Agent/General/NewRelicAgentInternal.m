@@ -756,6 +756,22 @@ static UIBackgroundTaskIdentifier background_task;
 
         NRLOG_INFO(@"Shutting down agent for duration of application lifetime.");
 
+        // Delete stored device ID.
+        [NRMAUDIDManager deleteStoredID];
+
+        // Stored device data, Metadata and crash file are cleared when crash upload.
+        [NRMATraceController cleanup];
+        [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
+
+        // Clear stored Events and stored attributes.
+        [NRMAAnalytics clearDuplicationStores];
+        [_sharedInstance.analyticsController clearLastSessionsAnalytics];
+
+        // Clear stored user defaults
+        [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
+        [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];
+        [[[NRMAHarvestController harvestController] harvester] clearStoredApplicationIdentifier];
+
         [_sharedInstance agentShutdown];
 
         [[NRMAHarvestController harvestController].harvestTimer stop];
@@ -779,16 +795,6 @@ static UIBackgroundTaskIdentifier background_task;
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:kNRInteractionDidCompleteNotification
                                                    object:nil];
-        // Delete stored device ID.
-        [NRMAUDIDManager deleteStoredID];
-
-        // Stored device data, Metadata and crash file are cleared when crash upload.
-        [NRMATraceController cleanup];
-        [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
-
-        // Clear stored Events and stored attributes.
-        [NRMAAnalytics clearDuplicationStores];
-        [_sharedInstance.analyticsController clearLastSessionsAnalytics];
 
         if (background_task != UIBackgroundTaskInvalid) {
             [[UIApplication sharedApplication] endBackgroundTask:background_task];
