@@ -15,6 +15,7 @@
     NSFileManager* _fileManager;
     NSString* _crashCollectorHost;
     BOOL _useSSL;
+    int _inFlightCount;
 }
 
 @property(strong) NSURLSession* uploadSession;

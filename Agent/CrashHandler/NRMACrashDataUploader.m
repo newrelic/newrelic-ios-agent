@@ -31,6 +31,7 @@
         self.applicationVersion = connectionInformation.applicationInformation.appVersion;
         _crashCollectorHost = url;
         _useSSL = useSSL;
+        _inFlightCount = 0;
     }
     return self;
 }
@@ -38,6 +39,13 @@
 - (NSArray*) crashReportURLs:(NSError* __autoreleasing*)error
 {
     NSString* reportPath = [NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),kNRMA_CR_ReportPath];
+    BOOL isDir;
+
+    // If the directory doesn't even exist we shouldn't call contentsOfDirectoryAtURL on it.
+    if (![_fileManager fileExistsAtPath:reportPath isDirectory: &isDir]) {
+        if (!isDir)
+            return @[];
+    }
 
     NSArray* fileList = [_fileManager contentsOfDirectoryAtURL:[NSURL fileURLWithPath:reportPath]
                                     includingPropertiesForKeys:nil
@@ -56,6 +64,10 @@
 
 - (void) uploadCrashReports
 {
+    if (_inFlightCount > 0) {
+        NRLOG_VERBOSE(@"Crash Data Uploader already running");
+        return;
+    }
     NSError* error = nil;
     NSArray* reportURLs = [self crashReportURLs:&error];
     if ([reportURLs count] <= 0) {
@@ -68,6 +80,7 @@
     }
 
     for (NSURL* fileURL in reportURLs) {
+
         [self uploadFileAtPath:fileURL];
     }
 }
@@ -104,9 +117,12 @@
         // Remove the crash log even though we couldn't upload so we don't try every time.
         [self removeCrashLogAtpath:path];
         return;
-   }
-    
+    }
+
+    _inFlightCount += 1;
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
+        self->_inFlightCount -= 1;
+
         NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
         if(responseError) {
             NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
