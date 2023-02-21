@@ -23,9 +23,15 @@
     return self;
 }
 
-
 #pragma mark - NSURLSessionDataDelegate Methods
 
+- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition))completionHandler {
+    if ([self.realDelegate respondsToSelector:@selector(URLSession:dataTask:didReceiveResponse:completionHandler:)]) {
+        [self.realDelegate URLSession:session
+                             dataTask:dataTask
+                   didReceiveResponse:response completionHandler:completionHandler];
+    }
+}
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
 {
@@ -38,17 +44,17 @@
 
             if (error) {
                 [NRMANSURLConnectionSupport noticeError:error
-                                           forRequest:task.originalRequest
-                                            withTimer:timer];
+                                             forRequest:task.originalRequest
+                                              withTimer:timer];
             } else {
                 NSData *data = NRMA__getDataForSessionTask(task);
 
                 [NRMANSURLConnectionSupport noticeResponse:task.response
-                                              forRequest:task.originalRequest
-                                               withTimer:timer
-                                                 andBody:data
+                                                forRequest:task.originalRequest
+                                                 withTimer:timer
+                                                   andBody:data
                                                  bytesSent:(NSUInteger)task.countOfBytesSent
-                                           bytesReceived:(NSUInteger)task.countOfBytesReceived];
+                                             bytesReceived:(NSUInteger)task.countOfBytesReceived];
             }
             // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
             NRMA__setTimerForSessionTask(task, nil);
@@ -57,8 +63,8 @@
 
     } @catch(NSException* exception) {
         [NRMAExceptionHandler logException:exception
-                                   class:NSStringFromClass([self class])
-                                selector:@"URLSession:task:didCompleteWithError:"];
+                                     class:NSStringFromClass([self class])
+                                  selector:@"URLSession:task:didCompleteWithError:"];
     }
     
     if ([self.realDelegate respondsToSelector:@selector(URLSession:task:didCompleteWithError:)]) {
@@ -75,5 +81,6 @@
                        didReceiveData:data];
     }
 }
+
 @end
 

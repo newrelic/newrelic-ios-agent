@@ -65,14 +65,8 @@ jobs:
         sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
 
         rm NewRelicAgent.podspecbak
-        
-        # added for dry run
-        cat NewRelicAgent.podspec
-        # added for dry run
-        pod trunk me
 
-        # COMMENTED FOR DRY RUN
-        # pod trunk push --allow-warnings NewRelicAgent.podspec
+        pod trunk push --allow-warnings NewRelicAgent.podspec
       env:
         COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
@@ -95,20 +89,15 @@ jobs:
 
         rm $XCFRAMEWORK_NAME
 
-        # added for dry run
-        cat Package.swift
-
-        # COMMENTED FOR DRY RUN
-        # # The following git cmd adds remote https://github.com/newrelic/newrelic-ios-agent-spm.
-        # # The subsequent git commands push the Package.swift up to that repo. URL is prepended with GHA PAT.
+        # The following git cmd adds remote https://github.com/newrelic/newrelic-ios-agent-spm.
+        # The subsequent git commands push the Package.swift up to that repo. URL is prepended with GHA PAT.
 
         git remote add spm ${{ secrets.PROD_SPM_URL }}
-        git ls-remote --tags spm
 
-        # git add Package.swift
-        # git commit -m "Added build ${{ env.version }}"
-        # git tag ${{ env.version }}
-        # git push spm main --tags
+        git add Package.swift
+        git commit -m "Added build ${{ env.version }}"
+        git tag ${{ env.version }}
+        git push spm main --tags
 
      # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
      # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.

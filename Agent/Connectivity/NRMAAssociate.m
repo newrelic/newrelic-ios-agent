@@ -14,6 +14,8 @@
 + (void)attach:(id)value
             to:(id)object
           with:(NSString *)key {
+        if (object == nil) return;
+
         objc_setAssociatedObject(object,
                                  [key cStringUsingEncoding:NSUTF8StringEncoding],
                                  value,
@@ -29,6 +31,8 @@
 
 + (void)removeFrom:(id)object
               with:(NSString *)key {
+    if (object == nil) return;
+
     objc_setAssociatedObject(object,
                              [key cStringUsingEncoding:NSUTF8StringEncoding],
                              nil,

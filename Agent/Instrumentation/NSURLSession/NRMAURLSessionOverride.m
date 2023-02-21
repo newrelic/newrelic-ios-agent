@@ -201,28 +201,28 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
 {
     if (self == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. self is nil. returning nil"];
-        NRLOG_VERBOSE(@"%@", res);
+        NRLOG_ERROR(@"%@", res);
         return nil;
     }
     if (_cmd == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. _cmd is nil. returning nil"];
-        NRLOG_VERBOSE(@"%@", res);
+        NRLOG_ERROR(@"%@", res);
         return nil;
     }
     if (request == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. request is nil. returning nil"];
-        NRLOG_VERBOSE(@"%@", res);
+        NRLOG_ERROR(@"%@", res);
         return nil;
     }
     if (NRMAOriginal__dataTaskWithRequest == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. NRMAOriginal__dataTaskWithRequest is nil. returning nil"];
-        NRLOG_VERBOSE(@"%@", res);
+        NRLOG_ERROR(@"%@", res);
         return nil;
     }
     
     if (request.URL == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request has no URL. Returning nil."];
-        NRLOG_VERBOSE(@"%@", res);
+        NRLOG_ERROR(@"%@", res);
         return nil;
     } else {
         NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request appears good, instrumenting request: %@", request.URL.absoluteString];
@@ -239,7 +239,7 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     [NRMAHTTPUtilities attachPayload:payload
                                   to:task.originalRequest];
     
-    //try to override the methods of the private class that is returned by this method
+    // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
     NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [end] Leaving after instrumenting request."];
@@ -255,10 +255,17 @@ NSURLSessionTask* NRMAOverride__dataTaskWithURL_completionHandler(id self, SEL _
     return NRMAOverride__dataTaskWithRequest_completionHandler(self, _cmd, [NSURLRequest requestWithURL:url], completionHandler);
 }
 
-
 NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, SEL _cmd,NSURLRequest* request , void (^completionHandler)(NSData*,NSURLResponse*,NSError*))
 {
     IMP originalImp = NRMAOriginal__dataTaskWithRequest_completionHandler;
+
+    if (originalImp == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__dataTaskWithRequest_completionHandler. NRMAOriginal__dataTaskWithRequest_completionHandler is nil. returning nil"];
+        NRLOG_ERROR(@"%@", res);
+
+        return nil;
+    }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
 
@@ -285,8 +292,8 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
         completionHandler(data,response,error);
     });
 
+    // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
-    //try to override the methods of the private class that is returned by this method
 
     return task;
     
@@ -295,9 +302,17 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
 NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
 {
     IMP originalImp = NRMAOriginal__dataTaskWithURL;
+
+    if (originalImp == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__dataTaskWithURL. NRMAOriginal__dataTaskWithURL is nil. returning nil"];
+        NRLOG_ERROR(@"%@", res);
+
+        return nil;
+    }
+
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURL*))originalImp)(self,_cmd,url);
     
-    //try to override the methods of the private class that is returned by this method
+    // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;
 }
@@ -307,6 +322,13 @@ NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
 NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd, NSURLRequest* request, NSURL* fileURL)
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithRequest_fromFile;
+
+    if (originalImp == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromFile. NRMAOriginal__uploadTaskWithRequest_fromFile is nil. returning nil"];
+        NRLOG_ERROR(@"%@", res);
+
+        return nil;
+    }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
@@ -322,6 +344,13 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
 NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd, NSURLRequest* request, NSData* data)
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithRequest_fromData;
+
+    if (originalImp == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromData. NRMAOriginal__uploadTaskWithRequest_fromData is nil. returning nil"];
+        NRLOG_ERROR(@"%@", res);
+
+        return nil;
+    }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
 
@@ -339,6 +368,13 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithStreamedRequest;
 
+    if (originalImp == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithStreamedRequest. NRMAOriginal__uploadTaskWithStreamedRequest is nil. returning nil"];
+        NRLOG_ERROR(@"%@", res);
+
+        return nil;
+    }
+
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*))originalImp)(self, _cmd,request);
     
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -349,6 +385,13 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
 NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler(id self, SEL _cmd, NSURLRequest* request, NSURL* fileURL, void (^completionHandler)(NSData*,NSURLResponse*,NSError*))
 {
     IMP originalIMP = NRMAOriginal__uploadTaskWithRequest_fromFile_completionHandler;
+
+    if (originalIMP == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler. NRMAOriginal__uploadTaskWithRequest_fromFile_completionHandler is nil. returning nil"];
+        NRLOG_ERROR(@"%@", res);
+        return nil;
+    }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
 
@@ -373,17 +416,22 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
         completionHandler(data,response,error);
     });
     
-    //try to override the methods of the private class that is returned by this method
+    // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;
     
 }
 
-//- (NSURLSessionUploadTask *)uploadTaskWithRequest:(NSURLRequest *)request fromData:(NSData *)bodyData completionHandler:(void (^)(NSData *data, NSURLResponse *response, NSError *error))completionHandler
-
 NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionHandler(id self, SEL _cmd, NSURLRequest* request, NSData* bodyData, void (^completionHandler)(NSData*,NSURLResponse*,NSError*))
 {
     IMP originalIMP = NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler;
+
+    if (originalIMP == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromData_completionHandler. NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler is nil. returning nil"];
+        NRLOG_ERROR(@"%@", res);
+        return nil;
+    }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
     if (completionHandler == nil) {
@@ -407,7 +455,7 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
         completionHandler(data,response,error);
     });
     
-    //try to override the methods of the private class that is returned by this method
+    // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;
 }
@@ -431,7 +479,15 @@ void NRMAOverride__didReceiveData(id self, SEL _cmd, NSData* data) {
 
     NRMA__setDataForSessionTask(task, currentData);
 
-    ((void(*)(id,SEL, NSData*))NRMAOriginal__didReceiveData)(self,_cmd, data);
+    IMP originalIMP = NRMAOriginal__didReceiveData;
+
+    if (originalIMP == nil) {
+        NSString *res = [NSString stringWithFormat:@"NRMAOverride__didReceiveData. NRMAOriginal__didReceiveData is nil. returning"];
+        NRLOG_ERROR(@"%@", res);
+        return;
+    }
+
+    ((void(*)(id,SEL, NSData*))originalIMP)(self,_cmd, data);
 }
 
 void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error)
@@ -474,6 +530,8 @@ NRTimer* NRMA__getTimerForSessionTask(NSURLSessionTask* task)
 
 void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer)
 {
+    if (task == nil) return;
+
     objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
     if (timer == nil) {
         assocPolicy = OBJC_ASSOCIATION_ASSIGN;
@@ -483,6 +541,8 @@ void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer)
 
 void NRMA__setDataForSessionTask(NSURLSessionTask* task, NSData* data)
 {
+    if (task == nil) return;
+
     objc_AssociationPolicy assocPolicy = OBJC_ASSOCIATION_RETAIN;
     if (data == nil) {
         assocPolicy = OBJC_ASSOCIATION_ASSIGN;
@@ -492,5 +552,7 @@ void NRMA__setDataForSessionTask(NSURLSessionTask* task, NSData* data)
 
 NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task)
 {
+    if (task == nil) return nil;
+
     return objc_getAssociatedObject(task, kNRSessionDataAssociatedObject);
 }

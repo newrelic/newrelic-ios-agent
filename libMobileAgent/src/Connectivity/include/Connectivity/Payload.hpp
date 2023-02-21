@@ -14,9 +14,8 @@ namespace Connectivity {
 
 
 /*
- * Payload is based off of the distributed tracing spec defined here
- * https://source.datanerd.us/earnold/agent-specs/blob/new-connectivity/Distributed-Tracing.md
- */
+ * Payload is based off of the distributed tracing spec defined in the Agent Spec.
+*/
 class Payload : public NRJSON::IJsonable {
 public:
     Payload() = default;
