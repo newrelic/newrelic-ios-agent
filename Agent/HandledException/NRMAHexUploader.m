@@ -58,7 +58,8 @@
         return;
     }
     
-    
+    NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
+
     NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
     [self.taskStore track:uploadTask.originalRequest];
     [uploadTask resume];
@@ -89,12 +90,12 @@
 - (void)  URLSession:(NSURLSession*)session
                 task:(NSURLSessionTask*)task
 didCompleteWithError:(nullable NSError*)error {
-    // We cancel http errors in other delegate method.
-    if (error && error.code != kCFURLErrorCancelled) {
+
+    if (error) {
         NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
         [self handledErroredRequest:task.originalRequest];
     } else {
-        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload cancelled: %@", error);
+        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
     }
 }
 
@@ -119,7 +120,8 @@ didCompleteWithError:(nullable NSError*)error {
                                                  size:[[[dataTask originalRequest] HTTPBody] length]
                                              received:response.expectedContentLength];
     }
-    completionHandler(NSURLSessionResponseCancel);
+
+    completionHandler(NSURLSessionResponseAllow);
 }
 
 - (void) handledErroredRequest:(NSURLRequest*)request {
