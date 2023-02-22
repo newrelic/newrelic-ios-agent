@@ -58,17 +58,17 @@ jobs:
     - name: Print XCFramework name
       run: echo "${{ env.version }}" 
 
-    - name: Create Prod Podspec for XCFramework version
-      run: |
-        cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
-        REPLACE=X.XX
-        sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
+    # - name: Create Prod Podspec for XCFramework version
+    #   run: |
+    #     cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
+    #     REPLACE=X.XX
+    #     sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
 
-        rm NewRelicAgent.podspecbak
+    #     rm NewRelicAgent.podspecbak
 
-        pod trunk push --allow-warnings NewRelicAgent.podspec
-      env:
-        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+    #     pod trunk push --allow-warnings NewRelicAgent.podspec
+    #   env:
+    #     COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
     - name: Create Prod Package.swift for XCFramework version
       run: |
@@ -95,7 +95,7 @@ jobs:
         git remote add spm ${{ secrets.PROD_SPM_URL }}
 
         git add Package.swift
-        git commit -m "Added build ${{ env.version }}"
+        git commit -m "Added build ${{ env.version }}" --author "smalsam-newr <smalsam@newrelic.com>"
         git tag ${{ env.version }}
         git push spm main --tags
 
