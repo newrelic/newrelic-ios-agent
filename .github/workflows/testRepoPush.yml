@@ -1,0 +1,60 @@
+name: RepoPushTest
+on:  
+  pull_request:
+jobs:
+  TestRepoPush:
+    name : TestRepoPush 
+    # runs-on: will be set to macos-latest when running on actual GHA. 
+    # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
+    runs-on: macos-latest 
+    steps:
+    - name: Checkout Main repo
+      uses: actions/checkout@v3
+      with:
+        path: main
+
+    - name: Checkout SPM
+      uses: actions/checkout@v3
+      with:
+        repository: newrelic/newrelic-ios-agent-spm
+        token: ${{ secrets.SPM_PAT }} # `GH_PAT` is a secret that contains your PAT
+        path: spm
+
+    - name: Create Prod Podspec for XCFramework version
+      run: |
+        cd main
+        cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
+        REPLACE=X.XX
+        sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
+
+        rm NewRelicAgent.podspecbak
+        
+        # Do nothing, real prod push script pushes to main cocoapods trunk
+
+    - name: Create test push for spm repo
+      run: |
+        
+        cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
+        cd spm
+
+        SPM_CHECKSUM=deadbeef
+        REPLACEVER={{VERSION}}
+        REPLACECHECKSUM={{CHECKSUM}}
+
+        sed -i bak "s/$REPLACEVER/7.4.3/g" Package.swift
+        sed -i -e "s/$REPLACECHECKSUM/$SPM_CHECKSUM/g" Package.swift
+
+        rm Package.swift-e
+        rm Package.swiftbak
+
+        echo "testtesttest" > myLog.log
+
+        git checkout -B testMyLog
+
+        git add myLog.log
+        git commit -m "Added myLog"
+        
+        git tag "testTag"   
+        
+        git push origin testMyLog --tags
+
