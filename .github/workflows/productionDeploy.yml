@@ -58,17 +58,17 @@ jobs:
     - name: Print XCFramework name
       run: echo "${{ env.version }}" 
 
-    # - name: Create Prod Podspec for XCFramework version
-    #   run: |
-    #     cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
-    #     REPLACE=X.XX
-    #     sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
+    - name: Create Prod Podspec for XCFramework version
+      run: |
+        cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
+        REPLACE=X.XX
+        sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
 
-    #     rm NewRelicAgent.podspecbak
+        rm NewRelicAgent.podspecbak
 
-    #     pod trunk push --allow-warnings NewRelicAgent.podspec
-    #   env:
-    #     COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+        pod trunk push --allow-warnings NewRelicAgent.podspec
+      env:
+        COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
     - name: Create Prod Package.swift for XCFramework version
       run: |
@@ -92,6 +92,9 @@ jobs:
         # The following git cmd adds remote https://github.com/newrelic/newrelic-ios-agent-spm.
         # The subsequent git commands push the Package.swift up to that repo. URL is prepended with GHA PAT.
 
+        # Attempt at fixing stored github-bot AUTH header.
+        git config --unset-all http.https://github.com/.extraheader
+        
         git remote add spm ${{ secrets.PROD_SPM_URL }}
 
         git add Package.swift
