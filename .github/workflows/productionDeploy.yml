@@ -69,6 +69,7 @@ jobs:
     - name: Create Prod Podspec for XCFramework version
       run: |
         cd main
+
         cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
         REPLACE=X.XX
         sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
@@ -100,9 +101,9 @@ jobs:
         rm $XCFRAMEWORK_NAME
                 
         git add Package.swift
-        git commit -m "Added build ${{ env.version }}" --author "smalsam-newr <smalsam@newrelic.com>"
+        git commit -m "Added build ${{ env.version }}"
         git tag ${{ env.version }}
-        git push spm main --tags
+        git push origin main --tags
 
      # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
      # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
