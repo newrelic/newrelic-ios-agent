@@ -88,6 +88,31 @@
 }
 - (void) testVerifyCollectorTimestamp
 {
+
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:KNRMA_TEST_COLLECTOR_HOST] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    [[NRMAHarvestController harvestController] harvester].connection.harvestSession = mockNSURLSession;
+
+    [[NRMAHarvestController harvestController] harvester].connection.serverTimestamp = 1234;
+
+    //connection.harvestSession = mockNSURLSession;
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler(nil, bresponse, nil);
+    }] resume];
+
+
     [[[NRMAHarvestController harvestController] harvester] execute];
     NSURLRequest* request = [[[[NRMAHarvestController harvestController] harvester] connection] createDataPost:@"test"];
     

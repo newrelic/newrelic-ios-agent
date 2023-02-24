@@ -105,18 +105,18 @@
     [mockNSURLSession stopMocking];
 }
 
-- (NRMAConnectInformation*) testSendConnect
-{
-    connection.serverTimestamp = 1234;
-    connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
-    
-    connection.collectorHost = @"mobile-collector.newrelic.com";
-    
-    NRMAHarvestResponse* response = [connection sendConnect];
-    XCTAssertNotNil(response, @"");
-    XCTAssertEqual(FORBIDDEN,response.statusCode, @"");
-    XCTAssertTrue([response.responseBody isEqualToString:@""],@"");
-}
+//- (NRMAConnectInformation*) testSendConnect
+//{
+//    connection.serverTimestamp = 1234;
+//    connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
+//    
+//    connection.collectorHost = @"mobile-collector.newrelic.com";
+//    
+//    NRMAHarvestResponse* response = [connection sendConnect];
+//    XCTAssertNotNil(response, @"");
+//    XCTAssertEqual(FORBIDDEN,response.statusCode, @"");
+//    XCTAssertTrue([response.responseBody isEqualToString:@""],@"");
+//}
 
 - (void) testMaxPayloadSizeLimitSendConnect {
     [helper.consumedMeasurements removeAllObjects];

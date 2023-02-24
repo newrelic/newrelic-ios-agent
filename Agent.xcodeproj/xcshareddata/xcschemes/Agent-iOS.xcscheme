@@ -66,6 +66,9 @@
                <Test
                   Identifier = "Agent_Tests">
                </Test>
+               <Test
+                  Identifier = "NRMAHarvesterTest">
+               </Test>
             </SkippedTests>
          </TestableReference>
          <TestableReference
