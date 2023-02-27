@@ -38,7 +38,7 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
         }
     }
 
-    // In iOS 13+ we instrument NSURLSessionTask:setState && NSURLSessionTaskDelegate:_didReceiveData
+    // In iOS 13+ we instrument NSURLSessionTask:setState
     if (@available(iOS 13, tvOS 13, *)) {
         // Instrument NSURLSession setState
         if (clazz && NRMAOriginal__urlSessionTask_SetState == nil) {
@@ -67,7 +67,7 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
         }
     }
     
-    // In iOS 13+ we instrument NSURLSessionTask:setState && NSURLSessionTaskDelegate:_didReceiveData
+    // In iOS 13+ we instrument NSURLSessionTask:setState
     if (@available(iOS 13, tvOS 13, *)) {
         if (NRMAOriginal__urlSessionTask_SetState != nil) {
             if (sizeof(__NRMAConcreteClass) == sizeof(Class)) {
