@@ -45,12 +45,17 @@ jobs:
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     steps:
-    - uses: actions/checkout@v3
-      with: 
-        submodules: true
+    - name: Checkout Main repo
+      uses: actions/checkout@v3
+      with:
+        path: main
 
-    - name: Install gems
-      run: bundle install
+    - name: Checkout SPM
+      uses: actions/checkout@v3
+      with:
+        repository: newrelic/newrelic-ios-agent-spm
+        token: ${{ secrets.SPM_PAT }}
+        path: spm
 
     - name: Get name
       run: echo "version=${{needs.deployS3Production.outputs.version}}" >> $GITHUB_ENV
@@ -60,6 +65,8 @@ jobs:
 
     - name: Create Prod Podspec for XCFramework version
       run: |
+        cd main
+
         cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
         REPLACE=X.XX
         sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
@@ -72,7 +79,8 @@ jobs:
 
     - name: Create Prod Package.swift for XCFramework version
       run: |
-        cp NewRelic-SwiftPackage/Package.swift.template Package.swift
+        cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
+        cd spm
 
         REPLACEVER={{VERSION}}
         REPLACECHECKSUM={{CHECKSUM}}
@@ -88,19 +96,11 @@ jobs:
         rm Package.swiftbak
 
         rm $XCFRAMEWORK_NAME
-
-        # The following git cmd adds remote https://github.com/newrelic/newrelic-ios-agent-spm.
-        # The subsequent git commands push the Package.swift up to that repo. URL is prepended with GHA PAT.
-
-        # Attempt at fixing stored github-bot AUTH header.
-        git config --unset-all http.https://github.com/.extraheader
-        
-        git remote add spm ${{ secrets.PROD_SPM_URL }}
-
+                
         git add Package.swift
-        git commit -m "Added build ${{ env.version }}" --author "smalsam-newr <smalsam@newrelic.com>"
+        git commit -m "Added build ${{ env.version }}"
         git tag ${{ env.version }}
-        git push spm main --tags
+        git push origin main --tags
 
      # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
      # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
