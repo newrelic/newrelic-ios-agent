@@ -31,6 +31,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing,
         ])
 #endif
+
+        NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
+
         // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
         guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPIInfo") as? String, let isStaging = plistHelper.objectFor(key: "isStaging", plist: "NRAPIInfo") as? Bool else {return true}
         

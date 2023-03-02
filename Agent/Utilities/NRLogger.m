@@ -79,6 +79,10 @@ withMessage:(NSString *)message {
     [[NRLogger logger] clearLog];
 }
 
++ (void)upload {
+    [[NRLogger logger] upload];
+}
+
 #pragma mark -- internal
 
 - (id)init {
@@ -239,6 +243,39 @@ withMessage:(NSString *)message {
             // Calling setLogTargets: will re-open the file safely.
             // Note: @synchronized is re-entrant, so we don't need to worry about lock contention.
             [self setLogTargets:self->logTargets];
+        }
+    }
+}
+
+- (void)upload {
+    @synchronized (self) {
+        if (self->logFile) {
+            NSString* logAPI = @"https://staging-log-api.newrelic.com/log/v1?Api-Key=1ec9ef92c4b69cc8539af55b0f70624dFFFFNRAL";
+
+            NSString *path = [NRLogger logFilePath];
+            NSData* logData = [NSData dataWithContentsOfFile:path];
+
+            NSString* logMesagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+            NSData* formattedData = [logMesagesJson dataUsingEncoding:NSUTF8StringEncoding];
+            NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
+            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:logAPI]];
+
+            req.HTTPMethod = @"POST";
+
+            NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                if (!error) {
+                    NSLog(@"Logs uploaded successfully: response = %@", response);
+
+                }
+                else {
+                    NSLog(@"Logs failed to upload");
+
+                }
+            }];
+
+            [uploadTask resume];
+            [self clearLog];
+
         }
     }
 }

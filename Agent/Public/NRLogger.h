@@ -132,6 +132,11 @@ withMessage:(NSString *)message;
 + (void)clearLog;
 
 /*!
+ Upload current log since last upload.
+ */
++ (void)upload;
+
+/*!
  return currently set logLevels
  */
 + (NRLogLevels) logLevels;

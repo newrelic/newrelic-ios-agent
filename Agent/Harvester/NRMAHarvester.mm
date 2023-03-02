@@ -594,6 +594,8 @@
                 #endif
             }
         }
+        // Do log upload
+        [NRLogger upload];
     }
 }
 
