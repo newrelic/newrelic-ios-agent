@@ -90,6 +90,7 @@ typedef enum _NRLogTargets {
     unsigned int logLevels;
     unsigned int logTargets;
     NSFileHandle *logFile;
+    NSString *logURL;
 }
 
 + (void)log:(unsigned int)level
@@ -118,6 +119,13 @@ withMessage:(NSString *)message;
  NRLogTargetFile will write log messages to a file on the device or simulator. Use logFilePath to retrieve the log file location.
  */
 + (void)setLogTargets:(unsigned int)targets;
+
+/*
+Configure the New Relic headerless logging API URL.
+
+@param url A single NSString constant, the logging API URL.
+*/
++ (void)setLogURL:(NSString*)url;
 
 /*!
  @result the path of the file to which the New Relic agent is logging.

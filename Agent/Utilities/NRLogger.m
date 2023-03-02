@@ -65,6 +65,10 @@ withMessage:(NSString *)message {
     [[NRLogger logger] setLogTargets:targets];
 }
 
++ (void)setLogURL:(NSString*) url {
+    [[NRLogger logger] setLogURL:url];
+}
+
 + (NSString *)logFilePath {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
     NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
@@ -162,10 +166,9 @@ withMessage:(NSString *)message {
     }
 }
 
-    - (NRLogLevels) logLevels {
-        return self->logLevels;
-    }
-
+- (NRLogLevels) logLevels {
+    return self->logLevels;
+}
 
 - (void)setLogTargets:(unsigned int)targets {
     NSString *fileOpenError = nil;
@@ -247,10 +250,18 @@ withMessage:(NSString *)message {
     }
 }
 
+- (void)setLogURL:(NSString*)url {
+    self->logURL = url;
+}
+
 - (void)upload {
     @synchronized (self) {
         if (self->logFile) {
-            NSString* logAPI = @"https://staging-log-api.newrelic.com/log/v1?Api-Key=1ec9ef92c4b69cc8539af55b0f70624dFFFFNRAL";
+            // 
+            if (!self->logURL) {
+                NSLog(@"Set Logging URL to upload");
+                return;
+            }
 
             NSString *path = [NRLogger logFilePath];
             NSData* logData = [NSData dataWithContentsOfFile:path];
@@ -258,7 +269,7 @@ withMessage:(NSString *)message {
             NSString* logMesagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
             NSData* formattedData = [logMesagesJson dataUsingEncoding:NSUTF8StringEncoding];
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:logAPI]];
+            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self->logURL]];
 
             req.HTTPMethod = @"POST";
 
