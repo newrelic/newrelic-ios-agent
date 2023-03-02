@@ -53,6 +53,7 @@
 #import "NRMAUDIDManager.h"
 #import "NRMAStartTimer.h"
 #import "NRMAUDIDManager.h"
+#import "NRMASupportMetricHelper.h"
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
 // Enabling this will bypass dispatch_once-style logic and expose more internal state.
@@ -756,6 +757,13 @@ static UIBackgroundTaskIdentifier background_task;
 
         NRLOG_INFO(@"Shutting down agent for duration of application lifetime.");
 
+        // If the agent is connected, it should have no problem performing an adhoc harvest right now containing Shutdown support metric.
+        [NRMASupportMetricHelper enqueueStopAgentMetric];
+
+        [NRMAHarvestController harvestNow];
+
+        // * ACTUAL SHUT DOWN *//
+
         // Delete stored device ID.
         [NRMAUDIDManager deleteStoredID];
 
@@ -806,10 +814,12 @@ static UIBackgroundTaskIdentifier background_task;
         // 1. NRMAURLSessionOverride
         // 2. NRMAMethodProfiler.
         // 3. NRMAWKWebViewInstrumentation.
-        // It would be unsafe to attempt de-swizzling everything during runtime.
+        // It may be unsafe to attempt de-swizzling everything during runtime.
 
         // Set permanent shutdown flag.
         _sharedInstance.isShutdown = true;
+
+        // * END SHUT DOWN *//
     }
     else {
         NRLOG_INFO(@"Failed to shut down agent, its not enabled yet.");

@@ -68,6 +68,15 @@
                                                           scope:nil]];
 }
 
++ (void) enqueueStopAgentMetric {
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
+    }
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAStopAgentMetric
+                                                          value:@1
+                                                          scope:nil]];
+}
+
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {

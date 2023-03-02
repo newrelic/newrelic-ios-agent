@@ -108,6 +108,7 @@ typedef NSString NRMetricUnit;
 #define kNRMAMetricActivityNetworkPrefix @"Mobile/Activity/Network"
 #define kNRAgentHealthPrefix             @"Supportability/AgentHealth"
 #define kNRMASessionStartMetric          @"Session/Start"
+#define kNRMAStopAgentMetric             @"Supportability/Mobile/iOS/Shutdown"
 
 #define kNRMAUUIDOverridden              @"Supportability/Mobile/iOS/UUID/Overridden"
 
