@@ -35,8 +35,6 @@ IMP NRMAOriginal__uploadTaskWithRequest_fromData;
 IMP NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler;
 IMP NRMAOriginal__uploadTaskWithStreamedRequest;
 
-IMP NRMAOriginal__didReceiveData;
-
 void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplementation);
 
 @interface NRMAIMPContainer : NSObject
@@ -96,7 +94,6 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
     }
 
     [self swizzleURLSessionTask];
-    [self swizzleDidReceiveData];
 }
 
 + (void) deinstrument
@@ -144,7 +141,6 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
     }
 
     [NRMAURLSessionTaskOverride deinstrument];
-    [self deinstrumentDidReceiveData];
 }
 
 + (void)swizzleURLSessionTask
@@ -152,29 +148,6 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
     NSArray<Class> *classesToSwizzle = [NRMAURLSessionTaskSearch urlSessionTaskClasses];
     for (Class classToSwizzle in classesToSwizzle) {
         [NRMAURLSessionTaskOverride instrumentConcreteClass:classToSwizzle];
-    }
-}
-
-+ (void)swizzleDidReceiveData
-{
-    if (@available(iOS 13, tvOS 13, *)) {
-
-        id clazz = objc_getClass("__NSCFURLLocalSessionConnection");
-        if (clazz) {
-            NRMAOriginal__didReceiveData = NRMASwapImplementations(clazz, @selector(_didReceiveData:), (IMP)NRMAOverride__didReceiveData);
-        }
-    }
-}
-
-+ (void)deinstrumentDidReceiveData
-{
-    if (@available(iOS 13, tvOS 13, *)) {
-        
-        id clazz = objc_getClass("__NSCFURLLocalSessionConnection");
-        if (clazz) {
-            NRMASwapImplementations(clazz,@selector(_didReceiveData:), (IMP)NRMAOriginal__didReceiveData);
-            NRMAOriginal__didReceiveData = nil;
-        }
     }
 }
 
@@ -458,36 +431,6 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;
-}
-
-void NRMAOverride__didReceiveData(id self, SEL _cmd, NSData* data) {
-
-    NSURLSessionTask* task = [self valueForKey:@"task"];
-
-    NSData *currentData = NRMA__getDataForSessionTask(task);
-
-    if (currentData == nil) {
-        // First time we've seen this tasks data.
-        currentData = data;
-    }
-    else {
-        // Data already exists for this tasks data.
-        NSMutableData *currentDataCopy = [currentData mutableCopy];
-        [currentDataCopy appendData:data];
-        currentData = currentDataCopy;
-    }
-
-    NRMA__setDataForSessionTask(task, currentData);
-
-    IMP originalIMP = NRMAOriginal__didReceiveData;
-
-    if (originalIMP == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__didReceiveData. NRMAOriginal__didReceiveData is nil. returning"];
-        NRLOG_ERROR(@"%@", res);
-        return;
-    }
-
-    ((void(*)(id,SEL, NSData*))originalIMP)(self,_cmd, data);
 }
 
 void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error)

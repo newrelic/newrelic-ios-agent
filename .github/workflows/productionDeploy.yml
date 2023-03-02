@@ -32,7 +32,7 @@ jobs:
       run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
     
     - name: Deploy to production S3
-      run: "aws s3 cp s3://nr-downloads-main/ios-v5/NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios_agent/ --copy-props none --recursive"
+      run: "aws s3 cp s3://nr-downloads-main/ios-v5/NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios_agent/ --copy-props none"
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -45,9 +45,17 @@ jobs:
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     steps:
-    - uses: actions/checkout@v3
-      with: 
-        submodules: true
+    - name: Checkout Main repo
+      uses: actions/checkout@v3
+      with:
+        path: main
+
+    - name: Checkout SPM
+      uses: actions/checkout@v3
+      with:
+        repository: newrelic/newrelic-ios-agent-spm
+        token: ${{ secrets.SPM_PAT }}
+        path: spm
 
     - name: Install gems
       run: bundle install
@@ -60,25 +68,22 @@ jobs:
 
     - name: Create Prod Podspec for XCFramework version
       run: |
+        cd main
+
         cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
         REPLACE=X.XX
         sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
-        rm NewRelicAgent.podspec-e
-        rm NewRelicAgent.podspecbak
-        
-        # added for dry run
-        cat NewRelicAgent.podspec
-        # added for dry run
-        pod trunk me
 
-        # COMMENTED FOR DRY RUN
-        # pod trunk push --allow-warnings NewRelicAgent.podspec
+        rm NewRelicAgent.podspecbak
+
+        pod trunk push --allow-warnings NewRelicAgent.podspec
       env:
         COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
     - name: Create Prod Package.swift for XCFramework version
       run: |
-        cp NewRelic-SwiftPackage/Package.swift.template Package.swift
+        cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
+        cd spm
 
         REPLACEVER={{VERSION}}
         REPLACECHECKSUM={{CHECKSUM}}
@@ -94,21 +99,11 @@ jobs:
         rm Package.swiftbak
 
         rm $XCFRAMEWORK_NAME
-
-        # added for dry run
-        cat Package.swift
-
-        # COMMENTED FOR DRY RUN
-        # # The following git cmd adds remote https://github.com/newrelic/newrelic-ios-agent-spm.
-        # # The subsequent git commands push the Package.swift up to that repo. URL is prepended with GHA PAT.
-
-        git remote add origin ${{ secrets.PROD_SPM_URL }}
-        git remote -v
-
-        # git add Package.swift
-        # git commit -m "Added build ${{ env.version }}"
-        # git tag ${{ env.version }}
-        # git push origin main --tags
+                
+        git add Package.swift
+        git commit -m "Added build ${{ env.version }}"
+        git tag ${{ env.version }}
+        git push origin main --tags
 
      # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
      # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.

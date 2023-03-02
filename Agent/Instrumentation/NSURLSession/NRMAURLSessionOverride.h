@@ -27,8 +27,6 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData_completionHandler
 NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd, NSURLRequest* request, NSData* data);
 NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd, NSURLRequest* request);
 
-void NRMAOverride__didReceiveData(id self, SEL _cmd, NSData* data);
-
 void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error);
 NRTimer* NRMA__getTimerForSessionTask(NSURLSessionTask* task);
 NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task);

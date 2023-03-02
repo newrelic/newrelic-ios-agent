@@ -31,6 +31,9 @@
                              dataTask:dataTask
                    didReceiveResponse:response completionHandler:completionHandler];
     }
+    else if (completionHandler) {
+        completionHandler(NSURLSessionResponseAllow);
+    }
 }
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
