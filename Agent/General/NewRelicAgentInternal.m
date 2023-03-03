@@ -803,7 +803,10 @@ static UIBackgroundTaskIdentifier background_task;
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:kNRInteractionDidCompleteNotification
                                                    object:nil];
-
+        // # disable logging
+        [NRLogger setLogLevels:NRLogLevelNone];
+        [NRLogger clearLog];
+        
         if (background_task != UIBackgroundTaskInvalid) {
             [[UIApplication sharedApplication] endBackgroundTask:background_task];
             // Invalidate the background_task.
