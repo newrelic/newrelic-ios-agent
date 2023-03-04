@@ -47,7 +47,7 @@ withMessage:(NSString *)message {
                                file, NRLogMessageFileKey,
                                [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
                                method, NRLogMessageMethodKey,
-                               [[[NSDate alloc] init] description], NRLogMessageTimestampKey,
+                               [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
                                message, NRLogMessageMessageKey,
                                nil]];
     }
@@ -138,7 +138,7 @@ withMessage:(NSString *)message {
                       NRLogMessageFileKey, [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       NRLogMessageLineNumberKey,[message objectForKey:NRLogMessageLineNumberKey],
                       NRLogMessageMethodKey,[[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
-                      NRLogMessageTimestampKey,[[message objectForKey:NRLogMessageTimestampKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
+                      NRLogMessageTimestampKey,[message objectForKey:NRLogMessageTimestampKey],
                       NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""]];
 
     return [json dataUsingEncoding:NSUTF8StringEncoding];
@@ -266,8 +266,8 @@ withMessage:(NSString *)message {
             NSString *path = [NRLogger logFilePath];
             NSData* logData = [NSData dataWithContentsOfFile:path];
 
-            NSString* logMesagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-            NSData* formattedData = [logMesagesJson dataUsingEncoding:NSUTF8StringEncoding];
+            NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+            NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
             NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self->logURL]];
 
@@ -275,12 +275,10 @@ withMessage:(NSString *)message {
 
             NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
                 if (!error) {
-                    NSLog(@"Logs uploaded successfully: response = %@", response);
-
+                    NRLOG_VERBOSE(@"Logs uploaded successfully.");
                 }
                 else {
-                    NSLog(@"Logs failed to upload");
-
+                    NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
                 }
             }];
 
