@@ -26,7 +26,8 @@ class UtilViewModel {
     var uniqueInteractionTraceIdentifier: String? =  nil
 
     let taskProcessor = TaskProcessor()
-    
+    let taskProcessor2 = TaskProcessorNoDidRcvResp()
+
     func createUtilOptions() {
         options.append(UtilOption(title: "Add Valid Breadcrumb", handler: { [self] in makeValidBreadcrumb()}))
         options.append(UtilOption(title: "Add Invalid Breadcrumb", handler: { [self] in makeInvalidBreadcrumb()}))
@@ -145,6 +146,17 @@ class UtilViewModel {
         dataTask.resume()
     }
 
+    func doDataTaskNoDidRcvResp() {
+        let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: taskProcessor2, delegateQueue: nil)
+        guard let url = URL(string: "https://www.google.com") else { return }
+
+        let request = URLRequest(url: url)
+
+        let dataTask = urlSession.dataTask(with: request)
+
+        dataTask.resume()
+    }
+
     func shutDown() {
         NewRelic.shutdown()
     }
@@ -172,6 +184,38 @@ class TaskProcessor: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSe
           if let certificate = SecTrustGetCertificateAtIndex(trust, 0) {
               _ = SecCertificateCopyData(certificate) as Data
               
+                completionHandler(.useCredential, URLCredential(trust: trust))
+                return
+          }
+        }
+      completionHandler(.cancelAuthenticationChallenge, nil)
+
+    }
+}
+
+class TaskProcessorNoDidRcvResp: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionTaskDelegate {
+
+    // DEMONSTRATE BUG in 7.4.2: API_MISUSE
+//    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+//
+//        completionHandler(.allow)
+//    }
+
+    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        print("DataTask rcv data.")
+    }
+
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        print("DataTask did complete.")
+    }
+
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+
+        if let trust = challenge.protectionSpace.serverTrust,
+             SecTrustGetCertificateCount(trust) > 0 {
+          if let certificate = SecTrustGetCertificateAtIndex(trust, 0) {
+              _ = SecCertificateCopyData(certificate) as Data
+
                 completionHandler(.useCredential, URLCredential(trust: trust))
                 return
           }
