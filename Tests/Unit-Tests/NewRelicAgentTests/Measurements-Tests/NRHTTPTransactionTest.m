@@ -109,7 +109,7 @@
 
 - (void) testNSURLConnection
 {
-    NSURLRequest* request  = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com"]];
+    NSURLRequest* request  = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://www.google.com"]];
     
     
     NSURLResponse* response = nil;
@@ -117,25 +117,28 @@
     [NSURLConnection sendSynchronousRequest:request
                           returningResponse:&response
                                       error:&error];
-    
-    __block BOOL failed = NO;
     double delayInSeconds = 10.0;
+    __block bool done = false;
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-    dispatch_after(popTime, dispatch_queue_create("connectionTimeoutQueue", NULL), ^(void){
-        failed = YES;
-    });
-    while (CFRunLoopGetCurrent() && helper.result == nil) {
-        [NRMATaskQueue synchronousDequeue];
-        if (failed) {
-            XCTFail(@"Timeout reached for yahoo connection test");
-            break;
+    dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        if (!done) {
+            XCTFail(@"Test timed out. helper.result was never populated");
         }
-    }
-    NSLog(@"%@",helper.result);
+    });
+    while (CFRunLoopGetCurrent() && !helper.result) {}; //wait for result to populate
+
+    [NRMATaskQueue synchronousDequeue];
+
+    NRLOG_VERBOSE(@"%@",helper.result);
     
     XCTAssertTrue([helper.result isKindOfClass:[NRMAHTTPTransactionMeasurement class]], @"verify the result is a http transaction");
-    XCTAssertTrue([((NRMAHTTPTransactionMeasurement*)helper.result).url isEqualToString:@"http://www.google.com"],@"match url to requested url");
-    XCTAssertTrue(((NRMAHTTPTransactionMeasurement*)helper.result).bytesReceived == 8,@"gzipped bytes received should be 8");
+    XCTAssertTrue([((NRMAHTTPTransactionMeasurement*)helper.result).url isEqualToString:@"https://www.google.com"],@"match url to requested url");
+
+    long long bytesRec = ((NRMAHTTPTransactionMeasurement*)helper.result).bytesReceived;
+    // TODO: Add back in
+     XCTAssertTrue(bytesRec == 8,@"gzipped bytes received should be 8");
+
+    done = true;
 }
 
 
