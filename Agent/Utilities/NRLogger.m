@@ -9,6 +9,7 @@
 #import "NRLogger.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAJSON.h"
+#import "NewRelicAgentInternal.h"
 
 NRLogger *_nr_logger = nil;
 
@@ -121,7 +122,7 @@ withMessage:(NSString *)message {
                   [message objectForKey:NRLogMessageMessageKey]);
         }
         if (self->logTargets & NRLogTargetFile) {
-            NSData *json = [self jsonDictonary:message];
+            NSData *json = [self jsonDictionary:message];
             if (json) {
                 if ([self->logFile offsetInFile]) {
                     [self->logFile writeData:[NSData dataWithBytes:"," length:1]];
@@ -132,18 +133,20 @@ withMessage:(NSString *)message {
     }
 }
 
-- (NSData*) jsonDictonary:(NSDictionary*)message {
-    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n}",
+- (NSData*) jsonDictionary:(NSDictionary*)message {
+    NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
+
+    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
                       NRLogMessageLevelKey, [message objectForKey:NRLogMessageLevelKey],
                       NRLogMessageFileKey, [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       NRLogMessageLineNumberKey,[message objectForKey:NRLogMessageLineNumberKey],
                       NRLogMessageMethodKey,[[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       NRLogMessageTimestampKey,[message objectForKey:NRLogMessageTimestampKey],
-                      NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""]];
+                      NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
+                      @"sessionId", nrSessiondId];
 
     return [json dataUsingEncoding:NSUTF8StringEncoding];
 }
-
 
 - (void)setLogLevels:(unsigned int)levels {
     @synchronized(self) {
@@ -259,7 +262,7 @@ withMessage:(NSString *)message {
         if (self->logFile) {
             // 
             if (!self->logURL) {
-                NSLog(@"Set Logging URL to upload");
+                NRLOG_VERBOSE(@"Set Logging URL to upload logs to New Relic using the Logs API.");
                 return;
             }
 
