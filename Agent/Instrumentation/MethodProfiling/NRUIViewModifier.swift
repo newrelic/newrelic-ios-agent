@@ -12,7 +12,6 @@ import SwiftUI
 @available(iOS 13, tvOS 13, *)
 internal struct NRViewModifier: SwiftUI.ViewModifier {
     
-    let identity: String = UUID().uuidString
     let name: String
     
     @State private var uniqueInteractionTraceIdentifier: String?
@@ -29,8 +28,8 @@ internal struct NRViewModifier: SwiftUI.ViewModifier {
 
 @available(iOS 13, tvOS 13, *)
 public extension SwiftUI.View {
-    func NRTrackView(name: String, attributes:[String:String] = [:]) -> some View {
-        return modifier(NRViewModifier(name: name))
+    func NRTrackView(name: String) -> some View {
+        modifier(NRViewModifier(name: name))
     }
 }
 
