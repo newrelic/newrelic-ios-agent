@@ -19,6 +19,7 @@ struct ImageDetailPDFView: UIViewRepresentable {
         guard let page = PDFPage(image: image) else { return view }
         view.document?.insert(page, at: 0)
         view.autoScales = true
+        view.backgroundColor = .clear
         return view
     }
     

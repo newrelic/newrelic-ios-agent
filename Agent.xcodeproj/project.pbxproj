@@ -1001,8 +1001,8 @@
 		F6E79D2B25A788AB006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F6E79D3A25A78B42006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
-		F824A43129AEAD63000886A6 /* NRUIViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRUIViewModifier.swift */; };
-		F824A43229AEAD63000886A6 /* NRUIViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRUIViewModifier.swift */; };
+		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
+		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 /* End PBXBuildFile section */
@@ -1880,7 +1880,7 @@
 		F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = TestNRMATraceContext.mm; sourceTree = "<group>"; };
 		F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceParent.mm; sourceTree = "<group>"; };
 		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
-		F824A43029AEAD63000886A6 /* NRUIViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRUIViewModifier.swift; sourceTree = "<group>"; };
+		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -2625,7 +2625,7 @@
 		02FF48AE24DC61EB00115469 /* MethodProfiling */ = {
 			isa = PBXGroup;
 			children = (
-				F824A43029AEAD63000886A6 /* NRUIViewModifier.swift */,
+				F824A43029AEAD63000886A6 /* NRViewModifier.swift */,
 				02FF48B824DC61F600115469 /* NRMAActingClassUtils.h */,
 				02FF48B324DC61F600115469 /* NRMAActingClassUtils.m */,
 				02FF48B024DC61F500115469 /* NRMAClassDataContainer.h */,
@@ -4262,7 +4262,7 @@
 				02FF4A9C24DC652E00115469 /* NRMABool.m in Sources */,
 				02FF486F24DC618F00115469 /* NRMAThreadTransition.m in Sources */,
 				02FF47D924DB563600115469 /* NewRelic.m in Sources */,
-				F824A43129AEAD63000886A6 /* NRUIViewModifier.swift in Sources */,
+				F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */,
 				02FF47FD24DB56B100115469 /* NRMATaskQueue.m in Sources */,
 				02FF484624DC614200115469 /* NRMATraceController.m in Sources */,
 				02FF4A9B24DC652E00115469 /* NRMAFileCleanup.m in Sources */,
@@ -4562,7 +4562,7 @@
 				02FF4C1E24E3201400115469 /* NRMABool.m in Sources */,
 				02FF4C1F24E3201400115469 /* NRMAThreadTransition.m in Sources */,
 				02FF4C2024E3201400115469 /* NewRelic.m in Sources */,
-				F824A43229AEAD63000886A6 /* NRUIViewModifier.swift in Sources */,
+				F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */,
 				02FF4C2124E3201400115469 /* NRMATaskQueue.m in Sources */,
 				02FF4C2224E3201400115469 /* NRMATraceController.m in Sources */,
 				02FF4C2324E3201400115469 /* NRMAFileCleanup.m in Sources */,
