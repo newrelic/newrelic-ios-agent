@@ -72,7 +72,7 @@
     if (deferredMetrics == nil) {
         deferredMetrics = [NSMutableArray array];
     }
-    NSString* metricString = [NSString stringWithFormat:kNRMAStopAgentMetricFormatString, kPlatformPlaceholder];
+    NSString* metricString = [NSString stringWithFormat:kNRMAStopAgentMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
     [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
                                                           value:@1
                                                           scope:nil]];

@@ -57,4 +57,20 @@
 
 }
 
+-(void)testAgentStopSupportMetric {
+
+    [NRMASupportMetricHelper enqueueStopAgentMetric];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([helper.result isKindOfClass:[NRMANamedValueMeasurement class]], @"The result is not a named value.");
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+
+    NSString* fullMetricName = [NSString stringWithFormat:@"Supportability/Mobile/%@/Native/API/shutdown", [NewRelicInternalUtils osName]];
+    XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
+}
+
 @end
