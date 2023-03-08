@@ -57,9 +57,6 @@ jobs:
         token: ${{ secrets.SPM_PAT }}
         path: spm
 
-    - name: Install gems
-      run: bundle install
-
     - name: Get name
       run: echo "version=${{needs.deployS3Production.outputs.version}}" >> $GITHUB_ENV
 
