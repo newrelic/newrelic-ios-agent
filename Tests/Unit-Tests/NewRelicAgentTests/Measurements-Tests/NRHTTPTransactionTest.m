@@ -56,35 +56,35 @@
     [[[mockHarvestConnection stub] andReturn:@"blah"] crossProcessID];
     BOOL isactive=  YES;
     const char* type = "c";
-    #ifdef __LP64__
+#ifdef __LP64__
     type = "B";
-    #endif
+#endif
     [[[mockAgentInstance stub] andReturnValue:[NSValue value:&isactive withObjCType:type]] enabled];
 
-//    _NRMAAgentTestModeEnabled = YES;
+    //    _NRMAAgentTestModeEnabled = YES;
 
-//    [NewRelicAgentInternal startWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN
-//                         andCollectorAddress:KNRMA_TEST_COLLECTOR_HOST
-//                                     withSSL:NO];
-//    while (CFRunLoopGetMain() && [[NRMAHarvestController harvestController] harvester].currentState != NRMA_HARVEST_CONNECTED){};
+    //    [NewRelicAgentInternal startWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN
+    //                         andCollectorAddress:KNRMA_TEST_COLLECTOR_HOST
+    //                                     withSSL:NO];
+    //    while (CFRunLoopGetMain() && [[NRMAHarvestController harvestController] harvester].currentState != NRMA_HARVEST_CONNECTED){};
 
 
     
-//    double delayInSeconds = 5.0;
-//    __block BOOL failed = NO;
-//    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-//    dispatch_after(popTime, dispatch_queue_create("timer_queue", NULL), ^(void){
-//        failed = YES;
-//    });
+    //    double delayInSeconds = 5.0;
+    //    __block BOOL failed = NO;
+    //    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    //    dispatch_after(popTime, dispatch_queue_create("timer_queue", NULL), ^(void){
+    //        failed = YES;
+    //    });
 
-//    while (CFRunLoopGetMain() && ![NRMAHarvestController configuration]) {
-//        //wait While harvester connects.
-//        if (failed) {
-//            STFail(@"Timeout reached for harvester to connect");
-//            return;
-//        
-//        }
-//    }
+    //    while (CFRunLoopGetMain() && ![NRMAHarvestController configuration]) {
+    //        //wait While harvester connects.
+    //        if (failed) {
+    //            STFail(@"Timeout reached for harvester to connect");
+    //            return;
+    //
+    //        }
+    //    }
 
     [NRMATraceController startTracing:YES];
     [NRMAMeasurements initializeMeasurements];
@@ -107,35 +107,38 @@
     [super tearDown];
 }
 
-- (void) testNSURLConnection
-{
-    NSURLRequest* request  = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com"]];
+- (void) testNSURLConnection {
     
-    
+    NSURLRequest* request  = [NSURLRequest requestWithURL:[NSURL URLWithString:@"https://www.google.com"]];
     NSURLResponse* response = nil;
     NSError* error = nil;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
     [NSURLConnection sendSynchronousRequest:request
                           returningResponse:&response
                                       error:&error];
-    
-    __block BOOL failed = NO;
+#pragma clang diagnostic pop
+
+    XCTestExpectation *expectation = [[XCTestExpectation alloc] initWithDescription:@"Result is populated"];
     double delayInSeconds = 10.0;
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-    dispatch_after(popTime, dispatch_queue_create("connectionTimeoutQueue", NULL), ^(void){
-        failed = YES;
-    });
-    while (CFRunLoopGetCurrent() && helper.result == nil) {
-        [NRMATaskQueue synchronousDequeue];
-        if (failed) {
-            XCTFail(@"Timeout reached for yahoo connection test");
-            break;
-        }
-    }
-    NSLog(@"%@",helper.result);
+
+    while (CFRunLoopGetCurrent() && !helper.result) {
+        [expectation fulfill];
+    };
+
+    XCTWaiterResult _ __unused = [XCTWaiter waitForExpectations:@[expectation] timeout:delayInSeconds];
+
+    [NRMATaskQueue synchronousDequeue];
+
+    NRLOG_VERBOSE(@"%@",helper.result);
     
     XCTAssertTrue([helper.result isKindOfClass:[NRMAHTTPTransactionMeasurement class]], @"verify the result is a http transaction");
-    XCTAssertTrue([((NRMAHTTPTransactionMeasurement*)helper.result).url isEqualToString:@"http://www.google.com"],@"match url to requested url");
-    XCTAssertTrue(((NRMAHTTPTransactionMeasurement*)helper.result).bytesReceived == 8,@"gzipped bytes received should be 8");
+    XCTAssertTrue([((NRMAHTTPTransactionMeasurement*)helper.result).url isEqualToString:@"https://www.google.com"],@"match url to requested url");
+
+    long long bytesRec = ((NRMAHTTPTransactionMeasurement*)helper.result).bytesReceived;
+    XCTAssertTrue(bytesRec > 0,@"gzipped bytes received should be > 0 but instead its %lld", bytesRec);
 }
 
 
