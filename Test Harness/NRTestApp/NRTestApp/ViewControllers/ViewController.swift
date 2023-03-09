@@ -25,7 +25,7 @@ class ViewController: UIViewController {
         self.view.backgroundColor = .systemBackground
 #endif
         setupSpaceStack()
-        setupButtonsStack()
+        setupButtonsTable()
         
         viewModel.error.onUpdate = { [weak self] _ in
             if let error = self?.viewModel.error.value {
@@ -50,7 +50,10 @@ class ViewController: UIViewController {
         spaceImageView.contentMode = .scaleAspectFit
         spaceImageView.heightAnchor.constraint(equalToConstant: 250.0).isActive = true
         spaceImageView.widthAnchor.constraint(equalToConstant: 250.0).isActive = true
-                                
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
+        spaceImageView.isUserInteractionEnabled = true
+        spaceImageView.addGestureRecognizer(tapGestureRecognizer)
+        
         //Text Label
         spaceLabel.widthAnchor.constraint(equalToConstant: self.view.frame.width).isActive = true
         spaceLabel.heightAnchor.constraint(equalToConstant: 40).isActive = true
@@ -74,7 +77,14 @@ class ViewController: UIViewController {
         spaceStack.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
     }
     
-    func setupButtonsStack() {
+    @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
+    {
+        guard let spaceImage = spaceImageView.image else { return }
+
+        coordinator?.showImageViewController(image:spaceImage)
+    }
+    
+    func setupButtonsTable() {
         let tableView = UITableView()
         
         tableView.delegate = self
@@ -102,11 +112,10 @@ class ViewController: UIViewController {
         coordinator?.showUtilitiesViewController()
     }
   
-#if os(iOS)
     func webViewAction() {
         self.coordinator?.showWebViewController()
     }
-#endif
+
     func refreshAction() {
         viewModel.loadApodData()
     }
