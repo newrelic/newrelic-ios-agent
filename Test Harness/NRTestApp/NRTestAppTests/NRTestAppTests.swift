@@ -88,4 +88,11 @@ final class NRTestAppTests: XCTestCase {
     func testUtilURLSessionDataTask() throws {
         XCTAssertNoThrow(utilViewModel.doDataTask())
     }
+
+    func testUtilURLSessionDataTaskNoRcvResp() throws {
+        // SHOULD NOT LOG API_MISUSE
+        // // 2023-02-28 12:29:28.954274-0700 NRTestApp[42431:6943448] [API] API MISUSE: NSURLSession delegate NRMAURLSessionTaskDelegate: <NRMAURLSessionTaskDelegate: 0x600001dcd270> (0x600001dcd270)
+        // // 2023-02-28 12:29:28.954355-0700 NRTestApp[42431:6943448] [API] API MISUSE: dataTask:didReceiveResponse:completionHandler: completion handler not called
+        XCTAssertNoThrow(utilViewModel.doDataTaskNoDidRcvResp())
+    }
 }
