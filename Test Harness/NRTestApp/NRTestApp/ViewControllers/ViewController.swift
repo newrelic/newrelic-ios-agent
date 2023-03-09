@@ -96,6 +96,9 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
         options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
+
+        options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
+
     }
     
     func utilitiesAction() {
@@ -109,6 +112,17 @@ class ViewController: UIViewController {
 #endif
     func refreshAction() {
         viewModel.loadApodData()
+    }
+
+    func refreshActionAsync() {
+        Task {
+            do {
+                try await viewModel.loadApodDataAsync()
+            }
+            catch {
+                print("error \(error)")
+            }
+        }
     }
     
     func makeButton(title: String) -> UIButton {
