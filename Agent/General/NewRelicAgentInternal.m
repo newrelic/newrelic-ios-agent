@@ -757,6 +757,23 @@ static UIBackgroundTaskIdentifier background_task;
 
         NRLOG_INFO(@"Shutting down agent for duration of application lifetime.");
 
+        // * CLEAR EXISTING HARVESTABLE DATA *//
+
+        // Clear harvestData
+        [[[[NRMAHarvestController harvestController] harvester] harvestData] clear];
+        
+        // Clear activity traces
+        [NRMATraceController cleanup];
+
+        // Clear stored Events and stored attributes.
+        [NRMAAnalytics clearDuplicationStores];
+        [_sharedInstance.analyticsController clearLastSessionsAnalytics];
+
+        // Clear measurementEngine
+        [NRMAMeasurements drain];
+
+        // * PERFORM FINAL SUPPORTABILITY METRIC SEND *//
+
         // If the agent is connected, it should have no problem performing an adhoc harvest right now containing Shutdown support metric.
         [NRMASupportMetricHelper enqueueStopAgentMetric];
 
@@ -768,12 +785,8 @@ static UIBackgroundTaskIdentifier background_task;
         [NRMAUDIDManager deleteStoredID];
 
         // Stored device data, Metadata and crash file are cleared when crash upload.
-        [NRMATraceController cleanup];
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 
-        // Clear stored Events and stored attributes.
-        [NRMAAnalytics clearDuplicationStores];
-        [_sharedInstance.analyticsController clearLastSessionsAnalytics];
 
         // Clear stored user defaults
         [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
