@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import NewRelic
 
 class ApodViewModel {
     let apodResponse: Variable<ApodResult?> = Variable(nil)
@@ -47,7 +46,6 @@ class ApodViewModel {
             
             self.apodResponse.value = decoded
         } catch {
-            NewRelic.recordError(error)
             self.error.value = error
         }
     }
