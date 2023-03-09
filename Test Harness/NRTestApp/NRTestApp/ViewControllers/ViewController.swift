@@ -79,9 +79,9 @@ class ViewController: UIViewController {
     
     @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
     {
-        if spaceImageView.image != nil {
-            coordinator?.showImageViewController(image: spaceImageView.image!)
-        }
+        guard let spaceImage = spaceImageView.image else { return }
+
+        coordinator?.showImageViewController(image:spaceImage)
     }
     
     func setupButtonsTable() {
