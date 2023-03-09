@@ -77,8 +77,7 @@ class ViewController: UIViewController {
         spaceStack.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
     }
     
-    @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
-    {
+    @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer) {
         if spaceImageView.image != nil {
             coordinator?.showImageViewController(image: spaceImageView.image!)
         }
