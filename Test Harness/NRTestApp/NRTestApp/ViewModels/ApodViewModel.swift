@@ -30,7 +30,7 @@ class ApodViewModel {
         })
     }
 
-    func loadApodDataAsync() async throws {
+    func loadApodDataAsync() async {
         do {
             let nasaUrl = ApodURL(date: Date.randomBetween(start: "2015-10-31", end: Date().dateString()))
             guard let url = URL(string: nasaUrl.url) else { return }
@@ -41,7 +41,7 @@ class ApodViewModel {
             let decoded = try JSONDecoder().decode(ApodResult.self, from: data)
             
             if decoded.media_type == "video" {
-                return try await loadApodDataAsync()
+                return await loadApodDataAsync()
             }
             
             self.apodResponse.value = decoded

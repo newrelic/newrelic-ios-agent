@@ -116,12 +116,7 @@ class ViewController: UIViewController {
 
     func refreshActionAsync() {
         Task {
-            do {
-                try await viewModel.loadApodDataAsync()
-            }
-            catch {
-                print("error \(error)")
-            }
+            await viewModel.loadApodDataAsync()
         }
     }
     
