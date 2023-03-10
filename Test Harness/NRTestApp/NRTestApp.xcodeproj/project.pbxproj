@@ -350,7 +350,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F8302B1F296F5EFB003EC291 /* Build configuration list for PBXNativeTarget "NRTestApp" */;
 			buildPhases = (
-				F824A54329BBB0D9000886A6 /* Generate NRAPI-Info plist */,
 				F8302AF1296F5EFA003EC291 /* Sources */,
 				F8302AF2296F5EFA003EC291 /* Frameworks */,
 				F8302AF3296F5EFA003EC291 /* Resources */,
@@ -388,7 +387,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F86429192979CDB1002ABA01 /* Build configuration list for PBXNativeTarget "NRTestApp (tvOS)" */;
 			buildPhases = (
-				F824A54F29BBB3DF000886A6 /* Generate NRAPI-Info plist */,
 				F86428E62979CDAF002ABA01 /* Sources */,
 				F86428E72979CDAF002ABA01 /* Frameworks */,
 				F86428E82979CDAF002ABA01 /* Resources */,
@@ -522,42 +520,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		F824A54329BBB0D9000886A6 /* Generate NRAPI-Info plist */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate NRAPI-Info plist";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This build script is to generate a new plist file to hold api keys so that they don't get accidentally committed. \n\nCONFIG_FILE_BASE_NAME=\"NRAPI-Info\"\n\nCONFIG_FILE_NAME=${CONFIG_FILE_BASE_NAME}.plist\nSAMPLE_CONFIG_FILE_NAME=${CONFIG_FILE_BASE_NAME}-Sample.plist\n\nCONFIG_FILE_PATH=$SRCROOT/$CONFIG_FILE_NAME\nSAMPLE_CONFIG_FILE_PATH=$SRCROOT/$SAMPLE_CONFIG_FILE_NAME\n\nif [ -f \"$CONFIG_FILE_PATH\" ]; then\n  echo \"$CONFIG_FILE_PATH exists.\"\nelse\n  echo \"$CONFIG_FILE_PATH does not exist, copying sample\"\n  cp -v \"${SAMPLE_CONFIG_FILE_PATH}\" \"${CONFIG_FILE_PATH}\"\n  sleep 1\nfi\n";
-		};
-		F824A54F29BBB3DF000886A6 /* Generate NRAPI-Info plist */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate NRAPI-Info plist";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This build script is to generate a new plist file to hold api keys so that they don't get accidentally committed. \n\nCONFIG_FILE_BASE_NAME=\"NRAPI-Info\"\n\nCONFIG_FILE_NAME=${CONFIG_FILE_BASE_NAME}.plist\nSAMPLE_CONFIG_FILE_NAME=${CONFIG_FILE_BASE_NAME}-Sample.plist\n\nCONFIG_FILE_PATH=$SRCROOT/$CONFIG_FILE_NAME\nSAMPLE_CONFIG_FILE_PATH=$SRCROOT/$SAMPLE_CONFIG_FILE_NAME\n\nif [ -f \"$CONFIG_FILE_PATH\" ]; then\n  echo \"$CONFIG_FILE_PATH exists.\"\nelse\n  echo \"$CONFIG_FILE_PATH does not exist, copying sample\"\n  cp -v \"${SAMPLE_CONFIG_FILE_PATH}\" \"${CONFIG_FILE_PATH}\"\n  sleep 1\nfi\n";
-		};
 		F8302B7A297057F9003EC291 /* Run New Relic dSYM Upload Tool */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
