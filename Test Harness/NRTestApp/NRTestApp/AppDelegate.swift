@@ -32,23 +32,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         ])
 #endif
         // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
-        guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPIInfo") as? String, let isStaging = plistHelper.objectFor(key: "isStaging", plist: "NRAPIInfo") as? Bool else {return true}
+        guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPIInfo") as? String else {return true}
         
-        // The staging server is for internal New Relic use only
-        if !isStaging {
-             NewRelic.start(withApplicationToken:apiKey)
+        // Changing the collector and crash collector addresses is not necessary to use New Relic production servers
+        guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPIInfo") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPIInfo") as? String else { return true }
+       
+        if collectorAddress.isEmpty || crashCollectorAddress.isEmpty {
+            NewRelic.start(withApplicationToken:apiKey)
         } else {
-            guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPIInfo") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPIInfo") as? String else {
-                print("If you want to use the New Relic staging web servers make sure to add them to NRAPIInfo.plist")
-                return true
-            }
-            
             NewRelic.start(withApplicationToken:apiKey,
                            andCollectorAddress: collectorAddress,
                            andCrashCollectorAddress: crashCollectorAddress)
         }
-        
-        // These must be called after Agent.start() aka NewRelic.start(withApplicationToken)
+
+        // These must be called after NewRelic.start(withApplicationToken:)
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
         
