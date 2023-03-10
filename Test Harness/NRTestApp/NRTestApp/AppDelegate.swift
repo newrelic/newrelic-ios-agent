@@ -16,6 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
 #if DEBUG
+        // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
         NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
 #endif
         
@@ -27,19 +28,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         ])
 #endif
 #if Enable_SWIFT_INTERACTION_TRACING
-        NewRelic.enableFeatures([
-            NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing,
-        ])
+        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing)
 #endif
         // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
-        guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPIInfo") as? String else {return true}
+        guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
         
-        // Changing the collector and crash collector addresses is not necessary to use New Relic production servers
-        guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPIInfo") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPIInfo") as? String else { return true }
+        // Changing the collector and crash collector addresses is not necessary to use New Relic production servers.
+        guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPI-Info") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPI-Info") as? String else { return true }
        
+        // If the entries for collectorAddress or crashCollectorAddress are empty in NRAPI-Info.plist file start the New Relic agent with default production end points.
         if collectorAddress.isEmpty || crashCollectorAddress.isEmpty {
+            // Start the agent using default endpoints.
             NewRelic.start(withApplicationToken:apiKey)
         } else {
+            // Start the agent with custom endpoints.
             NewRelic.start(withApplicationToken:apiKey,
                            andCollectorAddress: collectorAddress,
                            andCrashCollectorAddress: crashCollectorAddress)
