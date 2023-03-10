@@ -102,12 +102,15 @@ jobs:
         git tag ${{ env.version }}
         git push origin main --tags
 
+        cp Package.swift ../main/
+
      # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
      # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
      # Since production builds are infrequent this creates a PR that must be manually approved and merged.
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
       with:
+        path: main
         title: "[${{ env.version }}] Production Release"
         branch: "auto-production-release-${{ env.version }}"
         base: main

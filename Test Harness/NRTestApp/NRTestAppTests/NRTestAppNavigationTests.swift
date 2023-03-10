@@ -38,6 +38,9 @@ final class NRTestAppUITests: XCTestCase {
         
         mainCoordinator.showWebViewController()
         sleep(2)
+        
+        mainCoordinator.showImageViewController(image: UIImage())
+        sleep(2)
     }
     
 }
