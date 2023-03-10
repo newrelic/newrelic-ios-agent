@@ -36,7 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Changing the collector and crash collector addresses is not necessary to use New Relic production servers.
         guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPI-Info") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPI-Info") as? String else { return true }
        
-        // If the entries for collectorAddress or crashCollectorAddress are empty in NRAPI-Info.plist file start the New Relic agent with default production end points.
+        // If the entries for collectorAddress or crashCollectorAddress are empty in NRAPI-Info.plist, start the New Relic agent with default production endpoints.
         if collectorAddress.isEmpty || crashCollectorAddress.isEmpty {
             // Start the agent using default endpoints.
             NewRelic.start(withApplicationToken:apiKey)
