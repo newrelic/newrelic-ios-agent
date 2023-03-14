@@ -87,3 +87,5 @@ fastlane/test_output
 
 iOSInjectionProject/
 .DS_Store
+Test\ Harness/NRTestApp/NRAPI-Info.plist 
+
