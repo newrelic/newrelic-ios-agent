@@ -16,6 +16,7 @@ class WebViewController: UIViewController {
         super.viewDidLoad()
         
         self.title = "Web View"
+        webView.navigationDelegate = self
     }
     
     override func loadView() {
@@ -25,6 +26,44 @@ class WebViewController: UIViewController {
             webView.load(URLRequest(url: url))
             view = webView
         }
+    }
+}
+
+extension WebViewController: WKNavigationDelegate {
+    
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        print("didStartProvisionalNavigation")
+    }
+    
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        print("didFailProvisionalNavigation")
+    }
+    
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        print("authenticationChallenge:challenge")
+        completionHandler(.performDefaultHandling, nil)
+    }
+        
+    func webView(_ webView: WKWebView, authenticationChallenge challenge: URLAuthenticationChallenge, shouldAllowDeprecatedTLS decisionHandler: @escaping (Bool) -> Void) {
+        print("authenticationChallenge:shouldAllowDeprecatedTLS")
+        decisionHandler(true)
+    }
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse) async -> WKNavigationResponsePolicy {
+        print("decidePolicyFor navigationResponse")
+        return .allow
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        print("decidePolicyFor navigationAction")
+        if let host = navigationAction.request.url?.host {
+            if host.contains("newrelic.com") {
+                decisionHandler(.allow)
+                return
+            }
+        }
+
+        decisionHandler(.cancel)
     }
 }
 
