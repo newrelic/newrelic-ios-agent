@@ -10,6 +10,7 @@
 #import "NRMANetworkFacade.h"
 #import <objc/runtime.h>
 #import "NRTimer.h"
+#import <WebKit/WKNavigationDelegate.h>
 
 #define kNRWKTimerAssocObject @"com.NewRelic.WKNavigation.Timer"
 #define kNRWKURLAssocObject @"com.NewRelic.WKNavigation.URL"
@@ -44,7 +45,7 @@ didStartProvisionalNavigation:(WKNavigation*)navigation {
     Method m = class_getInstanceMethod(objc_getClass("WKWebView"), @selector(URL));
 
     if (m != NULL) {
-        url = ((NSURL*(*)(id,SEL))(IMP)method_getImplementation(m))(webView,@selector(URL));;
+        url = ((NSURL*(*)(id,SEL))(IMP)method_getImplementation(m))(webView,@selector(URL));
     }
 
     [NRWKNavigationDelegateBase navigation:navigation setURL:url];
@@ -134,6 +135,63 @@ didFailNavigation:(WKNavigation*)navigation
     if ([self.realDelegate respondsToSelector:_cmd]) {
         Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
         ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigation,error);
+    }
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+{
+    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]) {
+        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
+        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationAction,decisionHandler);
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow);
+    }
+}
+
+- (void)webView:(WKWebView *)webView
+decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
+    preferences:(WKWebpagePreferences *)preferences
+decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
+{
+    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
+        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
+        ((void(*)(id,SEL,id,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationAction,preferences,decisionHandler);
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow, preferences);
+    }
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+{
+    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationResponse:decisionHandler:)]) {
+        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
+        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationResponse,decisionHandler);
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow);
+    }
+}
+
+- (void)webView:(WKWebView *)webView
+decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse
+    preferences:(WKWebpagePreferences *)preferences
+decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
+{
+    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
+        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
+        ((void(*)(id,SEL,id,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationResponse,preferences,decisionHandler);
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow, preferences);
+    }
+}
+
+- (void)webView:(WKWebView *)webView
+didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
+completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
+    if ([self.realDelegate respondsToSelector:@selector(webView:didReceiveAuthenticationChallenge:completionHandler:)]) {
+            Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
+            ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,challenge,completionHandler);
+    } else {
+        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
     }
 }
 
