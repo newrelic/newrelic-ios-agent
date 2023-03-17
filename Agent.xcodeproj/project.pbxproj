@@ -764,7 +764,6 @@
 		02FF4BFB24E3201400115469 /* NewRelicAgent.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F824DB56B000115469 /* NewRelicAgent.m */; };
 		02FF4BFC24E3201400115469 /* NRMACrashReportFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48C624DC622400115469 /* NRMACrashReportFileManager.m */; };
 		02FF4BFD24E3201400115469 /* NRMATraceMachine.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF483B24DC614200115469 /* NRMATraceMachine.m */; };
-		02FF4BFE24E3201400115469 /* NRMAWKWebViewInstrumentation.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48A524DC61E800115469 /* NRMAWKWebViewInstrumentation.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		02FF4BFF24E3201400115469 /* HexUploadPublisher.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492724DC625A00115469 /* HexUploadPublisher.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		02FF4C0124E3201400115469 /* NRMAHarvestableVitals.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF497C24DC62B400115469 /* NRMAHarvestableVitals.m */; };
 		02FF4C0224E3201400115469 /* NRMAHTTPTransactions.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF497624DC62B400115469 /* NRMAHTTPTransactions.m */; };
@@ -831,7 +830,6 @@
 		02FF4C4524E3201400115469 /* NRMACrashReport_Symbol.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48FA24DC624300115469 /* NRMACrashReport_Symbol.m */; };
 		02FF4C4624E3201400115469 /* NRMACrashReport_Exception.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48FD24DC624300115469 /* NRMACrashReport_Exception.m */; };
 		02FF4C4724E3201400115469 /* NRMATraceConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF496024DC629000115469 /* NRMATraceConfiguration.m */; };
-		02FF4C4824E3201400115469 /* NRWKNavigationDelegateBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48A224DC61E800115469 /* NRWKNavigationDelegateBase.m */; };
 		02FF4C4924E3201400115469 /* NRMAConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF494424DC626E00115469 /* NRMAConnection.m */; };
 		02FF4C4A24E3201400115469 /* NRMAEnvironmentTraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF498F24DC62B700115469 /* NRMAEnvironmentTraceSegment.m */; };
 		02FF4C4B24E3201400115469 /* NRMAApplicationInformation.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF498124DC62B500115469 /* NRMAApplicationInformation.m */; };
@@ -864,7 +862,6 @@
 		02FF4C6824E3201400115469 /* NRMAActivityTraceMeasurementCreator.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A1724DC648600115469 /* NRMAActivityTraceMeasurementCreator.m */; };
 		02FF4C6924E3201400115469 /* NRMAMeasurement.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A3924DC64D400115469 /* NRMAMeasurement.m */; };
 		02FF4C6A24E3201400115469 /* NRMAMeasurementException.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A3F24DC64D500115469 /* NRMAMeasurementException.m */; };
-		02FF4C6B24E3201400115469 /* NRMAWKWebViewNavigationDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48A424DC61E800115469 /* NRMAWKWebViewNavigationDelegate.m */; };
 		02FF4C6C24E3201400115469 /* NRMAHexBackgroundUploader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF493024DC625A00115469 /* NRMAHexBackgroundUploader.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		02FF4C6D24E3201400115469 /* NRMAHarvestableArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49CF24DC636100115469 /* NRMAHarvestableArray.m */; };
 		02FF4C6E24E3201400115469 /* NewRelicInternalUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A9024DC652D00115469 /* NewRelicInternalUtils.m */; };
@@ -4529,7 +4526,6 @@
 				02FF4BFB24E3201400115469 /* NewRelicAgent.m in Sources */,
 				02FF4BFC24E3201400115469 /* NRMACrashReportFileManager.m in Sources */,
 				02FF4BFD24E3201400115469 /* NRMATraceMachine.m in Sources */,
-				02FF4BFE24E3201400115469 /* NRMAWKWebViewInstrumentation.m in Sources */,
 				02FF4BFF24E3201400115469 /* HexUploadPublisher.mm in Sources */,
 				02FF4C0124E3201400115469 /* NRMAHarvestableVitals.m in Sources */,
 				02FF4C0224E3201400115469 /* NRMAHTTPTransactions.m in Sources */,
@@ -4601,7 +4597,6 @@
 				02FF4C4524E3201400115469 /* NRMACrashReport_Symbol.m in Sources */,
 				02FF4C4624E3201400115469 /* NRMACrashReport_Exception.m in Sources */,
 				02FF4C4724E3201400115469 /* NRMATraceConfiguration.m in Sources */,
-				02FF4C4824E3201400115469 /* NRWKNavigationDelegateBase.m in Sources */,
 				02FF4C4924E3201400115469 /* NRMAConnection.m in Sources */,
 				02FF4C4A24E3201400115469 /* NRMAEnvironmentTraceSegment.m in Sources */,
 				02FF4C4B24E3201400115469 /* NRMAApplicationInformation.m in Sources */,
@@ -4636,7 +4631,6 @@
 				02FF4C6824E3201400115469 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
 				02FF4C6924E3201400115469 /* NRMAMeasurement.m in Sources */,
 				02FF4C6A24E3201400115469 /* NRMAMeasurementException.m in Sources */,
-				02FF4C6B24E3201400115469 /* NRMAWKWebViewNavigationDelegate.m in Sources */,
 				02FF4C6C24E3201400115469 /* NRMAHexBackgroundUploader.mm in Sources */,
 				02FF4C6D24E3201400115469 /* NRMAHarvestableArray.m in Sources */,
 				02FF4C6E24E3201400115469 /* NewRelicInternalUtils.m in Sources */,
