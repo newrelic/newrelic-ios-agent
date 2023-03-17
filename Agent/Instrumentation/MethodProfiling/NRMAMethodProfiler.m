@@ -1,4 +1,4 @@
-    //
+//
 //  NRMAMethodProfiler.m
 //  NewRelicAgent
 //
@@ -24,6 +24,7 @@
 #import "NewRelicCustomInteractionInterface.h"
 #import "NRMAClassDataContainer.h"
 #import "NRMAFlags.h"
+#import "NRMAViewControllerTimeTracker.h"
 
 #define NRMAMethodStoragePrefix @"NRMAMethodOverride_"
 #define CONFIGURATION_FILE_NAME @"newrelic_profiler"
@@ -34,7 +35,7 @@
 
 
 static dispatch_once_t skipInstrumentationOnceToken;
-    static dispatch_once_t methodReplacementOnceToken;
+static dispatch_once_t methodReplacementOnceToken;
 
 //swift class with non-objc parent class
 const NSString* kSwiftClassPrefix  = @"_T";
@@ -1064,9 +1065,18 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
             [NRMAExceptionHandler logException:exception
                                        class:@"NRMATraceMachine"
                                     selector:@"enterMethod:fromObjectNamed:parentTrace:traceCategory:"];
-            [NRMATraceController cleanup];   
+            [NRMATraceController cleanup];
         }
         #endif
+    }
+    
+    if ([NSStringFromSelector(selector) isEqualToString:@"viewDidAppear:"]) {
+        [NRMAViewControllerTimeTracker viewControllerShowing:self setTimer:[[NRTimer alloc]init]];
+    }
+
+    if ([NSStringFromSelector(selector) isEqualToString:@"viewDidDisappear:"]) {
+        NRTimer *timer = [NRMAViewControllerTimeTracker viewControllerShowingTimer:self];
+        [timer stopTimer];
     }
 
     return method_getImplementation(method);

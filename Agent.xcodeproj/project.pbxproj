@@ -1003,6 +1003,8 @@
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
+		F824A5EB29C4B385000886A6 /* NRMAViewControllerTimeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = F824A5EA29C4B385000886A6 /* NRMAViewControllerTimeTracker.m */; };
+		F824A5EC29C4B385000886A6 /* NRMAViewControllerTimeTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = F824A5EA29C4B385000886A6 /* NRMAViewControllerTimeTracker.m */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 /* End PBXBuildFile section */
@@ -1881,6 +1883,8 @@
 		F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceParent.mm; sourceTree = "<group>"; };
 		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
+		F824A5D629C4B36C000886A6 /* NRMAViewControllerTimeTracker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAViewControllerTimeTracker.h; sourceTree = "<group>"; };
+		F824A5EA29C4B385000886A6 /* NRMAViewControllerTimeTracker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAViewControllerTimeTracker.m; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -2520,6 +2524,8 @@
 				02FF483B24DC614200115469 /* NRMATraceMachine.m */,
 				02FF482F24DC614100115469 /* NRMATraceMachineAgentUserInterface.h */,
 				02FF482D24DC614100115469 /* NRMATraceMachineAgentUserInterface.m */,
+				F824A5D629C4B36C000886A6 /* NRMAViewControllerTimeTracker.h */,
+				F824A5EA29C4B385000886A6 /* NRMAViewControllerTimeTracker.m */,
 			);
 			path = ActivityTracing;
 			sourceTree = "<group>";
@@ -4324,6 +4330,7 @@
 				02FF4AB124DC652E00115469 /* NRMAJSON.m in Sources */,
 				02FF49F124DC645B00115469 /* NRMAAppUpgradeMetricGenerator.m in Sources */,
 				02FF48DA24DC622700115469 /* NRMATimestampContainer.m in Sources */,
+				F824A5EB29C4B385000886A6 /* NRMAViewControllerTimeTracker.m in Sources */,
 				02FF49AE24DC62B800115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF489C24DC61D200115469 /* NRMAURLSessionOverride.m in Sources */,
 				02FF49CB24DC62B800115469 /* NRMAHarvestableMetric.m in Sources */,
@@ -4624,6 +4631,7 @@
 				02FF4C5C24E3201400115469 /* NRMAJSON.m in Sources */,
 				02FF4C5E24E3201400115469 /* NRMAAppUpgradeMetricGenerator.m in Sources */,
 				02FF4C5F24E3201400115469 /* NRMATimestampContainer.m in Sources */,
+				F824A5EC29C4B385000886A6 /* NRMAViewControllerTimeTracker.m in Sources */,
 				02FF4C6024E3201400115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF4C6124E3201400115469 /* NRMAURLSessionOverride.m in Sources */,
 				02FF4C6224E3201400115469 /* NRMAHarvestableMetric.m in Sources */,
