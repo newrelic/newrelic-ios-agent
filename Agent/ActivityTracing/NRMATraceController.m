@@ -147,6 +147,11 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 + (void) startTracingWithName:(NSString *)name interactionObject:(id __unsafe_unretained)obj
 {
     @synchronized(kNRMAStartAndEndTracingLock) {
+        // If Agent is shutdown we shouldn't record traces.
+        if([NewRelicAgentInternal sharedInstance].isShutdown) {
+            return;
+        }
+
         NRLOG_VERBOSE(@"\"%@\" Activity started", name);
         [NRMATraceController startTracing:NO];
         [[[NewRelicAgentInternal sharedInstance] analyticsController] setLastInteraction:name];
@@ -174,6 +179,12 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 + (NRMATrace*) startTracing:(BOOL)persistentTrace
 {
     @synchronized(kNRMAStartAndEndTracingLock) {
+
+        // If Agent is shutdown we shouldn't record traces.
+        if([NewRelicAgentInternal sharedInstance].isShutdown) {
+            return nil;
+        }
+
         NRMATrace* rootTrace = [[NRMATrace alloc] init];
         rootTrace.persistent = persistentTrace;
         rootTrace.name = @"UI_Thread";
@@ -195,6 +206,12 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 + (void) startTracingWithRootTrace:(NRMATrace*)rootTrace
 {
     @synchronized(kNRMAStartAndEndTracingLock) {
+
+        // If Agent is shutdown we shouldn't record traces.
+        if([NewRelicAgentInternal sharedInstance].isShutdown) {
+            return;
+        }
+
         if ([NRMATraceController isTracingActive]) {
             [NRMATraceController completeActivityTrace];
         }
@@ -230,6 +247,12 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 + (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds
 {
     @synchronized(kNRMAStartAndEndTracingLock) {
+
+        // If Agent is shutdown we shouldn't record traces.
+        if([NewRelicAgentInternal sharedInstance].isShutdown) {
+            return NO;
+        }
+
         if(![NRMATraceController isTracingActive]) {
             NRLOG_VERBOSE(@"completeTrace called while no trace was running.");
             return NO;
@@ -321,6 +344,9 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 + (BOOL) enterMethod:(NRMATrace*)parentTrace
                 name:(NSString*)newTraceName
 {
+    if ([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
     if (![NRMATraceController isTracingActive]) {
         return NO;
     }
@@ -354,6 +380,10 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
              traceCategory:(enum NRTraceType)category
                  withTimer:(NRTimer *)timer
 {
+    if ([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return nil;
+    }
+
     if (![NRMATraceController isTracingActive]) {
         return nil;
     }

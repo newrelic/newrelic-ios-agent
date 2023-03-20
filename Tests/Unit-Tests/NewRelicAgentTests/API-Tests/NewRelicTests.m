@@ -35,23 +35,24 @@
 - (void) testBadSelectorMethodTrace
 {
     [NRMATraceController startTracingWithName:@"TEST"
-                         interactionObject:self];
+                            interactionObject:self];
     XCTAssertNoThrow(
-                    [NewRelic startTracingMethod:NSSelectorFromString(@"asdf123__3;.//@@$@!")
-                                          object:self
-                                           timer:[[NRTimer alloc] init]
-                        category:NRTraceTypeDatabase], @"");
+                     [NewRelic startTracingMethod:NSSelectorFromString(@"asdf123__3;.//@@$@!")
+                                           object:self
+                                            timer:[[NRTimer alloc] init]
+                                         category:NRTraceTypeDatabase], @"");
 
     XCTAssertNoThrow(
-                    [NewRelic startTracingMethod:nil
-                                          object:self
-                                           timer:[[NRTimer alloc] init]
-                                        category:NRTraceTypeImages],@"");
+                     [NewRelic startTracingMethod:nil
+                                           object:self
+                                            timer:[[NRTimer alloc] init]
+                                         category:NRTraceTypeImages],@"");
 
 
     [NRMATraceController completeActivityTrace];
 
 }
+
 - (void) testCrashNow {
     XCTAssertThrowsSpecific([NewRelic crashNow], NSException);
 }
@@ -73,6 +74,7 @@
     flags = [NRMAFlags featureFlags];
     XCTAssertFalse(flags & NRFeatureFlag_CrashReporting, @"flags should have Crash Reporting disabled");
 }
+
 - (void) testSetPlatform {
     NRMAConnectInformation* config = [NRMAAgentConfiguration connectionInformation];
     NRMAApplicationPlatform currentPlatform = config.deviceInformation.platform;
@@ -83,6 +85,7 @@
     XCTAssertEqual(currentPlatform, NRMAPlatform_Flutter);
     
 }
+
 - (void) testNoticeNetworkFailureForURLWithTimer {
     NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_HTTPTransaction];
     [NRMAMeasurements initializeMeasurements];
@@ -92,8 +95,8 @@
 
     [NewRelic noticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
-                              withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
-                              andFailureCode:-1];
+                               withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                          andFailureCode:-1];
 
     while(CFRunLoopGetCurrent() && !helper.result) {}
 
@@ -108,6 +111,7 @@
     [NRMAMeasurements removeMeasurementConsumer:helper];
     [NRMAMeasurements shutdown];
 }
+
 - (void) testEnableStartInteraction {
     [NRMAFlags setFeatureFlags:0];
     NRMAFeatureFlags flags = [NRMAFlags featureFlags];
@@ -139,7 +143,7 @@
             XCTFail(@"Test timed out. metricHelper.result was never populated");
         }
     });
-   
+
 
     [NRMATaskQueue synchronousDequeue];
 
@@ -187,9 +191,9 @@
     [NRMAMeasurements addMeasurementConsumer:metricHelper];
     NSString* fullMetricName = [NSString stringWithFormat:@"Custom/%@/%@[%@]",@"hello",@"world",kNRMetricUnitsOperations];
     [NewRelic recordMetricWithName:@"world"
-                                 category:@"hello"
-                                    value:[NSNumber numberWithInt:100]
-                               valueUnits:kNRMetricUnitsOperations];
+                          category:@"hello"
+                             value:[NSNumber numberWithInt:100]
+                        valueUnits:kNRMetricUnitsOperations];
 
     double delayInSeconds = 2.0;
     __block bool done = NO;
@@ -199,7 +203,7 @@
             XCTFail(@"Test timed out. helper.result was never populated");
         }
     });
-   
+
     [NRMATaskQueue synchronousDequeue];
 
     XCTAssertTrue([metricHelper.result isKindOfClass:[NRMANamedValueMeasurement class]],@"assert the result is a named value");
@@ -208,6 +212,7 @@
     XCTAssertEqualObjects(measurement.name, fullMetricName, @"Names should match");
     done = YES;
 }
+
 - (void) testRecordMetricWithValueUnits
 {
     NRMAMeasurementConsumerHelper* metricHelper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
@@ -215,10 +220,10 @@
     [NRMAMeasurements addMeasurementConsumer:metricHelper];
     NSString* fullMetricName = [NSString stringWithFormat:@"Custom/%@/%@[|%@]",@"hello",@"world",kNRMetricUnitSeconds];
     [NewRelic recordMetricWithName:@"world"
-                                 category:@"hello"
-                                    value:[NSNumber numberWithInt:1]
-                               valueUnits:nil
-                               countUnits:kNRMetricUnitSeconds];
+                          category:@"hello"
+                             value:[NSNumber numberWithInt:1]
+                        valueUnits:nil
+                        countUnits:kNRMetricUnitSeconds];
 
     double delayInSeconds = 2.0;
     __block bool done = NO;
@@ -262,8 +267,8 @@
 }
 - (void) testRecordHandledExceptions {
     XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
-                                                                                   reason:@"testing"
-                                                                                 userInfo:@{}]]);
+                                                                              reason:@"testing"
+                                                                            userInfo:@{}]]);
     XCTAssertNoThrow([NewRelic recordHandledException:nil withAttributes: nil]);
     XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
                                                                               reason:@"testing"
@@ -275,8 +280,8 @@
     XCTAssertNoThrow([NewRelic recordError:[NSError errorWithDomain:@"Unknown" code:NSURLErrorCancelled userInfo:nil]]);
     XCTAssertNoThrow([NewRelic recordError:nil attributes: nil]);
     XCTAssertNoThrow([NewRelic recordError:[NSException exceptionWithName:@"testException"
-                                                                              reason:@"testing"
-                                                                            userInfo:@{}] attributes: nil]);
+                                                                   reason:@"testing"
+                                                                 userInfo:@{}] attributes: nil]);
 }
 
 -(void) testSetApplicationBuildAndVersionBeforeSessionStart {
@@ -304,8 +309,6 @@
     [[NewRelicAgentInternal sharedInstance] destroyAgent];
 }
 
-
-// testGenerateDistributedTracingHeaders
 -(void) testTracingHeaders {
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
     XCTAssertNotNil([NewRelic generateDistributedTracingHeaders]);
@@ -335,6 +338,70 @@
     NSURL *test1 = [regexTransformer transformURL:[NSURL URLWithString:@"https://httpstat.us/200"]];
     NSURL *test2 = [internalTransformer transformURL:[NSURL URLWithString:@"https://httpstat.us/200"]];
     XCTAssertEqualObjects(test1, test2);
+}
+
+// XCode will run tests in alphabetical order, so the sharedInstance will not exist for testA*.
+-(void) testAShutdownBeforeEnable {
+    XCTAssertNil([NewRelicAgentInternal sharedInstance]);
+
+    [NewRelic shutdown];
+}
+
+-(void) testSetShutdown {
+
+    XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
+
+    [NewRelic shutdown];
+    // Test double shutdown call
+    [NewRelic shutdown];
+    // Test log when agent is shutdown.
+    [NewRelic startWithApplicationToken:@"TOKEN"];
+
+    // Can't assert
+    [NewRelic startTracingMethod:NSSelectorFromString(@"methodName")
+                          object:self
+                           timer:[[NRTimer alloc] init]
+                        category:NRTraceTypeDatabase];
+
+    // NR shouldn't crash if agent is shutdown.
+    [NewRelic crashNow];
+
+    // Can't assert.
+    [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]];
+    NSDictionary* dict = @{@"string":@"string",
+                           @"num":@1};
+    // Can't assert
+    [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"
+                                                             reason:@"the tea is too hot"
+                                                           userInfo:nil]
+                      withAttributes:dict];
+    // Can't assert
+    [NewRelic recordHandledExceptionWithStackTrace:dict];
+    // Can't assert
+    [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}]];
+    // Can't assert
+    [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}] attributes:dict];
+
+    XCTAssertFalse([NewRelic startInteractionWithName:@"InteractionName"]);
+
+    // Can't assert
+    [NewRelic stopCurrentInteraction:@"InteractionName"];
+
+    // Can't assert
+    [NewRelic endTracingMethodWithTimer:[[NRTimer alloc] init]];
+
+    XCTAssertFalse([NewRelic setAttribute:@"attr" value:@5]);
+    XCTAssertFalse([NewRelic incrementAttribute: @"attr"]);
+
+    XCTAssertFalse([NewRelic removeAttribute: @"attr"]);
+    XCTAssertFalse([NewRelic removeAllAttributes]);
+    XCTAssertFalse([NewRelic recordCustomEvent:@"asdf"
+                                          name:@"blah"
+                                    attributes:@{@"name":@"unblah"}]);
+    XCTAssertFalse([NewRelic recordBreadcrumb:@"test" attributes:dict]);
+
+    // Can't assert
+    [NewRelic recordCustomEvent:@"EventName" attributes:dict];
 }
 @end
 
