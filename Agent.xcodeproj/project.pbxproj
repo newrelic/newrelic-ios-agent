@@ -1000,6 +1000,8 @@
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
+		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
+		F825FAFA29CA147800E1C1DC /* NRMAWKNavigationDelegateBaseTest2.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAF829CA138A00E1C1DC /* NRMAWKNavigationDelegateBaseTest2.m */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 /* End PBXBuildFile section */
@@ -1878,6 +1880,9 @@
 		F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceParent.mm; sourceTree = "<group>"; };
 		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
+		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
+		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
+		F825FAF829CA138A00E1C1DC /* NRMAWKNavigationDelegateBaseTest2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKNavigationDelegateBaseTest2.m; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -2260,6 +2265,9 @@
 				0209AC6D24E7392D00E45C90 /* NSURLConnectionTests.h */,
 				0209AC8024E7393100E45C90 /* NSURLConnectionTests.m */,
 				0209AC6524E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m */,
+				F825FAF829CA138A00E1C1DC /* NRMAWKNavigationDelegateBaseTest2.m */,
+				F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */,
+				F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */,
 				C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */,
 				2BBBE6FA28BD528F003CADF3 /* NRMAStartTimerTests.h */,
 				2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */,
@@ -4138,6 +4146,7 @@
 				0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */,
 				0209ABF124E706FA00E45C90 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0209AC0E24E7071500E45C90 /* APINetworkNoticeTest.m in Sources */,
+				F825FAFA29CA147800E1C1DC /* NRMAWKNavigationDelegateBaseTest2.m in Sources */,
 				0209AC3124E7073800E45C90 /* NRMADeviceInformationTests.m in Sources */,
 				0209ABE324E706E600E45C90 /* TestUICollectionViewInstrumentation.m in Sources */,
 				0209AC9724E7393300E45C90 /* NRNSURLConnectionSupportTests.m in Sources */,
@@ -4331,6 +4340,7 @@
 				F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */,
 				02FF486324DC615A00115469 /* NRMAAnalytics.mm in Sources */,
 				02FF4A2624DC648600115469 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
+				F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */,
 				02FF4A4824DC64D500115469 /* NRMAMeasurement.m in Sources */,
 				02FF4A4E24DC64D500115469 /* NRMAMeasurementException.m in Sources */,
 				02FF48AA24DC61E900115469 /* NRMAWKWebViewNavigationDelegate.m in Sources */,

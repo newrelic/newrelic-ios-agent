@@ -148,10 +148,7 @@ didFailNavigation:(WKNavigation*)navigation
     }
 }
 
-- (void)webView:(WKWebView *)webView
-decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction
-    preferences:(WKWebpagePreferences *)preferences
-decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction preferences:(WKWebpagePreferences *)preferences decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
 {
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
         Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
@@ -161,32 +158,17 @@ decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))deci
     }
 }
 
-- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
 {
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationResponse:decisionHandler:)]) {
         Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
         ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationResponse,decisionHandler);
     } else {
-        decisionHandler(WKNavigationActionPolicyAllow);
+        decisionHandler(WKNavigationResponsePolicyAllow);
     }
 }
 
-- (void)webView:(WKWebView *)webView
-decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse
-    preferences:(WKWebpagePreferences *)preferences
-decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
-{
-    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationResponse,preferences,decisionHandler);
-    } else {
-        decisionHandler(WKNavigationActionPolicyAllow, preferences);
-    }
-}
-
-- (void)webView:(WKWebView *)webView
-didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge
-completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
+- (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
     if ([self.realDelegate respondsToSelector:@selector(webView:didReceiveAuthenticationChallenge:completionHandler:)]) {
             Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
             ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,challenge,completionHandler);
@@ -194,7 +176,6 @@ completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NS
         completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
     }
 }
-
 
 + (NSURL*) navigationURL:(WKNavigation*)nav
 {

@@ -1,8 +1,8 @@
 //
-//  NRMAWKNavigationDelegateBaseTest.m
-//  NewRelicAgent
+//  NRMAWKNavigationDelegateBaseTest2.m
+//  Agent_iOS
 //
-//  Created by Austin Washington on 7/26/17.
+//  Created by Mike Bruin on 3/21/23.
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
@@ -15,14 +15,9 @@
 
 @interface NRWKNavigationDelegateBase ()
 - (instancetype) initWithOriginalDelegate:(NSObject<WKNavigationDelegate>* __nullable __weak)delegate;
-+ (NSURL*) navigationURL:(WKNavigation*) nav;
-+ (NRTimer*) navigationTimer:(WKNavigation*) nav;
-+ (void) navigation:(WKNavigation*)nav setURL:(NSURL*)url;
-+ (void) navigation:(WKNavigation*)nav setTimer:(NRTimer*)timer;
 @end
 
-@interface NRMAWKNavigationDelegateBaseTest : XCTestCase <WKNavigationDelegate>
-@property(strong) NRTimer* timer;
+@interface NRMAWKNavigationDelegateBaseTest2 : XCTestCase <WKNavigationDelegate>
 @property(strong) NSURL* url;
 @property(strong) WKNavigation* web;
 @property(strong) NRMAWKWebViewNavigationDelegate* navBase;
@@ -31,38 +26,19 @@
 
 @end
 
-@implementation NRMAWKNavigationDelegateBaseTest
+@implementation NRMAWKNavigationDelegateBaseTest2
 
 - (void)setUp {
     [super setUp];
     self.navBase = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:self];
     self.web = [[WKNavigation alloc] init];
     self.url = [NSURL URLWithString: @"localhost"];
-    self.timer = [[NRTimer alloc] init];
     self.webView = [[WKWebView alloc] init];
     self.webView.navigationDelegate = _navBase;
 }
 
 - (void)tearDown {
     [super tearDown];
-}
-
-- (void) testNilParameterPassing {
-    @autoreleasepool {
-        XCTAssertNoThrow([NRWKNavigationDelegateBase navigation:nil setURL:_url], @"");
-        XCTAssertNil([NRWKNavigationDelegateBase navigationURL:_web]);
-        
-        XCTAssertNoThrow([NRWKNavigationDelegateBase navigation:nil setTimer:_timer], @"");
-        XCTAssertNil([NRWKNavigationDelegateBase navigationTimer:_web]);
-        //[NRWKNavigationDelegateBase navigationTimer:_web];
-    }
-}
-
-- (void) testImpersonation {
-    @autoreleasepool {
-        XCTAssertTrue([self.navBase isKindOfClass:[self class]]);
-        XCTAssertTrue([self.navBase isKindOfClass:[NRWKNavigationDelegateBase class]]);
-    }
 }
 
 - (void) testDecidePolicyForNavigationAction {
@@ -107,6 +83,27 @@
     }];;
     
     XCTAssertEqual(testResponse.receivedPolicy, WKNavigationResponsePolicyAllow);
+}
+
+#pragma mark Delegate Functions
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+{
+    decisionHandler(WKNavigationActionPolicyAllow);
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction preferences:(WKWebpagePreferences *)preferences decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
+{
+    decisionHandler(WKNavigationActionPolicyAllow, preferences);
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
+{
+    decisionHandler(WKNavigationResponsePolicyAllow);
+}
+
+- (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
+    completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
 }
 
 @end
