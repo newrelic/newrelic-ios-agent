@@ -24,31 +24,34 @@
 }
 - (void) add:(NRMAHarvestableHTTPTransaction*)transaction
 {
-    
-    if (transaction.errorCode != 0 && ![NRMAHarvestController configuration].collect_network_errors) {
+    NRMAHarvesterConfiguration* harvestConfig = [NRMAHarvestController configuration];
+    if (transaction.errorCode != 0 && harvestConfig && !harvestConfig.collect_network_errors) {
         NRLOG_VERBOSE(@"Network error ignored. collect_network_errors disabled.");
         return;
     }
     
     @synchronized(httpTransactions)
     {
-        if (httpTransactions.count >= [NRMAHarvestController configuration].report_max_transaction_count) {
-            NRLOG_VERBOSE(@"Max transaction count reached: %d",[NRMAHarvestController configuration].report_max_transaction_count);
+        if (harvestConfig) {
+            if (httpTransactions.count >= harvestConfig.report_max_transaction_count) {
+                NRLOG_VERBOSE(@"Max transaction count reached: %d",harvestConfig.report_max_transaction_count);
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
-            @try {
-                #endif
-                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/TransactionsDropped"
-                                       value:@1
-                                   scope:@""]];
+                @try {
+#endif
+                    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/TransactionsDropped"
+                                                                    value:@1
+                                                                    scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-            } @catch (NSException* exception) {
-                [NRMAExceptionHandler logException:exception
-                                           class:NSStringFromClass([self class])
-                                        selector:NSStringFromSelector(_cmd)];
+                } @catch (NSException* exception) {
+                    [NRMAExceptionHandler logException:exception
+                                                 class:NSStringFromClass([self class])
+                                              selector:NSStringFromSelector(_cmd)];
+                }
+#endif
+                return;
             }
-            #endif
-            return;
         }
+
         [httpTransactions addObject:transaction];
     }
 }

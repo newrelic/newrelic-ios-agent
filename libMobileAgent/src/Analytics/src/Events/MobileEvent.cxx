@@ -3,9 +3,11 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
+#include <Analytics/Constants.hpp>
 #include "MobileEvent.hpp"
+
 namespace NewRelic {
-    const std::string MobileEvent::__eventType = std::string("Mobile");
+    const std::string MobileEvent::__eventType = std::string(__kNRMA_RET_mobile);
     MobileEvent::MobileEvent(unsigned long long timestamp_epoch_millis, double session_elapsed_time_sec,
                              AttributeValidator& attributeValidator): AnalyticEvent(std::make_shared<std::string>(__eventType),
                                                                                     timestamp_epoch_millis,

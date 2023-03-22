@@ -28,10 +28,14 @@
 
 @implementation NRMAHTTPUtilities
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
+    NRMAHarvesterConfiguration* harvestConfig = [NRMAHarvestController configuration];
 
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
 
-    NSString* xprocess = [NRMAHarvestController configuration].cross_process_id;
+    if (!mutableRequest) return nil;
+    if (!harvestConfig) return mutableRequest;
+
+    NSString* xprocess = harvestConfig.cross_process_id;
 
     if (xprocess.length) {
         [mutableRequest setValue:xprocess
@@ -64,7 +68,9 @@
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request {
 
     if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
-    
+
+    if(!request) { return nil; }
+
     NRMAPayloadContainer *payloadContainer = [NRMAHTTPUtilities generatePayload];
     if(payloadContainer == nil) { return nil; }
     

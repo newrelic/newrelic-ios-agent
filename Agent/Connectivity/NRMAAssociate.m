@@ -25,6 +25,8 @@
 
 + (id)retrieveFrom:(id)object
               with:(NSString *)key {
+    if (object == nil) return nil;
+
     return objc_getAssociatedObject(object,
                                     [key cStringUsingEncoding:NSUTF8StringEncoding]);
 }

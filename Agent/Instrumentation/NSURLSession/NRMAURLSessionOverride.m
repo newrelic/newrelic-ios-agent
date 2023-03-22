@@ -239,6 +239,12 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
         return nil;
     }
 
+    if (request == nil) {
+        NRLOG_ERROR(@"NRMAOverride__dataTaskWithRequest_completionHandler. request is nil.");
+
+        return nil;
+    }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
 
@@ -303,6 +309,12 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
         return nil;
     }
 
+    if (request == nil) {
+        NRLOG_ERROR(@"NRMAOverride__uploadTaskWithRequest_fromFile. request is nil.");
+
+        return nil;
+    }
+
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSURL*))originalImp)(self,_cmd,mutableRequest,fileURL);
@@ -321,6 +333,12 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
     if (originalImp == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromData. NRMAOriginal__uploadTaskWithRequest_fromData is nil. returning nil"];
         NRLOG_ERROR(@"%@", res);
+
+        return nil;
+    }
+
+    if (request == nil) {
+        NRLOG_ERROR(@"NRMAOverride__uploadTaskWithRequest_fromData. request is nil.");
 
         return nil;
     }
@@ -347,6 +365,11 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
 
         return nil;
     }
+    if (request == nil) {
+        NRLOG_ERROR(@"NRMAOverride__uploadTaskWithStreamedRequest. request is nil.");
+
+        return nil;
+    }
 
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*))originalImp)(self, _cmd,request);
     
@@ -362,6 +385,12 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     if (originalIMP == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler. NRMAOriginal__uploadTaskWithRequest_fromFile_completionHandler is nil. returning nil"];
         NRLOG_ERROR(@"%@", res);
+        return nil;
+    }
+
+    if (request == nil) {
+        NRLOG_ERROR(@"NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler. request is nil.");
+
         return nil;
     }
 
@@ -402,6 +431,12 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     if (originalIMP == nil) {
         NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromData_completionHandler. NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler is nil. returning nil"];
         NRLOG_ERROR(@"%@", res);
+        return nil;
+    }
+
+    if (request == nil) {
+        NRLOG_ERROR(@"NRMAOverride__uploadTaskWithRequest_fromData_completionHandler. request is nil.");
+
         return nil;
     }
 

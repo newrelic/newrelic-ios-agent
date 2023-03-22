@@ -49,11 +49,13 @@
 - (id) JSONObject
 {
     NSMutableArray* array = [[NSMutableArray alloc] init];
+    NRMAHarvesterConfiguration *config = [NRMAHarvestController configuration];
+
     @synchronized(_activityTraces) {
         for (NRMAHarvestableActivity* activity in self.activityTraces) {
             NSError* error = nil;
             NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:activity options:0 error:&error];
-            if (jsonData.length >= [NRMAHarvestController configuration].activity_trace_max_size) {
+            if (jsonData.length >= config.activity_trace_max_size) {
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
                 @try {
 #endif

@@ -3,10 +3,11 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
+#include <Analytics/Constants.hpp>
 #include "RequestEvent.hpp"
 
 namespace NewRelic {
-    const std::string RequestEvent::__eventType = std::string("MobileRequest");
+    const std::string RequestEvent::__eventType = std::string(__kNRMA_RET_mobileRequest);
     RequestEvent::RequestEvent(unsigned long long timestamp_epoch_millis,
                                double session_eplased_time_sec,
                                std::unique_ptr<const Connectivity::Payload> payload,

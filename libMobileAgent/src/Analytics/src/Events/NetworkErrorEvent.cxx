@@ -4,7 +4,7 @@
 #include "NetworkErrorEvent.hpp"
 
 namespace NewRelic {
-    const std::string NetworkErrorEvent::__eventType = std::string("MobileRequestError");
+    const std::string NetworkErrorEvent::__eventType = std::string(__kNRMA_RET_mobileRequestError);
     NetworkErrorEvent::NetworkErrorEvent(unsigned long long timestamp_epoch_millis,
                                          double session_elapsed_time_sec,
                                          const char* encodedResponseBody,
