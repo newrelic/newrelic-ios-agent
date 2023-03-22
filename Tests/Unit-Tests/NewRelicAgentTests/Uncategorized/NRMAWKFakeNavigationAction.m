@@ -47,11 +47,6 @@
     self.receivedPolicy = policy;
 }
 
-- (void) setRequest: (NSURLRequest*) request
-{
-    self.request = request;
-}
-
 @end
 
 #pragma mark NRMAWKFakeURLAuthenticationChallenge
@@ -67,11 +62,6 @@
 - (void) completionHandler:(NSURLSessionAuthChallengeDisposition)disposition withCredential: (NSURLCredential*)credential  {
     self.authenticationChallengeDisposition = disposition;
     self.credential = credential;
-}
-
-- (void) setRequest: (NSURLRequest*) request
-{
-    self.request = request;
 }
 
 @end
