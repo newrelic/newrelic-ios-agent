@@ -126,10 +126,19 @@ extern "C" {
 + (NSString* _Nullable) crossProcessId;
 
 /*!
+ Stops New Relic data collection.
+
+ Call this to stop reporting all data to New Relic for the rest of the apps lifetime.
+ You must restart the application and call start to reenable New Relic.
+ */
++ (void)shutdown;
+
+/*!
  Starts New Relic data collection.
 
  Call this at the beginning of your UIApplicationDelegate's application:didFinishLaunchingWithOptions: method.
- You can find your App Token in the Settings tab of your mobile app on https://rpm.newrelic.com/
+ You can find your App Token in the Settings tab of your mobile app See docs for more info.
+ https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile/maintenance/viewing-your-application-token//
 
  Note that each app within New Relic has a unique app token, be sure to use the correct one.
  */

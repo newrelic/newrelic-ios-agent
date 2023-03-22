@@ -52,6 +52,8 @@
 #import "NRMAAppToken.h"
 #import "NRMAUDIDManager.h"
 #import "NRMAStartTimer.h"
+#import "NRMAUDIDManager.h"
+#import "NRMASupportMetricHelper.h"
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
 // Enabling this will bypass dispatch_once-style logic and expose more internal state.
@@ -168,6 +170,7 @@ static NewRelicAgentInternal* _sharedInstance;
         self->_lifetimeErrorCount = 0;
         self.appSessionStartDate = [NSDate date];
 
+        self->_isShutdown = false;
         self->_enabled = ![self isDisabled];
 
         if (self->_enabled) {
@@ -247,7 +250,6 @@ static NewRelicAgentInternal* _sharedInstance;
 - (BOOL) isDisabled {
     return [[NRMAHarvestController harvestController] harvester].currentState == NRMA_HARVEST_DISABLED;
 }
-
 
 - (void) destroyAgent {
     [NRMAHarvestController stop];
@@ -522,6 +524,10 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
 - (void) applicationWillEnterForeground {
 
+    if (_isShutdown) {
+        return;
+    }
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                              0),
                    ^{
@@ -600,6 +606,11 @@ static UIBackgroundTaskIdentifier background_task;
 }
 
 - (void) applicationDidEnterBackground {
+
+    if (_isShutdown) {
+        return;
+    }
+
     if (didFireEnterForeground != YES) {
         NRLOG_VERBOSE(@"applicationDidEnterBackground called before didEnterForeground called.");
         return;
@@ -739,8 +750,109 @@ static UIBackgroundTaskIdentifier background_task;
     return [NRMAHarvestController harvestNow];
 }
 
++ (void) shutdown {
+    if (_sharedInstance.enabled) {
+
+        // If shutdown is called when we are already shutdown, do nothing.
+        if (_sharedInstance.isShutdown) {
+            NRLOG_INFO(@"Agent is shutdown.");
+            return;
+        }
+
+        NRLOG_INFO(@"Shutting down agent for duration of application lifetime.");
+
+        // * CLEAR EXISTING HARVESTABLE DATA *//
+
+        // Clear harvestData
+        [[[[NRMAHarvestController harvestController] harvester] harvestData] clear];
+        
+        // Clear activity traces
+        [NRMATraceController cleanup];
+
+        // Clear stored Events and stored attributes.
+        [NRMAAnalytics clearDuplicationStores];
+        [_sharedInstance.analyticsController clearLastSessionsAnalytics];
+
+        // Clear measurementEngine
+        [NRMAMeasurements drain];
+
+        // * PERFORM FINAL SUPPORTABILITY METRIC SEND *//
+
+        // If the agent is connected, it should have no problem performing an adhoc harvest right now containing Shutdown support metric.
+        [NRMASupportMetricHelper enqueueStopAgentMetric];
+
+        [NRMAHarvestController harvestNow];
+
+        // * ACTUAL SHUT DOWN *//
+
+        // Delete stored device ID.
+        [NRMAUDIDManager deleteStoredID];
+
+        // Stored device data, Metadata and crash file are cleared when crash upload.
+        [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
+
+
+        // Clear stored user defaults
+        [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
+        [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];
+        [[[NRMAHarvestController harvestController] harvester] clearStoredApplicationIdentifier];
+
+        [_sharedInstance agentShutdown];
+
+        [[NRMAHarvestController harvestController].harvestTimer stop];
+
+        // Disable observers.
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:kNRCarrierNameDidUpdateNotification
+                                                      object:nil];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:kNRMemoryUsageDidChangeNotification
+                                                      object:nil];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:UIApplicationDidEnterBackgroundNotification
+                                                   object:[UIApplication sharedApplication]];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:UIApplicationWillEnterForegroundNotification
+                                                   object:[UIApplication sharedApplication]];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:UIApplicationWillTerminateNotification
+                                                   object:[UIApplication sharedApplication]];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:kNRInteractionDidCompleteNotification
+                                                   object:nil];
+        // # disable logging
+        [NRLogger setLogLevels:NRLogLevelNone];
+        [NRLogger clearLog];
+        
+        if (background_task != UIBackgroundTaskInvalid) {
+            [[UIApplication sharedApplication] endBackgroundTask:background_task];
+            // Invalidate the background_task.
+            background_task = UIBackgroundTaskInvalid;
+        }
+
+        // NOTE: We are leaving things swizzled in:
+        // 1. NRMAURLSessionOverride
+        // 2. NRMAMethodProfiler.
+        // 3. NRMAWKWebViewInstrumentation.
+        // It may be unsafe to attempt de-swizzling everything during runtime.
+
+        // Set permanent shutdown flag.
+        _sharedInstance.isShutdown = true;
+
+        // * END SHUT DOWN *//
+    }
+    else {
+        NRLOG_INFO(@"Failed to shut down agent, its not enabled yet.");
+    }
+}
+
 + (void) startWithApplicationToken:(NSString*)appToken
                andCollectorAddress:(NSString*)url {
+
+    if ([NewRelicAgentInternal sharedInstance].isShutdown) {
+        NRLOG_INFO(@"Agent is shut down for duration of applications lifetime. (This is because shutdown() was called.) Please restart the application and call NewRelic.startWithApplicationToken() to reenable.");
+        return;
+    }
 
     [self startWithApplicationToken:appToken
                 andCollectorAddress:url

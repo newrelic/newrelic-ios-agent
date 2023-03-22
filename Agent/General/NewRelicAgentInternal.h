@@ -42,6 +42,10 @@
 
 @property (atomic, readonly, strong) NRMAAgentConfiguration *agentConfiguration;
 
+@property (nonatomic, assign) BOOL isShutdown;
+
++ (void)shutdown;
+
 + (void)startWithApplicationToken:(NSString*)appToken
               andCollectorAddress:(NSString*)CollectorUrl;
 
