@@ -336,8 +336,7 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 + (void) instrumentWebViews {
-#if TARGET_OS_TV
-#else
+#if !TARGET_OS_TV
     if ([NRMAFlags shouldEnableWebViewInstrumentation]) {
         [NRMAWKWebViewInstrumentation instrument];
     }
@@ -364,8 +363,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
 // De-initialize agent instrumentation
 - (void) deinitializeInstrumentation {
-#if TARGET_OS_TV
-#else
+#if !TARGET_OS_TV
     [NRMAWKWebViewInstrumentation deinstrument];
 #endif
 }
