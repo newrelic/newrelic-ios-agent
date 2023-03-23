@@ -26,6 +26,8 @@
                                       activityName:(NSString*)name;
 + (void) initializeMeasurements;
 
++ (void) drain;
+
 + (void) shutdown;
 
 /*
