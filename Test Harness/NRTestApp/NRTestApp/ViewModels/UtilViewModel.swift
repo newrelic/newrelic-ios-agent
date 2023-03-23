@@ -43,6 +43,7 @@ class UtilViewModel {
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
+        options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
 
     func crash() {
@@ -154,6 +155,10 @@ class UtilViewModel {
         let dataTask = urlSession.dataTask(with: request)
 
         dataTask.resume()
+    }
+
+    func shutDown() {
+        NewRelic.shutdown()
     }
 }
 
