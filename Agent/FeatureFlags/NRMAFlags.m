@@ -154,6 +154,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_AppStartMetrics) != 0;
 }
 
++ (BOOL) shouldEnableSwiftAsyncURLSessionSupport {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_SwiftAsyncURLSessionSupport) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -197,6 +201,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
     }
     if ((flags & NRFeatureFlag_AppStartMetrics) == NRFeatureFlag_AppStartMetrics) {
         [retArray addObject:@"AppStartMetrics"];
+    }
+    if ((flags & NRFeatureFlag_SwiftAsyncURLSessionSupport) == NRFeatureFlag_SwiftAsyncURLSessionSupport) {
+        [retArray addObject:@"SwiftAsyncURLSessionSupport"];
     }
     return retArray;
 }

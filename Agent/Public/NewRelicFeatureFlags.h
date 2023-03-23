@@ -62,6 +62,9 @@
  - NRFeatureFlag_AppStartMetrics
     Enable (default)or disable flag for automatic calculation of app start metrics. Cold and Hot(Resume) start times only.
     Note: App Launch start are not reported when using Simulators or during debugging.
+
+ - NRFeatureFlag_SwiftAsyncURLSessionSupport
+    Enable (default)or disable flag for automatic instrumentation of async URLSession functions in Swift.
 */
 
 
@@ -81,4 +84,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_DistributedTracing                    = 1 << 14,
     NRFeatureFlag_GestureInstrumentation                = 1 << 15, // Disabled by default
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
+    NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 17, // Disabled by default
 };
