@@ -51,26 +51,32 @@
     methodImplementation = class_getMethodImplementation(clazz, @selector(dataTaskWithRequest:completionHandler:));
     dladdr(methodImplementation, &info);
     XCTAssertTrue(methodImplementation == (IMP)NRMAOverride__dataTaskWithRequest_completionHandler,@"%s doesn't match NRMAOverride",info.dli_sname);
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*,id))methodImplementation)(self,_cmd,nil,nil));
 
     methodImplementation = class_getMethodImplementation(clazz, @selector(uploadTaskWithStreamedRequest:));
     dladdr(methodImplementation, &info);
     XCTAssertTrue(methodImplementation == (IMP)NRMAOverride__uploadTaskWithStreamedRequest,@"%s doesn't match NRMAOverride",info.dli_sname);
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*))methodImplementation)(self,_cmd,nil));
 
     methodImplementation = class_getMethodImplementation(clazz, @selector(uploadTaskWithRequest:fromFile:completionHandler:));
     dladdr(methodImplementation, &info);
     XCTAssertTrue(methodImplementation == (IMP)NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler,@"%s doesn't match NRMAOverride",info.dli_sname);
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*,NSURL*,id))methodImplementation)(self,_cmd,nil,nil,nil));
 
     methodImplementation = class_getMethodImplementation(clazz, @selector(uploadTaskWithRequest:fromFile:));
     dladdr(methodImplementation, &info);
     XCTAssertTrue(methodImplementation == (IMP)NRMAOverride__uploadTaskWithRequest_fromFile,@"%s doesn't match NRMAOverride",info.dli_sname);
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*,NSURL*))methodImplementation)(self,_cmd,nil,nil));
 
     methodImplementation = class_getMethodImplementation(clazz, @selector(uploadTaskWithRequest:fromData:completionHandler:));
     dladdr(methodImplementation, &info);
     XCTAssertTrue(methodImplementation == (IMP)NRMAOverride__uploadTaskWithRequest_fromData_completionHandler,@"%s doesn't match NRMAOverride",info.dli_sname);
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*,NSData*,id))methodImplementation)(self,_cmd,nil,nil,nil));
 
     methodImplementation = class_getMethodImplementation(clazz, @selector(uploadTaskWithRequest:fromData:));
     dladdr(methodImplementation, &info);
     XCTAssertTrue(methodImplementation == (IMP)NRMAOverride__uploadTaskWithRequest_fromData,@"%s doesn't match NRMAOverride",info.dli_sname);
+    XCTAssertNil(((id(*)(id,SEL,NSURLRequest*,NSData*))methodImplementation)(self,_cmd,nil,nil));
 }
 - (BOOL) verifyDeinstrumented
 {

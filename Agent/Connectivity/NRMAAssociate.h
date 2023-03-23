@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface NRMAAssociate : NSObject
 + (void)attach:(_Nullable id)value
             to:(_Nonnull id)object
@@ -15,3 +17,5 @@
 + (_Nullable id)retrieveFrom:(_Nonnull id)object with:(NSString*)key;
 + (void)removeFrom:(_Nonnull id)object with:(NSString*)key;
 @end
+
+NS_ASSUME_NONNULL_END

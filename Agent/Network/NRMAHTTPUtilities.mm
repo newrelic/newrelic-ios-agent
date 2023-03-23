@@ -31,8 +31,6 @@
     NRMAHarvesterConfiguration* harvestConfig = [NRMAHarvestController configuration];
 
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
-
-    if (!mutableRequest) return nil;
     if (!harvestConfig) return mutableRequest;
 
     NSString* xprocess = harvestConfig.cross_process_id;
@@ -68,8 +66,6 @@
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest* _Nonnull)request {
 
     if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
-
-    if(!request) { return nil; }
 
     NRMAPayloadContainer *payloadContainer = [NRMAHTTPUtilities generatePayload];
     if(payloadContainer == nil) { return nil; }
