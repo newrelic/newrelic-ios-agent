@@ -13,6 +13,8 @@
 #import "NRMATraceController.h"
 #import "NRMAExceptionHandler.h"
 #import "NewRelicInternalUtils.h"
+#import "NewRelicAgentInternal.h"
+
 #define kCustomMetricRegexPattern   @"[a-zA-Z0-9_ ]+"
 #define kCustomUnitsRegexPattern    @"[a-zA-Z0-9_%/ ]+"
 #define customMetricRecordFailureLog  @"Record custom metric failed."
@@ -71,7 +73,10 @@ NRMAMetricSet* __metrics;
                    valueUnits:(NRMetricUnit *)valueUnits
                    countUnits:(NRMetricUnit *)countUnits
 {
-    //here's where all the magic happens
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
     
     if (name == nil || category == nil) {
         NRLOG_ERROR(@"+recordMetricWithName:Category:[...] must supply a name and category.");

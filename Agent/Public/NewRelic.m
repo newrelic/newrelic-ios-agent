@@ -38,6 +38,11 @@
 }
 + (void) crashNow:(NSString*)message
 {
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     @throw [NSException exceptionWithName:@"NewRelicDemoException"
                                    reason:message?:@"This is a demo crash from +[NewRelic demoCrash:]"
                                  userInfo:nil];
@@ -59,21 +64,44 @@
 }
 
 + (void) recordHandledException:(NSException*)exception {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception];
 }
 
 + (void) recordHandledException:(NSException*)exception
            withAttributes:(NSDictionary*)attributes {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
                                                                                     attributes:attributes];
 }
 
-+ (void) recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
++ (void)recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
 
 }
 
 + (void) recordError:(NSError* _Nonnull)error {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:nil];
 }
@@ -81,6 +109,11 @@
 + (void) recordError:(NSError* _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes
 {
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:attributes];
 }
@@ -135,6 +168,13 @@
         [NRMAFlags disableFeatures:NRFeatureFlag_CrashReporting];
     }
 }
+
+#pragma mark - Stopping the agent
+
++ (void)shutdown {
+    [NewRelicAgentInternal shutdown];
+}
+
 #pragma mark - Starting up the agent
 
 + (void)startWithApplicationToken:(NSString*)appToken
@@ -273,6 +313,12 @@
 
 + (NSString*) startInteractionWithName:(NSString*)interactionName
 {
+
+    // If Agent is shutdown we shouldn't record traces.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return nil;
+    }
+
     if (![NRMAFlags shouldEnableInteractionTracing]){
         NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return nil;
@@ -298,6 +344,11 @@
 
 + (void) stopCurrentInteraction:(NSString*)activityIdentifier
 {
+    // If Agent is shutdown we shouldn't record traces.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     if (![NRMAFlags shouldEnableInteractionTracing]){
         NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return;
@@ -335,6 +386,11 @@
                       timer:(NRTimer *)timer
                    category:(enum NRTraceType)category{
 
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     if (![NRMAFlags shouldEnableInteractionTracing]){
         NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return;
@@ -357,6 +413,11 @@
 
 + (void) endTracingMethodWithTimer:(NRTimer *)timer
 {
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
     [timer stopTimer];
     if (![NRMAFlags shouldEnableInteractionTracing]){
         NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
@@ -426,6 +487,12 @@
 
 + (BOOL) setAttribute:(NSString*)name
                 value:(id) value {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:name
                                                                                      value:value
                                                                                 persistent:YES];
@@ -437,6 +504,10 @@
 
 + (BOOL) incrementAttribute:(NSString*)name
                       value:(NSNumber*) value {
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController incrementSessionAttribute:name
                                                                                            value:value
@@ -450,10 +521,21 @@
 }
 
 + (BOOL) removeAttribute:(NSString*)name {
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController removeSessionAttributeNamed:name];
 }
 
 + (BOOL) removeAllAttributes {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController removeAllSessionAttributes];
 }
 
@@ -473,6 +555,12 @@
 
 + (BOOL) recordCustomEvent:(NSString*)eventType
                 attributes:(NSDictionary*)attributes {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController addCustomEvent:eventType
                                                                        withAttributes:attributes];
 }
@@ -481,6 +569,12 @@
 + (BOOL) recordBreadcrumb:(NSString* __nonnull)name
                attributes:(NSDictionary* __nullable)attributes
 {
+
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
                                                                       withAttributes:attributes];
 }

@@ -48,17 +48,19 @@ class ViewController: UIViewController {
     func setupSpaceStack() {
         //Image View
         spaceImageView.contentMode = .scaleAspectFit
-        spaceImageView.heightAnchor.constraint(equalToConstant: 250.0).isActive = true
-        spaceImageView.widthAnchor.constraint(equalToConstant: 250.0).isActive = true
+        spaceImageView.heightAnchor.constraint(lessThanOrEqualToConstant: 250.0).isActive = true
+        spaceImageView.widthAnchor.constraint(lessThanOrEqualToConstant: 250.0).isActive = true
+        spaceImageView.heightAnchor.constraint(greaterThanOrEqualToConstant: 100.0).isActive = true
+        spaceImageView.widthAnchor.constraint(greaterThanOrEqualToConstant: 100.0).isActive = true
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
         spaceImageView.isUserInteractionEnabled = true
         spaceImageView.addGestureRecognizer(tapGestureRecognizer)
         
         //Text Label
-        spaceLabel.widthAnchor.constraint(equalToConstant: self.view.frame.width).isActive = true
-        spaceLabel.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        spaceLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
         spaceLabel.text  = ""
         spaceLabel.textAlignment = .center
+        spaceLabel.numberOfLines = 0
         
         //Stack View
         spaceStack.axis = .vertical
@@ -75,6 +77,10 @@ class ViewController: UIViewController {
         //Constraints
         spaceStack.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
         spaceStack.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
+        spaceStack.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        spaceStack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        spaceLabel.leadingAnchor.constraint(equalTo: self.spaceStack.leadingAnchor).isActive = true
+        spaceLabel.trailingAnchor.constraint(equalTo: self.spaceStack.trailingAnchor).isActive = true
     }
     
     @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
@@ -89,13 +95,14 @@ class ViewController: UIViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.estimatedRowHeight = 140
+        tableView.estimatedRowHeight = 45
         tableView.bounces = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "utilitiesCell")
         
         self.view.addSubview(tableView)
         
+        tableView.heightAnchor.constraint(greaterThanOrEqualToConstant: 140.0).isActive = true
         tableView.topAnchor.constraint(equalTo: spaceStack.bottomAnchor, constant: 30.0).isActive = true
         tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
         tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
@@ -106,6 +113,9 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
         options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
+
+        options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
+
     }
     
     func utilitiesAction() {
@@ -118,6 +128,12 @@ class ViewController: UIViewController {
 
     func refreshAction() {
         viewModel.loadApodData()
+    }
+
+    func refreshActionAsync() {
+        Task {
+            await viewModel.loadApodDataAsync()
+        }
     }
     
     func makeButton(title: String) -> UIButton {

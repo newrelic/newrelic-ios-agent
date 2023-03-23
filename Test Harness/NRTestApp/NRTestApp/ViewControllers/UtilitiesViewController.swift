@@ -21,7 +21,7 @@ class UtilitiesViewController: UIViewController {
         
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.estimatedRowHeight = 140
+        tableView.estimatedRowHeight = 45
         tableView.bounces = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "utilitiesCell")
