@@ -27,7 +27,7 @@
 #import "W3CTraceState.h"
 
 @implementation NRMAHTTPUtilities
-+ (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
++ (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest* _Nonnull)request {
     NRMAHarvesterConfiguration* harvestConfig = [NRMAHarvestController configuration];
 
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
@@ -57,7 +57,7 @@
 }
 
 
-+ (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest*)request {
++ (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest* _Nonnull)request {
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities makeMutable:request];
     [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
                                   to:mutableRequest];
@@ -65,7 +65,7 @@
 
 }
 
-+ (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request {
++ (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest* _Nonnull)request {
 
     if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
 

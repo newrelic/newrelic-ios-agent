@@ -9,9 +9,9 @@
 #import <Foundation/Foundation.h>
 
 @interface NRMAAssociate : NSObject
-+ (void)attach:(id)value
-            to:(id)object
++ (void)attach:(_Nullable id)value
+            to:(_Nonnull id)object
           with:(NSString*)key;
-+ (id)retrieveFrom:(id)object with:(NSString*)key;
-+ (void)removeFrom:(id)object with:(NSString*)key;
++ (_Nullable id)retrieveFrom:(_Nonnull id)object with:(NSString*)key;
++ (void)removeFrom:(_Nonnull id)object with:(NSString*)key;
 @end

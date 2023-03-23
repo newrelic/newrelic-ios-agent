@@ -12,7 +12,7 @@
 @implementation NRMAAssociate
 
 + (void)attach:(id)value
-            to:(id)object
+            to:(_Nonnull id)object
           with:(NSString *)key {
         if (object == nil) return;
 
@@ -23,7 +23,7 @@
 
     }
 
-+ (id)retrieveFrom:(id)object
++ (_Nullable id)retrieveFrom:(_Nonnull id)object
               with:(NSString *)key {
     if (object == nil) return nil;
 
@@ -31,7 +31,7 @@
                                     [key cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
-+ (void)removeFrom:(id)object
++ (void)removeFrom:(_Nonnull id)object
               with:(NSString *)key {
     if (object == nil) return;
 
