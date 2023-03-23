@@ -12,7 +12,6 @@ extension UIImageView {
     
     func loadImage(withUrl urlString : String) {
         guard let url = URL(string: urlString) else {return}
-        self.image = nil
         
         let activityIndicator = UIActivityIndicatorView(style: .medium)
         activityIndicator.hidesWhenStopped = true
