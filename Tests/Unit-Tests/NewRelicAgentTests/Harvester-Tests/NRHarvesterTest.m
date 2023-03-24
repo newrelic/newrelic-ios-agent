@@ -125,48 +125,72 @@
 }
 
 // TODO: Reenable/rewrite these tests related to Harvester/Stored Data. JIRA: NR-96516
-//- (void) testBadStoredDataRecover
-//{
-//    NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] init];
-//    config.collect_network_errors = YES;
-//    config.cross_process_id = @"cross_process_id";
-//    config.data_report_period = 60;
-//    config.data_token = [[NRMADataToken alloc] init];
-//    config.data_token.clusterAgentId = -1;
-//    config.data_token.realAgentId = -1;
-//    config.error_limit = 50;
-//    config.report_max_transaction_age = 600;
-//    config.report_max_transaction_count =1000;
-//    config.response_body_limit = 2048;
-//    config.server_timestamp = 1379548800;
-//    config.stack_trace_limit = 100;
-//
-//    [[NSUserDefaults standardUserDefaults] setObject:[config asDictionary] forKey:kNRMAHarvesterConfigurationStoreKey];
-//    [[NSUserDefaults standardUserDefaults]synchronize];
-//
-//    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
-//    id dataMock = [OCMockObject partialMockForObject:[newHarvester harvestData]];
-//    [[dataMock expect] clear];
-//    id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
-//    //[newHarvester setAgentConfiguration:agentConfig];
-//    [harvesterMock setAgentConfiguration:agentConfig];
-//
-//    //[[harvesterMock expect] andForwardToRealObject]
-//    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
-//
-//    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
-//    [[[connectionMock stub] andForwardToRealObject] sendConnect];
-//
-//    [harvesterMock execute];
-//    [harvesterMock execute];
-//    [harvesterMock verify];
-//    //[connectionMock verify];
-//    [dataMock verify]; //verify the harvest data is cleared after a successful harvest
-//    [connectionMock stopMocking];
-//    [harvesterMock stopMocking];
-//    [dataMock stopMocking];
-//}
-//
+- (void) testBadStoredDataRecover
+{
+    NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] init];
+    config.collect_network_errors = YES;
+    config.cross_process_id = @"cross_process_id";
+    config.data_report_period = 60;
+    config.data_token = [[NRMADataToken alloc] init];
+    config.data_token.clusterAgentId = 1;
+    config.data_token.realAgentId = 1;
+    config.error_limit = 50;
+    config.report_max_transaction_age = 600;
+    config.report_max_transaction_count = 1000;
+    config.response_body_limit = 2048;
+    config.server_timestamp = 1379548800;
+    config.stack_trace_limit = 100;
+    config.account_id = 1;
+    config.application_id = 1;
+    
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+        
+    NSData *data = [NSJSONSerialization dataWithJSONObject:[config asDictionary] options:NSJSONWritingPrettyPrinted error:nil];
+    
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler(data, bresponse, nil);
+    }] resume];
+
+    [[NSUserDefaults standardUserDefaults] setObject:[config asDictionary] forKey:kNRMAHarvesterConfigurationStoreKey];
+    [[NSUserDefaults standardUserDefaults]synchronize];
+
+    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+    
+    newHarvester.connection.harvestSession = mockNSURLSession;
+    
+    id dataMock = [OCMockObject partialMockForObject:[newHarvester harvestData]];
+    [[dataMock expect] clear];
+    id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
+    //[newHarvester setAgentConfiguration:agentConfig];
+    [harvesterMock setAgentConfiguration:agentConfig];
+
+    //[[harvesterMock expect] andForwardToRealObject]
+    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
+
+    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
+    [[[connectionMock stub] andForwardToRealObject] sendConnect];
+
+    [harvesterMock execute];
+    [harvesterMock execute];
+    [harvesterMock verify];
+    //[connectionMock verify];
+    [dataMock verify]; //verify the harvest data is cleared after a successful harvest
+    [connectionMock stopMocking];
+    [harvesterMock stopMocking];
+    [dataMock stopMocking];
+}
+
 //- (void) testStoredData
 //{
 //    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
