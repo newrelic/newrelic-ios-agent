@@ -50,7 +50,7 @@
 {
     [super setUp];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
-                                                                          collectorAddress:@"staging-mobile-collector.newrelic.com"
+                                                                          collectorAddress:KNRMA_TEST_COLLECTOR_HOST
                                                                               crashAddress:nil];
     
     NSMutableArray* harvestAwareObjects = [[NSMutableArray alloc] init];
