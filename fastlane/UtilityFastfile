@@ -9,11 +9,17 @@ platform :ios do
       # Running in ./fastlane so switch dir to proj root.
       Dir.chdir("..") do
         begin
+          # Reset NRMAAgentVersion.h file if framework build has ran.
+          sh "git checkout Agent/Public/NRMAAgentVersion.h"
+          sh "rm -rf cocoapods/NewRelic.xcframework"
+          
           sh "rm -rf NewRelic.xcframework"
           sh "rm -rf #{Constants::ARCHIVES}"
-          sh "rm -rf Frameworks"
-          sh "rm -rf libMobileAgent/build"
           sh "rm -rf #{Constants::DD}"
+          sh "rm -rf coverage.xml"
+
+          sh "rm  -rf NewRelic_XCFramework_Agent*"
+
         rescue => ex
           # handle error
         ensure
