@@ -191,10 +191,8 @@
     id dataMock = [OCMockObject partialMockForObject:[newHarvester harvestData]];
     [[dataMock expect] clear];
     id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
-    //[newHarvester setAgentConfiguration:agentConfig];
     [harvesterMock setAgentConfiguration:agentConfig];
 
-    //[[harvesterMock expect] andForwardToRealObject]
     [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
 
     id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
@@ -203,7 +201,7 @@
     [harvesterMock execute];
     [harvesterMock execute];
     [harvesterMock verify];
-    //[connectionMock verify];
+
     [dataMock verify]; //verify the harvest data is cleared after a successful harvest
     [connectionMock stopMocking];
     [harvesterMock stopMocking];
@@ -223,9 +221,7 @@
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
     [harvester execute];
 
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {
-        NSLog(@"Poop");
-    };
+    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 
     //at this point there should be stored data
@@ -237,7 +233,6 @@
     [newHarvester setAgentConfiguration:agentConfig];
 
     id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
-    //[newHarvester setAgentConfiguration:agentConfig];
     [harvesterMock setAgentConfiguration:agentConfig];
 
     [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
