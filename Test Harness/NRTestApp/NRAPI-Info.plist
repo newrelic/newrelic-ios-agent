@@ -6,8 +6,6 @@
 	<string></string>
 	<key>collectorAddress</key>
 	<string></string>
-	<key>isStaging</key>
-	<false/>
 	<key>NRAPIKey</key>
 	<string></string>
 </dict>

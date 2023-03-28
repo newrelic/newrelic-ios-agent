@@ -13,6 +13,6 @@ struct ImageFullScreen: View {
 
     var body: some View {
         ImageDetailPDFView(image: image)
-        .NRTrackView()
+        .NRTrackView(name: "ImageDetailPDFView")
     }
 }
