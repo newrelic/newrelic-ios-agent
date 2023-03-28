@@ -130,6 +130,21 @@
 
         std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
+        if(retrievedPayload == nullptr) {
+            retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+        }
+
+        if(traceHeaders && retrievedPayload != nullptr) {
+            NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+            NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+            if ([traceParentComponents count] > 2) {
+                retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
+                retrievedPayload->setParentId(@"0".UTF8String);
+                retrievedPayload->setId(traceParentComponents[2].UTF8String);
+                retrievedPayload->setDistributedTracing(true);
+            }
+        }
+
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
 
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
@@ -142,19 +157,6 @@
                                                                                 withPayload:std::move(retrievedPayload)];
         } else {
 
-            if(traceHeaders) {
-                if(retrievedPayload == nullptr) {
-                    retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
-                }
-                
-                NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
-                NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
-                NRLOG_VERBOSE(@"Trace parent components: %@", traceParentComponents);
-                retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
-                retrievedPayload->setParentId(@"0".UTF8String);
-                retrievedPayload->setId(traceParentComponents[2].UTF8String);
-                retrievedPayload->setDistributedTracing(true);
-            }
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
                                                                                     withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
                                                                                                                                                bytesReceived:modifiedBytesReceived
@@ -205,6 +207,10 @@
         }
         std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
+        if(retrievedPayload == nullptr) {
+            retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+        }
+        
         [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                                                                    httpMethod:[request HTTPMethod]
                                                                                                                                connectionType:connectionType
