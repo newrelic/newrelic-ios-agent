@@ -205,6 +205,10 @@
         }
         std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
+        if(retrievedPayload == nullptr) {
+            retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+        }
+        
         [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                                                                    httpMethod:[request HTTPMethod]
                                                                                                                                connectionType:connectionType
