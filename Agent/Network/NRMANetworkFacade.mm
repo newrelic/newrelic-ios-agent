@@ -134,7 +134,7 @@
             retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
         }
 
-        if(traceHeaders) {
+        if(traceHeaders && retrievedPayload != nullptr) {
             NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
             NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
             retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
