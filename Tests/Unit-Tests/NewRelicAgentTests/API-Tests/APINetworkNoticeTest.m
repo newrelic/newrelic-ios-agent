@@ -167,6 +167,32 @@
     XCTAssertEqual((long long)result.endTime,(long long) 10000,@"Result end time did not match expected end time.");
     XCTAssertEqual(result.totalTime, 4000);
     XCTAssertEqual(result.statusCode, 200, @"Result status code did not match expected status code.");
+
+    // Test that adding invalid traceHeaders does not crash. there must be > 2 elements in the array produced by splitting the value on -.
+    [NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  bytesSent:0
+                              bytesReceived:0
+                               responseData:nil
+                               traceHeaders:@{@"traceparent":@"invalid"}
+                                     params:nil];
+    [NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  bytesSent:0
+                              bytesReceived:0
+                               responseData:nil
+                               traceHeaders:@{@"traceparent":@"invalid-invalid"}
+                                     params:nil];
+    [NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  bytesSent:0
+                              bytesReceived:0
+                               responseData:nil
+                               traceHeaders:@{@"traceparent":@""}
+                                     params:nil];
 }
 
 @end

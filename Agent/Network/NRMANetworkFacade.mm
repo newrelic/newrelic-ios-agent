@@ -150,12 +150,16 @@
                 
                 NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
                 NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
                 if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
 
                     retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
                     retrievedPayload->setParentId(@"0".UTF8String);
                     retrievedPayload->setId(traceParentComponents[2].UTF8String);
                     retrievedPayload->setDistributedTracing(true);
+                }
+                else {
+                    NRLOG_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
                 }
             }
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
