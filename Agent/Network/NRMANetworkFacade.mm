@@ -128,7 +128,6 @@
             modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
         }
 
-        std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
 
@@ -139,8 +138,10 @@
                                                                                                                            networkErrorMessage:nil
                                                                                                                            encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
                                                                                                                                  appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
-                                                                                withPayload:std::move(retrievedPayload)];
+                                                                                withPayload:[NRMAHTTPUtilities retrievePayload:request]];
         } else {
+
+            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
             if(traceHeaders) {
                 if(retrievedPayload == nullptr) {
@@ -149,11 +150,13 @@
                 
                 NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
                 NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
-                NRLOG_VERBOSE(@"Trace parent components: %@", traceParentComponents);
-                retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
-                retrievedPayload->setParentId(@"0".UTF8String);
-                retrievedPayload->setId(traceParentComponents[2].UTF8String);
-                retrievedPayload->setDistributedTracing(true);
+                if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
+
+                    retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
+                    retrievedPayload->setParentId(@"0".UTF8String);
+                    retrievedPayload->setId(traceParentComponents[2].UTF8String);
+                    retrievedPayload->setDistributedTracing(true);
+                }
             }
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
                                                                                     withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
@@ -203,7 +206,6 @@
         if(!replacedURL) {
             replacedURL = request.URL;
         }
-        std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
         [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
                                                                                                                                    httpMethod:[request HTTPMethod]
@@ -214,7 +216,7 @@
                                                                                                                                    bytesReceived:0
                                                                                                                                     responseTime:timer.timeElapsedInSeconds
                                                                                                                              networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:std::move(retrievedPayload)];
+                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
         // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags
         [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString

@@ -140,4 +140,33 @@
     XCTAssertEqual(result.statusCode, 0, @"Result status code did not match expected status code.");
 }
 
+- (void) testNoticeNetworkRequestWithTraceHeaders
+{
+    double startTime = 6000;
+    double endTime = 10000;
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"google.com"]];
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:request.URL
+                                                              statusCode:200
+                                                             HTTPVersion:nil
+                                                            headerFields:nil];
+    [NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  bytesSent:0
+                              bytesReceived:0
+                               responseData:nil
+                               traceHeaders:@{@"traceparent":@"parent-awesomeid-verycool"}
+                                     params:nil];
+
+    while(CFRunLoopGetCurrent() && !helper.result) {}
+
+    NRMAHTTPTransactionMeasurement* result = (NRMAHTTPTransactionMeasurement*)helper.result;
+
+    XCTAssertEqualObjects(result.url, @"google.com", @"Result url does not match recorded url.");
+    XCTAssertEqual(result.startTime, (double) 6000, @"Result start time did not match expected start time.");
+    XCTAssertEqual((long long)result.endTime,(long long) 10000,@"Result end time did not match expected end time.");
+    XCTAssertEqual(result.totalTime, 4000);
+    XCTAssertEqual(result.statusCode, 200, @"Result status code did not match expected status code.");
+}
+
 @end
