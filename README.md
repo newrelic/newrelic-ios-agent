@@ -74,7 +74,8 @@ The run-symbol-tool Run script must be added to your app's Xcode project build p
 - Option 1: Run the Unit Tests using Xcode by selecting Agent-iOS scheme and Product -> Test
 - Option 2: Running tests using [Fastlane](https://docs.fastlane.tools/)
     - `bundle exec fastlane runIOSTests`
-        - Run above command to run tests on iOS. Upon completion, code coverage will be generated.
+        - Run above command to run tests on iOS. Upon completion, code coverage will be generated. 
+            - run `brew install lcov` to add lcov for code coverage.
 
 ## Links
 - [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Released Swift packages are published here. 
