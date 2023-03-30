@@ -143,8 +143,9 @@ generate_html_report() {
   if [ "$verbose" = "1" ]; then
     echo "XcodeCoverage: Generating HTML report"
   fi
-     
-  "${LCOV_PATH}/genhtml" --output-directory . "${LCOV_INFO}"
+  GENHTML_PATH="$( which genhtml )"
+
+  "${GENHTML_PATH}" --output-directory . "${LCOV_INFO}"
 }
 
 generate_clover_xml () {
