@@ -45,4 +45,9 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(webViewController, animated: true)
 #endif
     }
+    
+    func showVideoViewController() {
+        let videoViewController = ViewControllerProvider.videoViewController
+        navigationController.pushViewController(videoViewController, animated: true)
+    }
 }

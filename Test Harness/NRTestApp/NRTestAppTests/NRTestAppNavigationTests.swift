@@ -41,6 +41,9 @@ final class NRTestAppUITests: XCTestCase {
         
         mainCoordinator.showImageViewController(image: UIImage())
         sleep(2)
+        
+        mainCoordinator.showVideoViewController()
+        sleep(1)
     }
     
 }

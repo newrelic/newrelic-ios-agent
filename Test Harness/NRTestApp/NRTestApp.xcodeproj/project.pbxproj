@@ -58,6 +58,8 @@
 		F86429442979CE31002ABA01 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; };
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
+		F8F276C829D5F5FC006F6A36 /* VideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276C729D5F5FC006F6A36 /* VideoViewController.swift */; };
+		F8F276C929D5F5FC006F6A36 /* VideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276C729D5F5FC006F6A36 /* VideoViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -167,6 +169,7 @@
 		F86428F62979CDB0002ABA01 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestApp--tvOS--Info.plist"; path = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
+		F8F276C729D5F5FC006F6A36 /* VideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -281,6 +284,7 @@
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
+				F8F276C729D5F5FC006F6A36 /* VideoViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -573,6 +577,7 @@
 				F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
+				F8F276C829D5F5FC006F6A36 /* VideoViewController.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
@@ -623,6 +628,7 @@
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
+				F8F276C929D5F5FC006F6A36 /* VideoViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

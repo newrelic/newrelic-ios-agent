@@ -8,7 +8,7 @@
 import UIKit
 
 enum ViewControllerProvider {
-    // Provides an AllCatsViewController
+
     static var viewController: ViewController {
         let viewController = ViewController()
         viewController.viewModel = ApodViewModel()
@@ -25,5 +25,10 @@ enum ViewControllerProvider {
         return viewController
     }
 #endif
+    
+    static var videoViewController: VideoViewController {
+        let viewController = VideoViewController()
+        return viewController
+    }
 }
 

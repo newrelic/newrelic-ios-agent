@@ -108,22 +108,28 @@ class ViewController: UIViewController {
         tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
-        options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
+        options.append(UtilOption(title: "Utilities", handler: { [self] in showUtilitiesAction()}))
 #if os(iOS)
-        options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
+        options.append(UtilOption(title: "WebView", handler: { [self] in showWebViewAction()}))
 #endif
+        options.append(UtilOption(title: "Video", handler: { [self] in showVideoAction()}))
+
         options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
 
         options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
 
     }
     
-    func utilitiesAction() {
+    func showUtilitiesAction() {
         coordinator?.showUtilitiesViewController()
     }
   
-    func webViewAction() {
+    func showWebViewAction() {
         self.coordinator?.showWebViewController()
+    }
+    
+    func showVideoAction() {
+        coordinator?.showVideoViewController()
     }
 
     func refreshAction() {
