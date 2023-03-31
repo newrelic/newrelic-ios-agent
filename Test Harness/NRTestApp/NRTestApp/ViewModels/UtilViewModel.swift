@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AVKit
 import NewRelic
 
 struct UtilOption {

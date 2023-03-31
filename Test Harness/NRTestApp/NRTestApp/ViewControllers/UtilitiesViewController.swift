@@ -7,7 +7,7 @@
 
 import UIKit
 
-class UtilitiesViewController: UIViewController {
+class UtilitiesViewController: UITableViewController {
     var viewModel = UtilViewModel()
     
     override func viewDidLoad() {
@@ -16,9 +16,7 @@ class UtilitiesViewController: UIViewController {
         viewModel.createUtilOptions()
         
         self.title = "Utilities"
-        
-        let tableView = UITableView()
-        
+                
         tableView.delegate = self
         tableView.dataSource = self
         tableView.estimatedRowHeight = 45
@@ -37,14 +35,14 @@ class UtilitiesViewController: UIViewController {
     
 }
 
-extension UtilitiesViewController: UITableViewDelegate, UITableViewDataSource {
+extension UtilitiesViewController {
 
-    func tableView(_ tableView: UITableView,
+    override func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
         return viewModel.options.count
     }
     
-    func tableView(_ tableView: UITableView,
+    override func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "utilitiesCell", for: indexPath)
 
@@ -59,7 +57,7 @@ extension UtilitiesViewController: UITableViewDelegate, UITableViewDataSource {
         return cell
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         viewModel.makeEvent()
         
         viewModel.options[indexPath.row].handler()

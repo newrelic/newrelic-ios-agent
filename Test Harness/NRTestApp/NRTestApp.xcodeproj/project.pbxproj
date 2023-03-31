@@ -60,6 +60,13 @@
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 		F8F276C829D5F5FC006F6A36 /* VideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276C729D5F5FC006F6A36 /* VideoViewController.swift */; };
 		F8F276C929D5F5FC006F6A36 /* VideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276C729D5F5FC006F6A36 /* VideoViewController.swift */; };
+		F8F276D629D613F2006F6A36 /* VideoAssetPersistenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276D129D613F2006F6A36 /* VideoAssetPersistenceManager.swift */; };
+		F8F276EF29D614FB006F6A36 /* VideoAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276EC29D614FB006F6A36 /* VideoAsset.swift */; };
+		F8F276F629D61D5C006F6A36 /* VideosTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276F529D61D5C006F6A36 /* VideosTableViewCell.swift */; };
+		F8F276F729D61D5C006F6A36 /* VideosTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276F529D61D5C006F6A36 /* VideosTableViewCell.swift */; };
+		F8F276FB29D734AC006F6A36 /* VideoAssetListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276D029D613F2006F6A36 /* VideoAssetListManager.swift */; };
+		F8F276FC29D734AD006F6A36 /* VideoAssetListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276D029D613F2006F6A36 /* VideoAssetListManager.swift */; };
+		F8F276FD29D7355E006F6A36 /* VideoAsset.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F276EC29D614FB006F6A36 /* VideoAsset.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -170,6 +177,10 @@
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestApp--tvOS--Info.plist"; path = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 		F8F276C729D5F5FC006F6A36 /* VideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewController.swift; sourceTree = "<group>"; };
+		F8F276D029D613F2006F6A36 /* VideoAssetListManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoAssetListManager.swift; sourceTree = "<group>"; };
+		F8F276D129D613F2006F6A36 /* VideoAssetPersistenceManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoAssetPersistenceManager.swift; sourceTree = "<group>"; };
+		F8F276EC29D614FB006F6A36 /* VideoAsset.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoAsset.swift; sourceTree = "<group>"; };
+		F8F276F529D61D5C006F6A36 /* VideosTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideosTableViewCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -292,6 +303,7 @@
 		F8302B8F297078F2003EC291 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				F8F276CF29D613AF006F6A36 /* VideoAssetManagers */,
 				F8302B8D297078EA003EC291 /* ApodViewModel.swift */,
 				F86428472971C661002ABA01 /* UtilViewModel.swift */,
 				F86428502971EE89002ABA01 /* Services */,
@@ -348,6 +360,25 @@
 				F824A30129A811E8000886A6 /* Assets.xcassets */,
 			);
 			path = "NRTestApp (tvOS)";
+			sourceTree = "<group>";
+		};
+		F8F276CF29D613AF006F6A36 /* VideoAssetManagers */ = {
+			isa = PBXGroup;
+			children = (
+				F8F276E529D614D0006F6A36 /* Models */,
+				F8F276F529D61D5C006F6A36 /* VideosTableViewCell.swift */,
+				F8F276D129D613F2006F6A36 /* VideoAssetPersistenceManager.swift */,
+				F8F276D029D613F2006F6A36 /* VideoAssetListManager.swift */,
+			);
+			path = VideoAssetManagers;
+			sourceTree = "<group>";
+		};
+		F8F276E529D614D0006F6A36 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F8F276EC29D614FB006F6A36 /* VideoAsset.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -573,6 +604,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F864284C2971DFA5002ABA01 /* triggerException.m in Sources */,
+				F8F276D629D613F2006F6A36 /* VideoAssetPersistenceManager.swift in Sources */,
 				F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */,
 				F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
@@ -590,6 +622,9 @@
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
+				F8F276FB29D734AC006F6A36 /* VideoAssetListManager.swift in Sources */,
+				F8F276F629D61D5C006F6A36 /* VideosTableViewCell.swift in Sources */,
+				F8F276FD29D7355E006F6A36 /* VideoAsset.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
@@ -624,10 +659,13 @@
 				F864293D2979CDFA002ABA01 /* ViewController.swift in Sources */,
 				F864293E2979CDFA002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864293F2979CDFA002ABA01 /* WebViewController.swift in Sources */,
+				F8F276EF29D614FB006F6A36 /* VideoAsset.swift in Sources */,
+				F8F276FC29D734AD006F6A36 /* VideoAssetListManager.swift in Sources */,
 				F86429402979CDFA002ABA01 /* ApodViewModel.swift in Sources */,
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
+				F8F276F729D61D5C006F6A36 /* VideosTableViewCell.swift in Sources */,
 				F8F276C929D5F5FC006F6A36 /* VideoViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

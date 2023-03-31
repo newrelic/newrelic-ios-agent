@@ -49,6 +49,9 @@ class ViewController: UIViewController {
         //Image View
         spaceImageView.contentMode = .scaleAspectFit
         spaceImageView.heightAnchor.constraint(lessThanOrEqualToConstant: 250.0).isActive = true
+        let constraint = spaceImageView.heightAnchor.constraint(equalToConstant: 250.0)
+        constraint.priority = UILayoutPriority(750)
+        constraint.isActive = true
         spaceImageView.widthAnchor.constraint(lessThanOrEqualToConstant: 250.0).isActive = true
         spaceImageView.heightAnchor.constraint(greaterThanOrEqualToConstant: 100.0).isActive = true
         spaceImageView.widthAnchor.constraint(greaterThanOrEqualToConstant: 100.0).isActive = true
@@ -112,7 +115,7 @@ class ViewController: UIViewController {
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in showWebViewAction()}))
 #endif
-        options.append(UtilOption(title: "Video", handler: { [self] in showVideoAction()}))
+        options.append(UtilOption(title: "Videos", handler: { [self] in showVideoAction()}))
 
         options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
 
