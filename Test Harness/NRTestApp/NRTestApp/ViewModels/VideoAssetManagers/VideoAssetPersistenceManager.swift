@@ -24,16 +24,15 @@ class VideoAssetPersistenceManager: NSObject {
         assetDownloadURLSession = AVAssetDownloadURLSession(configuration: backgroundConfiguration, assetDownloadDelegate: self, delegateQueue: OperationQueue.main)
     }
     
-    func downloadStream(for asset:  VideoAsset) {
+    func startAggregateAssetDownload(for asset:  VideoAsset) {
 
         let preferredMediaSelection = asset.urlAsset.preferredMediaSelection
 
-        guard let task =
-            assetDownloadURLSession.aggregateAssetDownloadTask(with: asset.urlAsset,
-                                                               mediaSelections: [preferredMediaSelection],
-                                                               assetTitle: asset.name,
-                                                               assetArtworkData: nil,
-                                                               options:
+        guard let task = assetDownloadURLSession.aggregateAssetDownloadTask(with: asset.urlAsset,
+                                                 mediaSelections: [preferredMediaSelection],
+                                                 assetTitle: asset.name,
+                                                 assetArtworkData: nil,
+                                                 options:
                 [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: 265_000]) else { return }
 
         task.taskDescription = asset.name
@@ -49,8 +48,7 @@ class VideoAssetPersistenceManager: NSObject {
         
         var bookmarkDataIsStale = false
         do {
-            let url = try URL(resolvingBookmarkData: localFileLocation,
-                                    bookmarkDataIsStale: &bookmarkDataIsStale)
+            let url = try URL(resolvingBookmarkData: localFileLocation, bookmarkDataIsStale: &bookmarkDataIsStale)
 
             if bookmarkDataIsStale {
                 fatalError("Bookmark is stale")
@@ -126,7 +124,7 @@ extension VideoAssetPersistenceManager: AVAssetDownloadDelegate {
                 fatalError("Downloading HLS streams is not supported in the simulator.")
                 
             default:
-                fatalError("An unexpected error occured \(error.domain)")
+                print("An unexpected error occured \(error.domain)")
             }
         } else {
             do {

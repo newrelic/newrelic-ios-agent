@@ -82,7 +82,7 @@ class VideoViewController: UITableViewController {
         switch downloadState {
         case .notDownloaded:
             alertAction = UIAlertAction(title: "Download", style: .default) { _ in
-                VideoAssetPersistenceManager.sharedManager.downloadStream(for: asset)
+                VideoAssetPersistenceManager.sharedManager.startAggregateAssetDownload(for: asset)
             }
 
         case .downloading,.downloaded:

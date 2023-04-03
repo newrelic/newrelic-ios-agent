@@ -1003,6 +1003,7 @@
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
+		F8F2770729DB1A03006F6A36 /* NRMAAVAggregateAssetDownloadTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F2770629DB1A03006F6A36 /* NRMAAVAggregateAssetDownloadTaskTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -1883,6 +1884,7 @@
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
+		F8F2770629DB1A03006F6A36 /* NRMAAVAggregateAssetDownloadTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMAAVAggregateAssetDownloadTaskTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2129,6 +2131,7 @@
 				0209ABFB24E7070800E45C90 /* NRURLSessionTaskOverrideWithDelegateTest.m */,
 				0209ABF924E7070800E45C90 /* NSURLSessionOverrideTest.m */,
 				2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */,
+				F8F2770629DB1A03006F6A36 /* NRMAAVAggregateAssetDownloadTaskTests.swift */,
 			);
 			path = "NSURLSession-Tests";
 			sourceTree = "<group>";
@@ -4135,6 +4138,7 @@
 				0209ACB024E7394500E45C90 /* NRMAUDIDManagerTest.m in Sources */,
 				0209ACB124E7394500E45C90 /* NRMAUUIDStoreTests.m in Sources */,
 				0209ABF024E706FA00E45C90 /* NRTraceMachineTests.m in Sources */,
+				F8F2770729DB1A03006F6A36 /* NRMAAVAggregateAssetDownloadTaskTests.swift in Sources */,
 				0209ACAF24E7394500E45C90 /* NRMAInstallMetricGeneratorTest.m in Sources */,
 				0209AC0124E7070900E45C90 /* NRURLSessionTaskOverrideTests.m in Sources */,
 				0209AC1024E7071500E45C90 /* NRMAAppTokenTest.m in Sources */,

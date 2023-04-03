@@ -17,11 +17,7 @@ class VideoAsset {
         self.name = name
         self.urlAsset = urlAsset
     }
-    
-    static func ==(lhs: VideoAsset, rhs: VideoAsset) -> Bool {
-        return (lhs.name == rhs.name) && (lhs.urlAsset == rhs.urlAsset)
-    }
-    
+
     enum DownloadState: String {
         case notDownloaded
         case downloading
