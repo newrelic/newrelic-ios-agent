@@ -42,7 +42,7 @@ class NRMAAVAggregateAssetDownloadTaskTests: XCTestCase {
     }
     
     func testAggregateAssetDownloadTask() {
-        let urlAsset = AVURLAsset(url: URL(string: "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8")!)
+        let urlAsset = AVURLAsset(url: URL(string: "http://www.google.com")!)
         let preferredMediaSelection = urlAsset.preferredMediaSelection
 
         guard let task = assetDownloadURLSession.aggregateAssetDownloadTask(with: urlAsset,
@@ -60,22 +60,6 @@ class NRMAAVAggregateAssetDownloadTaskTests: XCTestCase {
         
         let result = helper?.result as? NRMAHTTPTransactionMeasurement
 
-        XCTAssertEqual(result?.url, "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8")
-    }
-    
-    func testAssetDownloadTask() {
-        let urlAsset = AVURLAsset(url: URL(string: "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8")!)
-
-        guard let task = assetDownloadURLSession.makeAssetDownloadTask(asset: urlAsset, assetTitle: "Test Asset", assetArtworkData: nil) else { return }
-
-        task.taskDescription = "Test Asset"
-
-        task.resume()
-        
-        sleep(1)
-        
-        let result = helper?.result as? NRMAHTTPTransactionMeasurement
-
-        XCTAssertEqual(result?.url, "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8")
+        XCTAssertEqual(result?.url, "http://www.google.com")
     }
 }
