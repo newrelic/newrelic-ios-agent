@@ -116,7 +116,7 @@ NRJSON::JsonObject NewRelic::Connectivity::Payload::toJSON() {
     data[traceKey] = NRJSON::JsonValue(traceId);
     data[timeKey]  = NRJSON::JsonValue(timestamp);
 
-    if (accountId != trustedAccountKey) {
+    if (trustedAccountKey.length() > 0 && accountId != trustedAccountKey) {
         data[trustKey] = NRJSON::JsonValue(trustedAccountKey);
     }
 
