@@ -10,6 +10,8 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAJSON.h"
 #import "NewRelicAgentInternal.h"
+#import "NRMAHarvestController.h"
+#import "NRMAHarvesterConfiguration.h"
 
 NRLogger *_nr_logger = nil;
 
@@ -135,15 +137,17 @@ withMessage:(NSString *)message {
 
 - (NSData*) jsonDictionary:(NSDictionary*)message {
     NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
-
-    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
+    NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
+    NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
+    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
                       NRLogMessageLevelKey, [message objectForKey:NRLogMessageLevelKey],
                       NRLogMessageFileKey, [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       NRLogMessageLineNumberKey,[message objectForKey:NRLogMessageLineNumberKey],
                       NRLogMessageMethodKey,[[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       NRLogMessageTimestampKey,[message objectForKey:NRLogMessageTimestampKey],
                       NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
-                      @"sessionId", nrSessiondId];
+                      @"sessionId", nrSessiondId,
+                      @"appId", nrAppId];
 
     return [json dataUsingEncoding:NSUTF8StringEncoding];
 }
@@ -277,8 +281,18 @@ withMessage:(NSString *)message {
             req.HTTPMethod = @"POST";
 
             NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-                if (!error) {
+
+                BOOL errorCode = false;
+                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                    NSInteger responseCode = ((NSHTTPURLResponse*)response).statusCode;
+                    errorCode = responseCode >= 300;
+                }
+                if (!error && !errorCode) {
                     NRLOG_VERBOSE(@"Logs uploaded successfully.");
+                }
+                else if (errorCode) {
+                    NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
+
                 }
                 else {
                     NRLOG_ERROR(@"Logs failed to upload. error: %@", error);

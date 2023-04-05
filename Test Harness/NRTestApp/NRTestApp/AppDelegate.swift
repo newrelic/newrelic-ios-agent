@@ -33,13 +33,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
 
-        if let logURL = plistHelper.objectFor(key: "logAddress", plist: "NRAPI-Info") as? String, !logURL.isEmpty {
-            NRLogger.setLogURL(logURL)
-        }
-        else {
-            print("NRLogger API uploading disabled. No URL given.")
-        }
-
         // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
         guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
         
@@ -55,6 +48,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NewRelic.start(withApplicationToken:apiKey,
                            andCollectorAddress: collectorAddress,
                            andCrashCollectorAddress: crashCollectorAddress)
+        }
+
+        // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
+        if let logURL = plistHelper.objectFor(key: "logAddress", plist: "NRAPI-Info") as? String, !logURL.isEmpty {
+            NRLogger.setLogURL(logURL)
+        }
+        else {
+            print("NRLogger API uploading disabled. No URL given.")
         }
 
         // These must be called after NewRelic.start(withApplicationToken:)

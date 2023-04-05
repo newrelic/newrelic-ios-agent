@@ -12,6 +12,7 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionhandlerConstants.h"
 #import "NRMAAppToken.h"
+#import "NRLogger.h"
 
 static NSString* __NRMA__customAppVersionString = nil;
 static NSString* __NRMA__customAppBuildString = nil;
@@ -46,6 +47,7 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
 
         [self setCollectorHost:collectorHost];
         [self setCrashCollectorHost:crashHost];
+        [self setLoggingURL];
 
         _useSSL = YES;
     }
@@ -85,6 +87,28 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
             _crashCollectorHost = kNRMA_DEFAULT_CRASH_COLLECTOR_HOST;
         }
     }
+}
+// EU      https://log-api.eu.newrelic.com/log/v1?Api-Key=*
+// vs
+// Staging https://staging-log-api.newrelic.com/log/v1?Api-Key=*
+// vs
+// Prod    https://log-api.newrelic.com/log/v1?Api-Key=*
+
+- (void) setLoggingURL {
+    if (self.applicationToken.regionCode.length) {
+        _loggingURL = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_LOGGING_HOST,self.applicationToken.regionCode];
+    }
+    else if ([self.collectorHost isEqualToString:@"staging-mobile-collector.newrelic.com"]) {
+        _loggingURL = kNRMA_STAGING_LOGGING_HOST;
+    }
+    else {
+        _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
+    }
+    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1?Api-Key=%@",self.applicationToken.value];
+
+    NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
+
+    [NRLogger setLogURL:logURL];
 }
 
 + (NRMAConnectInformation*) connectionInformation
