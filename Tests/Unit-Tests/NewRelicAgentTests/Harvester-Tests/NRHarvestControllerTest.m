@@ -88,9 +88,11 @@
 }
 - (void) testVerifyCollectorTimestamp
 {
+    [[NRMAHarvestController harvestController] harvester].connection.serverTimestamp = 1234;
+
     [[[NRMAHarvestController harvestController] harvester] execute];
     NSURLRequest* request = [[[[NRMAHarvestController harvestController] harvester] connection] createDataPost:@"test"];
-    
+
     NSString* timestampHeader = request.allHTTPHeaderFields[kCONNECT_TIME_HEADER];
     XCTAssertNotNil(timestampHeader, @"");
 }

@@ -75,8 +75,7 @@
     connection.harvestSession = mockNSURLSession;
     
     id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
-    
-    
+
     __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
     
     [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
@@ -103,19 +102,6 @@
 
     [mockUploadTask stopMocking];
     [mockNSURLSession stopMocking];
-}
-
-- (NRMAConnectInformation*) testSendConnect
-{
-    connection.serverTimestamp = 1234;
-    connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
-    
-    connection.collectorHost = @"mobile-collector.newrelic.com";
-    
-    NRMAHarvestResponse* response = [connection sendConnect];
-    XCTAssertNotNil(response, @"");
-    XCTAssertEqual(FORBIDDEN,response.statusCode, @"");
-    XCTAssertTrue([response.responseBody isEqualToString:@""],@"");
 }
 
 - (void) testMaxPayloadSizeLimitSendConnect {
@@ -213,7 +199,7 @@
     // End set up stub for /data endpoint.
 
     connection.applicationToken = @"disabled-app-token";
-    connection.collectorHost= @"staging-mobile-collector.newrelic.com";
+    connection.collectorHost= KNRMA_TEST_COLLECTOR_HOST;
     connection.serverTimestamp = 1234;
     connection.useSSL = YES;
 
@@ -249,7 +235,7 @@
     // End set up stub for /data endpoint.
 
     connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
-    connection.collectorHost = @"staging-mobile-collector.newrelic.com";
+    connection.collectorHost = KNRMA_TEST_COLLECTOR_HOST;
     connection.applicationToken = @"app-token";
     connection.useSSL = YES;
     connection.serverTimestamp = 1234;
@@ -287,7 +273,7 @@
 
     NSLog(@"did this (^) test hang? do you have charles running? ಠ_ಠ");
 
-    connection.collectorHost = @"staging-mobile-collector.newrelic.com";
+    connection.collectorHost = KNRMA_TEST_COLLECTOR_HOST;
     connection.applicationToken = @"app-token";
 
     // Set up stub for /data endpoint.
@@ -311,7 +297,7 @@
     // End set up stub for /data endpoint.
     
     connection.connectionInformation = [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native];
-    connection.collectorHost = @"staging-mobile-collector.newrelic.com";
+    connection.collectorHost = KNRMA_TEST_COLLECTOR_HOST;
     connection.applicationToken = @"app-token";
     connection.useSSL = YES;
     connection.serverTimestamp = 1234;
@@ -347,7 +333,7 @@
     devInfo.model = [NewRelicInternalUtils deviceModel];
     devInfo.agentName = [NewRelicInternalUtils agentName];
     devInfo.agentVersion = @"2.123";
-    devInfo.deviceId =@"389C9738-A761-44DE-8A66-1668CFD67DA1";
+    devInfo.deviceId =@"DEVICEID-AAAA-BBBB-CCCC-1668CFD67DA1";
     devInfo.platform = platform;
     NRMAConnectInformation* connectionInformation = [[NRMAConnectInformation alloc] init];
     

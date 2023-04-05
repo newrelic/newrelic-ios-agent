@@ -8,4 +8,6 @@
 @interface NRMAUDIDManager : NSObject
 + (NSString*) deviceIdentifier;
 + (NSString*) UDID;
++ (void) deleteStoredID;
+
 @end

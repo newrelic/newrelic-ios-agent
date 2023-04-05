@@ -109,6 +109,9 @@ typedef NSString NRMetricUnit;
 #define kNRAgentHealthPrefix             @"Supportability/AgentHealth"
 #define kNRMASessionStartMetric          @"Session/Start"
 
+// NativePlatform, Platform,
+#define kNRMAStopAgentMetricFormatString @"Supportability/Mobile/%@/%@/API/shutdown"
+
 #define kNRMAUUIDOverridden              @"Supportability/Mobile/iOS/UUID/Overridden"
 
 // Defines Format string where 4 arguments are NativePlatform, Platform, Destination and DestinationSubArea.
