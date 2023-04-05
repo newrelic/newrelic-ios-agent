@@ -14,10 +14,10 @@ else
     ARCHITECTURE=${CURRENT_ARCH}
 fi
 
-LCOV_PATH="${scripts}/lcov-1.14/bin"
+LCOV_PATH="$( which lcov )"
 OBJ_DIR="${OBJECT_FILE_DIR_normal}/${ARCHITECTURE}"
 
 # Fix for the new LLVM-COV that requires gcov to have a -v parameter
 LCOV() {
-    "${LCOV_PATH}/lcov" "$@" --gcov-tool "${scripts}/llvm-cov-wrapper.sh"
+    "${LCOV_PATH}" "$@" --gcov-tool "${scripts}/llvm-cov-wrapper.sh"
 }

@@ -264,6 +264,12 @@
     [defaults synchronize];
 }
 
+- (void) clearStoredApplicationIdentifier {
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    [defaults removeObjectForKey:kNRMAApplicationIdentifierKey];
+    [defaults synchronize];
+}
+
 - (NSString*) crossProcessID {
     return connection.crossProcessID;
 }

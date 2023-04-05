@@ -8,8 +8,6 @@
 	<string></string>
 	<key>logAddress</key>
 	<string></string>
-	<key>isStaging</key>
-	<false/>
 	<key>NRAPIKey</key>
 	<string></string>
 </dict>
