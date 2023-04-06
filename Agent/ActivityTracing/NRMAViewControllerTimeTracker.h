@@ -11,8 +11,11 @@
 #import "NRConstants.h"
 
 @interface NRMAViewControllerTimeTracker : NSObject
+- (id) initWithName:(NSString*) string;
 
-+ (NRTimer*) viewControllerShowingTimer:(UIViewController*) vc;
-+ (void) viewControllerShowing:(UIViewController*)vc setTimer:(NRTimer*)timer;
++ (NRMAViewControllerTimeTracker*) getViewControllerShowingTracker:(UIViewController*) vc;
++ (void) viewControllerShowing:(UIViewController*)vc setTracker:(NRMAViewControllerTimeTracker*)tracker;
++ (void) removeTrackerFromViewController:(UIViewController*)vc;
 
+- (void) recordViewControllerViewTimeMetric;
 @end

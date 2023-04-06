@@ -1070,13 +1070,17 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
         #endif
     }
     
-    if ([NSStringFromSelector(selector) isEqualToString:@"viewDidAppear:"]) {
-        [NRMAViewControllerTimeTracker viewControllerShowing:self setTimer:[[NRTimer alloc]init]];
+    if ([NSStringFromClass(actingClass) isEqualToString:@"UIViewController"] && [NSStringFromSelector(selector) isEqualToString:@"viewDidAppear:"]) {
+        [NRMAViewControllerTimeTracker viewControllerShowing:self setTracker:[[NRMAViewControllerTimeTracker alloc]initWithName:NSStringFromClass([self class])]];
     }
 
-    if ([NSStringFromSelector(selector) isEqualToString:@"viewDidDisappear:"]) {
-        NRTimer *timer = [NRMAViewControllerTimeTracker viewControllerShowingTimer:self];
-        [timer stopTimer];
+    if ([NSStringFromClass(actingClass) isEqualToString:@"UIViewController"] && [NSStringFromSelector(selector) isEqualToString:@"viewDidDisappear:"]) {
+        NRMAViewControllerTimeTracker *tracker = [NRMAViewControllerTimeTracker getViewControllerShowingTracker:self];
+        if(tracker != Nil){
+            [tracker recordViewControllerViewTimeMetric];
+            [NRMAViewControllerTimeTracker removeTrackerFromViewController:self];
+            [tracker release];
+        }
     }
 
     return method_getImplementation(method);
