@@ -26,7 +26,6 @@ class NRMAViewControllerTimeTrackerTests: XCTestCase {
     var helper:NRMAMeasurementConsumerHelper?
     
     override func setUp() {
-        NRMAMethodProfiler.resetskipInstrumentationOnceToken()
         NRMAMethodProfiler().startMethodReplacement()
 
         helper = NRMAMeasurementConsumerHelper.init(type: NRMAMT_NamedValue)
@@ -37,6 +36,7 @@ class NRMAViewControllerTimeTrackerTests: XCTestCase {
     }
     
     override func tearDown() {
+        NRMAMethodProfiler.resetskipInstrumentationOnceToken()
         NRMAMeasurements.removeMeasurementConsumer(helper)
         helper = nil;
 
@@ -45,27 +45,30 @@ class NRMAViewControllerTimeTrackerTests: XCTestCase {
         super.tearDown()
     }
     
-    func testBackgroundApp() {
-        sleep(10)
-        XCTAssertNoThrow(vc.viewDidAppear(false))
+    // This test doesn't test much but is needed to get the NRMAMethodProfiler to work right. `\_(*-*)_/`
+    func testANothing() {
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
-        lookForViewTimeMetric()
 
-        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
-        XCTAssertNoThrow(vc.viewDidDisappear(false))
-        lookForViewTimeMetric()
-        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
-        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
     }
     
     func testViewControllerTimeMetric() {
-        sleep(5)
+        XCTAssertNoThrow(vc.viewDidAppear(false))
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        lookForViewTimeMetric()
+
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+        XCTAssertNoThrow(vc.viewDidDisappear(false))
+        lookForViewTimeMetric()
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+        
         XCTAssertNoThrow(vc.viewDidAppear(false))
 
         XCTAssertNoThrow(vc.viewDidDisappear(false))
         lookForViewTimeMetric()
     }
-    
+
     func lookForViewTimeMetric() {
         NRMATaskQueue.synchronousDequeue()
         let fullMetricName = "Mobile/Activity/Name/View_Time " + FakeViewController.description()
@@ -80,6 +83,7 @@ class NRMAViewControllerTimeTrackerTests: XCTestCase {
         
         XCTAssertNotNil(foundMeasurement)
         XCTAssertEqual(foundMeasurement?.name(), fullMetricName);
+        helper?.consumedMeasurements.removeAllObjects()
     }
     
 }
