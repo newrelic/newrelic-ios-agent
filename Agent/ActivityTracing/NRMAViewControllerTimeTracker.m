@@ -6,10 +6,11 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
 #import "NRMAViewControllerTimeTracker.h"
 #import "NRMAMeasurements.h"
 #import "NRMAAssociate.h"
+#import "NRTimer.h"
+#import "NRConstants.h"
 
 #define kNRUIViewControllerTimerAssocObject @"com.NewRelic.UIViewController.TimeTracker"
 

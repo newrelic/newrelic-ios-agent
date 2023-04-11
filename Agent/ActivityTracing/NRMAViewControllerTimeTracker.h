@@ -7,8 +7,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "NRTimer.h"
-#import "NRConstants.h"
 
 @interface NRMAViewControllerTimeTracker : NSObject
 - (id) initWithName:(NSString*) string;

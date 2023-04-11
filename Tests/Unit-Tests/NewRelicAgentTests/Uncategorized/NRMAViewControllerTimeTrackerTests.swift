@@ -6,7 +6,6 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
-import Foundation
 import XCTest
 import UIKit
 
