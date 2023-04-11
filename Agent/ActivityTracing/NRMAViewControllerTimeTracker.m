@@ -75,11 +75,9 @@
         return;
     }
 
-    NRTimer* tempTimer = self.timer;
-    self.timer = nil;
-    [tempTimer stopTimer];
+    [self.timer stopTimer];
 
-    [NRMAMeasurements recordMetric:[[NRMAMetric alloc] initWithName:[[NSString alloc] initWithFormat:@"Mobile/Activity/Name/View_Time %@", name] value:[[NSNumber alloc]initWithDouble:tempTimer.timeElapsedInSeconds] scope:name produceUnscoped:YES additionalValue:nil]];
+    [NRMAMeasurements recordMetric:[[NRMAMetric alloc] initWithName:[[NSString alloc] initWithFormat:@"Mobile/Activity/Name/View_Time %@", name] value:[[NSNumber alloc]initWithDouble:self.timer.timeElapsedInSeconds] scope:name produceUnscoped:YES additionalValue:nil]];
 }
 
 + (NRMAViewControllerTimeTracker*) getViewControllerShowingTracker:(UIViewController*) vc

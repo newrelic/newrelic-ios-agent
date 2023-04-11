@@ -63,8 +63,8 @@
         @synchronized(harvestAwareObjects) {
             [harvestAwareObjects addObject:harvestAwareObject];
         }
-        if (harvester) {
-            [harvester addHarvestAwareObject:harvestAwareObject];
+        if (self->harvester) {
+            [self->harvester addHarvestAwareObject:harvestAwareObject];
         }
 
     }] addHarvestAwareObject:OCMOCK_ANY];
