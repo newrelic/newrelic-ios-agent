@@ -20,57 +20,77 @@ class FakeViewController: UIViewController {
     }
 }
 
+// These tests will not run on there own, they need the method profiling that gets setup in earlier tests.
 class NRMAViewControllerTimeTrackerTests: XCTestCase {
-    let vc = FakeViewController()
     var helper:NRMAMeasurementConsumerHelper?
+    var fullMetricName = "Mobile/Activity/Name/View_Time " + FakeViewController.description()
     
     override func setUp() {
-        NRMAMethodProfiler().startMethodReplacement()
-
         helper = NRMAMeasurementConsumerHelper.init(type: NRMAMT_NamedValue)
 
         NRMAMeasurements.initializeMeasurements()
         NRMAMeasurements.addMeasurementConsumer(helper)
+
         super.setUp()
     }
     
     override func tearDown() {
-        NRMAMethodProfiler.resetskipInstrumentationOnceToken()
         NRMAMeasurements.removeMeasurementConsumer(helper)
         helper = nil;
 
         NRMAMeasurements.shutdown()
-        
+
         super.tearDown()
     }
     
-    // This test doesn't test much but is needed to get the NRMAMethodProfiler to work right. `\_(*-*)_/`
-    func testANothing() {
-        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
-        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+    func testViewControllerTimeMetricToBackground() {
+        let vc = FakeViewController()
 
+        vc.beginAppearanceTransition(true, animated: false)
+        vc.endAppearanceTransition()
+        
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        
+        let foundMeasurement = lookForViewTimeMetric()
+        XCTAssertNotNil(foundMeasurement)
+        XCTAssertEqual(foundMeasurement?.name(), fullMetricName);
     }
     
-    func testViewControllerTimeMetric() {
-        XCTAssertNoThrow(vc.viewDidAppear(false))
-        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
-        lookForViewTimeMetric()
+    func testViewControllerTimeMetricFromBackgroundToForground() {
+        let vc = FakeViewController()
 
-        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
-        XCTAssertNoThrow(vc.viewDidDisappear(false))
-        lookForViewTimeMetric()
-        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
-        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+        vc.beginAppearanceTransition(true, animated: false)
+        vc.endAppearanceTransition()
         
-        XCTAssertNoThrow(vc.viewDidAppear(false))
+        NotificationCenter.default.post(name: UIApplication.didEnterBackgroundNotification, object: nil)
+        
+        var foundMeasurement = lookForViewTimeMetric()
+        XCTAssertNotNil(foundMeasurement)
+        XCTAssertEqual(foundMeasurement?.name(), fullMetricName);
+        
+        NotificationCenter.default.post(name: UIApplication.willEnterForegroundNotification, object: nil)
+        vc.viewDidDisappear(false)
+        
+        foundMeasurement = lookForViewTimeMetric()
+        XCTAssertNotNil(foundMeasurement)
+        XCTAssertEqual(foundMeasurement?.name(), fullMetricName);
+    }
+    
+    func testViewControllerTimeMetricNormal() {
+        let vc = FakeViewController()
+        
+        vc.beginAppearanceTransition(true, animated: false)
+        vc.endAppearanceTransition()
 
-        XCTAssertNoThrow(vc.viewDidDisappear(false))
-        lookForViewTimeMetric()
+        vc.viewDidDisappear(false)
+        
+        let foundMeasurement = lookForViewTimeMetric()
+        XCTAssertNotNil(foundMeasurement)
+        XCTAssertEqual(foundMeasurement?.name(), fullMetricName);
     }
 
-    func lookForViewTimeMetric() {
+    func lookForViewTimeMetric() -> NRMANamedValueMeasurement? {
         NRMATaskQueue.synchronousDequeue()
-        let fullMetricName = "Mobile/Activity/Name/View_Time " + FakeViewController.description()
         var foundMeasurement: NRMANamedValueMeasurement?
         
         for case let measurement as NRMANamedValueMeasurement in helper!.consumedMeasurements {
@@ -79,10 +99,7 @@ class NRMAViewControllerTimeTrackerTests: XCTestCase {
                 break
             }
         }
-        
-        XCTAssertNotNil(foundMeasurement)
-        XCTAssertEqual(foundMeasurement?.name(), fullMetricName);
-        helper?.consumedMeasurements.removeAllObjects()
+        return foundMeasurement
     }
     
 }
