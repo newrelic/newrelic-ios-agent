@@ -1,4 +1,4 @@
-[![Community Plus header](https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png)](https://opensource.newrelic.com/oss-category/#community-plus)
+<a href="https://opensource.newrelic.com/oss-category/#community-plus"><picture><source media="(prefers-color-scheme: dark)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/dark/Community_Plus.png"><source media="(prefers-color-scheme: light)" srcset="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"><img alt="New Relic Open Source community plus project banner." src="https://github.com/newrelic/opensource-website/raw/main/src/images/categories/Community_Plus.png"></picture></a>
 
 # New Relic iOS Agent
 New Relic's mobile monitoring capabilities help you gain deeper visibility into how to analyze your iOS application performance and troubleshoot crashes. You can also examine HTTP and other network performance for unexpected lag, which will in turn help you collaborate more efficiently with your backend teams.
@@ -74,7 +74,8 @@ The run-symbol-tool Run script must be added to your app's Xcode project build p
 - Option 1: Run the Unit Tests using Xcode by selecting Agent-iOS scheme and Product -> Test
 - Option 2: Running tests using [Fastlane](https://docs.fastlane.tools/)
     - `bundle exec fastlane runIOSTests`
-        - Run above command to run tests on iOS. Upon completion, code coverage will be generated.
+        - Run above command to run tests on iOS. Upon completion, code coverage will be generated. 
+            - run `brew install lcov` to add lcov for code coverage.
 
 ## Links
 - [newrelic-ios-agent-spm](https://github.com/newrelic/newrelic-ios-agent-spm) Released Swift packages are published here. 

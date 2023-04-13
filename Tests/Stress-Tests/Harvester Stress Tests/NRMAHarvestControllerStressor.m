@@ -14,6 +14,9 @@
 #import "OCMock/OCMock.h"
 #import "NRAgentTestBase.h"
 #import "NRMAAppToken.h"
+
+#define TEST_COLLECTOR_HOST @"staging-mobile-collector.newrelic.com"
+
 @interface NRMAHarvestControllerStressor : NRMAAgentTestBase <NRMAHarvestAware>
 {
     NRMAAgentConfiguration* config;
@@ -32,7 +35,7 @@
     [super setUp];
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
     self.semaphore = dispatch_semaphore_create(procCount*kNRMASemaphoreMultiplier);
-    config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"AAd75d4d5a3045711bd5ae829d0f043b1fbf893152"] collectorAddress:@"staging-mobile-collector.newrelic.com" crashAddress:nil];
+    config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"APP_TOKEN"] collectorAddress:TEST_COLLECTOR_HOST crashAddress:nil];
     
     activity = [[NRMAHarvestableActivity alloc] init];
     activity.childSegments = [[NSMutableArray alloc] init];

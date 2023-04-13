@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F824A30229A811E8000886A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F824A30129A811E8000886A6 /* Assets.xcassets */; };
+		F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */; };
+		F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */; };
+		F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */; };
+		F824A54E29BBB23D000886A6 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */; };
+		F825FB0929CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */; };
 		F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302AF8296F5EFA003EC291 /* AppDelegate.swift */; };
 		F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302AFA296F5EFA003EC291 /* SceneDelegate.swift */; };
 		F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302AFC296F5EFA003EC291 /* ViewController.swift */; };
@@ -29,7 +35,6 @@
 		F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428472971C661002ABA01 /* UtilViewModel.swift */; };
 		F864284C2971DFA5002ABA01 /* triggerException.m in Sources */ = {isa = PBXBuildFile; fileRef = F864284B2971DFA5002ABA01 /* triggerException.m */; };
 		F864284F2971E254002ABA01 /* WebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864284E2971E254002ABA01 /* WebViewController.swift */; };
-		F864286129774E2D002ABA01 /* NRAPIInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = F864286029774E2D002ABA01 /* NRAPIInfo.plist */; };
 		F864286329775023002ABA01 /* plistHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F864286229775023002ABA01 /* plistHelper.swift */; };
 		F86428F72979CDB0002ABA01 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F86428F52979CDB0002ABA01 /* LaunchScreen.storyboard */; };
 		F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B982970ADC1003EC291 /* UIImageView.swift */; };
@@ -52,7 +57,6 @@
 		F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9329708027003EC291 /* ApodResult.swift */; };
 		F86429442979CE31002ABA01 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; };
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		F8B6F22F298C51D100D09B30 /* NRAPIInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = F864286029774E2D002ABA01 /* NRAPIInfo.plist */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -127,6 +131,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F824A30129A811E8000886A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
+		F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageFullScreen.swift; sourceTree = "<group>"; };
+		F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRAPI-Info.plist"; sourceTree = SOURCE_ROOT; };
+		F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRTestAppFakeNavigationAction.swift; sourceTree = "<group>"; };
 		F8302AF5296F5EFA003EC291 /* NRTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NRTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8302AF8296F5EFA003EC291 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F8302AFA296F5EFA003EC291 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -153,11 +162,10 @@
 		F864284B2971DFA5002ABA01 /* triggerException.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = triggerException.m; sourceTree = "<group>"; };
 		F864284D2971DFC9002ABA01 /* triggerException.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = triggerException.h; sourceTree = "<group>"; };
 		F864284E2971E254002ABA01 /* WebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewController.swift; sourceTree = "<group>"; };
-		F864286029774E2D002ABA01 /* NRAPIInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = NRAPIInfo.plist; sourceTree = "<group>"; };
 		F864286229775023002ABA01 /* plistHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = plistHelper.swift; sourceTree = "<group>"; };
 		F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (tvOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F86428F62979CDB0002ABA01 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
+		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestApp--tvOS--Info.plist"; path = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -221,7 +229,7 @@
 				F8302B01296F5EFB003EC291 /* Assets.xcassets */,
 				F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */,
 				F8302B06296F5EFB003EC291 /* Info.plist */,
-				F864286029774E2D002ABA01 /* NRAPIInfo.plist */,
+				F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */,
 			);
 			path = NRTestApp;
 			sourceTree = "<group>";
@@ -231,6 +239,7 @@
 			children = (
 				F8302B0F296F5EFB003EC291 /* NRTestAppTests.swift */,
 				F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */,
+				F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */,
 			);
 			path = NRTestAppTests;
 			sourceTree = "<group>";
@@ -268,6 +277,7 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
@@ -307,6 +317,7 @@
 			isa = PBXGroup;
 			children = (
 				F8302B972970ADA7003EC291 /* Extensions */,
+				F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */,
 				F8302B95297093FF003EC291 /* Variable.swift */,
 				F8302B9C2970B3E0003EC291 /* ApodURL.swift */,
 				F864286229775023002ABA01 /* plistHelper.swift */,
@@ -330,6 +341,7 @@
 			children = (
 				F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */,
 				F86428F52979CDB0002ABA01 /* LaunchScreen.storyboard */,
+				F824A30129A811E8000886A6 /* Assets.xcassets */,
 			);
 			path = "NRTestApp (tvOS)";
 			sourceTree = "<group>";
@@ -485,9 +497,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
-				F864286129774E2D002ABA01 /* NRAPIInfo.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -502,7 +514,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F8B6F22F298C51D100D09B30 /* NRAPIInfo.plist in Resources */,
+				F824A54E29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
+				F824A30229A811E8000886A6 /* Assets.xcassets in Resources */,
 				F86428F72979CDB0002ABA01 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -527,7 +540,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "SCRIPT=`/usr/bin/find \"${SRCROOT}/../..\" -name run-symbol-tool | head -n 1`\n\nif [ -z \"${SCRIPT}\"]; then\n ARTIFACT_DIR=\"${BUILD_DIR%Build/*}SourcePackages/artifacts\"\n SCRIPT=`/usr/bin/find \"${ARTIFACT_DIR}\" -name run-symbol-tool | head -n 1`\nfi\n\n/bin/sh \"${SCRIPT}\" \"APP_TOKEN\"\n";
+			shellScript = "SCRIPT=`/usr/bin/find \"${SRCROOT}/../..\" -name run-symbol-tool | head -n 1`\n/bin/sh \"${SCRIPT}\" \"APP_TOKEN\"\n\n";
 		};
 		F8B6F230298C51EB00D09B30 /* Run New Relic dSYM Upload Tool */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -546,7 +559,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "SCRIPT=`/usr/bin/find \"${SRCROOT}/../..\" -name run-symbol-tool | head -n 1`\n\nif [ -z \"${SCRIPT}\"]; then\n ARTIFACT_DIR=\"${BUILD_DIR%Build/*}SourcePackages/artifacts\"\n SCRIPT=`/usr/bin/find \"${ARTIFACT_DIR}\" -name run-symbol-tool | head -n 1`\nfi\n\n/bin/sh \"${SCRIPT}\" \"APP_TOKEN\"\n";
+			shellScript = "SCRIPT=`/usr/bin/find \"${SRCROOT}/../..\" -name run-symbol-tool | head -n 1`\n/bin/sh \"${SCRIPT}\" \"APP_TOKEN\"\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -571,7 +584,9 @@
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
+				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
+				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -581,6 +596,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F8302B10296F5EFB003EC291 /* NRTestAppTests.swift in Sources */,
+				F825FB0929CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift in Sources */,
 				F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -767,7 +783,7 @@
 				INFOPLIST_FILE = NRTestApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -777,6 +793,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "NRTestApp/Helpers/NRTestApp-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -798,7 +815,7 @@
 				INFOPLIST_FILE = NRTestApp/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -864,7 +881,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "NRTestApp--tvOS--Info.plist";
+				INFOPLIST_FILE = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist";
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -892,7 +909,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "NRTestApp--tvOS--Info.plist";
+				INFOPLIST_FILE = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist";
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
 				LD_RUNPATH_SEARCH_PATHS = (
