@@ -17,8 +17,8 @@ extension Date {
     
     private static func randomBetween(start: Date, end: Date) -> Date {
         guard end > start else {return Date()}
-        var date1 = start
-        var date2 = end
+        let date1 = start
+        let date2 = end
 
         let span = TimeInterval.random(in: date1.timeIntervalSinceNow...date2.timeIntervalSinceNow)
         return Date(timeIntervalSinceNow: span)

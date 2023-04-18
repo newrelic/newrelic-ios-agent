@@ -57,6 +57,10 @@ typedef enum {
 - (NSString*) crossProcessID;
 - (NRMAHarvesterConfiguration*) harvesterConfiguration;
 
+- (void) clearStoredConnectionInformation;
+- (void) clearStoredHarvesterConfiguration;
+- (void) clearStoredApplicationIdentifier;
+
 // Harvest Aware.
 - (NSArray*) getHarvestAwareList;
 - (void) addHarvestAwareObject:(id<NRMAHarvestAware>)harvestAware;

@@ -12,8 +12,7 @@ struct ApodService {
     func getApod(nasaURL: URL, completion: @escaping (Result<ApodResult, Error>) -> Void) {
         URLSession.shared.dataTask(with: nasaURL) { data, _, error in
             guard error == nil else {
-                completion(.failure(error!))
-                return
+                return completion(.failure(error!))
             }
             do {
                 let decoded = try JSONDecoder().decode(ApodResult.self, from: data!)

@@ -19,7 +19,7 @@ code, the source code can be found at [https://github.com/newrelic/newrelic-ios-
 * [XcodeCoverage 1.4.0](#xcode-coverage)
 * [lcov-to-cobertura-xml 2.0.2](#lcov-to-cobertura-xml)
 
-* [certifi v2021.10.08](#certifi)
+* [certifi v2021.10.08](#lcov)
 * [chardet 4.0.0](#chardet)
 * [idna 13.0.0](#idna)
 * [requests 2.27.1](#requests)

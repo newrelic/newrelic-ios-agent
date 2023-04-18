@@ -125,4 +125,8 @@ static __strong NSString* __UDID;
     }
 }
 
++ (void) deleteStoredID {
+    [[self identifierForVendorStore] removeStore];
+}
+
 @end

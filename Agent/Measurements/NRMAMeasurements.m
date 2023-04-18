@@ -69,6 +69,14 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
     }
 }
 
++ (void) drain {
+    @synchronized(__NRMAInitializationMutex) {
+        [__engine.httpTransactionMeasurementProducer drainMeasurements];
+        [__engine.activityTraceMeasurementProducer drainMeasurements];
+        [__engine.summaryMeasurementProducer drainMeasurements];
+        [__engine.machineMeasurementsProducer drainMeasurements];
+    }
+}
 
 + (void) shutdown
 {

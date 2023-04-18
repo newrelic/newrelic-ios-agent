@@ -71,6 +71,9 @@
 
     harvester = [[NRMAHarvester alloc] init];
     [harvester setAgentConfiguration:agentConfig];
+    
+    id mockNSURLSession = [self makeMockURLSession];
+    harvester.connection.harvestSession = mockNSURLSession;
 
     harvestAwareHelper = [[NRMAHarvestAwareHelper alloc] init];
     [harvester addHarvestAwareObject:harvestAwareHelper];
@@ -80,7 +83,8 @@
 {
     [super tearDown];
 }
-- (void) testHarvestConfiguration
+
+- (NRMAHarvesterConfiguration*) makeHarvestConfig
 {
     NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] init];
     config.application_token = kNRMA_ENABLED_STAGING_APP_TOKEN;
@@ -96,9 +100,62 @@
     config.response_body_limit = 2048;
     config.server_timestamp = 1379548800;
     config.stack_trace_limit = 100;
-    config.account_id = 340262;
-    config.application_id = 257421;
+    config.account_id = 190;
+    config.application_id = 39484;
     config.encoding_key = @"encoding_key";
+    
+    return config;
+}
+
+- (id) makeMockURLSession {
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+        
+    NSData *data = [NSJSONSerialization dataWithJSONObject:[config asDictionary] options:NSJSONWritingPrettyPrinted error:nil];
+    
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler(data, bresponse, nil);
+    }] resume];
+    
+    return mockNSURLSession;
+}
+
+- (id) makeMockURLSessionResponseError {
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:403 HTTPVersion:@"1.1" headerFields:nil];
+    
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        NSError *error = [NSError errorWithDomain:@"" code:403 userInfo:@{@"Error reason": @"Invalid Input"}];
+        completionHandler([@"DISABLE_NEW_RELIC" dataUsingEncoding:NSUTF8StringEncoding], bresponse, error);
+    }] resume];
+    
+    return mockNSURLSession;
+}
+
+- (void) testHarvestConfiguration
+{
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
     
     XCTAssertTrue([config isEqual:config], @"isEqual is correct");
     XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
@@ -122,6 +179,77 @@
     XCTAssertNotNil(configuration, @"Trace configuration is nil");
 
     XCTAssertEqualObjects(@"/*", configuration.activityTraceNamePattern, @"Trace name pattern is not correct");
+}
+
+- (void) testBadStoredDataRecover
+{
+    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+    id mockNSURLSession = [self makeMockURLSession];
+    
+    newHarvester.connection.harvestSession = mockNSURLSession;
+    
+    id dataMock = [OCMockObject partialMockForObject:[newHarvester harvestData]];
+    [[dataMock expect] clear];
+    id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
+    [harvesterMock setAgentConfiguration:agentConfig];
+
+    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
+
+    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
+    [[[connectionMock stub] andForwardToRealObject] sendConnect];
+
+    [harvesterMock execute];
+    [harvesterMock execute];
+    [harvesterMock verify];
+
+    [dataMock verify]; //verify the harvest data is cleared after a successful harvest
+    [connectionMock stopMocking];
+    [harvesterMock stopMocking];
+    [dataMock stopMocking];
+}
+
+- (void) testStoredData
+{
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    id mockNSURLSession = [self makeMockURLSession];
+
+    XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
+    [harvester execute];
+
+    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+    
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
+    [harvester execute];
+
+    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
+
+    //at this point there should be stored data
+    XCTAssertNotNil([defaults objectForKey:kNRMAHarvesterConfigurationStoreKey], @"this should have been set");
+    
+    NRMAHarvester *newHarvester = [[NRMAHarvester alloc] init];
+    
+    newHarvester.connection.harvestSession = mockNSURLSession;
+    [newHarvester setAgentConfiguration:agentConfig];
+
+    id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
+    [harvesterMock setAgentConfiguration:agentConfig];
+
+    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
+    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_CONNECTED];
+
+    id connectionMock = [OCMockObject niceMockForClass:[NRMAHarvesterConnection class]];
+    [[connectionMock reject] sendConnect];
+
+    [harvesterMock execute];
+    [harvesterMock execute];
+    [harvesterMock verify];
+    [connectionMock verify];
+
+    XCTAssertEqual([harvesterMock currentState], NRMA_HARVEST_CONNECTED, @"we should be connected with stored credentials");
+
+    [connectionMock  stopMocking];
+    [harvesterMock stopMocking];
 }
 
 // TODO: Reenable/rewrite these tests related to Harvester/Stored Data. JIRA: NR-96516
@@ -247,83 +375,75 @@
     XCTAssertTrue([harvester fetchHarvestConfiguration].isValid, @"Expected a valid default configuration");
 }
 
-// TODO: Reenable these harvester related tests. JIRA: NR-96516
-//-(void) testMigrationFromV3toV4ConnectEndpoint {
-//
-//    NRMAHarvester* aHarvester = [[NRMAHarvester alloc] init];
-//    [aHarvester setAgentConfiguration:agentConfig];
-//
-//    // ensure there is no lingering harvest configuration
-//    XCTAssertNil([aHarvester fetchHarvestConfiguration]);
-//
-//    [aHarvester execute]; // uninitialized -> disconnected
-//    [aHarvester execute]; // disconnected -> connected
-//
-//    // we have already connected to v4, so we fake v3 by unsetting the accountID and appID
-//    NRMAHarvesterConfiguration* currentConfig = [aHarvester fetchHarvestConfiguration];
-//    currentConfig.account_id = 0;
-//    currentConfig.application_id = 0;
-//
-//    // ensure we are connected via expected v3 configuration
-//    [aHarvester saveHarvesterConfiguration:currentConfig];
-//    XCTAssertEqual(aHarvester.currentState, NRMA_HARVEST_CONNECTED);
-//    XCTAssertFalse([[aHarvester fetchHarvestConfiguration] isValid]);
-//    XCTAssertEqual(0, [aHarvester fetchHarvestConfiguration].account_id);
-//    XCTAssertEqual(0, [aHarvester fetchHarvestConfiguration].application_id);
-//
-//    [aHarvester execute]; // connected -> connected -- should force a reconnect via v4
-//    XCTAssertEqual(aHarvester.currentState, NRMA_HARVEST_CONNECTED);
-//    XCTAssertTrue([[aHarvester fetchHarvestConfiguration] isValid]);
-//    XCTAssertEqual(190, [aHarvester fetchHarvestConfiguration].account_id);
-//    XCTAssertEqual(39484, [aHarvester fetchHarvestConfiguration].application_id);
-//
-//    aHarvester = nil;
-//}
-//
-//- (void) testUninitializedToConnected
-//{
-//
-//
-////    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleExecutable"];
-////    NSString* appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
-////    NSString* bundleID = [[NSBundle mainBundle] bundle ];
-//
-//    XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
-//
-//    //uninitialized -> disconnected
-//    [harvester execute];
-//
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
-//    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
-//
-//    //Disconnected -> connected
-//    [harvester execute];
-//
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
-//    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
-//}
-//
-////- (void) testUninitializedToDisabled
-////{
-////
-////    agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"AA06d1964231f6c881cedeaa44e837bde4079c683d"]
-////                                                  collectorAddress:nil
-////                                                      crashAddress:nil];
-////
-////    [harvester setAgentConfiguration:agentConfig];
-////
-////    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_UNINITIALIZED, @"expected uninitizlized");
-////    [harvester execute];
-////
-////
-////    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
-////    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
-////
-////    [harvester execute];
-////
-////    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
-////    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISABLED, @"expected disabled");
-////}
+- (void) testMigrationFromV3toV4ConnectEndpoint
+{
+    NRMAHarvester* aHarvester = [[NRMAHarvester alloc] init];
+    [aHarvester setAgentConfiguration:agentConfig];
+    id mockNSURLSession = [self makeMockURLSession];
+    
+    aHarvester.connection.harvestSession = mockNSURLSession;
+
+    // ensure there is no lingering harvest configuration
+    XCTAssertNil([aHarvester fetchHarvestConfiguration]);
+
+    [aHarvester execute]; // uninitialized -> disconnected
+    [aHarvester execute]; // disconnected -> connected
+
+    // we have already connected to v4, so we fake v3 by unsetting the accountID and appID
+    NRMAHarvesterConfiguration* currentConfig = [aHarvester fetchHarvestConfiguration];
+    currentConfig.account_id = 0;
+    currentConfig.application_id = 0;
+
+    // ensure we are connected via expected v3 configuration
+    [aHarvester saveHarvesterConfiguration:currentConfig];
+    XCTAssertEqual(aHarvester.currentState, NRMA_HARVEST_CONNECTED);
+    XCTAssertFalse([[aHarvester fetchHarvestConfiguration] isValid]);
+    XCTAssertEqual(0, [aHarvester fetchHarvestConfiguration].account_id);
+    XCTAssertEqual(0, [aHarvester fetchHarvestConfiguration].application_id);
+
+    [aHarvester execute]; // connected -> connected -- should force a reconnect via v4
+    XCTAssertEqual(aHarvester.currentState, NRMA_HARVEST_CONNECTED);
+    XCTAssertTrue([[aHarvester fetchHarvestConfiguration] isValid]);
+    XCTAssertEqual(190, [aHarvester fetchHarvestConfiguration].account_id);
+    XCTAssertEqual(39484, [aHarvester fetchHarvestConfiguration].application_id);
+
+    aHarvester = nil;
+}
+
+- (void) testUninitializedToConnected
+{
+    XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
+
+    //uninitialized -> disconnected
+    [harvester execute];
+    
+    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
+
+    //Disconnected -> connected
+    [harvester execute];
+
+    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
+}
+
+- (void) testUninitializedToDisabled
+{
+    id mockNSURLSession = [self makeMockURLSessionResponseError];
+    harvester.connection.harvestSession = mockNSURLSession;
+
+   XCTAssertEqual(harvester.currentState, NRMA_HARVEST_UNINITIALIZED, @"expected uninitizlized");
+   [harvester execute];
+
+
+   while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
+
+   [harvester execute];
+
+   while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+   XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISABLED, @"expected disabled");
+}
 
 - (void) testAppVersionUsesCFBundleShortVersionString
 {
