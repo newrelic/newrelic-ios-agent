@@ -13,6 +13,7 @@
 #import <objc/runtime.h>
 #import "NRLogger.h"
 #import "NRMAHTTPUtilities.h"
+#import "NRMANetworkFacade.h"
 
 static IMP NRMAOriginal__resume;
 static IMP NRMAOriginal__urlSessionTask_SetState;
@@ -112,9 +113,12 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
     @synchronized(lock) {
         @synchronized(task) {
             if ([NRMAURLSessionTaskOverride isSupportedTaskType: task]) {
-
+                NSURLRequest  *currentRequest = task.currentRequest;
+                if(currentRequest != nil && [currentRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY] != nil) {
+                    return;
+                }
+                
                 NSURL *url = [[task currentRequest] URL];
-
                 if (url != nil &&
                     newState != NSURLSessionTaskStateRunning && task.state == NSURLSessionTaskStateRunning) {
                     // get response code
