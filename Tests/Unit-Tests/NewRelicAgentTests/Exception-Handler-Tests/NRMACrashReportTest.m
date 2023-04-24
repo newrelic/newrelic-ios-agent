@@ -24,6 +24,7 @@
  #import "NRMACrashDataUploader.h"
 
  #import "NRMACrashReportFileManager.h"
+ #import "NRMAFakeDataHelper.h"
 
  #if __has_include(<CrashReporter/CrashReporter.h>)
  #import <CrashReporter/CrashReporter.h>
@@ -32,6 +33,13 @@
  #import "CrashReporter.h"
  #import "PLCrashReporter.h"
  #endif
+
+@interface NRMACrashDataWriter ()
++ (NSString*) getOperatingDevice:(PLCrashReportOperatingSystem)osEnum;
++ (NSString*) getArchitectureFromProcessorInfo:(PLCrashReportProcessorInfo*)info;
++ (NSString*) getProcessorArchType:(PLCrashReportProcessorTypeEncoding)architecture;
+@end
+
 
 @interface NRMACrashReportTest : XCTestCase
 
@@ -145,6 +153,7 @@
 
     XCTAssertNoThrow([report JSONObject]);
 }
+
 -(void) testCrashDataWriter {
 
      NSError *error;
@@ -181,7 +190,7 @@
 
  }
 
- -(void) testNRMACrashReportFileManager{
+ -(void) testNRMACrashReportFileManager {
      PLCrashReporter *reporter = [[PLCrashReporter alloc] initWithConfiguration: [PLCrashReporterConfig defaultConfiguration]];
      NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
      NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"google.com"
@@ -198,5 +207,84 @@
      XCTAssertNoThrow([fileManagerWithReporter processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
      XCTAssertNoThrow([fileManager processReportsWithSessionAttributes:nil analyticsEvents:nil], @"missing attributes and events should not cause exception");
  }
+
+- (void) testGetOperatingDevice {
+    NSString *operatingSystem = [NRMACrashDataWriter getOperatingDevice:PLCrashReportOperatingSystemMacOSX];
+    XCTAssertEqualObjects(operatingSystem, @"OSX");
+    
+    operatingSystem = [NRMACrashDataWriter getOperatingDevice:PLCrashReportOperatingSystemiPhoneOS];
+    XCTAssertEqualObjects(operatingSystem, @"iOS Device");
+    
+    operatingSystem = [NRMACrashDataWriter getOperatingDevice:PLCrashReportOperatingSystemiPhoneSimulator];
+    XCTAssertEqualObjects(operatingSystem, @"iOS Simulator");
+
+    operatingSystem = [NRMACrashDataWriter getOperatingDevice:PLCrashReportOperatingSystemAppleTVOS];
+    XCTAssertEqualObjects(operatingSystem, @"tvOS Device");
+    
+    operatingSystem = [NRMACrashDataWriter getOperatingDevice:PLCrashReportOperatingSystemUnknown];
+    XCTAssertEqualObjects(operatingSystem, @"Unknown");
+}
+
+- (void) testGetArchitectureFromProcessorInfo {
+    PLCrashReportProcessorInfo* info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM subtype:CPU_SUBTYPE_ARM_V7S];
+    NSString *architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"armv7s");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM subtype:CPU_SUBTYPE_ARM_V6];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"armv6");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM subtype:CPU_SUBTYPE_ARM_V7F];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"armv7");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM subtype:0];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"arm-unknown");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM64 subtype:CPU_SUBTYPE_ARM64_ALL];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"arm64");
+
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM64 subtype:CPU_SUBTYPE_ARM64_V8];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"arm64");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM64 subtype:CPU_SUBTYPE_ARM64E];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"arm64e");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ARM64 subtype:10];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"arm64-unknown");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_X86 subtype:0];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"i386");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_X86_64 subtype:0];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"x86_64");
+    
+    info = [[PLCrashReportProcessorInfo alloc] initWithTypeEncoding:PLCrashReportProcessorTypeEncodingMach type:CPU_TYPE_ANY subtype:0];
+    architecture = [NRMACrashDataWriter getArchitectureFromProcessorInfo:info];
+    XCTAssertEqualObjects(architecture, @"Unknown");
+}
+
+- (void) testGetProcessorArchType {
+    NSString *processorArchType = [NRMACrashDataWriter getProcessorArchType:PLCrashReportProcessorTypeEncodingMach];
+    XCTAssertEqualObjects(processorArchType, @"Mach");
+    
+    processorArchType = [NRMACrashDataWriter getProcessorArchType:PLCrashReportProcessorTypeEncodingUnknown];
+    XCTAssertEqualObjects(processorArchType, @"Unknown");
+}
+
+- (void) testStartCrashMetaDataMonitors {
+    XCTAssertNoThrow([NRMAExceptionDataCollectionWrapper startCrashMetaDataMonitors]);
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
+    
+    [NRMAExceptionDataCollectionWrapper endMonitoringOrientation];
+}
 
 @end

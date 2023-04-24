@@ -269,7 +269,6 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
 
     return task;
-    
 }
 
 NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
@@ -314,6 +313,7 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
     
     return task;
 }
+
 NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd, NSURLRequest* request, NSData* data)
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithRequest_fromData;
@@ -337,6 +337,7 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
     
     return task;
 }
+
 NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd, NSURLRequest* request)
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithStreamedRequest;

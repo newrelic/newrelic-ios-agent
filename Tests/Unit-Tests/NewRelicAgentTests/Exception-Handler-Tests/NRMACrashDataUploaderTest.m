@@ -98,6 +98,7 @@
     XCTAssertTrue([request.allHTTPHeaderFields[NEW_RELIC_OS_NAME_HEADER_KEY] isEqualToString:[NewRelicInternalUtils osName]]);
     XCTAssertTrue([request.URL.absoluteString isEqualToString:@"https://google.com/mobile_crash"]);
 }
+
 - (void) testBadURL
 {
     NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:nil
@@ -161,7 +162,6 @@
 
     XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
 }
-
 
 -(void) testCrashReportMobileCrashSupportabilityMetric {
     [helper.consumedMeasurements removeAllObjects];
