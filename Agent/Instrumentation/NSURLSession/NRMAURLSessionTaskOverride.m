@@ -14,6 +14,7 @@
 #import "NRLogger.h"
 #import "NRMAHTTPUtilities.h"
 #import "NRMANetworkFacade.h"
+#import "NRMAURLSessionTaskDelegate.h"
 
 static IMP NRMAOriginal__resume;
 static IMP NRMAOriginal__urlSessionTask_SetState;
@@ -39,7 +40,7 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
         }
     }
 
-    // In iOS 13+ we instrument NSURLSessionTask:setState
+   /* // In iOS 13+ we instrument NSURLSessionTask:setState
     if (@available(iOS 13, tvOS 13, *)) {
         // Instrument NSURLSession setState
         if (clazz && NRMAOriginal__urlSessionTask_SetState == nil) {
@@ -53,7 +54,7 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
                 }
             }
         }
-    }
+    }*/
 }
 
 + (void) deinstrument
@@ -101,6 +102,10 @@ void NRMAOverride__resume(id self, SEL _cmd)
         // and since we are only instrumenting NSURLSessionUploadTask and
         // NSURLSessionDataTask we only need to start a new timer on this transmission
         // since those two restart if they are suspended.
+        
+        if (@available(iOS 15.0, tvOS 15.0, *)) {
+        //    ((NSURLSessionTask*)self).delegate = [[NRMAURLSessionTaskDelegate alloc] initWithOriginalDelegate:((NSURLSessionTask*)self).delegate];
+        }
 
         NRMA__setTimerForSessionTask(self, [NRTimer new]);
     }

@@ -36,9 +36,14 @@ class ApodViewModel {
             guard let url = URL(string: nasaUrl.url) else { return }
             
             let request = URLRequest(url: url)
-            let (data, _) = try await URLSession.shared.data(for: request)
+            var data:Data?
+            if #available(iOS 15.0, tvOS 15.0, *) {
+                (data, _) = try await URLSession.shared.data(for: request, delegate: apodDelegate())
+            } else {
+                (data, _) = try await URLSession.shared.data(for: request)
+            }
             
-            let decoded = try JSONDecoder().decode(ApodResult.self, from: data)
+            let decoded = try JSONDecoder().decode(ApodResult.self, from: data!)
             
             if decoded.media_type == "video" {
                 return await loadApodDataAsync()
@@ -48,5 +53,56 @@ class ApodViewModel {
         } catch {
             self.error.value = error
         }
+    }
+}
+
+class apodDelegate: NSObject, URLSessionTaskDelegate, URLSessionDataDelegate {
+    
+    func urlSession(_ session: URLSession, didCreateTask task: URLSessionTask) {
+        print("Used")
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        print("Not Used?")
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        print("Used")
+        print(metrics)
+    }
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+        print("Not Used?")
+    }
+    
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        print("Used Occasionally?")
+        return (URLSession.AuthChallengeDisposition.performDefaultHandling, URLCredential())
+    }
+    
+    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
+        print("Not Used?")
+    }
+    
+    func urlSession(_ session: URLSession, taskIsWaitingForConnectivity task: URLSessionTask) {
+        print("Not Used?")
+    }
+    
+    func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
+        print("Not Used?")
+    }
+    
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        print("Not Used?")
+        print(data)
+    }
+    
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome downloadTask: URLSessionDownloadTask) {
+        print("Not Used?")
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse) async -> URLSession.ResponseDisposition {
+        print("Not Used?")
+        return URLSession.ResponseDisposition.allow
     }
 }
