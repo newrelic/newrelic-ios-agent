@@ -282,8 +282,9 @@
 - (void) testStartCrashMetaDataMonitors {
     XCTAssertNoThrow([NRMAExceptionDataCollectionWrapper startCrashMetaDataMonitors]);
     
+#if TARGET_OS_IOS
     [[NSNotificationCenter defaultCenter] postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
-    
+#endif
     [NRMAExceptionDataCollectionWrapper endMonitoringOrientation];
 }
 
