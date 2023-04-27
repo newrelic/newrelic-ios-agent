@@ -912,6 +912,8 @@
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
+		2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
+		2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
 		2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
@@ -1827,6 +1829,7 @@
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
+		2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHTTPUtilitiesTests.m; sourceTree = "<group>"; };
 		2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelper.m; sourceTree = "<group>"; };
 		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
 		2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAURLSessionTaskSearch.h; sourceTree = "<group>"; };
@@ -2272,6 +2275,7 @@
 				2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */,
 				F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */,
 				F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */,
+				2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */,
 			);
 			path = Uncategorized;
 			sourceTree = "<group>";
@@ -4157,6 +4161,7 @@
 				0209AC4924E7078C00E45C90 /* NRMATimestampContainerTest.m in Sources */,
 				0209ABEF24E706FA00E45C90 /* NRMAInteractionDataStampTests.m in Sources */,
 				C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */,
+				2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */,
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
 				C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */,
@@ -4397,6 +4402,7 @@
 			files = (
 				025657F524EB19BF00FE3125 /* NRMAExceptionMetaDataTest.m in Sources */,
 				F6E79D1225A7639D006277FB /* TestNRMATraceContext.mm in Sources */,
+				2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */,
 				025657F624EB19BF00FE3125 /* NRMACrashReportTest.m in Sources */,
 				025657F724EB19BF00FE3125 /* NRMAInternalTests.m in Sources */,
 				025657F824EB19BF00FE3125 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
