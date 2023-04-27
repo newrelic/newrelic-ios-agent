@@ -149,7 +149,7 @@
     }
 #endif
     //_wanNetworkType didn't equal any of the expected Technologies, or currentRadioAccessTechnology isn't available.
-    return @"unknown";
+    return NRMA_CARRIER_OTHER;
 }
 
 
