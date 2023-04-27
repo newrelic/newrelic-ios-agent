@@ -39,14 +39,39 @@
     payload->setId(spanId);
     payload->setTimestamp(timestamp);
 
+    std::string trustedAccountStd("1");
+    payload->setTrustedAccountKey(trustedAccountStd);
+
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
     
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *desiredHeader = @"@nr=0-2-10816994-25789457-17172750e6ff8549--0--1609970157093";
+    NSString *desiredHeader = @"1@nr=0-2-10816994-25789457-17172750e6ff8549--0--1609970157093";
     
     // assert
     XCTAssert([traceState isEqualToString: desiredHeader]);
 }
 
+- (void)testHeaderStringNoTrustedAccount {
+    // arrange
+    auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
+    std::string accountStr("10816994");
+    std::string appIdStd("25789457");
+    std::string spanId("17172750e6ff8549");
+    long long timestamp = 1609970157093;
+
+    // act
+    payload->setAccountId(accountStr);
+    payload->setAppId(appIdStd);
+    payload->setId(spanId);
+    payload->setTimestamp(timestamp);
+
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
+
+    NSString *traceState = [W3CTraceState headerFromContext:traceContext];
+    NSString *desiredHeader = @"@nr=0-2-10816994-25789457-17172750e6ff8549--0--1609970157093";
+
+    // assert
+    XCTAssert([traceState isEqualToString: desiredHeader]);
+}
 
 @end
