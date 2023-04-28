@@ -102,6 +102,8 @@
     config.stack_trace_limit = 100;
     config.account_id = 190;
     config.application_id = 39484;
+    config.trusted_account_key = @"123";
+    
     config.encoding_key = @"encoding_key";
     
     return config;
@@ -251,6 +253,89 @@
     [connectionMock  stopMocking];
     [harvesterMock stopMocking];
 }
+
+// TODO: Reenable/rewrite these tests related to Harvester/Stored Data. JIRA: NR-96516
+//- (void) testBadStoredDataRecover
+//{
+//    NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] init];
+//    config.collect_network_errors = YES;
+//    config.cross_process_id = @"cross_process_id";
+//    config.data_report_period = 60;
+//    config.data_token = [[NRMADataToken alloc] init];
+//    config.data_token.clusterAgentId = -1;
+//    config.data_token.realAgentId = -1;
+//    config.error_limit = 50;
+//    config.report_max_transaction_age = 600;
+//    config.report_max_transaction_count =1000;
+//    config.response_body_limit = 2048;
+//    config.server_timestamp = 1379548800;
+//    config.stack_trace_limit = 100;
+//
+//    [[NSUserDefaults standardUserDefaults] setObject:[config asDictionary] forKey:kNRMAHarvesterConfigurationStoreKey];
+//    [[NSUserDefaults standardUserDefaults]synchronize];
+//
+//    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+//    id dataMock = [OCMockObject partialMockForObject:[newHarvester harvestData]];
+//    [[dataMock expect] clear];
+//    id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
+//    //[newHarvester setAgentConfiguration:agentConfig];
+//    [harvesterMock setAgentConfiguration:agentConfig];
+//
+//    //[[harvesterMock expect] andForwardToRealObject]
+//    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
+//
+//    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
+//    [[[connectionMock stub] andForwardToRealObject] sendConnect];
+//
+//    [harvesterMock execute];
+//    [harvesterMock execute];
+//    [harvesterMock verify];
+//    //[connectionMock verify];
+//    [dataMock verify]; //verify the harvest data is cleared after a successful harvest
+//    [connectionMock stopMocking];
+//    [harvesterMock stopMocking];
+//    [dataMock stopMocking];
+//}
+//
+//- (void) testStoredData
+//{
+//    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+//
+//    XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
+//    [harvester execute];
+//
+//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+//
+//    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
+//    [harvester execute];
+//
+//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+//    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
+//
+//    //at this point there should be stored data
+//    XCTAssertNotNil([defaults objectForKey:kNRMAHarvesterConfigurationStoreKey], @"this should have been set");
+//
+//    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+//    id harvesterMock = [OCMockObject partialMockForObject:newHarvester];
+//    //[newHarvester setAgentConfiguration:agentConfig];
+//    [harvesterMock setAgentConfiguration:agentConfig];
+//
+//    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_DISCONNECTED];
+//    [[[harvesterMock expect] andForwardToRealObject] transition:NRMA_HARVEST_CONNECTED];
+//
+//    id connectionMock = [OCMockObject niceMockForClass:[NRMAHarvesterConnection class]];
+//    [[connectionMock reject] sendConnect];
+//
+//    [harvesterMock execute];
+//    [harvesterMock execute];
+//    [harvesterMock verify];
+//    [connectionMock verify];
+//
+//    XCTAssertEqual([harvesterMock currentState], NRMA_HARVEST_CONNECTED, @"we should be connected with stored credentials");
+//
+//    [connectionMock  stopMocking];
+//    [harvesterMock stopMocking];
+//}
 
 - (void) testMayUseStoredConfiguration
 {
