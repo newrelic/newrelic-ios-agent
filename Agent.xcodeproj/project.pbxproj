@@ -4820,6 +4820,7 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
+					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -4867,6 +4868,7 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
+					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5158,6 +5160,7 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
+					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5208,6 +5211,7 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
+					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5250,6 +5254,7 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
+					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Stress-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5288,6 +5293,7 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
+					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Stress-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
