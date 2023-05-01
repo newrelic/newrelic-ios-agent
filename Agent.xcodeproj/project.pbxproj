@@ -5049,7 +5049,7 @@
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
@@ -5102,7 +5102,7 @@
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
@@ -5330,7 +5330,7 @@
 				);
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;
@@ -5381,7 +5381,7 @@
 				);
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
-				OTHER_LDFLAGS = "";
+				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;

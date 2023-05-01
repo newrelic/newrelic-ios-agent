@@ -30,11 +30,11 @@ JsonValue::JsonValue(const JsonObject & o) : object_v(o), type_t(OBJECT) { }
 
 JsonValue::JsonValue(const JsonArray & o) : array_v(o), type_t(ARRAY) { }
 
-JsonValue::JsonValue(string&& s) : string_v(move(s)), type_t(STRING) { }
+JsonValue::JsonValue(string&& s) : string_v(std::move(s)), type_t(STRING) { }
 
-JsonValue::JsonValue(JsonObject&& o) : object_v(move(o)), type_t(OBJECT) { }
+JsonValue::JsonValue(JsonObject&& o) : object_v(std::move(o)), type_t(OBJECT) { }
 
-JsonValue::JsonValue(JsonArray&& o) : array_v(move(o)), type_t(ARRAY) { }
+JsonValue::JsonValue(JsonArray&& o) : array_v(std::move(o)), type_t(ARRAY) { }
 
 JsonValue::JsonValue(const JsonValue & v)
 { 
@@ -85,17 +85,17 @@ JsonValue::JsonValue(JsonValue&& v)
     {
         /** Base types */
         case INT:
-            int_v = move(v.int_v);
+            int_v = std::move(v.int_v);
             type_t = INT;
             break;
         
         case FLOAT:
-            float_v = move(v.float_v);
+            float_v = std::move(v.float_v);
             type_t = FLOAT;
             break;
         
         case BOOL:
-            bool_v = move(v.bool_v);
+            bool_v = std::move(v.bool_v);
             type_t = BOOL;
             break;
         
@@ -104,18 +104,18 @@ JsonValue::JsonValue(JsonValue&& v)
             break;
         
         case STRING:
-            string_v = move(v.string_v);
+            string_v = std::move(v.string_v);
             type_t = STRING;
             break;
         
         /** Compound types */
             case ARRAY:
-            array_v = move(v.array_v);
+            array_v = std::move(v.array_v);
             type_t = ARRAY;
             break;
         
         case OBJECT:
-            object_v = move(v.object_v);
+            object_v = std::move(v.object_v);
             type_t = OBJECT;
             break;
         
@@ -174,17 +174,17 @@ JsonValue &JsonValue::operator=(JsonValue&& v)
     {
         /** Base types */
         case INT:
-            int_v = move(v.int_v);
+            int_v = std::move(v.int_v);
             type_t = INT;
             break;
         
         case FLOAT:
-            float_v = move(v.float_v);
+            float_v = std::move(v.float_v);
             type_t = FLOAT;
             break;
         
         case BOOL:
-            bool_v = move(v.bool_v);
+            bool_v = std::move(v.bool_v);
             type_t = BOOL;
             break;
         
@@ -193,18 +193,18 @@ JsonValue &JsonValue::operator=(JsonValue&& v)
             break;
         
         case STRING:
-            string_v = move(v.string_v);
+            string_v = std::move(v.string_v);
             type_t = STRING;
             break;
         
         /** Compound types */
             case ARRAY:
-            array_v = move(v.array_v);
+            array_v = std::move(v.array_v);
             type_t = ARRAY;
             break;
         
         case OBJECT:
-            object_v = move(v.object_v);
+            object_v = std::move(v.object_v);
             type_t = OBJECT;
             break;
         
@@ -249,7 +249,7 @@ JsonObject::~JsonObject() { }
 
 JsonObject::JsonObject(const JsonObject & o) : _object(o._object) { }
 
-JsonObject::JsonObject(JsonObject&& o) : _object(move(o._object)) { }
+JsonObject::JsonObject(JsonObject&& o) : _object(std::move(o._object)) { }
 
 JsonObject &JsonObject::operator=(const JsonObject & o)
 {
@@ -259,7 +259,7 @@ JsonObject &JsonObject::operator=(const JsonObject & o)
 
 JsonObject &JsonObject::operator=(JsonObject&& o)
 {
-    _object = move(o._object);
+    _object = std::move(o._object);
     return *this;
 }
 
@@ -309,7 +309,7 @@ JsonArray::~JsonArray() { }
 
 JsonArray::JsonArray(const JsonArray & a) : _array(a._array) { }
 
-JsonArray::JsonArray(JsonArray&& a) : _array(move(a._array)) { }
+JsonArray::JsonArray(JsonArray&& a) : _array(std::move(a._array)) { }
 
 JsonArray &JsonArray::operator=(const JsonArray & a)
 {
@@ -319,7 +319,7 @@ JsonArray &JsonArray::operator=(const JsonArray & a)
 
 JsonArray &JsonArray::operator=(JsonArray&& a)
 {
-    _array = move(a._array);
+    _array = std::move(a._array);
     return *this;
 }
 
