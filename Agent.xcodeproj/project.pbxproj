@@ -4820,7 +4820,6 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
-					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -4868,7 +4867,6 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
-					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5051,7 +5049,7 @@
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
-				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
@@ -5104,7 +5102,7 @@
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited";
-				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SKIP_INSTALL = YES;
@@ -5160,7 +5158,6 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
-					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5211,7 +5208,6 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
-					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Agent-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5254,7 +5250,6 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
-					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Stress-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5293,7 +5288,6 @@
 				OTHER_LDFLAGS = (
 					"-force_load",
 					Tests/Shared/libOCMock.a,
-					"-Wno-quoted-include-in-framework-header",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.newrelic.Stress-Tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -5336,7 +5330,7 @@
 				);
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
-				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;
@@ -5387,7 +5381,7 @@
 				);
 				MARKETING_VERSION = 7.4.5;
 				MODULEMAP_FILE = agent.modulemap;
-				OTHER_LDFLAGS = "-Wno-quoted-include-in-framework-header";
+				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
 				PRODUCT_NAME = NewRelic;
 				SDKROOT = appletvos;

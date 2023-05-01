@@ -7,8 +7,8 @@
 #define LIBMOBILEAGENT_LONGATTRIBUTES_HPP
 
 
-#include "Attributes.hpp"
-#include "session-attributes_generated.h"
+#include <Hex/Attributes.hpp>
+#include <Hex/session-attributes_generated.h>
 
 using namespace com::newrelic::mobile::fbs;
 using namespace flatbuffers;

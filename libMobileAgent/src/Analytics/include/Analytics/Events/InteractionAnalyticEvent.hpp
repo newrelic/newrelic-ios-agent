@@ -1,6 +1,6 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
-#include "NamedAnalyticEvent.hpp"
+#include <Analytics/NamedAnalyticEvent.hpp>
 #ifndef __InteractionEvent_H_
 #define __InteractionEvent_H_
 

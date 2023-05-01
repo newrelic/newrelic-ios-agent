@@ -8,8 +8,8 @@
 
 #include <vector>
 #include <mutex>
-#include "Library.hpp"
-#include "ios_generated.h"
+#include <Hex/Library.hpp>
+#include <Hex/ios_generated.h>
 
 using namespace com::newrelic::mobile;
 using std::vector;
