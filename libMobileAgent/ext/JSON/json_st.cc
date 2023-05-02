@@ -1,6 +1,6 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
-#include "json_st.hh"
+#include <JSON/json_st.hh>
 #include <stdexcept>
 #include <string>
 #include <iomanip>
