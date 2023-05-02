@@ -116,7 +116,9 @@
 
 - (NSString *)getCurrentWanNetworkType:(NRMANetworkStatus)networkStatus
 {
-#if !TARGET_OS_TV
+#if TARGET_OS_TV
+    return NRMA_CARRIER_WIFI;
+#else
     @synchronized (_wanNetworkType) {
         if (networkStatus != ReachableViaWWAN) {
             return nil;

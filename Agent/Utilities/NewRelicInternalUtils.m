@@ -406,7 +406,7 @@ static NSString* _osVersion;
         NRLOG_INFO(@"%@",debugLog);
     }
 #endif
-    if (!wanType.length || [wanType isEqualToString:NRMA_CARRIER_OTHER]) {
+    if (!wanType.length) {
         switch (status) {
             case ReachableViaWiFi:
                 return NRMA_CARRIER_WIFI;
