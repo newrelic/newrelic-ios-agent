@@ -6,8 +6,8 @@
 #ifndef LIBMOBILEAGENT_MOBILEEVENT_HPP
 #define LIBMOBILEAGENT_MOBILEEVENT_HPP
 
-#include "Analytics/EventDeserializer.hpp"
-#include "AnalyticEvent.hpp"
+#include <Analytics/EventDeserializer.hpp>
+#include <Analytics/AnalyticEvent.hpp>
 
 
 namespace NewRelic {

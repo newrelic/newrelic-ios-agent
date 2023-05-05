@@ -6,9 +6,9 @@
 #ifndef LIBMOBILEAGENT_HANDLEDEXCEPTION_HPP
 #define LIBMOBILEAGENT_HANDLEDEXCEPTION_HPP
 
-#include "ios_generated.h"
-#include "hex_generated.h"
-#include "Thread.hpp"
+#include <Hex/ios_generated.h>
+#include <Hex/hex_generated.h>
+#include <Hex/Thread.hpp>
 
 using namespace com::newrelic::mobile;
 using namespace flatbuffers;

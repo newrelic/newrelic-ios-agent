@@ -5,7 +5,7 @@
 #define LIBMOBILEAGENT_APPLICATION_HPP
 
 #include <string>
-#include "Utilities/ApplicationContext.hpp"
+#include <Utilities/ApplicationContext.hpp>
 
 namespace NewRelic {
     class Application {

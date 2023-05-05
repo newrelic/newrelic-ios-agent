@@ -6,7 +6,7 @@
 #ifndef LIBMOBILEAGENT_NETWORKEVENT_HPP
 #define LIBMOBILEAGENT_NETWORKEVENT_HPP
 
-#include "IntrinsicEvent.hpp"
+#include <Analytics/IntrinsicEvent.hpp>
 
 namespace NewRelic {
     class RequestEvent : public IntrinsicEvent {

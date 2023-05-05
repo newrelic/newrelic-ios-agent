@@ -3,7 +3,7 @@
 #ifndef LIBMOBILEAGENT_CUSTOMEVENT_HPP
 #define LIBMOBILEAGENT_CUSTOMEVENT_HPP
 
-#include "AnalyticEvent.hpp"
+#include <Analytics/AnalyticEvent.hpp>
 
 namespace NewRelic {
     class CustomEvent : public AnalyticEvent {
