@@ -21,7 +21,6 @@ static Class __NRMAConcreteClass;
 
 @implementation NRMAURLSessionTaskOverride
 
-
 static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock";
 + (void) instrumentConcreteClass:(Class)clazz
 {

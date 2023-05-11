@@ -1,8 +1,8 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
-#include "Utilities/Number.hpp"
-#include "Utilities/String.hpp"
-#include "Utilities/Boolean.hpp"
+#include <Utilities/Number.hpp>
+#include <Utilities/String.hpp>
+#include <Utilities/Boolean.hpp>
 
 #ifndef __Value_H_
 #define __Value_H_

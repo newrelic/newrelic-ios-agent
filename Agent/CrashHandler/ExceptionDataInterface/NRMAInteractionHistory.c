@@ -52,12 +52,12 @@ void NRMA__setInteractionList(NRMAInteractionHistoryNode* list)
     __list = list;
 }
 
-NRMAInteractionHistoryNode* NRMA__getInteractionHistoryList()
+NRMAInteractionHistoryNode* NRMA__getInteractionHistoryList(void)
 {
     return __list;
 }
 
-void NRMA__deallocInteractionHistoryList()
+void NRMA__deallocInteractionHistoryList(void)
 {
     NRMAInteractionHistoryNode* head = __list;
     __list = NULL;
