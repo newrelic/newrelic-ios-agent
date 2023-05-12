@@ -24,6 +24,9 @@
 @interface NRMAWKNavigationDelegateWithDelegateFunctions : NSObject <WKNavigationDelegate>
 @end
 
+@interface NRMAWKNavigationDelegateWithOldDelegateFunction : NSObject <WKNavigationDelegate>
+@end
+
 @interface NRWKNavigationDelegateBase ()
 - (instancetype) initWithOriginalDelegate:(NSObject<WKNavigationDelegate>* __nullable __weak)delegate;
 + (NSURL*) navigationURL:(WKNavigation*) nav;
@@ -41,6 +44,7 @@
 
 @property(strong) NRMAWKWebViewNavigationDelegate* navBaseWithDelegateFunction;
 @property(strong) NRMAWKNavigationDelegateWithDelegateFunctions* delegateFunctions;
+@property(strong) NRMAWKNavigationDelegateWithOldDelegateFunction* oldDelegateFunction;
 @property(strong) WKWebView* webViewWithDelegateFunction;
 @property(strong) WKNavigation* navigationItem;
 
@@ -160,6 +164,24 @@
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
+    }
+}
+
+- (void) testDecidePolicyForNavigationActionWithOldDelegateFunction {
+    self.oldDelegateFunction = [[NRMAWKNavigationDelegateWithOldDelegateFunction alloc] init];
+    self.navBaseWithDelegateFunction = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:_oldDelegateFunction];
+    self.webViewWithDelegateFunction = [[WKWebView alloc] init];
+    self.webViewWithDelegateFunction.navigationDelegate = _navBaseWithDelegateFunction;
+    
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
+    
+    NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
+    
+    if (@available(iOS 13.0, *)) {
+        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+            [testAction decisionHandler:policy];
+        }];
+        XCTAssertEqual(testAction.receivedPolicy, WKNavigationResponsePolicyCancel);
     }
 }
 
@@ -289,6 +311,16 @@
 
 - (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
     completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+}
+
+@end
+
+@implementation NRMAWKNavigationDelegateWithOldDelegateFunction
+#pragma mark Delegate Functions
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+{
+    decisionHandler(WKNavigationResponsePolicyCancel);
 }
 
 @end
