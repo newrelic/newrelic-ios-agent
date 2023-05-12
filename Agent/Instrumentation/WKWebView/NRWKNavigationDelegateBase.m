@@ -153,6 +153,13 @@ didFailNavigation:(WKNavigation*)navigation
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
         Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
         ((void(*)(id,SEL,id,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationAction,preferences,decisionHandler);
+    } else if([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]){
+        SEL cmd = @selector(webView:decidePolicyForNavigationAction:decisionHandler:);
+        Method m = class_getInstanceMethod([self.realDelegate class], cmd);
+        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,cmd,webView,navigationAction, ^(WKNavigationActionPolicy navigationActionPolicy) {
+            decisionHandler(navigationActionPolicy, preferences);
+        }
+    );
     } else {
         decisionHandler(WKNavigationActionPolicyAllow, preferences);
     }
