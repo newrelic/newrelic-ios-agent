@@ -181,7 +181,7 @@
         [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
-        XCTAssertEqual(testAction.receivedPolicy, WKNavigationResponsePolicyCancel);
+        XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyCancel);
     }
 }
 
@@ -320,7 +320,7 @@
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
-    decisionHandler(WKNavigationResponsePolicyCancel);
+    decisionHandler(WKNavigationActionPolicyCancel);
 }
 
 @end
