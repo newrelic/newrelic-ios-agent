@@ -13,7 +13,11 @@ platform :ios do
           sh "rm -rf #{Constants::ARCHIVES}"
           sh "rm -rf Frameworks"
           sh "rm -rf libMobileAgent/build"
+
           sh "rm -rf #{Constants::DD}"
+          sh "rm -rf build"
+          sh "rm -rf build.out"
+
         rescue => ex
           # handle error
         ensure
