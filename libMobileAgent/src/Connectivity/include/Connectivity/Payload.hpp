@@ -7,7 +7,7 @@
 
 #include <JSON/IJsonable.hpp>
 
-#include "PayloadType.hpp"
+#include <Connectivity/PayloadType.hpp>
 
 namespace NewRelic {
 namespace Connectivity {

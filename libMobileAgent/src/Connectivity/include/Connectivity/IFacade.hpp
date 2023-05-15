@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "Payload.hpp"
+#include <Connectivity/Payload.hpp>
 
 namespace NewRelic {
 namespace Connectivity {

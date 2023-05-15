@@ -1003,6 +1003,7 @@
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
+		F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABB324E704A600E45C90 /* NRMAWKWebViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 /* End PBXBuildFile section */
@@ -4189,6 +4190,7 @@
 				0209ABD924E706AE00E45C90 /* TestHandledExceptionController.mm in Sources */,
 				F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */,
 				0209AC4E24E7079400E45C90 /* NRMAAnalyticsTest.mm in Sources */,
+				F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */,
 				0209AC3F24E7075200E45C90 /* NRHarvesterStateTest.m in Sources */,
 				0209AC2F24E7073800E45C90 /* NRMAHarvestableHTTPReqeustTests.m in Sources */,
 				0209ABD724E706AE00E45C90 /* TestHexUploader.m in Sources */,
@@ -5011,10 +5013,12 @@
 		021A15C324C9EEE700E8DFD5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_MODULE_DEBUGGING = NO;
+				CLANG_WARN_CXX0X_EXTENSIONS = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
 				CURRENT_PROJECT_VERSION = 7.4.5;
@@ -5028,9 +5032,10 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
-				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/**",
@@ -5063,11 +5068,13 @@
 		021A15C424C9EEE700E8DFD5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_ENABLE_CODE_COVERAGE = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_MODULE_DEBUGGING = NO;
+				CLANG_WARN_CXX0X_EXTENSIONS = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
@@ -5084,8 +5091,9 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
-				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = NO;
 				HEADER_SEARCH_PATHS = (
 					.,
