@@ -6,21 +6,21 @@
 #ifndef LIBMOBILEAGENT_HEXCONTROLLER_HPP
 #define LIBMOBILEAGENT_HEXCONTROLLER_HPP
 
-#include "flatbuffers/flatbuffers.h"
+#include <flatbuffers/flatbuffers.h>
 
-#include "HexReport.hpp"
+#include <Hex/HexReport.hpp>
 #include <Analytics/AnalyticsController.hpp>
-#include "BooleanAttributes.hpp"
-#include "LongAttributes.hpp"
-#include "StringAttributes.hpp"
-#include "DoubleAttributes.hpp"
-#include "Library.hpp"
-#include "Thread.hpp"
-#include "HexPublisher.hpp"
-#include "LibraryController.hpp"
-#include "HexReport.hpp"
-#include "HexStore.hpp"
-#include "HexReportContext.hpp"
+#include <Hex/BooleanAttributes.hpp>
+#include <Hex/LongAttributes.hpp>
+#include <Hex/StringAttributes.hpp>
+#include <Hex/DoubleAttributes.hpp>
+#include <Hex/Library.hpp>
+#include <Hex/Thread.hpp>
+#include <Hex/HexPublisher.hpp>
+#include <Hex/LibraryController.hpp>
+#include <Hex/HexReport.hpp>
+#include <Hex/HexStore.hpp>
+#include <Hex/HexReportContext.hpp>
 
 namespace NewRelic {
     namespace Hex {

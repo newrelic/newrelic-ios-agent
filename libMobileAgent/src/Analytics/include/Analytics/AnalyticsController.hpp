@@ -1,18 +1,18 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
-#include "EventManager.hpp"
-#include "AttributeBase.hpp"
-#include "AttributeValidator.hpp"
-#include "SessionAttributeManager.hpp"
-#include "PersistentStore.hpp"
-#include "Analytics/Constants.hpp"
-#include "NetworkRequestData.hpp"
-#include "NetworkResponseData.hpp"
+#include <Analytics/EventManager.hpp>
+#include <Analytics/AttributeBase.hpp>
+#include <Analytics/AttributeValidator.hpp>
+#include <Analytics/SessionAttributeManager.hpp>
+#include <Analytics/PersistentStore.hpp>
+#include <Analytics/Constants.hpp>
+#include <Analytics/NetworkRequestData.hpp>
+#include <Analytics/NetworkResponseData.hpp>
 #include  <JSON/json.hh>
 #include <vector>
 #include <memory>
-#include "BreadcrumbEvent.hpp"
-#include "RequestEvent.hpp"
+#include <Analytics/BreadcrumbEvent.hpp>
+#include <Analytics/RequestEvent.hpp>
 
 
 #ifndef __AnalyticsController_H_

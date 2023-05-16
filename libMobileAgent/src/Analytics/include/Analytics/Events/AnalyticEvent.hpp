@@ -6,8 +6,8 @@
 #include <string>
 #include <map>
 #include <Utilities/BaseValue.hpp>
-#include "Analytics/Attribute.hpp"
-#include "Analytics/AttributeValidator.hpp"
+#include <Analytics/Attribute.hpp>
+#include <Analytics/AttributeValidator.hpp>
 #include <JSON/json.hh>
 
 namespace NewRelic {
