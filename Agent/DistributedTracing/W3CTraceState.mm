@@ -10,10 +10,10 @@
 
 @implementation W3CTraceState
 
-+ (NSString *) trustedAccountKeyFor:(AccountType) trustedAccount {
-    switch (trustedAccount) {
++ (NSString *) trustedAccountKeyFor:(NRMATraceContext*) traceContext {
+    switch (traceContext.trustedAccount) {
         case NRTraceContext:
-            return @"@nr";
+            return [NSString stringWithFormat:@"%@@nr", traceContext.trustedAccountKeyString];
         default:
             return @"";
     }
@@ -36,7 +36,7 @@
 
     // Do not base64 encode. traceContext.spanId should equal traceparent->parentId.
     NSString *headerString = [NSString stringWithFormat:formatStr,
-                              [W3CTraceState trustedAccountKeyFor: traceContext.trustedAccount],
+                              [W3CTraceState trustedAccountKeyFor: traceContext],
                               [W3CTraceState getVersion],
                               [W3CTraceState getParentType],
                               traceContext.accountId,

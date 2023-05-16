@@ -634,8 +634,8 @@ static UIBackgroundTaskIdentifier background_task;
     @try {
 #endif
         [NRMATraceController completeActivityTrace];
-#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
         [NRMAExceptionHandler logException:exception
                                      class:NSStringFromClass([self class])
@@ -790,7 +790,6 @@ static UIBackgroundTaskIdentifier background_task;
 
         // Stored device data, Metadata and crash file are cleared when crash upload.
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
-
 
         // Clear stored user defaults
         [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];

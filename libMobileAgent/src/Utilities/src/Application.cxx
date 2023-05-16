@@ -6,7 +6,7 @@ namespace NewRelic {
 
 Application* Application::__instance = nullptr;
 
-Application::Application() : _context(ApplicationContext("","")) {}
+Application::Application() : _context(ApplicationContext("","","")) {}
 
 Application& Application::getInstance() {
     if (__instance == nullptr) {

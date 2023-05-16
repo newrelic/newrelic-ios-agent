@@ -21,7 +21,6 @@ static Class __NRMAConcreteClass;
 
 @implementation NRMAURLSessionTaskOverride
 
-
 static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock";
 + (void) instrumentConcreteClass:(Class)clazz
 {
@@ -100,14 +99,11 @@ void NRMAOverride__resume(id self, SEL _cmd)
 {
     if (((NSURLSessionTask*)self).state == NSURLSessionTaskStateSuspended) {
 
-        NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:((NSURLSessionTask*)self).originalRequest];
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:((NSURLSessionTask*)self).originalRequest];
-        //the only state resume will start a task is from Suspended.
-        //and since we are only instrumenting NSURLSessionUploadTask and
-        //NSURLSessionDataTask we only need to start a new timer on this transmission
-        //since those two restart if they are suspended.
+        // The only state resume will start a task is from Suspended.
+        // and since we are only instrumenting NSURLSessionUploadTask and
+        // NSURLSessionDataTask we only need to start a new timer on this transmission
+        // since those two restart if they are suspended.
+
         NRMA__setTimerForSessionTask(self, [NRTimer new]);
     }
     //call original method

@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 #include <future>
-#include "HexReport.hpp"
+#include <Hex/HexReport.hpp>
 
 namespace NewRelic {
     namespace Hex {

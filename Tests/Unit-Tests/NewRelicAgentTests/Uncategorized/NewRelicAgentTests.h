@@ -22,7 +22,7 @@
 #define TEST_REDIRECT_URL @"http://www.tappister.com/test/a/b"
 #define TEST_REDIRECT_END_URL @"http://www.tappister.com/funk/c"
 
-#define TEST_APPLICATION_TOKEN @"AAa2d4baa1094bf9049bb22895935e46f85c45c211"
+#define TEST_APPLICATION_TOKEN @"APP_TOKEN"
 #define TEST_COLLECTOR_HOST @"staging-mobile-collector.newrelic.com"
 #define TEST_BUNDLE_ID @"com.newrelic.tests"
 #define TEST_BAD_COLLECTOR_HOST @"smc-broken.newrelic.com"
@@ -34,7 +34,7 @@
 STAssertNotNil([NewRelicAgentInternal transactionData], @"Transaction data list was nil"); \
 STAssertEquals((unsigned)1, [NewRelicAgentInternal transactionData].count, @"Expected one value in transaction data list");
 
-typedef BOOL(^ConditionalBlock)();
+typedef BOOL(^ConditionalBlock)(void);
 
 @interface WaitBlock : NSObject
 
@@ -70,8 +70,8 @@ typedef BOOL(^ConditionalBlock)();
 
 @class NewRelicAgentTests;
 
-extern NRMANetworkStatus ReachableViaWWANMethod();
-extern NRMANetworkStatus NotReachableMethod();
+extern NRMANetworkStatus ReachableViaWWANMethod(void);
+extern NRMANetworkStatus NotReachableMethod(void);
 
 extern BOOL _NRMAAgentTestModeEnabled;
 

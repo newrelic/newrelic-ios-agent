@@ -6,14 +6,14 @@
 #ifndef LIBMOBILEAGENT_CONTEXT_HPP
 #define LIBMOBILEAGENT_CONTEXT_HPP
 
-#include "BooleanAttributes.hpp"
-#include "StringAttributes.hpp"
-#include "LongAttributes.hpp"
-#include "DoubleAttributes.hpp"
-#include "HandledException.hpp"
-#include "AgentData.hpp"
+#include <Hex/BooleanAttributes.hpp>
+#include <Hex/StringAttributes.hpp>
+#include <Hex/LongAttributes.hpp>
+#include <Hex/DoubleAttributes.hpp>
+#include <Hex/HandledException.hpp>
+#include <Hex/AgentData.hpp>
 #include <Analytics/AttributeValidator.hpp>
-#include "HexReport.hpp"
+#include <Hex/HexReport.hpp>
 
 #include <JSON/json_st.hh>
 #include <Analytics/AttributeBase.hpp>
