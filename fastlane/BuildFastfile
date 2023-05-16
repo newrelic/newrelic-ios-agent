@@ -83,9 +83,9 @@ platform :ios do
         sh("mkdir -p \"#{Constants::ARCHIVES}/macOS.xcarchive\"")
         sh("cp -r build/macosx/macosx.xcarchive/. \"#{Constants::ARCHIVES}/macOS.xcarchive\"")
       
-        sh("mkdir -p \"#{Constants::ARCHIVES}/macOS.xcarchive/Library/Frameworks/NewRelic.framework\"")
+        sh("mkdir -p \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework\"")
 
-        sh("cp -r build/macosx/NewRelic.framework/. \"#{Constants::ARCHIVES}/macOS.xcarchive/Library/Frameworks/NewRelic.framework\"")
+        sh("cp -r build/macosx/NewRelic.framework/. \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework\"")
     end
   end
 end
