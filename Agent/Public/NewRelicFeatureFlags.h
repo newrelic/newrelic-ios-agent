@@ -31,7 +31,7 @@
    Enabled by default. Controls capture of handled exceptions via 'recordHandledException:' API.
 
 - NRFeatureFlag_NSURLSessionInstrumentation
-   Enable (default) or disable  flag for instrumentation of NSURLSessions.
+   Enable (default) or disable flag for instrumentation of NSURLSessions.
    Currently only instruments network activity dispatched with
    NSURLSessionDataTasks and NSURLSessionUploadTasks.
 
@@ -57,6 +57,7 @@
     Enabled by default. Enables distributed tracing support for network
     requests.
 
+ // Do not use flag GestureInstrumentation please.
  - NRFeatureFlag_GestureInstrumentation
     Disabled by default.
 
@@ -65,7 +66,7 @@
     Note: App Launch start are not reported when using Simulators or during debugging.
 
  - NRFeatureFlag_SwiftAsyncURLSessionSupport
-    Enable or disable  (default) flag for automatic instrumentation of async URLSession functions in Swift.
+    Disabled by default. Enable or disable (default) flag for automatic instrumentation of async URLSession functions in Swift.
 */
 
 
@@ -81,10 +82,11 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_NetworkRequestEvents                  = 1 << 9,
     NRFeatureFlag_HandledExceptionEvents                = 1 << 10,
     NRFeatureFlag_DefaultInteractions                   = 1 << 12,
-    // Do not use ExperimentalNetworkingInstrumentation please.
+    // Do not use flag ExperimentalNetworkingInstrumentation please.
     NRFeatureFlag_ExperimentalNetworkingInstrumentation = 1 << 13, // Disabled by default. Do not use please.
     NRFeatureFlag_DistributedTracing                    = 1 << 14,
-    NRFeatureFlag_GestureInstrumentation                = 1 << 15, // Disabled by default
+    // Do not use flag GestureInstrumentation please.
+    NRFeatureFlag_GestureInstrumentation                = 1 << 15, // Disabled by default. Do not use please.
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
     NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 17, // Disabled by default
 };
