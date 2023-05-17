@@ -19,6 +19,7 @@
 #import "NRMAHTTPUtilities.h"
 #import "NRMAAssociate.h"
 #import "NRMAURLSessionTaskSearch.h"
+#import "NRMAFlags.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
 
@@ -92,8 +93,10 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
         
         NRMAOriginal__uploadTaskWithStreamedRequest=NRMASwapImplementations(clazz,@selector(uploadTaskWithStreamedRequest:),(IMP)NRMAOverride__uploadTaskWithStreamedRequest);
     }
-
-    [self swizzleURLSessionTask];
+    
+    if ([NRMAFlags shouldEnableSwiftAsyncURLSessionSupport]) {
+        [self swizzleURLSessionTask];
+    }
 }
 
 + (void) deinstrument
