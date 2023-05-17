@@ -64,6 +64,9 @@
  - NRFeatureFlag_AppStartMetrics
     Enable (default) or disable flag for automatic calculation of app start metrics. Cold and Hot(Resume) start times only.
     Note: App Launch start are not reported when using Simulators or during debugging.
+ 
+ - NRFeatureFlag_FedRampEnabled
+    When enabled, defaults the collector and crash collector to use FedRamp compliant endpoints
 
  - NRFeatureFlag_SwiftAsyncURLSessionSupport
     Disabled by default. Enable or disable (default) flag for automatic instrumentation of async URLSession functions in Swift.
@@ -88,5 +91,6 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     // Do not use flag GestureInstrumentation please.
     NRFeatureFlag_GestureInstrumentation                = 1 << 15, // Disabled by default. Do not use please.
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
-    NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 17, // Disabled by default
+    NRFeatureFlag_FedRampEnabled                        = 1 << 17, // Disabled by default
+    NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 18, // Disabled by default
 };
