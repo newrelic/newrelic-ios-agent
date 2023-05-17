@@ -43,6 +43,8 @@
 
 + (BOOL) shouldEnableAppStartMetrics;
 
++ (BOOL) shouldEnableFedRampSupport;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

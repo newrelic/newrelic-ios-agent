@@ -215,5 +215,21 @@ static NRMAFeatureFlags __originalFlags;
     XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
 }
 
+- (void) testFedRampSupportIsDisabledByDefault
+{
+    XCTAssertFalse(__originalFlags & NRFeatureFlag_FedRampEnabled, @"FedRamp support should be disabled by default!");
+}
 
+- (void) testFedRampSupportEnable
+{
+    XCTAssertFalse([NRMAFlags shouldEnableFedRampSupport], @"Since no flags have been set, FedRamp Support should be false");
+    
+    [NRMAFlags enableFeatures:NRFeatureFlag_FedRampEnabled];
+    
+    XCTAssertTrue([NRMAFlags shouldEnableFedRampSupport], @"FedRamp Support Should be enabled");
+    
+    [NRMAFlags disableFeatures:NRFeatureFlag_FedRampEnabled];
+    
+    XCTAssertFalse([NRMAFlags shouldEnableFedRampSupport], @"FedRamp Support should be disabled");
+}
 @end
