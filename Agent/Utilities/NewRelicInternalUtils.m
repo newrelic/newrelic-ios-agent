@@ -28,9 +28,6 @@
 
 #import <mach/mach.h>
 
-#define NRMA_CARRIER_OTHER        @"unknown"
-#define NRMA_CARRIER_WIFI         @"wifi"
-
 #ifdef NRMA_REACHABILITY_DEBUG
 #import "NRMADEBUG_Reachability.h"
 #endif

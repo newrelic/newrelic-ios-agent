@@ -219,6 +219,23 @@ static NRMAFeatureFlags __originalFlags;
 {
     XCTAssertFalse(__originalFlags & NRFeatureFlag_FedRampEnabled, @"FedRamp support should be disabled by default!");
 }
+- (void) testShouldSwiftAsyncURLSessionSupport
+{
+    XCTAssertFalse([NRMAFlags shouldEnableSwiftAsyncURLSessionSupport], @"since no flags have been set this should be false!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_SwiftAsyncURLSessionSupport];
+
+    XCTAssertFalse([NRMAFlags shouldEnableSwiftAsyncURLSessionSupport], @"this should now be disabled");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_SwiftAsyncURLSessionSupport];
+
+    XCTAssertTrue([NRMAFlags shouldEnableSwiftAsyncURLSessionSupport], @"this again be true!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_SwiftAsyncURLSessionSupport];
+
+    XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
+}
+
 
 - (void) testFedRampSupportEnable
 {
