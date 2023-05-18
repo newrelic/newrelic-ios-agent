@@ -44,7 +44,9 @@
 
 @property(strong) NRMAWKWebViewNavigationDelegate* navBaseWithDelegateFunction;
 @property(strong) NRMAWKNavigationDelegateWithDelegateFunctions* delegateFunctions;
+@property(strong) NRMAWKWebViewNavigationDelegate* navBaseWithOldDelegateFunction;
 @property(strong) NRMAWKNavigationDelegateWithOldDelegateFunction* oldDelegateFunction;
+@property(strong) WKWebView* webViewWithOldDelegateFunction;
 @property(strong) WKWebView* webViewWithDelegateFunction;
 @property(strong) WKNavigation* navigationItem;
 
@@ -69,6 +71,11 @@
     self.webViewWithDelegateFunction = [[WKWebView alloc] init];
     self.webViewWithDelegateFunction.navigationDelegate = _navBaseWithDelegateFunction;
     self.navigationItem = [[WKNavigation alloc]init];
+    
+    self.oldDelegateFunction = [[NRMAWKNavigationDelegateWithOldDelegateFunction alloc] init];
+    self.navBaseWithOldDelegateFunction = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:_oldDelegateFunction];
+    self.webViewWithOldDelegateFunction = [[WKWebView alloc] init];
+    self.webViewWithOldDelegateFunction.navigationDelegate = _navBaseWithOldDelegateFunction;
     
     [NRMATaskQueue clear];
 
@@ -168,17 +175,12 @@
 }
 
 - (void) testDecidePolicyForNavigationActionWithOldDelegateFunction {
-    self.oldDelegateFunction = [[NRMAWKNavigationDelegateWithOldDelegateFunction alloc] init];
-    self.navBaseWithDelegateFunction = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:_oldDelegateFunction];
-    self.webViewWithDelegateFunction = [[WKWebView alloc] init];
-    self.webViewWithDelegateFunction.navigationDelegate = _navBaseWithDelegateFunction;
-    
     NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
     if (@available(iOS 13.0, *)) {
-        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyCancel);
