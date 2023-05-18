@@ -169,6 +169,8 @@ static NSString* _osVersion;
             return kNRMAPlatformString_Flutter;
         case NRMAPlatform_Capacitor:
             return kNRMAPlatformString_Capacitor;
+        case NRMAPlatform_MAUI:
+            return kNRMAPlatformString_MAUI;
     }
 }
 
