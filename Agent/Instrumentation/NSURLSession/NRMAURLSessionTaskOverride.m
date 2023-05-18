@@ -14,6 +14,7 @@
 #import "NRLogger.h"
 #import "NRMAHTTPUtilities.h"
 #import "NRMANetworkFacade.h"
+#import "NRMAFlags.h"
 
 static IMP NRMAOriginal__resume;
 static IMP NRMAOriginal__urlSessionTask_SetState;
@@ -37,6 +38,9 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
             }
         }
     }
+    
+    // We'll only instrument setState if the user enables Swift async URLSession support.
+    if (![NRMAFlags shouldEnableSwiftAsyncURLSessionSupport]) return;
 
     // In iOS 13+ we instrument NSURLSessionTask:setState
     if (@available(iOS 13, tvOS 13, *)) {

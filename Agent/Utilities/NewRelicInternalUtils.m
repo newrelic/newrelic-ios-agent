@@ -28,9 +28,6 @@
 
 #import <mach/mach.h>
 
-#define NRMA_CARRIER_OTHER        @"unknown"
-#define NRMA_CARRIER_WIFI         @"wifi"
-
 #ifdef NRMA_REACHABILITY_DEBUG
 #import "NRMADEBUG_Reachability.h"
 #endif
@@ -172,6 +169,8 @@ static NSString* _osVersion;
             return kNRMAPlatformString_Flutter;
         case NRMAPlatform_Capacitor:
             return kNRMAPlatformString_Capacitor;
+        case NRMAPlatform_MAUI:
+            return kNRMAPlatformString_MAUI;
     }
 }
 
