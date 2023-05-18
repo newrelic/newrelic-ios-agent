@@ -45,6 +45,8 @@
 
 + (BOOL) shouldEnableFedRampSupport;
 
++ (BOOL) shouldEnableSwiftAsyncURLSessionSupport;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting
