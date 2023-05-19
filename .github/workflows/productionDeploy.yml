@@ -22,7 +22,7 @@ jobs:
         submodules: true
 
     - name: Install gems
-      run: bundle install
+      run: bundle install --redownload
 
     - name: Get name
       run: echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV

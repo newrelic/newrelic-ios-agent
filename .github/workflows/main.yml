@@ -30,7 +30,7 @@ jobs:
       run: brew install lcov
 
     - name: Install gems
-      run: bundle install
+      run: bundle install --redownload
 
     - name: Run tests on iOS (using fastlane)
       run: bundle exec fastlane runIOSTests
@@ -55,7 +55,7 @@ jobs:
         xcode-version: '14.2'
 
     - name: Install gems
-      run: bundle install
+      run: bundle install --redownload
 
     - name: Run tests on tvOS (using fastlane)
       run: bundle exec fastlane runTVOSTests
@@ -78,7 +78,7 @@ jobs:
         xcode-version: '14.2'
 
     - name: Install gems
-      run: bundle install
+      run: bundle install --redownload
 
     - name: Build NewRelic.xcframework (using fastlane)
       run: bundle exec fastlane buildAndZip
@@ -109,7 +109,7 @@ jobs:
         submodules: true
 
     - name: Install gems
-      run: bundle install
+      run: bundle install --redownload
 
     - name: Get name
       run: echo "version=${{needs.deployS3.outputs.version}}" >> $GITHUB_ENV
