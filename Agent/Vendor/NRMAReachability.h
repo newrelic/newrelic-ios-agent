@@ -53,6 +53,9 @@
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
 #endif
 
+#define NRMA_CARRIER_OTHER        @"unknown"
+#define NRMA_CARRIER_WIFI         @"wifi"
+
 typedef enum {
 	NotReachable = 0,
 	ReachableViaWiFi,

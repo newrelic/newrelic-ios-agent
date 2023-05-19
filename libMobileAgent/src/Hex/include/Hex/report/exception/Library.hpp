@@ -6,7 +6,7 @@
 #ifndef LIBMOBILEAGENT_LIBRARY_HPP
 #define LIBMOBILEAGENT_LIBRARY_HPP
 
-#include "ios_generated.h"
+#include <Hex/ios_generated.h>
 
 using namespace com::newrelic::mobile;
 using namespace flatbuffers;

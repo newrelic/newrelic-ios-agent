@@ -32,6 +32,7 @@ std::unique_ptr<Payload> Facade::newPayload() {
     auto payload = std::make_unique<Payload>();
     payload->setAccountId(Application::getInstance().getContext().getAccountId());
     payload->setAppId(Application::getInstance().getContext().getApplicationId());
+    payload->setTrustedAccountKey(Application::getInstance().getContext().getTrustedAccountKey());
     payload->setId(GuidGenerator::newGUID());
     payload->setTraceId(_currentTraceId);
     payload->setParentId(_currentParentId);

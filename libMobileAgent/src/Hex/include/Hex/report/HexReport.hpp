@@ -2,18 +2,18 @@
 // Created by Bryce Buchanan on 7/19/17.
 //  Copyright © 2023 New Relic. All rights reserved.
 //
-#include "ios_generated.h"
-#include "hex_generated.h"
-#include "session-attributes_generated.h"
-#include "agent-data_generated.h"
+#include <Hex/ios_generated.h>
+#include <Hex/hex_generated.h>
+#include <Hex/session-attributes_generated.h>
+#include <Hex/agent-data_generated.h>
 #include <Analytics/AttributeValidator.hpp>
 #include <Analytics/AttributeBase.hpp>
-#include "HandledException.hpp"
-#include "AppInfo.hpp"
-#include "BooleanAttributes.hpp"
-#include "StringAttributes.hpp"
-#include "LongAttributes.hpp"
-#include "DoubleAttributes.hpp"
+#include <Hex/HandledException.hpp>
+#include <Hex/AppInfo.hpp>
+#include <Hex/BooleanAttributes.hpp>
+#include <Hex/StringAttributes.hpp>
+#include <Hex/LongAttributes.hpp>
+#include <Hex/DoubleAttributes.hpp>
 
 #ifndef LIBMOBILEAGENT_HEXREPORT_HPP
 #define LIBMOBILEAGENT_HEXREPORT_HPP

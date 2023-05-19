@@ -10,6 +10,7 @@
 
 #include <Connectivity/Facade.hpp>
 #import "W3CTraceParent.h"
+#import "NRMAHTTPUtilities.h"
 
 @interface TestW3CTraceParent : XCTestCase
 
@@ -37,6 +38,11 @@
     // act
     payload->setAccountId(accountStr);
     payload->setAppId(appIdStd);
+
+    std::string trustedAccountStd("1");
+
+    payload->setTrustedAccountKey(trustedAccountStd);
+
     payload->setId(spanId);
     payload->setTraceId(traceId);
     payload->setTimestamp(timestamp);

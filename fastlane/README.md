@@ -71,6 +71,14 @@ Run Agent tests for tvOS
 
 Run dSYM Upload Tools test
 
+### ios clean
+
+```sh
+[bundle exec] fastlane ios clean
+```
+
+
+
 ### ios deleteBuildArtifacts
 
 ```sh

@@ -15,8 +15,7 @@
 
 extern id (*NRMA__WKWebView_navigationDelegate)(id self,
                                          SEL _cmd);
-@interface NRMAWKWebViewTests : RootTests
-@property(retain) WKWebView* webView;
+@interface NRMAWKWebViewTests : XCTestCase
 @end
 
 
@@ -24,6 +23,9 @@ extern id (*NRMA__WKWebView_navigationDelegate)(id self,
 @end
 
 @implementation Delegate
+- (void) webView:(WKWebView*)webView didStartProvisionalNavigation:(WKNavigation*)navigation {
+    NSLog(@"HELP");
+}
 @end
 
 @implementation NRMAWKWebViewTests
@@ -39,14 +41,14 @@ extern id (*NRMA__WKWebView_navigationDelegate)(id self,
 
 - (void)testReleaseOfInstrumentedWebViewDelegateObject {
     
-    self.webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:[WKWebViewConfiguration new]];
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:CGRectZero configuration:[WKWebViewConfiguration new]];
 
     //get the true navigation delegate (NRMAWebViewNavigationDelegate), rather than our redirected instrumented one
-   id navDelegate = NRMA__WKWebView_navigationDelegate(self.webView,@selector(navigationDelegate));
+   id navDelegate = NRMA__WKWebView_navigationDelegate(webView,@selector(navigationDelegate));
     
     XCTAssertEqual(2, [navDelegate retainCount]);
     
-    self.webView.navigationDelegate = nil;
+    webView.navigationDelegate = nil;
 
     XCTAssertEqual(1, [navDelegate retainCount]); // we see the nav delegate's retain count is decreased by 1 after it is no longer used internally.
     

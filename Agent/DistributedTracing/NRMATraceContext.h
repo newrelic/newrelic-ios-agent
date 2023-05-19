@@ -23,6 +23,8 @@ typedef enum trustedAccountKeys: NSUInteger {
 @property (strong) NSString*   traceId;
 @property          long long   timestamp;
 @property          AccountType trustedAccount;
+@property          NSString*   trustedAccountKeyString;
+
 // For optional/not supported fields
 @property (strong) NSString*   TRACE_FIELD_UNUSED;
 

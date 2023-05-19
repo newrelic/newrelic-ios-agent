@@ -67,6 +67,14 @@ void NewRelic::Connectivity::Payload::setParentId(const std::__1::basic_string<c
     Payload::parentId = parentId;
 }
 
+const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &NewRelic::Connectivity::Payload::getTrustedAccountKey() const {
+    return trustedAccountKey;
+}
+
+void NewRelic::Connectivity::Payload::setTrustedAccountKey(const std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> &trustedAccountKey) {
+    Payload::trustedAccountKey = trustedAccountKey;
+}
+
 long long int NewRelic::Connectivity::Payload::getTimestamp() const {
     return timestamp;
 }
@@ -93,6 +101,7 @@ NRJSON::JsonObject NewRelic::Connectivity::Payload::toJSON() {
     static const std::string idKey        = "id";
     static const std::string traceKey     = "tr";
     static const std::string timeKey      = "ti";
+    static const std::string trustKey     = "tk";
 
     NRJSON::JsonArray versionArray;
     for (auto it = version.cbegin(); it != version.cend(); it++){
@@ -106,6 +115,10 @@ NRJSON::JsonObject NewRelic::Connectivity::Payload::toJSON() {
     data[idKey] = NRJSON::JsonValue(id);
     data[traceKey] = NRJSON::JsonValue(traceId);
     data[timeKey]  = NRJSON::JsonValue(timestamp);
+
+    if (trustedAccountKey.length() > 0 && accountId != trustedAccountKey) {
+        data[trustKey] = NRJSON::JsonValue(trustedAccountKey);
+    }
 
     json[versionKey] = versionArray;
     json[dataKey] = data;

@@ -34,7 +34,7 @@
 STAssertNotNil([NewRelicAgentInternal transactionData], @"Transaction data list was nil"); \
 STAssertEquals((unsigned)1, [NewRelicAgentInternal transactionData].count, @"Expected one value in transaction data list");
 
-typedef BOOL(^ConditionalBlock)();
+typedef BOOL(^ConditionalBlock)(void);
 
 @interface WaitBlock : NSObject
 
@@ -70,8 +70,8 @@ typedef BOOL(^ConditionalBlock)();
 
 @class NewRelicAgentTests;
 
-extern NRMANetworkStatus ReachableViaWWANMethod();
-extern NRMANetworkStatus NotReachableMethod();
+extern NRMANetworkStatus ReachableViaWWANMethod(void);
+extern NRMANetworkStatus NotReachableMethod(void);
 
 extern BOOL _NRMAAgentTestModeEnabled;
 

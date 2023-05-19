@@ -6,8 +6,8 @@
 #ifndef LIBMOBILEAGENT_FRAME_HPP
 #define LIBMOBILEAGENT_FRAME_HPP
 
-#include "ios_generated.h"
-#include "hex_generated.h"
+#include <Hex/ios_generated.h>
+#include <Hex/hex_generated.h>
 
 using namespace com::newrelic::mobile;
 using namespace flatbuffers;

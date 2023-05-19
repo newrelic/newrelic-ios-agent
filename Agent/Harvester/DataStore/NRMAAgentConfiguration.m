@@ -12,6 +12,7 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionhandlerConstants.h"
 #import "NRMAAppToken.h"
+#import "NRMAFlags.h"
 
 static NSString* __NRMA__customAppVersionString = nil;
 static NSString* __NRMA__customAppBuildString = nil;
@@ -62,7 +63,9 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
     if (host) {
         _collectorHost = host;
     } else {
-        if (self.applicationToken.regionCode.length) {
+        if ([NRMAFlags shouldEnableFedRampSupport]) {
+            _collectorHost = kNRMA_FEDRAMP_COLLECTOR_HOST;
+        } else if (self.applicationToken.regionCode.length) {
             _collectorHost = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_COLLECTOR_HOST,self.applicationToken.regionCode];
         } else {
             _collectorHost = kNRMA_DEFAULT_COLLECTOR_HOST;
@@ -79,7 +82,9 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
     if (host) {
          _crashCollectorHost  = host;
     } else {
-        if (self.applicationToken.regionCode.length) {
+        if ([NRMAFlags shouldEnableFedRampSupport]) {
+            _crashCollectorHost = KNRMA_FEDRAMP_CRASH_COLLECTOR_HOST;
+        } else if (self.applicationToken.regionCode.length) {
             _crashCollectorHost = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_CRASH_HOST,self.applicationToken.regionCode];
         } else {
             _crashCollectorHost = kNRMA_DEFAULT_CRASH_COLLECTOR_HOST;
