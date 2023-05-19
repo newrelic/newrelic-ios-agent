@@ -4,7 +4,7 @@
 #ifndef FLATBUFFERS_GENERATED_IOS_COM_NEWRELIC_MOBILE_FBS_IOS_H_
 #define FLATBUFFERS_GENERATED_IOS_COM_NEWRELIC_MOBILE_FBS_IOS_H_
 
-#include "flatbuffers/flatbuffers.h"
+#include <flatbuffers/flatbuffers.h>
 
 namespace com {
 namespace newrelic {

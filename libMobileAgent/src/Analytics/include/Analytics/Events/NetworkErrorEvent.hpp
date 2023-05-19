@@ -3,7 +3,7 @@
 #ifndef LIBMOBILEAGENT_NETWORKERROREVENT_HPP
 #define LIBMOBILEAGENT_NETWORKERROREVENT_HPP
 
-#include "IntrinsicEvent.hpp"
+#include <Analytics/IntrinsicEvent.hpp>
 
 namespace NewRelic {
     class NetworkErrorEvent : public IntrinsicEvent {

@@ -1,7 +1,7 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
 #include <Utilities/Value.hpp>
-#include "AttributeBase.hpp"
+#include <Analytics/AttributeBase.hpp>
 #include <string>
 #include <functional>
 #ifndef __Attribute_H_

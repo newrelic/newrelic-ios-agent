@@ -6,8 +6,8 @@
 #ifndef LIBMOBILEAGENT_EVENTDESERIALIZER_HPP
 #define LIBMOBILEAGENT_EVENTDESERIALIZER_HPP
 
-#include "AnalyticEvent.hpp"
-#include "Analytics/Deserializer.hpp"
+#include <Analytics/AnalyticEvent.hpp>
+#include <Analytics/Deserializer.hpp>
 #include <sstream>
 namespace NewRelic {
     class EventDeserializer : public Deserializer {

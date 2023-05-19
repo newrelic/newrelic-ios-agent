@@ -28,6 +28,7 @@
 #define kNRMA_ENCODING_KEY @"encoding_key"
 #define kNRMA_ACCOUNT_ID @"account_id"
 #define kNMRA_APPLICATION_ID @"application_id"
+#define kNRMA_TRUSTED_ACCOUNT_KEY @"trusted_account_key"
 
 #define NRMA_DEFAULT_COLLECT_NETWORK_ERRORS YES  // boolean
 #define NRMA_DEFAULT_REPORT_PERIOD 60            // seconds
@@ -58,6 +59,7 @@
 @property(nonatomic,assign) NSString* encoding_key;
 @property(nonatomic,assign) long long account_id;
 @property(nonatomic,assign) long long application_id;
+@property(nonatomic,strong) NSString* trusted_account_key;
 
 + (id) defaultHarvesterConfiguration;
 - (BOOL) isValid;
