@@ -84,7 +84,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '14.2'
+        xcode-version: '14.3'
 
     - name: Update gem
       run: bundle update
