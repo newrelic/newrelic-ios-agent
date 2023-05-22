@@ -114,7 +114,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: build-reports
-        path: plugins/gradle/build/reports/
+        path: /Users/runner/Library/Logs/fastlane/xcbuild/
 
   # Create NewRelicAgent.podspec & Package.swift with new version number and checksum.
   deployStagingSpecs:
