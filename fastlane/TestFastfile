@@ -28,7 +28,7 @@ platform :ios do
       code_coverage: true,
       scheme: "Agent-iOS",
       device: "iPhone 8",
-      raw_buildlog: true
+      disable_xcpretty: true
     )
   end
   
@@ -52,7 +52,7 @@ platform :ios do
       code_coverage: true,
       scheme: "Agent-tvOS",
       device: "Apple TV",
-      raw_buildlog: true
+      disable_xcpretty: true
 
     )
   end
