@@ -27,7 +27,8 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-iOS",
-      device: "iPhone 8"
+      device: "iPhone 8",
+      raw_buildlog: true
     )
   end
   
@@ -50,7 +51,9 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-tvOS",
-      device: "Apple TV"
+      device: "Apple TV",
+      raw_buildlog: true
+
     )
   end
 
