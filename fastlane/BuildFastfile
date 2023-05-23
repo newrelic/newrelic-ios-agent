@@ -8,6 +8,7 @@ platform :ios do
     xcodebuild(
       clean: true,
       archive: true,
+      verbose: true,
       archive_path: "#{Constants::ARCHIVES}/iOS.xcarchive",
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
@@ -15,18 +16,19 @@ platform :ios do
       sdk: "iphoneos",
       derivedDataPath: Constants::DD,
       xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
     # Build Sim
     xcodebuild(
       clean: true, 
       build: true,
+      verbose: true,
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "iphonesimulator",
       derivedDataPath: Constants::DD,
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
   end
 
@@ -35,6 +37,7 @@ platform :ios do
     # Build Device
     xcodebuild(
       archive: true,
+      verbose: true,
       archive_path: "#{Constants::ARCHIVES}/tvOS.xcarchive",
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
@@ -42,17 +45,18 @@ platform :ios do
       sdk: "appletvos",
       derivedDataPath: Constants::DD,
       xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
     # Build Sim
     xcodebuild(
       build: true, 
+      verbose: true,
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-tvOS",
       sdk: "appletvsimulator",
       derivedDataPath: Constants::DD,
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
   end 
 
