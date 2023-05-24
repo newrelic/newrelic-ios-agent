@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
+		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		F824A30229A811E8000886A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F824A30129A811E8000886A6 /* Assets.xcassets */; };
 		F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */; };
 		F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */; };
@@ -19,8 +22,6 @@
 		F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8302B01296F5EFB003EC291 /* Assets.xcassets */; };
 		F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */; };
 		F8302B10296F5EFB003EC291 /* NRTestAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B0F296F5EFB003EC291 /* NRTestAppTests.swift */; };
-		F8302B8229705B28003EC291 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
-		F8302B8329705B28003EC291 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B8529707695003EC291 /* ViewControllerProvider.swift */; };
 		F8302B89297076E9003EC291 /* Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B88297076E9003EC291 /* Coordinator.swift */; };
 		F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B8A297076F9003EC291 /* MainCoordinator.swift */; };
@@ -106,13 +107,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		F8302B8429705B29003EC291 /* Embed Frameworks */ = {
+		2BE9D6C32A1E90E400A09A98 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				F8302B8329705B28003EC291 /* NewRelic.framework in Embed Frameworks */,
+				2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -175,7 +176,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F8302B8229705B28003EC291 /* NewRelic.framework in Frameworks */,
+				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
+				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -358,8 +360,8 @@
 				F8302AF1296F5EFA003EC291 /* Sources */,
 				F8302AF2296F5EFA003EC291 /* Frameworks */,
 				F8302AF3296F5EFA003EC291 /* Resources */,
-				F8302B8429705B29003EC291 /* Embed Frameworks */,
 				F8302B7A297057F9003EC291 /* Run New Relic dSYM Upload Tool */,
+				2BE9D6C32A1E90E400A09A98 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -784,8 +786,9 @@
 				CODE_SIGN_ENTITLEMENTS = NRTestApp/NRTestApp.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				"ENABLE_APP_SANDBOX[sdk=*]" = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestApp/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -800,7 +803,7 @@
 				);
 				MARKETING_VERSION = 4.7;
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRApp.bitcode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
@@ -825,10 +828,13 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
+				ENABLE_APP_SANDBOX = YES;
+				"ENABLE_APP_SANDBOX[sdk=*]" = NO;
+				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestApp/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -910,7 +916,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist";
@@ -943,7 +949,7 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=appletvos*]" = SU7SUNGZJP;
 				GENERATE_INFOPLIST_FILE = YES;
