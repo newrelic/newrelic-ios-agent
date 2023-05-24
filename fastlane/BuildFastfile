@@ -73,11 +73,9 @@ platform :ios do
     #   sdk: "macosx",
     #   derivedDataPath: Constants::DD,
     #   xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES",
-    #   xcodebuild_formatter: ""
+    #   raw_buildlog: true
     # )
     
-    # Execute the following, grab the xcarchive and put it in the XCFramework.
-    # ./scripts/build_catalyst_agent.sh
     Dir.chdir("..") do
         sh("pwd")
         # change it to take -- "#{Constants::ARCHIVES}/macOS.xcarchive"
@@ -85,11 +83,14 @@ platform :ios do
 
         sh("pwd")
         sh("mkdir -p \"#{Constants::ARCHIVES}/macOS.xcarchive\"")
-        sh("cp -r build/macosx/macosx.xcarchive/. \"#{Constants::ARCHIVES}/macOS.xcarchive\"")
+        sh("cp -p -R build/macosx/macosx.xcarchive/. \"#{Constants::ARCHIVES}/macOS.xcarchive\"")
       
         sh("mkdir -p \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework\"")
 
-        sh("cp -r build/macosx/NewRelic.framework/. \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework\"")
+        sh("cp -p -R build/macosx/NewRelic.framework/. \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework\"")
+
+        sh("./scripts/fixFrameworkSymlinks.sh \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic\"")
+
     end
   end
 end
