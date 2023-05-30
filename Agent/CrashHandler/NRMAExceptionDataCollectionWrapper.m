@@ -37,12 +37,6 @@ static NRMAExceptionDataCollectionWrapper* __wrapper;
 + (void) startCrashMetaDataMonitors
 {
     [[[self class] singleton] beginMonitoringOrientation];
-    [[[self class] singleton] beginMonitoringMemoryUsage];
-
-}
-
-- (void) beginMonitoringMemoryUsage
-{
 
 }
 
@@ -57,7 +51,7 @@ static NRMAExceptionDataCollectionWrapper* __wrapper;
 #endif
 }
 
-- (void) endMonitoringOrientation
++ (void) endMonitoringOrientation
 {
 #if !TARGET_OS_TV
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -77,25 +71,5 @@ static NRMAExceptionDataCollectionWrapper* __wrapper;
 #endif
 }
 
-#pragma mark external facing setters
-// Store Network Status.
-+ (void) storeNetworkStatus:(NRMANetworkStatus)status
-{
-    NRMA_setNetworkConnectivity([[self class] enumToString:status].UTF8String);
-}
-
-+ (NSString*) enumToString:(NRMANetworkStatus)status
-{
-    switch (status) {
-        case ReachableViaWiFi:
-            return @"wifi";
-            break;
-        case ReachableViaWWAN:
-            return @"cell";
-        case NotReachable:
-        default:
-            return @"none";
-            break;
-    }
-}
 @end
+

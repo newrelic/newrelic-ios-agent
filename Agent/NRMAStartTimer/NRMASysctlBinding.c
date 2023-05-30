@@ -22,7 +22,7 @@ struct timeval timeVal(const int majorCommand, const int minorCommand) {
     return value;
 }
 
-struct timeval processStartTime() {
+struct timeval processStartTime(void) {
     size_t length = 4;
     int mib[length];
 

@@ -2,7 +2,7 @@
 
 #ifndef LIBMOBILEAGENT_INTRINSICEVENT_HPP
 #define LIBMOBILEAGENT_INTRINSICEVENT_HPP
-#include "AnalyticEvent.hpp"
+#include <Analytics/AnalyticEvent.hpp>
 #include <Connectivity/Payload.hpp>
 namespace NewRelic {
     class IntrinsicEvent : public AnalyticEvent {

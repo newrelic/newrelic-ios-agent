@@ -6,12 +6,12 @@
 #include <Analytics/BreadcrumbEvent.hpp>
 #include <Analytics/RequestEvent.hpp>
 
-#include "CustomMobileEvent.hpp"
-#include "InteractionAnalyticEvent.hpp"
-#include "SessionAnalyticEvent.hpp"
-#include "UserActionEvent.hpp"
-#include "CustomEvent.hpp"
-#include "PersistentStore.hpp"
+#include <Analytics/CustomMobileEvent.hpp>
+#include <Analytics/InteractionAnalyticEvent.hpp>
+#include <Analytics/SessionAnalyticEvent.hpp>
+#include <Analytics/UserActionEvent.hpp>
+#include <Analytics/CustomEvent.hpp>
+#include <Analytics/PersistentStore.hpp>
 
 #ifndef __EventManager_H_
 #define __EventManager_H_

@@ -12,8 +12,19 @@
 #import "NRTimer.h"
 #import <WebKit/WebKit.h>
 #import "NRMAWKFakeNavigationAction.h"
+#import "NRMATaskQueue.h"
+#import "NRMeasurementConsumerHelper.h"
+#import "NRMAMeasurements.h"
+#import "NRMAHTTPTransactionMeasurement.h"
+
+@interface NRMATaskQueue (tests)
++ (void) clear;
+@end
 
 @interface NRMAWKNavigationDelegateWithDelegateFunctions : NSObject <WKNavigationDelegate>
+@end
+
+@interface NRMAWKNavigationDelegateWithOldDelegateFunction : NSObject <WKNavigationDelegate>
 @end
 
 @interface NRWKNavigationDelegateBase ()
@@ -33,7 +44,14 @@
 
 @property(strong) NRMAWKWebViewNavigationDelegate* navBaseWithDelegateFunction;
 @property(strong) NRMAWKNavigationDelegateWithDelegateFunctions* delegateFunctions;
+@property(strong) NRMAWKWebViewNavigationDelegate* navBaseWithOldDelegateFunction;
+@property(strong) NRMAWKNavigationDelegateWithOldDelegateFunction* oldDelegateFunction;
+@property(strong) WKWebView* webViewWithOldDelegateFunction;
 @property(strong) WKWebView* webViewWithDelegateFunction;
+@property(strong) WKNavigation* navigationItem;
+
+@property(strong) NRMAMeasurementConsumerHelper* helper;
+
 
 @end
 
@@ -43,7 +61,7 @@
     [super setUp];
     self.navBase = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:self];
     self.web = [[WKNavigation alloc] init];
-    self.url = [NSURL URLWithString: @"localhost"];
+    self.url = [NSURL URLWithString: @"http://localhost/"];
     self.timer = [[NRTimer alloc] init];
     self.webView = [[WKWebView alloc] init];
     self.webView.navigationDelegate = _navBase;
@@ -52,9 +70,26 @@
     self.navBaseWithDelegateFunction = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:_delegateFunctions];
     self.webViewWithDelegateFunction = [[WKWebView alloc] init];
     self.webViewWithDelegateFunction.navigationDelegate = _navBaseWithDelegateFunction;
+    self.navigationItem = [[WKNavigation alloc]init];
+    
+    self.oldDelegateFunction = [[NRMAWKNavigationDelegateWithOldDelegateFunction alloc] init];
+    self.navBaseWithOldDelegateFunction = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:_oldDelegateFunction];
+    self.webViewWithOldDelegateFunction = [[WKWebView alloc] init];
+    self.webViewWithOldDelegateFunction.navigationDelegate = _navBaseWithOldDelegateFunction;
+    
+    [NRMATaskQueue clear];
+
+    self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_HTTPTransaction];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:self.helper];
+
 }
 
 - (void)tearDown {
+    [NRMAMeasurements removeMeasurementConsumer:self.helper];
+    self.helper = nil;
+    [NRMAMeasurements shutdown];
+    
     [super tearDown];
 }
 
@@ -77,7 +112,7 @@
 }
 
 - (void) testDecidePolicyForNavigationAction {
-    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"localhost"]];
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
@@ -96,7 +131,7 @@
 }
 
 - (void) testDidReceiveAuthenticationChallenge {
-    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"localhost"]];
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
     
     NRMAWKFakeURLAuthenticationChallenge *testChallenge = [[NRMAWKFakeURLAuthenticationChallenge alloc] initWith:url];
     
@@ -109,7 +144,7 @@
 }
 
 - (void) testDecidePolicyForNavigationResponse {
-    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"localhost"]];
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
@@ -121,7 +156,7 @@
 }
 
 - (void) testDecidePolicyForNavigationActionWithDelegateFunctions {
-    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"localhost"]];
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
@@ -139,8 +174,21 @@
     }
 }
 
+- (void) testDecidePolicyForNavigationActionWithOldDelegateFunction {
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
+    
+    NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
+    
+    if (@available(iOS 13.0, *)) {
+        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+            [testAction decisionHandler:policy];
+        }];
+        XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyCancel);
+    }
+}
+
 - (void) testDidReceiveAuthenticationChallengeWithDelegateFunctions {
-    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"localhost"]];
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
     
     NRMAWKFakeURLAuthenticationChallenge *testChallenge = [[NRMAWKFakeURLAuthenticationChallenge alloc] initWith:url];
     
@@ -153,7 +201,7 @@
 }
 
 - (void) testDecidePolicyForNavigationResponseWithDelegateFunctions {
-    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:@"localhost"]];
+    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
@@ -164,10 +212,89 @@
     XCTAssertEqual(testResponse.receivedPolicy, WKNavigationResponsePolicyAllow);
 }
 
+- (void)testWebViewLoadTimeMetric {
+    [self startWebKitLoad];
+    
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didFinishNavigation:self.navigationItem];
+    sleep(1);
+    
+    NSString* fullMetricName = self.url.absoluteString;
+    
+    NRMAHTTPTransactionMeasurement* foundMeasurement;
+    
+    for (id measurement in self.helper.consumedMeasurements) {
+        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+    
+    XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
+}
+
+- (void)testWebViewLoadFailedProvisionalNavigationMetric {
+    [self startWebKitLoad];
+    
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailProvisionalNavigation:self.navigationItem withError:[self createNSError]];
+    sleep(1);
+    
+    NSString* fullMetricName = self.url.absoluteString;
+    
+    NRMAHTTPTransactionMeasurement* foundMeasurement;
+    
+    for (id measurement in self.helper.consumedMeasurements) {
+        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+    
+    XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
+    
+}
+
+- (void)testWebViewLoadDidFailNavigationMetric {
+    [self startWebKitLoad];
+    
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailNavigation:self.navigationItem withError:[self createNSError]];
+    sleep(1);
+    
+    NSString* fullMetricName = self.url.absoluteString;
+    
+    NRMAHTTPTransactionMeasurement* foundMeasurement;
+    
+    for (id measurement in self.helper.consumedMeasurements) {
+        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+    
+    XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
+    
+}
+
+- (void) startWebKitLoad {
+    NSURLRequest* urlRequest = [[NSURLRequest alloc] initWithURL:self.url];
+    [self.webViewWithDelegateFunction loadRequest:urlRequest];
+    
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didStartProvisionalNavigation:self.navigationItem];
+}
+
+- (NSError*) createNSError {
+    return [NSError errorWithDomain:@"some_domain" code:100 userInfo:@{
+                                                        NSLocalizedDescriptionKey:@"Something went wrong"
+                                                        }];;
+}
 @end
 
 @implementation NRMAWKNavigationDelegateWithDelegateFunctions
 #pragma mark Delegate Functions
+
+- (void) webView:(WKWebView*)webView didStartProvisionalNavigation:(WKNavigation*)navigation {}
+- (void) webView:(WKWebView*)webView didFinishNavigation:(WKNavigation*)navigation {}
+- (void) webView:(WKWebView*)webView didFailProvisionalNavigation:(WKNavigation*)navigation withError:(NSError*)error {}
+- (void) webView:(WKWebView*)webView didFailNavigation:(WKNavigation*)navigation withError:(NSError*)error {}
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
@@ -186,6 +313,16 @@
 
 - (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
     completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+}
+
+@end
+
+@implementation NRMAWKNavigationDelegateWithOldDelegateFunction
+#pragma mark Delegate Functions
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+{
+    decisionHandler(WKNavigationActionPolicyCancel);
 }
 
 @end
