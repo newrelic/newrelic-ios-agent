@@ -102,6 +102,8 @@
     config.stack_trace_limit = 100;
     config.account_id = 190;
     config.application_id = 39484;
+    config.trusted_account_key = @"123";
+    
     config.encoding_key = @"encoding_key";
     
     return config;

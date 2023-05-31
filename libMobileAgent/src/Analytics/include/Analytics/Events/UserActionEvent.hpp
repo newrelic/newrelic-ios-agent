@@ -6,8 +6,8 @@
 
 #ifndef LIBMOBILEAGENT_USERACTIONEVENT_HPP
 #define LIBMOBILEAGENT_USERACTIONEVENT_HPP
-#include "IntrinsicEvent.hpp"
-#include "Analytics/EventDeserializer.hpp"
+#include <Analytics/IntrinsicEvent.hpp>
+#include <Analytics/EventDeserializer.hpp>
 
 namespace NewRelic {
     class UserActionEvent : public AnalyticEvent {

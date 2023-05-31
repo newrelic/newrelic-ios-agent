@@ -258,6 +258,7 @@
                 architecture = @"x86_64";
                 break;
             default:
+                architecture = @"Unknown";
                 break;
         }
     }
@@ -296,7 +297,7 @@
 
 + (NSString*) subtypesForARM64:(uint64_t)subtype
 {
-    switch (CPU_SUBTYPE_ARM64_PTR_AUTH_VERSION(subtype)) {
+    switch (subtype) {
         case CPU_SUBTYPE_ARM64_ALL:
             return @"arm64";
             break;

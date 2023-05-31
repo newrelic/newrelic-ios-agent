@@ -8,6 +8,7 @@ platform :ios do
     xcodebuild(
       clean: true,
       archive: true,
+      verbose: true,
       archive_path: "#{Constants::ARCHIVES}/iOS.xcarchive",
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
@@ -15,18 +16,19 @@ platform :ios do
       sdk: "iphoneos",
       derivedDataPath: Constants::DD,
       xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
     # Build Sim
     xcodebuild(
       clean: true, 
       build: true,
+      verbose: true,
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-iOS",
       sdk: "iphonesimulator",
       derivedDataPath: Constants::DD,
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
   end
 
@@ -35,6 +37,7 @@ platform :ios do
     # Build Device
     xcodebuild(
       archive: true,
+      verbose: true,
       archive_path: "#{Constants::ARCHIVES}/tvOS.xcarchive",
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
@@ -42,32 +45,52 @@ platform :ios do
       sdk: "appletvos",
       derivedDataPath: Constants::DD,
       xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
     # Build Sim
     xcodebuild(
       build: true, 
+      verbose: true,
       configuration: "#{Constants::MODE}",
       workspace: "Agent.xcworkspace",
       scheme: "Agent-tvOS",
       sdk: "appletvsimulator",
       derivedDataPath: Constants::DD,
-      xcodebuild_formatter: ""
+      raw_buildlog: true
     )
   end 
 
   desc "Build macOS.xcarchive"
   lane :buildMacOS do 
-    xcodebuild(
-      archive: true,
-      archive_path: "#{Constants::ARCHIVES}/macOS.xcarchive",
-      configuration: "#{Constants::MODE}",
-      workspace: "Agent.xcworkspace",
-      scheme: "Agent-iOS",
-      sdk: "macosx",
-      derivedDataPath: Constants::DD,
-      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES",
-      xcodebuild_formatter: ""
-    )
+
+    # The way I goofed previously was using this new code here that doesn't codesign the Mac OS portion of the XCFramework.... Don't do that. Left for historical knowledge.
+    # xcodebuild(
+    #   archive: true,
+    #   archive_path: "#{Constants::ARCHIVES}/macOS.xcarchive",
+    #   configuration: "#{Constants::MODE}",
+    #   workspace: "Agent.xcworkspace",
+    #   scheme: "Agent-iOS",
+    #   sdk: "macosx",
+    #   derivedDataPath: Constants::DD,
+    #   xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES SUPPORTS_MACCATALYST=YES",
+    #   raw_buildlog: true
+    # )
+    
+    Dir.chdir("..") do
+        sh("pwd")
+        # change it to take -- "#{Constants::ARCHIVES}/macOS.xcarchive"
+        sh("./scripts/build_catalyst_agent.sh")
+
+        sh("pwd")
+        sh("mkdir -p \"#{Constants::ARCHIVES}/macOS.xcarchive\"")
+        sh("cp -p -R build/macosx/macosx.xcarchive/. \"#{Constants::ARCHIVES}/macOS.xcarchive\"")
+      
+        sh("mkdir -p \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework\"")
+
+        sh("cp -p -R build/macosx/NewRelic.framework/. \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework\"")
+
+        sh("./scripts/fixFrameworkSymlinks.sh \"#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic\"")
+
+    end
   end
 end

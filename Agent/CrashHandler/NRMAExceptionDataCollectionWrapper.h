@@ -11,6 +11,7 @@
 @interface NRMAExceptionDataCollectionWrapper : NSObject
 
 + (void) startCrashMetaDataMonitors;
++ (void) endMonitoringOrientation;
 
 @end
 

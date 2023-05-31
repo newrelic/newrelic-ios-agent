@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "Utilities/BaseValue.hpp"
+#include <Utilities/BaseValue.hpp>
 
 #ifndef __String_H_
 #define __String_H_

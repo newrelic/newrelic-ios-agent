@@ -21,6 +21,9 @@ jobs:
       with: 
         submodules: true
 
+    - name: Update gem
+      run: bundle update
+
     - name: Install gems
       run: bundle install
 

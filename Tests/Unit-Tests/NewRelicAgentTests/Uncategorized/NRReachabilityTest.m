@@ -16,11 +16,11 @@
 
 #pragma mark Methods to override the NRMAReachability currentReachabilityStatus method
 
-NRMANetworkStatus ReachableViaWWANMethod() {
+NRMANetworkStatus ReachableViaWWANMethod(void) {
     return ReachableViaWWAN;
 }
 
-NRMANetworkStatus NotReachableMethod() {
+NRMANetworkStatus NotReachableMethod(void) {
     return NotReachable;
 }
 

@@ -1,10 +1,10 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
 #include <unistd.h>
-#include "CacheBackedStore.hpp"
+#include <Analytics/CacheBackedStore.hpp>
 #include <Utilities/libLogger.hpp>
 #include <Utilities/WorkQueue.hpp>
-#include "AnalyticEvent.hpp"
+#include <Analytics/AnalyticEvent.hpp>
 #include <chrono>
 #include <sstream>
 

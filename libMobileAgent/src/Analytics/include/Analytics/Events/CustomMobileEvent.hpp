@@ -1,7 +1,7 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
 #include <string>
-#include "NamedAnalyticEvent.hpp"
+#include <Analytics/NamedAnalyticEvent.hpp>
 
 #ifndef __CustomMobileEvent_H_
 #define __CustomMobileEvent_H_
