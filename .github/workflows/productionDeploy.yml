@@ -66,8 +66,8 @@ jobs:
     - name: Print XCFramework name
       run: echo "${{ env.version }}" 
 
-     - name: Create Prod Podspec for XCFramework version
-       run: |
+    - name: Create Prod Podspec for XCFramework version
+      run: |
          cd main
 
          cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
@@ -77,7 +77,7 @@ jobs:
          rm NewRelicAgent.podspecbak
 
          pod trunk push --allow-warnings NewRelicAgent.podspec
-       env:
+      env:
          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
    # - name: Create Prod Package.swift for XCFramework version
