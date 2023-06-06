@@ -1004,6 +1004,7 @@
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
 		F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABB324E704A600E45C90 /* NRMAWKWebViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 /* End PBXBuildFile section */
@@ -1885,6 +1886,7 @@
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
+		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -2284,6 +2286,7 @@
 		021A15B024C9EEE700E8DFD5 = {
 			isa = PBXGroup;
 			children = (
+				F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */,
 				34A929172912D721001449B6 /* Hex.xcodeproj */,
 				34A9291D2912D726001449B6 /* Analytics.xcodeproj */,
 				34A929232912D72A001449B6 /* Connectivity.xcodeproj */,
@@ -3985,6 +3988,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
