@@ -21,7 +21,7 @@
 #define kNRMA_DEFAULT_LOGGING_HOST           @"log-api.newrelic.com"
 #define kNRMA_REGION_SPECIFIC_LOGGING_HOST   @"log-api.%@.newrelic.com"
 #define kNRMA_STAGING_LOGGING_HOST           @"staging-log-api.newrelic.com"
-
+#define kNRMA_FEDRAMP_LOGGING_HOST           @"gov-log-api.newrelic.com"
 
 @interface NRMAAgentConfiguration : NSObject
 

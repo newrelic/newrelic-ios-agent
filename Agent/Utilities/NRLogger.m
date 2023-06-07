@@ -283,8 +283,8 @@ withMessage:(NSString *)message {
             NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
             NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", self->logURL,  self->logIngestKey]]];
-
+            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
+            [req setValue:self->logIngestKey forHTTPHeaderField:@"Api-Key"];
             req.HTTPMethod = @"POST";
 
             NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {

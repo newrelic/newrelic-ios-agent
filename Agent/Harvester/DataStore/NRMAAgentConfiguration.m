@@ -106,10 +106,13 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
     else if ([self.collectorHost isEqualToString:@"staging-mobile-collector.newrelic.com"]) {
         _loggingURL = kNRMA_STAGING_LOGGING_HOST;
     }
+    else if ([NRMAFlags shouldEnableFedRampSupport]) {
+        _loggingURL = kNRMA_FEDRAMP_LOGGING_HOST;
+    }
     else {
         _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
     }
-    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1?Api-Key="];
+    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1"];
 
     NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
 
