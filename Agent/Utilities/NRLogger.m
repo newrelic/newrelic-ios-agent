@@ -285,6 +285,8 @@ withMessage:(NSString *)message {
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
             NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
             [req setValue:self->logIngestKey forHTTPHeaderField:@"Api-Key"];
+            [req setValue:@"NEWRELIC" forKey:@"X_APP_LICENSE_KEY_REQUEST_HEADER"];
+
             req.HTTPMethod = @"POST";
 
             NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
