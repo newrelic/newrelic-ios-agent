@@ -68,8 +68,13 @@ withMessage:(NSString *)message {
     [[NRLogger logger] setLogTargets:targets];
 }
 
++ (void)setLogIngestKey:(NSString*)key {
+    [[NRLogger logger] setLogIngestKey:key];
+}
+
 + (void)setLogURL:(NSString*) url {
     [[NRLogger logger] setLogURL:url];
+
 }
 
 + (NSString *)logFilePath {
@@ -257,15 +262,17 @@ withMessage:(NSString *)message {
     }
 }
 
+- (void)setLogIngestKey:(NSString*)url {
+    self->logIngestKey = url;
+}
 - (void)setLogURL:(NSString*)url {
     self->logURL = url;
 }
-
 - (void)upload {
     @synchronized (self) {
         if (self->logFile) {
             // 
-            if (!self->logURL) {
+            if (!self->logIngestKey) {
                 NRLOG_VERBOSE(@"Set Logging URL to upload logs to New Relic using the Logs API.");
                 return;
             }
@@ -276,7 +283,7 @@ withMessage:(NSString *)message {
             NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
             NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self->logURL]];
+            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self->logIngestKey]];
 
             req.HTTPMethod = @"POST";
 

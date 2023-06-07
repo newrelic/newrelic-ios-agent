@@ -109,7 +109,7 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
     else {
         _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
     }
-    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1?Api-Key=%@",self.applicationToken.value];
+    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1?Api-Key="];
 
     NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
 

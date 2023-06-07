@@ -91,6 +91,8 @@ typedef enum _NRLogTargets {
     unsigned int logTargets;
     NSFileHandle *logFile;
     NSString *logURL;
+
+    NSString *logIngestKey;
 }
 
 + (void)log:(unsigned int)level
@@ -125,7 +127,10 @@ Configure the New Relic headerless logging API URL.
 
 @param url A single NSString constant, the logging API URL.
 */
-+ (void)setLogURL:(NSString*)url;
++ (void)setLogIngestKey:(NSString*) key;
+
+
++ (void)setLogURL:(NSString*) url;
 
 /*!
  @result the path of the file to which the New Relic agent is logging.

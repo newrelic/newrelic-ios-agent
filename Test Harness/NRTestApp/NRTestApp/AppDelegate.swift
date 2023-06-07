@@ -50,8 +50,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
-        if let logURL = plistHelper.objectFor(key: "logAddress", plist: "NRAPI-Info") as? String, !logURL.isEmpty {
-            NRLogger.setLogURL(logURL)
+        if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {
+            NRLogger.setLogIngestKey(logIngestKey)
         }
         else {
             print("NRLogger API uploading disabled. No URL given.")
