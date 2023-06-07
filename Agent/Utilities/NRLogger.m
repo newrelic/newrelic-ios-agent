@@ -272,7 +272,7 @@ withMessage:(NSString *)message {
     @synchronized (self) {
         if (self->logFile) {
             // 
-            if (!self->logIngestKey) {
+            if (!self->logIngestKey || !self->logURL) {
                 NRLOG_VERBOSE(@"Set Logging URL to upload logs to New Relic using the Logs API.");
                 return;
             }
@@ -283,7 +283,7 @@ withMessage:(NSString *)message {
             NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
             NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self->logIngestKey]];
+            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", self->logURL,  self->logIngestKey]]];
 
             req.HTTPMethod = @"POST";
 
