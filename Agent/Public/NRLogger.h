@@ -93,6 +93,9 @@ typedef enum _NRLogTargets {
     NSString *logURL;
 
     NSString *logIngestKey;
+    dispatch_queue_t logQueue;
+    unsigned long long lastFileSize;
+
 }
 
 + (void)log:(unsigned int)level

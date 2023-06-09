@@ -103,6 +103,7 @@ withMessage:(NSString *)message {
         self->logLevels = NRLogLevelError | NRLogLevelWarning;
         self->logTargets = NRLogTargetConsole;
         self->logFile = nil;
+        self->logQueue = dispatch_queue_create("com.newrelicagent.loggingfilequeue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -118,7 +119,8 @@ withMessage:(NSString *)message {
 
 - (void)addLogMessage:(NSDictionary *)message {
     // The static method checks the log level before we get here.
-    @synchronized(self) {
+    //    @synchronized(self) {
+    dispatch_async(logQueue, ^{
         if (self->logTargets & NRLogTargetConsole) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
@@ -127,6 +129,7 @@ withMessage:(NSString *)message {
                   [message objectForKey:NRLogMessageLineNumberKey],
                   [message objectForKey:NRLogMessageMethodKey],
                   [message objectForKey:NRLogMessageMessageKey]);
+
         }
         if (self->logTargets & NRLogTargetFile) {
             NSData *json = [self jsonDictionary:message];
@@ -135,9 +138,20 @@ withMessage:(NSString *)message {
                     [self->logFile writeData:[NSData dataWithBytes:"," length:1]];
                 }
                 [self->logFile writeData:json];
+
+                dispatch_async(self->logQueue, ^{
+                    NSFileHandle *handleForReadingAtPath = [NSFileHandle fileHandleForReadingAtPath:[NRLogger logFilePath]];
+                    self->lastFileSize = [handleForReadingAtPath seekToEndOfFile];
+                   // NSLog(@"logs fileSize = %llu", self->lastFileSize);
+                    if (self->lastFileSize > kNRMAMaxPayloadSizeLimit) {
+                       // NSLog(@"logs fileSize exceeds 1MB , upload logs");
+                        [self upload];
+                    }
+                    [handleForReadingAtPath closeFile];
+                });
             }
         }
-    }
+    });
 }
 
 - (NSData*) jsonDictionary:(NSDictionary*)message {
@@ -269,9 +283,8 @@ withMessage:(NSString *)message {
     self->logURL = url;
 }
 - (void)upload {
-    @synchronized (self) {
+    dispatch_async(logQueue, ^{
         if (self->logFile) {
-            // 
             if (!self->logIngestKey || !self->logURL) {
                 NRLOG_VERBOSE(@"Set Logging URL to upload logs to New Relic using the Logs API.");
                 return;
@@ -285,7 +298,7 @@ withMessage:(NSString *)message {
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
             NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
             [req setValue:self->logIngestKey forHTTPHeaderField:@"Api-Key"];
-            [req setValue:@"NEWRELIC" forKey:@"X_APP_LICENSE_KEY_REQUEST_HEADER"];
+            //  [req setValue:@"NEWRELIC" forKey:@"X_APP_LICENSE_KEY_REQUEST_HEADER"];
 
             req.HTTPMethod = @"POST";
 
@@ -310,9 +323,8 @@ withMessage:(NSString *)message {
 
             [uploadTask resume];
             [self clearLog];
-
         }
-    }
+    });
 }
 
 @end
