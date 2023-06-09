@@ -6,7 +6,7 @@
 #ifndef LIBMOBILEAGENT_HEXREPORTCONTEXT_HPP
 #define LIBMOBILEAGENT_HEXREPORTCONTEXT_HPP
 
-#include "HexContext.hpp"
+#include <Hex/HexContext.hpp>
 
 namespace NewRelic {
     namespace Hex {

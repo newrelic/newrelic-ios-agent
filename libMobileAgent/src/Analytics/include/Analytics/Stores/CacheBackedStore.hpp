@@ -7,7 +7,7 @@
 #include <future>
 #include <chrono>
 #include <map>
-#include "AnalyticEvent.hpp"
+#include <Analytics/AnalyticEvent.hpp>
 #ifndef LIBMOBILEAGENT_CACHEBACKSTORE_HPP
 #define LIBMOBILEAGENT_CACHEBACKSTORE_HPP
 namespace NewRelic {

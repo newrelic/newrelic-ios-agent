@@ -87,7 +87,7 @@
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidChangeAppVersionNotification
                                                                         object:nil
                                                                       userInfo:@{kNRMACurrentVersionKey:currentConnectionInfo.applicationInformation.appVersion,
-                                                                              kNRMALastVersionKey:oldConnectionInfo.applicationInformation.appVersion}];
+                                                                                 kNRMALastVersionKey:oldConnectionInfo.applicationInformation.appVersion}];
                 } else {
                     NRLOG_VERBOSE(@"detected upgrade, but device model was different.");
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADeviceDidChangeNotification
@@ -183,7 +183,9 @@
 - (void) configureHarvester:(NRMAHarvesterConfiguration*)harvestConfiguration
 {
     NewRelic::Application::getInstance().setContext(NewRelic::ApplicationContext([[NSString stringWithFormat:@"%lld", harvestConfiguration.account_id] cStringUsingEncoding:NSUTF8StringEncoding],
-                                                                                 [[NSString stringWithFormat:@"%lld", harvestConfiguration.application_id] cStringUsingEncoding:NSUTF8StringEncoding]));
+                                                                                 [[NSString stringWithFormat:@"%lld", harvestConfiguration.application_id] cStringUsingEncoding:NSUTF8StringEncoding],
+                                                                                 [[NSString stringWithFormat:@"%@", harvestConfiguration.trusted_account_key] cStringUsingEncoding:NSUTF8StringEncoding]));
+
     self.harvestData.dataToken = harvestConfiguration.data_token;
     connection.serverTimestamp = harvestConfiguration.server_timestamp;
     connection.crossProcessID  = harvestConfiguration.cross_process_id;
@@ -289,7 +291,7 @@
         // Reconnect performed here.
         [self execute];
         return;
-   }
+    }
     
     NRLOG_VERBOSE(@"Harvester: connected");
     NRMAHarvestResponse* response = nil;
@@ -302,12 +304,12 @@
         if ([exception.name isEqualToString:NSInvalidArgumentException]) {
             NRLOG_ERROR(@"harvest failed: harvestData == nil. This could just mean there was nothing to harvest.");
             [NRMAExceptionHandler logException:exception
-                                       class:NSStringFromClass([connection class])
-                                    selector:@"sendData:"];
+                                         class:NSStringFromClass([connection class])
+                                      selector:@"sendData:"];
 
             // The most likely cause of a crash here is bad json data. Let's clear out that data, and prevent this from happening again.
             [self.harvestData clear];
-        
+
             return;
         }
     }
@@ -342,13 +344,13 @@
     @try {
 #endif
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Collector/Harvest"
-                               value:[NSNumber numberWithDouble:harvestTimer.timeElapsedInSeconds]
-                           scope:@""]];
+                                                        value:[NSNumber numberWithDouble:harvestTimer.timeElapsedInSeconds]
+                                                        scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
         [NRMAExceptionHandler logException:exception
-                                   class:NSStringFromClass([self class])
-                                selector:NSStringFromSelector(_cmd)];
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
     }
 #endif
     [self fireOnHarvestComplete];
@@ -416,17 +418,17 @@
 
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {
-            #endif
-        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Collector/Connect"
-                                   value:[NSNumber numberWithDouble:connectionTimer.timeElapsedInSeconds]
-                                                    scope:@""]];
+#endif
+            [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Collector/Connect"
+                                                            value:[NSNumber numberWithDouble:connectionTimer.timeElapsedInSeconds]
+                                                            scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         } @catch (NSException* exception) {
             [NRMAExceptionHandler logException:exception
-                                       class:NSStringFromClass([self class])
-                                    selector:NSStringFromSelector(_cmd)];
+                                         class:NSStringFromClass([self class])
+                                      selector:NSStringFromSelector(_cmd)];
         }
-        #endif
+#endif
         return;
     }
     [connectionTimer stopTimer];
@@ -434,17 +436,17 @@
     NRLOG_VERBOSE(@"Harvest connect response: %d",response.statusCode);
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
-        #endif
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"%@/%d",kNRSupportabilityResponseCode,response.statusCode]
-                               value:@1
-                           scope:@""]];
+#endif
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"%@/%d",kNRSupportabilityResponseCode,response.statusCode]
+                                                        value:@1
+                                                        scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
         [NRMAExceptionHandler logException:exception
-                                   class:NSStringFromClass([self class])
-                                selector:NSStringFromSelector(_cmd)];
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
     }
-    #endif
+#endif
     switch ( response.statusCode) {
         case UNAUTHORIZED:
         case INVALID_AGENT_ID:
@@ -487,8 +489,8 @@
         NSError* error = nil;
         NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
         id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
-                                           options:0
-                                             error:&error];
+                                             options:0
+                                               error:&error];
         if (!error) {
             config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:jsonObject];
         }
@@ -568,15 +570,15 @@
             if ([hao respondsToSelector:@selector(onHarvestBefore)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 @try {
-                    #endif
+#endif
                     [hao onHarvestBefore];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                     [NRMAExceptionHandler logException:exception
-                                               class:NSStringFromClass([hao class])
-                                            selector:@"onHarvestBefore"];
+                                                 class:NSStringFromClass([hao class])
+                                              selector:@"onHarvestBefore"];
                 }
-                #endif
+#endif
             }
         }
     }
@@ -589,15 +591,15 @@
             if ([hao respondsToSelector:@selector(onHarvest)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 @try {
-                    #endif
+#endif
                     [hao onHarvest];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                     [NRMAExceptionHandler logException:exception
-                                                class:NSStringFromClass([hao class])
-                                             selector:@"onHarvest"];
+                                                 class:NSStringFromClass([hao class])
+                                              selector:@"onHarvest"];
                 }
-                #endif
+#endif
             }
         }
     }
@@ -616,10 +618,10 @@
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* excep) {
                     [NRMAExceptionHandler logException:excep
-                                               class:NSStringFromClass([hao class])
-                                            selector:@"onHarvestComplete"];
+                                                 class:NSStringFromClass([hao class])
+                                              selector:@"onHarvestComplete"];
                 }
-                #endif
+#endif
             }
         }
     }
@@ -632,15 +634,15 @@
             if ([hao respondsToSelector:@selector(onHarvestError)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 @try {
-                    #endif
+#endif
                     [hao onHarvestError];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                     [NRMAExceptionHandler logException:exception
-                                               class:NSStringFromClass([hao class])
-                                            selector:@"onHarvestError"];
+                                                 class:NSStringFromClass([hao class])
+                                              selector:@"onHarvestError"];
                 }
-                #endif
+#endif
             }
         }
     }
@@ -653,15 +655,15 @@
             if ([hao respondsToSelector:@selector(onHarvestStart)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 @try {
-                    #endif
-                [hao onHarvestStart];
+#endif
+                    [hao onHarvestStart];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                     [NRMAExceptionHandler logException:exception
-                                               class:NSStringFromClass([hao class])
-                                            selector:@"onHarvestStart"];
+                                                 class:NSStringFromClass([hao class])
+                                              selector:@"onHarvestStart"];
                 }
-                #endif
+#endif
             }
         }
     }
@@ -674,15 +676,15 @@
             if ([hao respondsToSelector:@selector(onHarvestStop)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 @try {
-                    #endif
+#endif
                     [hao onHarvestStop];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                     [NRMAExceptionHandler logException:exception
-                                               class:NSStringFromClass([hao class])
-                                            selector:@"onHarvestStop"];
+                                                 class:NSStringFromClass([hao class])
+                                              selector:@"onHarvestStop"];
                 }
-                #endif
+#endif
             }
         }
     }
