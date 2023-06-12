@@ -138,17 +138,48 @@ didFailNavigation:(WKNavigation*)navigation
     }
 }
 
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction preferences:(WKWebpagePreferences *)preferences decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
+{
+    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigationAction)],
+                                   [NSValue valueWithPointer: &(preferences)],
+                                   [NSValue valueWithPointer: &(decisionHandler)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
+    } else if([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]){
+        SEL cmd = @selector(webView:decidePolicyForNavigationAction:decisionHandler:);
+        
+        typedef void (^DecisionHandler)(WKNavigationActionPolicy);
+        DecisionHandler newDecisionHandler = ^void(WKNavigationActionPolicy navigationActionPolicy) {
+            decisionHandler(navigationActionPolicy, preferences);
+        };
+        
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigationAction)],
+                                   [NSValue valueWithPointer: &(newDecisionHandler)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:cmd] selector:cmd parameters:parameters];
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow, preferences);
+    }
+}
+
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]) {
         if([self.realDelegate respondsToSelector:_cmd]) {
-            NSArray* parameterKeys = [NSArray arrayWithObjects:
+            NSArray* parameters = [NSArray arrayWithObjects:
                                        [NSValue valueWithPointer: &(webView)],
                                        [NSValue valueWithPointer: &(navigationAction)],
                                        [NSValue valueWithPointer: &(decisionHandler)],
                                        nil
                                     ];
-            [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameterKeys];
+            [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
         }
     } else {
         decisionHandler(WKNavigationActionPolicyAllow);
@@ -158,13 +189,13 @@ didFailNavigation:(WKNavigation*)navigation
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
 {
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationResponse:decisionHandler:)]) {
-        NSArray* parameterKeys = [NSArray arrayWithObjects:
+        NSArray* parameters = [NSArray arrayWithObjects:
                                    [NSValue valueWithPointer: &(webView)],
                                    [NSValue valueWithPointer: &(navigationResponse)],
                                    [NSValue valueWithPointer: &(decisionHandler)],
                                    nil
                                 ];
-        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameterKeys];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     } else {
         decisionHandler(WKNavigationResponsePolicyAllow);
     }
@@ -172,13 +203,13 @@ didFailNavigation:(WKNavigation*)navigation
 
 - (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
     if ([self.realDelegate respondsToSelector:@selector(webView:didReceiveAuthenticationChallenge:completionHandler:)]) {
-        NSArray* parameterKeys = [NSArray arrayWithObjects:
+        NSArray* parameters = [NSArray arrayWithObjects:
                                    [NSValue valueWithPointer: &(webView)],
                                    [NSValue valueWithPointer: &(challenge)],
                                    [NSValue valueWithPointer: &(completionHandler)],
                                    nil
                                 ];
-        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameterKeys];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     } else {
         completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
     }
