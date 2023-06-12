@@ -5,7 +5,7 @@
 
 #ifndef LIBMOBILEAGENT_LIBLOGGER_HPP
 #define LIBMOBILEAGENT_LIBLOGGER_HPP
-#include "Utilities/LoggerBridge.hpp"
+#include <Utilities/LoggerBridge.hpp>
 #include <memory>
 
 

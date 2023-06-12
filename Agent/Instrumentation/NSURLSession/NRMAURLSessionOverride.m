@@ -19,6 +19,7 @@
 #import "NRMAHTTPUtilities.h"
 #import "NRMAAssociate.h"
 #import "NRMAURLSessionTaskSearch.h"
+#import "NRMAFlags.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
 
@@ -92,8 +93,10 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
         
         NRMAOriginal__uploadTaskWithStreamedRequest=NRMASwapImplementations(clazz,@selector(uploadTaskWithStreamedRequest:),(IMP)NRMAOverride__uploadTaskWithStreamedRequest);
     }
-
-    [self swizzleURLSessionTask];
+    
+    if ([NRMAFlags shouldEnableSwiftAsyncURLSessionSupport]) {
+        [self swizzleURLSessionTask];
+    }
 }
 
 + (void) deinstrument
@@ -269,7 +272,6 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
 
     return task;
-    
 }
 
 NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
@@ -314,6 +316,7 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
     
     return task;
 }
+
 NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd, NSURLRequest* request, NSData* data)
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithRequest_fromData;
@@ -337,6 +340,7 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
     
     return task;
 }
+
 NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd, NSURLRequest* request)
 {
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithStreamedRequest;

@@ -7,7 +7,7 @@
 
 #include <JSON/IJsonable.hpp>
 
-#include "PayloadType.hpp"
+#include <Connectivity/PayloadType.hpp>
 
 namespace NewRelic {
 namespace Connectivity {
@@ -51,6 +51,10 @@ public:
 
     void setParentId(const std::string &parentId);
 
+    const std::string &getTrustedAccountKey() const;
+
+    void setTrustedAccountKey(const std::string &trustedAccountKey);
+
     long long int getTimestamp() const;
 
     void setTimestamp(long long int timestamp);
@@ -81,6 +85,9 @@ private:
 
     //the parent payload id
     std::string parentId;
+
+    //the parent payload id
+    std::string trustedAccountKey;
 
     //unix epoch timestamp in milliseconds
     long long timestamp;

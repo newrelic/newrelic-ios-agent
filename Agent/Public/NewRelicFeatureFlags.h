@@ -31,7 +31,7 @@
    Enabled by default. Controls capture of handled exceptions via 'recordHandledException:' API.
 
 - NRFeatureFlag_NSURLSessionInstrumentation
-   Enable (default) flag for instrumentation of NSURLSessions.
+   Enable (default) or disable flag for instrumentation of NSURLSessions.
    Currently only instruments network activity dispatched with
    NSURLSessionDataTasks and NSURLSessionUploadTasks.
 
@@ -48,6 +48,7 @@
    and are titled "Displayed <ViewControllerName>". This flag is associated with
    NRFeatureFlag_InteractionTracing, but acts as a subset of functionality on that feature.
 
+ // Do not use flag ExperimentalNetworkingInstrumentation please.
 - NRFeatureFlag_ExperimentalNetworkingInstrumentation
    Disabled by default. Enables experimental networking instrumentation. This
    feature may decrease the stability of applications.
@@ -56,12 +57,19 @@
     Enabled by default. Enables distributed tracing support for network
     requests.
 
+ // Do not use flag GestureInstrumentation please.
  - NRFeatureFlag_GestureInstrumentation
     Disabled by default.
 
  - NRFeatureFlag_AppStartMetrics
-    Enable (default)or disable flag for automatic calculation of app start metrics. Cold and Hot(Resume) start times only.
+    Enable (default) or disable flag for automatic calculation of app start metrics. Cold and Hot(Resume) start times only.
     Note: App Launch start are not reported when using Simulators or during debugging.
+ 
+ - NRFeatureFlag_FedRampEnabled
+    When enabled, defaults the collector and crash collector to use FedRamp compliant endpoints
+
+ - NRFeatureFlag_SwiftAsyncURLSessionSupport
+    Disabled by default. Enable or disable (default) flag for automatic instrumentation of async URLSession functions in Swift.
 */
 
 
@@ -77,8 +85,12 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_NetworkRequestEvents                  = 1 << 9,
     NRFeatureFlag_HandledExceptionEvents                = 1 << 10,
     NRFeatureFlag_DefaultInteractions                   = 1 << 12,
-    NRFeatureFlag_ExperimentalNetworkingInstrumentation = 1 << 13, // Disabled by default
+    // Do not use flag ExperimentalNetworkingInstrumentation please.
+    NRFeatureFlag_ExperimentalNetworkingInstrumentation = 1 << 13, // Disabled by default. Do not use please.
     NRFeatureFlag_DistributedTracing                    = 1 << 14,
-    NRFeatureFlag_GestureInstrumentation                = 1 << 15, // Disabled by default
+    // Do not use flag GestureInstrumentation please.
+    NRFeatureFlag_GestureInstrumentation                = 1 << 15, // Disabled by default. Do not use please.
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
+    NRFeatureFlag_FedRampEnabled                        = 1 << 17, // Disabled by default
+    NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 18, // Disabled by default
 };

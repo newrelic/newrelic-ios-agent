@@ -62,7 +62,7 @@ extern "C" {
         __agentId = agentId;
     }
 
-    uint64_t NRMA_getAgentId() {
+    uint64_t NRMA_getAgentId(void) {
         return __agentId;
     }
 
@@ -71,7 +71,7 @@ extern "C" {
         __accountId = accountId;
     }
 
-    uint64_t NRMA_getAccountId()
+    uint64_t NRMA_getAccountId(void)
     {
         return __accountId;
     }
@@ -80,7 +80,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__sessionId, sessionId);
     }
 
-    const char* NRMA_getSessionId() {
+    const char* NRMA_getSessionId(void) {
         return __sessionId;
     }
 
@@ -91,7 +91,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__tempDirectory, tempDir);
     }
 
-    const char* NRMA_getTempDir()
+    const char* NRMA_getTempDir(void)
     {
         return __tempDirectory;
     }
@@ -101,7 +101,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__appToken, appToken);
     }
     
-    const char* NRMA_getAppToken()
+    const char* NRMA_getAppToken(void)
     {
         return __appToken;
     }
@@ -112,7 +112,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__appVersion, appVersion);
     }
     
-    const char* NRMA_getAppVersion()
+    const char* NRMA_getAppVersion(void)
     {
         return __appVersion;
     }
@@ -123,7 +123,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__appName, appName);
     }
     
-    const char* NRMA_getAppName()
+    const char* NRMA_getAppName(void)
     {
         return __appName;
     }
@@ -134,7 +134,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__buildIdentifier, buildIdentifier);
     }
     
-    const char* NRMA_getBuildIdentifier()
+    const char* NRMA_getBuildIdentifier(void)
     {
         return __buildIdentifier;
     }
@@ -145,7 +145,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__orientation, orientation);
     }
     
-    const char* NRMA_getOrientation()
+    const char* NRMA_getOrientation(void)
     {
         return __orientation;
     }
@@ -156,7 +156,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__memoryUsage, memoryUsage);
     }
     
-    const char* NRMA_getMemoryUsage()
+    const char* NRMA_getMemoryUsage(void)
     {
         return __memoryUsage;
     }
@@ -167,7 +167,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__memorySize, memorySize);
     }
     
-    const char* NRMA_getMemorySize()
+    const char* NRMA_getMemorySize(void)
     {
         return __memorySize;
     }
@@ -179,7 +179,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__diskSize,diskSize);
     }
     
-    const char* NRMA_getDiskSize()
+    const char* NRMA_getDiskSize(void)
     {
         return __diskSize;
     }
@@ -190,7 +190,7 @@ extern "C" {
         //__NRMA_assign_retain((char**)&__diskFree ,diskFree );
     }
     
-    uint64_t NRMA_getDiskFree()
+    uint64_t NRMA_getDiskFree(void)
     {
         return __diskFree;
     }
@@ -202,7 +202,7 @@ extern "C" {
         __NRMA_assign_retain((char**)&__networkConnectivity ,networkConnectivity );
     }
     
-    const char* NRMA_getNetworkConnectivity()
+    const char* NRMA_getNetworkConnectivity(void)
     {
         return __networkConnectivity;
     }
@@ -213,7 +213,7 @@ void NRMA_setBuild(const char* buildNumber)
     __NRMA_assign_retain((char**)&__build, buildNumber);
 }
 
-const char* NRMA_getBuild()
+    const char* NRMA_getBuild(void)
 {
     return __build;
 }
@@ -224,7 +224,7 @@ const char* NRMA_getBuild()
         __NRMA_assign_retain((char**)&__sessionStartTime,sessionStartTime);
     }
     
-    const char* NRMA_getSessionStartTime()
+    const char* NRMA_getSessionStartTime(void)
     {
         return __sessionStartTime;
     }
@@ -249,7 +249,7 @@ const char* NRMA_getBuild()
         (*dest) = (char*)heapChar;
     }
 
-    void NRMA__freeMetaData()
+    void NRMA__freeMetaData(void)
     {
         free((void*)__sessionId);
         __sessionId=NULL;
@@ -280,7 +280,7 @@ const char* NRMA_getBuild()
         __sessionStartTime=NULL;
     }
     
-    void NRMA_freeInteractionHistoryList() {
+    void NRMA_freeInteractionHistoryList(void) {
         NRMAInteractionHistoryNode* root = NRMA__getInteractionHistoryList();
         while (root != NULL) {
             if (root->name != NULL) {
@@ -294,7 +294,7 @@ const char* NRMA_getBuild()
         }
     }
     
-    void NRMA_freeExceptionData() {
+    void NRMA_freeExceptionData(void) {
         NRMA__freeMetaData();
         NRMA_freeInteractionHistoryList();
     }
@@ -350,7 +350,7 @@ const char* NRMA_getBuild()
         return 0;
     }
     
-    const char *NRMA_createTempFileName() {
+    const char *NRMA_createTempFileName(void) {
         const char *tempDir = NRMA_getTempDir();
         
         unsigned long fileNameLen = strlen(tempDir) + strlen(kNRMAMetaFileName) + 1;
@@ -482,7 +482,7 @@ const char* NRMA_getBuild()
     // Not async safe, don't call in crash handler.
     // This is now only called on harvest before.
 
-    void NRMA_updateModelNumber()
+    void NRMA_updateModelNumber(void)
     {
 
         NSString* model = [NewRelicInternalUtils deviceModel];
@@ -494,12 +494,12 @@ const char* NRMA_getBuild()
         return;
     }
 
-    const char* NRMA_getModelNumber()
+    const char* NRMA_getModelNumber(void)
     {
         return __modelNumber;
     }
 
-    void NRMA_updateDiskUsage()
+    void NRMA_updateDiskUsage(void)
     {
         struct statfs mystat;
 

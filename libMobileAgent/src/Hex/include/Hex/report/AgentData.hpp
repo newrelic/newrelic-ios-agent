@@ -7,15 +7,15 @@
 #define LIBMOBILEAGENT_AGENTDATA_HPP
 
 
-#include "StringAttributes.hpp"
-#include "BooleanAttributes.hpp"
-#include "DoubleAttributes.hpp"
-#include "LongAttributes.hpp"
-#include "ios_generated.h"
-#include "hex_generated.h"
-#include "agent-data_generated.h"
-#include "AppInfo.hpp"
-#include "HandledException.hpp"
+#include <Hex/StringAttributes.hpp>
+#include <Hex/BooleanAttributes.hpp>
+#include <Hex/DoubleAttributes.hpp>
+#include <Hex/LongAttributes.hpp>
+#include <Hex/ios_generated.h>
+#include <Hex/hex_generated.h>
+#include <Hex/agent-data_generated.h>
+#include <Hex/AppInfo.hpp>
+#include <Hex/HandledException.hpp>
 
 
 namespace NewRelic {

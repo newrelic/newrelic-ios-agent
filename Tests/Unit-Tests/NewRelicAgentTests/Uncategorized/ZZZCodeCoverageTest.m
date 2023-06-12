@@ -26,7 +26,7 @@
     [super tearDown];
 }
 
-extern void __gcov_dump();
+extern void __gcov_dump(void);
 
 -(void)testThatIsntReallyATest
 {

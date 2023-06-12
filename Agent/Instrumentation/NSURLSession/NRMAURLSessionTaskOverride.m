@@ -13,13 +13,13 @@
 #import <objc/runtime.h>
 #import "NRLogger.h"
 #import "NRMAHTTPUtilities.h"
+#import "NRMAFlags.h"
 
 static IMP NRMAOriginal__resume;
 static IMP NRMAOriginal__urlSessionTask_SetState;
 static Class __NRMAConcreteClass;
 
 @implementation NRMAURLSessionTaskOverride
-
 
 static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock";
 + (void) instrumentConcreteClass:(Class)clazz
@@ -37,6 +37,9 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
             }
         }
     }
+    
+    // We'll only instrument setState if the user enables Swift async URLSession support.
+    if (![NRMAFlags shouldEnableSwiftAsyncURLSessionSupport]) return;
 
     // In iOS 13+ we instrument NSURLSessionTask:setState
     if (@available(iOS 13, tvOS 13, *)) {
@@ -96,14 +99,11 @@ void NRMAOverride__resume(id self, SEL _cmd)
 {
     if (((NSURLSessionTask*)self).state == NSURLSessionTaskStateSuspended) {
 
-        NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:((NSURLSessionTask*)self).originalRequest];
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:((NSURLSessionTask*)self).originalRequest];
-        //the only state resume will start a task is from Suspended.
-        //and since we are only instrumenting NSURLSessionUploadTask and
-        //NSURLSessionDataTask we only need to start a new timer on this transmission
-        //since those two restart if they are suspended.
+        // The only state resume will start a task is from Suspended.
+        // and since we are only instrumenting NSURLSessionUploadTask and
+        // NSURLSessionDataTask we only need to start a new timer on this transmission
+        // since those two restart if they are suspended.
+
         NRMA__setTimerForSessionTask(self, [NRTimer new]);
     }
     //call original method
