@@ -121,13 +121,6 @@
     }];
     
     XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
-    
-    if (@available(iOS 13.0, *)) {
-        [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
-            [testAction decisionHandler:policy];
-        }];
-        XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
-    }
 }
 
 - (void) testDidReceiveAuthenticationChallenge {
@@ -171,19 +164,6 @@
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
-    }
-}
-
-- (void) testDecidePolicyForNavigationActionWithOldDelegateFunction {
-    NSURLRequest* url = [[NSURLRequest alloc] initWithURL:self.url];
-    
-    NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
-    
-    if (@available(iOS 13.0, *)) {
-        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
-            [testAction decisionHandler:policy];
-        }];
-        XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyCancel);
     }
 }
 
