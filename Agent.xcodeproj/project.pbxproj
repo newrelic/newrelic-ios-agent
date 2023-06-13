@@ -988,6 +988,11 @@
 		34DD7304291979CC00481FA9 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
 		34DD7305291979CC00481FA9 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9292E2912D72F001449B6 /* JSON.framework */; };
 		34DD7306291979CC00481FA9 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
+		34EA78C82A39221E0071CC95 /* NRMACustomEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */; };
+		34EA78C92A39221E0071CC95 /* NRMACustomEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */; };
+		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
+		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
+		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
 		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
 		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
@@ -1886,6 +1891,9 @@
 		34A9292F2912D736001449B6 /* Utilities.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Utilities.xcodeproj; path = libMobileAgent/src/Utilities/Utilities/Utilities.xcodeproj; sourceTree = "<group>"; };
 		34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLTransformer.h; sourceTree = "<group>"; };
 		34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformer.m; sourceTree = "<group>"; };
+		34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMACustomEvent.h; sourceTree = "<group>"; };
+		34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMACustomEvent.m; sourceTree = "<group>"; };
+		34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestCustomEvents.m; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
@@ -2067,6 +2075,7 @@
 				0209AC4D24E7079400E45C90 /* NRMARequestEvents.mm */,
 				343883552834405700B31C2E /* NRMAURLTransformerTests.m */,
 				34544D2B2A323D1400B5A8D1 /* TestIntegratedEventManager.m */,
+				34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */,
 			);
 			path = "Analytics-Tests";
 			sourceTree = "<group>";
@@ -2573,6 +2582,8 @@
 				34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */,
 				34544D302A324A1400B5A8D1 /* NRMAAnalyticEvent.h */,
 				34544D312A324A1400B5A8D1 /* NRMAAnalyticEvent.m */,
+				34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */,
+				34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -3327,6 +3338,7 @@
 				02FF4A5324DC64D500115469 /* NRMAActivityTraceMeasurement.h in Headers */,
 				02FF4B0424DC8CB200115469 /* code_generators.h in Headers */,
 				02FF4A1B24DC648600115469 /* NRMAHarvestableHTTPTransactionGeneration.h in Headers */,
+				34EA78C82A39221E0071CC95 /* NRMACustomEvent.h in Headers */,
 				02FF4A2024DC648600115469 /* NRMAActivityTraceMeasurementCreator.h in Headers */,
 				02FF48A924DC61E900115469 /* NRMAWKWebViewInstrumentation.h in Headers */,
 				02FF4AB724DC653A00115469 /* NRMADEBUG_Reachability.h in Headers */,
@@ -3539,6 +3551,7 @@
 				02FF4B6924E3201400115469 /* NRMAActivityTraceMeasurement.h in Headers */,
 				02FF4B6A24E3201400115469 /* code_generators.h in Headers */,
 				02FF4B6B24E3201400115469 /* NRMAHarvestableHTTPTransactionGeneration.h in Headers */,
+				34EA78C92A39221E0071CC95 /* NRMACustomEvent.h in Headers */,
 				02FF4B6C24E3201400115469 /* NRMAActivityTraceMeasurementCreator.h in Headers */,
 				02FF4B6D24E3201400115469 /* NRMAWKWebViewInstrumentation.h in Headers */,
 				02FF4B6E24E3201400115469 /* NRMADEBUG_Reachability.h in Headers */,
@@ -4215,6 +4228,7 @@
 				0209ABFE24E7070900E45C90 /* NRURLSessionDelegateTests.m in Sources */,
 				0209AC6624E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m in Sources */,
 				0209AC3024E7073800E45C90 /* NRMAHarvestableEventsTest.m in Sources */,
+				34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */,
 				0209AC0F24E7071500E45C90 /* NewRelicAPITest.m in Sources */,
 				C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */,
 				0209AC0D24E7071500E45C90 /* NewRelicTests.m in Sources */,
@@ -4311,6 +4325,7 @@
 				02FF484624DC614200115469 /* NRMATraceController.m in Sources */,
 				02FF4A9B24DC652E00115469 /* NRMAFileCleanup.m in Sources */,
 				02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */,
+				34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
 				02FF4A7B24DC64FC00115469 /* NRMACustomTrace.m in Sources */,
 				02FF496524DC629000115469 /* NRMATraceConfigurations.m in Sources */,
 				02FF4A0324DC647200115469 /* NRMAMeasurements.m in Sources */,
@@ -4727,6 +4742,7 @@
 				02FF4C9524E3201400115469 /* NRMATraceMachineAgentUserInterface.m in Sources */,
 				02FF4C9624E3201400115469 /* NRMANSURLConnectionDelegateBase.m in Sources */,
 				02FF4C9724E3201400115469 /* NRMAHTTPUtilities.mm in Sources */,
+				34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				02FF4C9A24E3201400115469 /* NRMASessionIdentifierManager.mm in Sources */,
