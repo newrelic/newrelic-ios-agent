@@ -109,8 +109,13 @@ didFailProvisionalNavigation:(WKNavigation*)navigation
                                   withError:error];
 
     if ([self.realDelegate respondsToSelector:_cmd]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigation,error);
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigation)],
+                                   [NSValue valueWithPointer: &(error)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     }
 }
 
@@ -133,8 +138,13 @@ didFailNavigation:(WKNavigation*)navigation
                                   withError:error];
     
     if ([self.realDelegate respondsToSelector:_cmd]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigation,error);
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigation)],
+                                   [NSValue valueWithPointer: &(error)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     }
 }
 
