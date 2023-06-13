@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)init;
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
-- (nullable NSString *)getEventJSONStringWithError:(NSError **)error;
+- (nullable NSString *)getEventJSONStringWithError:( NSError * _Nullable *)error;
 @end
 
 NS_ASSUME_NONNULL_END

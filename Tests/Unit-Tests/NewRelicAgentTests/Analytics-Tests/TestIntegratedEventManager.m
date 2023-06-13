@@ -10,7 +10,7 @@
 
 #import "NRMAEventManager.h"
 
-#import "NRMAAnalyticEvent.h"
+#import "NRMACustomEvent.h"
 
 
 @interface TestIntegratedEventManager : XCTestCase
@@ -28,20 +28,14 @@
     // Put teardown code here. This method is called after the invocation of each test method in the class.
 }
 
-- (void)testAddEvent {
-    // Given
-    NRMAAnalyticEvent *testEvent = [NRMAAnalyticEvent new];
-    
-    // When
-    BOOL result = [sut addEvent:testEvent];
-    
-    // Then
-    XCTAssertTrue(result,"Adding the event was not successful");
-}
-
 - (void)testRetrieveEventJSON {
     // Given
-    NRMAAnalyticEvent *testEvent = [NRMAAnalyticEvent new];
+    NSTimeInterval timestamp = 10;
+    unsigned long long elapsedTime = 50;
+//    NRMAAnalyticEvent *testEvent = [[NRMAAnalyticEvent alloc] initWithTimestamp:timestamp
+    NRMACustomEvent *testEvent = [[NRMACustomEvent alloc] initWithEventType:@"CustomEvent"
+                                                                  timestamp:timestamp
+                                                sessionElapsedTimeInSeconds:elapsedTime];
     NSError *error = nil;
     
     // When
@@ -55,7 +49,21 @@
                                                     options:0
                                                       error:nil];
     XCTAssertNotNil(decode[0][@"timestamp"]);
+    double retrievedTimestamp = [decode[0][@"timestamp"] doubleValue];
+    XCTAssertEqual(retrievedTimestamp, timestamp);
     XCTAssertNotNil(decode[0][@"timeSinceLoad"]);
+    unsigned long long retrievedElapsedTime = [decode[0][@"timeSinceLoad"] unsignedLongLongValue];
+    XCTAssertEqual(retrievedElapsedTime, elapsedTime);
+}
+
+- (void)testMaxBufferSize {
+    // Given
+//    [sut setMaxEventBufferSize:1];
+    
+    // When
+    
+    
+    // Then
 }
 
 @end
