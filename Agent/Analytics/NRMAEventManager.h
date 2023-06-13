@@ -8,11 +8,15 @@
 
 #import <Foundation/Foundation.h>
 
+#import "NRMAAnalyticEventProtocol.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAEventManager : NSObject
 
 - (instancetype)init;
+- (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
+- (nullable NSString *)getEventJSONStringWithError:(NSError **)error;
 @end
 
 NS_ASSUME_NONNULL_END

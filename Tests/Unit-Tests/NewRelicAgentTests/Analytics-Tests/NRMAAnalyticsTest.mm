@@ -27,6 +27,9 @@
 @end
 @implementation NRMAAnalyticsTest
 
+#undef USE_INTEGRATED_EVENT_MANAGER
+#define USE_INTEGRATED_EVENT_MANAGER 0
+
 - (void)setUp {
     [super setUp];
     [NRLogger setLogLevels:NRLogLevelNone];
