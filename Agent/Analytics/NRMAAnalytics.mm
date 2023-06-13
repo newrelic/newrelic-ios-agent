@@ -21,8 +21,9 @@
 #import <Connectivity/Payload.hpp>
 #import "NewRelicAgentInternal.h"
 #import "NRMAEventManager.h"
+#import "NRMAAnalyticEvent.h"
 
-#define USE_INTEGRATED_EVENT_MANAGER 1
+//#define USE_INTEGRATED_EVENT_MANAGER 1
 
 using namespace NewRelic;
 @implementation NRMAAnalytics
@@ -370,7 +371,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    NRMAAnalyticEvent *testEvent = [NRMAAnalyticEvent new];
+    return [_eventManager addEvent:testEvent];
 #else
     try {
         auto event = _analyticsController->newEvent(name.UTF8String);

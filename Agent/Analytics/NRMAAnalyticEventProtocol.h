@@ -9,7 +9,9 @@
 #ifndef NRMAAnalyticEventProtocol_h
 #define NRMAAnalyticEventProtocol_h
 
-@protocol NRMAAnalyticEvent <NSObject>
+#import "NRMAJSON.h"
+
+@protocol NRMAAnalyticEventProtocol <NSObject, NRMAJSONABLE>
 
 
 
