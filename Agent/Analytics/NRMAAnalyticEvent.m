@@ -10,4 +10,34 @@
 
 @implementation NRMAAnalyticEvent
 
+//- (instancetype) init {
+//    self = [super init];
+//    if (self) {
+//        _timestamp = [[NSDate date] timeIntervalSince1970];
+//    }
+//    return self;
+//}
+
+- (nonnull instancetype)initWithTimestamp:(NSTimeInterval)timestamp
+              sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds {
+    self = [super init];
+    if (self) {
+        _timestamp = timestamp;
+        _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
+    }
+    
+    return self;
+}
+
+- (id)JSONObject {
+    NSDictionary *dict = @{
+        @"timestamp":[NSNumber numberWithUnsignedLongLong:self.timestamp],
+        @"timeSinceLoad":[NSNumber numberWithUnsignedLongLong:self.sessionElapsedTimeSeconds]
+    };
+
+    return dict;
+}
+
+
+
 @end
