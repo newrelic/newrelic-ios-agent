@@ -30,9 +30,10 @@ platform :ios do
       }, output: "#{dirName}/NewRelic.xcframework")
     end
 
+    codesignFramework
+
     cpDsymToolsToFramework
 
-    codesignFramework
   end
 
   desc "Copy dsym-upload-tools to xcframework"
