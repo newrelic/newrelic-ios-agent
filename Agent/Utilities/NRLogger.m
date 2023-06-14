@@ -285,10 +285,8 @@ withMessage:(NSString *)message {
 - (void)upload {
     dispatch_async(logQueue, ^{
         if (self->logFile) {
-            if (!self->logIngestKey || !self->logURL) {
-                NRLOG_VERBOSE(@"Set Logging URL to upload logs to New Relic using the Logs API.");
-                return;
-            }
+            // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
+            if (!self->logIngestKey || !self->logURL) { return; }
 
             NSString *path = [NRLogger logFilePath];
             NSData* logData = [NSData dataWithContentsOfFile:path];
@@ -298,7 +296,6 @@ withMessage:(NSString *)message {
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
             NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
             [req setValue:self->logIngestKey forHTTPHeaderField:@"Api-Key"];
-            //  [req setValue:@"NEWRELIC" forKey:@"X_APP_LICENSE_KEY_REQUEST_HEADER"];
 
             req.HTTPMethod = @"POST";
 
