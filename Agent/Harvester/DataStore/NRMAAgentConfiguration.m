@@ -93,13 +93,10 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
         }
     }
 }
-// EU      https://log-api.eu.newrelic.com/log/v1?Api-Key=*
-// vs
-// Staging https://staging-log-api.newrelic.com/log/v1?Api-Key=*
-// vs
-// Prod    https://log-api.newrelic.com/log/v1?Api-Key=*
 
 - (void) setLoggingURL {
+    if (![NRMAFlags shouldEnableLogReporting]) { return; }
+
     if (self.applicationToken.regionCode.length) {
         _loggingURL = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_LOGGING_HOST,self.applicationToken.regionCode];
     }
