@@ -31,6 +31,8 @@ platform :ios do
     end
 
     cpDsymToolsToFramework
+
+    codesignFramework
   end
 
   desc "Copy dsym-upload-tools to xcframework"
@@ -40,7 +42,12 @@ platform :ios do
       sh("cp -r dsym-upload-tools/ NewRelic.xcframework/Resources/")
     end
   end
-
+  desc "Codesign xcframework"
+  lane :codesignFramework do 
+    Dir.chdir("..") do
+      sh("codesign --timestamp -v --sign \"Apple Distribution: New Relic Inc (SU7SUNGZJP)\" NewRelic.xcframework")
+    end
+  end
   # DEBUG LANES
   
   desc "Ouput Universal NewRelic.xcframework for iOS Only"
