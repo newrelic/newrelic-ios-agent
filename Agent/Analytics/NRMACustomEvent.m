@@ -14,12 +14,14 @@
 
 - (nonnull instancetype) initWithEventType:(NSString *)eventType
                                  timestamp:(NSTimeInterval)timestamp
-               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds {
+               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+                    withAttributeValidator:(id<AttributeValidatorProtocol>) attributeValidator {
     self = [super init];
     if (self) {
         _timestamp = timestamp;
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _eventType = eventType;
+        _attributeValidator = attributeValidator;
         
         attributes = [[NSMutableDictionary alloc] init];
     }
@@ -32,6 +34,14 @@
 }
 
 - (BOOL)addAttribute:(NSString *)name value:(id)value {
+    if(![self.attributeValidator nameValidator:name]) {
+        return NO;
+    }
+    
+    if(![self.attributeValidator valueValidator:value]) {
+        return NO;
+    }
+    
     attributes[name] = value;
     return true;
 }
