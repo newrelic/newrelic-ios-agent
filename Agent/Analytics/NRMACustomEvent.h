@@ -18,9 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) unsigned long long sessionElapsedTimeSeconds;
 @property (nonatomic, readonly) NSString *eventType;
 
-//- (instancetype) initWithTimestamp:(NSTimeInterval)timestamp
-//       sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds;
-
 - (instancetype) initWithEventType:(NSString *)eventType
                          timestamp:(NSTimeInterval)timestamp
        sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds;

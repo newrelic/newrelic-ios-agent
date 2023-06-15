@@ -8,7 +8,9 @@
 
 #import "NRMACustomEvent.h"
 
-@implementation NRMACustomEvent
+@implementation NRMACustomEvent {
+    NSMutableDictionary<NSString *, id> *attributes;
+}
 
 //- (instancetype) init {
 //    self = [super init];
@@ -26,19 +28,19 @@
         _timestamp = timestamp;
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _eventType = eventType;
+        
+        attributes = [[NSMutableDictionary alloc] init];
     }
     
     return self;
 }
 
 - (NSTimeInterval)getEventAge {
-//    NSDate *now = [[NSDate alloc] init];
-//    return [now timeIntervalSinceDate:[NSDate dateWithTimeIntervalSinceReferenceDate:self.timestamp]];
     return [[[NSDate alloc] init] timeIntervalSince1970] - self.timestamp;
 }
 
 - (BOOL)addAttribute:(NSString *)name value:(id)value {
-    return true;
+    
 }
 
 - (id)JSONObject {
