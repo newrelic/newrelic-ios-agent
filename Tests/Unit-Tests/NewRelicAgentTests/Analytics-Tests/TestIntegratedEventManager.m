@@ -11,6 +11,7 @@
 #import "NRMAEventManager.h"
 
 #import "NRMACustomEvent.h"
+#import "BlockAttributeValidator.h"
 
 
 @interface TestIntegratedEventManager : XCTestCase
@@ -18,10 +19,22 @@
 
 @implementation TestIntegratedEventManager
     NRMAEventManager *sut;
+    BlockAttributeValidator *agreeableAttributeValidator;
+
 
 - (void)setUp {
     // Put setup code here. This method is called before the invocation of each test method in the class.
     sut = [NRMAEventManager new];
+    
+    if(agreeableAttributeValidator == nil) {
+        agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+            return YES;
+        } valueValidator:^BOOL(id value) {
+            return YES;
+        } andEventTypeValidator:^BOOL(NSString *eventType) {
+            return YES;
+        }];
+    }
 }
 
 - (void)tearDown {
@@ -35,7 +48,8 @@
 //    NRMAAnalyticEvent *testEvent = [[NRMAAnalyticEvent alloc] initWithTimestamp:timestamp
     NRMACustomEvent *testEvent = [[NRMACustomEvent alloc] initWithEventType:@"CustomEvent"
                                                                   timestamp:timestamp
-                                                sessionElapsedTimeInSeconds:elapsedTime];
+                                                sessionElapsedTimeInSeconds:elapsedTime
+                                                     withAttributeValidator:agreeableAttributeValidator];
     NSError *error = nil;
     
     // When
@@ -61,11 +75,13 @@
     [sut setMaxEventBufferSize:1];
     NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                                        timestamp:3
-                                                     sessionElapsedTimeInSeconds:20];
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
     
     NRMACustomEvent *customEevntTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
                                                                        timestamp:5
-                                                     sessionElapsedTimeInSeconds:15];
+                                                     sessionElapsedTimeInSeconds:15
+                                                          withAttributeValidator:agreeableAttributeValidator];
     
     // When
     [sut addEvent:customEventOne];
@@ -84,7 +100,8 @@
     [sut setMaxEventBufferSize:0];
     NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                                        timestamp:3
-                                                     sessionElapsedTimeInSeconds:20];
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
     
     [sut addEvent:customEventOne];
     
@@ -101,7 +118,8 @@
     [sut setMaxEventBufferTimeInSeconds:NSUIntegerMax];
     NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                                        timestamp:3
-                                                     sessionElapsedTimeInSeconds:20];
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
     // When
     [sut addEvent:customEventOne];
     
@@ -114,7 +132,8 @@
     [sut setMaxEventBufferTimeInSeconds:1];
     NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                                        timestamp:3
-                                                     sessionElapsedTimeInSeconds:20];
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
     // When
     [sut addEvent:customEventOne];
     
