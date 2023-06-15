@@ -8,15 +8,9 @@
 
 #import "NRMACustomEvent.h"
 
-@implementation NRMACustomEvent
-
-//- (instancetype) init {
-//    self = [super init];
-//    if (self) {
-//        _timestamp = [[NSDate date] timeIntervalSince1970];
-//    }
-//    return self;
-//}
+@implementation NRMACustomEvent {
+    NSMutableDictionary<NSString *, id> *attributes;
+}
 
 - (nonnull instancetype) initWithEventType:(NSString *)eventType
                                  timestamp:(NSTimeInterval)timestamp
@@ -26,29 +20,38 @@
         _timestamp = timestamp;
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _eventType = eventType;
+        
+        attributes = [[NSMutableDictionary alloc] init];
     }
     
     return self;
 }
 
 - (NSTimeInterval)getEventAge {
-//    NSDate *now = [[NSDate alloc] init];
-//    return [now timeIntervalSinceDate:[NSDate dateWithTimeIntervalSinceReferenceDate:self.timestamp]];
     return [[[NSDate alloc] init] timeIntervalSince1970] - self.timestamp;
 }
 
 - (BOOL)addAttribute:(NSString *)name value:(id)value {
+    attributes[name] = value;
     return true;
 }
 
 - (id)JSONObject {
-    NSDictionary *dict = @{
-        @"timestamp":[NSNumber numberWithUnsignedLongLong:self.timestamp],
-        @"timeSinceLoad":[NSNumber numberWithUnsignedLongLong:self.sessionElapsedTimeSeconds],
-        @"eventType":self.eventType
-    };
+//    NSDictionary *dict = @{
+//        @"timestamp":[NSNumber numberWithUnsignedLongLong:self.timestamp],
+//        @"timeSinceLoad":[NSNumber numberWithUnsignedLongLong:self.sessionElapsedTimeSeconds],
+//        @"eventType":self.eventType
+//    };
+    
+    // There was a way to do this using the Objective-C runtime
+    // to iterate through the properties, but I do not remember it
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:attributes];
+    dict[@"timestamp"] = @(self.timestamp);
+    dict[@"timeSinceLoad"] = @(self.sessionElapsedTimeSeconds);
+    dict[@"eventType"] = self.eventType;
+    
 
-    return dict;
+    return [NSDictionary dictionaryWithDictionary:dict];
 }
 
 @end
