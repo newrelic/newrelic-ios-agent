@@ -58,12 +58,68 @@
 
 - (void)testMaxBufferSize {
     // Given
-//    [sut setMaxEventBufferSize:1];
+    [sut setMaxEventBufferSize:1];
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:3
+                                                     sessionElapsedTimeInSeconds:20];
+    
+    NRMACustomEvent *customEevntTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                       timestamp:5
+                                                     sessionElapsedTimeInSeconds:15];
     
     // When
-    
+    [sut addEvent:customEventOne];
+    [sut addEvent:customEevntTwo];
     
     // Then
+    NSError *error = nil;
+    NSString *eventJSONString = [sut getEventJSONStringWithError:&error];
+    NSArray *decode = [NSJSONSerialization JSONObjectWithData:[eventJSONString dataUsingEncoding:NSUTF8StringEncoding]
+                                                    options:0
+                                                      error:nil];
+    XCTAssertEqual(decode.count, 1);
+}
+
+- (void)testZeroMaxBufferSize {
+    [sut setMaxEventBufferSize:0];
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:3
+                                                     sessionElapsedTimeInSeconds:20];
+    
+    [sut addEvent:customEventOne];
+    
+    NSError *error = nil;
+    NSString *eventJSONString = [sut getEventJSONStringWithError:&error];
+    NSArray *decode = [NSJSONSerialization JSONObjectWithData:[eventJSONString dataUsingEncoding:NSUTF8StringEncoding]
+                                                    options:0
+                                                      error:nil];
+    XCTAssertEqual(decode.count, 0);
+}
+
+- (void)testNotAgedOutEvents {
+    // Given
+    [sut setMaxEventBufferTimeInSeconds:NSUIntegerMax];
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:3
+                                                     sessionElapsedTimeInSeconds:20];
+    // When
+    [sut addEvent:customEventOne];
+    
+    // Then
+    XCTAssertFalse([sut didReachMaxQueueTime:[[NSDate now] timeIntervalSince1970]]);
+}
+
+- (void)testAgedOutEvents {
+    // Given
+    [sut setMaxEventBufferTimeInSeconds:1];
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:3
+                                                     sessionElapsedTimeInSeconds:20];
+    // When
+    [sut addEvent:customEventOne];
+    
+    // Then
+    XCTAssertTrue([sut didReachMaxQueueTime:[[NSDate now] timeIntervalSince1970]]);
 }
 
 @end
