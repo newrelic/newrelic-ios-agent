@@ -32,7 +32,8 @@ platform :ios do
 
     codesignFramework
 
-    cpDsymToolsToFramework
+    # copying dsym tools into the xcframework is not going to work out for the mac catalyst build.
+    #cpDsymToolsToFramework
 
   end
 
