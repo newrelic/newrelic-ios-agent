@@ -170,6 +170,7 @@
     
     XCTAssertEqual(decode.count, 3);
     
+    
     [sut empty];
     
     NSString *emptyJSONString = [sut getEventJSONStringWithError:&error];
@@ -177,6 +178,35 @@
                                                     options:0
                                                       error:nil];
     XCTAssertEqual(emptyDecode.count, 0);
+}
+
+- (void)testEmptyEventsResetOldestEventTime {
+    // Given
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventThree = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 3"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    [sut setMaxEventBufferTimeInSeconds:1];
+    
+    [sut addEvent:customEventOne];
+    [sut addEvent:customEventTwo];
+    [sut addEvent:customEventThree];
+    
+    XCTAssertTrue([sut didReachMaxQueueTime:2000]);
+
+    [sut empty];
+
+    XCTAssertFalse([sut didReachMaxQueueTime:2000]);
 }
 
 @end

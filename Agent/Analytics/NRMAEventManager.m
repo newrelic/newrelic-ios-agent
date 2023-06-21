@@ -95,6 +95,8 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 - (void)empty {
     @synchronized (events) {
         [events removeAllObjects];
+        oldestEventTimestamp = 0;
+        totalAttemptedInserts = 0;
     }
 }
 
