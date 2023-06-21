@@ -71,7 +71,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 }
 
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event {
-    @synchronized (self) {
+    @synchronized (events) {
         // The event fits within the buffer
         if (events.count < maxBufferSize) {
             [events addObject:event];
@@ -90,6 +90,12 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
     }
     totalAttemptedInserts++;
     return YES;
+}
+
+- (void)empty {
+    @synchronized (events) {
+        [events removeAllObjects];
+    }
 }
 
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error {

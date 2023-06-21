@@ -141,4 +141,42 @@
     XCTAssertTrue([sut didReachMaxQueueTime:[[NSDate now] timeIntervalSince1970]]);
 }
 
+- (void)testEmptyEvents {
+    // Given
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:3
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                       timestamp:3
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventThree = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 3"
+                                                                       timestamp:3
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    [sut addEvent:customEventOne];
+    [sut addEvent:customEventTwo];
+    [sut addEvent:customEventThree];
+
+    NSError *error = nil;
+    NSString *eventJSONString = [sut getEventJSONStringWithError:&error];
+    NSArray *decode = [NSJSONSerialization JSONObjectWithData:[eventJSONString dataUsingEncoding:NSUTF8StringEncoding]
+                                                    options:0
+                                                      error:nil];
+    
+    XCTAssertEqual(decode.count, 3);
+    
+    [sut empty];
+    
+    NSString *emptyJSONString = [sut getEventJSONStringWithError:&error];
+    NSArray *emptyDecode = [NSJSONSerialization JSONObjectWithData:[emptyJSONString dataUsingEncoding:NSUTF8StringEncoding]
+                                                    options:0
+                                                      error:nil];
+    XCTAssertEqual(emptyDecode.count, 0);
+}
+
 @end
