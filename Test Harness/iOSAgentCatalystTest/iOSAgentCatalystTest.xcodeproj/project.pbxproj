@@ -3,12 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2B1616CF2A3BD258006CDA8C /* NewRelic.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2BB74B9F2A3B84FE007BDCE7 /* NewRelic.xcframework */; };
-		2B1616D02A3BD258006CDA8C /* NewRelic.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2BB74B9F2A3B84FE007BDCE7 /* NewRelic.xcframework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2B9CB9AA2A44AFCA0016AD75 /* NewRelic.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9CB9A82A44AFC00016AD75 /* NewRelic.xcframework */; };
+		2B9CB9AB2A44AFCA0016AD75 /* NewRelic.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9CB9A82A44AFC00016AD75 /* NewRelic.xcframework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2BB74B892A3B704D007BDCE7 /* iOSAgentCatalystTestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB74B882A3B704D007BDCE7 /* iOSAgentCatalystTestApp.swift */; };
 		2BB74B8B2A3B704D007BDCE7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB74B8A2A3B704D007BDCE7 /* ContentView.swift */; };
 		2BB74B8D2A3B704E007BDCE7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2BB74B8C2A3B704E007BDCE7 /* Assets.xcassets */; };
@@ -22,7 +22,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				2B1616D02A3BD258006CDA8C /* NewRelic.xcframework in Embed Frameworks */,
+				2B9CB9AB2A44AFCA0016AD75 /* NewRelic.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -30,13 +30,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B9CB9A82A44AFC00016AD75 /* NewRelic.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:SU7SUNGZJP:New Relic Inc"; lastKnownFileType = wrapper.xcframework; path = NewRelic.xcframework; sourceTree = SOURCE_ROOT; };
 		2BB74B852A3B704D007BDCE7 /* CatalystTestiOSAgent.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CatalystTestiOSAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BB74B882A3B704D007BDCE7 /* iOSAgentCatalystTestApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSAgentCatalystTestApp.swift; sourceTree = "<group>"; };
 		2BB74B8A2A3B704D007BDCE7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2BB74B8C2A3B704E007BDCE7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2BB74B8F2A3B704E007BDCE7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		2BB74B9E2A3B834D007BDCE7 /* iOSAgentCatalystTest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = iOSAgentCatalystTest.entitlements; sourceTree = "<group>"; };
-		2BB74B9F2A3B84FE007BDCE7 /* NewRelic.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = NewRelic.xcframework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2B1616CF2A3BD258006CDA8C /* NewRelic.xcframework in Frameworks */,
+				2B9CB9AA2A44AFCA0016AD75 /* NewRelic.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,7 +73,7 @@
 				2BB74B9E2A3B834D007BDCE7 /* iOSAgentCatalystTest.entitlements */,
 				2BB74B882A3B704D007BDCE7 /* iOSAgentCatalystTestApp.swift */,
 				2BB74B8A2A3B704D007BDCE7 /* ContentView.swift */,
-				2BB74B9F2A3B84FE007BDCE7 /* NewRelic.xcframework */,
+				2B9CB9A82A44AFC00016AD75 /* NewRelic.xcframework */,
 				2BB74B8C2A3B704E007BDCE7 /* Assets.xcassets */,
 				2BB74B8E2A3B704E007BDCE7 /* Preview Content */,
 			);
