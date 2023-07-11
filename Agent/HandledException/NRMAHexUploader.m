@@ -92,7 +92,12 @@
 didCompleteWithError:(nullable NSError*)error {
 
     if (error) {
-        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
+        if (error.code == kCFURLErrorCancelled) {
+            NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload cancelled: %@", error);
+        }
+        else {
+            NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
+        }
         [self handledErroredRequest:task.originalRequest];
     } else {
         NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
