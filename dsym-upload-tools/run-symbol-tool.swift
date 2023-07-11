@@ -95,7 +95,13 @@ func start() {
     do {
         let contents = try fileManager.contentsOfDirectory(atPath: directory)
         for content in contents where content.hasSuffix(".dSYM") {
-            dSYMPaths.append("\(directory)/\(content)")
+            // Was previously...
+//            dSYMPaths.append("\(directory)/\(content)")
+// Now we are using the following code based on a fix suggested to us.  
+            let dwarfContents = try fileManager.contentsOfDirectory(atPath: "\(directory)/\(content)/Contents/Resources/DWARF")
+            for dwarfContent in dwarfContents {        
+                dSYMPaths.append("\(directory)/\(content)/Contents/Resources/DWARF/\(dwarfContent)") 
+            }
         }
     } catch {
         print(error)
