@@ -1,7 +1,7 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
 #include <mach/std_types.h>
-#include "Utilities/BaseValue.hpp"
+#include <Utilities/BaseValue.hpp>
 #ifndef __Number_H_
 #define __Number_H_
 namespace NewRelic {

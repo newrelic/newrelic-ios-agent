@@ -7,6 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
+#import <OCMock/OCMock.h>
 #import "NRMACrashDataUploader.h"
 #import "NRAgentTestBase.h"
 #import "NewRelicAgentInternal.h"
@@ -60,6 +61,27 @@
     [super tearDown];
 }
 
+- (id) makeMockURLSession {
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://google.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
+    
+    id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
+    [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
+
+    id mockUploadTask = [OCMockObject mockForClass:NSURLSessionUploadTask.class];
+
+    __block void (^completionHandler)(NSData*, NSURLResponse*, NSError*);
+
+    [[[[mockNSURLSession stub] andReturn:mockUploadTask] andDo:^(NSInvocation * invoke) {
+        [invoke getArgument:&completionHandler atIndex:4];
+    }] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+
+    [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
+        completionHandler(nil, bresponse, nil);
+    }] resume];
+    
+    return mockNSURLSession;
+}
+
 - (void) testHeaderGeneration {
     NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"google.com"
                                                                               applicationToken:@"token"
@@ -76,6 +98,7 @@
     XCTAssertTrue([request.allHTTPHeaderFields[NEW_RELIC_OS_NAME_HEADER_KEY] isEqualToString:[NewRelicInternalUtils osName]]);
     XCTAssertTrue([request.URL.absoluteString isEqualToString:@"https://google.com/mobile_crash"]);
 }
+
 - (void) testBadURL
 {
     NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:nil
@@ -140,7 +163,35 @@
     XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
 }
 
-// TODO: Add test
-// Test supportability metric upon successful /mobile_crash request.
+-(void) testCrashReportMobileCrashSupportabilityMetric {
+    [helper.consumedMeasurements removeAllObjects];
+    id mockNSURLSession = [self makeMockURLSession];
+
+    NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"google.com"
+                                                                              applicationToken:@"token"
+                                                                         connectionInformation:[NRMAAgentConfiguration connectionInformation]
+                                                                                        useSSL:YES];
+    uploader.uploadSession = mockNSURLSession;
+    [NRMAFakeDataHelper makeFakeCrashReport:1000];
+    
+    XCTAssertNoThrow([uploader uploadCrashReports]);
+
+    [NRMATaskQueue synchronousDequeue];
+    
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    NSString* fullMetricName = [NSString stringWithFormat:kNRMABytesOutSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, @"mobile_crash"];
+    
+    NRMANamedValueMeasurement* foundMeasurement;
+    
+    for (id measurement in helper.consumedMeasurements) {
+        if([((NRMANamedValueMeasurement*)measurement).name isEqualToString:fullMetricName]) {
+            foundMeasurement = measurement;
+            break;
+        }
+    }
+
+    XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
+}
 
 @end

@@ -4,7 +4,7 @@
 #ifndef FLATBUFFERS_GENERATED_SESSIONATTRIBUTES_COM_NEWRELIC_MOBILE_FBS_H_
 #define FLATBUFFERS_GENERATED_SESSIONATTRIBUTES_COM_NEWRELIC_MOBILE_FBS_H_
 
-#include "flatbuffers/flatbuffers.h"
+#include <flatbuffers/flatbuffers.h>
 
 namespace com {
 namespace newrelic {

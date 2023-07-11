@@ -52,22 +52,19 @@ extension WebViewController: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if let host = navigationAction.request.url?.host {
-            if host.contains("newrelic.com") {
-                decisionHandler(.allow)
-                return
-            }
+        if navigationAction.navigationType == .linkActivated {
+            guard let url = navigationAction.request.url else {return}
+            webView.load(URLRequest(url: url))
         }
-        decisionHandler(.cancel)
+        decisionHandler(.allow)
     }
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, preferences: WKWebpagePreferences) async -> (WKNavigationActionPolicy, WKWebpagePreferences) {
-        if let host = navigationAction.request.url?.host {
-            if host.contains("newrelic.com") {
-                return (.allow, preferences)
-            }
+        if navigationAction.navigationType == .linkActivated {
+            guard let url = navigationAction.request.url else {return(.cancel, preferences)}
+            webView.load(URLRequest(url: url))
         }
-        return (.cancel, preferences)
+        return (.allow, preferences)
     }
 }
 

@@ -7,9 +7,9 @@
 #define LIBMOBILEAGENT_DOUBLEATTRIBUTES_HPP
 
 
-#include "session-attributes_generated.h"
-#include "Attributes.hpp"
-#include "BooleanAttributes.hpp"
+#include <Hex/session-attributes_generated.h>
+#include <Hex/Attributes.hpp>
+#include <Hex/BooleanAttributes.hpp>
 
 
 using namespace com::newrelic::mobile::fbs;

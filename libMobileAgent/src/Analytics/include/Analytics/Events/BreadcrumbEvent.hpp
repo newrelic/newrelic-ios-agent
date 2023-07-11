@@ -3,8 +3,8 @@
 #ifndef LIBMOBILEAGENT_BREADCRUMBEVENT_HPP
 #define LIBMOBILEAGENT_BREADCRUMBEVENT_HPP
 
-#include "CustomEvent.hpp"
-#include "AnalyticEvent.hpp"
+#include <Analytics/CustomEvent.hpp>
+#include <Analytics/AnalyticEvent.hpp>
 
 namespace NewRelic {
     class BreadcrumbEvent : public CustomEvent {

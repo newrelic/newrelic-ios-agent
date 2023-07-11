@@ -7,8 +7,8 @@
 #define LIBMOBILEAGENT_HEXPERSISTENCEMANAGER_HPP
 
 
-#include "HexStore.hpp"
-#include "HexPublisher.hpp"
+#include <Hex/HexStore.hpp>
+#include <Hex/HexPublisher.hpp>
 
 namespace NewRelic {
     namespace Hex {

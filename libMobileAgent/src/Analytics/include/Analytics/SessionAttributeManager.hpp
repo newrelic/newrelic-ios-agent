@@ -3,10 +3,10 @@
 #ifndef __SessionAttributeManager_H_
 #define __SessionAttributeManager_H_
 
-#include "Analytics/AttributeValidator.hpp"
-#include "Analytics/SessionAttributeManager.hpp"
-#include "Analytics/AttributeBase.hpp"
-#include "PersistentStore.hpp"
+#include <Analytics/AttributeValidator.hpp>
+#include <Analytics/SessionAttributeManager.hpp>
+#include <Analytics/AttributeBase.hpp>
+#include <Analytics/PersistentStore.hpp>
 #include <memory>
 #include <map>
 #include <JSON/json.hh>

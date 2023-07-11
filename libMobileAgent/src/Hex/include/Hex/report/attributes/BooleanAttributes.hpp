@@ -6,8 +6,8 @@
 #ifndef LIBMOBILEAGENT_BOOL_HPP
 #define LIBMOBILEAGENT_BOOL_HPP
 
-#include "session-attributes_generated.h"
-#include "Attributes.hpp"
+#include <Hex/session-attributes_generated.h>
+#include <Hex/Attributes.hpp>
 
 using namespace com::newrelic::mobile;
 using namespace flatbuffers;
