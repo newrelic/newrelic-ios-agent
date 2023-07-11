@@ -71,6 +71,14 @@ Run Agent tests for tvOS
 
 Run dSYM Upload Tools test
 
+### ios clean
+
+```sh
+[bundle exec] fastlane ios clean
+```
+
+
+
 ### ios deleteBuildArtifacts
 
 ```sh
@@ -94,6 +102,14 @@ Ouput Universal NewRelic.xcframework
 ```
 
 Copy dsym-upload-tools to xcframework
+
+### ios codesignFramework
+
+```sh
+[bundle exec] fastlane ios codesignFramework
+```
+
+Codesign xcframework
 
 ### ios internalOutputXCFrameworkIOSOnly
 

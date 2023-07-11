@@ -30,7 +30,11 @@ platform :ios do
       }, output: "#{dirName}/NewRelic.xcframework")
     end
 
-    cpDsymToolsToFramework
+    codesignFramework
+
+    # copying dsym tools into the xcframework is not going to work out for the mac catalyst build.
+    #cpDsymToolsToFramework
+
   end
 
   desc "Copy dsym-upload-tools to xcframework"
@@ -40,7 +44,12 @@ platform :ios do
       sh("cp -r dsym-upload-tools/ NewRelic.xcframework/Resources/")
     end
   end
-
+  desc "Codesign xcframework"
+  lane :codesignFramework do 
+    Dir.chdir("..") do
+      sh("codesign --timestamp -v --sign \"Apple Distribution: New Relic Inc (SU7SUNGZJP)\" NewRelic.xcframework")
+    end
+  end
   # DEBUG LANES
   
   desc "Ouput Universal NewRelic.xcframework for iOS Only"
