@@ -82,8 +82,8 @@ jobs:
 
      # SKIP SPM FOR COCOAPODS SPECS DEPLOY JOB
 
-     # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
-     # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
+     # At this point we have NewRelicAgent.podspec corresponding to the production build sitting at the repo root.
+     # The following step creates a PR containing that new NewRelicAgent.podspec file at the root of the repo.
      # Since production builds are infrequent this creates a PR that must be manually approved and merged.
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
@@ -148,8 +148,8 @@ jobs:
 
        cp Package.swift ../main/
 
-     # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
-     # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
+     # At this point we have Package.swift corresponding to the production build sitting at the repo root.
+     # The following step creates a PR containing that new Package.swift file at the root of the repo.
      # Since production builds are infrequent this creates a PR that must be manually approved and merged.
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
