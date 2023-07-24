@@ -1,16 +1,15 @@
-# The input version number (ex: 7.4.0) and branch: main are required for the production build.
-# The deployS3Production job copies the existing build from staging download location to the production download location.
-# The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
-# inputs: version (String): The version number to promote to production. (ex 7.4.0)
 name: productionDeploy
 on: 
   workflow_dispatch:
+    # The input version number (ex: 7.4.0) and branch: main are required for the production build.
     inputs:
       version:
         required: true
 
 jobs:
-
+  # The deployS3Production job copies the existing build from staging download location to the production download location.
+  # The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
+  # inputs: version (String): The version number to promote to production. (ex 7.4.0)
   deployS3Production:
     name: deployS3Production
     runs-on: macos-latest
@@ -81,33 +80,32 @@ jobs:
       env:
          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
-   - name: Create Prod Package.swift for XCFramework version
-     if: success() || failure()
-     run: |
-       cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
-       cd spm
+   # - name: Create Prod Package.swift for XCFramework version
+   #   run: |
+   #     cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
+   #     cd spm
 
-       REPLACEVER={{VERSION}}
-       REPLACECHECKSUM={{CHECKSUM}}
+   #     REPLACEVER={{VERSION}}
+   #     REPLACECHECKSUM={{CHECKSUM}}
 
-       XCFRAMEWORK_NAME="NewRelic_XCFramework_Agent_${{ env.version }}.zip"
-       curl https://download.newrelic.com/ios_agent/$XCFRAMEWORK_NAME -o $XCFRAMEWORK_NAME
-       SPM_CHECKSUM=`swift package compute-checksum  ${XCFRAMEWORK_NAME}`
+   #     XCFRAMEWORK_NAME="NewRelic_XCFramework_Agent_${{ env.version }}.zip"
+   #     curl https://download.newrelic.com/ios_agent/$XCFRAMEWORK_NAME -o $XCFRAMEWORK_NAME
+   #     SPM_CHECKSUM=`swift package compute-checksum  ${XCFRAMEWORK_NAME}`
 
-       sed -i bak "s/$REPLACEVER/${{ env.version }}/g" Package.swift
-       sed -i -e "s/$REPLACECHECKSUM/$SPM_CHECKSUM/g" Package.swift
+   #     sed -i bak "s/$REPLACEVER/${{ env.version }}/g" Package.swift
+   #     sed -i -e "s/$REPLACECHECKSUM/$SPM_CHECKSUM/g" Package.swift
 
-       rm Package.swift-e
-       rm Package.swiftbak
+   #     rm Package.swift-e
+   #     rm Package.swiftbak
 
-       rm $XCFRAMEWORK_NAME
+   #     rm $XCFRAMEWORK_NAME
                 
-       git add Package.swift
-       git commit -m "Added build ${{ env.version }}"
-       git tag ${{ env.version }}
-       git push origin main --tags
+   #     git add Package.swift
+   #     git commit -m "Added build ${{ env.version }}"
+   #     git tag ${{ env.version }}
+   #     git push origin main --tags
 
-       cp Package.swift ../main/
+   #     cp Package.swift ../main/
 
      # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
      # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
