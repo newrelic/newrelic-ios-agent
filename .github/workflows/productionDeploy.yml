@@ -1,15 +1,16 @@
+# The input version number (ex: 7.4.0) and branch: main are required for the production build.
+# The deployS3Production job copies the existing build from staging download location to the production download location.
+# The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
+# inputs: version (String): The version number to promote to production. (ex 7.4.0)
 name: productionDeploy
 on: 
   workflow_dispatch:
-    # The input version number (ex: 7.4.0) and branch: main are required for the production build.
     inputs:
       version:
         required: true
 
 jobs:
-  # The deployS3Production job copies the existing build from staging download location to the production download location.
-  # The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
-  # inputs: version (String): The version number to promote to production. (ex 7.4.0)
+
   deployS3Production:
     name: deployS3Production
     runs-on: macos-latest
