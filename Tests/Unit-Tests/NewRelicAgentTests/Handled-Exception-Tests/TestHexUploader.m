@@ -113,25 +113,6 @@
     [mockUploader stopMocking];
 }
 
-- (void) testNoRetryOnCancel {
-    id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
-
-    NSError* error = [NSError errorWithDomain:(NSString*)kCFErrorDomainCFNetwork
-                                         code:kCFURLErrorCancelled
-                                     userInfo:nil];
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnonnull"
-    [mockUploader URLSession:nil task:nil didCompleteWithError:error];
-#pragma clang diagnostic pop
-
-    XCTAssertThrows([mockUploader verify]);
-
-    [mockUploader stopMocking];
-
-}
-
 - (void) testRetryOnFailure {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
     [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];

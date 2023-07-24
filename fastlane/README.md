@@ -103,6 +103,14 @@ Ouput Universal NewRelic.xcframework
 
 Copy dsym-upload-tools to xcframework
 
+### ios codesignFramework
+
+```sh
+[bundle exec] fastlane ios codesignFramework
+```
+
+Codesign xcframework
+
 ### ios internalOutputXCFrameworkIOSOnly
 
 ```sh
