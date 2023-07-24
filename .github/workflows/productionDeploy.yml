@@ -80,8 +80,8 @@ jobs:
     #   env:
     #      COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
-   - name: Create Prod Package.swift for XCFramework version
-     run: |
+    - name: Create Prod Package.swift for XCFramework version
+      run: |
        cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
        cd spm
 
