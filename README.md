@@ -84,9 +84,7 @@ The run-symbol-tool Run script must be added to your app's Xcode project build p
 ## Support
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
-
-[🚧UNDER CONSTRUCTION🚧]
->Add the url for the support thread here: discuss.newrelic.com
+[Mobile topic on forum.newrelic.com](https://forum.newrelic.com/s/?c__categories=%5B%7B%22id%22%3A%22a6c8W000000EesdQAC%22%2C%22isCustomImage%22%3Afalse%2C%22sObjectType%22%3A%22Category__c%22%2C%22subtitle%22%3A%22%22%2C%22title%22%3A%22Mobile%22%2C%22titleFormatted%22%3A%22%3Cstrong%3EMob%3C%2Fstrong%3Eile%22%2C%22subtitleFormatted%22%3A%22%22%2C%22icon%22%3A%22standard%3Adefault%22%7D%5D)
 
 ## Contribute
 
@@ -102,8 +100,7 @@ If you believe you have found a security vulnerability in this project or any of
 
 If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
 
-[🚧UNDER CONSTRUCTION🚧]
-To all contributors, we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to [Project Name](<LINK TO https://opensource.newrelic.com/projects/... PAGE>).
+To all contributors, we thank you!  Without your contribution, this project would not be what it is today.  We also host a community project page dedicated to [New Relic iOS agent](https://opensource.newrelic.com/).
 
 ## License
 New Relic iOS Agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
