@@ -54,6 +54,7 @@
 #import "NRMAStartTimer.h"
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAURLSessionWebSocketInstrumentation.h"
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
 // Enabling this will bypass dispatch_once-style logic and expose more internal state.
@@ -321,6 +322,10 @@ static NewRelicAgentInternal* _sharedInstance;
     dispatch_once(&onceToken,
                   ^{
         [NewRelicAgentInternal instrumentWebViews];
+        
+        if ([NRMAFlags shouldEnableNSURLSessionWebSocketInstrumentationSupport]) {
+            [NRMAURLSessionWebSocketInstrumentation instrument];
+        }
 
         if ([NRMAFlags shouldEnableNSURLSessionInstrumentation]) {
             [NRMAURLSessionOverride beginInstrumentation];

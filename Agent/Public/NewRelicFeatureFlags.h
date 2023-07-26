@@ -70,8 +70,10 @@
 
  - NRFeatureFlag_SwiftAsyncURLSessionSupport
     Disabled by default. Enable or disable (default) flag for automatic instrumentation of async URLSession functions in Swift.
-*/
 
+- NRFeatureFlag_NSURLSessionWebSocketInstrumentation
+   Disabled by default. Enable or disable (default) flag for automatic instrumentation NSURLSessionWebSocketTasks.
+*/
 
 
 typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
@@ -93,4 +95,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
     NRFeatureFlag_FedRampEnabled                        = 1 << 17, // Disabled by default
     NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 18, // Disabled by default
+    NRFeatureFlag_NSURLSessionWebSocketInstrumentation  = 1 << 19, // Disabled by default
 };

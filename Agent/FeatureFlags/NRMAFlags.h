@@ -47,6 +47,8 @@
 
 + (BOOL) shouldEnableSwiftAsyncURLSessionSupport;
 
++ (BOOL) shouldEnableNSURLSessionWebSocketInstrumentationSupport;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

@@ -162,6 +162,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_SwiftAsyncURLSessionSupport) != 0;
 }
 
++ (BOOL) shouldEnableNSURLSessionWebSocketInstrumentationSupport {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_NSURLSessionWebSocketInstrumentation) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -211,6 +215,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
     }
     if ((flags & NRFeatureFlag_SwiftAsyncURLSessionSupport) == NRFeatureFlag_SwiftAsyncURLSessionSupport) {
         [retArray addObject:@"SwiftAsyncURLSessionSupport"];
+    }
+    if ((flags & NRFeatureFlag_NSURLSessionWebSocketInstrumentation) == NRFeatureFlag_NSURLSessionWebSocketInstrumentation) {
+        [retArray addObject:@"NSURLSessionWebSocketInstrumentationSupport"];
     }
     return retArray;
 }

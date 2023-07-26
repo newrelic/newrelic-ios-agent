@@ -9,7 +9,6 @@
 #import "NRMAURLSessionOverride.h"
 #import "NRMAMethodSwizzling.h"
 #import <objc/runtime.h>
-#import "NRMAMethodSwizzling.h"
 #import "NRMAMeasurements.h"
 #import "NRMAURLSessionTaskOverride.h"
 #import "NewRelicInternalUtils.h"
