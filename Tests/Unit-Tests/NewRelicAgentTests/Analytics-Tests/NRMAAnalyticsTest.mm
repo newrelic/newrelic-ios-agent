@@ -28,7 +28,7 @@
 @implementation NRMAAnalyticsTest
 
 #undef USE_INTEGRATED_EVENT_MANAGER
-#define USE_INTEGRATED_EVENT_MANAGER 0
+#define USE_INTEGRATED_EVENT_MANAGER 1
 
 - (void)setUp {
     [super setUp];
@@ -60,13 +60,15 @@
 //1.79769313486232e+308
 //9223372036854775807
     NSString* json = [analytics analyticsJSONString];
-    XCTAssertTrue([json containsString:@"9223372036854775807"]);
-    XCTAssertTrue([json containsString:@"1.79769313486232e+308"]);
+    XCTAssertTrue([json containsString:@(LLONG_MAX).stringValue]);
+    XCTAssertTrue([json containsString:@(DBL_MAX).stringValue]);
     //NSJSONSerialization can't parse scientific notation because it's bad.
     // See `2.4.  Numbers`  https://www.ietf.org/rfc/rfc4627.txt
     //    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
     //                                                options:0
     //                                                        error:nil];
+    //1.7976931348623157e+308
+    //1.79769313486232e+308
 
 }
 - (void) testRequestEvents {

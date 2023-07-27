@@ -34,11 +34,11 @@
 }
 
 - (BOOL)addAttribute:(NSString *)name value:(id)value {
-    if(![self.attributeValidator nameValidator:name]) {
+    if(self.attributeValidator != nil && ![self.attributeValidator nameValidator:name]) {
         return NO;
     }
     
-    if(![self.attributeValidator valueValidator:value]) {
+    if(self.attributeValidator != nil && ![self.attributeValidator valueValidator:name]) {
         return NO;
     }
     
