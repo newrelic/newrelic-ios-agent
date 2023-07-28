@@ -36,6 +36,9 @@ NSArray *reservedKeys = @[@"eventType",
                           @"lastInteraction",
 ];
 
+NSString* userIdReservedKey = @"userId";
+NSString* lastInteractionReservedKey = @"lastInteraction";
+
 int maxNameLength = 256;
 int maxValueSizeBytes = 4096;
 int maxNumberAttributes = 128;
@@ -43,7 +46,6 @@ int maxNumberAttributes = 128;
 NSString *attributesFileName = @"attributes.txt";
 
 @implementation NRMASAM {
-    // value must be a NSNumber, Integer, or NSString.
     NSMutableDictionary<NSString*, id> *attributeDict;
 }
 
@@ -56,8 +58,7 @@ NSString *attributesFileName = @"attributes.txt";
 }
 
 - (BOOL) setLastInteraction:(NSString*)name {
-    // TODO Move string to constants.
-    return [self setNRSessionAttribute:@"lastInteraction" value:name];
+    return [self setNRSessionAttribute:lastInteractionReservedKey value:name];
 }
 
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value {
@@ -83,18 +84,8 @@ NSString *attributesFileName = @"attributes.txt";
         return false;
     }
 
-    if ([value isKindOfClass:[NSNumber class]]) {
-        NSNumber* number = (NSNumber*)value;
-
-    } else if ([value isKindOfClass:[NSString class]]) {
-        NSString* string = (NSString*)value;
-    } else if([value isKindOfClass:[NRMABool class]]) {
-        if ([(NRMABool*) value value]) {
-            value = @(true);
-        }
-        else {
-            value = @(false);
-        }
+    if([value isKindOfClass:[NRMABool class]]) {
+        value = @(([(NRMABool*) value value]));
     }
 
     [attributeDict setValue:value forKey:name];
@@ -105,8 +96,7 @@ NSString *attributesFileName = @"attributes.txt";
 }
 
 - (BOOL) setUserId:(NSString *)userId {
-    // TODO Move string to constants.
-    return [self setSessionAttribute:@"userId" value:userId persistent:true];
+    return [self setSessionAttribute:userIdReservedKey value:userId persistent:true];
 }
 
 - (BOOL) removeSessionAttributeNamed:(NSString*)name {
@@ -146,9 +136,9 @@ NSString *attributesFileName = @"attributes.txt";
         if (existingValue && [existingValue isKindOfClass:[NSNumber class]]) {
             float existingFloatValue = 0;
 
-            if ([NewRelicInternalUtils isInteger:number] ) {
+            if ([NewRelicInternalUtils isInteger:existingValue] ) {
                 existingFloatValue = (float) [existingValue integerValue];
-            } else if ([NewRelicInternalUtils isFloat:number])  {
+            } else if ([NewRelicInternalUtils isFloat:existingValue])  {
                 existingFloatValue = [existingValue floatValue];
             }
             [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
@@ -193,7 +183,11 @@ NSString *attributesFileName = @"attributes.txt";
 - (void) clearPersistedSessionAnalytics {
     [attributeDict removeAllObjects];
 
-    // TODO: Delete attributes.txt file.
+    NSError* error;
+    [[NSFileManager defaultManager] removeItemAtPath:[NRMASAM attributeFilePath] error:&error];
+    if (error) {
+        NRLOG_VERBOSE(@"Failed to clear Persisted Session Analytics w/ error = %@", error);
+    }
 }
 
 - (BOOL) persistToDisk {
@@ -214,48 +208,50 @@ NSString *attributesFileName = @"attributes.txt";
 
 -(BOOL) isValidAttributeName:(NSString*)name {
     if ([name length] == 0) {
+        NRLOG_ERROR(@"invalid attribute: name length = 0");
         return false;
     }
     if ([name hasPrefix:@" "]) {
+        NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
         return false;
     }
     // check if attribute name is reserved or attribute name matches reserved prefix.
     for (NSString* key in reservedKeys) {
         if ([key isEqualToString:name]) {
+            NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
             return false;
         }
         if ([name hasPrefix: key])  {
+            NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
             return false;
         }
     }
     // check if attribute name exceeds max length.
     if ([name length] > maxNameLength) {
+        NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
         return false;
     }
 
     return true;
 }
 
-// TODO Validate Max value byte size.
 -(BOOL) isValidValue:(id)value {
     if ([value isKindOfClass:[NSString class]]) {
         if ([(NSString*)value length] == 0) {
+            NRLOG_ERROR(@"invalid attribute: value length = 0");
+            return false;
+        }
+        else if ([(NSString*)value length] >= maxValueSizeBytes) {
+            NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
             return false;
         }
     }
-    if (value == nil) return false;
+    if (value == nil) {
+        NRLOG_ERROR(@"invalid attribute: value cannot be nil");
+        return false;
+    }
 
     return true;
-    /*
-    [](const char *value) {
-        if (strlen(value) * sizeof(char) >= MAX_VALUE_SIZE_BYTES) {
-            std::ostringstream oss;
-            oss << "value exceeded maximum byte size, " << MAX_VALUE_SIZE_BYTES;
-            throw std::invalid_argument(oss.str());
-        }
-        return true;
-    },
-     */
 }
 
 // Helpers

@@ -1,20 +1,12 @@
 //
-//  NRMAAnalyticsTest.m
+//  NRMASAMTest.mm
 //  NewRelicAgent
 //
-//  Created by Bryce Buchanan on 3/20/15.
+//  Created by Chris Dillard on 7/26/23.
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
-//#import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
-//#import "NRMAAnalytics+cppInterface.h"
-//#import <Analytics/AnalyticsController.hpp>
-//#import <climits>
-//#import "NRMAFlags.h"
-//#import "NRMABool.h"
-//#import "NRLogger.h"
-//#import "NRMASupportMetricHelper.h"
 #import "NRMASAM.h"
 
 @interface NRMASAMTest : XCTestCase
@@ -60,6 +52,25 @@
                                                            options:0
                                                              error:nil];
     XCTAssertTrue([decode[attribute] isEqual:@(2)]);
+}
+- (void) testIncrementSessionAttributeDiffTypes {
+    NRMASAM *manager = [NRMASAM new];
+    NSString* attribute = @"incrementableAttribute";
+    float initialValue = 1.2;
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@(initialValue) persistent:true], @"Failed to successfully set session attribute");
+
+    double incrementValue = 1.23;
+    [manager incrementSessionAttribute:attribute value:@(incrementValue) persistent:true];
+
+    NSString* attributes = [manager sessionAttributeJSONString];
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    float newValue =  [decode[attribute] floatValue];
+
+    XCTAssertEqualWithAccuracy(newValue, 2.43, 0.01);
 }
 
 - (void) testSetUserId {

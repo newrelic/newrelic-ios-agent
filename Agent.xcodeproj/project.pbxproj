@@ -2048,7 +2048,6 @@
 				0209ABCA24E7064F00E45C90 /* Feature-Flags-Tests */,
 				0209ABC924E7064300E45C90 /* Exception-Handler-Tests */,
 				0209ABC824E705B500E45C90 /* Analytics-Tests */,
-				0209ABC724E705AB00E45C90 /* Agent-Health-Tests */,
 				0209ABC624E7059900E45C90 /* User-Action-Tests */,
 			);
 			path = NewRelicAgentTests;
@@ -2060,13 +2059,6 @@
 				0209AC5024E707AB00E45C90 /* NRMAUserActionBuilderTest.m */,
 			);
 			path = "User-Action-Tests";
-			sourceTree = "<group>";
-		};
-		0209ABC724E705AB00E45C90 /* Agent-Health-Tests */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = "Agent-Health-Tests";
 			sourceTree = "<group>";
 		};
 		0209ABC824E705B500E45C90 /* Analytics-Tests */ = {
