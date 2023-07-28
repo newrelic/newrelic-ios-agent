@@ -1029,6 +1029,10 @@
 		F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
+		F8FBFA512A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
+		F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
+		F8FBFA552A71BA2900CDC8C5 /* NRMAPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */; };
+		F8FBFA562A71BA2900CDC8C5 /* NRMAPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -1923,6 +1927,10 @@
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
+		F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMARequestEvent.m; sourceTree = "<group>"; };
+		F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMARequestEvent.h; sourceTree = "<group>"; };
+		F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAPayload.m; sourceTree = "<group>"; };
+		F8FBFA572A71BA3A00CDC8C5 /* NRMAPayload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAPayload.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2573,6 +2581,9 @@
 		02FF484F24DC614D00115469 /* Analytics */ = {
 			isa = PBXGroup;
 			children = (
+				F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */,
+				F8FBFA572A71BA3A00CDC8C5 /* NRMAPayload.h */,
+				F8FBFA3C2A71A32400CDC8C5 /* Events */,
 				02FF485A24DC615A00115469 /* NRMAAnalytics.h */,
 				02FF485824DC615900115469 /* NRMAAnalytics.mm */,
 				02FF485424DC615900115469 /* NRMAAnalytics+cppInterface.h */,
@@ -2588,11 +2599,6 @@
 				34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */,
 				34544D122A3142F900B5A8D1 /* NRMAEventManager.h */,
 				34544D132A3142F900B5A8D1 /* NRMAEventManager.m */,
-				34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */,
-				34544D302A324A1400B5A8D1 /* NRMAAnalyticEvent.h */,
-				34544D312A324A1400B5A8D1 /* NRMAAnalyticEvent.m */,
-				34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */,
-				34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */,
 				342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */,
 				342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */,
 				342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */,
@@ -3261,6 +3267,20 @@
 				F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */,
 			);
 			path = "DistributedTesting-Tests";
+			sourceTree = "<group>";
+		};
+		F8FBFA3C2A71A32400CDC8C5 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */,
+				34544D302A324A1400B5A8D1 /* NRMAAnalyticEvent.h */,
+				34544D312A324A1400B5A8D1 /* NRMAAnalyticEvent.m */,
+				34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */,
+				34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */,
+				F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */,
+				F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */,
+			);
+			path = Events;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -4288,6 +4308,7 @@
 			files = (
 				02FF4B1124E1CA0F00115469 /* NRMAAnalytics.h in Sources */,
 				02FF49CA24DC62B800115469 /* NRMAMetricSet.m in Sources */,
+				F8FBFA552A71BA2900CDC8C5 /* NRMAPayload.m in Sources */,
 				02FF48E324DC622700115469 /* NRMAExceptionhandlerConstants.m in Sources */,
 				02FF49DB24DC636100115469 /* NRMATimedTraceSegment.m in Sources */,
 				F6E79CF125A66887006277FB /* NRMATraceContext.mm in Sources */,
@@ -4402,6 +4423,7 @@
 				02FF48DA24DC622700115469 /* NRMATimestampContainer.m in Sources */,
 				02FF49AE24DC62B800115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF489C24DC61D200115469 /* NRMAURLSessionOverride.m in Sources */,
+				F8FBFA512A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */,
 				02FF49CB24DC62B800115469 /* NRMAHarvestableMetric.m in Sources */,
 				02FF489A24DC61D200115469 /* NRMAURLSessionTaskDelegate.m in Sources */,
 				02FF482224DB5B8100115469 /* NRMATableViewIntrumentation.m in Sources */,
@@ -4724,6 +4746,7 @@
 				02FF4C7224E3201400115469 /* NRMAGestureRecognizerInstrumentation.m in Sources */,
 				02FF4C7324E3201400115469 /* NRMAReachability.m in Sources */,
 				02FF4C7424E3201400115469 /* NRMAMeasurementEngine.m in Sources */,
+				F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */,
 				02FF4C7524E3201400115469 /* NRMAAssociate.m in Sources */,
 				02FF4C7624E3201400115469 /* NRMANetworkFacade.mm in Sources */,
 				02FF4C7724E3201400115469 /* NRMAThreadLocalStore.m in Sources */,
@@ -4741,6 +4764,7 @@
 				02FF4C8224E3201400115469 /* NRMAActivityTraceMeasurementProducer.m in Sources */,
 				02FF4C8324E3201400115469 /* NRMAExceptionMetaDataStore.m in Sources */,
 				02FF4C8424E3201400115469 /* NRMASummaryMeasurementConsumer.m in Sources */,
+				F8FBFA562A71BA2900CDC8C5 /* NRMAPayload.m in Sources */,
 				02FF4C8524E3201400115469 /* NRMAFlags.m in Sources */,
 				02FF4C8624E3201400115469 /* NRMACrashDataWriter.m in Sources */,
 				02FF4C8724E3201400115469 /* NRGCDOverride.m in Sources */,
