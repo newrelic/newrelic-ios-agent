@@ -60,16 +60,15 @@
 //1.79769313486232e+308
 //9223372036854775807
     NSString* json = [analytics analyticsJSONString];
-    XCTAssertTrue([json containsString:@(LLONG_MAX).stringValue]);
-    XCTAssertTrue([json containsString:@(DBL_MAX).stringValue]);
-    //NSJSONSerialization can't parse scientific notation because it's bad.
-    // See `2.4.  Numbers`  https://www.ietf.org/rfc/rfc4627.txt
-    //    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-    //                                                options:0
-    //                                                        error:nil];
-    //1.7976931348623157e+308
-    //1.79769313486232e+308
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:0
+                                                         error:nil];
 
+    long long decodedInt = [decode[0][@"bigInt"] longLongValue];
+    XCTAssertEqual(decodedInt, @(LLONG_MAX).longLongValue);
+    
+    double decodedDouble = [decode[0][@"bigDouble"] doubleValue];
+    XCTAssertEqual(decodedDouble, @(DBL_MAX).doubleValue);
 }
 - (void) testRequestEvents {
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
