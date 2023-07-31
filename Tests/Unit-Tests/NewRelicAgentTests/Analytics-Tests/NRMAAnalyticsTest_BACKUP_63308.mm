@@ -28,7 +28,11 @@
 @implementation NRMAAnalyticsTest
 
 #undef USE_INTEGRATED_EVENT_MANAGER
+<<<<<<< HEAD
+#define USE_INTEGRATED_EVENT_MANAGER 0
+=======
 #define USE_INTEGRATED_EVENT_MANAGER 1
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
 
 - (void)setUp {
     [super setUp];

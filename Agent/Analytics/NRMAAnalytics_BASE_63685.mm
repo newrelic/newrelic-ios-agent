@@ -20,15 +20,6 @@
 #import "NRMAUserActionBuilder.h"
 #import <Connectivity/Payload.hpp>
 #import "NewRelicAgentInternal.h"
-#import "NRMAEventManager.h"
-#import "NRMAAnalyticEvent.h"
-
-//#define USE_INTEGRATED_EVENT_MANAGER 1
-
-#import "NRMAEventManager.h"
-#import "NRMACustomEvent.h"
-
-#define USE_INTEGRATED_EVENT_MANAGER 1
 
 using namespace NewRelic;
 @implementation NRMAAnalytics
@@ -36,9 +27,6 @@ using namespace NewRelic;
     std::shared_ptr<AnalyticsController> _analyticsController;
     BOOL _sessionWillEnd;
     NSRegularExpression* __eventTypeRegex;
-    
-    NRMAEventManager *_eventManager;
-    NSDate *_sessionStartTime;
 }
 
 static PersistentStore<std::string,BaseValue>* __attributeStore;
@@ -116,20 +104,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if (dictionary[@(__kNRMA_RA_sessionDuration)]) {
             _analyticsController->removeSessionAttribute(__kNRMA_RA_sessionDuration);
         }
-        
-#if USE_INTEGRATED_EVENT_MANAGER
-        _eventManager = [NRMAEventManager new];
-#endif
-        // SessionStartTime is passed in as milliseconds. In the agent, when used,
-        // the NSDate time interval is multiplied by 1000 to get milliseconds.
-        // Tests will pass it in as 0, hence the check.
-        // When libMobileAgent finally goes away, this can simply be initialized with the NSDate
-        // the NewRelicAgentInternal initializes with.
-        if(sessionStartTime == 0) {
-            _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:sessionStartTime];
-        } else {
-            _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
-        }
     }
     return self;
 }
@@ -148,25 +122,19 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL)addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
 
-    return YES;
-#else
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
         return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload));
     }
     return NO;
-#endif
 }
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
                  withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return YES;
-#else
+
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
@@ -175,16 +143,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 
     return NO;
-#endif
 }
 
 
 - (BOOL)addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
              withResponse:(NRMANetworkResponseData *)responseData
               withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
@@ -192,22 +156,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload));
     }
     return NO;
-#endif
 }
 
 - (BOOL) setLastInteraction:(NSString*)name {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     return [self setNRSessionAttribute:@(__kNRMA_RA_lastInteraction)
                                  value:name];
-#endif
 }
 
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
             NSNumber* number = (NSNumber*)value;
@@ -261,13 +217,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return NO;
 
     }
-#endif
 }
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
             NSNumber* number = (NSNumber*)value;
@@ -303,13 +255,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return NO;
 
     }
-#endif
 }
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
             NSNumber* number = (NSNumber*)value;
@@ -341,23 +289,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return NO;
 
     }
-#endif
 }
 
 - (BOOL) setUserId:(NSString *)userId {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     return [self setSessionAttribute:@"userId"
                                value:userId
                           persistent:YES];
-#endif
 }
 
 - (BOOL) removeSessionAttributeNamed:(NSString*)name {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     try {
         return _analyticsController->removeSessionAttribute(name.UTF8String);
     } catch (std::exception& e) {
@@ -367,12 +307,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRLOG_ERROR(@"Failed to remove attribute.");
         return NO;
     }
-#endif
 }
 - (BOOL) removeAllSessionAttributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     try {
         return _analyticsController->clearSessionAttributes();
     } catch (std::exception& e) {
@@ -383,15 +319,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return NO;
 
     }
-#endif
 }
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-//    NRMAAnalyticEvent *testEvent = [NRMAAnalyticEvent new];
-//    return [_eventManager addEvent:testEvent];
-    return NO;
-#else
+    
     try {
         auto event = _analyticsController->newEvent(name.UTF8String);
         if (event == nullptr) {
@@ -410,14 +341,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return NO;
     }
     return NO;
-#endif
 }
 
 - (BOOL) addBreadcrumb:(NSString*)name
         withAttributes:(NSDictionary*)attributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     try {
 
         if(!name.length) {
@@ -443,15 +370,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return NO;
     }
     return NO;
-#endif
 }
 
 
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes {
-//#if USE_INTEGRATED_EVENT_MANAGER
-////    return NO;
-//#else
+
     try {
         if (!__eventTypeRegex) {
             NSError* error = nil;
@@ -473,17 +397,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return NO;
         }
 
-#if USE_INTEGRATED_EVENT_MANAGER
-        NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
-                                                                  timestamp:[[NSDate now] timeIntervalSince1970]
-                                                sessionElapsedTimeInSeconds:[[NSDate now] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
-        [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-            [event addAttribute:key value:obj];
-        }];
-        [_eventManager addEvent:event];
-        
-        return YES;
-#else
+
         auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
 
         if (event == nullptr) {
@@ -494,7 +408,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if([self event:event withAttributes:attributes]) {
             return _analyticsController->addEvent(event);
         }
-#endif
     } catch (std::exception& e){
         NRLOG_ERROR(@"Failed to add event: %s",e.what());
         return NO;
@@ -506,10 +419,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (BOOL) event:(std::shared_ptr<AnalyticEvent>)event withAttributes:(NSDictionary*)attributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-
-    return YES;
-#else
     for (NSString* key in attributes.allKeys) {
         id value = attributes[key];
         if ([value isKindOfClass:[NSString class]]) {
@@ -532,14 +441,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
     }
     return YES;
-#endif
 }
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number
 {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     if ([NewRelicInternalUtils isInteger:number]) {
     return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue]); //has internal exception handling
     } else if ([NewRelicInternalUtils isFloat:number]) {
@@ -547,13 +452,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     } else {
         return NO;
     }
-#endif
 }
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
     if ([NewRelicInternalUtils isInteger:number]) {
         return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number integerValue],(bool)persistent); //has internal exception handling.
     } else if ([NewRelicInternalUtils isFloat:number]) {
@@ -561,16 +462,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     } else {
         return NO;
     }
-#endif
 }
 
 
 
 - (NSString*) analyticsJSONString {
-#if USE_INTEGRATED_EVENT_MANAGER
-    NSError *error = nil;
-    return [_eventManager getEventJSONStringWithError:&error];
-#else
     try {
         auto events = _analyticsController->getEventsJSON(true);
         std::stringstream stream;
@@ -582,7 +478,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRLOG_VERBOSE(@"Failed to generate event json");
     }
     return nil;
-#endif
 }
 
 - (NSString*) sessionAttributeJSONString {

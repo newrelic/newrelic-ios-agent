@@ -120,6 +120,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 #if USE_INTEGRATED_EVENT_MANAGER
         _eventManager = [NRMAEventManager new];
 #endif
+<<<<<<< HEAD
+=======
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
         // Tests will pass it in as 0, hence the check.
@@ -130,6 +132,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } else {
             _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
         }
+        
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
     }
     return self;
 }
@@ -149,8 +153,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
 #if USE_INTEGRATED_EVENT_MANAGER
-
+<<<<<<< HEAD
+    return NO;
+=======
     return YES;
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
 #else
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
@@ -165,7 +172,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 withResponse:(NRMANetworkResponseData *)responseData
                  withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
 #if USE_INTEGRATED_EVENT_MANAGER
+<<<<<<< HEAD
+    return NO;
+=======
     return YES;
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
 #else
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
@@ -388,9 +399,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
+<<<<<<< HEAD
+    NRMAAnalyticEvent *testEvent = [NRMAAnalyticEvent new];
+    return [_eventManager addEvent:testEvent];
+=======
 //    NRMAAnalyticEvent *testEvent = [NRMAAnalyticEvent new];
 //    return [_eventManager addEvent:testEvent];
     return NO;
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
 #else
     try {
         auto event = _analyticsController->newEvent(name.UTF8String);
@@ -449,9 +465,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes {
+<<<<<<< HEAD
+#if USE_INTEGRATED_EVENT_MANAGER
+    return NO;
+#else
+=======
 //#if USE_INTEGRATED_EVENT_MANAGER
 ////    return NO;
 //#else
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
     try {
         if (!__eventTypeRegex) {
             NSError* error = nil;
@@ -503,12 +525,16 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return NO;
     }
     return NO;
+#endif
 }
 
 - (BOOL) event:(std::shared_ptr<AnalyticEvent>)event withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-
+<<<<<<< HEAD
+    return NO;
+=======
     return YES;
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
 #else
     for (NSString* key in attributes.allKeys) {
         id value = attributes[key];
@@ -568,8 +594,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (NSString*) analyticsJSONString {
 #if USE_INTEGRATED_EVENT_MANAGER
+<<<<<<< HEAD
+    return nil;
+=======
     NSError *error = nil;
     return [_eventManager getEventJSONStringWithError:&error];
+>>>>>>> 756ac9ba86999b37b850935f5efb2a2700114bba
 #else
     try {
         auto events = _analyticsController->getEventsJSON(true);

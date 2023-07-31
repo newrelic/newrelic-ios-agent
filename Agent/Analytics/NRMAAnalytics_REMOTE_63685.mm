@@ -20,10 +20,6 @@
 #import "NRMAUserActionBuilder.h"
 #import <Connectivity/Payload.hpp>
 #import "NewRelicAgentInternal.h"
-#import "NRMAEventManager.h"
-#import "NRMAAnalyticEvent.h"
-
-//#define USE_INTEGRATED_EVENT_MANAGER 1
 
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
@@ -130,6 +126,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } else {
             _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
         }
+        
     }
     return self;
 }
@@ -149,7 +146,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
 #if USE_INTEGRATED_EVENT_MANAGER
-
     return YES;
 #else
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
@@ -507,7 +503,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) event:(std::shared_ptr<AnalyticEvent>)event withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-
     return YES;
 #else
     for (NSString* key in attributes.allKeys) {
