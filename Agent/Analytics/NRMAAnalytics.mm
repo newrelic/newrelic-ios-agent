@@ -22,13 +22,11 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAEventManager.h"
 #import "NRMAAnalyticEvent.h"
-
-//#define USE_INTEGRATED_EVENT_MANAGER 1
-
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
+#import "NRMASAM.h"
 
-#define USE_INTEGRATED_EVENT_MANAGER 1
+//#define USE_INTEGRATED_EVENT_MANAGER 1
 
 using namespace NewRelic;
 @implementation NRMAAnalytics
@@ -38,6 +36,7 @@ using namespace NewRelic;
     NSRegularExpression* __eventTypeRegex;
     
     NRMAEventManager *_eventManager;
+    NRMASAM *_sessionAttributeManager;
     NSDate *_sessionStartTime;
 }
 
@@ -119,6 +118,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
 #if USE_INTEGRATED_EVENT_MANAGER
         _eventManager = [NRMAEventManager new];
+        _sessionAttributeManager = [NRMASAM new];
 #endif
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
@@ -197,7 +197,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setLastInteraction:(NSString*)name {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setLastInteraction:name];
 #else
     return [self setNRSessionAttribute:@(__kNRMA_RA_lastInteraction)
                                  value:name];
@@ -206,7 +206,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setNRSessionAttribute:name value:value];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
@@ -266,7 +266,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setSessionAttribute:name value:value persistent:isPersistent];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
@@ -308,7 +308,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setSessionAttribute:name value:value persistent:true];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
@@ -346,7 +346,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setUserId:(NSString *)userId {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setUserId:userId];
 #else
     return [self setSessionAttribute:@"userId"
                                value:userId
@@ -356,7 +356,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) removeSessionAttributeNamed:(NSString*)name {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager removeSessionAttributeNamed:name];
 #else
     try {
         return _analyticsController->removeSessionAttribute(name.UTF8String);
@@ -371,7 +371,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 - (BOOL) removeAllSessionAttributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager removeAllSessionAttributes];
 #else
     try {
         return _analyticsController->clearSessionAttributes();
@@ -538,7 +538,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number
 {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager incrementSessionAttribute:name value:number persistent: false];
 #else
     if ([NewRelicInternalUtils isInteger:number]) {
     return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue]); //has internal exception handling
@@ -552,7 +552,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager incrementSessionAttribute:name value:number persistent:persistent];
 #else
     if ([NewRelicInternalUtils isInteger:number]) {
         return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number integerValue],(bool)persistent); //has internal exception handling.
@@ -586,6 +586,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (NSString*) sessionAttributeJSONString {
+#if USE_INTEGRATED_EVENT_MANAGER
+    return [_sessionAttributeManager sessionAttributeJSONString];
+#else
     try {
     auto attributes = _analyticsController->getSessionAttributeJSON();
     std::stringstream stream;
@@ -597,8 +600,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRLOG_VERBOSE(@ "Failed to generate attributes json.");
     }
     return nil;
+#endif
 }
 + (NSString*) getLastSessionsAttributes {
+#if USE_INTEGRATED_EVENT_MANAGER
+    return [NRMASAM getLastSessionsAttributes];
+#else
     try {
     auto attributes = AnalyticsController::fetchDuplicatedAttributes([self attributeDupStore], YES);
     std::stringstream stream;
@@ -615,6 +622,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRLOG_VERBOSE(@"failed to generate session attribute json.");
     }
     return nil;
+#endif
 }
 + (NSString*) getLastSessionsEvents{
     try {
@@ -642,6 +650,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 + (void) clearDuplicationStores
 {
+#if USE_INTEGRATED_EVENT_MANAGER
+    // TODO: SAM Persistence
+//    [self attributeDupStore].clear();
+//    [self eventDupStore].clear();
+#else
     try {
         [self attributeDupStore].clear();
         [self eventDupStore].clear();
@@ -650,10 +663,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     } catch(...) {
         NRLOG_VERBOSE(@"Failed to clear dup stores.");
     }
+#endif
 }
 
 
 - (void) clearLastSessionsAnalytics {
+#if USE_INTEGRATED_EVENT_MANAGER
+    [_sessionAttributeManager clearLastSessionsAnalytics];
+#else
     try {
         _analyticsController->clearAttributesDuplicationStore();
         _analyticsController->clearEventsDuplicationStore();
@@ -662,6 +679,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     } catch (...) {
         NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs.");
     }
+#endif
 }
 
 //Harvest Aware methods
