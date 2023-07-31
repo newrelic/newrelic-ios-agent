@@ -9,15 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "NRMARequestEvent.h"
 
-@implementation NRMARequestEvent {
-    NSMutableDictionary<NSString *, id> *attributes;
-}
-
-@synthesize timestamp = m_timestamp;
-@synthesize sessionElapsedTimeSeconds = m_sessionElapsedTimeSeconds;
-@synthesize eventType = m_eventType;
-@synthesize attributeValidator = m_attributeValidator;
-
+@implementation NRMARequestEvent
 
 - (nonnull instancetype) initWithEventType:(NSString *)eventType
                                  timestamp:(NSTimeInterval)timestamp
@@ -26,26 +18,25 @@
                     withAttributeValidator:(id<AttributeValidatorProtocol>)attributeValidator {
     self = [super init];
     if (self) {
-        m_timestamp = timestamp;
-        m_sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
-        m_eventType = eventType;
-        m_attributeValidator = attributeValidator;
+        self.timestamp = timestamp;
+        self.sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
+        self.eventType = eventType;
+        self.attributeValidator = attributeValidator;
         _payload = payload;
-        
-        attributes = [[NSMutableDictionary alloc] init];
     }
     
     return self;
 }
 
 - (id)JSONObject {
-    NRMACustomEvent *sut = [[NRMACustomEvent alloc] initWithEventType:m_eventType
-                                                            timestamp:m_timestamp
-                                          sessionElapsedTimeInSeconds:m_sessionElapsedTimeSeconds
-                                               withAttributeValidator:m_attributeValidator];
+    NRMAMobileEvent *sut = [[NRMAMobileEvent alloc] initWithEventType:self.eventType
+                                                            timestamp:self.timestamp
+                                          sessionElapsedTimeInSeconds:self.sessionElapsedTimeSeconds
+                                               withAttributeValidator:self.attributeValidator];
     NSDictionary *event = [sut JSONObject];
 
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
+    [dict addEntriesFromDictionary:self.attributes];
     dict[@"payload"] = [_payload JSONObject];
 
     return [NSDictionary dictionaryWithDictionary:dict];

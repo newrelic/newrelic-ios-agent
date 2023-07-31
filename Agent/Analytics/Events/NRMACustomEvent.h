@@ -10,20 +10,11 @@
 
 #import "NRMAAnalyticEventProtocol.h"
 #import "AttributeValidatorProtocol.h"
+#import "NRMAMobileEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMACustomEvent : NSObject <NRMAAnalyticEventProtocol>
-
-@property (readonly) NSTimeInterval timestamp;
-@property (readonly) unsigned long long sessionElapsedTimeSeconds;
-@property (nonatomic, readonly) NSString *eventType;
-@property (weak, readonly) id <AttributeValidatorProtocol> attributeValidator;
-
-- (instancetype) initWithEventType:(NSString *)eventType
-                         timestamp:(NSTimeInterval)timestamp
-       sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
-            withAttributeValidator:(id<AttributeValidatorProtocol>) attributeValidator;
+@interface NRMACustomEvent : NRMAMobileEvent
 
 
 @end

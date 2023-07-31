@@ -16,7 +16,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMARequestEvent : NRMACustomEvent <NRMAAnalyticEventProtocol>
-@property (weak, readonly) NRMAPayload* payload;
+@property (weak) NRMAPayload* payload;
+
+- (nonnull instancetype) initWithEventType:(NSString *)eventType
+                                 timestamp:(NSTimeInterval)timestamp
+               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+                                   payload:(NRMAPayload *)payload
+                    withAttributeValidator:(id<AttributeValidatorProtocol>)attributeValidator;
 
 @end
 

@@ -22,6 +22,15 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *trustedAccountKey;
 @property (readonly) bool dtEnabled;
 
+- (nonnull instancetype) initWithEventType:(NSString *)eventType
+                                 timestamp:(NSTimeInterval)timestamp
+                                 accountID:(NSString*)accountId
+                                 appID:(NSString*)appId
+                                 ID:(NSString*)id
+                                 traceID:(NSString*)traceId
+                                 parentID:(NSString*)parentId
+                                 trustedAccountKey:(NSString*)trustedAccountKey;
+
 @end
 
 NS_ASSUME_NONNULL_END
