@@ -958,10 +958,6 @@
 		34544D2C2A323D1400B5A8D1 /* TestIntegratedEventManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 34544D2B2A323D1400B5A8D1 /* TestIntegratedEventManager.m */; };
 		34544D2E2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */; };
 		34544D2F2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */; };
-		34544D322A324A1400B5A8D1 /* NRMAAnalyticEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 34544D302A324A1400B5A8D1 /* NRMAAnalyticEvent.h */; };
-		34544D332A324A1400B5A8D1 /* NRMAAnalyticEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 34544D302A324A1400B5A8D1 /* NRMAAnalyticEvent.h */; };
-		34544D342A324A1400B5A8D1 /* NRMAAnalyticEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34544D312A324A1400B5A8D1 /* NRMAAnalyticEvent.m */; };
-		34544D352A324A1400B5A8D1 /* NRMAAnalyticEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34544D312A324A1400B5A8D1 /* NRMAAnalyticEvent.m */; };
 		34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 02FF4AD924DC815400115469 /* libCrashReporter.a */; };
 		34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34731AFA26B376A600CE568A /* CoreData.framework */; };
 		34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
@@ -1877,8 +1873,6 @@
 		34544D132A3142F900B5A8D1 /* NRMAEventManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAEventManager.m; sourceTree = "<group>"; };
 		34544D2B2A323D1400B5A8D1 /* TestIntegratedEventManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestIntegratedEventManager.m; sourceTree = "<group>"; };
 		34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAAnalyticEventProtocol.h; sourceTree = "<group>"; };
-		34544D302A324A1400B5A8D1 /* NRMAAnalyticEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAAnalyticEvent.h; sourceTree = "<group>"; };
-		34544D312A324A1400B5A8D1 /* NRMAAnalyticEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticEvent.m; sourceTree = "<group>"; };
 		34731AFA26B376A600CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731B0826B3789000CE568A /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/iOSSupport/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		34731B0A26B378FE00CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
@@ -2589,8 +2583,6 @@
 				34544D122A3142F900B5A8D1 /* NRMAEventManager.h */,
 				34544D132A3142F900B5A8D1 /* NRMAEventManager.m */,
 				34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */,
-				34544D302A324A1400B5A8D1 /* NRMAAnalyticEvent.h */,
-				34544D312A324A1400B5A8D1 /* NRMAAnalyticEvent.m */,
 				34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */,
 				34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */,
 				342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */,
@@ -3420,7 +3412,6 @@
 				021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */,
 				02FF483E24DC614200115469 /* NRMATraceController.h in Headers */,
 				02FF49B324DC62B800115469 /* NRMAHarvestableMethodMetric.h in Headers */,
-				34544D322A324A1400B5A8D1 /* NRMAAnalyticEvent.h in Headers */,
 				02FF49A224DC62B800115469 /* NRMADeviceInformation.h in Headers */,
 				02FF49FF24DC647200115469 /* NRMAMeasurementEngine.h in Headers */,
 				02FF4ACF24DC657B00115469 /* NRMAHTTPUtilities.h in Headers */,
@@ -3635,7 +3626,6 @@
 				02FF4BAF24E3201400115469 /* Agent.h in Headers */,
 				02FF4BB024E3201400115469 /* NRMATraceController.h in Headers */,
 				02FF4BB124E3201400115469 /* NRMAHarvestableMethodMetric.h in Headers */,
-				34544D332A324A1400B5A8D1 /* NRMAAnalyticEvent.h in Headers */,
 				02FF4BB224E3201400115469 /* NRMADeviceInformation.h in Headers */,
 				02FF4BB324E3201400115469 /* NRMAMeasurementEngine.h in Headers */,
 				02FF4BB424E3201400115469 /* NRMAHTTPUtilities.h in Headers */,
@@ -4329,7 +4319,6 @@
 				02FF4A9924DC652E00115469 /* NRLogger.m in Sources */,
 				02FF480B24DB573E00115469 /* NRMAUserActionBuilder.m in Sources */,
 				02FF49A024DC62B800115469 /* NRMAScopedMeasurements.m in Sources */,
-				34544D342A324A1400B5A8D1 /* NRMAAnalyticEvent.m in Sources */,
 				02FF49A824DC62B800115469 /* NRMAAnalyticsEvents.m in Sources */,
 				02FF480A24DB573E00115469 /* NRMAUserActionFacade.mm in Sources */,
 				2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */,
@@ -4656,7 +4645,6 @@
 				02FF4C2D24E3201400115469 /* NRMAHarvestableHTTPTransactionGeneration.m in Sources */,
 				2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */,
 				02FF4C2E24E3201400115469 /* NRMANamedValueProducer.m in Sources */,
-				34544D352A324A1400B5A8D1 /* NRMAAnalyticEvent.m in Sources */,
 				02FF4C2F24E3201400115469 /* NRCustomMetrics.m in Sources */,
 				02FF4C3024E3201400115469 /* NRMAExceptionHandlerManager.m in Sources */,
 				02FF4C3124E3201400115469 /* NRMAMethodProfiler.m in Sources */,

@@ -451,9 +451,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes {
-//#if USE_INTEGRATED_EVENT_MANAGER
-////    return NO;
-//#else
     try {
         if (!__eventTypeRegex) {
             NSError* error = nil;
