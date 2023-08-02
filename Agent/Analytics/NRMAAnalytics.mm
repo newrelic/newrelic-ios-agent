@@ -30,7 +30,7 @@
 #import "NRMARequestEvent.h"
 #import "NRMAPayload.h"
 
-#define USE_INTEGRATED_EVENT_MANAGER 1
+#define USE_INTEGRATED_EVENT_MANAGER 0
 
 using namespace NewRelic;
 @implementation NRMAAnalytics
@@ -399,9 +399,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-//    NRMAAnalyticEvent *testEvent = [NRMAAnalyticEvent new];
-//    return [_eventManager addEvent:testEvent];
-    return NO;
+    NRMACustomEvent *testEvent = [[NRMACustomEvent alloc] initWithEventType:name
+                                                                  timestamp:[[NSDate now] timeIntervalSince1970]
+                                                                  sessionElapsedTimeInSeconds:[[NSDate now] timeIntervalSinceDate:_sessionStartTime]
+                                                                  withAttributeValidator:nil];
+    [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+        [testEvent addAttribute:key value:obj];
+    }];
+    
+    return [_eventManager addEvent:testEvent];
 #else
     try {
         auto event = _analyticsController->newEvent(name.UTF8String);
@@ -460,9 +466,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes {
-//#if USE_INTEGRATED_EVENT_MANAGER
-////    return NO;
-//#else
     try {
         if (!__eventTypeRegex) {
             NSError* error = nil;
