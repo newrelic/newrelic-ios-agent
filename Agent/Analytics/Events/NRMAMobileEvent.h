@@ -11,17 +11,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
  
-@interface NRMAMobileEvent : NSObject <NRMAJSONABLE>
+@interface NRMAMobileEvent : NSObject <NRMAAnalyticEventProtocol>
 
 @property  NSTimeInterval timestamp;
 @property  unsigned long long sessionElapsedTimeSeconds;
-@property (nonatomic) NSString *eventType;
-@property (nonatomic) NSMutableDictionary<NSString *, id> *attributes;
+@property (nonatomic, strong) NSString *eventType;
+@property (strong) NSMutableDictionary<NSString *, id> *attributes;
 
 @property (weak) id <AttributeValidatorProtocol> attributeValidator;
 
-- (instancetype) initWithEventType:(NSString *)eventType
-                         timestamp:(NSTimeInterval)timestamp
+- (instancetype) initWithTimestamp:(NSTimeInterval)timestamp
        sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
             withAttributeValidator:(id<AttributeValidatorProtocol>) attributeValidator;
 

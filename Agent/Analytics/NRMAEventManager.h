@@ -9,6 +9,9 @@
 #import <Foundation/Foundation.h>
 
 #import "NRMAAnalyticEventProtocol.h"
+#import "NRMANetworkResponseData.h"
+#import "NRMANetworkRequestData.h"
+#import "NRMAPayload.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -19,6 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds;
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
+- (BOOL)addRequestEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withPayload:(NRMAPayload *)payload;
 - (void)empty;
 - (nullable NSString *)getEventJSONStringWithError:( NSError * _Nullable *)error;
 @end

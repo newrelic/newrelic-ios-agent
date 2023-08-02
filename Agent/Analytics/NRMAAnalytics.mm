@@ -27,6 +27,8 @@
 
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
+#import "NRMARequestEvent.h"
+#import "NRMAPayload.h"
 
 #define USE_INTEGRATED_EVENT_MANAGER 1
 
@@ -144,22 +146,26 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
          interactionDuration:(double)duration_secs {
     return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
 }
+#if USE_INTEGRATED_EVENT_MANAGER
+- (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
+                  withResponse:(NRMANetworkResponseData *)responseData
+               withPayload:(NRMAPayload *)payload {
+
+    return [_eventManager addRequestEvent:requestData withResponse:responseData withPayload:payload];
+}
+#else
 
 - (BOOL)addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-
-    return YES;
-#else
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
         return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload));
     }
     return NO;
-#endif
 }
+#endif
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
@@ -178,13 +184,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 #endif
 }
 
+#if USE_INTEGRATED_EVENT_MANAGER
+- (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
+            withResponse:(NRMANetworkResponseData *)responseData
+            withPayload:(NRMAPayload *)payload {
+    return [_eventManager addHTTPErrorEvent:requestData withResponse:responseData withPayload:payload];
+}
+
+#else
 
 - (BOOL)addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
              withResponse:(NRMANetworkResponseData *)responseData
-              withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
+            withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
@@ -192,8 +203,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload));
     }
     return NO;
-#endif
 }
+#endif
 
 - (BOOL) setLastInteraction:(NSString*)name {
 #if USE_INTEGRATED_EVENT_MANAGER
@@ -507,7 +518,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) event:(std::shared_ptr<AnalyticEvent>)event withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-
     return YES;
 #else
     for (NSString* key in attributes.allKeys) {

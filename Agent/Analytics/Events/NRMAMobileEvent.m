@@ -18,15 +18,14 @@
     return self;
 }
 
-- (nonnull instancetype) initWithEventType:(NSString *)eventType
-                                 timestamp:(NSTimeInterval)timestamp
+- (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
                     withAttributeValidator:(id<AttributeValidatorProtocol>) attributeValidator {
     self = [super init];
     if (self) {
+        _eventType = @"Mobile";
         _timestamp = timestamp;
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
-        _eventType = eventType;
         _attributeValidator = attributeValidator;
     }
     

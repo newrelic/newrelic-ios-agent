@@ -15,8 +15,8 @@
 
 @property (readonly) NSTimeInterval timestamp;
 @property (readonly) unsigned long long sessionElapsedTimeSeconds;
-@property (nonatomic, readonly) NSString *eventType;
-
+@property (nonatomic, strong) NSString *eventType;
+@property (strong) NSMutableDictionary<NSString *, id> *attributes;
 
 - (BOOL) addAttribute:(NSString *)name value:(id)value;
 - (NSTimeInterval)getEventAge;

@@ -16,6 +16,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMACustomEvent : NRMAMobileEvent
 
+- (instancetype) initWithEventType:(NSString *)eventType
+                         timestamp:(NSTimeInterval)timestamp
+       sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+            withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator;
+
 
 @end
 

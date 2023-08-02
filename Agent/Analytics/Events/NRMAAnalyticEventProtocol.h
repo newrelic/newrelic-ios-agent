@@ -13,9 +13,9 @@
 
 @protocol NRMAAnalyticEventProtocol <NSObject, NRMAJSONABLE>
 
-@property (readonly) NSTimeInterval timestamp;
-@property (readonly) unsigned long long sessionElapsedTimeSeconds;
-@property (nonatomic, readonly) NSString *eventType;
+@property NSTimeInterval timestamp;
+@property unsigned long long sessionElapsedTimeSeconds;
+@property (nonatomic) NSString *eventType;
 
 
 - (BOOL) addAttribute:(NSString *)name value:(id)value;

@@ -1,27 +1,32 @@
 //
-//  NRMARequestEvent.m
+//  NRMANetworkErrorEvent.m
 //  Agent
 //
-//  Created by Mike Bruin on 7/26/23.
+//  Created by Mike Bruin on 8/2/23.
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "NRMARequestEvent.h"
+#import "NRMANetworkErrorEvent.h"
 
-@implementation NRMARequestEvent
+@implementation NRMANetworkErrorEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+                       encodedResponseBody:(NSString *) encodedResponseBody
+                             appDataHeader:(NSString *) appDataHeader
                                    payload:(NRMAPayload *)payload
-                    withAttributeValidator:(id<AttributeValidatorProtocol>)attributeValidator {
+                    withAttributeValidator:(id<AttributeValidatorProtocol>)attributeValidator
+{
     self = [super init];
     if (self) {
         self.timestamp = timestamp;
         self.sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
-        self.eventType = @"MobileRequest";
+        self.eventType = @"MobileRequestError";
         self.attributeValidator = attributeValidator;
-        _payload = payload;
+        self.payload = payload;
+        self.encodedResponseBody = encodedResponseBody;
+        self.appDataHeader = appDataHeader;
     }
     
     return self;
@@ -31,7 +36,9 @@
     NSDictionary *event = [super JSONObject];
 
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
-    dict[@"payload"] = [_payload JSONObject];
+//TODO: make sure these are the right keys
+    dict[@"encodedResponseBody"] = self.encodedResponseBody;
+    dict[@"appDataHeader"] = self.appDataHeader;
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

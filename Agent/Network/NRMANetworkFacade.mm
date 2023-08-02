@@ -130,7 +130,9 @@
 
 
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
-
+#if USE_INTEGRATED_EVENT_MANAGER
+            [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]] withPayload:[[NRMAPayload alloc] init]]; //TODO: Real Payload here
+#else
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
                                                                                withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response]
                                                                                                                                  bytesReceived:modifiedBytesReceived
@@ -139,8 +141,11 @@
                                                                                                                            encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
                                                                                                                                  appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
                                                                                 withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+#endif
         } else {
-
+#if USE_INTEGRATED_EVENT_MANAGER
+            [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]] withPayload: [[NRMAPayload alloc] init]]; //TODO: Real Payload here
+#else
             std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
 
             if(traceHeaders) {
@@ -168,7 +173,8 @@
                                                                                                                                                 responseTime:[timer timeElapsedInSeconds]]
                                                                                      withPayload:std::move(retrievedPayload)];
 
-        }
+#endif
+     }
 
         [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
                                                            httpMethod:[request HTTPMethod]

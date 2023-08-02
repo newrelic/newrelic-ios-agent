@@ -25,8 +25,13 @@
 #import "NRMATraceContext.h"
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
+#include <Utilities/Application.hpp>
+#import "NRMAHarvestController.h"
 
 @implementation NRMAHTTPUtilities
+NSString* currentTraceId;
+NSString* currentParentId;
+
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
 
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
@@ -110,6 +115,32 @@
     if(payload == nullptr) { return nil; }
     payload->setDistributedTracing(true);
     return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
+}
+
++ (NRMAPayload *) generateNRMAPayload {
+
+    return [NRMAHTTPUtilities startTrip];
+}
+
++ (NRMAPayload *) startTrip {
+    if(!NewRelic::Application::getInstance().isValid()) {
+        return nil;
+    }
+    
+    @synchronized (currentTraceId) {
+        NSString * accountID = @([NRMAHarvestController harvestController].harvester.harvesterConfiguration.account_id).stringValue;
+        NSString * appId = @([NRMAHarvestController harvestController].harvester.harvesterConfiguration.application_id).stringValue;
+        NSString * trustedAccountKey =  [NRMAHarvestController harvestController].harvester.harvesterConfiguration.trusted_account_key;
+        NSTimeInterval currentTimeStamp = [[NSDate date] timeIntervalSince1970];
+
+        currentTraceId = [[NSUUID UUID] UUIDString];
+        currentParentId = @"";
+        
+        NRMAPayload * payload = [[NRMAPayload alloc] initWithEventType:@"" timestamp:currentTimeStamp accountID:accountID appID:appId ID:accountID traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
+        currentParentId = [payload id];
+
+        return payload;
+    }
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {

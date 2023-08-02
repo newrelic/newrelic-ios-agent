@@ -11,8 +11,9 @@
 #import "NRTimer.h"
 #import "NRMANetworkRequestData.h"
 #import "NRMANetworkResponseData.h"
+#import "NRMAPayload.h"
 
-
+#define USE_INTEGRATED_EVENT_MANAGER 1
 @interface NRMAAnalytics : NSObject <NRMAHarvestAware>
 - (void) setMaxEventBufferTime:(unsigned int) seconds;
 
@@ -24,6 +25,10 @@
 
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes;
+#if USE_INTEGRATED_EVENT_MANAGER
+- (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withPayload:(NRMAPayload *)payload;
+- (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withPayload:(NRMAPayload *)payload;
+#endif
 
 - (NSString*) analyticsJSONString;
 - (void) sessionWillEnd;
