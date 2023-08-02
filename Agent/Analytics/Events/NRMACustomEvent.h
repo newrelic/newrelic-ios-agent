@@ -8,9 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "NRMAAnalyticEventProtocol.h"
-#import "AttributeValidatorProtocol.h"
 #import "NRMAMobileEvent.h"
+#import "AttributeValidatorProtocol.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,7 +19,6 @@ NS_ASSUME_NONNULL_BEGIN
                          timestamp:(NSTimeInterval)timestamp
        sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
             withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator;
-
 
 @end
 

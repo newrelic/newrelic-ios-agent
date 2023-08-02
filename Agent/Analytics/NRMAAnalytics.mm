@@ -21,16 +21,13 @@
 #import <Connectivity/Payload.hpp>
 #import "NewRelicAgentInternal.h"
 #import "NRMAEventManager.h"
-#import "NRMAAnalyticEvent.h"
-
-//#define USE_INTEGRATED_EVENT_MANAGER 1
 
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
 #import "NRMARequestEvent.h"
 #import "NRMAPayload.h"
 
-#define USE_INTEGRATED_EVENT_MANAGER 0
+//#define USE_INTEGRATED_EVENT_MANAGER 0
 
 using namespace NewRelic;
 @implementation NRMAAnalytics

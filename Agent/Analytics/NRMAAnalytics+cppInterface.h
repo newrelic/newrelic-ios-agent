@@ -8,7 +8,8 @@
 
 #ifndef NRMAAnalyticsController_CppInterface_h
 #define NRMAAnalyticsController_CppInterface_h
-#define USE_INTEGRATED_EVENT_MANAGER 1
+
+//#define USE_INTEGRATED_EVENT_MANAGER 1
 
 @interface NRMAAnalytics (cppInterface)
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController;
