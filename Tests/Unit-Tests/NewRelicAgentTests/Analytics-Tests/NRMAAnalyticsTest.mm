@@ -27,6 +27,9 @@
 @end
 @implementation NRMAAnalyticsTest
 
+#undef USE_INTEGRATED_EVENT_MANAGER
+#define USE_INTEGRATED_EVENT_MANAGER 0
+
 - (void)setUp {
     [super setUp];
     [NRLogger setLogLevels:NRLogLevelNone];
@@ -44,8 +47,37 @@
 
     [super tearDown];
 }
-- (void) testLargeNumbers {
 
+// Due to the nature of how NSJSONSerialization treats doubles,
+// two versions of this test are needed. The first works with the
+// new, integrated event manager. The second is the legacy version
+// which worked with the older, libMobileAgent version. 
+- (void) testLargeNumbers {
+    
+#if USE_INTEGRATED_EVENT_MANAGER
+    
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
+               withAttributes:@{@"bigInt": @(LLONG_MAX),
+                       @"bigDouble": @(DBL_MAX)}];
+
+    XCTAssertTrue(accepted);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSError *error = nil;
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:0
+                                                         error:&error];
+
+    long long decodedInt = [decode[0][@"bigInt"] longLongValue];
+    XCTAssertEqual(decodedInt, @(LLONG_MAX).longLongValue);
+    
+    double decodedDouble = [decode[0][@"bigDouble"] doubleValue];
+    XCTAssertEqual(decodedDouble, @(DBL_MAX).doubleValue);
+    
+#else
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
@@ -64,7 +96,7 @@
     //    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
     //                                                options:0
     //                                                        error:nil];
-
+#endif
 }
 - (void) testRequestEvents {
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
@@ -294,19 +326,10 @@
 
 
 
-- (void) testBooleanInput {
+- (void) testBooleanSessionAttribute {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    [analytics addEventNamed:@"BooleanAttributes" withAttributes:@{@"thisIsTrue":[[NRMABool alloc] initWithBOOL:YES],
-                                                                   @"thisIsFalse":[[NRMABool alloc] initWithBOOL:NO]}];
-    NSString* json = [analytics analyticsJSONString];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                           options:0
-                                                             error:nil];
-
-    XCTAssertTrue([decode[0][@"thisIsTrue"] boolValue]);
-    XCTAssertFalse([decode[0][@"thisIsFalse"] boolValue]);
-
     [analytics setSessionAttribute:@"aBoolValue" value:[[NRMABool alloc] initWithBOOL:YES]];
+    NSString* json = [analytics analyticsJSONString];
     json = [analytics sessionAttributeJSONString];
 
     NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -314,8 +337,21 @@
                                                              error:nil];
 
     XCTAssertTrue([dictionary[@"aBoolValue"] boolValue]);
-
 }
+
+- (void)testBooleanEventAttribute {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics addEventNamed:@"BooleanAttributes" withAttributes:@{@"thisIsTrue":@(YES),
+                                                                   @"thisIsFalse":@(NO)}];
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+
+    XCTAssertTrue([decode[0][@"thisIsTrue"] boolValue]);
+    XCTAssertFalse([decode[0][@"thisIsFalse"] boolValue]);
+}
+
 - (void) testRemoveAttribute {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     
