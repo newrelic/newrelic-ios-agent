@@ -63,9 +63,51 @@ NSString* currentParentId;
     [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
                                   to:mutableRequest];
     return mutableRequest;
-
 }
 
+#if USE_INTEGRATED_EVENT_MANAGER
++ (NRMAPayload*) addConnectivityHeader:(NSMutableURLRequest*)request {
+    if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
+    
+    NRMAPayload *payload = [NRMAHTTPUtilities generateNRMAPayload];
+    if(payload == nil) { return nil; }
+    
+    NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:payload];
+    
+    if(connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY]
+       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
+    }
+    
+    BOOL dtError = false;
+    if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY]
+       forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+    } else {
+        dtError = true;
+    }
+    
+    if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY]
+       forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
+    } else {
+        dtError = true;
+    }
+        
+    if (dtError) {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Exception"
+                           value:@1
+                       scope:@""]];
+    } else {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Success"
+                           value:@1
+                       scope:@""]];
+    }
+    
+    return payload;
+}
+
+#else
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request {
 
     if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
@@ -107,6 +149,7 @@ NSString* currentParentId;
         
     return payloadContainer;
 }
+#endif
 
 + (NRMAPayloadContainer *) generatePayload {
     std::unique_ptr<NewRelic::Connectivity::Payload> payload = nullptr;
@@ -143,6 +186,44 @@ NSString* currentParentId;
     }
 }
 
+#if USE_INTEGRATED_EVENT_MANAGER
++ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayload*)payload {
+    NSDictionary *json;
+    
+    if(payload != nil) {
+        json = [payload JSONObject];
+    }
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload:payload];
+    NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
+    NSString *traceState = [W3CTraceState headerFromContext:traceContext];
+    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[NSKeyedArchiver archivedDataWithRootObject:json]];
+    
+    return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:encodedPayloadHeader,
+             W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
+             W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY:traceState};
+}
+
++ (void) attachPayload:(NRMAPayload*)payload to:(id)object {
+    [NRMAAssociate attach:payload to:object with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+}
+
++ (NRMAPayload*) retrievePayload:(id)object {
+    id associatedObject = [NRMAAssociate retrieveFrom:object
+                                    with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+
+    [NRMAAssociate removeFrom:object
+                         with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+
+    if ([associatedObject isKindOfClass:[NRMAPayload class]]) {
+
+        return associatedObject;
+    }
+
+    return nil;
+}
+
+#else
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {
     NSString *payloadHeader;
     const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
@@ -184,5 +265,7 @@ NSString* currentParentId;
 
     return std::unique_ptr<NewRelic::Connectivity::Payload>(nullptr);
 }
+
+#endif
 
 @end

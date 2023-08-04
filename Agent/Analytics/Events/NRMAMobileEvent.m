@@ -62,7 +62,6 @@
     dict[@"timestamp"] = @(self.timestamp);
     dict[@"timeSinceLoad"] = @(self.sessionElapsedTimeSeconds);
     dict[@"eventType"] = self.eventType;
-    
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

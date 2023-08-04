@@ -150,6 +150,26 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
     return [_eventManager addRequestEvent:requestData withResponse:responseData withPayload:payload];
 }
+
+- (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
+                withResponse:(NRMANetworkResponseData *)responseData
+                 withPayload:(NRMAPayload*)payload {
+    if ([NRMAFlags shouldEnableRequestErrorEvents]) {
+        return [_eventManager addNetworkErrorEvent:requestData withResponse:responseData withPayload:payload];
+    }
+
+    return NO;
+}
+
+- (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
+            withResponse:(NRMANetworkResponseData *)responseData
+            withPayload:(NRMAPayload *)payload {
+    if ([NRMAFlags shouldEnableRequestErrorEvents]) {
+        return [_eventManager addHTTPErrorEvent:requestData withResponse:responseData withPayload:payload];
+    }
+    return NO;
+}
+
 #else
 
 - (BOOL)addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
@@ -162,14 +182,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
     return NO;
 }
-#endif
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
                  withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return YES;
-#else
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
@@ -178,17 +194,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 
     return NO;
-#endif
 }
-
-#if USE_INTEGRATED_EVENT_MANAGER
-- (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
-            withResponse:(NRMANetworkResponseData *)responseData
-            withPayload:(NRMAPayload *)payload {
-    return [_eventManager addHTTPErrorEvent:requestData withResponse:responseData withPayload:payload];
-}
-
-#else
 
 - (BOOL)addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
              withResponse:(NRMANetworkResponseData *)responseData

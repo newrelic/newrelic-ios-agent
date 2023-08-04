@@ -13,14 +13,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAPayload : NSObject <NRMAJSONABLE>
 @property (readonly) NSTimeInterval timestamp;
-@property (nonatomic, readonly) NSString *eventType;
-@property (nonatomic, readonly) NSString *accountId;
-@property (nonatomic, readonly) NSString *appId;
-@property (nonatomic, readonly) NSString *id;
-@property (nonatomic, readonly) NSString *traceId;
-@property (nonatomic, readonly) NSString *parentId;
-@property (nonatomic, readonly) NSString *trustedAccountKey;
-@property (readonly) bool dtEnabled;
+@property (nonatomic) NSString *eventType;
+@property (nonatomic) NSString *accountId;
+@property (nonatomic) NSString *appId;
+@property (nonatomic) NSString *id;
+@property (nonatomic) NSString *traceId;
+@property (nonatomic) NSString *parentId;
+@property (nonatomic) NSString *trustedAccountKey;
+@property  bool dtEnabled;
 
 - (nonnull instancetype) initWithEventType:(NSString *)eventType
                                  timestamp:(NSTimeInterval)timestamp

@@ -27,7 +27,6 @@
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData*)requestData
                    withResponse:(NRMANetworkResponseData*)responseData
                     withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload;
-#endif
 
 - (BOOL) addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                  withResponse:(NRMANetworkResponseData *)responseData
@@ -36,6 +35,8 @@
 - (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
               withResponse:(NRMANetworkResponseData *)responseData
                withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload;
+#endif
+
 @end
 
 

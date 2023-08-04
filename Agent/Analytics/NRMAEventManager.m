@@ -189,6 +189,13 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
     return [self addEvent:[self createErrorEvent:requestData withResponse:responseData withPayload:payload]];
 }
 
+- (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
+           withResponse:(NRMANetworkResponseData *)responseData
+              withPayload:(NRMAPayload *)payload {
+    
+    return [self addEvent:[self createErrorEvent:requestData withResponse:responseData withPayload:payload]];
+}
+
 - (id<NRMAAnalyticEventProtocol>)createErrorEvent:(NRMANetworkRequestData *)requestData
            withResponse:(NRMANetworkResponseData *)responseData
              withPayload:(NRMAPayload *)payload {
