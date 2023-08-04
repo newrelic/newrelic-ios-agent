@@ -50,11 +50,6 @@
 }
 
 - (id)JSONObject {
-//    NSDictionary *dict = @{
-//        @"timestamp":[NSNumber numberWithUnsignedLongLong:self.timestamp],
-//        @"timeSinceLoad":[NSNumber numberWithUnsignedLongLong:self.sessionElapsedTimeSeconds],
-//        @"eventType":self.eventType
-//    };
     
     // There was a way to do this using the Objective-C runtime
     // to iterate through the properties, but I do not remember it

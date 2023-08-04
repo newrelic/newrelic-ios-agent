@@ -47,8 +47,37 @@
 
     [super tearDown];
 }
-- (void) testLargeNumbers {
 
+// Due to the nature of how NSJSONSerialization treats doubles,
+// two versions of this test are needed. The first works with the
+// new, integrated event manager. The second is the legacy version
+// which worked with the older, libMobileAgent version. 
+- (void) testLargeNumbers {
+    
+#if USE_INTEGRATED_EVENT_MANAGER
+    
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
+               withAttributes:@{@"bigInt": @(LLONG_MAX),
+                       @"bigDouble": @(DBL_MAX)}];
+
+    XCTAssertTrue(accepted);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSError *error = nil;
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:0
+                                                         error:&error];
+
+    long long decodedInt = [decode[0][@"bigInt"] longLongValue];
+    XCTAssertEqual(decodedInt, @(LLONG_MAX).longLongValue);
+    
+    double decodedDouble = [decode[0][@"bigDouble"] doubleValue];
+    XCTAssertEqual(decodedDouble, @(DBL_MAX).doubleValue);
+    
+#else
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
@@ -60,15 +89,14 @@
 //1.79769313486232e+308
 //9223372036854775807
     NSString* json = [analytics analyticsJSONString];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                       options:0
-                                                         error:nil];
-
-    long long decodedInt = [decode[0][@"bigInt"] longLongValue];
-    XCTAssertEqual(decodedInt, @(LLONG_MAX).longLongValue);
-    
-    double decodedDouble = [decode[0][@"bigDouble"] doubleValue];
-    XCTAssertEqual(decodedDouble, @(DBL_MAX).doubleValue);
+    XCTAssertTrue([json containsString:@"9223372036854775807"]);
+    XCTAssertTrue([json containsString:@"1.79769313486232e+308"]);
+    //NSJSONSerialization can't parse scientific notation because it's bad.
+    // See `2.4.  Numbers`  https://www.ietf.org/rfc/rfc4627.txt
+    //    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+    //                                                options:0
+    //                                                        error:nil];
+#endif
 }
 - (void) testRequestEvents {
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
