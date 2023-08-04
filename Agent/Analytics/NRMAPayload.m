@@ -13,8 +13,7 @@
     NSString *version;
 }
 
-- (nonnull instancetype) initWithEventType:(NSString *)eventType
-                                 timestamp:(NSTimeInterval)timestamp
+- (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                                  accountID:(NSString*)accountId
                                  appID:(NSString*)appId
                                  ID:(NSString*)id
@@ -24,7 +23,7 @@
     self = [super init];
     if (self) {
         _timestamp = timestamp;
-        _eventType = eventType;
+        _payloadType = @"mobile";
         _accountId = accountId;
         _appId = appId;
         _id = id;
@@ -55,8 +54,7 @@
     data[idKey] = self.id;
     data[appKey] = self.appId;
     data[traceKey] = self.traceId;
-    //data[@"parentId"] = self.parentId;
-    //data[@"eventType"] = self.eventType;
+    data[typeKey] = self.payloadType;
     if (self.trustedAccountKey.length > 0 && self.accountId != self.trustedAccountKey) {
         data[trustKey] = self.trustedAccountKey;
     }

@@ -179,7 +179,7 @@ NSString* currentParentId;
         currentTraceId = [[NSUUID UUID] UUIDString];
         currentParentId = @"";
         
-        NRMAPayload * payload = [[NRMAPayload alloc] initWithEventType:@"" timestamp:currentTimeStamp accountID:accountID appID:appId ID:accountID traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
+        NRMAPayload * payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId ID:accountID traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
         currentParentId = [payload id];
 
         return payload;

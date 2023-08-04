@@ -31,7 +31,7 @@
     NSDictionary *event = [super JSONObject];
 
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
-    dict[@"payload"] = [_payload JSONObject];
+    dict[@"payload"] = [_payload JSONObject];//TODO: make sure this is the right key
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

@@ -32,17 +32,23 @@
     // Given
     NSTimeInterval timestamp = 10;
     unsigned long long elapsedTime = 50;
-    NSString *eventType = @"New Event";
-    NRMAPayload* payload = [[NRMAPayload alloc] initWithEventType:eventType timestamp:timestamp accountID:@"1" appID:@"1" ID:@"1" traceID:@"1" parentID:@"1" trustedAccountKey:@"1"];
+    NSString *payloadType = @"mobile";
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:@"1" appID:@"2" ID:@"3" traceID:@"4" parentID:@"5" trustedAccountKey:@"6"];
     
     // Then
     NSDictionary *event = [payload JSONObject];
-    XCTAssertEqual([event[@"timestamp"] doubleValue], timestamp);
-    XCTAssertEqual([event[@"timeSinceLoad"] unsignedLongLongValue], elapsedTime);
+    XCTAssertEqualObjects(event[@"v"], @"0,2");
+    
+    NSDictionary *data = event[@"d"];
+    XCTAssertEqual([data[@"ti"] doubleValue], timestamp);
+    XCTAssertEqualObjects(data[@"ty"], payloadType);
+    XCTAssertEqual(data[@"ac"], @"1");
+    XCTAssertEqual(data[@"ap"], @"2");
+    XCTAssertEqual(data[@"id"], @"3");
+    XCTAssertEqual(data[@"tr"], @"4");
+    XCTAssertEqual(data[@"tk"], @"6");
 
-    XCTAssertEqual(event[@"eventType"], eventType);
 }
-
 
 
 @end

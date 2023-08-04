@@ -110,7 +110,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
         }
         
         NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
-        NSTimeInterval sessionDuration_sec = 0.0 ; //TODO: need to calculate session duration getCurrentSessionDuration_sec(currentTime_ms);
+        NSTimeInterval sessionDuration_sec = (currentTime_ms - payload.timestamp)/1000; // TODO: Make sure it's ok to use payload timestamp
         
         NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:nil]; //TODO: need a real AttributeValidator?
         if (event == nil) {
