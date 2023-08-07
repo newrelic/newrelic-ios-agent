@@ -24,6 +24,8 @@
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
 #import "NRMASAM.h"
+#import "BlockAttributeValidator.h"
+#import "NRMAAnalyticsConstants.h"
 
 #define USE_INTEGRATED_EVENT_MANAGER 0
 
@@ -93,31 +95,79 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         //They can be removed now and it shouldn't interfere with the generation
         //of these attributes if it should occur.
         NSString* attributes = [self sessionAttributeJSONString];
-        NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                               options:0
-                                                                     error:nil];
-        if (dictionary[@(__kNRMA_RA_upgradeFrom)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_upgradeFrom);
-        }
-        if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
-            _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
-        }
-        if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
-            _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
-        }
-        if (dictionary[@(__kNRMA_RA_install)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_install);
-        }
-
-        //session duration is only valid for one session. This metric should be removed
-        //after the persistent attributes are loaded.   
-        if (dictionary[@(__kNRMA_RA_sessionDuration)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_sessionDuration);
+        if (attributes != nil) {
+            NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                       options:0
+                                                                         error:nil];
+            if (dictionary[@(__kNRMA_RA_upgradeFrom)]) {
+                _analyticsController->removeSessionAttribute(__kNRMA_RA_upgradeFrom);
+            }
+            if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
+                _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
+            }
+            if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
+                _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
+            }
+            if (dictionary[@(__kNRMA_RA_install)]) {
+                _analyticsController->removeSessionAttribute(__kNRMA_RA_install);
+            }
+            
+            //session duration is only valid for one session. This metric should be removed
+            //after the persistent attributes are loaded.   
+            if (dictionary[@(__kNRMA_RA_sessionDuration)]) {
+                _analyticsController->removeSessionAttribute(__kNRMA_RA_sessionDuration);
+            }
         }
         
 #if USE_INTEGRATED_EVENT_MANAGER
         _eventManager = [NRMAEventManager new];
-        _sessionAttributeManager = [NRMASAM new];
+        _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+            if ([name length] == 0) {
+                NRLOG_ERROR(@"invalid attribute: name length = 0");
+                return false;
+            }
+            if ([name hasPrefix:@" "]) {
+                NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
+                return false;
+            }
+            // check if attribute name is reserved or attribute name matches reserved prefix.
+            for (NSString* key in reservedKeywords) {
+                if ([key isEqualToString:name]) {
+                    NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                    return false;
+                }
+                if ([name hasPrefix:key])  {
+                    NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                    return false;
+                }
+            }
+            // check if attribute name exceeds max length.
+            if ([name length] > maxNameLength) {
+                NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
+                return false;
+            }
+            return true;
+            
+        } valueValidator:^BOOL(id value) {
+            if ([value isKindOfClass:[NSString class]]) {
+                if ([(NSString*)value length] == 0) {
+                    NRLOG_ERROR(@"invalid attribute: value length = 0");
+                    return false;
+                }
+                else if ([(NSString*)value length] >= maxValueSizeBytes) {
+                    NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
+                    return false;
+                }
+            }
+            if (value == nil) {
+                NRLOG_ERROR(@"invalid attribute: value cannot be nil");
+                return false;
+            }
+
+            return true;
+        } andEventTypeValidator:^BOOL(NSString *eventType) {
+            return YES;
+        }]];
 #endif
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.

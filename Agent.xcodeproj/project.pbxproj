@@ -914,6 +914,8 @@
 		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
 		2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
+		2B5815932A8192540031C4A6 /* NRMAAnalyticsConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5815922A8192540031C4A6 /* NRMAAnalyticsConstants.h */; };
+		2B5815942A8192540031C4A6 /* NRMAAnalyticsConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5815922A8192540031C4A6 /* NRMAAnalyticsConstants.h */; };
 		2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
@@ -1856,6 +1858,7 @@
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHTTPUtilitiesTests.m; sourceTree = "<group>"; };
+		2B5815922A8192540031C4A6 /* NRMAAnalyticsConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAAnalyticsConstants.h; sourceTree = "<group>"; };
 		2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelper.m; sourceTree = "<group>"; };
 		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
 		2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAURLSessionTaskSearch.h; sourceTree = "<group>"; };
@@ -2577,6 +2580,7 @@
 		02FF484F24DC614D00115469 /* Analytics */ = {
 			isa = PBXGroup;
 			children = (
+				2B5815922A8192540031C4A6 /* NRMAAnalyticsConstants.h */,
 				02FF485A24DC615A00115469 /* NRMAAnalytics.h */,
 				02FF485824DC615900115469 /* NRMAAnalytics.mm */,
 				2B73BC482A785B4E00F51862 /* NRMASAM.h */,
@@ -3449,6 +3453,7 @@
 				02FF47EF24DB567600115469 /* NewRelicCustomInteractionInterface.h in Headers */,
 				02FF4AC424DC656900115469 /* NRMAPayloadContainer+cppInterface.h in Headers */,
 				02FF495424DC626E00115469 /* NRMAHarvester.h in Headers */,
+				2B5815932A8192540031C4A6 /* NRMAAnalyticsConstants.h in Headers */,
 				02FF495024DC626E00115469 /* NRMAHarvestAware.h in Headers */,
 				02FF4AFF24DC8CB200115469 /* registry.h in Headers */,
 				02FF48E824DC622700115469 /* NRMAExceptionHandlerJSONKeys.h in Headers */,
@@ -3664,6 +3669,7 @@
 				02FF4BC824E3201400115469 /* NewRelicCustomInteractionInterface.h in Headers */,
 				02FF4BC924E3201400115469 /* NRMAPayloadContainer+cppInterface.h in Headers */,
 				02FF4BCA24E3201400115469 /* NRMAHarvester.h in Headers */,
+				2B5815942A8192540031C4A6 /* NRMAAnalyticsConstants.h in Headers */,
 				02FF4BCD24E3201400115469 /* NRMAHarvestAware.h in Headers */,
 				02FF4BCE24E3201400115469 /* registry.h in Headers */,
 				02FF4BCF24E3201400115469 /* NRMAExceptionHandlerJSONKeys.h in Headers */,

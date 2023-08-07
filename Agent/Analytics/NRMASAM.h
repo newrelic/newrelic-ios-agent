@@ -7,8 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "BlockAttributeValidator.h"
 
 @interface NRMASAM : NSObject
+
+- (id)initWithAttributeValidator:(BlockAttributeValidator*) validator;
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent;
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value;

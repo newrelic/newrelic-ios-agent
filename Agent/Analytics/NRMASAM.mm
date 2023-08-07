@@ -10,49 +10,18 @@
 #import "NRLogger.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMABool.h"
-
-NSArray *reservedKeys = @[@"eventType",
-                          @"type",
-                          @"timestamp",
-                          @"category",
-                          @"accountId",
-                          @"appId",
-                          @"appName",
-                          @"uuid",
-                          @"sessionDuration",
-                          @"osName",
-                          @"osVersion",
-                          @"osMajorVersion",
-                          @"deviceManufacturer",
-                          @"deviceModel",
-                          @"carrier",
-                          @"newRelicVersion",
-                          @"memUsageMb",
-                          @"sessionId",
-                          @"install",
-                          @"upgradeFrom",
-                          @"platform",
-                          @"platformVersion",
-                          @"lastInteraction",
-];
-
-NSString* userIdReservedKey = @"userId";
-NSString* lastInteractionReservedKey = @"lastInteraction";
-
-int maxNameLength = 256;
-int maxValueSizeBytes = 4096;
-int maxNumberAttributes = 128;
-
-NSString *attributesFileName = @"attributes.txt";
+#import "NRMAAnalyticsConstants.h"
 
 @implementation NRMASAM {
     NSMutableDictionary<NSString*, id> *attributeDict;
+    BlockAttributeValidator *attributeValidator;
 }
 
-- (nonnull instancetype)init {
+- (id)initWithAttributeValidator:(BlockAttributeValidator*)validator {
     self = [super init];
     if (self) {
         attributeDict = [[NSMutableDictionary alloc] init];
+        attributeValidator = validator;
     }
     return self;
 }
@@ -71,8 +40,8 @@ NSString *attributesFileName = @"attributes.txt";
 
 -  (BOOL) setAttribute:(NSString*)name value:(id)value validate:(BOOL)validate {
     if (validate) {
-        BOOL validAttribute = [self isValidAttributeName:name];
-        BOOL validValue = [self isValidValue:value];
+        BOOL validAttribute = [attributeValidator nameValidator:name];
+        BOOL validValue = [attributeValidator valueValidator:value];
 
         if (!(validAttribute && validValue)) {
             NRLOG_VERBOSE(@"Failed to create attribute named %@", name);
@@ -202,56 +171,6 @@ NSString *attributesFileName = @"attributes.txt";
     else {
         return false;
     }
-}
-
-// Validators
-
--(BOOL) isValidAttributeName:(NSString*)name {
-    if ([name length] == 0) {
-        NRLOG_ERROR(@"invalid attribute: name length = 0");
-        return false;
-    }
-    if ([name hasPrefix:@" "]) {
-        NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
-        return false;
-    }
-    // check if attribute name is reserved or attribute name matches reserved prefix.
-    for (NSString* key in reservedKeys) {
-        if ([key isEqualToString:name]) {
-            NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
-            return false;
-        }
-        if ([name hasPrefix: key])  {
-            NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
-            return false;
-        }
-    }
-    // check if attribute name exceeds max length.
-    if ([name length] > maxNameLength) {
-        NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
-        return false;
-    }
-
-    return true;
-}
-
--(BOOL) isValidValue:(id)value {
-    if ([value isKindOfClass:[NSString class]]) {
-        if ([(NSString*)value length] == 0) {
-            NRLOG_ERROR(@"invalid attribute: value length = 0");
-            return false;
-        }
-        else if ([(NSString*)value length] >= maxValueSizeBytes) {
-            NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
-            return false;
-        }
-    }
-    if (value == nil) {
-        NRLOG_ERROR(@"invalid attribute: value cannot be nil");
-        return false;
-    }
-
-    return true;
 }
 
 // Helpers
