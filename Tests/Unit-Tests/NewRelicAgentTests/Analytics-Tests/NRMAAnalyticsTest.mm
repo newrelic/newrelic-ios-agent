@@ -28,7 +28,7 @@
 @implementation NRMAAnalyticsTest
 
 #undef USE_INTEGRATED_EVENT_MANAGER
-#define USE_INTEGRATED_EVENT_MANAGER 0
+#define USE_INTEGRATED_EVENT_MANAGER 1
 
 - (void)setUp {
     [super setUp];
@@ -51,33 +51,8 @@
 // Due to the nature of how NSJSONSerialization treats doubles,
 // two versions of this test are needed. The first works with the
 // new, integrated event manager. The second is the legacy version
-// which worked with the older, libMobileAgent version. 
+// which worked with the older, libMobileAgent version.
 - (void) testLargeNumbers {
-    
-#if USE_INTEGRATED_EVENT_MANAGER
-    
-
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-
-    bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
-               withAttributes:@{@"bigInt": @(LLONG_MAX),
-                       @"bigDouble": @(DBL_MAX)}];
-
-    XCTAssertTrue(accepted);
-
-    NSString* json = [analytics analyticsJSONString];
-    NSError *error = nil;
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                       options:0
-                                                         error:&error];
-
-    long long decodedInt = [decode[0][@"bigInt"] longLongValue];
-    XCTAssertEqual(decodedInt, @(LLONG_MAX).longLongValue);
-    
-    double decodedDouble = [decode[0][@"bigDouble"] doubleValue];
-    XCTAssertEqual(decodedDouble, @(DBL_MAX).doubleValue);
-    
-#else
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
@@ -96,7 +71,6 @@
     //    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
     //                                                options:0
     //                                                        error:nil];
-#endif
 }
 - (void) testRequestEvents {
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
