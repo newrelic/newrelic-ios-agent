@@ -152,7 +152,7 @@
             
             if(traceHeaders) {
                 if(retrievedPayload == nil) {
-                    retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
+                    retrievedPayload = [NRMAHTTPUtilities generatePayload];
                 }
                 NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
                 NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];

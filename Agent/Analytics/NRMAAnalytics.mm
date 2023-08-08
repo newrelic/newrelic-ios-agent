@@ -147,8 +147,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                withPayload:(NRMAPayload *)payload {
-
-    return [_eventManager addRequestEvent:requestData withResponse:responseData withPayload:payload];
+    if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
+        return [_eventManager addRequestEvent:requestData withResponse:responseData withPayload:payload];
+    }
+    return NO;
 }
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData

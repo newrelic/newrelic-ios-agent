@@ -28,8 +28,11 @@
     NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"google.com"]];
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+#ifdef USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-
+#endif
     XCTAssertNotNil(payload);
 
     NSDictionary<NSString *, NSString *>* headers = [mutableRequest allHTTPHeaderFields];
@@ -63,8 +66,12 @@
     NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"google.com"]];
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+#ifdef USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-
+#endif
+    
     XCTAssertNotNil(payload);
 
     NSDictionary<NSString *, NSString *>* headers = [mutableRequest allHTTPHeaderFields];

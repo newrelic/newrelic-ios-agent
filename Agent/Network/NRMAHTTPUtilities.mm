@@ -69,7 +69,7 @@ NSString* currentParentId;
 + (NRMAPayload*) addConnectivityHeader:(NSMutableURLRequest*)request {
     if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
     
-    NRMAPayload *payload = [NRMAHTTPUtilities generateNRMAPayload];
+    NRMAPayload *payload = [NRMAHTTPUtilities generatePayload];
     if(payload == nil) { return nil; }
     
     NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:payload];
@@ -105,6 +105,11 @@ NSString* currentParentId;
     }
     
     return payload;
+}
+
++ (NRMAPayload *) generatePayload {
+
+    return [NRMAHTTPUtilities startTrip];
 }
 
 #else
@@ -149,7 +154,6 @@ NSString* currentParentId;
         
     return payloadContainer;
 }
-#endif
 
 + (NRMAPayloadContainer *) generatePayload {
     std::unique_ptr<NewRelic::Connectivity::Payload> payload = nullptr;
@@ -159,11 +163,7 @@ NSString* currentParentId;
     payload->setDistributedTracing(true);
     return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
 }
-
-+ (NRMAPayload *) generateNRMAPayload {
-
-    return [NRMAHTTPUtilities startTrip];
-}
+#endif
 
 + (NRMAPayload *) startTrip {
     if(!NewRelic::Application::getInstance().isValid()) {
@@ -171,9 +171,9 @@ NSString* currentParentId;
     }
     
     @synchronized (currentTraceId) {
-        NSString * accountID = @([NRMAHarvestController harvestController].harvester.harvesterConfiguration.account_id).stringValue;
-        NSString * appId = @([NRMAHarvestController harvestController].harvester.harvesterConfiguration.application_id).stringValue;
-        NSString * trustedAccountKey =  [NRMAHarvestController harvestController].harvester.harvesterConfiguration.trusted_account_key;
+        NSString * accountID = @(NewRelic::Application::getInstance().getContext().getAccountId().c_str());
+        NSString * appId = @(NewRelic::Application::getInstance().getContext().getApplicationId().c_str());
+        NSString * trustedAccountKey =  @(NewRelic::Application::getInstance().getContext().getTrustedAccountKey().c_str());
         NSTimeInterval currentTimeStamp = [[NSDate date] timeIntervalSince1970];
 
         currentTraceId = [[NSUUID UUID] UUIDString];
@@ -197,7 +197,7 @@ NSString* currentParentId;
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload:payload];
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[NSKeyedArchiver archivedDataWithRootObject:json]];
+    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[NSJSONSerialization  dataWithJSONObject:json options:0 error:nil]];
     
     return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:encodedPayloadHeader,
              W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
