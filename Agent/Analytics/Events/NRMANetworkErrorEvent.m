@@ -17,7 +17,7 @@
                        encodedResponseBody:(NSString *) encodedResponseBody
                              appDataHeader:(NSString *) appDataHeader
                                    payload:(NRMAPayload *)payload
-                    withAttributeValidator:(id<AttributeValidatorProtocol>)attributeValidator
+                    withAttributeValidator:(__nullable id<AttributeValidatorProtocol>)attributeValidator
 {
     self = [super init];
     if (self) {

@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initWithTimestamp:(NSTimeInterval)timestamp
        sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
-            withAttributeValidator:(id<AttributeValidatorProtocol>) attributeValidator;
+            withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator;
 
 - (NSTimeInterval)getEventAge;
 - (BOOL)addAttribute:(NSString *)name value:(id)value;

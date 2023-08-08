@@ -44,7 +44,7 @@
         self.requestDomain = requestDomain;
         self.requestPath = requestPath;
         self.requestMethod = requestMethod;
-        self.contentType = connectionType;
+        self.connectionType = connectionType;
         self.contentType = contentType;
         self.bytesSent = bytesSent;
         

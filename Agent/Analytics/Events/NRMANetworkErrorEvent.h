@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
                        encodedResponseBody:(NSString *) encodedResponseBody
                              appDataHeader:(NSString *) appDataHeader
                                    payload:(NRMAPayload *)payload
-                    withAttributeValidator:(id<AttributeValidatorProtocol>)attributeValidator;
+                    withAttributeValidator:(__nullable id<AttributeValidatorProtocol>)attributeValidator;
 
 @end
 

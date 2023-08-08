@@ -20,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
                                    payload:(NRMAPayload *)payload
-                    withAttributeValidator:(id<AttributeValidatorProtocol>)attributeValidator;
+                    withAttributeValidator:(__nullable id<AttributeValidatorProtocol>)attributeValidator;
 
 @end
 

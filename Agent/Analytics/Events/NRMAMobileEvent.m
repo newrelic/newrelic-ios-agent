@@ -20,7 +20,7 @@
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
-                    withAttributeValidator:(id<AttributeValidatorProtocol>) attributeValidator {
+                    withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator {
     self = [super init];
     if (self) {
         _eventType = @"Mobile";
