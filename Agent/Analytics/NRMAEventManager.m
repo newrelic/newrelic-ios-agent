@@ -158,15 +158,15 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
             [event addAttribute:@(__kNRMA_Attrib_connectionType) value:connectionType];
         }
         
-        if (bytesReceived != 0) {
+        if (![bytesReceived isEqual: @(0)]) {
             [event addAttribute:@(__kNRMA_Attrib_bytesReceived) value:bytesReceived];
         }
         
-        if (bytesSent != 0) {
+        if (![bytesSent isEqual: @(0)]) {
             [event addAttribute:@(__kNRMA_Attrib_bytesSent) value:bytesSent];
         }
         
-        if (statusCode != 0) {
+        if (![statusCode isEqual: @(0)]) {
             [event addAttribute:@(__kNRMA_Attrib_statusCode) value:statusCode];
         }
         
@@ -185,15 +185,19 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 - (BOOL)addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
            withResponse:(NRMANetworkResponseData *)responseData
               withPayload:(NRMAPayload *)payload {
-    
-    return [self addEvent:[self createErrorEvent:requestData withResponse:responseData withPayload:payload]];
+    NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+    [event addAttribute:@(__kNRMA_Attrib_errorType) value:@(__kNRMA_Val_errorType_HTTP)];
+
+    return [self addEvent:event];
 }
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
            withResponse:(NRMANetworkResponseData *)responseData
               withPayload:(NRMAPayload *)payload {
-    
-    return [self addEvent:[self createErrorEvent:requestData withResponse:responseData withPayload:payload]];
+    NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+    [event addAttribute:@(__kNRMA_Attrib_errorType) value:@(__kNRMA_Val_errorType_Network)];
+
+    return [self addEvent:event];
 }
 
 - (id<NRMAAnalyticEventProtocol>)createErrorEvent:(NRMANetworkRequestData *)requestData
@@ -262,11 +266,11 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
             [event addAttribute:@(__kNRMA_Attrib_connectionType) value:connectionType];
         }
         
-        if (bytesReceived != 0) {
+        if (![bytesReceived isEqual: @(0)]) {
             [event addAttribute:@(__kNRMA_Attrib_bytesReceived) value:bytesReceived];
         }
         
-        if (bytesSent != 0) {
+        if (![bytesSent isEqual: @(0)]) {
             [event addAttribute:@(__kNRMA_Attrib_bytesSent) value:bytesSent];
         }
         
@@ -274,7 +278,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
             [event addAttribute:@(__kNRMA_Attrib_networkError) value:networkErrorMessage];
         }
         
-        if (networkErrorCode != 0) {
+        if (![networkErrorCode isEqual: @(0)]) {
             [event addAttribute:@(__kNRMA_Attrib_networkErrorCode) value:networkErrorCode];
         }
         
@@ -282,7 +286,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
             [event addAttribute:@(__kNRMA_Attrib_networkError) value:networkErrorMessage];
         }
         
-        if (statusCode != 0) {
+        if (![statusCode isEqual: @(0)]) {
             [event addAttribute:@(__kNRMA_Attrib_statusCode) value:statusCode];
         }
         

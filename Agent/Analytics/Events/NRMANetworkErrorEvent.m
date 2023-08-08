@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "NRMANetworkErrorEvent.h"
+#include "Analytics/Constants.hpp"
 
 @implementation NRMANetworkErrorEvent
 
@@ -36,9 +37,8 @@
     NSDictionary *event = [super JSONObject];
 
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
-//TODO: make sure these are the right keys
-    dict[@"encodedResponseBody"] = self.encodedResponseBody;
-    dict[@"appDataHeader"] = self.appDataHeader;
+    dict[@(__kNRMA_RA_responseBody)] = self.encodedResponseBody;
+    dict[@(__kNRMA_RA_appDataHeader)] = self.appDataHeader;
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

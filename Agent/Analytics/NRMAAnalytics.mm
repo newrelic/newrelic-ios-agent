@@ -405,8 +405,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
     NRMACustomEvent *testEvent = [[NRMACustomEvent alloc] initWithEventType:name
-                                                                  timestamp:[[NSDate now] timeIntervalSince1970]
-                                                                  sessionElapsedTimeInSeconds:[[NSDate now] timeIntervalSinceDate:_sessionStartTime]
+                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                  sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                                   withAttributeValidator:nil];
     [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         [testEvent addAttribute:key value:obj];
@@ -494,8 +494,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 #if USE_INTEGRATED_EVENT_MANAGER
         NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
-                                                                  timestamp:[[NSDate now] timeIntervalSince1970]
-                                                sessionElapsedTimeInSeconds:[[NSDate now] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
+                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];
         }];
