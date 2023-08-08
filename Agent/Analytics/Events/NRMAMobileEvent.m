@@ -41,7 +41,7 @@
         return NO;
     }
     
-    if(self.attributeValidator != nil && ![self.attributeValidator valueValidator:name]) {
+    if(self.attributeValidator != nil && ![self.attributeValidator valueValidator:value]) {
         return NO;
     }
     
