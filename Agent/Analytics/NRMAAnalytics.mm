@@ -26,6 +26,7 @@
 #import "NRMACustomEvent.h"
 #import "NRMARequestEvent.h"
 #import "NRMAPayload.h"
+#import "NRMANetworkErrorEvent.h"
 
 //#define USE_INTEGRATED_EVENT_MANAGER 0
 
@@ -148,18 +149,108 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                   withResponse:(NRMANetworkResponseData *)responseData
                withPayload:(NRMAPayload *)payload {
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
-        return [_eventManager addRequestEvent:requestData withResponse:responseData withPayload:payload];
+        return [self addRequestEvent:requestData withResponse:responseData withPayload:payload];
     }
     return NO;
+}
+
+- (BOOL)addRequestEvent:(NRMANetworkRequestData *)requestData
+           withResponse:(NRMANetworkResponseData *)responseData
+            withPayload:(NRMAPayload *)payload {
+
+    @try {
+        NSString* distributedTracingId = @"";
+        NSString* traceId = @"";
+        bool addDistributedTracing = false;
+        if (payload != nil) {
+            distributedTracingId = payload.id;
+            traceId = payload.traceId;
+            addDistributedTracing = payload.dtEnabled;
+        }
+        
+        NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
+        NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
+        
+        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:nil]; //TODO: need a real AttributeValidator?
+        if (event == nil) {
+            return false;
+        }
+        
+        NSString* requestUrl = requestData.requestUrl;
+        NSString* requestDomain = requestData.requestDomain;
+        NSString* requestPath = requestData.requestPath;
+        NSString* requestMethod = requestData.requestMethod;
+        NSString* connectionType = requestData.connectionType;
+        NSNumber* bytesSent = @(requestData.bytesSent);
+        NSString* contentType = requestData.contentType;
+        NSNumber *responseTime = @(responseData.timeInSeconds);
+        NSNumber* bytesReceived = @(responseData.bytesReceived);
+        NSNumber* statusCode = @(responseData.statusCode);
+        
+        if ((requestUrl.length == 0)) {
+            NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
+            return false;
+        }
+        
+        [event addAttribute:@(__kNRMA_Attrib_requestUrl) value:requestUrl];
+        [event addAttribute:@(__kNRMA_Attrib_responseTime) value:responseTime];
+        
+        if (addDistributedTracing) {
+            [event addAttribute:@(__kNRMA_Attrib_dtGuid) value:distributedTracingId];
+            [event addAttribute:@(__kNRMA_Attrib_dtId) value:distributedTracingId];
+            [event addAttribute:@(__kNRMA_Attrib_dtTraceId) value:traceId];
+        }
+        
+        if ((requestDomain.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_requestDomain) value:requestDomain];
+        }
+        
+        if ((requestPath.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_requestPath) value:requestPath];
+        }
+        
+        if ((requestMethod.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_requestMethod) value:requestMethod];
+        }
+        
+        if ((connectionType.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_connectionType) value:connectionType];
+        }
+        
+        if (![bytesReceived isEqual: @(0)]) {
+            [event addAttribute:@(__kNRMA_Attrib_bytesReceived) value:bytesReceived];
+        }
+        
+        if (![bytesSent isEqual: @(0)]) {
+            [event addAttribute:@(__kNRMA_Attrib_bytesSent) value:bytesSent];
+        }
+        
+        if (![statusCode isEqual: @(0)]) {
+            [event addAttribute:@(__kNRMA_Attrib_statusCode) value:statusCode];
+        }
+        
+        if ((contentType.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_contentType) value:contentType];
+        }
+        
+        return [_eventManager addEvent:event];
+    } @catch (NSException *exception) {
+        NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
+    } @finally {
+        NRLOG_ERROR(@"Failed to add Network Error Event.");
+    }
 }
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
                  withPayload:(NRMAPayload*)payload {
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
-        return [_eventManager addNetworkErrorEvent:requestData withResponse:responseData withPayload:payload];
+        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+        if(event == nil){ return NO; }
+        [event addAttribute:@(__kNRMA_Attrib_errorType) value:@(__kNRMA_Val_errorType_Network)];
+            
+        return [_eventManager addEvent:event];
     }
-
     return NO;
 }
 
@@ -167,9 +258,115 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             withResponse:(NRMANetworkResponseData *)responseData
             withPayload:(NRMAPayload *)payload {
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
-        return [_eventManager addHTTPErrorEvent:requestData withResponse:responseData withPayload:payload];
+        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+        if(event == nil){ return NO; }
+        [event addAttribute:@(__kNRMA_Attrib_errorType) value:@(__kNRMA_Val_errorType_HTTP)];
+
+        return [_eventManager addEvent:event];
     }
     return NO;
+}
+
+- (id<NRMAAnalyticEventProtocol>)createErrorEvent:(NRMANetworkRequestData *)requestData
+           withResponse:(NRMANetworkResponseData *)responseData
+             withPayload:(NRMAPayload *)payload {
+    @try {
+        NSString* distributedTracingId = @"";
+        NSString* traceId = @"";
+        bool addDistributedTracing = false;
+        if (payload != nil) {
+            distributedTracingId = payload.id;
+            traceId = payload.traceId;
+            addDistributedTracing = payload.dtEnabled;
+        }
+        
+        NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
+        NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
+        
+        NSString* requestUrl = requestData.requestUrl;
+        NSString* requestDomain = requestData.requestDomain;
+        NSString* requestPath = requestData.requestPath;
+        NSString* requestMethod = requestData.requestMethod;
+        NSString* connectionType = requestData.connectionType;
+        NSNumber* bytesSent = @(requestData.bytesSent);
+        NSString* contentType = requestData.contentType;
+        NSString* appDataHeader = responseData.appDataHeader;
+        NSString* encodedResponseBody = responseData.encodedResponseBody;
+        NSString* networkErrorMessage = responseData.errorMessage;
+        NSNumber* networkErrorCode = @(responseData.networkErrorCode);
+        NSNumber *responseTime = @(responseData.timeInSeconds);
+        NSNumber* bytesReceived = @(responseData.bytesReceived);
+        NSNumber* statusCode = @(responseData.statusCode);
+        
+        if ((requestUrl.length == 0)) {
+            NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
+            return nil;
+        }
+        
+        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:nil]; //TODO: need a real AttributeValidator?
+        if (event == nil) {
+            return nil;
+        }
+        
+        [event addAttribute:@(__kNRMA_Attrib_requestUrl) value:requestUrl];
+        [event addAttribute:@(__kNRMA_Attrib_responseTime) value:responseTime];
+        
+        if (addDistributedTracing) {
+            [event addAttribute:@(__kNRMA_Attrib_dtGuid) value:distributedTracingId];
+            [event addAttribute:@(__kNRMA_Attrib_dtId) value:distributedTracingId];
+            [event addAttribute:@(__kNRMA_Attrib_dtTraceId) value:traceId];
+        }
+        
+        if ((requestDomain.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_requestDomain) value:requestDomain];
+        }
+        
+        if ((requestPath.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_requestPath) value:requestPath];
+        }
+        
+        if ((requestMethod.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_requestMethod) value:requestMethod];
+        }
+        
+        if ((connectionType.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_connectionType) value:connectionType];
+        }
+        
+        if (![bytesReceived isEqual: @(0)]) {
+            [event addAttribute:@(__kNRMA_Attrib_bytesReceived) value:bytesReceived];
+        }
+        
+        if (![bytesSent isEqual: @(0)]) {
+            [event addAttribute:@(__kNRMA_Attrib_bytesSent) value:bytesSent];
+        }
+        
+        if (encodedResponseBody.length > 0) {
+            [event addAttribute:@(__kNRMA_Attrib_networkError) value:networkErrorMessage];
+        }
+        
+        if (![networkErrorCode isEqual: @(0)]) {
+            [event addAttribute:@(__kNRMA_Attrib_networkErrorCode) value:networkErrorCode];
+        }
+        
+        if (networkErrorMessage.length > 0) {
+            [event addAttribute:@(__kNRMA_Attrib_networkError) value:networkErrorMessage];
+        }
+        
+        if (![statusCode isEqual: @(0)]) {
+            [event addAttribute:@(__kNRMA_Attrib_statusCode) value:statusCode];
+        }
+        
+        if ((contentType.length > 0)) {
+            [event addAttribute:@(__kNRMA_Attrib_contentType) value:contentType];
+        }
+        
+        return event;
+    } @catch (NSException *exception) {
+        NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
+    } @finally {
+        NRLOG_ERROR(@"Failed to add Network Error Event.");
+    }
 }
 
 #else
