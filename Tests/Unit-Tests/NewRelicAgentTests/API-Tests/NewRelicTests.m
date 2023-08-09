@@ -403,5 +403,15 @@
     // Can't assert
     [NewRelic recordCustomEvent:@"EventName" attributes:dict];
 }
+
+- (void) testLogging {
+    XCTAssertNoThrow([NewRelic logInfo:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logError:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+
+}
+
 @end
 

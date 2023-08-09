@@ -43,6 +43,8 @@ class ViewController: UIViewController {
         }
         
         viewModel.loadApodData()
+
+        NewRelic.logInfo("ViewController viewDidLoad finished.")
     }
     
     func setupSpaceStack() {
