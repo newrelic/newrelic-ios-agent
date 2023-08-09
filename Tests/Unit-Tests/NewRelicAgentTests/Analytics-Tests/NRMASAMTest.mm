@@ -71,7 +71,7 @@
 
 - (void) testSetSessionAttribute {
     NRMASAM *manager = [self samTest];
-    XCTAssertTrue([manager setSessionAttribute:@"blarg" value:@"blurg" persistent:true], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:@"blarg" value:@"blurg"], @"Failed to successfully set session attribute");
 
     NSString* attributes = [manager sessionAttributeJSONString];
 
@@ -96,8 +96,8 @@
 - (void) testIncrementSessionAttribute {
     NRMASAM *manager = [self samTest];
     NSString* attribute = @"incrementableAttribute";
-    XCTAssertTrue([manager setSessionAttribute:attribute value:@(1) persistent:true], @"Failed to successfully set session attribute");
-    [manager incrementSessionAttribute:attribute value:@(1) persistent:true];
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@(1)], @"Failed to successfully set session attribute");
+    [manager incrementSessionAttribute:attribute value:@(1)];
 
     NSString* attributes = [manager sessionAttributeJSONString];
 
@@ -111,10 +111,10 @@
     NSString* attribute = @"incrementableAttribute";
     float initialValue = 1.2;
 
-    XCTAssertTrue([manager setSessionAttribute:attribute value:@(initialValue) persistent:true], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@(initialValue)], @"Failed to successfully set session attribute");
 
     double incrementValue = 1.23;
-    [manager incrementSessionAttribute:attribute value:@(incrementValue) persistent:true];
+    [manager incrementSessionAttribute:attribute value:@(incrementValue)];
 
     NSString* attributes = [manager sessionAttributeJSONString];
 
@@ -144,7 +144,7 @@
 - (void) testRemoveSessionAttributeNamed {
     NRMASAM *manager = [self samTest];
     NSString *attribute = @"blarg";
-    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg" persistent:true], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
     NSString* attributes = [manager sessionAttributeJSONString];
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
                                                            options:0
@@ -165,8 +165,8 @@
     NSString *attribute = @"blarg";
     NSString *attribute2 = @"blarg2";
 
-    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg" persistent:true], @"Failed to successfully set session attribute");
-    XCTAssertTrue([manager setSessionAttribute:attribute2 value:@"blurg2" persistent:true], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute2 value:@"blurg2"], @"Failed to successfully set session attribute");
 
     NSString* attributes = [manager sessionAttributeJSONString];
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
@@ -182,6 +182,53 @@
                                                             options:0
                                                               error:nil];
     XCTAssertEqual(decode2.count, 0, @"attributes not removed when they should have been.");
+}
+
+- (void) testSetNRSessionAttributesToMaxAndAddUserAttribute {
+    NRMASAM *manager = [self samTest];
+
+    for (int i = 0; i < maxNumberAttributes; i++) {
+        NSString *newName = [NSString stringWithFormat:@"blarg%d",i];
+
+        XCTAssertTrue([manager setNRSessionAttribute:newName value:@"blurg"], @"Failed to successfully set session attribute");
+    }
+
+    XCTAssertTrue([manager setSessionAttribute:@"userDefined" value:@"userDefinedValue"], @"Failed to successfully set session attribute");
+
+    NSString* attributes = [manager sessionAttributeJSONString];
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertTrue([decode[@"blarg0"] isEqualToString:@"blurg"]);
+    XCTAssertTrue([decode[@"userDefined"] isEqualToString:@"userDefinedValue"]);
+}
+
+- (void) testMaxUserAttributes {
+    NRMASAM *manager = [self samTest];
+
+    // Fill to max private session Attribute
+    for (int i = 0; i < maxNumberAttributes; i++) {
+        NSString *newName = [NSString stringWithFormat:@"blarg%d",i];
+
+        XCTAssertTrue([manager setNRSessionAttribute:newName value:@"blurg"], @"Failed to successfully set session attribute");
+    }
+
+    for (int i = 0; i < maxNumberAttributes; i++) {
+        NSString *newName = [NSString stringWithFormat:@"userDefined%d",i];
+
+        XCTAssertTrue([manager setSessionAttribute:newName value:@"userDefinedValue"], @"Failed to successfully set session attribute");
+
+    }
+    XCTAssertFalse([manager setSessionAttribute:@"userDefined129" value:@"userDefinedValue"], @"Failed to fail when adding user defined session attribute which exceeds limit.");
+
+    NSString* attributes = [manager sessionAttributeJSONString];
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+
+    XCTAssertTrue([decode[@"userDefined0"] isEqualToString:@"userDefinedValue"]);
 }
 
 // TODO:

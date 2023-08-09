@@ -18,3 +18,5 @@ static int maxValueSizeBytes = 4096;
 static int maxNumberAttributes = 128;
 
 static NSString *attributesFileName = @"attributes.txt";
+
+static NSString *privateAttributeCountIdentifier = @"_NR_Private_Attribute_Count";

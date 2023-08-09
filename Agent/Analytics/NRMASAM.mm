@@ -34,7 +34,7 @@
     return [self setAttribute:name value:value validate:false];
 }
 
-- (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent {
+- (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
     return [self setAttribute:name value:value validate:true];
 }
 
@@ -47,17 +47,30 @@
             NRLOG_VERBOSE(@"Failed to create attribute named %@", name);
             return false;
         }
-    }
-    if (attributeDict.count >= maxNumberAttributes) {
-        NRLOG_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
-        return false;
+        unsigned long countOfPrivateAttributes = [self countOfPrivateAttributes];
+
+        if (attributeDict.count >= maxNumberAttributes + countOfPrivateAttributes) {
+            NRLOG_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
+            return false;
+        }
     }
 
     if([value isKindOfClass:[NRMABool class]]) {
         value = @(([(NRMABool*) value value]));
     }
+    unsigned long preAddCount = attributeDict.count;
 
     [attributeDict setValue:value forKey:name];
+
+    unsigned long postAddCount = attributeDict.count;
+
+    // If a NR System Attrib was added to attributeDict increment the count
+    if (!validate && (preAddCount != postAddCount)) {
+        unsigned long currentCount = [self countOfPrivateAttributes];
+
+        unsigned long newValue = currentCount == 0 ? 2 : currentCount + 1;
+        [attributeDict setValue:@(newValue) forKey:privateAttributeCountIdentifier];
+    }
 
     [self persistToDisk];
 
@@ -65,7 +78,7 @@
 }
 
 - (BOOL) setUserId:(NSString *)userId {
-    return [self setSessionAttribute:userIdReservedKey value:userId persistent:true];
+    return [self setSessionAttribute:userIdReservedKey value:userId];
 }
 
 - (BOOL) removeSessionAttributeNamed:(NSString*)name {
@@ -91,7 +104,7 @@
     return true;
 }
 
-- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent {
+- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number {
     id existingValue = [attributeDict objectForKey:name];
 
     if ([NewRelicInternalUtils isInteger:number] || ([NewRelicInternalUtils isFloat:number])) {
@@ -174,6 +187,15 @@
 }
 
 // Helpers
+
+-(unsigned long) countOfPrivateAttributes {
+    id existingCount = attributeDict[privateAttributeCountIdentifier];
+    unsigned long existingCountInt = 0;
+    if (existingCount != nil) {
+        existingCountInt = [existingCount unsignedLongValue];
+    }
+    return existingCountInt;
+}
 
 +(NSString*)attributeFilePath {
     return [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],attributesFileName];
