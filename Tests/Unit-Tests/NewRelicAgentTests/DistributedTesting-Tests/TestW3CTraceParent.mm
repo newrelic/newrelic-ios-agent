@@ -33,7 +33,8 @@
     NSString* spanId = @"17172750e6ff8549";
     NSString* traceId = @"edd7db371b2faa5b";
     long long timestamp = 1609970157093;
-    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd ID:spanId traceID:traceId parentID:spanId trustedAccountKey:@"1"];
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
+    payload.id = spanId;
 #else
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();

@@ -32,7 +32,7 @@
     // Given
     NSTimeInterval timestamp = 10;
     NSString *payloadType = @"mobile";
-    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:@"1" appID:@"2" ID:@"3" traceID:@"4" parentID:@"5" trustedAccountKey:@"6"];
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:@"1" appID:@"2" traceID:@"4" parentID:@"5" trustedAccountKey:@"6"];
     
     // Then
     NSDictionary *event = [payload JSONObject];
@@ -43,7 +43,7 @@
     XCTAssertEqualObjects(data[@"ty"], payloadType);
     XCTAssertEqual(data[@"ac"], @"1");
     XCTAssertEqual(data[@"ap"], @"2");
-    XCTAssertEqual(data[@"id"], @"3");
+    XCTAssertNotNil(data[@"id"]);
     XCTAssertEqual(data[@"tr"], @"4");
     XCTAssertEqual(data[@"tk"], @"6");
 
