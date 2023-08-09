@@ -21,7 +21,7 @@
 {
     self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds payload:payload withAttributeValidator:attributeValidator];
     if (self) {
-        self.eventType = @"MobileRequestError";
+        self.eventType = kNRMA_RET_mobileRequestError;
         self.encodedResponseBody = encodedResponseBody;
         self.appDataHeader = appDataHeader;
     }

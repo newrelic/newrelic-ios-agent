@@ -16,7 +16,7 @@
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator {
     self = [super init];
     if (self) {
-        _eventType = @"Mobile";
+        _eventType = kNRMA_RET_mobile;
         _timestamp = timestamp;
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _attributeValidator = attributeValidator;
