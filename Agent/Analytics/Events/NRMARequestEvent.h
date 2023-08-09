@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak) NRMAPayload* payload;
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
-               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+               sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                                    payload:(NRMAPayload *)payload
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>)attributeValidator;
 

@@ -16,7 +16,6 @@
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                                  accountID:(NSString*)accountId
                                  appID:(NSString*)appId
-                                 ID:(NSString*)id
                                  traceID:(NSString*)traceId
                                  parentID:(NSString*)parentId
                                  trustedAccountKey:(NSString*)trustedAccountKey {
@@ -26,7 +25,7 @@
         _payloadType = @"mobile";
         _accountId = accountId;
         _appId = appId;
-        _id = id;
+        _id = [[[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] substringToIndex:16] lowercaseString];
         _traceId = traceId;
         _parentId = parentId;
         _trustedAccountKey = trustedAccountKey;

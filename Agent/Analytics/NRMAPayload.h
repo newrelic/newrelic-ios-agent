@@ -25,7 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                                  accountID:(NSString*)accountId
                                  appID:(NSString*)appId
-                                 ID:(NSString*)id
                                  traceID:(NSString*)traceId
                                  parentID:(NSString*)parentId
                                  trustedAccountKey:(NSString*)trustedAccountKey;

@@ -12,7 +12,7 @@
 @implementation NRMAMobileEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
-               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+               sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator {
     self = [super init];
     if (self) {

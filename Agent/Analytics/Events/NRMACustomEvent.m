@@ -12,7 +12,7 @@
 
 - (instancetype) initWithEventType:(NSString *)eventType
                          timestamp:(NSTimeInterval)timestamp
-       sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+       sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
             withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator
 {
     self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds withAttributeValidator:attributeValidator];

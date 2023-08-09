@@ -13,7 +13,7 @@
 @implementation NRMANetworkErrorEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
-               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+               sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                        encodedResponseBody:(NSString *) encodedResponseBody
                              appDataHeader:(NSString *) appDataHeader
                                    payload:(NRMAPayload *)payload

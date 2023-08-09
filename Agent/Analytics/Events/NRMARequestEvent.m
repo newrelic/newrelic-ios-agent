@@ -13,7 +13,7 @@
 @implementation NRMARequestEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
-               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+               sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                                    payload:(NRMAPayload *)payload
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>)attributeValidator {
     self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds withAttributeValidator:attributeValidator];

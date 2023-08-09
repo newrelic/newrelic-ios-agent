@@ -20,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString * appDataHeader;
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
-               sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
+               sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                        encodedResponseBody:(NSString *) encodedResponseBody
                              appDataHeader:(NSString *) appDataHeader
                                    payload:(NRMAPayload *)payload
