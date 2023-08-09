@@ -180,6 +180,7 @@ NSString* currentParentId;
         //currentParentId = @""; Facade.cpp does this not sure why
         
         NRMAPayload * payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId ID:accountID traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
+        payload.dtEnabled = [NRMAFlags shouldEnableDistributedTracing];
         currentParentId = [payload id];
 
         return payload;

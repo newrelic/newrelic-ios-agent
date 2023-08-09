@@ -200,6 +200,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
             [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
             [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+            [event addAttribute:kNRMA_Attrib_traceId value:traceId];
         }
         
         if ((requestDomain.length > 0)) {
