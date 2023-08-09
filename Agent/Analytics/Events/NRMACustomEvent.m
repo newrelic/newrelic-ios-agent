@@ -15,12 +15,9 @@
        sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
             withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator
 {
-    self = [super init];
+    self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds withAttributeValidator:attributeValidator];
     if (self) {
         self.eventType = eventType;
-        self.timestamp = timestamp;
-        self.sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
-        self.attributeValidator = attributeValidator;
     }
     
     return self;

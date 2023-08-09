@@ -11,7 +11,6 @@
 #import "NRLogger.h"
 #import "NRMAJSON.h"
 #import "NRMARequestEvent.h"
-#include "Analytics/Constants.hpp"
 #import "NRMANetworkErrorEvent.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;

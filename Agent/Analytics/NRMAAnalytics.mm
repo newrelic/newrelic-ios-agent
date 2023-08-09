@@ -22,6 +22,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAEventManager.h"
 
+#import "Constants.h"
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
 #import "NRMARequestEvent.h"
@@ -98,8 +99,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
                                                                options:0
                                                                      error:nil];
-        if (dictionary[@(__kNRMA_RA_upgradeFrom)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_upgradeFrom);
+        if (dictionary[kNRMA_RA_upgradeFrom]) {
+            _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
         }
         if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
             _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
@@ -107,14 +108,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
             _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
         }
-        if (dictionary[@(__kNRMA_RA_install)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_install);
+        if (dictionary[kNRMA_RA_install]) {
+            _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
         }
 
         //session duration is only valid for one session. This metric should be removed
         //after the persistent attributes are loaded.   
-        if (dictionary[@(__kNRMA_RA_sessionDuration)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_sessionDuration);
+        if (dictionary[kNRMA_RA_sessionDuration]) {
+            _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
         }
         
 #if USE_INTEGRATED_EVENT_MANAGER
@@ -192,52 +193,50 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return false;
         }
         
-        [event addAttribute:@(__kNRMA_Attrib_requestUrl) value:requestUrl];
-        [event addAttribute:@(__kNRMA_Attrib_responseTime) value:responseTime];
+        [event addAttribute:kNRMA_Attrib_requestUrl value:requestUrl];
+        [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
         
         if (addDistributedTracing) {
-            [event addAttribute:@(__kNRMA_Attrib_dtGuid) value:distributedTracingId];
-            [event addAttribute:@(__kNRMA_Attrib_dtId) value:distributedTracingId];
-            [event addAttribute:@(__kNRMA_Attrib_dtTraceId) value:traceId];
+            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
         }
         
         if ((requestDomain.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_requestDomain) value:requestDomain];
+            [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
         }
         
         if ((requestPath.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_requestPath) value:requestPath];
+            [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
         }
         
         if ((requestMethod.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_requestMethod) value:requestMethod];
+            [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
         }
         
         if ((connectionType.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_connectionType) value:connectionType];
+            [event addAttribute:kNRMA_Attrib_connectionType value:connectionType];
         }
         
         if (![bytesReceived isEqual: @(0)]) {
-            [event addAttribute:@(__kNRMA_Attrib_bytesReceived) value:bytesReceived];
+            [event addAttribute:kNRMA_Attrib_bytesReceived value:bytesReceived];
         }
         
         if (![bytesSent isEqual: @(0)]) {
-            [event addAttribute:@(__kNRMA_Attrib_bytesSent) value:bytesSent];
+            [event addAttribute:kNRMA_Attrib_bytesSent value:bytesSent];
         }
         
         if (![statusCode isEqual: @(0)]) {
-            [event addAttribute:@(__kNRMA_Attrib_statusCode) value:statusCode];
+            [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
         }
         
         if ((contentType.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_contentType) value:contentType];
+            [event addAttribute:kNRMA_Attrib_contentType value:contentType];
         }
         
         return [_eventManager addEvent:event];
     } @catch (NSException *exception) {
         NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
-    } @finally {
-        NRLOG_ERROR(@"Failed to add Network Error Event.");
     }
 }
 
@@ -247,7 +246,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
         if(event == nil){ return NO; }
-        [event addAttribute:@(__kNRMA_Attrib_errorType) value:@(__kNRMA_Val_errorType_Network)];
+        [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_Network];
             
         return [_eventManager addEvent:event];
     }
@@ -260,7 +259,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
         if(event == nil){ return NO; }
-        [event addAttribute:@(__kNRMA_Attrib_errorType) value:@(__kNRMA_Val_errorType_HTTP)];
+        [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_HTTP];
 
         return [_eventManager addEvent:event];
     }
@@ -308,64 +307,62 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return nil;
         }
         
-        [event addAttribute:@(__kNRMA_Attrib_requestUrl) value:requestUrl];
-        [event addAttribute:@(__kNRMA_Attrib_responseTime) value:responseTime];
+        [event addAttribute:kNRMA_Attrib_requestUrl value:requestUrl];
+        [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
         
         if (addDistributedTracing) {
-            [event addAttribute:@(__kNRMA_Attrib_dtGuid) value:distributedTracingId];
-            [event addAttribute:@(__kNRMA_Attrib_dtId) value:distributedTracingId];
-            [event addAttribute:@(__kNRMA_Attrib_dtTraceId) value:traceId];
+            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
         }
         
         if ((requestDomain.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_requestDomain) value:requestDomain];
+            [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
         }
         
         if ((requestPath.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_requestPath) value:requestPath];
+            [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
         }
         
         if ((requestMethod.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_requestMethod) value:requestMethod];
+            [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
         }
         
         if ((connectionType.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_connectionType) value:connectionType];
+            [event addAttribute:kNRMA_Attrib_connectionType value:connectionType];
         }
         
         if (![bytesReceived isEqual: @(0)]) {
-            [event addAttribute:@(__kNRMA_Attrib_bytesReceived) value:bytesReceived];
+            [event addAttribute:kNRMA_Attrib_bytesReceived value:bytesReceived];
         }
         
         if (![bytesSent isEqual: @(0)]) {
-            [event addAttribute:@(__kNRMA_Attrib_bytesSent) value:bytesSent];
+            [event addAttribute:kNRMA_Attrib_bytesSent value:bytesSent];
         }
         
         if (encodedResponseBody.length > 0) {
-            [event addAttribute:@(__kNRMA_Attrib_networkError) value:networkErrorMessage];
+            [event addAttribute:kNRMA_Attrib_networkError value:networkErrorMessage];
         }
         
         if (![networkErrorCode isEqual: @(0)]) {
-            [event addAttribute:@(__kNRMA_Attrib_networkErrorCode) value:networkErrorCode];
+            [event addAttribute:kNRMA_Attrib_networkErrorCode value:networkErrorCode];
         }
         
         if (networkErrorMessage.length > 0) {
-            [event addAttribute:@(__kNRMA_Attrib_networkError) value:networkErrorMessage];
+            [event addAttribute:kNRMA_Attrib_networkError value:networkErrorMessage];
         }
         
         if (![statusCode isEqual: @(0)]) {
-            [event addAttribute:@(__kNRMA_Attrib_statusCode) value:statusCode];
+            [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
         }
         
         if ((contentType.length > 0)) {
-            [event addAttribute:@(__kNRMA_Attrib_contentType) value:contentType];
+            [event addAttribute:kNRMA_Attrib_contentType value:contentType];
         }
         
         return event;
     } @catch (NSException *exception) {
         NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
-    } @finally {
-        NRLOG_ERROR(@"Failed to add Network Error Event.");
     }
 }
 
@@ -412,7 +409,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 #if USE_INTEGRATED_EVENT_MANAGER
     return NO;
 #else
-    return [self setNRSessionAttribute:@(__kNRMA_RA_lastInteraction)
+    return [self setNRSessionAttribute:kNRMA_RA_lastInteraction
                                  value:name];
 #endif
 }

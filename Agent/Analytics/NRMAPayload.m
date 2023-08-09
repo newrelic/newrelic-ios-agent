@@ -31,7 +31,7 @@
         _parentId = parentId;
         _trustedAccountKey = trustedAccountKey;
         _dtEnabled = false;
-        self->version = @"0,2";
+        self->version = @"[0,2]";
     }
     
     return self;

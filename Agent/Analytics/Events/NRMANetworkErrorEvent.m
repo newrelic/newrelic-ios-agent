@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "NRMANetworkErrorEvent.h"
-#include "Analytics/Constants.hpp"
+#include "Constants.h"
 
 @implementation NRMANetworkErrorEvent
 
@@ -19,13 +19,9 @@
                                    payload:(NRMAPayload *)payload
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>)attributeValidator
 {
-    self = [super init];
+    self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds payload:payload withAttributeValidator:attributeValidator];
     if (self) {
-        self.timestamp = timestamp;
-        self.sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         self.eventType = @"MobileRequestError";
-        self.attributeValidator = attributeValidator;
-        self.payload = payload;
         self.encodedResponseBody = encodedResponseBody;
         self.appDataHeader = appDataHeader;
     }
@@ -37,8 +33,8 @@
     NSDictionary *event = [super JSONObject];
 
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
-    dict[@(__kNRMA_RA_responseBody)] = self.encodedResponseBody;
-    dict[@(__kNRMA_RA_appDataHeader)] = self.appDataHeader;
+    dict[kNRMA_RA_responseBody] = self.encodedResponseBody;
+    dict[kNRMA_RA_appDataHeader] = self.appDataHeader;
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

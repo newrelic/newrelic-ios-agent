@@ -31,13 +31,12 @@
 - (void)testPayloadCreation {
     // Given
     NSTimeInterval timestamp = 10;
-    unsigned long long elapsedTime = 50;
     NSString *payloadType = @"mobile";
     NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:@"1" appID:@"2" ID:@"3" traceID:@"4" parentID:@"5" trustedAccountKey:@"6"];
     
     // Then
     NSDictionary *event = [payload JSONObject];
-    XCTAssertEqualObjects(event[@"v"], @"0,2");
+    XCTAssertEqualObjects(event[@"v"], @"[0,2]");
     
     NSDictionary *data = event[@"d"];
     XCTAssertEqual([data[@"ti"] doubleValue], timestamp);

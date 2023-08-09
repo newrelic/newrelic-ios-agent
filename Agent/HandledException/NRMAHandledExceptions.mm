@@ -16,7 +16,6 @@
 #import "HexUploadPublisher.hpp"
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
-#include <Analytics/Constants.hpp>
 #include <execinfo.h>
 
 @interface NRMAAnalytics(Protected)

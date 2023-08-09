@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "NRMARequestEvent.h"
+#import "Constants.h"
 
 @implementation NRMARequestEvent
 
@@ -15,12 +16,9 @@
                sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
                                    payload:(NRMAPayload *)payload
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>)attributeValidator {
-    self = [super init];
+    self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds withAttributeValidator:attributeValidator];
     if (self) {
-        self.timestamp = timestamp;
-        self.sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         self.eventType = @"MobileRequest";
-        self.attributeValidator = attributeValidator;
         _payload = payload;
     }
     
@@ -31,7 +29,7 @@
     NSDictionary *event = [super JSONObject];
 
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
-    dict[@"payload"] = [_payload JSONObject];//TODO: make sure this is the right key
+    dict[kNRMA_RA_payload] = [_payload JSONObject];//TODO: make sure this is the right key
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

@@ -7,16 +7,9 @@
 //
 
 #import "NRMAMobileEvent.h"
+#import "Constants.h"
 
 @implementation NRMAMobileEvent
-
--(id) init {
-    self = [super init];
-    if (self) {
-        _attributes = [[NSMutableDictionary alloc] init];
-    }
-    return self;
-}
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(unsigned long long)sessionElapsedTimeSeconds
@@ -27,6 +20,7 @@
         _timestamp = timestamp;
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _attributeValidator = attributeValidator;
+        _attributes = [[NSMutableDictionary alloc] init];
     }
     
     return self;
@@ -54,9 +48,9 @@
     // There was a way to do this using the Objective-C runtime
     // to iterate through the properties, but I do not remember it
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:_attributes];
-    dict[@"timestamp"] = @(self.timestamp);
-    dict[@"timeSinceLoad"] = @(self.sessionElapsedTimeSeconds);
-    dict[@"eventType"] = self.eventType;
+    dict[kNRMA_RA_timestamp] = @(self.timestamp);
+    dict[kNRMA_RA_sessionElapsedTime] = @(self.sessionElapsedTimeSeconds);
+    dict[kNRMA_RA_eventType] = self.eventType;
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

@@ -1035,6 +1035,8 @@
 		F8FBFA632A78416300CDC8C5 /* NRMAMobileEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA612A78416300CDC8C5 /* NRMAMobileEvent.m */; };
 		F8FBFA842A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */; };
 		F8FBFA852A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */; };
+		F8FBFB1F2A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
+		F8FBFB202A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -1937,6 +1939,8 @@
 		F8FBFA642A78416F00CDC8C5 /* NRMAMobileEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAMobileEvent.h; sourceTree = "<group>"; };
 		F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkErrorEvent.m; sourceTree = "<group>"; };
 		F8FBFA862A7AE6A200CDC8C5 /* NRMANetworkErrorEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkErrorEvent.h; sourceTree = "<group>"; };
+		F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Constants.m; sourceTree = "<group>"; };
+		F8FBFB212A83CEDC00CDC8C5 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2611,6 +2615,8 @@
 				342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */,
 				342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */,
 				342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */,
+				F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */,
+				F8FBFB212A83CEDC00CDC8C5 /* Constants.h */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -4413,6 +4419,7 @@
 				02FF49AF24DC62B800115469 /* NRMAApplicationInformation.m in Sources */,
 				02FF4A4A24DC64D500115469 /* NRMANamedValueMeasurement.m in Sources */,
 				02FF4A7024DC64E600115469 /* NRMAMeasurementProducer.m in Sources */,
+				F8FBFB1F2A83CEBD00CDC8C5 /* Constants.m in Sources */,
 				2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */,
 				02FF49B824DC62B800115469 /* NRMADataToken.m in Sources */,
 				02FF482024DB5B8100115469 /* NRMAGestureProcessor.m in Sources */,
@@ -4705,6 +4712,7 @@
 				02FF4C3924E3201400115469 /* NRMACPUVitals.m in Sources */,
 				02FF4C3A24E3201400115469 /* NRMAActivityTrace.m in Sources */,
 				34DB253A2824791B00A5BC45 /* NRMAURLTransformer.m in Sources */,
+				F8FBFB202A83CEBD00CDC8C5 /* Constants.m in Sources */,
 				02FF4C3B24E3201400115469 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				02FF4C3C24E3201400115469 /* NRMACrashReport_SignalInfo.m in Sources */,
 				02FF4C3E24E3201400115469 /* NRMARetryTracker.m in Sources */,
