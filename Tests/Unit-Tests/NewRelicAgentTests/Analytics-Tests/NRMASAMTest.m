@@ -38,19 +38,22 @@
                                                                dataUsingEncoding:NSUTF8StringEncoding]
                                                            options:0
                                                              error:&error];
-    XCTAssertNotNil(decode[@"attribute"]);
-    XCTAssertEqual([decode[@"attribute"] floatValue], 1.5);
+    XCTAssertEqual([decode[@"attribute"] floatValue], 1.5, @"Value of attribute stored is not 1.5");
 }
 
-//- (void)testAddFloatAttribute {
-//    // Given
-//    NRMASAM *sut = [NRMASAM new];
-//
-//    // When
-//    [sut setSessionAttribute:@"attribute" value:1.0];
-//
-//    // Then
-//
-//}
+- (void)testMaxAttributeCount {
+    // Given
+    NRMASAM *sut = [NRMASAM new];
+    
+    // When
+    // Add attributes up to the limit
+    for(int i = 0; i < 128; i++) {
+        NSString *attributeName = [NSString stringWithFormat:@"attribute %d", i];
+        XCTAssertTrue([sut setSessionAttribute:attributeName value:@(i)], @"Failed to add session attribute");
+    }
+    
+    // Then
+    XCTAssertFalse([sut setSessionAttribute:@"attribute128" value:@(128)], @"Allowed to add too many attributes");
+}
 
 @end

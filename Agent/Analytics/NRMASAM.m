@@ -9,6 +9,8 @@
 #import "NRMASAM.h"
 #import "NRMAJSON.h"
 
+static const NSUInteger kDefaultAttributeLimit = 128;
+
 @implementation NRMASAM {
     NSMutableDictionary<NSString *, id>* attributes;
 }
@@ -23,7 +25,11 @@
 
 - (BOOL)setSessionAttribute:(nonnull NSString *)name value:(nonnull id)value {
     @synchronized (attributes) {
-        attributes[name] = value;
+        if(attributes.count < kDefaultAttributeLimit) {
+            attributes[name] = value;
+        } else {
+            return NO;
+        }
     }
     
     return YES;
