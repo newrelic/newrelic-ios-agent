@@ -42,7 +42,7 @@
 #import "NRMAAppUpgradeMetricGenerator.h"
 #import "NRMAAppInstallMetricGenerator.h"
 #import "NRMAAnalytics.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NRMAWKWebViewInstrumentation.h"
 #import "NRMAExceptionHandlerStartupManager.h"
 #import "NRMAFlags.h"
@@ -438,9 +438,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
     [self.analyticsController setNRSessionAttribute:@"appBuild"
                                               value:info.applicationInformation.appBuild];
-    [self.analyticsController setNRSessionAttribute:@(__kNRMA_RA_platform)
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_platform
                                               value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:info.deviceInformation.platform]];
-    [self.analyticsController setNRSessionAttribute:@(__kNRMA_RA_platformVersion)
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_platformVersion
                                               value:info.deviceInformation.platformVersion ?: info.deviceInformation.agentVersion];
 
     NSString* vendorId = [NRMAUDIDManager deviceIdentifier];

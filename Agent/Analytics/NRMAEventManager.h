@@ -9,6 +9,9 @@
 #import <Foundation/Foundation.h>
 
 #import "NRMAAnalyticEventProtocol.h"
+#import "NRMANetworkResponseData.h"
+#import "NRMANetworkRequestData.h"
+#import "NRMAPayload.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

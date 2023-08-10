@@ -20,11 +20,16 @@
 #import "NRMAUserActionBuilder.h"
 #import <Connectivity/Payload.hpp>
 #import "NewRelicAgentInternal.h"
+#import "NRMAEventManager.h"
 
+#import "Constants.h"
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
+#import "NRMARequestEvent.h"
+#import "NRMAPayload.h"
+#import "NRMANetworkErrorEvent.h"
 
-#define USE_INTEGRATED_EVENT_MANAGER 0
+//#define USE_INTEGRATED_EVENT_MANAGER 0
 
 using namespace NewRelic;
 @implementation NRMAAnalytics
@@ -94,8 +99,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
                                                                options:0
                                                                      error:nil];
-        if (dictionary[@(__kNRMA_RA_upgradeFrom)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_upgradeFrom);
+        if (dictionary[kNRMA_RA_upgradeFrom]) {
+            _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
         }
         if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
             _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
@@ -103,14 +108,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
             _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
         }
-        if (dictionary[@(__kNRMA_RA_install)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_install);
+        if (dictionary[kNRMA_RA_install]) {
+            _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
         }
 
         //session duration is only valid for one session. This metric should be removed
         //after the persistent attributes are loaded.   
-        if (dictionary[@(__kNRMA_RA_sessionDuration)]) {
-            _analyticsController->removeSessionAttribute(__kNRMA_RA_sessionDuration);
+        if (dictionary[kNRMA_RA_sessionDuration]) {
+            _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
         }
         
 #if USE_INTEGRATED_EVENT_MANAGER
@@ -126,7 +131,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } else {
             _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
         }
-        
     }
     return self;
 }
@@ -141,28 +145,244 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
          interactionDuration:(double)duration_secs {
     return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
 }
+#if USE_INTEGRATED_EVENT_MANAGER
+- (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
+                  withResponse:(NRMANetworkResponseData *)responseData
+               withPayload:(NRMAPayload *)payload {
+    if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
+        return [self addRequestEvent:requestData withResponse:responseData withPayload:payload];
+    }
+    return NO;
+}
+
+- (BOOL)addRequestEvent:(NRMANetworkRequestData *)requestData
+           withResponse:(NRMANetworkResponseData *)responseData
+            withPayload:(NRMAPayload *)payload {
+
+    @try {
+        NSString* distributedTracingId = @"";
+        NSString* traceId = @"";
+        bool addDistributedTracing = false;
+        if (payload != nil) {
+            distributedTracingId = payload.id;
+            traceId = payload.traceId;
+            addDistributedTracing = payload.dtEnabled;
+        }
+        
+        NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
+        NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
+        
+        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:nil]; //TODO: need a real AttributeValidator?
+        if (event == nil) {
+            return false;
+        }
+        
+        NSString* requestUrl = requestData.requestUrl;
+        NSString* requestDomain = requestData.requestDomain;
+        NSString* requestPath = requestData.requestPath;
+        NSString* requestMethod = requestData.requestMethod;
+        NSString* connectionType = requestData.connectionType;
+        NSNumber* bytesSent = @(requestData.bytesSent);
+        NSString* contentType = requestData.contentType;
+        NSNumber *responseTime = @(responseData.timeInSeconds);
+        NSNumber* bytesReceived = @(responseData.bytesReceived);
+        NSNumber* statusCode = @(responseData.statusCode);
+        
+        if ((requestUrl.length == 0)) {
+            NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
+            return false;
+        }
+        
+        [event addAttribute:kNRMA_Attrib_requestUrl value:requestUrl];
+        [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
+        
+        if (addDistributedTracing) {
+            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+            [event addAttribute:kNRMA_Attrib_traceId value:traceId];
+        }
+        
+        if ((requestDomain.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
+        }
+        
+        if ((requestPath.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
+        }
+        
+        if ((requestMethod.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
+        }
+        
+        if ((connectionType.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_connectionType value:connectionType];
+        }
+        
+        if (![bytesReceived isEqual: @(0)]) {
+            [event addAttribute:kNRMA_Attrib_bytesReceived value:bytesReceived];
+        }
+        
+        if (![bytesSent isEqual: @(0)]) {
+            [event addAttribute:kNRMA_Attrib_bytesSent value:bytesSent];
+        }
+        
+        if (![statusCode isEqual: @(0)]) {
+            [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
+        }
+        
+        if ((contentType.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_contentType value:contentType];
+        }
+        
+        return [_eventManager addEvent:event];
+    } @catch (NSException *exception) {
+        NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
+    }
+}
+
+- (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
+                withResponse:(NRMANetworkResponseData *)responseData
+                 withPayload:(NRMAPayload*)payload {
+    if ([NRMAFlags shouldEnableRequestErrorEvents]) {
+        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+        if(event == nil){ return NO; }
+        [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_Network];
+            
+        return [_eventManager addEvent:event];
+    }
+    return NO;
+}
+
+- (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
+            withResponse:(NRMANetworkResponseData *)responseData
+            withPayload:(NRMAPayload *)payload {
+    if ([NRMAFlags shouldEnableRequestErrorEvents]) {
+        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+        if(event == nil){ return NO; }
+        [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_HTTP];
+
+        return [_eventManager addEvent:event];
+    }
+    return NO;
+}
+
+- (id<NRMAAnalyticEventProtocol>)createErrorEvent:(NRMANetworkRequestData *)requestData
+           withResponse:(NRMANetworkResponseData *)responseData
+             withPayload:(NRMAPayload *)payload {
+    @try {
+        NSString* distributedTracingId = @"";
+        NSString* traceId = @"";
+        bool addDistributedTracing = false;
+        if (payload != nil) {
+            distributedTracingId = payload.id;
+            traceId = payload.traceId;
+            addDistributedTracing = payload.dtEnabled;
+        }
+        
+        NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
+        NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
+        
+        NSString* requestUrl = requestData.requestUrl;
+        NSString* requestDomain = requestData.requestDomain;
+        NSString* requestPath = requestData.requestPath;
+        NSString* requestMethod = requestData.requestMethod;
+        NSString* connectionType = requestData.connectionType;
+        NSNumber* bytesSent = @(requestData.bytesSent);
+        NSString* contentType = requestData.contentType;
+        NSString* appDataHeader = responseData.appDataHeader;
+        NSString* encodedResponseBody = responseData.encodedResponseBody;
+        NSString* networkErrorMessage = responseData.errorMessage;
+        NSNumber* networkErrorCode = @(responseData.networkErrorCode);
+        NSNumber *responseTime = @(responseData.timeInSeconds);
+        NSNumber* bytesReceived = @(responseData.bytesReceived);
+        NSNumber* statusCode = @(responseData.statusCode);
+        
+        if ((requestUrl.length == 0)) {
+            NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
+            return nil;
+        }
+        
+        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:nil]; //TODO: need a real AttributeValidator?
+        if (event == nil) {
+            return nil;
+        }
+        
+        [event addAttribute:kNRMA_Attrib_requestUrl value:requestUrl];
+        [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
+        
+        if (addDistributedTracing) {
+            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+        }
+        
+        if ((requestDomain.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
+        }
+        
+        if ((requestPath.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
+        }
+        
+        if ((requestMethod.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
+        }
+        
+        if ((connectionType.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_connectionType value:connectionType];
+        }
+        
+        if (![bytesReceived isEqual: @(0)]) {
+            [event addAttribute:kNRMA_Attrib_bytesReceived value:bytesReceived];
+        }
+        
+        if (![bytesSent isEqual: @(0)]) {
+            [event addAttribute:kNRMA_Attrib_bytesSent value:bytesSent];
+        }
+        
+        if (encodedResponseBody.length > 0) {
+            [event addAttribute:kNRMA_Attrib_networkError value:networkErrorMessage];
+        }
+        
+        if (![networkErrorCode isEqual: @(0)]) {
+            [event addAttribute:kNRMA_Attrib_networkErrorCode value:networkErrorCode];
+        }
+        
+        if (networkErrorMessage.length > 0) {
+            [event addAttribute:kNRMA_Attrib_networkError value:networkErrorMessage];
+        }
+        
+        if (![statusCode isEqual: @(0)]) {
+            [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
+        }
+        
+        if ((contentType.length > 0)) {
+            [event addAttribute:kNRMA_Attrib_contentType value:contentType];
+        }
+        
+        return event;
+    } @catch (NSException *exception) {
+        NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
+    }
+}
+
+#else
 
 - (BOOL)addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return YES;
-#else
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
         return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload));
     }
     return NO;
-#endif
 }
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
                  withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return YES;
-#else
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
@@ -171,16 +391,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 
     return NO;
-#endif
 }
-
 
 - (BOOL)addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
              withResponse:(NRMANetworkResponseData *)responseData
-              withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
-#else
+            withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
@@ -188,14 +403,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload));
     }
     return NO;
-#endif
 }
+#endif
 
 - (BOOL) setLastInteraction:(NSString*)name {
 #if USE_INTEGRATED_EVENT_MANAGER
     return NO;
 #else
-    return [self setNRSessionAttribute:@(__kNRMA_RA_lastInteraction)
+    return [self setNRSessionAttribute:kNRMA_RA_lastInteraction
                                  value:name];
 #endif
 }
@@ -385,8 +600,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
     NRMACustomEvent *testEvent = [[NRMACustomEvent alloc] initWithEventType:name
-                                                                  timestamp:[[NSDate now] timeIntervalSince1970]
-                                                                  sessionElapsedTimeInSeconds:[[NSDate now] timeIntervalSinceDate:_sessionStartTime]
+                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                  sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                                   withAttributeValidator:nil];
     [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         [testEvent addAttribute:key value:obj];
@@ -474,8 +689,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 #if USE_INTEGRATED_EVENT_MANAGER
         NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
-                                                                  timestamp:[[NSDate now] timeIntervalSince1970]
-                                                sessionElapsedTimeInSeconds:[[NSDate now] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
+                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];
         }];

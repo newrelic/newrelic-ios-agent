@@ -10,6 +10,8 @@
 
 #import "NRLogger.h"
 #import "NRMAJSON.h"
+#import "NRMARequestEvent.h"
+#import "NRMANetworkErrorEvent.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 600; // 5 Minutes
