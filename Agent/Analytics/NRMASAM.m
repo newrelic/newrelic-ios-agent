@@ -35,6 +35,25 @@ static const NSUInteger kDefaultAttributeLimit = 128;
     return YES;
 }
 
+- (BOOL)removeSessionAttributeNamed:(nonnull NSString *)name {
+    @synchronized (attributes) {
+        id value = attributes[name];
+        if(value) {
+            [attributes removeObjectForKey:name];
+        } else {
+            return NO;
+        }
+    }
+    
+    return YES;
+}
+
+
+- (void)removeAllSessionAttributes {
+    @synchronized (attributes) {
+        [attributes removeAllObjects];
+    }
+}
 
 - (nullable NSString *)getSessionAttributeJSONStringWithError:(NSError * _Nullable __autoreleasing * _Nullable)error {
     
@@ -46,5 +65,6 @@ static const NSUInteger kDefaultAttributeLimit = 128;
     
     return attributeJsonString;
 }
+
 
 @end

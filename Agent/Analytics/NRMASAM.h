@@ -14,6 +14,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL) setSessionAttribute:(NSString *)name value:(id)value;
 
+- (BOOL) removeSessionAttributeNamed:(NSString *)name;
+- (void) removeAllSessionAttributes;
+
 - (nullable NSString *)getSessionAttributeJSONStringWithError:( NSError * _Nullable *)error;
 
 @end
