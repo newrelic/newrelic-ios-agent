@@ -35,6 +35,24 @@ NSString *DT_FIELD_UNUSED = @"";
     return self;
 }
 
+#if USE_INTEGRATED_EVENT_MANAGER
+- (id) initWithPayload: (NRMAPayload*)payload{
+    [self setNewRelicDefaults];
+
+    if (payload == nil) return self;
+
+    self.accountId = payload.accountId;
+    self.appId = payload.appId;
+    self.traceId = payload.traceId;
+    self.spanId = payload.id;
+    self.timestamp = payload.timestamp;
+
+    self.trustedAccountKeyString = payload.trustedAccountKey;
+    
+    return self;
+}
+
+#else
 - (id) initWithPayload: (const std::unique_ptr<NewRelic::Connectivity::Payload>&)payload{
     [self setNewRelicDefaults];
 
@@ -55,5 +73,5 @@ NSString *DT_FIELD_UNUSED = @"";
     
     return self;
 }
-
+#endif
 @end

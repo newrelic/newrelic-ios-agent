@@ -13,7 +13,7 @@
 #import "NRConstants.h"
 #import <OCMock/OCMock.h>
 #import "NRMAAnalytics.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NRMABool.h"
 #import "NRMASupportMetricHelper.h"
 
@@ -85,7 +85,7 @@
         [invocation getArgument:&value atIndex:3];
 
         XCTAssertTrue(value.value, @"verison value doesn't match");
-        XCTAssertTrue([@(__kNRMA_RA_install) isEqualToString:attribute],@"incorrect attribute string.");
+        XCTAssertTrue([kNRMA_RA_install isEqualToString:attribute],@"incorrect attribute string.");
 
 
         sessionAttributeAdded = YES;
@@ -121,7 +121,7 @@
         [invocation getArgument:&value atIndex:3];
 
         XCTAssertTrue(value.value, @"version value doesn't match");
-        XCTAssertTrue([@(__kNRMA_RA_install) isEqualToString:attribute],@"incorrect attribute string.");
+        XCTAssertTrue([kNRMA_RA_install isEqualToString:attribute],@"incorrect attribute string.");
 
 
         sessionAttributeAdded = YES;

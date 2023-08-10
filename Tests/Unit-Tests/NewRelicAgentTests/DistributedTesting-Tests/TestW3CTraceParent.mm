@@ -27,6 +27,15 @@
 }
 
 - (void)testHeaderString {
+#ifdef USE_INTEGRATED_EVENT_MANAGER
+    NSString* accountStr = @"10816994";
+    NSString* appIdStd = @"25789457";
+    NSString* spanId = @"17172750e6ff8549";
+    NSString* traceId = @"edd7db371b2faa5b";
+    long long timestamp = 1609970157093;
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
+    payload.id = spanId;
+#else
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
     std::string accountStr("10816994");
@@ -46,6 +55,7 @@
     payload->setId(spanId);
     payload->setTraceId(traceId);
     payload->setTimestamp(timestamp);
+#endif
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
     [traceContext setTrustedAccount:NRTraceContext];

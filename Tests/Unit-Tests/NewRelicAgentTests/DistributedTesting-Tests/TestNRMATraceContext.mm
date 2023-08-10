@@ -27,6 +27,14 @@
 }
 
 - (void)testContextWhenPayloadProvided {
+#ifdef USE_INTEGRATED_EVENT_MANAGER
+    NSString* accountStr = @"accountForTesting";
+    NSString* appIdStd = @"appIdForTesting";
+    NSString* spanId = @"17172750e6ff8549";
+    NSString* traceId = @"spanIdForTesting";
+    long long timestamp = 1609970157093;
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
+#else
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
     std::string accountStr("accountForTesting");
@@ -42,13 +50,21 @@
     payload->setId(spanId);
     payload->setTimestamp(timestamp);
     
+#endif
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
     
+#ifdef USE_INTEGRATED_EVENT_MANAGER
+    XCTAssert([accountStr isEqualToString: traceContext.accountId]);
+    XCTAssert([appIdStd isEqualToString: traceContext.appId]);
+    XCTAssert([traceId isEqualToString: traceContext.traceId]);
+    XCTAssert([payload.id isEqualToString: traceContext.spanId]);
+#else
     // assert
     XCTAssert([[NSString stringWithUTF8String: accountStr.c_str()] isEqualToString: traceContext.accountId]);
     XCTAssert([[NSString stringWithUTF8String: appIdStd.c_str()] isEqualToString: traceContext.appId]);
     XCTAssert([[NSString stringWithUTF8String: traceId.c_str()] isEqualToString: traceContext.traceId]);
     XCTAssert([[NSString stringWithUTF8String: spanId.c_str()] isEqualToString: traceContext.spanId]);
+#endif
     XCTAssertEqual(timestamp, traceContext.timestamp);
 }
 

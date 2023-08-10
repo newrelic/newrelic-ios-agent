@@ -6,6 +6,14 @@
 
 @interface NRMANetworkRequestData : NSObject
 
+@property (nonatomic) NSString *requestUrl;
+@property (nonatomic) NSString *requestDomain;
+@property (nonatomic) NSString *requestPath;
+@property (nonatomic) NSString *requestMethod;
+@property (nonatomic) NSString *connectionType;
+@property (nonatomic) NSString *contentType;
+@property (nonatomic) NSInteger bytesSent;
+
 -(id) initWithRequestUrl:(NSURL*)requestUrl
               httpMethod:(NSString*)requestMethod
           connectionType:(NSString*)connectionType

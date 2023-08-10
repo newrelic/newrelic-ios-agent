@@ -208,8 +208,12 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     IMP originalImp = NRMAOriginal__dataTaskWithRequest;
     
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+#if USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-
+#endif
+    
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,request);
     
     [NRMAHTTPUtilities attachPayload:payload
@@ -243,12 +247,16 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+#if USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-
+#endif
+    
     if (completionHandler == nil) {
-
+        
         NSURLSessionDataTask* task  = ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,completionHandler);
-
+        
         [NRMAHTTPUtilities attachPayload:payload
                                       to:task.originalRequest];
 
@@ -306,7 +314,11 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+#if USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#endif
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSURL*))originalImp)(self,_cmd,mutableRequest,fileURL);
 
     [NRMAHTTPUtilities attachPayload:payload
@@ -330,7 +342,11 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
 
+#if USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#endif
 
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSData*))originalImp)(self, _cmd, mutableRequest, data);
 
@@ -370,8 +386,12 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+#if USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-
+#endif
+    
     if (completionHandler == nil) {
         NSURLSessionUploadTask* task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,completionHandler);
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -410,7 +430,11 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
+#if USE_INTEGRATED_EVENT_MANAGER
+    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#else
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+#endif
     if (completionHandler == nil) {
         NSURLSessionUploadTask* task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,completionHandler);
 
