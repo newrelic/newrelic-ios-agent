@@ -113,7 +113,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
             
             NSData *eventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
                                                          options:0
-                                                           error:error];
+                                                           error:&error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
         } @catch (NSException *e) {

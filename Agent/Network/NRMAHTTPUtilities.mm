@@ -177,7 +177,7 @@ NSString* currentParentId;
         NSTimeInterval currentTimeStamp = [[NSDate date] timeIntervalSince1970];
 
         currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
-        //currentParentId = @""; Facade.cpp does this not sure why
+        currentParentId = @"";
         
         NRMAPayload * payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
         payload.dtEnabled = [NRMAFlags shouldEnableDistributedTracing];
