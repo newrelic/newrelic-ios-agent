@@ -19,6 +19,7 @@
 #import "NRMAAppToken.h"
 #include <Utilities/Application.hpp>
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -602,6 +603,10 @@
                 }
 #endif
             }
+        }
+        if ([NRMAFlags shouldEnableLogReporting]) {
+            // Do log upload
+            [NRLogger upload];
         }
     }
 }
