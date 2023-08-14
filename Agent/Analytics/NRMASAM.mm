@@ -14,6 +14,8 @@
 
 @implementation NRMASAM {
     NSMutableDictionary<NSString*, id> *attributeDict;
+    NSMutableDictionary<NSString*, id> *privateAttributeDict;
+
     BlockAttributeValidator *attributeValidator;
 }
 
@@ -21,6 +23,8 @@
     self = [super init];
     if (self) {
         attributeDict = [[NSMutableDictionary alloc] init];
+        privateAttributeDict = [[NSMutableDictionary alloc] init];
+
         attributeValidator = validator;
     }
     return self;
@@ -31,7 +35,16 @@
 }
 
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value {
-    return [self setAttribute:name value:value validate:false];
+
+    if([value isKindOfClass:[NRMABool class]]) {
+        value = @(([(NRMABool*) value value]));
+    }
+
+    [privateAttributeDict setValue:value forKey:name];
+
+    [self persistToDisk];
+
+    return true;
 }
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
@@ -47,9 +60,7 @@
             NRLOG_VERBOSE(@"Failed to create attribute named %@", name);
             return false;
         }
-        unsigned long countOfPrivateAttributes = [self countOfPrivateAttributes];
-
-        if (attributeDict.count >= maxNumberAttributes + countOfPrivateAttributes) {
+        if (attributeDict.count >= maxNumberAttributes) {
             NRLOG_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
             return false;
         }
@@ -58,19 +69,8 @@
     if([value isKindOfClass:[NRMABool class]]) {
         value = @(([(NRMABool*) value value]));
     }
-    unsigned long preAddCount = attributeDict.count;
 
     [attributeDict setValue:value forKey:name];
-
-    unsigned long postAddCount = attributeDict.count;
-
-    // If a NR System Attrib was added to attributeDict increment the count
-    if (!validate && (preAddCount != postAddCount)) {
-        unsigned long currentCount = [self countOfPrivateAttributes];
-
-        unsigned long newValue = currentCount == 0 ? 2 : currentCount + 1;
-        [attributeDict setValue:@(newValue) forKey:privateAttributeCountIdentifier];
-    }
 
     [self persistToDisk];
 
@@ -139,8 +139,25 @@
 }
 
 - (NSString*) sessionAttributeJSONString {
+
+    NSMutableDictionary *output = [attributeDict mutableCopy];
+   [output addEntriesFromDictionary:privateAttributeDict];
+
     NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:attributeDict options:0 error:&error];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:output options:0 error:&error];
+    if (!jsonData) {
+        NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
+    }
+    else {
+        return( [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+    }
+    return nil;
+}
+
+- (NSString*) privateSessionAttributeJSONString {
+
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:privateAttributeDict options:0 error:&error];
     if (!jsonData) {
         NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
     }
@@ -160,10 +177,13 @@
 
 - (void) clearLastSessionsAnalytics {
     [attributeDict removeAllObjects];
+    [privateAttributeDict removeAllObjects];
+
 }
 
 - (void) clearPersistedSessionAnalytics {
     [attributeDict removeAllObjects];
+    [privateAttributeDict removeAllObjects];
 
     NSError* error;
     [[NSFileManager defaultManager] removeItemAtPath:[NRMASAM attributeFilePath] error:&error];
@@ -186,19 +206,26 @@
     }
 }
 
-// Helpers
+- (BOOL) persistPrivateAttributesToDisk {
+    NSString* currentAttributes = [self privateSessionAttributeJSONString];
 
--(unsigned long) countOfPrivateAttributes {
-    id existingCount = attributeDict[privateAttributeCountIdentifier];
-    unsigned long existingCountInt = 0;
-    if (existingCount != nil) {
-        existingCountInt = [existingCount unsignedLongValue];
+    NSData* data = [currentAttributes dataUsingEncoding:NSUTF8StringEncoding];
+    if (data) {
+        [data writeToFile:[NRMASAM privateAttributeFilePath] atomically:true];
+
+        return true;
     }
-    return existingCountInt;
+    else {
+        return false;
+    }
 }
+
+// Helpers
 
 +(NSString*)attributeFilePath {
     return [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],attributesFileName];
 }
-
++(NSString*)privateAttributeFilePath {
+    return [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],privateAttributesFileName];
+}
 @end
