@@ -998,8 +998,6 @@
 		34DD7304291979CC00481FA9 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
 		34DD7305291979CC00481FA9 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9292E2912D72F001449B6 /* JSON.framework */; };
 		34DD7306291979CC00481FA9 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
-		34EA78C82A39221E0071CC95 /* NRMACustomEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */; };
-		34EA78C92A39221E0071CC95 /* NRMACustomEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */; };
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
@@ -1033,6 +1031,20 @@
 		F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
+		F8FBFA512A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
+		F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
+		F8FBFA552A71BA2900CDC8C5 /* NRMAPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */; };
+		F8FBFA562A71BA2900CDC8C5 /* NRMAPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */; };
+		F8FBFA592A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA582A77FA3000CDC8C5 /* TestRequestEvents.m */; };
+		F8FBFA5A2A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA582A77FA3000CDC8C5 /* TestRequestEvents.m */; };
+		F8FBFA5F2A78336200CDC8C5 /* TestNRMAPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA5E2A78336200CDC8C5 /* TestNRMAPayload.m */; };
+		F8FBFA602A78336200CDC8C5 /* TestNRMAPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA5E2A78336200CDC8C5 /* TestNRMAPayload.m */; };
+		F8FBFA622A78416300CDC8C5 /* NRMAMobileEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA612A78416300CDC8C5 /* NRMAMobileEvent.m */; };
+		F8FBFA632A78416300CDC8C5 /* NRMAMobileEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA612A78416300CDC8C5 /* NRMAMobileEvent.m */; };
+		F8FBFA842A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */; };
+		F8FBFA852A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */; };
+		F8FBFB1F2A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
+		F8FBFB202A83CEBD00CDC8C5 /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -1929,6 +1941,18 @@
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
+		F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMARequestEvent.m; sourceTree = "<group>"; };
+		F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMARequestEvent.h; sourceTree = "<group>"; };
+		F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAPayload.m; sourceTree = "<group>"; };
+		F8FBFA572A71BA3A00CDC8C5 /* NRMAPayload.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAPayload.h; sourceTree = "<group>"; };
+		F8FBFA582A77FA3000CDC8C5 /* TestRequestEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestRequestEvents.m; sourceTree = "<group>"; };
+		F8FBFA5E2A78336200CDC8C5 /* TestNRMAPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestNRMAPayload.m; sourceTree = "<group>"; };
+		F8FBFA612A78416300CDC8C5 /* NRMAMobileEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAMobileEvent.m; sourceTree = "<group>"; };
+		F8FBFA642A78416F00CDC8C5 /* NRMAMobileEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAMobileEvent.h; sourceTree = "<group>"; };
+		F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkErrorEvent.m; sourceTree = "<group>"; };
+		F8FBFA862A7AE6A200CDC8C5 /* NRMANetworkErrorEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkErrorEvent.h; sourceTree = "<group>"; };
+		F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Constants.m; sourceTree = "<group>"; };
+		F8FBFB212A83CEDC00CDC8C5 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2092,6 +2116,8 @@
 				343883552834405700B31C2E /* NRMAURLTransformerTests.m */,
 				34544D2B2A323D1400B5A8D1 /* TestIntegratedEventManager.m */,
 				34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */,
+				F8FBFA582A77FA3000CDC8C5 /* TestRequestEvents.m */,
+				F8FBFA5E2A78336200CDC8C5 /* TestNRMAPayload.m */,
 			);
 			path = "Analytics-Tests";
 			sourceTree = "<group>";
@@ -2580,6 +2606,9 @@
 		02FF484F24DC614D00115469 /* Analytics */ = {
 			isa = PBXGroup;
 			children = (
+				F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */,
+				F8FBFA572A71BA3A00CDC8C5 /* NRMAPayload.h */,
+				F8FBFA3C2A71A32400CDC8C5 /* Events */,
 				2B5815922A8192540031C4A6 /* NRMAAnalyticsConstants.h */,
 				02FF485A24DC615A00115469 /* NRMAAnalytics.h */,
 				02FF485824DC615900115469 /* NRMAAnalytics.mm */,
@@ -2599,11 +2628,11 @@
 				34544D122A3142F900B5A8D1 /* NRMAEventManager.h */,
 				34544D132A3142F900B5A8D1 /* NRMAEventManager.m */,
 				34544D2D2A32489C00B5A8D1 /* NRMAAnalyticEventProtocol.h */,
-				34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */,
-				34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */,
 				342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */,
 				342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */,
 				342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */,
+				F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */,
+				F8FBFB212A83CEDC00CDC8C5 /* Constants.h */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -3271,6 +3300,21 @@
 			path = "DistributedTesting-Tests";
 			sourceTree = "<group>";
 		};
+		F8FBFA3C2A71A32400CDC8C5 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */,
+				34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */,
+				F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */,
+				F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */,
+				F8FBFA862A7AE6A200CDC8C5 /* NRMANetworkErrorEvent.h */,
+				F8FBFA832A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m */,
+				F8FBFA642A78416F00CDC8C5 /* NRMAMobileEvent.h */,
+				F8FBFA612A78416300CDC8C5 /* NRMAMobileEvent.m */,
+			);
+			path = Events;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -3359,7 +3403,6 @@
 				02FF4A5324DC64D500115469 /* NRMAActivityTraceMeasurement.h in Headers */,
 				02FF4B0424DC8CB200115469 /* code_generators.h in Headers */,
 				02FF4A1B24DC648600115469 /* NRMAHarvestableHTTPTransactionGeneration.h in Headers */,
-				34EA78C82A39221E0071CC95 /* NRMACustomEvent.h in Headers */,
 				02FF4A2024DC648600115469 /* NRMAActivityTraceMeasurementCreator.h in Headers */,
 				02FF48A924DC61E900115469 /* NRMAWKWebViewInstrumentation.h in Headers */,
 				02FF4AB724DC653A00115469 /* NRMADEBUG_Reachability.h in Headers */,
@@ -3575,7 +3618,6 @@
 				02FF4B6924E3201400115469 /* NRMAActivityTraceMeasurement.h in Headers */,
 				02FF4B6A24E3201400115469 /* code_generators.h in Headers */,
 				02FF4B6B24E3201400115469 /* NRMAHarvestableHTTPTransactionGeneration.h in Headers */,
-				34EA78C92A39221E0071CC95 /* NRMACustomEvent.h in Headers */,
 				02FF4B6C24E3201400115469 /* NRMAActivityTraceMeasurementCreator.h in Headers */,
 				02FF4B6D24E3201400115469 /* NRMAWKWebViewInstrumentation.h in Headers */,
 				02FF4B6E24E3201400115469 /* NRMADEBUG_Reachability.h in Headers */,
@@ -4187,6 +4229,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0209AC9224E7393300E45C90 /* NRMAExceptionMetaDataTest.m in Sources */,
+				F8FBFA592A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */,
 				2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */,
 				F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */,
@@ -4240,6 +4283,7 @@
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
 				C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */,
 				0209ACA224E7393300E45C90 /* NRThreadInfoTest.m in Sources */,
+				F8FBFA5F2A78336200CDC8C5 /* TestNRMAPayload.m in Sources */,
 				0209ABF524E706FA00E45C90 /* NRGCDOverrideTest.m in Sources */,
 				0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */,
 				0209ACA124E7393300E45C90 /* NRUncaughtExceptionhandlerTests.m in Sources */,
@@ -4297,8 +4341,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8FBFA842A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */,
 				02FF4B1124E1CA0F00115469 /* NRMAAnalytics.h in Sources */,
 				02FF49CA24DC62B800115469 /* NRMAMetricSet.m in Sources */,
+				F8FBFA552A71BA2900CDC8C5 /* NRMAPayload.m in Sources */,
 				02FF48E324DC622700115469 /* NRMAExceptionhandlerConstants.m in Sources */,
 				02FF49DB24DC636100115469 /* NRMATimedTraceSegment.m in Sources */,
 				F6E79CF125A66887006277FB /* NRMATraceContext.mm in Sources */,
@@ -4384,6 +4430,7 @@
 				02FF48BD24DC61F600115469 /* NRMAActingClassUtils.m in Sources */,
 				02FF4A6724DC64E600115469 /* NRMAMethodMeasurementProducer.m in Sources */,
 				02FF47FB24DB56B100115469 /* NewRelicAgentInternal.m in Sources */,
+				F8FBFA622A78416300CDC8C5 /* NRMAMobileEvent.m in Sources */,
 				02FF4AB224DC652E00115469 /* NRMAExceptionHandler.m in Sources */,
 				02FF490E24DC624400115469 /* NRMACrashReport_Symbol.m in Sources */,
 				02FF491124DC624400115469 /* NRMACrashReport_Exception.m in Sources */,
@@ -4394,6 +4441,7 @@
 				02FF49AF24DC62B800115469 /* NRMAApplicationInformation.m in Sources */,
 				02FF4A4A24DC64D500115469 /* NRMANamedValueMeasurement.m in Sources */,
 				02FF4A7024DC64E600115469 /* NRMAMeasurementProducer.m in Sources */,
+				F8FBFB1F2A83CEBD00CDC8C5 /* Constants.m in Sources */,
 				2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */,
 				02FF49B824DC62B800115469 /* NRMADataToken.m in Sources */,
 				02FF482024DB5B8100115469 /* NRMAGestureProcessor.m in Sources */,
@@ -4413,6 +4461,7 @@
 				02FF48DA24DC622700115469 /* NRMATimestampContainer.m in Sources */,
 				02FF49AE24DC62B800115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF489C24DC61D200115469 /* NRMAURLSessionOverride.m in Sources */,
+				F8FBFA512A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */,
 				02FF49CB24DC62B800115469 /* NRMAHarvestableMetric.m in Sources */,
 				02FF489A24DC61D200115469 /* NRMAURLSessionTaskDelegate.m in Sources */,
 				02FF482224DB5B8100115469 /* NRMATableViewIntrumentation.m in Sources */,
@@ -4512,10 +4561,12 @@
 				0256580D24EB19BF00FE3125 /* NRURLSessionTaskOverrideTests.m in Sources */,
 				0256580E24EB19BF00FE3125 /* NRMAAppTokenTest.m in Sources */,
 				0256580F24EB19BF00FE3125 /* TestContextAdapter.mm in Sources */,
+				F8FBFA5A2A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				0256581024EB19BF00FE3125 /* NRMAConnectionTest.m in Sources */,
 				0256581124EB19BF00FE3125 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0256581224EB19BF00FE3125 /* APINetworkNoticeTest.m in Sources */,
 				0256581324EB19BF00FE3125 /* NRMADeviceInformationTests.m in Sources */,
+				F8FBFA602A78336200CDC8C5 /* TestNRMAPayload.m in Sources */,
 				0256581424EB19BF00FE3125 /* TestUICollectionViewInstrumentation.m in Sources */,
 				0256581524EB19BF00FE3125 /* NRNSURLConnectionSupportTests.m in Sources */,
 				0256581624EB19BF00FE3125 /* APIMethodTraceTest.m in Sources */,
@@ -4624,6 +4675,7 @@
 				02FF4C0124E3201400115469 /* NRMAHarvestableVitals.m in Sources */,
 				02FF4C0224E3201400115469 /* NRMAHTTPTransactions.m in Sources */,
 				02FF4C0424E3201400115469 /* NRMAMachineMeasurementConsumer.m in Sources */,
+				F8FBFA632A78416300CDC8C5 /* NRMAMobileEvent.m in Sources */,
 				02FF4C0524E3201400115469 /* NRMAMetric.m in Sources */,
 				02FF4C0624E3201400115469 /* NRMAInteractionHistory.c in Sources */,
 				02FF4C0724E3201400115469 /* NRMAActivityNameGenerator.m in Sources */,
@@ -4677,11 +4729,13 @@
 				02FF4C3524E3201400115469 /* NRMACrashReport_Library.m in Sources */,
 				2BF42C6728B80B82006E9C27 /* NRMASysctlBinding.c in Sources */,
 				02FF4C3624E3201400115469 /* NRMAHarvestable.m in Sources */,
+				F8FBFA852A7AE68C00CDC8C5 /* NRMANetworkErrorEvent.m in Sources */,
 				02FF4C3724E3201400115469 /* NRMAHarvestData.m in Sources */,
 				02FF4C3824E3201400115469 /* NRMANonARCMethods.m in Sources */,
 				02FF4C3924E3201400115469 /* NRMACPUVitals.m in Sources */,
 				02FF4C3A24E3201400115469 /* NRMAActivityTrace.m in Sources */,
 				34DB253A2824791B00A5BC45 /* NRMAURLTransformer.m in Sources */,
+				F8FBFB202A83CEBD00CDC8C5 /* Constants.m in Sources */,
 				02FF4C3B24E3201400115469 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				02FF4C3C24E3201400115469 /* NRMACrashReport_SignalInfo.m in Sources */,
 				02FF4C3E24E3201400115469 /* NRMARetryTracker.m in Sources */,
@@ -4736,6 +4790,7 @@
 				02FF4C7224E3201400115469 /* NRMAGestureRecognizerInstrumentation.m in Sources */,
 				02FF4C7324E3201400115469 /* NRMAReachability.m in Sources */,
 				02FF4C7424E3201400115469 /* NRMAMeasurementEngine.m in Sources */,
+				F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */,
 				02FF4C7524E3201400115469 /* NRMAAssociate.m in Sources */,
 				02FF4C7624E3201400115469 /* NRMANetworkFacade.mm in Sources */,
 				02FF4C7724E3201400115469 /* NRMAThreadLocalStore.m in Sources */,
@@ -4753,6 +4808,7 @@
 				02FF4C8224E3201400115469 /* NRMAActivityTraceMeasurementProducer.m in Sources */,
 				02FF4C8324E3201400115469 /* NRMAExceptionMetaDataStore.m in Sources */,
 				02FF4C8424E3201400115469 /* NRMASummaryMeasurementConsumer.m in Sources */,
+				F8FBFA562A71BA2900CDC8C5 /* NRMAPayload.m in Sources */,
 				02FF4C8524E3201400115469 /* NRMAFlags.m in Sources */,
 				02FF4C8624E3201400115469 /* NRMACrashDataWriter.m in Sources */,
 				02FF4C8724E3201400115469 /* NRGCDOverride.m in Sources */,
