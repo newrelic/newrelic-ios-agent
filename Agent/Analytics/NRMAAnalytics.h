@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "NRMAHarvestAware.h"
 #import "NRTimer.h"
+#import "NRMAUserActionBuilder.h"
 #import "NRMANetworkRequestData.h"
 #import "NRMANetworkResponseData.h"
 #import "NRMAPayload.h"
@@ -45,6 +46,7 @@
         withAttributes:(NSDictionary*)attributes;
 
 - (BOOL) addInteractionEvent:(NSString*)name interactionDuration:(double)duration_secs;
+- (BOOL) recordUserAction:(NRMAUserAction *)userAction;
 
 
 
