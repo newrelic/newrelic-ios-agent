@@ -22,8 +22,39 @@
 - (id)initWithAttributeValidator:(BlockAttributeValidator*)validator {
     self = [super init];
     if (self) {
-        attributeDict = [[NSMutableDictionary alloc] init];
-        privateAttributeDict = [[NSMutableDictionary alloc] init];
+
+        // Load public attributes from file.
+        NSError *error;
+        NSData *existingData = [[NRMASAM attributeFilePath] dataUsingEncoding:NSUTF8StringEncoding];
+        if (existingData != nil) {
+            attributeDict = [[NSJSONSerialization JSONObjectWithData:existingData options:kNilOptions error:&error] mutableCopy];
+
+            if (error == nil) {
+                NRLOG_VERBOSE(@"Loaded %lu public attributes from file.", (unsigned long)attributeDict.count);
+            }
+            else {
+                NRLOG_ERROR(@"Error loading public attributes from file: %@", error);
+            }
+        }
+        if (!attributeDict) {
+            attributeDict = [[NSMutableDictionary alloc] init];
+        }
+
+        // Load private attributes from file.
+        NSData *existingPrivateData = [[NRMASAM privateAttributeFilePath] dataUsingEncoding:NSUTF8StringEncoding];
+        if (existingPrivateData != nil) {
+            privateAttributeDict = [[NSJSONSerialization JSONObjectWithData:existingPrivateData options:kNilOptions error:&error] mutableCopy];
+
+            if (error == nil) {
+                NRLOG_VERBOSE(@"Loaded %lu private attributes from file.", (unsigned long)privateAttributeDict.count);
+            }
+            else {
+                NRLOG_ERROR(@"Error loading private attributes from file: %@", error);
+            }
+        }
+        if (!privateAttributeDict) {
+            privateAttributeDict = [[NSMutableDictionary alloc] init];
+        }
 
         attributeValidator = validator;
     }
@@ -40,10 +71,11 @@
         value = @(([(NRMABool*) value value]));
     }
 
-    [privateAttributeDict setValue:value forKey:name];
-
-    [self persistToDisk];
-
+    @synchronized (privateAttributeDict) {
+        [privateAttributeDict setValue:value forKey:name];
+        
+        [self persistPrivateAttributesToDisk];
+    }
     return true;
 }
 
@@ -70,9 +102,10 @@
         value = @(([(NRMABool*) value value]));
     }
 
-    [attributeDict setValue:value forKey:name];
-
-    [self persistToDisk];
+    @synchronized (attributeDict) {
+        [attributeDict setValue:value forKey:name];
+        [self persistToDisk];
+    }
 
     return true;
 }
@@ -82,25 +115,27 @@
 }
 
 - (BOOL) removeSessionAttributeNamed:(NSString*)name {
-    id value = [attributeDict objectForKey:name];
-    [attributeDict removeObjectForKey:name];
-    [self persistToDisk];
-
-    if (value) {
-        return true;
-    }
-    else {
-        NRLOG_VERBOSE(@"Failed to remove Session Attribute - it does not exist.");
-
-        return false;
+    @synchronized (attributeDict) {
+        id value = [attributeDict objectForKey:name];
+        [attributeDict removeObjectForKey:name];
+        [self persistToDisk];
+        
+        if (value) {
+            return true;
+        }
+        else {
+            NRLOG_VERBOSE(@"Failed to remove Session Attribute - it does not exist.");
+            
+            return false;
+        }
     }
 }
 
 - (BOOL) removeAllSessionAttributes {
-    [attributeDict removeAllObjects];
-
-    [self persistToDisk];
-
+    @synchronized (attributeDict) {
+        [attributeDict removeAllObjects];
+        [self persistToDisk];
+    }
     return true;
 }
 
@@ -123,14 +158,17 @@
             } else if ([NewRelicInternalUtils isFloat:existingValue])  {
                 existingFloatValue = [existingValue floatValue];
             }
-            [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
-            [self persistToDisk];
-
+            @synchronized (attributeDict) {
+                [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
+                [self persistToDisk];
+            }
             return true;
         }
         else {
-            [attributeDict setValue:number forKey:name];
-            [self persistToDisk];
+            @synchronized (attributeDict) {
+                [attributeDict setValue:number forKey:name];
+                [self persistToDisk];
+            }
             return false;
         }
     }
@@ -138,10 +176,11 @@
     return false;
 }
 
+// Includes Public and Private Attributes
 - (NSString*) sessionAttributeJSONString {
 
     NSMutableDictionary *output = [attributeDict mutableCopy];
-   [output addEntriesFromDictionary:privateAttributeDict];
+    [output addEntriesFromDictionary:privateAttributeDict];
 
     NSError *error;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:output options:0 error:&error];
@@ -154,6 +193,21 @@
     return nil;
 }
 
+// Public Attributes Only
+- (NSString*) publicSessionAttributeJSONString {
+
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:attributeDict options:0 error:&error];
+    if (!jsonData) {
+        NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
+    }
+    else {
+        return( [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+    }
+    return nil;
+}
+
+// Private Attributes Only
 - (NSString*) privateSessionAttributeJSONString {
 
     NSError *error;
@@ -176,29 +230,42 @@
 }
 
 - (void) clearLastSessionsAnalytics {
-    [attributeDict removeAllObjects];
-    [privateAttributeDict removeAllObjects];
+    @synchronized (attributeDict) {
+        @synchronized (privateAttributeDict) {
+            [attributeDict removeAllObjects];
+            [privateAttributeDict removeAllObjects];
+        }
+    }
 
 }
 
 - (void) clearPersistedSessionAnalytics {
-    [attributeDict removeAllObjects];
-    [privateAttributeDict removeAllObjects];
+    @synchronized (attributeDict) {
+        @synchronized (privateAttributeDict) {
+            
+            [attributeDict removeAllObjects];
+            [privateAttributeDict removeAllObjects];
+            
+            NSError* error;
+            [[NSFileManager defaultManager] removeItemAtPath:[NRMASAM attributeFilePath] error:&error];
+            if (error) {
+                NRLOG_VERBOSE(@"Failed to clear Persisted Session Analytics w/ error = %@", error);
+            }
 
-    NSError* error;
-    [[NSFileManager defaultManager] removeItemAtPath:[NRMASAM attributeFilePath] error:&error];
-    if (error) {
-        NRLOG_VERBOSE(@"Failed to clear Persisted Session Analytics w/ error = %@", error);
+            [[NSFileManager defaultManager] removeItemAtPath:[NRMASAM privateAttributeFilePath] error:&error];
+            if (error) {
+                NRLOG_VERBOSE(@"Failed to clear Persisted Private Session Analytics w/ error = %@", error);
+            }
+        }
     }
 }
 
 - (BOOL) persistToDisk {
-    NSString* currentAttributes = [self sessionAttributeJSONString];
+    NSString* currentAttributes = [self publicSessionAttributeJSONString];
 
     NSData* data = [currentAttributes dataUsingEncoding:NSUTF8StringEncoding];
     if (data) {
         [data writeToFile:[NRMASAM attributeFilePath] atomically:true];
-
         return true;
     }
     else {

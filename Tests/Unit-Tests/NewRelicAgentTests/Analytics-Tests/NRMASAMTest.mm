@@ -10,6 +10,7 @@
 #import "NRMASAM.h"
 #import "NRMAAnalyticsConstants.h"
 #import "NRLogger.h"
+#import "NewRelicInternalUtils.h"
 
 @interface NRMASAMTest : XCTestCase
 {
@@ -231,12 +232,54 @@
     XCTAssertTrue([decode[@"userDefined0"] isEqualToString:@"userDefinedValue"]);
 }
 
-// TODO:
 - (void) testClearLastSessionsAnalytics {
+    NRMASAM *manager = [self samTest];
+    NSString *attribute = @"blarg";
+    NSString *attribute2 = @"blarg2";
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute2 value:@"blurg2"], @"Failed to successfully set session attribute");
+
+    [manager clearLastSessionsAnalytics];
+    NSString* attributes = [manager sessionAttributeJSONString];
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertEqual(decode.count, 0, @"Should have emptied session attributes.");
+
+
 }
 
-// TODO:
 - (void) testClearPersistedSessionAnalytics {
+    NRMASAM *manager = [self samTest];
+    NSString *attribute = @"blarg";
+    NSString *attribute2 = @"blarg2";
+
+    NSString *attribute3 = @"privateBlarg3";
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute2 value:@"blurg2"], @"Failed to successfully set session attribute");
+
+    XCTAssertTrue([manager setNRSessionAttribute:attribute3 value:@"blurg2"], @"Failed to successfully set private session attribute");
+
+
+    [manager clearPersistedSessionAnalytics];
+    NSString* attributes = [manager sessionAttributeJSONString];
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertEqual(decode.count, 0, @"Should have emptied session attributes.");
+
+
+    NSString *publicAttributePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],attributesFileName];
+    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:publicAttributePath], @"Data had value but it should be nil");
+
+
+    NSString *privateAttributePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],privateAttributesFileName];
+    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:privateAttributePath], @"Private Data had value but it should be nil");
+
 }
 
 @end
