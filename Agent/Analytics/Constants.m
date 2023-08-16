@@ -20,6 +20,7 @@ NSString * const kNRMA_RA_uuid               = @"uuid";
 NSString * const kNRMA_RA_sessionDuration    = @"sessionDuration";
 NSString * const kNRMA_RA_sessionElapsedTime = @"timeSinceLoad";
 NSString * const kNRMA_RA_payload            = @"payload";
+NSString * const kNRMA_RA_InteractionDuration = @"interactionDuration";
 NSString * const kNRMA_RA_osName             = @"osName";
 NSString * const kNRMA_RA_osVersion          = @"osVersion";
 NSString * const kNRMA_RA_osMajorVersion     = @"osMajorVersion";

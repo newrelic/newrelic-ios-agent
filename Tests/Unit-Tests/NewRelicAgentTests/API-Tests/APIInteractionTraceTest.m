@@ -112,6 +112,46 @@ BOOL NRMA__shouldCancelCurrentTrace(id __unsafe_unretained obj);
 
     [mockAgentInternal stopMocking];
 }
+
+- (void) testLastInteractionEvent
+{
+    id mockAgentInternal = [OCMockObject niceMockForClass:[NewRelicAgentInternal class]];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [[[[mockAgentInternal stub] classMethod]  andReturn:mockAgentInternal] sharedInstance];
+
+    [[[mockAgentInternal stub] andReturn:analytics] analyticsController];
+
+    NSString* kDefaultName = @"Hello World";
+    NR_START_NAMED_INTERACTION(kDefaultName);
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sleep(1);
+    });
+    [NRMATraceController completeActivityTrace];
+
+    [NRMATaskQueue synchronousDequeue];
+    XCTAssertNotNil(helper.result, @"a trace should be created");
+    XCTAssertTrue([helper.result isKindOfClass:[NRMAActivityTraceMeasurement class]], @"it should be an Activity measurement");
+
+    NSString* traceName = ((NRMAActivityTraceMeasurement*)helper.result).traceName;
+    NSString* expectedName = kDefaultName;
+    XCTAssertEqualObjects(traceName,expectedName, @"");
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"eventType"]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"Mobile"]);
+    XCTAssertTrue([decode[0][@"name"] isEqualToString:@"Hello World"]);
+
+    [mockAgentInternal stopMocking];
+}
+
 - (void) testInteractionTrace
 {
 

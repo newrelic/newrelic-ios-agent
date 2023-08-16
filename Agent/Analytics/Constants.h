@@ -19,6 +19,7 @@ extern NSString *const kNRMA_RA_uuid;
 extern NSString *const kNRMA_RA_sessionDuration;
 extern NSString *const kNRMA_RA_sessionElapsedTime;
 extern NSString *const kNRMA_RA_payload;
+extern NSString *const kNRMA_RA_InteractionDuration;
 extern NSString *const kNRMA_RA_osName;
 extern NSString *const kNRMA_RA_osVersion;
 extern NSString *const kNRMA_RA_osMajorVersion;
