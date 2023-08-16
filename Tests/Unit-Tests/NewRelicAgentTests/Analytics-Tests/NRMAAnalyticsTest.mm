@@ -324,6 +324,7 @@
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"testBreadcrumbs"]);
 }
 
+#if USE_INTEGRATED_EVENT_MANAGER
 - (void) testRecordUserAction {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
@@ -385,6 +386,7 @@
     XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Unknown"]);
 
 }
+#endif
 
 - (void) testRecordNilUserAction {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
