@@ -632,6 +632,36 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) addBreadcrumb:(NSString*)name
         withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
+    try {
+
+        if(!name.length) {
+            NRLOG_ERROR(@"Breadcrumb must be named.");
+            return NO;
+        }
+
+        NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
+                                                                      timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                      sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                                      withAttributeValidator:nil]; // Create a regular custom event with MobileBreadcrumb event type
+        if (event == nil) {
+            NRLOG_ERROR(@"Unable to create breadcrumb event");
+            return NO;
+        }
+        
+        [event addAttribute:@"name" value:name]; // Add the name as an attribute
+
+        [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            [event addAttribute:key value:obj];
+        }];
+        
+        return [_eventManager addEvent:event];
+    } catch (NSException *exception){
+        NRLOG_ERROR(@"Failed to add event: %@", exception.reason);
+        return NO;
+    } catch (...) {
+        NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.", name);
+        return NO;
+    }
     return NO;
 #else
     try {
