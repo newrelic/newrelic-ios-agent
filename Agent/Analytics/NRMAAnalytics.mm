@@ -28,6 +28,8 @@
 #import "NRMARequestEvent.h"
 #import "NRMAPayload.h"
 #import "NRMANetworkErrorEvent.h"
+#import "NRMASAM.h"
+#import "BlockAttributeValidator.h"
 
 //#define USE_INTEGRATED_EVENT_MANAGER 0
 
@@ -39,6 +41,7 @@ using namespace NewRelic;
     NSRegularExpression* __eventTypeRegex;
     
     NRMAEventManager *_eventManager;
+    NRMASAM *_sessionAttributeManager;
     NSDate *_sessionStartTime;
 }
 
@@ -96,30 +99,79 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         //They can be removed now and it shouldn't interfere with the generation
         //of these attributes if it should occur.
         NSString* attributes = [self sessionAttributeJSONString];
-        NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                               options:0
-                                                                     error:nil];
-        if (dictionary[kNRMA_RA_upgradeFrom]) {
-            _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
-        }
-        if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
-            _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
-        }
-        if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
-            _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
-        }
-        if (dictionary[kNRMA_RA_install]) {
-            _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
-        }
+        if (attributes != nil) {
+            NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                       options:0
+                                                                         error:nil];
+            if (dictionary[kNRMA_RA_upgradeFrom]) {
+                _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
+            }
+            if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
+                _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
+            }
+            if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
+                _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
+            }
+            if (dictionary[kNRMA_RA_install]) {
+                _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
+            }
 
-        //session duration is only valid for one session. This metric should be removed
-        //after the persistent attributes are loaded.   
-        if (dictionary[kNRMA_RA_sessionDuration]) {
-            _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
+            //session duration is only valid for one session. This metric should be removed
+            //after the persistent attributes are loaded.
+            if (dictionary[kNRMA_RA_sessionDuration]) {
+                _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
+            }
         }
         
 #if USE_INTEGRATED_EVENT_MANAGER
         _eventManager = [NRMAEventManager new];
+        _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+            if ([name length] == 0) {
+                NRLOG_ERROR(@"invalid attribute: name length = 0");
+                return false;
+            }
+            if ([name hasPrefix:@" "]) {
+                NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
+                return false;
+            }
+            // check if attribute name is reserved or attribute name matches reserved prefix.
+            for (NSString* key in reservedKeywords) {
+                if ([key isEqualToString:name]) {
+                    NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                    return false;
+                }
+                if ([name hasPrefix:key])  {
+                    NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                    return false;
+                }
+            }
+            // check if attribute name exceeds max length.
+            if ([name length] > maxNameLength) {
+                NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
+                return false;
+            }
+            return true;
+
+        } valueValidator:^BOOL(id value) {
+            if ([value isKindOfClass:[NSString class]]) {
+                if ([(NSString*)value length] == 0) {
+                    NRLOG_ERROR(@"invalid attribute: value length = 0");
+                    return false;
+                }
+                else if ([(NSString*)value length] >= maxValueSizeBytes) {
+                    NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
+                    return false;
+                }
+            }
+            if (value == nil) {
+                NRLOG_ERROR(@"invalid attribute: value cannot be nil");
+                return false;
+            }
+
+            return true;
+        } andEventTypeValidator:^BOOL(NSString *eventType) {
+            return YES;
+        }]];
 #endif
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
@@ -408,7 +460,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setLastInteraction:(NSString*)name {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setLastInteraction:name];
 #else
     return [self setNRSessionAttribute:kNRMA_RA_lastInteraction
                                  value:name];
@@ -417,7 +469,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setNRSessionAttribute:name value:value];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
@@ -477,7 +529,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setSessionAttribute:name value:value persistent:isPersistent];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
@@ -519,7 +571,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setSessionAttribute:name value:value persistent:true];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
@@ -557,7 +609,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setUserId:(NSString *)userId {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager setUserId:userId];
 #else
     return [self setSessionAttribute:@"userId"
                                value:userId
@@ -567,7 +619,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) removeSessionAttributeNamed:(NSString*)name {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager removeSessionAttributeNamed:name];
 #else
     try {
         return _analyticsController->removeSessionAttribute(name.UTF8String);
@@ -582,7 +634,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 - (BOOL) removeAllSessionAttributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager removeAllSessionAttributes];
 #else
     try {
         return _analyticsController->clearSessionAttributes();
@@ -781,7 +833,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number
 {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager incrementSessionAttribute:name value:number persistent: false];
 #else
     if ([NewRelicInternalUtils isInteger:number]) {
     return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue]); //has internal exception handling
@@ -795,7 +847,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return NO;
+    return [_sessionAttributeManager incrementSessionAttribute:name value:number persistent:persistent];
 #else
     if ([NewRelicInternalUtils isInteger:number]) {
         return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number integerValue],(bool)persistent); //has internal exception handling.
@@ -829,6 +881,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (NSString*) sessionAttributeJSONString {
+#if USE_INTEGRATED_EVENT_MANAGER
+    return [_sessionAttributeManager sessionAttributeJSONString];
+#else
     try {
     auto attributes = _analyticsController->getSessionAttributeJSON();
     std::stringstream stream;
@@ -840,8 +895,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRLOG_VERBOSE(@ "Failed to generate attributes json.");
     }
     return nil;
+#endif
 }
 + (NSString*) getLastSessionsAttributes {
+#if USE_INTEGRATED_EVENT_MANAGER
+    return [NRMASAM getLastSessionsAttributes];
+#else
     try {
     auto attributes = AnalyticsController::fetchDuplicatedAttributes([self attributeDupStore], YES);
     std::stringstream stream;
@@ -858,6 +917,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRLOG_VERBOSE(@"failed to generate session attribute json.");
     }
     return nil;
+#endif
 }
 + (NSString*) getLastSessionsEvents{
     try {
@@ -897,6 +957,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 
 - (void) clearLastSessionsAnalytics {
+#if USE_INTEGRATED_EVENT_MANAGER
+    [_sessionAttributeManager clearLastSessionsAnalytics];
+#else
     try {
         _analyticsController->clearAttributesDuplicationStore();
         _analyticsController->clearEventsDuplicationStore();
@@ -905,6 +968,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     } catch (...) {
         NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs.");
     }
+#endif
 }
 
 //Harvest Aware methods
@@ -940,4 +1004,33 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [harvestableAnalytics release];
     }
 }
+
++ (NSArray<NSString*>*) reservedKeywords {
+    return [NSArray arrayWithObjects:
+            kNRMA_RA_eventType,
+            kNRMA_RA_type,
+            kNRMA_RA_timestamp,
+            kNRMA_RA_category,
+            kNRMA_RA_accountId,
+            kNRMA_RA_appId,
+            kNRMA_RA_appName,
+            kNRMA_RA_uuid,
+            kNRMA_RA_sessionDuration,
+            kNRMA_RA_osName,
+            kNRMA_RA_osVersion,
+            kNRMA_RA_osMajorVersion,
+            kNRMA_RA_deviceManufacturer,
+            kNRMA_RA_deviceModel,
+            kNRMA_RA_carrier,
+            kNRMA_RA_newRelicVersion,
+            kNRMA_RA_memUsageMb,
+            kNRMA_RA_sessionId,
+            kNRMA_RA_install,
+            kNRMA_RA_upgradeFrom,
+            kNRMA_RA_platform,
+            kNRMA_RA_platformVersion,
+            kNRMA_RA_lastInteraction
+            ,nil];
+}
+
 @end

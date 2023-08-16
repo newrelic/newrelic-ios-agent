@@ -54,9 +54,13 @@
 - (void) clearLastSessionsAnalytics;
 
 
-//this uitilizes setSessionAttribute:value: which validates the user input 'name'.
+//this utilizes setSessionAttribute:value: which validates the user input 'name'.
 - (BOOL) setLastInteraction:(NSString*)name;
 
 //private NR attribute settings
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value;
+
+
++ (NSArray<NSString*>*) reservedKeywords;
+
 @end
