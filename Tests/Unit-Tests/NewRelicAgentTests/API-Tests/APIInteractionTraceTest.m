@@ -143,11 +143,12 @@ BOOL NRMA__shouldCancelCurrentTrace(id __unsafe_unretained obj);
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                       options:0
                                                         error:nil];
+    NSUInteger last = decode.count-1;
     XCTAssertNotNil(decode);
-    XCTAssertNotNil(decode[0]);
-    XCTAssertNotNil(decode[0][@"eventType"]);
-    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"Mobile"]);
-    XCTAssertTrue([decode[0][@"name"] isEqualToString:@"Hello World"]);
+    XCTAssertNotNil(decode[last]);
+    XCTAssertNotNil(decode[last][@"eventType"]);
+    XCTAssertTrue([decode[last][@"eventType"] isEqualToString:@"Mobile"]);
+    XCTAssertTrue([decode[last][@"name"] isEqualToString:kDefaultName]);
 
     [mockAgentInternal stopMocking];
 }
