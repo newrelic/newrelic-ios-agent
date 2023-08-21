@@ -834,7 +834,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number
 {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager incrementSessionAttribute:name value:number persistent: false];
+    return [_sessionAttributeManager incrementSessionAttribute:name value:number];
 #else
     if ([NewRelicInternalUtils isInteger:number]) {
     return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue]); //has internal exception handling
@@ -845,22 +845,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 #endif
 }
-
-- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager incrementSessionAttribute:name value:number persistent:persistent];
-#else
-    if ([NewRelicInternalUtils isInteger:number]) {
-        return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number integerValue],(bool)persistent); //has internal exception handling.
-    } else if ([NewRelicInternalUtils isFloat:number]) {
-    return _analyticsController->incrementSessionAttribute([name UTF8String], [number floatValue],(bool)persistent); //has internal exception handling.
-    } else {
-        return NO;
-    }
-#endif
-}
-
-
 
 - (NSString*) analyticsJSONString {
 #if USE_INTEGRATED_EVENT_MANAGER
