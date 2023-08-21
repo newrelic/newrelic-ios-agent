@@ -77,7 +77,7 @@
 
         [self persistPrivateAttributesToDisk];
     }
-    return true;
+    return YES;
 }
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
@@ -90,11 +90,11 @@
 
     if (!(validAttribute && validValue)) {
         NRLOG_VERBOSE(@"Failed to create attribute named %@", name);
-        return false;
+        return NO;
     }
     if (attributeDict.count >= kNRMA_Attrib_Max_Number_Attributes) {
         NRLOG_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
-        return false;
+        return NO;
     }
 
     if([value isKindOfClass:[NRMABool class]]) {
@@ -106,7 +106,7 @@
         [self persistToDisk];
     }
 
-    return true;
+    return YES;
 }
 
 - (BOOL) setUserId:(NSString *)userId {
@@ -120,12 +120,12 @@
         if (value) {
             [attributeDict removeObjectForKey:name];
             [self persistToDisk];
-            return true;
+            return YES;
         }
         else {
             NRLOG_VERBOSE(@"Failed to remove Session Attribute - it does not exist.");
 
-            return false;
+            return NO;
         }
     }
 }
@@ -135,79 +135,48 @@
         [attributeDict removeAllObjects];
         [self persistToDisk];
     }
-    return true;
+    return YES;
 }
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number {
     id existingValue = [attributeDict objectForKey:name];
 
-    if (existingValue && [existingValue isKindOfClass:[NSNumber class]]) {
+    NSNumber *newValue;
 
-        if ([NewRelicInternalUtils isInteger:number] || ([NewRelicInternalUtils isFloat:number])) {
-            if ([NewRelicInternalUtils isInteger:number] ) {
-                unsigned long long incrementValue = [number integerValue];
-
-                // Handle case where existing value is integer and increment is integer.
-                if ([NewRelicInternalUtils isInteger:existingValue] ) {
-                    unsigned long long existingIntValue =  [existingValue integerValue];
-
-                    @synchronized (attributeDict) {
-                        [attributeDict setValue:@(existingIntValue + incrementValue) forKey:name];
-                        [self persistToDisk];
-                    }
-                    return true;
-                    // Handle case where existing value is float and increment is integer.
-                } else if ([NewRelicInternalUtils isFloat:existingValue])  {
-                    float existingFloatValue = [existingValue floatValue];
-
-                    @synchronized (attributeDict) {
-                        [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
-                        [self persistToDisk];
-                    }
-                    return true;
-                }
-
-            } else if ([NewRelicInternalUtils isFloat:number])  {
-                float incrementValue =  [number floatValue];
-
-                if (existingValue && [existingValue isKindOfClass:[NSNumber class]]) {
-                    // Handle case where existing value is float and increment is integer.
-                    if ([NewRelicInternalUtils isInteger:existingValue] ) {
-                        unsigned long long existingIntValue = [existingValue integerValue];
-
-                        @synchronized (attributeDict) {
-                            [attributeDict setValue:@(existingIntValue + incrementValue) forKey:name];
-                            [self persistToDisk];
-                        }
-                        return true;
-                        // Handle case where existing value is integer and increment is float.
-                    } else if ([NewRelicInternalUtils isFloat:existingValue])  {
-                        float existingFloatValue = [existingValue floatValue];
-
-                        @synchronized (attributeDict) {
-                            [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
-                            [self persistToDisk];
-                        }
-                        return true;
-                    }
-
-                }
-            }
-        }
-        else {
-            NRLOG_ERROR(@"incrementSessionAttribute failed. Value passed must be NSNumber of type int or float.");
-        }
-    }
-    // If there is no existing value for this integer or float, set initial attribute value to number.
-    else {
-        @synchronized (attributeDict) {
-            [attributeDict setValue:number forKey:name];
-            [self persistToDisk];
-        }
-        return false;
+    // if the existing value doesn't exist, the user meant to call setAttribute.
+    // Should this return NO, to indicate the attribute doesn't exist?
+    if (!existingValue) {
+        return [self setAttribute:name value:number];
     }
 
-    return false;
+    // cannot increment with non number values
+    if (![NewRelicInternalUtils isInteger:number] && ![NewRelicInternalUtils isFloat:number]) {
+        return NO;
+    }
+
+    // Cannot increment a non-number attribute
+    if (![existingValue isKindOfClass:[NSNumber class]] ||
+        (![NewRelicInternalUtils isInteger:existingValue] && ![NewRelicInternalUtils isFloat:existingValue])) {
+        return NO;
+    }
+
+    if ([NewRelicInternalUtils isInteger:existingValue]) {
+        unsigned long long incrementValueLongLong = [number unsignedLongLongValue];
+        newValue = [NSNumber numberWithUnsignedLongLong:[existingValue unsignedLongLongValue] + incrementValueLongLong];
+    } else if ([NewRelicInternalUtils isFloat:existingValue]) {
+        double incrementValueDouble = [number doubleValue];
+        newValue = [NSNumber numberWithDouble:[existingValue doubleValue] + incrementValueDouble];
+    } else {
+        // something that's not an integer or a floating point number got through
+        return NO;
+    }
+
+    @synchronized (attributeDict) {
+        [attributeDict setValue:newValue forKey:name];
+        [self persistToDisk];
+    }
+
+    return YES;
 }
 
 // Includes Public and Private Attributes
@@ -300,10 +269,10 @@
     NSData* data = [currentAttributes dataUsingEncoding:NSUTF8StringEncoding];
     if (data) {
         [data writeToFile:[NRMASAM attributeFilePath] atomically:true];
-        return true;
+        return YES;
     }
     else {
-        return false;
+        return NO;
     }
 }
 
@@ -314,10 +283,10 @@
     if (data) {
         [data writeToFile:[NRMASAM privateAttributeFilePath] atomically:true];
 
-        return true;
+        return YES;
     }
     else {
-        return false;
+        return NO;
     }
 }
 

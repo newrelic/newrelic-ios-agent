@@ -12,6 +12,7 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAAnalytics.h"
 #import "Constants.h"
+#import "NRMABool.h"
 
 @interface NRMASAMTest : XCTestCase
 {
@@ -25,45 +26,45 @@
     return [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
         if ([name length] == 0) {
             NRLOG_ERROR(@"invalid attribute: name length = 0");
-            return false;
+            return NO;
         }
         if ([name hasPrefix:@" "]) {
             NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
-            return false;
+            return NO;
         }
         // check if attribute name is reserved or attribute name matches reserved prefix.
         for (NSString* key in [NRMAAnalytics reservedKeywords]) {
             if ([key isEqualToString:name]) {
                 NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
-                return false;
+                return NO;
             }
             if ([key hasPrefix:name])  {
                 NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
-                return false;
+                return NO;
             }
         }
         // check if attribute name exceeds max length.
         if ([name length] > kNRMA_Attrib_Max_Name_Length) {
             NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
-            return false;
+            return NO;
         }
-        return true;
+        return YES;
 
     } valueValidator:^BOOL(id value) {
         if ([value isKindOfClass:[NSString class]]) {
             unsigned long length = [(NSString*)value length];
             if (length == 0) {
                 NRLOG_ERROR(@"invalid attribute: value length = 0");
-                return false;
+                return NO;
             }
             else if (length >= kNRMA_Attrib_Max_Value_Size_Bytes) {
                 NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
-                return false;
+                return NO;
             }
         }
         if (value == nil) {
             NRLOG_ERROR(@"invalid attribute: value cannot be nil");
-            return false;
+            return NO;
         }
 
         return true;
@@ -117,7 +118,7 @@
     XCTAssertTrue([manager setSessionAttribute:attribute value:@(initialValue)], @"Failed to successfully set session attribute");
 
     double incrementValue = 1.23;
-    [manager incrementSessionAttribute:attribute value:@(incrementValue)];
+    XCTAssertTrue([manager incrementSessionAttribute:attribute value:@(incrementValue)]);
 
     NSString* attributes = [manager sessionAttributeJSONString];
 
@@ -339,5 +340,72 @@
 
 }
 
+- (void)testIncrementIntegerValueWithDouble {
+    NRMASAM *manager = [self samTest];
+    NSString *attribute = @"incrementableAttribute";
+    unsigned long long initialIntegerValue = 24;
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@(initialIntegerValue)], @"Failed to successfully set session attribute");
+
+    double incrementValue = 1.23;
+    XCTAssertTrue([manager incrementSessionAttribute:attribute value:@(incrementValue)]);
+
+    NSString* attributes = [manager sessionAttributeJSONString];
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    unsigned long long newValue =  [decode[attribute] unsignedLongLongValue];
+
+    XCTAssertEqualWithAccuracy(newValue, 25, 0.01);
+}
+
+- (void)testIncrementDoubleValueWithInteger {
+    NRMASAM *manager = [self samTest];
+    NSString *attribute = @"incrementableAttribute";
+    double initialDoubleValue = 1.2;
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@(initialDoubleValue)], @"Failed to successfully set session attribute");
+
+    unsigned long long incrementValue = 3;
+    [manager incrementSessionAttribute:attribute value:@(incrementValue)];
+
+    NSString* attributes = [manager sessionAttributeJSONString];
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    double newValue =  [decode[attribute] doubleValue];
+
+    XCTAssertEqualWithAccuracy(newValue, 4.2, 0.01);
+}
+
+- (void)testCantIncrementStrings {
+    NRMASAM *manager = [self samTest];
+    NSString *attribute = @"unincrementableAttribute";
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@"Should not be incremented"], @"Failed to successfully set session attribute");
+
+    XCTAssertFalse([manager incrementSessionAttribute:attribute value:@(20)]);
+}
+
+- (void)testCantIncrementBool {
+    NRMASAM *manager = [self samTest];
+    NSString *attribute = @"unincrementableAttribute";
+    NRMABool *initialValue = [[NRMABool alloc] initWithBOOL:NO];
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:initialValue], @"Failed to successfully set session attribute");
+
+    XCTAssertFalse([manager incrementSessionAttribute:attribute value:@(20)]);
+}
+
+- (void)testCantAddNonNumberToNumber {
+    NRMASAM *manager = [self samTest];
+    NSString *attribute = @"incrementableAttributeBadValue";
+
+    double initialDoubleValue = 1.2;
+
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@(initialDoubleValue)], @"Failed to successfully set session attribute");
+
+    XCTAssertFalse([manager incrementSessionAttribute:attribute value:[NSNumber numberWithBool:YES]]);
+}
 
 @end
