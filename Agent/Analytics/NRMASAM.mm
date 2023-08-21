@@ -81,22 +81,20 @@
 }
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
-    return [self setAttribute:name value:value validate:true];
+    return [self setAttribute:name value:value];
 }
 
--  (BOOL) setAttribute:(NSString*)name value:(id)value validate:(BOOL)validate {
-    if (validate) {
-        BOOL validAttribute = [attributeValidator nameValidator:name];
-        BOOL validValue = [attributeValidator valueValidator:value];
+-  (BOOL) setAttribute:(NSString*)name value:(id)value {
+    BOOL validAttribute = [attributeValidator nameValidator:name];
+    BOOL validValue = [attributeValidator valueValidator:value];
 
-        if (!(validAttribute && validValue)) {
-            NRLOG_VERBOSE(@"Failed to create attribute named %@", name);
-            return false;
-        }
-        if (attributeDict.count >= kNRMA_Attrib_Max_Number_Attributes) {
-            NRLOG_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
-            return false;
-        }
+    if (!(validAttribute && validValue)) {
+        NRLOG_VERBOSE(@"Failed to create attribute named %@", name);
+        return false;
+    }
+    if (attributeDict.count >= kNRMA_Attrib_Max_Number_Attributes) {
+        NRLOG_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
+        return false;
     }
 
     if([value isKindOfClass:[NRMABool class]]) {
