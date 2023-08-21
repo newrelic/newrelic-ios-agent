@@ -141,35 +141,70 @@
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number {
     id existingValue = [attributeDict objectForKey:name];
 
-    if ([NewRelicInternalUtils isInteger:number] || ([NewRelicInternalUtils isFloat:number])) {
-        float incrementValue = 0;
-        if ([NewRelicInternalUtils isInteger:number] ) {
-            unsigned long long incrementValueLongLong = (unsigned long long)[number integerValue];
-            incrementValue = (float) incrementValueLongLong;
-        } else if ([NewRelicInternalUtils isFloat:number])  {
-            incrementValue =  [number floatValue];
-        }
-        if (existingValue && [existingValue isKindOfClass:[NSNumber class]]) {
-            float existingFloatValue = 0;
+    if (existingValue && [existingValue isKindOfClass:[NSNumber class]]) {
 
-            if ([NewRelicInternalUtils isInteger:existingValue] ) {
-                existingFloatValue = (float) [existingValue integerValue];
-            } else if ([NewRelicInternalUtils isFloat:existingValue])  {
-                existingFloatValue = [existingValue floatValue];
+        if ([NewRelicInternalUtils isInteger:number] || ([NewRelicInternalUtils isFloat:number])) {
+            if ([NewRelicInternalUtils isInteger:number] ) {
+                unsigned long long incrementValue = [number integerValue];
+
+                // Handle case where existing value is integer and increment is integer.
+                if ([NewRelicInternalUtils isInteger:existingValue] ) {
+                    unsigned long long existingIntValue =  [existingValue integerValue];
+
+                    @synchronized (attributeDict) {
+                        [attributeDict setValue:@(existingIntValue + incrementValue) forKey:name];
+                        [self persistToDisk];
+                    }
+                    return true;
+                    // Handle case where existing value is float and increment is integer.
+                } else if ([NewRelicInternalUtils isFloat:existingValue])  {
+                    float existingFloatValue = [existingValue floatValue];
+
+                    @synchronized (attributeDict) {
+                        [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
+                        [self persistToDisk];
+                    }
+                    return true;
+                }
+
+            } else if ([NewRelicInternalUtils isFloat:number])  {
+                float incrementValue =  [number floatValue];
+
+                if (existingValue && [existingValue isKindOfClass:[NSNumber class]]) {
+                    // Handle case where existing value is float and increment is integer.
+                    if ([NewRelicInternalUtils isInteger:existingValue] ) {
+                        unsigned long long existingIntValue = [existingValue integerValue];
+
+                        @synchronized (attributeDict) {
+                            [attributeDict setValue:@(existingIntValue + incrementValue) forKey:name];
+                            [self persistToDisk];
+                        }
+                        return true;
+                        // Handle case where existing value is integer and increment is float.
+                    } else if ([NewRelicInternalUtils isFloat:existingValue])  {
+                        float existingFloatValue = [existingValue floatValue];
+
+                        @synchronized (attributeDict) {
+                            [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
+                            [self persistToDisk];
+                        }
+                        return true;
+                    }
+
+                }
             }
-            @synchronized (attributeDict) {
-                [attributeDict setValue:@(existingFloatValue + incrementValue) forKey:name];
-                [self persistToDisk];
-            }
-            return true;
         }
         else {
-            @synchronized (attributeDict) {
-                [attributeDict setValue:number forKey:name];
-                [self persistToDisk];
-            }
-            return false;
+            NRLOG_ERROR(@"incrementSessionAttribute failed. Value passed must be NSNumber of type int or float.");
         }
+    }
+    // If there is no existing value for this integer or float, set initial attribute value to number.
+    else {
+        @synchronized (attributeDict) {
+            [attributeDict setValue:number forKey:name];
+            [self persistToDisk];
+        }
+        return false;
     }
 
     return false;
