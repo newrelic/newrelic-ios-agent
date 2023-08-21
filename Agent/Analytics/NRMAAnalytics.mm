@@ -135,7 +135,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 return false;
             }
             // check if attribute name is reserved or attribute name matches reserved prefix.
-            for (NSString* key in reservedKeywords) {
+            for (NSString* key in [NRMAAnalytics reservedKeywords]) {
                 if ([key isEqualToString:name]) {
                     NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
                     return false;
@@ -146,7 +146,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 }
             }
             // check if attribute name exceeds max length.
-            if ([name length] > maxNameLength) {
+            if ([name length] > kNRMA_Attrib_Max_Name_Length) {
                 NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
                 return false;
             }
@@ -158,7 +158,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                     NRLOG_ERROR(@"invalid attribute: value length = 0");
                     return false;
                 }
-                else if ([(NSString*)value length] >= maxValueSizeBytes) {
+                else if ([(NSString*)value length] >= kNRMA_Attrib_Max_Value_Size_Bytes) {
                     NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
                     return false;
                 }
@@ -529,7 +529,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager setSessionAttribute:name value:value persistent:isPersistent];
+    // All values are persisted
+    return [_sessionAttributeManager setSessionAttribute:name value:value];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
@@ -571,7 +572,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
 #if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager setSessionAttribute:name value:value persistent:true];
+    return [_sessionAttributeManager setSessionAttribute:name value:value];
 #else
     try {
         if ([value isKindOfClass:[NSNumber class]]) {
