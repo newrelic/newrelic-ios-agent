@@ -34,12 +34,12 @@
     [super setUp];
     [NRLogger setLogLevels:NRLogLevelNone];
     /*  FIXME: don't use PersistentEventsStore/PersistentAttributeStore atm
-    const char* dupAttributeStoreName = NewRelic::AnalyticsController::getAttributeDupStoreName();
-    const char* dupEventStoreName = NewRelic::AnalyticsController::getEventDupStoreName();
-    dupEventStore = new NewRelic::PersistentEventsStore{[NRMAAnalytics getDBStorePath].UTF8String,dupEventStoreName};
-    dupAttribStore = new NewRelic::PersistentAttributeStore{[NRMAAnalytics getStorePath].UTF8String,dupAttributeStoreName};
-    */
-        [NRMAAnalytics clearDuplicationStores];
+     const char* dupAttributeStoreName = NewRelic::AnalyticsController::getAttributeDupStoreName();
+     const char* dupEventStoreName = NewRelic::AnalyticsController::getEventDupStoreName();
+     dupEventStore = new NewRelic::PersistentEventsStore{[NRMAAnalytics getDBStorePath].UTF8String,dupEventStoreName};
+     dupAttribStore = new NewRelic::PersistentAttributeStore{[NRMAAnalytics getStorePath].UTF8String,dupAttributeStoreName};
+     */
+    [NRMAAnalytics clearDuplicationStores];
 }
 
 - (void)tearDown {
@@ -51,43 +51,43 @@
 // Due to the nature of how NSJSONSerialization treats doubles,
 // two versions of this test are needed. The first works with the
 // new, integrated event manager. The second is the legacy version
-// which worked with the older, libMobileAgent version. 
+// which worked with the older, libMobileAgent version.
 - (void) testLargeNumbers {
-    
+
 #if USE_INTEGRATED_EVENT_MANAGER
-    
+
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
-               withAttributes:@{@"bigInt": @(LLONG_MAX),
-                       @"bigDouble": @(DBL_MAX)}];
+                                withAttributes:@{@"bigInt": @(LLONG_MAX),
+                                                 @"bigDouble": @(DBL_MAX)}];
 
     XCTAssertTrue(accepted);
 
     NSString* json = [analytics analyticsJSONString];
     NSError *error = nil;
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                       options:0
-                                                         error:&error];
+                                                      options:0
+                                                        error:&error];
 
     long long decodedInt = [decode[0][@"bigInt"] longLongValue];
     XCTAssertEqual(decodedInt, @(LLONG_MAX).longLongValue);
-    
+
     double decodedDouble = [decode[0][@"bigDouble"] doubleValue];
     XCTAssertEqual(decodedDouble, @(DBL_MAX).doubleValue);
-    
+
 #else
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
-               withAttributes:@{@"bigInt": @(LLONG_MAX),
-                       @"bigDouble": @(DBL_MAX)}];
+                                withAttributes:@{@"bigInt": @(LLONG_MAX),
+                                                 @"bigDouble": @(DBL_MAX)}];
 
     XCTAssertTrue(accepted);
 
-//1.79769313486232e+308
-//9223372036854775807
+    //1.79769313486232e+308
+    //9223372036854775807
     NSString* json = [analytics analyticsJSONString];
     XCTAssertTrue([json containsString:@"9223372036854775807"]);
     XCTAssertTrue([json containsString:@"1.79769313486232e+308"]);
@@ -106,13 +106,13 @@
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile?request=parameter";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
-    
+
     NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
                                                                                   httpMethod:@"GET"
                                                                               connectionType:@"wifi"
                                                                                  contentType:@"application/json"
                                                                                    bytesSent:100];
-    
+
     NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
                                                                                           bytesReceived:200
                                                                                            responseTime:[timer timeElapsedInSeconds]];
@@ -156,22 +156,22 @@
     NSString* responseBodyEncoded = @"aGVsbG9Xb3JsZA==";
 
     NSString* appDataHeader = @"ToatsBase64EncodedStringSeeThereIsAnEqualSignAtTheEnd=";
-    
+
     NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
                                                                                   httpMethod:@"GET"
                                                                               connectionType:@"wifi"
                                                                                  contentType:nil
                                                                                    bytesSent:200];
-    
+
     NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithHttpError:403
-                                                                                  bytesReceived:100
-                                                                                   responseTime:[timer timeElapsedInSeconds]
-                                                                            networkErrorMessage:@"unauthorized"
-                                                                            encodedResponseBody:responseBody
-                                                                                  appDataHeader:appDataHeader];
-    
+                                                                                 bytesReceived:100
+                                                                                  responseTime:[timer timeElapsedInSeconds]
+                                                                           networkErrorMessage:@"unauthorized"
+                                                                           encodedResponseBody:responseBody
+                                                                                 appDataHeader:appDataHeader];
+
     XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withPayload:nullptr]);
-    
+
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                       options:0
@@ -195,8 +195,8 @@
 
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertNil(decode[0][@"networkErrorCode"]);
-    
-    
+
+
 }
 
 - (void) testSetLastInteraction {
@@ -205,8 +205,8 @@
 
     NSString* json = [analytics sessionAttributeJSONString];
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                      options:0
-                                                        error:nil];
+                                                           options:0
+                                                             error:nil];
 
     XCTAssertNotNil(decode[@"lastInteraction"]);
     XCTAssertTrue([decode[@"lastInteraction"] isEqualToString:@"Display Banana"]);
@@ -220,25 +220,25 @@
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
-    
+
     NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
                                                                                   httpMethod:@"GET"
                                                                               connectionType:@"wifi"
                                                                                  contentType:@"application/json"
                                                                                    bytesSent:200];
-    
+
     NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithNetworkError:-1001
-                                                                                     bytesReceived:100
-                                                                                       responseTime:[timer timeElapsedInSeconds]
-                                                                               networkErrorMessage:@"network failure"];
-                                              
+                                                                                    bytesReceived:100
+                                                                                     responseTime:[timer timeElapsedInSeconds]
+                                                                              networkErrorMessage:@"network failure"];
+
 
     [analytics addNetworkErrorEvent:requestData withResponse:responseData withPayload:nullptr];
 
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                     options:0
-                                                       error:nil];
+                                                      options:0
+                                                        error:nil];
 
     XCTAssertNotNil(decode);
     XCTAssertNotNil(decode[0]);
@@ -261,9 +261,9 @@
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     BOOL didAddCustomEvent = [analytics addCustomEvent:@"newEventBlah"
-                    withAttributes:@{
-                                     @"blah":@"blah",
-                                     @"Winner":@1}];
+                                        withAttributes:@{
+        @"blah":@"blah",
+        @"Winner":@1}];
 
     XCTAssertTrue(didAddCustomEvent);
 
@@ -314,7 +314,7 @@
                                                       options:0
                                                         error:nil];
     XCTAssertTrue(decode[0][@"badAttribute"] == nil);
-    
+
 }
 
 - (void) testBreadcrumb {
@@ -322,7 +322,7 @@
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     XCTAssertFalse([analytics addBreadcrumb:@""
-                            withAttributes:nil]);
+                             withAttributes:nil]);
 
     XCTAssertFalse([analytics addBreadcrumb:nil
                              withAttributes:nil]);
@@ -351,8 +351,8 @@
     json = [analytics sessionAttributeJSONString];
 
     NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                           options:0
-                                                             error:nil];
+                                                               options:0
+                                                                 error:nil];
 
     XCTAssertTrue([dictionary[@"aBoolValue"] boolValue]);
 }
@@ -363,8 +363,8 @@
                                                                    @"thisIsFalse":@(NO)}];
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                           options:0
-                                                             error:nil];
+                                                      options:0
+                                                        error:nil];
 
     XCTAssertTrue([decode[0][@"thisIsTrue"] boolValue]);
     XCTAssertFalse([decode[0][@"thisIsFalse"] boolValue]);
@@ -372,15 +372,15 @@
 
 - (void) testRemoveAttribute {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    
+
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
-    
+
     [analytics removeSessionAttributeNamed:@"a"];
-    
+
     // [JK] I manually stepped through the above code and verified that the underlying analytics attribute store ends up adding both 'a' and 'b', and then removing 'a' leaving only 'b'.
     // TODO figure out how to programmatically confirm this. analyticsJSONString() returns an empty array
-    
+
 
     NSString *json = [analytics analyticsJSONString];
 #pragma clang diagnostic push
@@ -396,12 +396,12 @@
 
 - (void) testRemoveAllAttributes {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    
+
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
-    
+
     [analytics removeAllSessionAttributes];
-    
+
     // [JK] I manually stepped through the above code and verified that the underlying analytics attribute store ends up adding both 'a' and 'b', and then removing both.
     // TODO figure out how to programmatically confirm this. analyticsJSONString() returns an empty array
 
@@ -413,9 +413,9 @@
                                                             options:0
                                                               error:nil];
 #pragma clang diagnostic pop
-   
+
     //XCTAssertNil([decoded valueForKey:@"b"], "Expected result to NOT contain key 'b'");
-  //  XCTAssertNil([decoded valueForKey:@"a"], "Expected result to NOT contain key 'a'");
+    //  XCTAssertNil([decoded valueForKey:@"a"], "Expected result to NOT contain key 'a'");
 }
 
 - (void) testJSONInputs {
@@ -453,64 +453,64 @@
 
 - (void) testDuplicateStore {
     //todo: reenable test (disabled for beta 1, no persistent store)
-//    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-//    [analytics setSessionAttribute:@"12345" value:@5];
-//    [analytics addEventNamed:@"blah" withAttributes:@{@"pew pew":@"asdf"}];
-//    [analytics setSessionAttribute:@"test" value:@"hello"];
-//
-//    NSDictionary* dict = [NRMAAnalytics getLastSessionsAttributes];
-//    NSArray* array = [NRMAAnalytics getLastSessionsEvents];
-//
-//    XCTAssertTrue([dict[@"12345"] isEqual:@5], @"failed to correctly fetch from dup attribute store.");
-//    XCTAssertTrue([dict[@"test"] isEqual:@"hello"],@"failed to correctly fetch from dup attribute store.");
-//    XCTAssertTrue([array[0][@"name"]  isEqualToString: @"blah"], @"failed to correctly fetch dup event store.");
-//
-//    dict = [NRMAAnalytics getLastSessionsAttributes];
-//    array = [NRMAAnalytics getLastSessionsEvents];
-//
-//    XCTAssertTrue(dict.count == 0, @"dup stores should be empty.");
-//    XCTAssertTrue(array.count == 0, @"dup stores should be empty.");
-//
-//    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-//    dict = [NRMAAnalytics getLastSessionsAttributes];
-//    array = [NRMAAnalytics getLastSessionsEvents];
-//    XCTAssertTrue([dict[@"test"] isEqualToString:@"hello"],@"persistent attribute was not added to the dup store");
-//    XCTAssertTrue(array.count == 0, @"dup events not empty after Analytics persistent data restored.");
+    //    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    //    [analytics setSessionAttribute:@"12345" value:@5];
+    //    [analytics addEventNamed:@"blah" withAttributes:@{@"pew pew":@"asdf"}];
+    //    [analytics setSessionAttribute:@"test" value:@"hello"];
+    //
+    //    NSDictionary* dict = [NRMAAnalytics getLastSessionsAttributes];
+    //    NSArray* array = [NRMAAnalytics getLastSessionsEvents];
+    //
+    //    XCTAssertTrue([dict[@"12345"] isEqual:@5], @"failed to correctly fetch from dup attribute store.");
+    //    XCTAssertTrue([dict[@"test"] isEqual:@"hello"],@"failed to correctly fetch from dup attribute store.");
+    //    XCTAssertTrue([array[0][@"name"]  isEqualToString: @"blah"], @"failed to correctly fetch dup event store.");
+    //
+    //    dict = [NRMAAnalytics getLastSessionsAttributes];
+    //    array = [NRMAAnalytics getLastSessionsEvents];
+    //
+    //    XCTAssertTrue(dict.count == 0, @"dup stores should be empty.");
+    //    XCTAssertTrue(array.count == 0, @"dup stores should be empty.");
+    //
+    //    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    //    dict = [NRMAAnalytics getLastSessionsAttributes];
+    //    array = [NRMAAnalytics getLastSessionsEvents];
+    //    XCTAssertTrue([dict[@"test"] isEqualToString:@"hello"],@"persistent attribute was not added to the dup store");
+    //    XCTAssertTrue(array.count == 0, @"dup events not empty after Analytics persistent data restored.");
 }
 
 - (void) testMidSessionHarvest {
     //todo: reenable test (disabled for beta 1, no persistent store)
-//
-//    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-//
-//    [analytics setMaxEventBufferTime:0];
-//
-//    [analytics addEventNamed:@"pewpew" withAttributes:@{@"1":@"hello",@"2":@2}];
-//
-//    [analytics setSessionAttribute:@"12345" value:@5];
-//    [analytics setSessionAttribute:@"123" value:@"123"];
-//
-//    [analytics onHarvestBefore];
-//
-//
-//    NSDictionary* dict = [NRMAAnalytics getLastSessionsAttributes];
-//    NSArray* array = [NRMAAnalytics getLastSessionsEvents];
-//
-//    XCTAssertTrue([dict[@"12345"] isEqual:@5], @"dup store doesn't contain expected value");
-//    XCTAssertTrue([dict[@"123"] isEqualToString:@"123"], @"dup store doesn't contain expected value");
-//
-//    XCTAssertTrue(array.count == 0, @"dup events should have been cleared out on harvest before.");
+    //
+    //    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    //
+    //    [analytics setMaxEventBufferTime:0];
+    //
+    //    [analytics addEventNamed:@"pewpew" withAttributes:@{@"1":@"hello",@"2":@2}];
+    //
+    //    [analytics setSessionAttribute:@"12345" value:@5];
+    //    [analytics setSessionAttribute:@"123" value:@"123"];
+    //
+    //    [analytics onHarvestBefore];
+    //
+    //
+    //    NSDictionary* dict = [NRMAAnalytics getLastSessionsAttributes];
+    //    NSArray* array = [NRMAAnalytics getLastSessionsEvents];
+    //
+    //    XCTAssertTrue([dict[@"12345"] isEqual:@5], @"dup store doesn't contain expected value");
+    //    XCTAssertTrue([dict[@"123"] isEqualToString:@"123"], @"dup store doesn't contain expected value");
+    //
+    //    XCTAssertTrue(array.count == 0, @"dup events should have been cleared out on harvest before.");
 }
 
 - (void) testBadInput {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     BOOL result;
-//- (BOOL) addInteractionEvent:(NSString*)name interactionDuration:(double)duration_secs;
+    //- (BOOL) addInteractionEvent:(NSString*)name interactionDuration:(double)duration_secs;
     XCTAssertNoThrow(result = [analytics addInteractionEvent:nil interactionDuration:-100],@"shouldn't throw ");
 
     XCTAssertFalse(result,@"Bad input result in a false result");
 
-//- (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes;
+    //- (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes;
     {
         XCTAssertNoThrow(result = [analytics addEventNamed:@"" withAttributes:nil], @"bad input should not throw an exception");
 
@@ -555,7 +555,7 @@
         XCTAssertFalse(result,@"Bad input result in a false result");
     }
 
-//- (BOOL) setSessionAttribute:(NSString*)name value:(id)value;
+    //- (BOOL) setSessionAttribute:(NSString*)name value:(id)value;
     {
         XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:@""]);
         XCTAssertFalse(result,@"Bad input result in a false result");
@@ -568,41 +568,28 @@
 
 
     }
-//- (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent;
+    //- (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent;
     {
 
-        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:@"" persistent:YES]);
+        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:@""]);
         XCTAssertFalse(result,@"Bad input result in a false result");
 
-        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:nil persistent:YES]);
+        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:nil]);
         XCTAssertFalse(result,@"Bad input result in a false result");
 
-        XCTAssertNoThrow(result = [analytics setSessionAttribute:nil value:nil persistent:YES]);
+        XCTAssertNoThrow(result = [analytics setSessionAttribute:nil value:nil]);
         XCTAssertFalse(result,@"Bad input result in a false result");
 
-        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:@"" persistent:NO]);
+        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:@""] );
         XCTAssertFalse(result,@"Bad input result in a false result");
 
-        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:nil persistent:NO]);
+        XCTAssertNoThrow(result = [analytics setSessionAttribute:@"" value:nil]);
         XCTAssertFalse(result,@"Bad input result in a false result");
 
-        XCTAssertNoThrow(result = [analytics setSessionAttribute:nil value:nil persistent:NO]);
-        XCTAssertFalse(result,@"Bad input result in a false result");
-    }
-//- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number;
-    {
-        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:@1]);
-        XCTAssertFalse(result,@"Bad input result in a false result");
-
-        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:nil]);
-        XCTAssertFalse(result,@"Bad input result in a false result");
-
-        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:nil value:nil]);
+        XCTAssertNoThrow(result = [analytics setSessionAttribute:nil value:nil]);
         XCTAssertFalse(result,@"Bad input result in a false result");
     }
-
-
-//- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent;
+    //- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number;
     {
         XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:@1]);
         XCTAssertFalse(result,@"Bad input result in a false result");
@@ -612,17 +599,30 @@
 
         XCTAssertNoThrow(result = [analytics incrementSessionAttribute:nil value:nil]);
         XCTAssertFalse(result,@"Bad input result in a false result");
+    }
 
-        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:@1 persistent:NO]);
+
+    //- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent;
+    {
+        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:@1]);
         XCTAssertFalse(result,@"Bad input result in a false result");
 
-        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:nil persistent:NO]);
+        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:nil]);
         XCTAssertFalse(result,@"Bad input result in a false result");
 
-        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:nil value:nil persistent:NO]);
+        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:nil value:nil]);
+        XCTAssertFalse(result,@"Bad input result in a false result");
+
+        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:@1]);
+        XCTAssertFalse(result,@"Bad input result in a false result");
+
+        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:@"" value:nil]);
+        XCTAssertFalse(result,@"Bad input result in a false result");
+
+        XCTAssertNoThrow(result = [analytics incrementSessionAttribute:nil value:nil]);
         XCTAssertFalse(result,@"Bad input result in a false result");
     }
-//- (BOOL) removeSessionAttributeNamed:(NSString*)name;
+    //- (BOOL) removeSessionAttributeNamed:(NSString*)name;
     {
         XCTAssertNoThrow(result = [analytics removeSessionAttributeNamed:@""]);
         XCTAssertFalse(result,@"Bad input result in a false result");

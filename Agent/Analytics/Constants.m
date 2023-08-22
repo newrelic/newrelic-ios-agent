@@ -64,6 +64,7 @@ NSString * const kNRMA_RP_nr                 = @"nr.";
 NSString * const kNRMA_Attrib_guid           = @"guid";
 NSString * const kNRMA_Attrib_traceId        = @"traceId";
 NSString * const kNRMA_Attrib_parentId       = @"nr.parentId";
+NSString * const kNRMA_Attrib_userId         = @"userId";
 
 //Request Event Attributes (not reserved)
 NSString * const kNRMA_Attrib_connectionType    = @"connectionType";
@@ -86,3 +87,7 @@ NSString * const kNRMA_Attrib_name              = @"name";
 
 NSString * const kNRMA_Val_errorType_HTTP       = @"HTTPError";
 NSString * const kNRMA_Val_errorType_Network    = @"NetworkFailure";
+
+
+NSString * const kNRMA_Attrib_file       = @"attributes.txt";
+NSString * const kNRMA_Attrib_file_private    = @"privateAttributes.txt";
