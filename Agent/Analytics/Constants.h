@@ -77,6 +77,7 @@ extern NSString *const kNRMA_Attrib_contentType;
 extern NSString *const kNRMA_Attrib_dtGuid;
 extern NSString *const kNRMA_Attrib_dtId;
 extern NSString *const kNRMA_Attrib_dtTraceId;
+extern NSString *const kNRMA_Attrib_name;
 
 extern NSString *const kNRMA_Val_errorType_HTTP;
 extern NSString *const kNRMA_Val_errorType_Network;

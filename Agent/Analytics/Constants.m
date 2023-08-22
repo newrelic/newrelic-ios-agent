@@ -82,6 +82,7 @@ NSString * const kNRMA_Attrib_contentType       = @"contentType";
 NSString * const kNRMA_Attrib_dtGuid            = @"guid";
 NSString * const kNRMA_Attrib_dtId              = @"id";
 NSString * const kNRMA_Attrib_dtTraceId         = @"trace.id";
+NSString * const kNRMA_Attrib_name              = @"name";
 
 NSString * const kNRMA_Val_errorType_HTTP       = @"HTTPError";
 NSString * const kNRMA_Val_errorType_Network    = @"NetworkFailure";
