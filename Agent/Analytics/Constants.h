@@ -59,6 +59,7 @@ extern NSString *const kNRMA_RP_nr;
 extern NSString *const kNRMA_Attrib_guid;
 extern NSString *const kNRMA_Attrib_traceId;
 extern NSString *const kNRMA_Attrib_parentId;
+extern NSString *const kNRMA_Attrib_userId;
 
 extern NSString *const kNRMA_Attrib_connectionType;
 extern NSString *const kNRMA_Attrib_requestUrl;
@@ -79,3 +80,12 @@ extern NSString *const kNRMA_Attrib_dtTraceId;
 
 extern NSString *const kNRMA_Val_errorType_HTTP;
 extern NSString *const kNRMA_Val_errorType_Network;
+
+extern NSString *const kNRMA_Attrib_file;
+extern NSString *const kNRMA_Attrib_file_private;
+
+
+// Integer Analytics Constants
+static int kNRMA_Attrib_Max_Name_Length = 256;
+static int kNRMA_Attrib_Max_Value_Size_Bytes = 4096;
+static int kNRMA_Attrib_Max_Number_Attributes = 128;
