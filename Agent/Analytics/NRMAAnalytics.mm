@@ -43,6 +43,7 @@ using namespace NewRelic;
     NRMAEventManager *_eventManager;
     NRMASAM *_sessionAttributeManager;
     NSDate *_sessionStartTime;
+    id<AttributeValidatorProtocol> _attributeValidator;
 }
 
 static PersistentStore<std::string,BaseValue>* __attributeStore;
@@ -125,7 +126,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
 #if USE_INTEGRATED_EVENT_MANAGER
         _eventManager = [NRMAEventManager new];
-        _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+        _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
             if ([name length] == 0) {
                 NRLOG_ERROR(@"invalid attribute: name length = 0");
                 return false;
@@ -151,7 +152,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 return false;
             }
             return true;
-
+            
         } valueValidator:^BOOL(id value) {
             if ([value isKindOfClass:[NSString class]]) {
                 if ([(NSString*)value length] == 0) {
@@ -163,15 +164,16 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                     return false;
                 }
             }
-            if (value == nil) {
+            if (value == nil || [value isKindOfClass:[NSNull class]]) {
                 NRLOG_ERROR(@"invalid attribute: value cannot be nil");
                 return false;
             }
-
+            
             return true;
         } andEventTypeValidator:^BOOL(NSString *eventType) {
             return YES;
-        }]];
+        }];
+        _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
 #endif
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
@@ -224,7 +226,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
         NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
         
-        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:nil]; //TODO: need a real AttributeValidator?
+        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:_attributeValidator];
         if (event == nil) {
             return false;
         }
@@ -355,7 +357,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return nil;
         }
         
-        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:nil]; //TODO: need a real AttributeValidator?
+        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:_attributeValidator];
         if (event == nil) {
             return nil;
         }
@@ -655,7 +657,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     NRMACustomEvent *testEvent = [[NRMACustomEvent alloc] initWithEventType:name
                                                                   timestamp:[[NSDate date] timeIntervalSince1970]
                                                                   sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                                  withAttributeValidator:nil];
+                                                                  withAttributeValidator:_attributeValidator];
     [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         [testEvent addAttribute:key value:obj];
     }];
@@ -696,7 +698,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
                                                                       timestamp:[[NSDate date] timeIntervalSince1970]
                                                                       sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                                      withAttributeValidator:nil]; // Create a regular custom event with MobileBreadcrumb event type
+                                                                      withAttributeValidator:_attributeValidator];
         if (event == nil) {
             NRLOG_ERROR(@"Unable to create breadcrumb event");
             return NO;
@@ -773,7 +775,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 #if USE_INTEGRATED_EVENT_MANAGER
         NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
                                                                   timestamp:[[NSDate date] timeIntervalSince1970]
-                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
+                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];
         }];
