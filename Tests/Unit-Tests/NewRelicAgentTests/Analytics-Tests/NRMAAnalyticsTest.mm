@@ -279,6 +279,24 @@
     XCTAssertTrue([decode[0][@"Winner"] isEqual:@1]);
 }
 
+- (void) testInteractionEvent {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"eventType"]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"Mobile"]);
+    XCTAssertTrue([decode[0][@"name"] isEqualToString:@"newEventBlah"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"Interaction"]);
+    XCTAssertTrue([decode[0][@"interactionDuration"] isEqual:@(1.0)]);    
+}
+
 - (void ) testCustomEventUnicode {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 

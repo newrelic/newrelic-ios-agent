@@ -194,8 +194,20 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addInteractionEvent:(NSString*)name
          interactionDuration:(double)duration_secs {
+#if USE_INTEGRATED_EVENT_MANAGER
+    NRMAMobileEvent *event = [[NRMAMobileEvent alloc] initWithTimestamp:[[NSDate date] timeIntervalSince1970]
+                                                          sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                          withAttributeValidator:nil];
+    [event addAttribute:kNRMA_Attrib_name value:name];
+    [event addAttribute:kNRMA_RA_category value:@"Interaction"];
+    [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
+    
+    return [_eventManager addEvent:event];
+#else
     return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
+#endif
 }
+
 #if USE_INTEGRATED_EVENT_MANAGER
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
@@ -651,15 +663,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
 #if USE_INTEGRATED_EVENT_MANAGER
-    NRMACustomEvent *testEvent = [[NRMACustomEvent alloc] initWithEventType:name
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:name
                                                                   timestamp:[[NSDate date] timeIntervalSince1970]
                                                                   sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                                   withAttributeValidator:nil];
     [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-        [testEvent addAttribute:key value:obj];
+        [event addAttribute:key value:obj];
     }];
     
-    return [_eventManager addEvent:testEvent];
+    return [_eventManager addEvent:event];
 #else
     try {
         auto event = _analyticsController->newEvent(name.UTF8String);
@@ -701,7 +713,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return NO;
         }
         
-        [event addAttribute:@"name" value:name]; // Add the name as an attribute
+        [event addAttribute:kNRMA_Attrib_name value:name]; // Add the name as an attribute
 
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];

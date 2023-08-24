@@ -186,10 +186,6 @@ static NewRelicAgentInternal* _sharedInstance;
                                                      selector:@selector(applicationWillTerminate)
                                                          name:UIApplicationWillTerminateNotification
                                                        object:[UIApplication sharedApplication]];
-            [[NSNotificationCenter defaultCenter] addObserver:self
-                                                     selector:@selector(didReceiveInteractionCompleteNotification:)
-                                                         name:kNRInteractionDidCompleteNotification
-                                                       object:nil];
 
             NRLOG_INFO(@"Agent enabled");
 
@@ -816,9 +812,7 @@ static UIBackgroundTaskIdentifier background_task;
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:UIApplicationWillTerminateNotification
                                                    object:[UIApplication sharedApplication]];
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:kNRInteractionDidCompleteNotification
-                                                   object:nil];
+
         // # disable logging
         [NRLogger setLogLevels:NRLogLevelNone];
         [NRLogger clearLog];
