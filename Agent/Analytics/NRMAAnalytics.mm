@@ -17,7 +17,6 @@
 #import "NRMAFlags.h"
 #import "NRMANetworkRequestData+CppInterface.h"
 #import "NRMANetworkResponseData+CppInterface.h"
-#import "NRMAUserActionBuilder.h"
 #import <Connectivity/Payload.hpp>
 #import "NewRelicAgentInternal.h"
 #import "NRMAEventManager.h"
@@ -841,6 +840,49 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
     return YES;
 #endif
+}
+
+- (BOOL)recordUserAction:(NRMAUserAction *)userAction {
+    if (userAction == nil) { return NO; };
+    
+    NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileUserAction
+                                                              timestamp:[[NSDate date] timeIntervalSince1970]
+                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
+
+    if (userAction.associatedMethod.length > 0) {
+        [event addAttribute:kNRMA_RA_methodExecuted value:userAction.associatedMethod];
+    }
+
+    if (userAction.associatedClass.length > 0) {
+        [event addAttribute:kNRMA_RA_targetObject value:userAction.associatedClass];
+    }
+
+    if (userAction.elementLabel.length > 0) {
+        [event addAttribute:kNRMA_RA_label value:userAction.elementLabel];
+    }
+
+    if ((userAction.accessibilityId.length > 0)) {
+        [event addAttribute:kNRMA_RA_accessibility value:userAction.accessibilityId];
+    }
+
+    if ((userAction.interactionCoordinates.length > 0)) {
+        [event addAttribute:kNRMA_RA_touchCoordinates value:userAction.interactionCoordinates];
+    }
+
+    if ((userAction.actionType.length > 0)) {
+        [event addAttribute:kNMRA_RA_actionType value:userAction.actionType];
+    }
+
+    if ((userAction.elementFrame.length > 0)) {
+        [event addAttribute:kNRMA_RA_frame value:userAction.elementFrame];
+    }
+
+    NSString* deviceOrientation = [NewRelicInternalUtils deviceOrientation];
+    if (deviceOrientation.length > 0) {
+        [event addAttribute:kNRMA_RA_orientation value:deviceOrientation];
+    }
+
+    return [_eventManager addEvent:event];
 }
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number

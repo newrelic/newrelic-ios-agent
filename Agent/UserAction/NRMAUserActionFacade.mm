@@ -11,6 +11,7 @@
 
 @interface NRMAUserActionFacade () {
     std::shared_ptr<NewRelic::AnalyticsController> wrappedAnalyticsController;
+    NRMAAnalytics * analyticsController;
 }
 @end
 
@@ -20,11 +21,15 @@
     self = [super init];
     if (self) {
         wrappedAnalyticsController = std::shared_ptr<NewRelic::AnalyticsController>([analytics analyticsController]);
+        analyticsController = analytics;
     }
     return self;
 }
 
 - (void)recordUserAction:(NRMAUserAction *)userAction {
+#if USE_INTEGRATED_EVENT_MANAGER
+    [analyticsController recordUserAction:userAction];
+#else
     try {
         wrappedAnalyticsController->addUserActionEvent(userAction.associatedMethod.UTF8String,
                 userAction.associatedClass.UTF8String,
@@ -39,6 +44,7 @@
     } catch (...) {
         NRLOG_VERBOSE(@"Failed to add TrackedGesture: unknown error.");
     }
+#endif
 }
 
 @end
