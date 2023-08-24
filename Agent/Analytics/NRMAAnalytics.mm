@@ -199,7 +199,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 #if USE_INTEGRATED_EVENT_MANAGER
     NRMAMobileEvent *event = [[NRMAMobileEvent alloc] initWithTimestamp:[[NSDate date] timeIntervalSince1970]
                                                           sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                          withAttributeValidator:nil];
+                                                          withAttributeValidator:_attributeValidator];
     [event addAttribute:kNRMA_Attrib_name value:name];
     [event addAttribute:kNRMA_RA_category value:@"Interaction"];
     [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
@@ -849,7 +849,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     
     NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileUserAction
                                                               timestamp:[[NSDate date] timeIntervalSince1970]
-                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:nil];
+                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
 
     if (userAction.associatedMethod.length > 0) {
         [event addAttribute:kNRMA_RA_methodExecuted value:userAction.associatedMethod];
