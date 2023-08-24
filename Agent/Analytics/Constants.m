@@ -20,6 +20,7 @@ NSString * const kNRMA_RA_uuid               = @"uuid";
 NSString * const kNRMA_RA_sessionDuration    = @"sessionDuration";
 NSString * const kNRMA_RA_sessionElapsedTime = @"timeSinceLoad";
 NSString * const kNRMA_RA_payload            = @"payload";
+NSString * const kNRMA_RA_InteractionDuration = @"interactionDuration";
 NSString * const kNRMA_RA_osName             = @"osName";
 NSString * const kNRMA_RA_osVersion          = @"osVersion";
 NSString * const kNRMA_RA_osMajorVersion     = @"osMajorVersion";
@@ -82,6 +83,7 @@ NSString * const kNRMA_Attrib_contentType       = @"contentType";
 NSString * const kNRMA_Attrib_dtGuid            = @"guid";
 NSString * const kNRMA_Attrib_dtId              = @"id";
 NSString * const kNRMA_Attrib_dtTraceId         = @"trace.id";
+NSString * const kNRMA_Attrib_name              = @"name";
 
 NSString * const kNRMA_Val_errorType_HTTP       = @"HTTPError";
 NSString * const kNRMA_Val_errorType_Network    = @"NetworkFailure";
