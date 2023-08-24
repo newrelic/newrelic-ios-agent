@@ -279,6 +279,24 @@
     XCTAssertTrue([decode[0][@"Winner"] isEqual:@1]);
 }
 
+- (void) testInteractionEvent {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"eventType"]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"Mobile"]);
+    XCTAssertTrue([decode[0][@"name"] isEqualToString:@"newEventBlah"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"Interaction"]);
+    XCTAssertTrue([decode[0][@"interactionDuration"] isEqual:@(1.0)]);    
+}
+
 - (void ) testCustomEventUnicode {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
@@ -324,6 +342,75 @@
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"testBreadcrumbs"]);
 }
 
+#if USE_INTEGRATED_EVENT_MANAGER
+- (void) testRecordUserAction {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {
+            [builder withActionType:@"Tap"];
+            [builder fromMethod:@"Method"];
+            [builder fromClass:NSStringFromClass([self class])];
+            [builder fromUILabel:@"Label"];
+            [builder withAccessibilityId:@"AccessibilityId"];
+            [builder atCoordinates:NSStringFromCGPoint(CGPointMake(1, 1))];
+            [builder withElementFrame:NSStringFromCGRect(CGRectMake(1, 1, 1, 1))];
+    }];
+    
+    [analytics recordUserAction:uiGesture];
+
+    NSString* json = [analytics analyticsJSONString];
+
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"eventType"]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
+    XCTAssertTrue([decode[0][@"actionType"] isEqualToString:@"Tap"]);
+    XCTAssertTrue([decode[0][@"accessibility"] isEqualToString:@"AccessibilityId"]);
+    XCTAssertTrue([decode[0][@"targetObject"] isEqualToString:@"NRMAAnalyticsTest"]);
+    XCTAssertTrue([decode[0][@"methodExecuted"] isEqualToString:@"Method"]);
+    XCTAssertTrue([decode[0][@"label"] isEqualToString:@"Label"]);
+    XCTAssertTrue([decode[0][@"controlRect"] isEqualToString:@"{{1, 1}, {1, 1}}"]);
+    XCTAssertTrue([decode[0][@"touchCoordinates"] isEqualToString:@"{1, 1}"]);
+    XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Unknown"]);
+
+}
+
+- (void) testRecordEmptyUserAction {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {}];
+    
+    [analytics recordUserAction:uiGesture];
+
+    NSString* json = [analytics analyticsJSONString];
+
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"eventType"]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
+    XCTAssertNil(decode[0][@"actionType"]);
+    XCTAssertNil(decode[0][@"accessibility"]);
+    XCTAssertNil(decode[0][@"targetObject"]);
+    XCTAssertNil(decode[0][@"methodExecuted"]);
+    XCTAssertNil(decode[0][@"label"]);
+    XCTAssertNil(decode[0][@"controlRect"]);
+    XCTAssertNil(decode[0][@"touchCoordinates"]);
+    XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Unknown"]);
+
+}
+#endif
+
+- (void) testRecordNilUserAction {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    
+    XCTAssertFalse([analytics recordUserAction:nil]);
+}
 
 
 - (void) testBooleanSessionAttribute {
