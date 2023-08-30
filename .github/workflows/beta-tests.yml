@@ -4,8 +4,10 @@ on:
     inputs:
       xcode_version:
         required: true
+        default: latest
       os_version:
         required: true
+        default: '17.0'
 
 jobs:
   testIOSBeta:
@@ -20,7 +22,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: ${{ env.xcode_version }}
+        xcode-version: ${{ github.event.inputs.xcode_version }}
 
     - name: Install lcov
       run: brew install lcov
@@ -32,7 +34,33 @@ jobs:
       run: bundle install
 
     - name: Run tests on iOS (using fastlane)
-      run: bundle exec fastlane runIOSBetaTests os_version:${{ env.os_version }}
+      run: bundle exec fastlane runIOSBetaTests os_version:${{ github.event.inputs.os_version }}
+
+  testIOSAppBeta:
+    name : TestIOSAppBeta
+    # runs-on: will be set to macos-latest when running on actual GHA. 
+    # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
+    runs-on: macos-13 
+    steps:
+    - uses: actions/checkout@master
+      with: 
+        submodules: true
+    
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: ${{ github.event.inputs.xcode_version }}
+
+    - name: Install lcov
+      run: brew install lcov
+
+    - name: Update gem
+      run: bundle update
+
+    - name: Install gems
+      run: bundle install
+
+    - name: Run app tests on iOS (using fastlane)
+      run: bundle exec fastlane runIOSAppBetaTests os_version:${{ github.event.inputs.os_version }}
 
   testTVOSBeta:
     name : TestTVOSBeta
@@ -46,7 +74,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: ${{ env.xcode_version }}
+        xcode-version: ${{ github.event.inputs.xcode_version }}
 
     - name: Install lcov
       run: brew install lcov
@@ -58,4 +86,4 @@ jobs:
       run: bundle install
 
     - name: Run tests on tvOS (using fastlane)
-      run: bundle exec fastlane runTVOSBetaTests os_version:${{ env.os_version }}
+      run: bundle exec fastlane runTVOSBetaTests os_version:${{ github.event.inputs.os_version }}

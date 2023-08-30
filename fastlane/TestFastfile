@@ -54,6 +54,20 @@ platform :ios do
     )
   end
 
+  desc "Run App tests for iOS beta"
+  lane :runIOSAppBetaTests do |options|
+
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "NRTestApp",
+      device: "iPhone 14 Pro Max (#{options[:os_version]})",
+      disable_xcpretty: true
+    )
+  end
+
   # tvOS Tests
   
   desc "Run Agent tests for tvOS"
@@ -80,7 +94,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-tvOS",
-      device: "Apple TV 4K (3rd generation) (#{options[:os_version]})",
+      device: "Apple TV (#{options[:os_version]})",
       disable_xcpretty: true
 
     )
