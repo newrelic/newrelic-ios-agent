@@ -2,7 +2,9 @@ name: beta-tests
 on: 
   workflow_dispatch:
     inputs:
-      xcode-version:
+      xcode_version:
+        required: true
+      os_version:
         required: true
 
 jobs:
@@ -18,7 +20,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: ${{ env.xcode-version }}
+        xcode-version: ${{ env.xcode_version }}
 
     - name: Install lcov
       run: brew install lcov
@@ -30,10 +32,7 @@ jobs:
       run: bundle install
 
     - name: Run tests on iOS (using fastlane)
-      run: bundle exec fastlane runIOSBetaTests
-
-    - name: Run example app tests on iOS (using fastlane)
-      run: bundle exec fastlane runIOSBetaAppTests
+      run: bundle exec fastlane runIOSBetaTests os_version:${{ env.os_version }}
 
   testTVOSBeta:
     name : TestTVOSBeta
@@ -47,7 +46,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: ${{ env.xcode-version }}
+        xcode-version: ${{ env.xcode_version }}
 
     - name: Install lcov
       run: brew install lcov
@@ -59,4 +58,4 @@ jobs:
       run: bundle install
 
     - name: Run tests on tvOS (using fastlane)
-      run: bundle exec fastlane runTVOSBetaTests
+      run: bundle exec fastlane runTVOSBetaTests os_version:${{ env.os_version }}

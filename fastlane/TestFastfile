@@ -41,7 +41,7 @@ platform :ios do
   end
 
   desc "Run Agent tests for iOS beta"
-  lane :runIOSBetaTests do
+  lane :runIOSBetaTests do |options|
 
     deleteBuildArtifacts
 
@@ -49,21 +49,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-iOS",
-      device: "iPhone 8 (17.0)",
-      disable_xcpretty: true
-    )
-  end
-
-  desc "Run example app tests for iOS beta"
-  lane :runIOSBetaAppTests do
-    
-    deleteBuildArtifacts
-
-    run_tests(
-      workspace: "/Test\ Harness/NRTestApp/NRTestApp.xcodeproj",
-      code_coverage: true,
-      scheme: "NRTestApp",
-      device: "iPhone 8 (17.0)",
+      device: "iPhone 14 Pro Max (#{options[:os_version]})",
       disable_xcpretty: true
     )
   end
@@ -86,7 +72,7 @@ platform :ios do
   end
 
   desc "Run Agent tests for tvOS beta"
-  lane :runTVOSBetaTests do 
+  lane :runTVOSBetaTests do |options|
     
     deleteBuildArtifacts
 
@@ -94,7 +80,7 @@ platform :ios do
       workspace: "Agent.xcworkspace",
       code_coverage: true,
       scheme: "Agent-tvOS",
-      device: "Apple TV (17.0)",
+      device: "Apple TV 4K (3rd generation) (#{options[:os_version]})",
       disable_xcpretty: true
 
     )
