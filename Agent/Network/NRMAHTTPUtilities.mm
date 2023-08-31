@@ -60,19 +60,23 @@ NSString* currentParentId;
 
 + (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest*)request {
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities makeMutable:request];
+#if USE_INTEGRATED_EVENT_MANAGER
+    [NRMAHTTPUtilities attachNRMAPayload:[NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]
+                                  to:mutableRequest];
+#else
     [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
                                   to:mutableRequest];
+#endif
     return mutableRequest;
 }
 
-#if USE_INTEGRATED_EVENT_MANAGER
-+ (NRMAPayload*) addConnectivityHeader:(NSMutableURLRequest*)request {
++ (NRMAPayload*) addConnectivityHeaderNRMAPayload:(NSMutableURLRequest*)request {
     if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
     
-    NRMAPayload *payload = [NRMAHTTPUtilities generatePayload];
+    NRMAPayload *payload = [NRMAHTTPUtilities generateNRMAPayload];
     if(payload == nil) { return nil; }
     
-    NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:payload];
+    NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:payload];
     
     if(connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY].length) {
         [request setValue:connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY]
@@ -107,12 +111,11 @@ NSString* currentParentId;
     return payload;
 }
 
-+ (NRMAPayload *) generatePayload {
++ (NRMAPayload *) generateNRMAPayload {
 
     return [NRMAHTTPUtilities startTrip];
 }
 
-#else
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request {
 
     if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
@@ -163,7 +166,6 @@ NSString* currentParentId;
     payload->setDistributedTracing(true);
     return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
 }
-#endif
 
 + (NRMAPayload *) startTrip {
     if(!NewRelic::Application::getInstance().isValid()) {
@@ -187,15 +189,14 @@ NSString* currentParentId;
     }
 }
 
-#if USE_INTEGRATED_EVENT_MANAGER
-+ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayload*)payload {
++ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload {
     NSDictionary *json;
     
     if(payload != nil) {
         json = [payload JSONObject];
     }
     
-    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload:payload];
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload:payload];
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
     NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[NSJSONSerialization  dataWithJSONObject:json options:0 error:nil]];
@@ -205,11 +206,11 @@ NSString* currentParentId;
              W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY:traceState};
 }
 
-+ (void) attachPayload:(NRMAPayload*)payload to:(id)object {
++ (void) attachNRMAPayload:(NRMAPayload*)payload to:(id)object {
     [NRMAAssociate attach:payload to:object with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
 }
 
-+ (NRMAPayload*) retrievePayload:(id)object {
++ (NRMAPayload*) retrieveNRMAPayload:(id)object {
     id associatedObject = [NRMAAssociate retrieveFrom:object
                                     with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
 
@@ -224,7 +225,6 @@ NSString* currentParentId;
     return nil;
 }
 
-#else
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {
     NSString *payloadHeader;
     const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
@@ -266,7 +266,5 @@ NSString* currentParentId;
 
     return std::unique_ptr<NewRelic::Connectivity::Payload>(nullptr);
 }
-
-#endif
 
 @end

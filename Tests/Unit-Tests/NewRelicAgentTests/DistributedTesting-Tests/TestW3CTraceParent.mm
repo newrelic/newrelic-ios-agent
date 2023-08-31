@@ -35,6 +35,8 @@
     long long timestamp = 1609970157093;
     NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
     payload.id = spanId;
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
 #else
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
@@ -55,9 +57,10 @@
     payload->setId(spanId);
     payload->setTraceId(traceId);
     payload->setTimestamp(timestamp);
-#endif
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
+#endif
+    
     [traceContext setTrustedAccount:NRTraceContext];
     
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];

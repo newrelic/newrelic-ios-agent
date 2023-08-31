@@ -34,6 +34,8 @@
     long long timestamp = 1609970157093;
     NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
     payload.id = spanId;
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
 #else
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
@@ -50,9 +52,10 @@
 
     std::string trustedAccountStd("1");
     payload->setTrustedAccountKey(trustedAccountStd);
-#endif
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
+#endif
+    
     
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
     NSString *desiredHeader = @"1@nr=0-2-10816994-25789457-17172750e6ff8549--0--1609970157093";
@@ -72,6 +75,8 @@
     payload.appId = appIdStd;
     payload.id = spanId;
     payload.timestamp = timestamp;
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
 #else
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
@@ -85,10 +90,10 @@
     payload->setAppId(appIdStd);
     payload->setId(spanId);
     payload->setTimestamp(timestamp);
-#endif
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
-
+#endif
+    
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
     NSString *desiredHeader = @"@nr=0-2-10816994-25789457-17172750e6ff8549--0--1609970157093";
 

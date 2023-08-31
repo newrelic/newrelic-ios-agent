@@ -18,15 +18,14 @@
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request;
 + (NSMutableURLRequest*) makeMutable:(NSURLRequest*)request;
 + (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest*)request;
-#if USE_INTEGRATED_EVENT_MANAGER
-+ (NRMAPayload *) generatePayload;
-+ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayload*)payload;
-+ (void) attachPayload:(NRMAPayload*)payload to:(id)object;
-+ (NRMAPayload*) addConnectivityHeader:(NSMutableURLRequest*)request;
-#else
+
++ (NRMAPayload *) generateNRMAPayload;
++ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload;
++ (void) attachNRMAPayload:(NRMAPayload*)payload to:(id)object;
++ (NRMAPayload*) addConnectivityHeaderNRMAPayload:(NSMutableURLRequest*)request;
+
 + (NRMAPayloadContainer *)generatePayload;
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer;
 + (void) attachPayload:(NRMAPayloadContainer*)payload to:(id)object;
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request;
-#endif
 @end
