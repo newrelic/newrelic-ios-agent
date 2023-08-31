@@ -27,17 +27,6 @@
 }
 
 - (void)testHeaderString {
-#ifdef USE_INTEGRATED_EVENT_MANAGER
-    NSString* accountStr = @"10816994";
-    NSString* appIdStd = @"25789457";
-    NSString* spanId = @"17172750e6ff8549";
-    NSString* traceId = @"edd7db371b2faa5b";
-    long long timestamp = 1609970157093;
-    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
-    payload.id = spanId;
-    
-    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
-#else
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
     std::string accountStr("10816994");
@@ -59,7 +48,26 @@
     payload->setTimestamp(timestamp);
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
-#endif
+    
+    [traceContext setTrustedAccount:NRTraceContext];
+    
+    NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
+    NSString *desiredHeader = @"00-edd7db371b2faa5b-17172750e6ff8549-00";
+    
+    // assert
+    XCTAssert([traceParent isEqualToString: desiredHeader]);
+}
+
+- (void)testHeaderStringNRMAPayload {
+    NSString* accountStr = @"10816994";
+    NSString* appIdStd = @"25789457";
+    NSString* spanId = @"17172750e6ff8549";
+    NSString* traceId = @"edd7db371b2faa5b";
+    long long timestamp = 1609970157093;
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
+    payload.id = spanId;
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
     
     [traceContext setTrustedAccount:NRTraceContext];
     

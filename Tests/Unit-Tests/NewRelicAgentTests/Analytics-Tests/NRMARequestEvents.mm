@@ -42,6 +42,7 @@ static NRMAFeatureFlags __originalFlags;
 }
 
 - (void) testDisableFeatureFlag {
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
 
     NRTimer* timer = [NRTimer new];
     [NRMAFlags disableFeatures:NRFeatureFlag_RequestErrorEvents];
@@ -60,11 +61,35 @@ static NRMAFeatureFlags __originalFlags;
                                                                            networkErrorMessage:@""
                                                                            encodedResponseBody:nil
                                                                                  appDataHeader:nil];
-#if USE_INTEGRATED_EVENT_MANAGER
-    BOOL result = [analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr];
-#else
+
     BOOL result = [analytics addNetworkRequestEvent:requestData withResponse:responseData withPayload:nullptr];
-#endif
+
+    XCTAssertFalse(result);
+}
+
+- (void) testDisableFeatureFlagNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+
+    NRTimer* timer = [NRTimer new];
+    [NRMAFlags disableFeatures:NRFeatureFlag_RequestErrorEvents];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    
+    NSURL* url = [[NSURL alloc] initWithString:@"https://rpm.newrelic.com"];
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:nil
+                                                                                   bytesSent:1];
+    
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithHttpError:400
+                                                                                 bytesReceived:2
+                                                                                  responseTime:[timer timeElapsedInSeconds]
+                                                                           networkErrorMessage:@""
+                                                                           encodedResponseBody:nil
+                                                                                 appDataHeader:nil];
+
+    BOOL result = [analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr];
+
     XCTAssertFalse(result);
 }
 

@@ -27,9 +27,6 @@
 @end
 @implementation NRMAAnalyticsTest
 
-#undef USE_INTEGRATED_EVENT_MANAGER
-#define USE_INTEGRATED_EVENT_MANAGER 0
-
 - (void)setUp {
     [super setUp];
     [NRLogger setLogLevels:NRLogLevelNone];
@@ -53,10 +50,29 @@
 // new, integrated event manager. The second is the legacy version
 // which worked with the older, libMobileAgent version.
 - (void) testLargeNumbers {
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
-#if USE_INTEGRATED_EVENT_MANAGER
+    bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
+                                withAttributes:@{@"bigInt": @(LLONG_MAX),
+                                                 @"bigDouble": @(DBL_MAX)}];
 
+    XCTAssertTrue(accepted);
 
+    //1.79769313486232e+308
+    //9223372036854775807
+    NSString* json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"9223372036854775807"]);
+    XCTAssertTrue([json containsString:@"1.79769313486232e+308"]);
+    //NSJSONSerialization can't parse scientific notation because it's bad.
+    // See `2.4.  Numbers`  https://www.ietf.org/rfc/rfc4627.txt
+    //    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+    //                                                options:0
+    //                                                        error:nil];
+}
+
+- (void) testLargeNumbersNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
@@ -76,30 +92,11 @@
 
     double decodedDouble = [decode[0][@"bigDouble"] doubleValue];
     XCTAssertEqual(decodedDouble, @(DBL_MAX).doubleValue);
-
-#else
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-
-    bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
-                                withAttributes:@{@"bigInt": @(LLONG_MAX),
-                                                 @"bigDouble": @(DBL_MAX)}];
-
-    XCTAssertTrue(accepted);
-
-    //1.79769313486232e+308
-    //9223372036854775807
-    NSString* json = [analytics analyticsJSONString];
-    XCTAssertTrue([json containsString:@"9223372036854775807"]);
-    XCTAssertTrue([json containsString:@"1.79769313486232e+308"]);
-    //NSJSONSerialization can't parse scientific notation because it's bad.
-    // See `2.4.  Numbers`  https://www.ietf.org/rfc/rfc4627.txt
-    //    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-    //                                                options:0
-    //                                                        error:nil];
-#endif
 }
+
 - (void) testRequestEvents {
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
     NRTimer* timer = [NRTimer new];
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
@@ -117,11 +114,7 @@
                                                                                           bytesReceived:200
                                                                                            responseTime:[timer timeElapsedInSeconds]];
 
-#if USE_INTEGRATED_EVENT_MANAGER
-    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
-#else
     XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withPayload:nullptr]);
-#endif
     
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -147,7 +140,54 @@
     [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
 }
 
+- (void) testRequestEventsNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+    NRTimer* timer = [NRTimer new];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSString* urlString = @"https://api.newrelic.com/api/v1/mobile?request=parameter";
+    NSURL* url = [NSURL URLWithString:urlString];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:100];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
+                                                                                          bytesReceived:200
+                                                                                           responseTime:[timer timeElapsedInSeconds]];
+
+    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"connectionType"]);
+    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"api.newrelic.com"]);
+    XCTAssertTrue([decode[0][@"requestPath"] isEqualToString:@"/api/v1/mobile"]);
+    XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
+    XCTAssertTrue([decode[0][@"contentType"] isEqualToString:@"application/json"]);
+    XCTAssertTrue([decode[0][@"bytesSent"] isEqual:@100]);
+    XCTAssertTrue([decode[0][@"bytesReceived"] isEqual:@200]);
+    XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
+    XCTAssertNotNil(decode[0][@"responseTime"]);
+    XCTAssertFalse([decode[0][@"requestUrl"] isEqualToString:urlString]);
+    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
+    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
+    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
+}
+
 - (void) testRequestEventHTTPError {
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
     NRTimer* timer = [NRTimer new];
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
@@ -173,11 +213,66 @@
                                                                            networkErrorMessage:@"unauthorized"
                                                                            encodedResponseBody:responseBody
                                                                                  appDataHeader:appDataHeader];
-#if USE_INTEGRATED_EVENT_MANAGER
-    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
-#else
+
     XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withPayload:nullptr]);
-#endif
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"connectionType"]);
+    XCTAssertTrue([decode[0][@"requestUrl"] isEqualToString:urlString]);
+    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"api.newrelic.com"]);
+    XCTAssertTrue([decode[0][@"requestPath"] isEqualToString:@"/api/v1/mobile"]);
+    XCTAssertNil(decode[0][@"contentType"]);
+    XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
+    XCTAssertTrue([decode[0][@"bytesSent"] isEqual:@200]);
+    XCTAssertTrue([decode[0][@"bytesReceived"] isEqual:@100]);
+    XCTAssertTrue([decode[0][@"statusCode"] isEqual:@403]);
+    XCTAssertTrue([decode[0][@"errorType"] isEqualToString:@"HTTPError"]);
+    XCTAssertTrue([decode[0][@"networkError"] isEqualToString:@"unauthorized"]);
+    XCTAssertTrue([decode[0][@"nr.X-NewRelic-App-Data"] isEqualToString:appDataHeader]);
+    XCTAssertTrue([decode[0][@"nr.responseBody"] isEqualToString:responseBodyEncoded]);
+
+    XCTAssertNotNil(decode[0][@"responseTime"]);
+    XCTAssertNil(decode[0][@"networkErrorCode"]);
+
+
+}
+
+- (void) testRequestEventHTTPErrorNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+    NRTimer* timer = [NRTimer new];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
+    NSURL* url = [NSURL URLWithString:urlString];
+    [timer stopTimer];
+
+
+    NSString* responseBody = @"helloWorld";
+    NSString* responseBodyEncoded = @"aGVsbG9Xb3JsZA==";
+
+    NSString* appDataHeader = @"ToatsBase64EncodedStringSeeThereIsAnEqualSignAtTheEnd=";
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:nil
+                                                                                   bytesSent:200];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithHttpError:403
+                                                                                 bytesReceived:100
+                                                                                  responseTime:[timer timeElapsedInSeconds]
+                                                                           networkErrorMessage:@"unauthorized"
+                                                                           encodedResponseBody:responseBody
+                                                                                 appDataHeader:appDataHeader];
+
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                       options:0
@@ -219,6 +314,52 @@
 }
 
 - (void) testRequestEventNetworkError {
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+
+    NRTimer* timer = [NRTimer new];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
+    NSURL* url = [NSURL URLWithString:urlString];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:200];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithNetworkError:-1001
+                                                                                    bytesReceived:100
+                                                                                     responseTime:[timer timeElapsedInSeconds]
+                                                                              networkErrorMessage:@"network failure"];
+
+    [analytics addNetworkErrorEvent:requestData withResponse:responseData withPayload:nullptr];
+    
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"connectionType"]);
+    XCTAssertTrue([decode[0][@"requestUrl"] isEqualToString:urlString]);
+    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"api.newrelic.com"]);
+    XCTAssertTrue([decode[0][@"requestPath"] isEqualToString:@"/api/v1/mobile"]);
+    XCTAssertTrue([decode[0][@"contentType"] isEqualToString:@"application/json"]);
+    XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
+    XCTAssertTrue([decode[0][@"bytesSent"] isEqual:@200]);
+    XCTAssertTrue([decode[0][@"bytesReceived"] isEqual:@100]);
+    XCTAssertTrue([decode[0][@"networkErrorCode"] isEqual:@-1001]);
+    XCTAssertTrue([decode[0][@"errorType"] isEqualToString:@"NetworkFailure"]);
+    XCTAssertTrue([decode[0][@"networkError"] isEqualToString:@"network failure"]);
+    XCTAssertNotNil(decode[0][@"responseTime"]);
+    XCTAssertNil(decode[0][@"statusCode"]);
+}
+
+- (void) testRequestEventNetworkErrorNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
 
     NRTimer* timer = [NRTimer new];
 
@@ -239,11 +380,7 @@
                                                                               networkErrorMessage:@"network failure"];
 
 
-#if USE_INTEGRATED_EVENT_MANAGER
     [analytics addNetworkErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr];
-#else
-    [analytics addNetworkErrorEvent:requestData withResponse:responseData withPayload:nullptr];
-#endif
     
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -268,6 +405,30 @@
 }
 
 - (void) testCustomEvent {
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    BOOL didAddCustomEvent = [analytics addCustomEvent:@"newEventBlah"
+                                        withAttributes:@{
+        @"blah":@"blah",
+        @"Winner":@1}];
+
+    XCTAssertTrue(didAddCustomEvent);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"eventType"]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"newEventBlah"]);
+    XCTAssertTrue([decode[0][@"blah"] isEqualToString:@"blah"]);
+    XCTAssertTrue([decode[0][@"Winner"] isEqual:@1]);
+}
+
+- (void) testCustomEventNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     BOOL didAddCustomEvent = [analytics addCustomEvent:@"newEventBlah"
@@ -290,6 +451,7 @@
 }
 
 - (void) testInteractionEvent {
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
@@ -305,6 +467,25 @@
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"newEventBlah"]);
     XCTAssertTrue([decode[0][@"category"] isEqualToString:@"Interaction"]);
     XCTAssertTrue([decode[0][@"interactionDuration"] isEqual:@(1.0)]);    
+}
+
+- (void) testInteractionEventNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"eventType"]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"Mobile"]);
+    XCTAssertTrue([decode[0][@"name"] isEqualToString:@"newEventBlah"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"Interaction"]);
+    XCTAssertTrue([decode[0][@"interactionDuration"] isEqual:@(1.0)]);
 }
 
 - (void ) testCustomEventUnicode {
@@ -352,8 +533,8 @@
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"testBreadcrumbs"]);
 }
 
-#if USE_INTEGRATED_EVENT_MANAGER
 - (void) testRecordUserAction {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {
@@ -389,32 +570,13 @@
 }
 
 - (void) testRecordEmptyUserAction {
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {}];
     
-    [analytics recordUserAction:uiGesture];
-
-    NSString* json = [analytics analyticsJSONString];
-
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                      options:0
-                                                        error:nil];
-    XCTAssertNotNil(decode);
-    XCTAssertNotNil(decode[0]);
-    XCTAssertNotNil(decode[0][@"eventType"]);
-    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
-    XCTAssertNil(decode[0][@"actionType"]);
-    XCTAssertNil(decode[0][@"accessibility"]);
-    XCTAssertNil(decode[0][@"targetObject"]);
-    XCTAssertNil(decode[0][@"methodExecuted"]);
-    XCTAssertNil(decode[0][@"label"]);
-    XCTAssertNil(decode[0][@"controlRect"]);
-    XCTAssertNil(decode[0][@"touchCoordinates"]);
-    XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Unknown"]);
-
+    XCTAssertFalse([analytics recordUserAction:uiGesture]);
 }
-#endif
 
 - (void) testRecordNilUserAction {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];

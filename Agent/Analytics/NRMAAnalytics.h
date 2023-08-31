@@ -14,7 +14,6 @@
 #import "NRMANetworkResponseData.h"
 #import "NRMAPayload.h"
 
-//#define USE_INTEGRATED_EVENT_MANAGER 1
 @interface NRMAAnalytics : NSObject <NRMAHarvestAware>
 - (void) setMaxEventBufferTime:(unsigned int) seconds;
 

@@ -26,8 +26,7 @@
     // Put teardown code here. This method is called after the invocation of each test method in the class.
 }
 
-- (void)testContextWhenPayloadProvided {
-#ifdef USE_INTEGRATED_EVENT_MANAGER
+- (void)testContextWhenNRMAPayloadProvided {
     NSString* accountStr = @"accountForTesting";
     NSString* appIdStd = @"appIdForTesting";
     NSString* spanId = @"17172750e6ff8549";
@@ -36,7 +35,16 @@
     NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
 
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
-#else
+    
+    XCTAssert([accountStr isEqualToString: traceContext.accountId]);
+    XCTAssert([appIdStd isEqualToString: traceContext.appId]);
+    XCTAssert([traceId isEqualToString: traceContext.traceId]);
+    XCTAssert([payload.id isEqualToString: traceContext.spanId]);
+
+    XCTAssertEqual(timestamp, traceContext.timestamp);
+}
+
+- (void)testContextWhenPayloadProvided {
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
     std::string accountStr("accountForTesting");
@@ -53,20 +61,12 @@
     payload->setTimestamp(timestamp);
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
-#endif
     
-#ifdef USE_INTEGRATED_EVENT_MANAGER
-    XCTAssert([accountStr isEqualToString: traceContext.accountId]);
-    XCTAssert([appIdStd isEqualToString: traceContext.appId]);
-    XCTAssert([traceId isEqualToString: traceContext.traceId]);
-    XCTAssert([payload.id isEqualToString: traceContext.spanId]);
-#else
     // assert
     XCTAssert([[NSString stringWithUTF8String: accountStr.c_str()] isEqualToString: traceContext.accountId]);
     XCTAssert([[NSString stringWithUTF8String: appIdStd.c_str()] isEqualToString: traceContext.appId]);
     XCTAssert([[NSString stringWithUTF8String: traceId.c_str()] isEqualToString: traceContext.traceId]);
     XCTAssert([[NSString stringWithUTF8String: spanId.c_str()] isEqualToString: traceContext.spanId]);
-#endif
     XCTAssertEqual(timestamp, traceContext.timestamp);
 }
 
