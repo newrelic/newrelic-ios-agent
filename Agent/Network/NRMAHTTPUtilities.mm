@@ -181,7 +181,7 @@ NSString* currentParentId;
         
         NRMAPayload * payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
         payload.dtEnabled = [NRMAFlags shouldEnableDistributedTracing];
-        currentParentId = [payload id];
+        currentParentId = [payload payloadId];
 
         return payload;
     }

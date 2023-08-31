@@ -161,7 +161,7 @@
 
                     retrievedPayload.traceId = traceParentComponents[1];
                     retrievedPayload.parentId = @"0";
-                    retrievedPayload.id = traceParentComponents[2];
+                    retrievedPayload.payloadId = traceParentComponents[2];
                     retrievedPayload.dtEnabled = true;
                 }
                 else {

@@ -30,8 +30,6 @@
 #import "NRMASAM.h"
 #import "BlockAttributeValidator.h"
 
-//#define USE_INTEGRATED_EVENT_MANAGER 0
-
 using namespace NewRelic;
 @implementation NRMAAnalytics
 {
@@ -229,7 +227,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSString* traceId = @"";
         bool addDistributedTracing = false;
         if (payload != nil) {
-            distributedTracingId = payload.id;
+            distributedTracingId = payload.payloadId;
             traceId = payload.traceId;
             addDistributedTracing = payload.dtEnabled;
         }
@@ -340,7 +338,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSString* traceId = @"";
         bool addDistributedTracing = false;
         if (payload != nil) {
-            distributedTracingId = payload.id;
+            distributedTracingId = payload.payloadId;
             traceId = payload.traceId;
             addDistributedTracing = payload.dtEnabled;
         }

@@ -25,7 +25,7 @@
         _payloadType = @"mobile";
         _accountId = accountId;
         _appId = appId;
-        _id = [[[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] substringToIndex:16] lowercaseString];
+        _payloadId = [[[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] substringToIndex:16] lowercaseString];
         _traceId = traceId;
         _parentId = parentId;
         _trustedAccountKey = trustedAccountKey;
@@ -50,7 +50,7 @@
     NSMutableDictionary *data = [[NSMutableDictionary alloc] init];
     data[timeKey] = @(self.timestamp);
     data[accountKey] = self.accountId;
-    data[idKey] = self.id;
+    data[idKey] = self.payloadId;
     data[appKey] = self.appId;
     data[traceKey] = self.traceId;
     data[typeKey] = self.payloadType;

@@ -44,7 +44,7 @@ NSString *DT_FIELD_UNUSED = @"";
     self.accountId = payload.accountId;
     self.appId = payload.appId;
     self.traceId = payload.traceId;
-    self.spanId = payload.id;
+    self.spanId = payload.payloadId;
     self.timestamp = payload.timestamp;
 
     self.trustedAccountKeyString = payload.trustedAccountKey;
