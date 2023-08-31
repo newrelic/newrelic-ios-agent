@@ -26,11 +26,9 @@
 
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes;
-#if USE_INTEGRATED_EVENT_MANAGER
-- (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withPayload:(NRMAPayload *)payload;
-- (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withPayload:(NRMAPayload *)payload;
-- (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withPayload:(NRMAPayload*)payload;
-#endif
+- (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload *)payload;
+- (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload *)payload;
+- (BOOL) addNetworkErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload*)payload;
 
 - (NSString*) analyticsJSONString;
 - (void) sessionWillEnd;

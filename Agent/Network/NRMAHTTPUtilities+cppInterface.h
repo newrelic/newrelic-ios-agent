@@ -10,9 +10,7 @@
 #import "NRMAHTTPUtilities.h"
 
 @interface NRMAHTTPUtilities (cppInterface)
-#if USE_INTEGRATED_EVENT_MANAGER
-+ (NRMAPayload*) retrievePayload:(NSURLRequest*)request;
-#else
++ (NRMAPayload*) retrieveNRMAPayload:(NSURLRequest*)request;
+
 + (std::unique_ptr<NewRelic::Connectivity::Payload>) retrievePayload:(NSURLRequest*)request;
-#endif
 @end

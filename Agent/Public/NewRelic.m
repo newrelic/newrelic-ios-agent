@@ -306,7 +306,11 @@
 }
 
 + (NSDictionary<NSString*,NSString*>*)generateDistributedTracingHeaders {
+#if USE_INTEGRATED_EVENT_MANAGER
+    return [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:[NRMAHTTPUtilities generateNRMAPayload]];
+#else
     return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
+#endif
 }
 
 #pragma mark - Interactions

@@ -29,11 +29,10 @@ typedef enum trustedAccountKeys: NSUInteger {
 // For optional/not supported fields
 @property (strong) NSString*   TRACE_FIELD_UNUSED;
 
-#if USE_INTEGRATED_EVENT_MANAGER
-- (id) initWithPayload: (NRMAPayload*)payload;
-#else
+- (id) initWithNRMAPayload: (NRMAPayload*)payload;
+
 - (id) initWithPayload: (const std::unique_ptr<NewRelic::Connectivity::Payload>&)payload;
-#endif
+
 - (void) setTrustedAccountKey: (AccountType) trustedAccount;
 
 @end

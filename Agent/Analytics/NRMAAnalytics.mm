@@ -210,19 +210,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 #endif
 }
 
-#if USE_INTEGRATED_EVENT_MANAGER
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
-               withPayload:(NRMAPayload *)payload {
+               withNRMAPayload:(NRMAPayload *)payload {
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
-        return [self addRequestEvent:requestData withResponse:responseData withPayload:payload];
+        return [self addRequestEvent:requestData withResponse:responseData withNRMAPayload:payload];
     }
     return NO;
 }
 
 - (BOOL)addRequestEvent:(NRMANetworkRequestData *)requestData
            withResponse:(NRMANetworkResponseData *)responseData
-            withPayload:(NRMAPayload *)payload {
+            withNRMAPayload:(NRMAPayload *)payload {
 
     @try {
         NSString* distributedTracingId = @"";
@@ -308,9 +307,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
-                 withPayload:(NRMAPayload*)payload {
+                 withNRMAPayload:(NRMAPayload*)payload {
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
-        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withNRMAPayload:payload];
         if(event == nil){ return NO; }
         [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_Network];
             
@@ -321,9 +320,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
             withResponse:(NRMANetworkResponseData *)responseData
-            withPayload:(NRMAPayload *)payload {
+            withNRMAPayload:(NRMAPayload *)payload {
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
-        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withPayload:payload];
+        NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withNRMAPayload:payload];
         if(event == nil){ return NO; }
         [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_HTTP];
 
@@ -334,7 +333,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (id<NRMAAnalyticEventProtocol>)createErrorEvent:(NRMANetworkRequestData *)requestData
            withResponse:(NRMANetworkResponseData *)responseData
-             withPayload:(NRMAPayload *)payload {
+             withNRMAPayload:(NRMAPayload *)payload {
     @try {
         NSString* distributedTracingId = @"";
         NSString* traceId = @"";
@@ -432,8 +431,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
-#else
-
 - (BOOL)addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
@@ -469,7 +466,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
     return NO;
 }
-#endif
 
 - (BOOL) setLastInteraction:(NSString*)name {
 #if USE_INTEGRATED_EVENT_MANAGER

@@ -117,8 +117,12 @@
                                                                                           bytesReceived:200
                                                                                            responseTime:[timer timeElapsedInSeconds]];
 
+#if USE_INTEGRATED_EVENT_MANAGER
+    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+#else
     XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withPayload:nullptr]);
-
+#endif
+    
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                       options:0
@@ -169,9 +173,11 @@
                                                                            networkErrorMessage:@"unauthorized"
                                                                            encodedResponseBody:responseBody
                                                                                  appDataHeader:appDataHeader];
-
+#if USE_INTEGRATED_EVENT_MANAGER
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+#else
     XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withPayload:nullptr]);
-
+#endif
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                       options:0
@@ -233,8 +239,12 @@
                                                                               networkErrorMessage:@"network failure"];
 
 
+#if USE_INTEGRATED_EVENT_MANAGER
+    [analytics addNetworkErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr];
+#else
     [analytics addNetworkErrorEvent:requestData withResponse:responseData withPayload:nullptr];
-
+#endif
+    
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                       options:0

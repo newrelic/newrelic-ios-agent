@@ -60,9 +60,11 @@ static NRMAFeatureFlags __originalFlags;
                                                                            networkErrorMessage:@""
                                                                            encodedResponseBody:nil
                                                                                  appDataHeader:nil];
-
+#if USE_INTEGRATED_EVENT_MANAGER
+    BOOL result = [analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr];
+#else
     BOOL result = [analytics addNetworkRequestEvent:requestData withResponse:responseData withPayload:nullptr];
-    
+#endif
     XCTAssertFalse(result);
 }
 
