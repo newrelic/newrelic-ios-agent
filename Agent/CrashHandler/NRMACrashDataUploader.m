@@ -39,6 +39,14 @@
 {
     NSString* reportPath = [NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),kNRMA_CR_ReportPath];
 
+    BOOL isDir;
+
+    // If the directory doesn't even exist we shouldn't call contentsOfDirectoryAtURL on it.
+    if (![_fileManager fileExistsAtPath:reportPath isDirectory: &isDir]) {
+        if (!isDir)
+            return @[];
+    }
+
     NSArray* fileList = [_fileManager contentsOfDirectoryAtURL:[NSURL fileURLWithPath:reportPath]
                                     includingPropertiesForKeys:nil
                                                        options:NSDirectoryEnumerationSkipsHiddenFiles| NSDirectoryEnumerationSkipsPackageDescendants | NSDirectoryEnumerationSkipsSubdirectoryDescendants
