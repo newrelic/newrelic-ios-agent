@@ -47,10 +47,10 @@ platform :ios do
 
     run_tests(
       workspace: "Agent.xcworkspace",
-      code_coverage: true,
+      code_coverage: false,
       scheme: "Agent-iOS",
       device: "iPhone 14 Pro Max (#{options[:os_version]})",
-      disable_xcpretty: true
+      output_style: 'raw'
     )
   end
 
@@ -61,10 +61,10 @@ platform :ios do
 
     run_tests(
       workspace: "Agent.xcworkspace",
-      code_coverage: true,
+      code_coverage: false,
       scheme: "NRTestApp",
       device: "iPhone 14 Pro Max (#{options[:os_version]})",
-      disable_xcpretty: true
+      output_style: 'raw'
     )
   end
 
@@ -92,11 +92,10 @@ platform :ios do
 
     run_tests(
       workspace: "Agent.xcworkspace",
-      code_coverage: true,
+      code_coverage: false,
       scheme: "Agent-tvOS",
-      device: "Apple TV (#{options[:os_version]})",
-      disable_xcpretty: true
-
+      device: "Apple TV 4K (3rd generation) (at 1080p) (#{options[:os_version]})",
+      output_style: 'raw'
     )
   end
 

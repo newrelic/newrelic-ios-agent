@@ -70,7 +70,7 @@ jobs:
     name : TestTVOSBeta
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-latest 
+    runs-on: macos-13 
     steps:
     - uses: actions/checkout@v3
       with: 
