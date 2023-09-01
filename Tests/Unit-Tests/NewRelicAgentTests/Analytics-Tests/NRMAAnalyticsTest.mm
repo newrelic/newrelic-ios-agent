@@ -933,8 +933,11 @@
     XCTAssertTrue([decode[0][@"label"] isEqualToString:@"Label"]);
     XCTAssertTrue([decode[0][@"controlRect"] isEqualToString:@"{{1, 1}, {1, 1}}"]);
     XCTAssertTrue([decode[0][@"touchCoordinates"] isEqualToString:@"{1, 1}"]);
-#ifdef TARGET_OS_IOS
+    
+#if !TARGET_OS_TV
     XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Unknown"]);
+#else
+    XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Landscape"]);
 #endif
 }
 
