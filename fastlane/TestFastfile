@@ -99,6 +99,20 @@ platform :ios do
     )
   end
 
+  desc "Run Agent tests for tvOS beta"
+  lane :runTVOSAppBetaTests do |options|
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: false,
+      scheme: "NRTestApp (tvOS)",
+      device: "Apple TV 4K (3rd generation) (at 1080p) (#{options[:os_version]})",
+      output_style: 'raw'
+    )
+  end
+
   lane :coverage do 
     Dir.chdir("..") do
       begin
