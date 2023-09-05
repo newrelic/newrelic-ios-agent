@@ -81,7 +81,6 @@ final class NRTestApp_tvOS_Tests: XCTestCase {
         
         XCUIRemote.shared.press(.select)
         
-        var idx = 0
         for cell in app.tables.cells.allElementsBoundByIndex {
             if !cell.staticTexts["Crash Now!"].exists {
                 XCUIRemote.shared.press(.select)
