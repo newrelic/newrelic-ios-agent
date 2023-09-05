@@ -537,6 +537,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 + (void) clearDuplicationStores
 {
+    NRLOG_VERBOSE(@"Clearing event duplication stores...");
+
     try {
         [self attributeDupStore].clear();
         [self eventDupStore].clear();
