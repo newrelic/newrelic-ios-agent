@@ -119,4 +119,9 @@ final class NRTestAppTests: XCTestCase, URLAuthenticationChallengeSender {
         XCTAssertNil(testChallenge.receivedCredential);
         XCTAssertEqual(testChallenge.receivedChallenge, .performDefaultHandling);
     }
+
+    func testZZZShutdown() throws {
+        XCTAssertNoThrow(utilViewModel.shutDown())
+
+    }
 }
