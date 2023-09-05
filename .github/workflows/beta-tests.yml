@@ -63,6 +63,9 @@ jobs:
     - name: Install gems
       run: bundle install
 
+    - name: Run script to add New Relic API Key
+      run: bundle exec fastlane addAPIKeyToPlist valueToAdd:${{ secrets.NEWRELIC_API_KEY }}
+
     - name: Run app tests on iOS (using fastlane)
       run: bundle exec fastlane runIOSAppBetaTests os_version:${{ github.event.inputs.os_version }}
 
@@ -114,6 +117,9 @@ jobs:
 
     - name: Install gems
       run: bundle install
+
+    - name: Run script to add New Relic API Key
+      run: bundle exec fastlane addAPIKeyToPlist valueToAdd:${{ secrets.NEWRELIC_API_KEY }}
 
     - name: Run app tests on tvOS (using fastlane)
       run: bundle exec fastlane runTVOSAppBetaTests os_version:${{ github.event.inputs.os_version }}
