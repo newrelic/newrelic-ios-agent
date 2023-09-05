@@ -30,6 +30,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing)
 #endif
 
+        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport)
+
         // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
         // NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_LogReporting)
 
