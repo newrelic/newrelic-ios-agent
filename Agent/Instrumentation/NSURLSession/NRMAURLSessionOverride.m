@@ -208,21 +208,17 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     IMP originalImp = NRMAOriginal__dataTaskWithRequest;
     
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-#else
-    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-#endif
-    
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,request);
-    
-#if USE_INTEGRATED_EVENT_MANAGER
-    [NRMAHTTPUtilities attachNRMAPayload:payload
-                                  to:task.originalRequest];
-#else
-    [NRMAHTTPUtilities attachPayload:payload
-                                  to:task.originalRequest];
-#endif
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+        [NRMAHTTPUtilities attachNRMAPayload:payload
+                                      to:task.originalRequest];
+    } else {
+        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+        [NRMAHTTPUtilities attachPayload:payload
+                                      to:task.originalRequest];
+    }
+
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
@@ -251,38 +247,36 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-#else
-    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-#endif
-    
+    __block NSURLSessionTask* task = nil;
     if (completionHandler == nil) {
+        task  = ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,completionHandler);
+
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                          to:task.originalRequest];
+        } else {
+            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+            [NRMAHTTPUtilities attachPayload:payload
+                                          to:task.originalRequest];
+        }
         
-        NSURLSessionDataTask* task  = ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,completionHandler);
-       
-#if USE_INTEGRATED_EVENT_MANAGER
-        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                      to:task.originalRequest];
-#else
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
-#endif
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
         return task;
     }
     
-    __block NSURLSessionTask* task = nil;
-
     task =  ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,^(NSData* data, NSURLResponse* response, NSError* error){
 
-#if USE_INTEGRATED_EVENT_MANAGER
-        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                      to:task.originalRequest];
-#else
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
-#endif
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                          to:task.originalRequest];
+        } else {
+            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+            [NRMAHTTPUtilities attachPayload:payload
+                                          to:task.originalRequest];
+        }
+
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
@@ -326,20 +320,17 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-#else
-    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-#endif
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSURL*))originalImp)(self,_cmd,mutableRequest,fileURL);
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+        [NRMAHTTPUtilities attachNRMAPayload:payload
+                                      to:task.originalRequest];
+    } else {
+        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+        [NRMAHTTPUtilities attachPayload:payload
+                                      to:task.originalRequest];
+    }
 
-#if USE_INTEGRATED_EVENT_MANAGER
-    [NRMAHTTPUtilities attachNRMAPayload:payload
-                                  to:task.originalRequest];
-#else
-    [NRMAHTTPUtilities attachPayload:payload
-                                  to:task.originalRequest];
-#endif
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
     return task;
@@ -357,20 +348,15 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-#else
-    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-#endif
-
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSData*))originalImp)(self, _cmd, mutableRequest, data);
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+        [NRMAHTTPUtilities attachNRMAPayload:payload to:task.originalRequest];
+    } else {
+        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+        [NRMAHTTPUtilities attachPayload:payload to:task.originalRequest];
+    }
 
-#if USE_INTEGRATED_EVENT_MANAGER
-    [NRMAHTTPUtilities attachNRMAPayload:payload to:task.originalRequest];
-#else
-    [NRMAHTTPUtilities attachPayload:payload to:task.originalRequest];
-#endif
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
     return task;
@@ -405,36 +391,36 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-#else
-    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-#endif
-    
+    __block NSURLSessionUploadTask* task = nil;
     if (completionHandler == nil) {
-        NSURLSessionUploadTask* task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,completionHandler);
+        task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,completionHandler);
+        
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                          to:task.originalRequest];
+        } else {
+            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+            [NRMAHTTPUtilities attachPayload:payload
+                                          to:task.originalRequest];
+        }
+    
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
-#if USE_INTEGRATED_EVENT_MANAGER
-        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                      to:task.originalRequest];
-#else
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
-#endif
         return task;
     }
     
-    __block NSURLSessionUploadTask* task = nil;
     task =  ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,^(NSData* data,
                                                                                                                                                         NSURLResponse* response,
                                                                                                                                                         NSError* error){
-#if USE_INTEGRATED_EVENT_MANAGER
-        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                      to:task.originalRequest];
-#else
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
-#endif
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                              to:task.originalRequest];
+        } else {
+            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+            [NRMAHTTPUtilities attachPayload:payload
+                                          to:task.originalRequest];
+        }
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
@@ -457,35 +443,35 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     }
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-#else
-    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-#endif
+    __block NSURLSessionUploadTask* task = nil;
     if (completionHandler == nil) {
-        NSURLSessionUploadTask* task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,completionHandler);
+        task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,completionHandler);
 
-#if USE_INTEGRATED_EVENT_MANAGER
-        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                      to:task.originalRequest];
-#else
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
-#endif
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                          to:task.originalRequest];
+        } else {
+            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+            [NRMAHTTPUtilities attachPayload:payload
+                                          to:task.originalRequest];
+        }
+
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
         return task;
     }
     
-    __block NSURLSessionUploadTask* task = nil;
     task =  ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,^(NSData* data, NSURLResponse* response, NSError* error){
 
-#if USE_INTEGRATED_EVENT_MANAGER
-        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                      to:task.originalRequest];
-#else
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
-#endif
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                          to:task.originalRequest];
+        } else {
+            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+            [NRMAHTTPUtilities attachPayload:payload
+                                          to:task.originalRequest];
+        }
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);

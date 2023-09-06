@@ -8,6 +8,7 @@
 #include <Connectivity/Facade.hpp>
 #import "NRLogger.h"
 #import "NewRelicInternalUtils.h"
+#import "NRMAFlags.h"
 
 @interface NRMAUserActionFacade () {
     std::shared_ptr<NewRelic::AnalyticsController> wrappedAnalyticsController;
@@ -27,24 +28,24 @@
 }
 
 - (void)recordUserAction:(NRMAUserAction *)userAction {
-#if USE_INTEGRATED_EVENT_MANAGER
-    [analyticsController recordUserAction:userAction];
-#else
-    try {
-        wrappedAnalyticsController->addUserActionEvent(userAction.associatedMethod.UTF8String,
-                userAction.associatedClass.UTF8String,
-                userAction.elementLabel.UTF8String,
-                userAction.accessibilityId.UTF8String,
-                userAction.interactionCoordinates.UTF8String,
-                userAction.actionType.UTF8String,
-                userAction.elementFrame.UTF8String,
-                [NewRelicInternalUtils deviceOrientation].UTF8String);
-    } catch (std::exception &error) {
-        NRLOG_VERBOSE(@"Failed to add TrackedGesture: %s.", error.what());
-    } catch (...) {
-        NRLOG_VERBOSE(@"Failed to add TrackedGesture: unknown error.");
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [analyticsController recordUserAction:userAction];
+    } else {
+        try {
+            wrappedAnalyticsController->addUserActionEvent(userAction.associatedMethod.UTF8String,
+                                                           userAction.associatedClass.UTF8String,
+                                                           userAction.elementLabel.UTF8String,
+                                                           userAction.accessibilityId.UTF8String,
+                                                           userAction.interactionCoordinates.UTF8String,
+                                                           userAction.actionType.UTF8String,
+                                                           userAction.elementFrame.UTF8String,
+                                                           [NewRelicInternalUtils deviceOrientation].UTF8String);
+        } catch (std::exception &error) {
+            NRLOG_VERBOSE(@"Failed to add TrackedGesture: %s.", error.what());
+        } catch (...) {
+            NRLOG_VERBOSE(@"Failed to add TrackedGesture: unknown error.");
+        }
     }
-#endif
 }
 
 @end

@@ -1025,6 +1025,8 @@
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
+		F848CDC02AA133EA0082052F /* NRMAInteractionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */; };
+		F848CDC12AA133EA0082052F /* NRMAInteractionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */; };
 		F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABB324E704A600E45C90 /* NRMAWKWebViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
@@ -1935,6 +1937,8 @@
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
+		F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAInteractionEvent.m; sourceTree = "<group>"; };
+		F848CDD52AA133FB0082052F /* NRMAInteractionEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAInteractionEvent.h; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
@@ -3299,6 +3303,8 @@
 		F8FBFA3C2A71A32400CDC8C5 /* Events */ = {
 			isa = PBXGroup;
 			children = (
+				F848CDD52AA133FB0082052F /* NRMAInteractionEvent.h */,
+				F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */,
 				34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */,
 				34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */,
 				F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */,
@@ -4440,6 +4446,7 @@
 				02FF482024DB5B8100115469 /* NRMAGestureProcessor.m in Sources */,
 				02FF495224DC626E00115469 /* NRMAHarvester.mm in Sources */,
 				02FF49C524DC62B800115469 /* NRMAConnectInformation.m in Sources */,
+				F848CDC02AA133EA0082052F /* NRMAInteractionEvent.m in Sources */,
 				02FF4A2324DC648600115469 /* NRMAMeasurementConsumer.m in Sources */,
 				02FF4AA824DC652E00115469 /* NRMAUDIDManager.m in Sources */,
 				02FF48DC24DC622700115469 /* NRMACrashDataUploader.m in Sources */,
@@ -4711,6 +4718,7 @@
 				02FF4C2724E3201400115469 /* NRMAMeasurements.m in Sources */,
 				02FF4C2824E3201400115469 /* NRMAUncaughtExceptionHandler.m in Sources */,
 				02FF4C2A24E3201400115469 /* NRMAExceptionHandlerJSONKeys.m in Sources */,
+				F848CDC12AA133EA0082052F /* NRMAInteractionEvent.m in Sources */,
 				02FF4C2C24E3201400115469 /* NRMANSURLConnectionSupport.m in Sources */,
 				02FF4C2D24E3201400115469 /* NRMAHarvestableHTTPTransactionGeneration.m in Sources */,
 				2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */,

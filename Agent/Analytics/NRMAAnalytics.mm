@@ -25,12 +25,11 @@
 #import "NRMAEventManager.h"
 #import "NRMACustomEvent.h"
 #import "NRMARequestEvent.h"
+#import "NRMAInteractionEvent.h"
 #import "NRMAPayload.h"
 #import "NRMANetworkErrorEvent.h"
 #import "NRMASAM.h"
 #import "BlockAttributeValidator.h"
-
-//#define USE_INTEGRATED_EVENT_MANAGER 0
 
 using namespace NewRelic;
 @implementation NRMAAnalytics
@@ -123,57 +122,57 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
         }
         
-#if USE_INTEGRATED_EVENT_MANAGER
-        _eventManager = [NRMAEventManager new];
-        _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
-            if ([name length] == 0) {
-                NRLOG_ERROR(@"invalid attribute: name length = 0");
-                return false;
-            }
-            if ([name hasPrefix:@" "]) {
-                NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
-                return false;
-            }
-            // check if attribute name is reserved or attribute name matches reserved prefix.
-            for (NSString* key in [NRMAAnalytics reservedKeywords]) {
-                if ([key isEqualToString:name]) {
-                    NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            _eventManager = [NRMAEventManager new];
+            _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+                if ([name length] == 0) {
+                    NRLOG_ERROR(@"invalid attribute: name length = 0");
                     return false;
                 }
-                if ([name hasPrefix:key])  {
-                    NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                if ([name hasPrefix:@" "]) {
+                    NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
                     return false;
                 }
-            }
-            // check if attribute name exceeds max length.
-            if ([name length] > kNRMA_Attrib_Max_Name_Length) {
-                NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
-                return false;
-            }
-            return true;
-            
-        } valueValidator:^BOOL(id value) {
-            if ([value isKindOfClass:[NSString class]]) {
-                if ([(NSString*)value length] == 0) {
-                    NRLOG_ERROR(@"invalid attribute: value length = 0");
+                // check if attribute name is reserved or attribute name matches reserved prefix.
+                for (NSString* key in [NRMAAnalytics reservedKeywords]) {
+                    if ([key isEqualToString:name]) {
+                        NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                        return false;
+                    }
+                    if ([name hasPrefix:key])  {
+                        NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                        return false;
+                    }
+                }
+                // check if attribute name exceeds max length.
+                if ([name length] > kNRMA_Attrib_Max_Name_Length) {
+                    NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
                     return false;
                 }
-                else if ([(NSString*)value length] >= kNRMA_Attrib_Max_Value_Size_Bytes) {
-                    NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
+                return true;
+                
+            } valueValidator:^BOOL(id value) {
+                if ([value isKindOfClass:[NSString class]]) {
+                    if ([(NSString*)value length] == 0) {
+                        NRLOG_ERROR(@"invalid attribute: value length = 0");
+                        return false;
+                    }
+                    else if ([(NSString*)value length] >= kNRMA_Attrib_Max_Value_Size_Bytes) {
+                        NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
+                        return false;
+                    }
+                }
+                if (value == nil || [value isKindOfClass:[NSNull class]]) {
+                    NRLOG_ERROR(@"invalid attribute: value cannot be nil");
                     return false;
                 }
-            }
-            if (value == nil || [value isKindOfClass:[NSNull class]]) {
-                NRLOG_ERROR(@"invalid attribute: value cannot be nil");
-                return false;
-            }
-            
-            return true;
-        } andEventTypeValidator:^BOOL(NSString *eventType) {
-            return YES;
-        }];
-        _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
-#endif
+                
+                return true;
+            } andEventTypeValidator:^BOOL(NSString *eventType) {
+                return YES;
+            }];
+            _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
+        }
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
         // Tests will pass it in as 0, hence the check.
@@ -196,18 +195,17 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addInteractionEvent:(NSString*)name
          interactionDuration:(double)duration_secs {
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMAMobileEvent *event = [[NRMAMobileEvent alloc] initWithTimestamp:[[NSDate date] timeIntervalSince1970]
-                                                          sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                          withAttributeValidator:_attributeValidator];
-    [event addAttribute:kNRMA_Attrib_name value:name];
-    [event addAttribute:kNRMA_RA_category value:@"Interaction"];
-    [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
-    
-    return [_eventManager addEvent:event];
-#else
-    return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
-#endif
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        if(name == nil || name.length == 0){return NO;}
+        NRMAInteractionEvent *event = [[NRMAInteractionEvent alloc] initWithTimestamp:[[NSDate date] timeIntervalSince1970]
+                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] name:name category:@"Interaction"
+                                                     withAttributeValidator:_attributeValidator];
+        [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
+        
+        return [_eventManager addEvent:event];
+    } else {
+        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
+    }
 }
 
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
@@ -468,291 +466,282 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (BOOL) setLastInteraction:(NSString*)name {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager setLastInteraction:name];
-#else
-    return [self setNRSessionAttribute:kNRMA_RA_lastInteraction
-                                 value:name];
-#endif
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager setLastInteraction:name];
+    } else {
+        return [self setNRSessionAttribute:kNRMA_RA_lastInteraction
+                                     value:name];
+    }
 }
 
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager setNRSessionAttribute:name value:value];
-#else
-    try {
-        if ([value isKindOfClass:[NSNumber class]]) {
-            NSNumber* number = (NSNumber*)value;
-            if ([NewRelicInternalUtils isFloat:number]) {
-                auto attribute = NewRelic::Attribute<float>::createAttribute([name UTF8String],
-                                                                             [](const char* name_str) {
-                                                                                 return strlen(name_str) > 0;
-                                                                             },
-                                                                             [number floatValue],
-                                                                             [](float num) {
-                                                                                 return true;
-                                                                             });
-
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager setNRSessionAttribute:name value:value];
+    } else {
+        try {
+            if ([value isKindOfClass:[NSNumber class]]) {
+                NSNumber* number = (NSNumber*)value;
+                if ([NewRelicInternalUtils isFloat:number]) {
+                    auto attribute = NewRelic::Attribute<float>::createAttribute([name UTF8String],
+                                                                                 [](const char* name_str) {
+                        return strlen(name_str) > 0;
+                    },
+                                                                                 [number floatValue],
+                                                                                 [](float num) {
+                        return true;
+                    });
+                    
+                    return _analyticsController->addNRAttribute(attribute);
+                }
+                if ([NewRelicInternalUtils isInteger:number]) {
+                    auto attribute = NewRelic::Attribute<long long>::createAttribute([name UTF8String],
+                                                                                     [](const char* name_str) {
+                        return strlen(name_str) > 0;
+                    },
+                                                                                     [number longLongValue],
+                                                                                     [](long long num) {
+                        return true;
+                    });
+                    return _analyticsController->addNRAttribute(attribute);
+                }
+                return NO;
+            } else if ([value isKindOfClass:[NSString class]]) {
+                NSString* string = (NSString*)value;
+                auto attribute = NewRelic::Attribute<const char*>::createAttribute([name UTF8String], [](const char* name_str) {
+                    return strlen(name_str) > 0;
+                }, [string UTF8String], [](const char* value_str) {
+                    return strlen(value_str) > 0;
+                });
                 return _analyticsController->addNRAttribute(attribute);
-            }
-            if ([NewRelicInternalUtils isInteger:number]) {
-                auto attribute = NewRelic::Attribute<long long>::createAttribute([name UTF8String],
-                                                                             [](const char* name_str) {
-                                                                                 return strlen(name_str) > 0;
-                                                                             },
-                                                                             [number longLongValue],
-                                                                             [](long long num) {
-                                                                                 return true;
-                                                                             });
-                return _analyticsController->addNRAttribute(attribute);
-            }
-            return NO;
-        } else if ([value isKindOfClass:[NSString class]]) {
-            NSString* string = (NSString*)value;
-            auto attribute = NewRelic::Attribute<const char*>::createAttribute([name UTF8String], [](const char* name_str) {
-                return strlen(name_str) > 0;
-            }, [string UTF8String], [](const char* value_str) {
-                return strlen(value_str) > 0;
-            });
-            return _analyticsController->addNRAttribute(attribute);
-        } else if([value isKindOfClass:[NRMABool class]]) {
+            } else if([value isKindOfClass:[NRMABool class]]) {
                 auto attribute = NewRelic::Attribute<bool>::createAttribute([name UTF8String],
                                                                             [](const char* name_str) {return strlen(name_str) > 0;},
                                                                             ((NRMABool*)value).value,
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
-        } else {
-            NRLOG_VERBOSE(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+            } else {
+                NRLOG_VERBOSE(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                return NO;
+            }
+        } catch (std::exception& error) {
+            NRLOG_VERBOSE(@"failed to add NR session attribute, \'%@\' : %s",name, error.what());
             return NO;
+        } catch (...) {
+            NRLOG_VERBOSE(@"failed to add NR session attribute.");
+            return NO;
+            
         }
-    } catch (std::exception& error) {
-        NRLOG_VERBOSE(@"failed to add NR session attribute, \'%@\' : %s",name, error.what());
-        return NO;
-    } catch (...) {
-        NRLOG_VERBOSE(@"failed to add NR session attribute.");
-        return NO;
-
     }
-#endif
 }
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent {
-#if USE_INTEGRATED_EVENT_MANAGER
-    // All values are persisted
-    return [_sessionAttributeManager setSessionAttribute:name value:value];
-#else
-    try {
-        if ([value isKindOfClass:[NSNumber class]]) {
-            NSNumber* number = (NSNumber*)value;
-            //objcType returns a char*, but all primitives are denoted by a single character
-            if([NewRelicInternalUtils isInteger:number]) {
-                return _analyticsController->addSessionAttribute([name UTF8String], [number longLongValue], (bool)isPersistent);
-            }
-            if([NewRelicInternalUtils isFloat:number]) {
-                return _analyticsController->addSessionAttribute([name UTF8String], [number doubleValue], (bool)isPersistent);
-            }
-            if ([NewRelicInternalUtils isBool:number]) {
-                return _analyticsController->addSessionAttribute([name UTF8String], (bool)[number boolValue], (bool)isPersistent);
-            }
-            return NO;
-        } else if ([value isKindOfClass:[NSString class]]) {
-            NSString* string = (NSString*)value;
-            return _analyticsController->addSessionAttribute([name UTF8String], [string UTF8String],(bool)isPersistent);
-        } else if([value isKindOfClass:[NRMABool class]]) {
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        // All values are persisted
+        return [_sessionAttributeManager setSessionAttribute:name value:value];
+    } else {
+        try {
+            if ([value isKindOfClass:[NSNumber class]]) {
+                NSNumber* number = (NSNumber*)value;
+                //objcType returns a char*, but all primitives are denoted by a single character
+                if([NewRelicInternalUtils isInteger:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], [number longLongValue], (bool)isPersistent);
+                }
+                if([NewRelicInternalUtils isFloat:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], [number doubleValue], (bool)isPersistent);
+                }
+                if ([NewRelicInternalUtils isBool:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], (bool)[number boolValue], (bool)isPersistent);
+                }
+                return NO;
+            } else if ([value isKindOfClass:[NSString class]]) {
+                NSString* string = (NSString*)value;
+                return _analyticsController->addSessionAttribute([name UTF8String], [string UTF8String],(bool)isPersistent);
+            } else if([value isKindOfClass:[NRMABool class]]) {
                 auto attribute = NewRelic::Attribute<bool>::createAttribute([name UTF8String],
                                                                             [](const char* name_str) {return strlen(name_str) > 0;},
                                                                             ((NRMABool*)value).value,
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
-        } else {
-            NRLOG_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+            } else {
+                NRLOG_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                return NO;
+            }
+        } catch (std::exception& error) {
+            NRLOG_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
             return NO;
+        } catch (...) {
+            NRLOG_ERROR(@"failed to add session attribute.");
+            return NO;
+            
         }
-    } catch (std::exception& error) {
-        NRLOG_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
-        return NO;
-    } catch (...) {
-        NRLOG_ERROR(@"failed to add session attribute.");
-        return NO;
-
     }
-#endif
 }
 
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager setSessionAttribute:name value:value];
-#else
-    try {
-        if ([value isKindOfClass:[NSNumber class]]) {
-            NSNumber* number = (NSNumber*)value;
-            if([NewRelicInternalUtils isInteger:number]) {
-                return _analyticsController->addSessionAttribute([name UTF8String], [number longLongValue]);
-            }
-            if([NewRelicInternalUtils isFloat:number]) {
-                return _analyticsController->addSessionAttribute([name UTF8String], [number doubleValue]);
-            }
-            return NO;
-        } else if ([value isKindOfClass:[NSString class]]) {
-            NSString* string = (NSString*)value;
-            return _analyticsController->addSessionAttribute([name UTF8String], [string UTF8String]);
-        } else if([value isKindOfClass:[NRMABool class]]) {
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager setSessionAttribute:name value:value];
+    } else {
+        try {
+            if ([value isKindOfClass:[NSNumber class]]) {
+                NSNumber* number = (NSNumber*)value;
+                if([NewRelicInternalUtils isInteger:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], [number longLongValue]);
+                }
+                if([NewRelicInternalUtils isFloat:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], [number doubleValue]);
+                }
+                return NO;
+            } else if ([value isKindOfClass:[NSString class]]) {
+                NSString* string = (NSString*)value;
+                return _analyticsController->addSessionAttribute([name UTF8String], [string UTF8String]);
+            } else if([value isKindOfClass:[NRMABool class]]) {
                 auto attribute = NewRelic::Attribute<bool>::createAttribute([name UTF8String],
                                                                             [](const char* name_str) {return strlen(name_str) > 0;},
                                                                             ((NRMABool*)value).value,
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
-        } else {
-            NRLOG_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+            } else {
+                NRLOG_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                return NO;
+            }
+        } catch (std::exception& error) {
+            NRLOG_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
             return NO;
+        } catch (...) {
+            NRLOG_ERROR(@"failed to add session attribute.");
+            return NO;
+            
         }
-    } catch (std::exception& error) {
-        NRLOG_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
-        return NO;
-    } catch (...) {
-        NRLOG_ERROR(@"failed to add session attribute.");
-        return NO;
-
     }
-#endif
 }
 
 - (BOOL) setUserId:(NSString *)userId {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager setUserId:userId];
-#else
-    return [self setSessionAttribute:@"userId"
-                               value:userId
-                          persistent:YES];
-#endif
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager setUserId:userId];
+    } else {
+        return [self setSessionAttribute:@"userId"
+                                   value:userId
+                              persistent:YES];
+    }
 }
 
 - (BOOL) removeSessionAttributeNamed:(NSString*)name {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager removeSessionAttributeNamed:name];
-#else
-    try {
-        return _analyticsController->removeSessionAttribute(name.UTF8String);
-    } catch (std::exception& e) {
-        NRLOG_ERROR(@"Failed to remove attribute: %s",e.what());
-        return NO;
-    } catch (...) {
-        NRLOG_ERROR(@"Failed to remove attribute.");
-        return NO;
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager removeSessionAttributeNamed:name];
+    } else {
+        try {
+            return _analyticsController->removeSessionAttribute(name.UTF8String);
+        } catch (std::exception& e) {
+            NRLOG_ERROR(@"Failed to remove attribute: %s",e.what());
+            return NO;
+        } catch (...) {
+            NRLOG_ERROR(@"Failed to remove attribute.");
+            return NO;
+        }
     }
-#endif
 }
 - (BOOL) removeAllSessionAttributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager removeAllSessionAttributes];
-#else
-    try {
-        return _analyticsController->clearSessionAttributes();
-    } catch (std::exception& e) {
-        NRLOG_ERROR(@"Failed to remove all attributes: %s",e.what());
-        return NO;
-    } catch (...) {
-        NRLOG_ERROR(@"Failed to remove all attributes.");
-        return NO;
-
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager removeAllSessionAttributes];
+    } else {
+        try {
+            return _analyticsController->clearSessionAttributes();
+        } catch (std::exception& e) {
+            NRLOG_ERROR(@"Failed to remove all attributes: %s",e.what());
+            return NO;
+        } catch (...) {
+            NRLOG_ERROR(@"Failed to remove all attributes.");
+            return NO;
+            
+        }
     }
-#endif
 }
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:name
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        if(name == nil || name.length == 0){return NO;}
+        NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:name
                                                                   timestamp:[[NSDate date] timeIntervalSince1970]
-                                                                  sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                                  withAttributeValidator:_attributeValidator];
-    [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-        [event addAttribute:key value:obj];
-    }];
-    
-    return [_eventManager addEvent:event];
-#else
-    try {
-        auto event = _analyticsController->newEvent(name.UTF8String);
-        if (event == nullptr) {
-            NRLOG_ERROR(@"Unable to create event with name: \"%@\"",name);
+                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                     withAttributeValidator:_attributeValidator];
+        [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            [event addAttribute:key value:obj];
+        }];
+        
+        return [_eventManager addEvent:event];
+    } else {
+        try {
+            auto event = _analyticsController->newEvent(name.UTF8String);
+            if (event == nullptr) {
+                NRLOG_ERROR(@"Unable to create event with name: \"%@\"",name);
+                return NO;
+            }
+            
+            if ([self event:event withAttributes:attributes]) {
+                return _analyticsController->addEvent(event);
+            }
+        } catch (std::exception& e){
+            NRLOG_ERROR(@"Failed to add event: %s",e.what());
+            return NO;
+        } catch (...) {
+            NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
             return NO;
         }
-
-        if ([self event:event withAttributes:attributes]) {
-            return _analyticsController->addEvent(event);
-        }
-    } catch (std::exception& e){
-        NRLOG_ERROR(@"Failed to add event: %s",e.what());
-        return NO;
-    } catch (...) {
-        NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
         return NO;
     }
-    return NO;
-#endif
 }
 
 - (BOOL) addBreadcrumb:(NSString*)name
         withAttributes:(NSDictionary*)attributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-    try {
-
+    if([NRMAFlags shouldEnableNewEventSystem]){
         if(!name.length) {
             NRLOG_ERROR(@"Breadcrumb must be named.");
             return NO;
         }
-
+        
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
-                                                                      timestamp:[[NSDate date] timeIntervalSince1970]
-                                                                      sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                                      withAttributeValidator:_attributeValidator];
+                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                     withAttributeValidator:_attributeValidator];
         if (event == nil) {
             NRLOG_ERROR(@"Unable to create breadcrumb event");
             return NO;
         }
         
         [event addAttribute:kNRMA_Attrib_name value:name]; // Add the name as an attribute
-
+        
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];
         }];
         
         return [_eventManager addEvent:event];
-    } catch (NSException *exception){
-        NRLOG_ERROR(@"Failed to add event: %@", exception.reason);
-        return NO;
-    } catch (...) {
-        NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.", name);
-        return NO;
-    }
-    return NO;
-#else
-    try {
-
-        if(!name.length) {
-            NRLOG_ERROR(@"Breadcrumb must be named.");
-            return NO;
-        }
-
-        auto event = _analyticsController->newBreadcrumbEvent();
-        if (event == nullptr) {
-            NRLOG_ERROR(@"Unable to create breadcrumb event");
-            return NO;
-        }
-
-        if ([self event:event withAttributes:attributes]) {
+    } else {
+        try {
+            
+            if(!name.length) {
+                NRLOG_ERROR(@"Breadcrumb must be named.");
+                return NO;
+            }
+            
+            auto event = _analyticsController->newBreadcrumbEvent();
+            if (event == nullptr) {
+                NRLOG_ERROR(@"Unable to create breadcrumb event");
+                return NO;
+            }
+            
+            if ([self event:event withAttributes:attributes]) {
                 event->addAttribute("name",name.UTF8String);
-            return _analyticsController->addEvent(event);
+                return _analyticsController->addEvent(event);
+            }
+        } catch (std::exception& e){
+            NRLOG_ERROR(@"Failed to add event: %s",e.what());
+            return NO;
+        } catch (...) {
+            NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
+            return NO;
         }
-    } catch (std::exception& e){
-        NRLOG_ERROR(@"Failed to add event: %s",e.what());
-        return NO;
-    } catch (...) {
-        NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
         return NO;
     }
-    return NO;
-#endif
 }
 
 
@@ -779,28 +768,28 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return NO;
         }
 
-#if USE_INTEGRATED_EVENT_MANAGER
-        NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
-                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
-                                                sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
-        [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-            [event addAttribute:key value:obj];
-        }];
-        [_eventManager addEvent:event];
-        
-        return YES;
-#else
-        auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
-
-        if (event == nullptr) {
-            NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
-            return NO;
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
+                                                                      timestamp:[[NSDate date] timeIntervalSince1970]
+                                                    sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
+            [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+                [event addAttribute:key value:obj];
+            }];
+            [_eventManager addEvent:event];
+            
+            return YES;
+        } else {
+            auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
+            
+            if (event == nullptr) {
+                NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
+                return NO;
+            }
+            
+            if([self event:event withAttributes:attributes]) {
+                return _analyticsController->addEvent(event);
+            }
         }
-
-        if([self event:event withAttributes:attributes]) {
-            return _analyticsController->addEvent(event);
-        }
-#endif
     } catch (std::exception& e){
         NRLOG_ERROR(@"Failed to add event: %s",e.what());
         return NO;
@@ -812,9 +801,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (BOOL) event:(std::shared_ptr<AnalyticEvent>)event withAttributes:(NSDictionary*)attributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return YES;
-#else
     for (NSString* key in attributes.allKeys) {
         id value = attributes[key];
         if ([value isKindOfClass:[NSString class]]) {
@@ -837,7 +823,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
     }
     return YES;
-#endif
 }
 
 - (BOOL)recordUserAction:(NRMAUserAction *)userAction {
@@ -885,77 +870,79 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number
 {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager incrementSessionAttribute:name value:number];
-#else
-    if ([NewRelicInternalUtils isInteger:number]) {
-    return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue]); //has internal exception handling
-    } else if ([NewRelicInternalUtils isFloat:number]) {
-        return _analyticsController->incrementSessionAttribute([name UTF8String], [number doubleValue]); //has internal exception handling
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager incrementSessionAttribute:name value:number];
     } else {
-        return NO;
+        if ([NewRelicInternalUtils isInteger:number]) {
+            return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue]); //has internal exception handling
+        } else if ([NewRelicInternalUtils isFloat:number]) {
+            return _analyticsController->incrementSessionAttribute([name UTF8String], [number doubleValue]); //has internal exception handling
+        } else {
+            return NO;
+        }
     }
-#endif
 }
 
 - (NSString*) analyticsJSONString {
-#if USE_INTEGRATED_EVENT_MANAGER
-    NSError *error = nil;
-    return [_eventManager getEventJSONStringWithError:&error];
-#else
-    try {
-        auto events = _analyticsController->getEventsJSON(true);
-        std::stringstream stream;
-        stream <<std::setprecision(13)<< *events;
-        return [NSString stringWithUTF8String:stream.str().c_str()];
-    } catch (std::exception& e) {
-        NRLOG_VERBOSE(@"Failed to generate event json: %s",e.what());
-    } catch (...) {
-        NRLOG_VERBOSE(@"Failed to generate event json");
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NSError *error = nil;
+        return [_eventManager getEventJSONStringWithError:&error];
+    } else {
+        try {
+            auto events = _analyticsController->getEventsJSON(true);
+            std::stringstream stream;
+            stream <<std::setprecision(13)<< *events;
+            return [NSString stringWithUTF8String:stream.str().c_str()];
+        } catch (std::exception& e) {
+            NRLOG_VERBOSE(@"Failed to generate event json: %s",e.what());
+        } catch (...) {
+            NRLOG_VERBOSE(@"Failed to generate event json");
+        }
+        return nil;
     }
-    return nil;
-#endif
 }
 
 - (NSString*) sessionAttributeJSONString {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [_sessionAttributeManager sessionAttributeJSONString];
-#else
-    try {
-    auto attributes = _analyticsController->getSessionAttributeJSON();
-    std::stringstream stream;
-    stream <<std::setprecision(13)<<*attributes;
-    return [NSString stringWithUTF8String:stream.str().c_str()];
-    } catch (std::exception& e) {
-        NRLOG_VERBOSE(@"Failed to generate attributes json: %s",e.what());
-    } catch (...) {
-        NRLOG_VERBOSE(@ "Failed to generate attributes json.");
-    }
-    return nil;
-#endif
-}
-+ (NSString*) getLastSessionsAttributes {
-#if USE_INTEGRATED_EVENT_MANAGER
-    return [NRMASAM getLastSessionsAttributes];
-#else
-    try {
-    auto attributes = AnalyticsController::fetchDuplicatedAttributes([self attributeDupStore], YES);
-    std::stringstream stream;
-    stream << std::setprecision(13)<< *attributes;
-    
-    NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
-    if (!jsonString.length) {
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager sessionAttributeJSONString];
+    } else {
+        try {
+            auto attributes = _analyticsController->getSessionAttributeJSON();
+            std::stringstream stream;
+            stream <<std::setprecision(13)<<*attributes;
+            return [NSString stringWithUTF8String:stream.str().c_str()];
+        } catch (std::exception& e) {
+            NRLOG_VERBOSE(@"Failed to generate attributes json: %s",e.what());
+        } catch (...) {
+            NRLOG_VERBOSE(@ "Failed to generate attributes json.");
+        }
         return nil;
     }
-        return jsonString;
-    } catch (std::exception& e) {
-        NRLOG_VERBOSE(@"failed to generate session attribute json: %s", e.what());
-    } catch (...) {
-        NRLOG_VERBOSE(@"failed to generate session attribute json.");
-    }
-    return nil;
-#endif
 }
++ (NSString*) getLastSessionsAttributes {
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [NRMASAM getLastSessionsAttributes];
+    } else {
+        
+        try {
+            auto attributes = AnalyticsController::fetchDuplicatedAttributes([self attributeDupStore], YES);
+            std::stringstream stream;
+            stream << std::setprecision(13)<< *attributes;
+            
+            NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
+            if (!jsonString.length) {
+                return nil;
+            }
+            return jsonString;
+        } catch (std::exception& e) {
+            NRLOG_VERBOSE(@"failed to generate session attribute json: %s", e.what());
+        } catch (...) {
+            NRLOG_VERBOSE(@"failed to generate session attribute json.");
+        }
+        return nil;
+    }
+}
+
 + (NSString*) getLastSessionsEvents{
     try {
         auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
@@ -994,18 +981,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 
 - (void) clearLastSessionsAnalytics {
-#if USE_INTEGRATED_EVENT_MANAGER
-    [_sessionAttributeManager clearLastSessionsAnalytics];
-#else
-    try {
-        _analyticsController->clearAttributesDuplicationStore();
-        _analyticsController->clearEventsDuplicationStore();
-    } catch (std::exception& e) {
-        NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs, %s",e.what());
-    } catch (...) {
-        NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs.");
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [_sessionAttributeManager clearLastSessionsAnalytics];
+    } else {
+        try {
+            _analyticsController->clearAttributesDuplicationStore();
+            _analyticsController->clearEventsDuplicationStore();
+        } catch (std::exception& e) {
+            NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs, %s",e.what());
+        } catch (...) {
+            NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs.");
+        }
     }
-#endif
 }
 
 //Harvest Aware methods

@@ -60,13 +60,13 @@ NSString* currentParentId;
 
 + (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest*)request {
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities makeMutable:request];
-#if USE_INTEGRATED_EVENT_MANAGER
-    [NRMAHTTPUtilities attachNRMAPayload:[NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]
-                                  to:mutableRequest];
-#else
-    [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
-                                  to:mutableRequest];
-#endif
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [NRMAHTTPUtilities attachNRMAPayload:[NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]
+                                          to:mutableRequest];
+    } else {
+        [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
+                                      to:mutableRequest];
+    }
     return mutableRequest;
 }
 

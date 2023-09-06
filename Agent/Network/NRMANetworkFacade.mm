@@ -131,74 +131,66 @@
 
 
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
-#if USE_INTEGRATED_EVENT_MANAGER
-            [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
-                                                                               withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
+            if([NRMAFlags shouldEnableNewEventSystem]){
+                [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
+                                                                                   withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
                                                                                 withNRMAPayload:[NRMAHTTPUtilities retrieveNRMAPayload:request]];
-#else
-            [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
-                                                                               withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response]
-                                                                                                                                 bytesReceived:modifiedBytesReceived
-                                                                                                                                  responseTime:[timer timeElapsedInSeconds]
-                                                                                                                           networkErrorMessage:nil
-                                                                                                                           encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData]
-                                                                                                                                 appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
-                                                                                withPayload:[NRMAHTTPUtilities retrievePayload:request]];
-#endif
-        } else {
-#if USE_INTEGRATED_EVENT_MANAGER
-            NRMAPayload* retrievedPayload = [NRMAHTTPUtilities retrieveNRMAPayload:request];
-            
-            if(traceHeaders) {
-                if(retrievedPayload == nil) {
-                    retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
-                }
-                NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
-                NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
-                // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
-                if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
-
-                    retrievedPayload.traceId = traceParentComponents[1];
-                    retrievedPayload.parentId = @"0";
-                    retrievedPayload.id = traceParentComponents[2];
-                    retrievedPayload.dtEnabled = true;
-                }
-                else {
-                    NRLOG_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
-                }
+            } else {
+                [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
+                                                                                   withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
+                                                                                    withPayload:[NRMAHTTPUtilities retrievePayload:request]];
             }
-            
-            [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]] withNRMAPayload: retrievedPayload];
-#else
-            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
-
-            if(traceHeaders) {
-                if(retrievedPayload == nullptr) {
-                    retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+        } else {
+            if([NRMAFlags shouldEnableNewEventSystem]){
+                NRMAPayload* retrievedPayload = [NRMAHTTPUtilities retrieveNRMAPayload:request];
+                
+                if(traceHeaders) {
+                    if(retrievedPayload == nil) {
+                        retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
+                    }
+                    NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                    NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                    // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
+                    if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
+                        
+                        retrievedPayload.traceId = traceParentComponents[1];
+                        retrievedPayload.parentId = @"0";
+                        retrievedPayload.id = traceParentComponents[2];
+                        retrievedPayload.dtEnabled = true;
+                    }
+                    else {
+                        NRLOG_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                    }
                 }
                 
-                NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
-                NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
-                // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
-                if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
-
-                    retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
-                    retrievedPayload->setParentId(@"0".UTF8String);
-                    retrievedPayload->setId(traceParentComponents[2].UTF8String);
-                    retrievedPayload->setDistributedTracing(true);
+                [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]] withNRMAPayload: retrievedPayload];
+            } else {
+                std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
+                if(traceHeaders) {
+                    if(retrievedPayload == nullptr) {
+                        retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+                    }
+                    
+                    NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                    NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                    // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
+                    if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
+                        
+                        retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
+                        retrievedPayload->setParentId(@"0".UTF8String);
+                        retrievedPayload->setId(traceParentComponents[2].UTF8String);
+                        retrievedPayload->setDistributedTracing(true);
+                    }
+                    else {
+                        NRLOG_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                    }
                 }
-                else {
-                    NRLOG_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
-                }
+                [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
+                                                                                        withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]]
+                                                                                         withPayload:std::move(retrievedPayload)];
+                
             }
-            [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
-                                                                                    withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
-                                                                                                                                               bytesReceived:modifiedBytesReceived
-                                                                                                                                                responseTime:[timer timeElapsedInSeconds]]
-                                                                                     withPayload:std::move(retrievedPayload)];
-
-#endif
-     }
+        }
 
         [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
                                                            httpMethod:[request HTTPMethod]
@@ -240,29 +232,29 @@
         if(!replacedURL) {
             replacedURL = request.URL;
         }
-#if USE_INTEGRATED_EVENT_MANAGER
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
-                                                                                                                                   httpMethod:[request HTTPMethod]
-                                                                                                                               connectionType:connectionType
-                                                                                                                                  contentType:[request allHTTPHeaderFields][@"Content-Type"]
-                                                                                                                                    bytesSent:0]
-                                                                              withResponse:[[NRMANetworkResponseData alloc] initWithNetworkError:error.code
-                                                                                                                                   bytesReceived:0
-                                                                                                                                    responseTime:timer.timeElapsedInSeconds
-                                                                                                                             networkErrorMessage:error.localizedDescription]
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
+                                                                                                                                       httpMethod:[request HTTPMethod]
+                                                                                                                                   connectionType:connectionType
+                                                                                                                                      contentType:[request allHTTPHeaderFields][@"Content-Type"]
+                                                                                                                                        bytesSent:0]
+                                                                                  withResponse:[[NRMANetworkResponseData alloc] initWithNetworkError:error.code
+                                                                                                                                       bytesReceived:0
+                                                                                                                                        responseTime:timer.timeElapsedInSeconds
+                                                                                                                                 networkErrorMessage:error.localizedDescription]
                                                                                withNRMAPayload:[NRMAHTTPUtilities retrieveNRMAPayload:request]];
-#else
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
-                                                                                                                                   httpMethod:[request HTTPMethod]
-                                                                                                                               connectionType:connectionType
-                                                                                                                                  contentType:[request allHTTPHeaderFields][@"Content-Type"]
-                                                                                                                                    bytesSent:0]
-                                                                              withResponse:[[NRMANetworkResponseData alloc] initWithNetworkError:error.code
-                                                                                                                                   bytesReceived:0
-                                                                                                                                    responseTime:timer.timeElapsedInSeconds
-                                                                                                                             networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
-#endif
+        }else{
+            [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
+                                                                                                                                       httpMethod:[request HTTPMethod]
+                                                                                                                                   connectionType:connectionType
+                                                                                                                                      contentType:[request allHTTPHeaderFields][@"Content-Type"]
+                                                                                                                                        bytesSent:0]
+                                                                                  withResponse:[[NRMANetworkResponseData alloc] initWithNetworkError:error.code
+                                                                                                                                       bytesReceived:0
+                                                                                                                                        responseTime:timer.timeElapsedInSeconds
+                                                                                                                                 networkErrorMessage:error.localizedDescription]
+                                                                                   withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+        }
         // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags
         [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString
                                                            httpMethod:[request HTTPMethod]
