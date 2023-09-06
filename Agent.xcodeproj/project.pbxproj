@@ -948,6 +948,11 @@
 		2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */; };
 		2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
 		2BFFB1EC28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
+		340D64142AA92FCE00E63CC1 /* PersistentStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentStore.h */; };
+		340D64152AA92FCE00E63CC1 /* PersistentStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentStore.h */; };
+		340D64162AA92FCE00E63CC1 /* PersistentStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentStore.m */; };
+		340D64172AA92FCE00E63CC1 /* PersistentStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentStore.m */; };
+		340D642E2AA9301900E63CC1 /* PersistentStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */; };
 		342C4B412A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */; };
 		342C4B422A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */; };
 		342C4B582A3BD15A00116992 /* BlockAttributeValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */; };
@@ -1894,6 +1899,9 @@
 		2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimer.m; sourceTree = "<group>"; };
 		2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelperTests.h; sourceTree = "<group>"; };
 		2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelperTests.m; sourceTree = "<group>"; };
+		340D64122AA92FCE00E63CC1 /* PersistentStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentStore.h; sourceTree = "<group>"; };
+		340D64132AA92FCE00E63CC1 /* PersistentStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentStore.m; sourceTree = "<group>"; };
+		340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentStoreTests.m; sourceTree = "<group>"; };
 		342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AttributeValidatorProtocol.h; sourceTree = "<group>"; };
 		342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlockAttributeValidator.h; sourceTree = "<group>"; };
 		342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlockAttributeValidator.m; sourceTree = "<group>"; };
@@ -2125,6 +2133,7 @@
 				34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */,
 				F8FBFA582A77FA3000CDC8C5 /* TestRequestEvents.m */,
 				F8FBFA5E2A78336200CDC8C5 /* TestNRMAPayload.m */,
+				340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */,
 			);
 			path = "Analytics-Tests";
 			sourceTree = "<group>";
@@ -2639,6 +2648,8 @@
 				342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */,
 				F8FBFB1E2A83CEBD00CDC8C5 /* Constants.m */,
 				F8FBFB212A83CEDC00CDC8C5 /* Constants.h */,
+				340D64122AA92FCE00E63CC1 /* PersistentStore.h */,
+				340D64132AA92FCE00E63CC1 /* PersistentStore.m */,
 			);
 			path = Analytics;
 			sourceTree = "<group>";
@@ -3402,6 +3413,7 @@
 				02FF49AD24DC62B800115469 /* NRMAHTTPTransactions.h in Headers */,
 				02FF49E024DC636100115469 /* NRMATimedTraceSegment.h in Headers */,
 				02FF491F24DC624400115469 /* NRMACrashReport_Symbol.h in Headers */,
+				340D64142AA92FCE00E63CC1 /* PersistentStore.h in Headers */,
 				02FF496B24DC629000115469 /* NRMAHarvestData.h in Headers */,
 				02FF4A0424DC647200115469 /* NRMAThreadInfo.h in Headers */,
 				02FF4A0524DC647200115469 /* NRMAMeasurementType.h in Headers */,
@@ -3617,6 +3629,7 @@
 				02FF4B5D24E3201400115469 /* NRMAHTTPTransactions.h in Headers */,
 				02FF4B5E24E3201400115469 /* NRMATimedTraceSegment.h in Headers */,
 				02FF4B5F24E3201400115469 /* NRMACrashReport_Symbol.h in Headers */,
+				340D64152AA92FCE00E63CC1 /* PersistentStore.h in Headers */,
 				02FF4B6024E3201400115469 /* NRMAHarvestData.h in Headers */,
 				02FF4B6124E3201400115469 /* NRMAThreadInfo.h in Headers */,
 				02FF4B6224E3201400115469 /* NRMAMeasurementType.h in Headers */,
@@ -4297,6 +4310,7 @@
 				0209ABF524E706FA00E45C90 /* NRGCDOverrideTest.m in Sources */,
 				0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */,
 				0209ACA124E7393300E45C90 /* NRUncaughtExceptionhandlerTests.m in Sources */,
+				340D642E2AA9301900E63CC1 /* PersistentStoreTests.m in Sources */,
 				0209AC5124E707AB00E45C90 /* NRMAUserActionBuilderTest.m in Sources */,
 				0209AC9D24E7393300E45C90 /* NRMAUpgradeMetricGeneratorTest.m in Sources */,
 				0209AC4024E7075200E45C90 /* NRHarvesterConnectionTests.m in Sources */,
@@ -4377,6 +4391,7 @@
 				02FF4A3324DC64AE00115469 /* NRMAMetric.m in Sources */,
 				02FF48F324DC623400115469 /* NRMAInteractionHistory.c in Sources */,
 				02FF484E24DC614200115469 /* NRMAActivityNameGenerator.m in Sources */,
+				340D64162AA92FCE00E63CC1 /* PersistentStore.m in Sources */,
 				02FF49C424DC62B800115469 /* NRMAScopedMeasurement.m in Sources */,
 				02FF4AA924DC652E00115469 /* NRMAAppToken.m in Sources */,
 				02FF4AC324DC656900115469 /* NRMAPayloadContainer.mm in Sources */,
@@ -4842,6 +4857,7 @@
 				02FF4C9524E3201400115469 /* NRMATraceMachineAgentUserInterface.m in Sources */,
 				02FF4C9624E3201400115469 /* NRMANSURLConnectionDelegateBase.m in Sources */,
 				02FF4C9724E3201400115469 /* NRMAHTTPUtilities.mm in Sources */,
+				340D64172AA92FCE00E63CC1 /* PersistentStore.m in Sources */,
 				34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
