@@ -57,7 +57,10 @@
 //private NR attribute settings
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value;
 
+- (BOOL) addSessionEndAttribute;
+- (BOOL) addSessionEvent;
 
++ (int64_t) currentTimeMillis;
 + (NSArray<NSString*>*) reservedKeywords;
 
 @end

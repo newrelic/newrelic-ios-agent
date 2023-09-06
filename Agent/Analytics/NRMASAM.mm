@@ -12,6 +12,7 @@
 #import "NRMABool.h"
 #import "AttributeValidatorProtocol.h"
 #import "Constants.h"
+#import "NRMAAnalytics.h"
 
 @implementation NRMASAM {
     NSMutableDictionary<NSString*, id> *attributeDict;
@@ -26,7 +27,8 @@
 
         // Load public attributes from file.
         NSError *error;
-        NSData *existingData = [[NRMASAM attributeFilePath] dataUsingEncoding:NSUTF8StringEncoding];
+
+        NSData *existingData = [NSData dataWithContentsOfFile:[NRMASAM attributeFilePath]];
         if (existingData != nil) {
             attributeDict = [[NSJSONSerialization JSONObjectWithData:existingData options:kNilOptions error:&error] mutableCopy];
 
@@ -42,7 +44,8 @@
         }
 
         // Load private attributes from file.
-        NSData *existingPrivateData = [[NRMASAM privateAttributeFilePath] dataUsingEncoding:NSUTF8StringEncoding];
+        NSData *existingPrivateData = [NSData dataWithContentsOfFile:[NRMASAM privateAttributeFilePath]];
+
         if (existingPrivateData != nil) {
             privateAttributeDict = [[NSJSONSerialization JSONObjectWithData:existingPrivateData options:kNilOptions error:&error] mutableCopy];
 
@@ -132,8 +135,14 @@
 
 - (BOOL) removeAllSessionAttributes {
     @synchronized (attributeDict) {
-        [attributeDict removeAllObjects];
-        [self persistToDisk];
+        @synchronized (privateAttributeDict) {
+
+            [attributeDict removeAllObjects];
+            [privateAttributeDict removeAllObjects];
+
+            [self persistToDisk];
+            [self persistPrivateAttributesToDisk];
+        }
     }
     return YES;
 }
@@ -191,7 +200,8 @@
         NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
     }
     else {
-        return( [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+        NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        return jsonString;
     }
     return nil;
 }
@@ -205,7 +215,9 @@
         NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
     }
     else {
-        return( [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+        NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+        return jsonString;
     }
     return nil;
 }
@@ -219,7 +231,9 @@
         NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
     }
     else {
-        return( [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]);
+        NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+        return jsonString;
     }
     return nil;
 }
@@ -227,7 +241,9 @@
 + (NSString*) getLastSessionsAttributes {
     NSData *data = [NSData dataWithContentsOfFile:[self attributeFilePath]];
     if (data) {
-        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        NSString* jsonString =  [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+        return jsonString;
     }
     return nil;
 }
@@ -268,12 +284,13 @@
 
     NSData* data = [currentAttributes dataUsingEncoding:NSUTF8StringEncoding];
     if (data) {
-        [data writeToFile:[NRMASAM attributeFilePath] atomically:true];
-        return YES;
+        if ([data writeToFile:[NRMASAM attributeFilePath] atomically:true]) {
+            return YES;
+        }
     }
-    else {
-        return NO;
-    }
+    NRLOG_ERROR(@"Failed to persist public attributes to disk");
+
+    return NO;
 }
 
 - (BOOL) persistPrivateAttributesToDisk {
@@ -281,13 +298,13 @@
 
     NSData* data = [currentAttributes dataUsingEncoding:NSUTF8StringEncoding];
     if (data) {
-        [data writeToFile:[NRMASAM privateAttributeFilePath] atomically:true];
+        if ([data writeToFile:[NRMASAM privateAttributeFilePath] atomically:true]) {
+            return YES;
+        }
+    }
+    NRLOG_ERROR(@"Failed to persist private attributes to disk");
 
-        return YES;
-    }
-    else {
-        return NO;
-    }
+    return NO;
 }
 
 // Helpers
