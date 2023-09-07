@@ -8,6 +8,8 @@
 
 #import "PersistentStore.h"
 
+#import "NRLogger.h"
+
 @implementation PersistentStore {
     NSMutableDictionary *store;
     NSString *_filename;
@@ -31,14 +33,23 @@
     return store[key];
 }
 
-- (BOOL)load {
-    NSData *storedData = [NSData dataWithContentsOfFile:_filename];
-    NSError *error = nil;
+- (BOOL)load:(NSError **)error {
+    NSData *storedData = [NSData dataWithContentsOfFile:_filename
+                                                options:0
+                                                  error:&error];
+    if(storedData == nil) {
+        if(error != NULL && *error != nil) {
+            return NO;
+        }
+    }
     
     NSMutableDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:storedData
-                                                                                         error:&error];
-    if(error != nil) {
-        return NO;
+                                                                                         error:error];
+    
+    if(storedDictionary == nil) {
+        if(error != NULL && *error != nil) {
+            return NO;
+        }
     }
     
     [store addEntriesFromDictionary:storedDictionary];

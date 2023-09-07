@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithFilename:(NSString *)filename;
 - (void)setObject:(ObjectType)object forKey:(KeyType)key;
 - (nullable ObjectType)objectForKey:(KeyType)key;
-- (BOOL)load;
+- (BOOL)load:(NSError **)error;
 
 @end
 

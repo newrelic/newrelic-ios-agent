@@ -120,15 +120,22 @@
     NSError *error = nil;
     NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
                                                                                             error:&error];
-    
+    XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
     XCTAssertEqual([retrievedDictionary count], 1);
     
     PersistentStore *anotherOne = [[PersistentStore alloc] initWithFilename:testFilename];
-    XCTAssertTrue([anotherOne load]);
+    [anotherOne load:&error];
+    XCTAssertNil(error, "Error loading previous events: %@", [error localizedDescription]);
     TestEvent *anotherEvent = [anotherOne objectForKey:@"aKey"];
     XCTAssertNotNil(anotherEvent);
     XCTAssertEqual(anotherEvent.timestamp, testEvent.timestamp);
     XCTAssertEqual(anotherEvent.sessionElapsedTimeSeconds, testEvent.sessionElapsedTimeSeconds);
     XCTAssertEqual([anotherEvent.attributes count], [testEvent.attributes count]);
+}
+
+- (void)testStoreReturnsNoIfFileDoesNotExist {
+    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:@"FileDoesNotExist"];
+    NSError *error = nil;
+    XCTAssertFalse([sut load:&error]);
 }
 @end
