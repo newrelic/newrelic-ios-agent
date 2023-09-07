@@ -701,7 +701,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(name == nil || name.length == 0){return NO;}
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:name
-                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                  timestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                      withAttributeValidator:_attributeValidator];
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
@@ -740,7 +740,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
         
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
-                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                  timestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                      withAttributeValidator:_attributeValidator];
         if (event == nil) {
@@ -810,7 +810,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
         if([NRMAFlags shouldEnableNewEventSystem]){
             NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
-                                                                      timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                      timestamp:[NRMAAnalytics currentTimeMillis]
                                                     sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
             [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [event addAttribute:key value:obj];
@@ -869,7 +869,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if (userAction == nil) { return NO; };
     
     NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileUserAction
-                                                              timestamp:[[NSDate date] timeIntervalSince1970]
+                                                              timestamp:[NRMAAnalytics currentTimeMillis]
                                             sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
 
     if (userAction.associatedMethod.length > 0) {
@@ -1104,14 +1104,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (BOOL) addSessionEvent {
-    NRMASessionEvent *event = [[NRMASessionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] category:@"Session" withAttributeValidator:_attributeValidator];
+    NRMASessionEvent *event = [[NRMASessionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
+                                              sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                                 category:@"Session" withAttributeValidator:_attributeValidator];
 
     return [_eventManager addEvent:event];
 }
 
+#pragma mark Static helpers.
+
 + (int64_t) currentTimeMillis {
     double timestamp = [[NSDate date] timeIntervalSince1970];
-    int64_t timeInMilisInt64 = (int64_t)(timestamp*1000);
+    int64_t timeInMilisInt64 = (int64_t)(timestamp * 1000);
     return timeInMilisInt64;
 }
 
@@ -1140,7 +1144,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             kNRMA_RA_platform,
             kNRMA_RA_platformVersion,
             kNRMA_RA_lastInteraction
-            ,nil];
+        ,nil];
 }
 
 @end
