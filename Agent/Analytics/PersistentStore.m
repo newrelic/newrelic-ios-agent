@@ -32,10 +32,10 @@
 - (void)setObject:(nonnull id)object forKey:(nonnull id)key {
     store[key] = object;
     
-    NSTimeInterval delay = [[NSDate new] timeIntervalSinceDate:_lastSave] > _minimumDelay ? 0: _minimumDelay;
-    if(delay == 0) {
+//    NSTimeInterval delay = [[NSDate new] timeIntervalSinceDate:_lastSave] > _minimumDelay ? 0: _minimumDelay;
+//    if(delay == 0) {
         [self saveToFile];
-    }
+//    }
 }
 
 - (nullable id)objectForKey:(nonnull id)key {

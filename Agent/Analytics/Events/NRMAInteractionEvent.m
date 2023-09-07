@@ -36,4 +36,21 @@
     return [NSDictionary dictionaryWithDictionary:dict];
 }
 
+- (void)encodeWithCoder:(NSCoder *)coder {
+    [super encodeWithCoder:coder];
+    
+    [coder encodeObject:self.category forKey:@"Category"];
+    [coder encodeObject:self.name forKey:@"Name"];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if(self) {
+        self.category = [coder decodeObjectForKey:@"Category"];
+        self.name = [coder decodeObjectForKey:@"Name"];
+    }
+    
+    return self;
+}
+
 @end

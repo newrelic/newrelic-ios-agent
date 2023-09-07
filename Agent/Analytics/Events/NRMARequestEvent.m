@@ -19,7 +19,7 @@
     self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds withAttributeValidator:attributeValidator];
     if (self) {
         self.eventType = kNRMA_RET_mobileRequest;
-        _payload = payload;
+        self.payload = payload;
     }
     
     return self;
@@ -32,6 +32,21 @@
     dict[kNRMA_RA_payload] = [_payload JSONObject];//TODO: make sure this is the right key
 
     return [NSDictionary dictionaryWithDictionary:dict];
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder {
+    [super encodeWithCoder:coder];
+    
+    [coder encodeObject:_payload forKey:@"Payload"];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if(self) {
+        self.payload = [coder decodeObjectForKey:@"Payload"];
+    }
+    
+    return self;
 }
 
 @end

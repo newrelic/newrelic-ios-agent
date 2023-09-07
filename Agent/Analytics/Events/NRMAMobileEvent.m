@@ -55,4 +55,22 @@
     return [NSDictionary dictionaryWithDictionary:dict];
 }
 
+- (void)encodeWithCoder:(nonnull NSCoder *)coder {
+    [coder encodeObject:_eventType forKey:@"EventType"];
+    [coder encodeDouble:_timestamp forKey:@"Timestamp"];
+    [coder encodeDouble:_sessionElapsedTimeSeconds forKey:@"SessionElapsedTime"];
+    [coder encodeObject:_attributes forKey:@"Attributes"];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super init];
+    if(self) {
+        self.timestamp = [coder decodeDoubleForKey:@"Timestamp"];
+        self.eventType = [coder decodeObjectForKey:@"EventType"];
+        self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:@"SessionElapsedTime"];
+        self.attributes = [coder decodeObjectForKey:@"Attributes"];
+    }
+    
+    return self;
+}
 @end

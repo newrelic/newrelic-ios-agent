@@ -9,7 +9,13 @@
 #import <XCTest/XCTest.h>
 
 #import "PersistentStore.h"
+
 #import "NRMAMobileEvent.h"
+#import "NRMACustomEvent.h"
+#import "NRMARequestEvent.h"
+#import "NRMAInteractionEvent.h"
+
+#import "BlockAttributeValidator.h"
 
 @interface TestEvent : NRMAMobileEvent <NSCoding>
 - (instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -53,18 +59,39 @@
 @end
 
 @interface PersistentStoreTests : XCTestCase
-
 @end
 
-@implementation PersistentStoreTests
-    NSString *testFilename = @"fbstest_tempStore";
+@implementation PersistentStoreTests {
+    BlockAttributeValidator *agreeableAttributeValidator;
+}
+
+NSString *testFilename = @"fbstest_tempStore";
+
+
 
 - (void)setUp {
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+    if(agreeableAttributeValidator == nil) {
+        agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *) {
+            return YES;
+        } valueValidator:^BOOL(id) {
+            return YES;
+        } andEventTypeValidator:^BOOL(NSString *) {
+            return YES;
+        }];
+    }
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:testFilename]) {
+        [fileManager removeItemAtPath:testFilename error:nil];
+    }
 }
 
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:testFilename]) {
+        [fileManager removeItemAtPath:testFilename error:nil];
+    }
 }
 
 //- (void)testExample {
@@ -81,7 +108,8 @@
 
 - (void)testStoresObject {
     // Given
-    PersistentStore<NSString *, TestEvent*> *sut = [PersistentStore new];
+    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:testFilename
+                                                     andMinimumDelay:1];
     
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
                                             sessionElapsedTimeInSeconds:50
@@ -140,6 +168,87 @@
                                                      andMinimumDelay:1];
     NSError *error = nil;
     XCTAssertFalse([sut load:&error]);
+}
+
+- (void)testStoreHandlesDifferentTypesOfEvents {
+    // Given
+    PersistentStore *originalStore = [[PersistentStore alloc] initWithFilename:testFilename
+                                                     andMinimumDelay:1];
+    NSError *error = nil;
+
+    // When
+    NRMACustomEvent *customEvent = [self createCustomEvent];
+    NRMARequestEvent *requestEvent = [self createRequestEvent];
+    NRMAInteractionEvent *interactionEvent = [self createInteractionEvent];
+
+    [originalStore setObject:customEvent forKey:@"Custom Event"];
+    [originalStore setObject:requestEvent forKey:@"Request Event"];
+    [originalStore setObject:interactionEvent forKey:@"Interaction Event"];
+    sleep(1);
+
+    // Then
+//    NSFileManager *fileManager = [NSFileManager defaultManager];
+//
+//    XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+//
+//    NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
+//    NSError *error = nil;
+//    NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
+//                                                                                            error:&error];
+    
+    PersistentStore *anotherOne = [[PersistentStore alloc] initWithFilename:testFilename
+                                                            andMinimumDelay:1];
+
+    [anotherOne load:&error];
+
+    XCTAssertNil(error, @"There was a problem loading the previous events into the new thing");
+
+    NRMACustomEvent *retrievedCustom = [anotherOne objectForKey:@"Custom Event"];
+    XCTAssertNotNil(retrievedCustom);
+    XCTAssertEqual(retrievedCustom.timestamp, customEvent.timestamp);
+    XCTAssertEqual(retrievedCustom.sessionElapsedTimeSeconds, customEvent.sessionElapsedTimeSeconds);
+    XCTAssertEqualObjects(retrievedCustom.eventType, customEvent.eventType);
+
+    NRMARequestEvent *retrievedRequest = [anotherOne objectForKey:@"Request Event"];
+    XCTAssertNotNil(retrievedRequest);
+    XCTAssertEqual(retrievedRequest.timestamp, requestEvent.timestamp);
+    XCTAssertEqual(retrievedRequest.sessionElapsedTimeSeconds, requestEvent.sessionElapsedTimeSeconds);
+    XCTAssertEqualObjects(retrievedRequest.eventType, requestEvent.eventType);
+}
+
+- (NRMACustomEvent *)createCustomEvent {
+    NSTimeInterval timestamp = arc4random() % 100;
+    NSTimeInterval elapsedTime = arc4random() % 50;
+    NSString *eventType = @"New Event";
+
+    return [[NRMACustomEvent alloc] initWithEventType:eventType
+                                            timestamp:timestamp
+                          sessionElapsedTimeInSeconds:elapsedTime
+                               withAttributeValidator:agreeableAttributeValidator];
+}
+
+- (NRMARequestEvent *)createRequestEvent {
+    NSTimeInterval timestamp = arc4random() % 100;
+    NSTimeInterval elapsedTime = arc4random() % 50;
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:@"1" appID:@"1" traceID:@"1" parentID:@"1" trustedAccountKey:@"1"];
+
+    return [[NRMARequestEvent alloc] initWithTimestamp:timestamp
+                           sessionElapsedTimeInSeconds:elapsedTime
+                                               payload:payload
+                                withAttributeValidator:agreeableAttributeValidator];
+}
+
+- (NRMAInteractionEvent *)createInteractionEvent {
+    NSTimeInterval timestamp = arc4random() % 100;
+    NSTimeInterval elapsedTime = arc4random() % 50;
+    NSString *name = @"Interaction";
+    NSString *category = @"Category";
+
+    return [[NRMAInteractionEvent alloc] initWithTimestamp:timestamp
+                               sessionElapsedTimeInSeconds:elapsedTime
+                                                      name:name
+                                                  category:category
+                                    withAttributeValidator:agreeableAttributeValidator];
 }
 
 @end

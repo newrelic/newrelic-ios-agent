@@ -39,4 +39,21 @@
     return [NSDictionary dictionaryWithDictionary:dict];
 }
 
+- (void)encodeWithCoder:(NSCoder *)coder {
+    [super encodeWithCoder:coder];
+    
+    [coder encodeObject:self.encodedResponseBody forKey:@"EncodedResponseBody"];
+    [coder encodeObject:self.appDataHeader forKey:@"AppDataHeader"];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if(self) {
+        self.encodedResponseBody = [coder decodeObjectForKey:@"EncodedResponseBody"];
+        self.appDataHeader = [coder decodeObjectForKey:@"AppDataHeader"];
+    }
+    
+    return self;
+}
+
 @end

@@ -63,4 +63,32 @@
     return [NSDictionary dictionaryWithDictionary:dict];
 }
 
+- (void)encodeWithCoder:(NSCoder *)coder {
+    [coder encodeDouble:_timestamp forKey:@"Timestamp"];
+    [coder encodeObject:_accountId forKey:@"AccountId"];
+    [coder encodeObject:_appId forKey:@"AppId"];
+    [coder encodeObject:_id forKey:@"id"];
+    [coder encodeObject:_traceId forKey:@"TraceId"];
+    [coder encodeObject:_parentId forKey:@"ParentId"];
+    [coder encodeObject:_trustedAccountKey forKey:@"TrustedAccountKey"];
+}
+
+- (nullable instancetype)initWithCoder:(NSCoder *)coder {
+    self = [super init];
+    if (self) {
+        _timestamp = [coder decodeDoubleForKey:@"Timestamp"];
+        _payloadType = @"mobile";
+        _accountId = [coder decodeObjectForKey:@"AccountId"];
+        _appId = [coder decodeObjectForKey:@"AppId"];
+        _id = [coder decodeObjectForKey:@"id"];
+        _traceId = [coder decodeObjectForKey:@"TraceId"];
+        _parentId = [coder decodeObjectForKey:@"ParentId"];
+        _trustedAccountKey = [coder decodeObjectForKey:@"TrustedAccountKey"];
+        _dtEnabled = false;
+        self->version = @"[0,2]";
+    }
+    
+    return self;
+}
+
 @end
