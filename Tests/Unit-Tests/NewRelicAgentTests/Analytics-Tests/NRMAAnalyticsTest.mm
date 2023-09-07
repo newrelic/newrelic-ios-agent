@@ -1246,4 +1246,17 @@
 
 }
 
+- (void) testSendSessionEndAttrib {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+   XCTAssertTrue([analytics addSessionEndAttribute], @"failed to successfully add session end attrib");
+}
+
+- (void) testSendSessionEvent {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+   XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
+
+}
+
 @end

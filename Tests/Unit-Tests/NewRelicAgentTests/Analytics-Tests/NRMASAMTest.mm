@@ -21,6 +21,12 @@
 
 @implementation NRMASAMTest
 
+- (void)setUp {
+    [super setUp];
+
+    NRMASAM *manager = [self samTest];
+    [manager removeAllSessionAttributes];
+}
 
 - (NRMASAM*) samTest {
     return [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {

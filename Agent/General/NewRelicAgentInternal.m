@@ -389,7 +389,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) initializeAnalytics {
     @synchronized(kNRMAAnalyticsInitializationLock) {
-        [NRMAAnalytics clearDuplicationStores];
+       // [NRMAAnalytics clearDuplicationStores];
         self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
     }
 

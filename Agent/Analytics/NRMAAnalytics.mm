@@ -30,6 +30,7 @@
 #import "NRMANetworkErrorEvent.h"
 #import "NRMASAM.h"
 #import "BlockAttributeValidator.h"
+#import "NRMASessionEvent.h"
 
 using namespace NewRelic;
 @implementation NRMAAnalytics
@@ -75,53 +76,27 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) setMaxEventBufferSize:(unsigned int) size {
-    _analyticsController->setMaxEventBufferSize(size);
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [_eventManager setMaxEventBufferSize:size];
+    }
+    else {
+        _analyticsController->setMaxEventBufferSize(size);
+    }
 }
 - (void) setMaxEventBufferTime:(unsigned int)seconds
 {
-    _analyticsController->setMaxEventBufferTime(seconds);
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [_eventManager setMaxEventBufferTimeInSeconds:seconds];
+    }
+    else {
+        _analyticsController->setMaxEventBufferTime(seconds);
+    }
 }
 
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime {
     self = [super init];
     if(self){
-        if(!__has_feature(cxx_exceptions)) {
-            NRLOG_ERROR(@"C++ exception handling is disabled. This will cause incorrect behavior in the New Relic Agent.");
-            @throw [NSException exceptionWithName:@"Invalid Configuration" reason:@"c++ exception handling is disabled" userInfo:nil];
-        }
-
-        NSString* documentDirURL = [NewRelicInternalUtils getStorePath];
-        LibLogger::setLogger(std::make_shared<NewRelic::NRMALoggerBridge>(NewRelic::NRMALoggerBridge()));
-        _analyticsController = std::make_shared<NewRelic::AnalyticsController>(sessionStartTime,documentDirURL.UTF8String, [NRMAAnalytics eventDupStore], [NRMAAnalytics attributeDupStore]);
-        //__kNRMA_RA_upgradeFrom and __kNRMA_RA_install are only valid for one session
-        //and will be set shortly after the initialization of NRMAAnalytics.
-        //They can be removed now and it shouldn't interfere with the generation
-        //of these attributes if it should occur.
-        NSString* attributes = [self sessionAttributeJSONString];
-        if (attributes != nil) {
-            NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                                       options:0
-                                                                         error:nil];
-            if (dictionary[kNRMA_RA_upgradeFrom]) {
-                _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
-            }
-            if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
-                _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
-            }
-            if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
-                _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
-            }
-            if (dictionary[kNRMA_RA_install]) {
-                _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
-            }
-
-            //session duration is only valid for one session. This metric should be removed
-            //after the persistent attributes are loaded.
-            if (dictionary[kNRMA_RA_sessionDuration]) {
-                _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
-            }
-        }
-        
+        // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
             _eventManager = [NRMAEventManager new];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
@@ -172,6 +147,73 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 return YES;
             }];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
+
+
+            NSString* attributes = [self sessionAttributeJSONString];
+            if (attributes != nil) {
+                NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                           options:0
+                                                                             error:nil];
+                if (dictionary[kNRMA_RA_upgradeFrom]) {
+                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_upgradeFrom];
+                }
+                if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
+                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMASecureUDIDIsNilNotification];
+
+                }
+                if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
+                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMADeviceChangedAttribute];
+                }
+                if (dictionary[kNRMA_RA_install]) {
+                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_install];
+                }
+
+                //session duration is only valid for one session. This metric should be removed
+                //after the persistent attributes are loaded.
+                if (dictionary[kNRMA_RA_sessionDuration]) {
+                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_sessionDuration];
+                }
+            }
+
+        }
+        // Use old Event system
+        else {
+            if(!__has_feature(cxx_exceptions)) {
+                NRLOG_ERROR(@"C++ exception handling is disabled. This will cause incorrect behavior in the New Relic Agent.");
+                @throw [NSException exceptionWithName:@"Invalid Configuration" reason:@"c++ exception handling is disabled" userInfo:nil];
+            }
+
+            NSString* documentDirURL = [NewRelicInternalUtils getStorePath];
+            LibLogger::setLogger(std::make_shared<NewRelic::NRMALoggerBridge>(NewRelic::NRMALoggerBridge()));
+            _analyticsController = std::make_shared<NewRelic::AnalyticsController>(sessionStartTime,documentDirURL.UTF8String, [NRMAAnalytics eventDupStore], [NRMAAnalytics attributeDupStore]);
+            //__kNRMA_RA_upgradeFrom and __kNRMA_RA_install are only valid for one session
+            //and will be set shortly after the initialization of NRMAAnalytics.
+            //They can be removed now and it shouldn't interfere with the generation
+            //of these attributes if it should occur.
+            NSString* attributes = [self sessionAttributeJSONString];
+            if (attributes != nil) {
+                NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                           options:0
+                                                                             error:nil];
+                if (dictionary[kNRMA_RA_upgradeFrom]) {
+                    _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
+                }
+                if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
+                    _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
+                }
+                if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
+                    _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
+                }
+                if (dictionary[kNRMA_RA_install]) {
+                    _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
+                }
+
+                //session duration is only valid for one session. This metric should be removed
+                //after the persistent attributes are loaded.
+                if (dictionary[kNRMA_RA_sessionDuration]) {
+                    _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
+                }
+            }
         }
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
@@ -197,7 +239,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
          interactionDuration:(double)duration_secs {
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(name == nil || name.length == 0){return NO;}
-        NRMAInteractionEvent *event = [[NRMAInteractionEvent alloc] initWithTimestamp:[[NSDate date] timeIntervalSince1970]
+        NRMAInteractionEvent *event = [[NRMAInteractionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] name:name category:@"Interaction"
                                                      withAttributeValidator:_attributeValidator];
         [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
@@ -231,10 +273,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             addDistributedTracing = payload.dtEnabled;
         }
         
-        NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
         NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
         
-        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:_attributeValidator];
+        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:_attributeValidator];
         if (event == nil) {
             return false;
         }
@@ -342,7 +383,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             addDistributedTracing = payload.dtEnabled;
         }
         
-        NSTimeInterval currentTime_ms = [[[NSDate alloc] init] timeIntervalSince1970];
         NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
         
         NSString* requestUrl = requestData.requestUrl;
@@ -365,7 +405,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return nil;
         }
         
-        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:currentTime_ms sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:_attributeValidator];
+        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:_attributeValidator];
         if (event == nil) {
             return nil;
         }
@@ -661,7 +701,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(name == nil || name.length == 0){return NO;}
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:name
-                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                  timestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                      withAttributeValidator:_attributeValidator];
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
@@ -700,7 +740,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
         
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
-                                                                  timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                  timestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                      withAttributeValidator:_attributeValidator];
         if (event == nil) {
@@ -770,7 +810,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
         if([NRMAFlags shouldEnableNewEventSystem]){
             NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
-                                                                      timestamp:[[NSDate date] timeIntervalSince1970]
+                                                                      timestamp:[NRMAAnalytics currentTimeMillis]
                                                     sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
             [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [event addAttribute:key value:obj];
@@ -829,7 +869,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if (userAction == nil) { return NO; };
     
     NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileUserAction
-                                                              timestamp:[[NSDate date] timeIntervalSince1970]
+                                                              timestamp:[NRMAAnalytics currentTimeMillis]
                                             sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
 
     if (userAction.associatedMethod.length > 0) {
@@ -1007,26 +1047,76 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }];
         [[NewRelicAgentInternal sharedInstance].gestureFacade recordUserAction:backgroundGesture];
     }
-    
-    if(!_analyticsController->addSessionEndAttribute()) { //has exception handling within
-        NRLOG_ERROR(@"failed to add session end attribute.");
-    }
 
-    if(!_analyticsController->addSessionEvent()) { //has exception handling within
-        NRLOG_ERROR(@"failed to add a session event");
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        if(![self addSessionEndAttribute]) { //has exception handling within
+            NRLOG_ERROR(@"failed to add session end attribute.");
+        }
+
+        if(![self addSessionEvent]) { //has exception handling within
+            NRLOG_ERROR(@"failed to add a session event");
+        }
+    }
+    else {
+        if(!_analyticsController->addSessionEndAttribute()) { //has exception handling within
+            NRLOG_ERROR(@"failed to add session end attribute.");
+        }
+
+        if(!_analyticsController->addSessionEvent()) { //has exception handling within
+            NRLOG_ERROR(@"failed to add a session event");
+        }
     }
     
 }
 
 - (void) onHarvestBefore {
-    if (_sessionWillEnd || _analyticsController->didReachMaxEventBufferTime()) {
-        
-        NRMAHarvestableAnalytics* harvestableAnalytics = [[NRMAHarvestableAnalytics alloc] initWithAttributeJSON:[self sessionAttributeJSONString]
-                                                                                                        EventJSON:[self analyticsJSONString]];
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        if (_sessionWillEnd || [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]) {
+            [self handleHarvest];
+        }
 
-        [NRMAHarvestController addHarvestableAnalytics:harvestableAnalytics];
-        [harvestableAnalytics release];
     }
+    else {
+        if (_sessionWillEnd || _analyticsController->didReachMaxEventBufferTime()) {
+            [self handleHarvest];
+        }
+    }
+}
+
+-(void) handleHarvest {
+    NRMAHarvestableAnalytics* harvestableAnalytics = [[NRMAHarvestableAnalytics alloc] initWithAttributeJSON:[self sessionAttributeJSONString]
+                                                                                                    EventJSON:[self analyticsJSONString]];
+
+    [NRMAHarvestController addHarvestableAnalytics:harvestableAnalytics];
+    [harvestableAnalytics release];
+}
+
+- (BOOL) addSessionEndAttribute {
+
+    NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
+
+    if (![_sessionAttributeManager setNRSessionAttribute:kNRMA_RA_sessionDuration value:@(elapsed)]) {
+        NRLOG_ERROR(@"failed to add session end attribute.");
+        return NO;
+    }
+
+    return YES;
+}
+
+- (BOOL) addSessionEvent {
+    NRMASessionEvent *event = [[NRMASessionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
+                                              sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                                 category:@"Session" withAttributeValidator:_attributeValidator];
+
+    return [_eventManager addEvent:event];
+}
+
+#pragma mark Static helpers.
+
++ (int64_t) currentTimeMillis {
+    double timestamp = [[NSDate date] timeIntervalSince1970];
+    int64_t timeInMilisInt64 = (int64_t)(timestamp * 1000);
+    return timeInMilisInt64;
 }
 
 + (NSArray<NSString*>*) reservedKeywords {
@@ -1054,7 +1144,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             kNRMA_RA_platform,
             kNRMA_RA_platformVersion,
             kNRMA_RA_lastInteraction
-            ,nil];
+        ,nil];
 }
 
 @end
