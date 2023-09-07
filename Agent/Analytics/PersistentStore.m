@@ -13,20 +13,29 @@
 @implementation PersistentStore {
     NSMutableDictionary *store;
     NSString *_filename;
+    NSTimeInterval _minimumDelay;
+    NSDate *_lastSave;
 }
 
-- (nonnull instancetype)initWithFilename:(NSString *)filename {
+- (nonnull instancetype)initWithFilename:(NSString *)filename
+                         andMinimumDelay:(NSTimeInterval)minimumDelay {
     self = [super init];
     if (self) {
         store = [NSMutableDictionary new];
         _filename = filename;
+        _minimumDelay = minimumDelay;
+        _lastSave = [NSDate new];
     }
     return self;
 }
 
 - (void)setObject:(nonnull id)object forKey:(nonnull id)key {
     store[key] = object;
-    [self saveToFile];
+    
+    NSTimeInterval delay = [[NSDate new] timeIntervalSinceDate:_lastSave] > _minimumDelay ? 0: _minimumDelay;
+    if(delay == 0) {
+        [self saveToFile];
+    }
 }
 
 - (nullable id)objectForKey:(nonnull id)key {
@@ -65,8 +74,9 @@
                                        error:&error];
         if(!success) {
             NSLog(@"Error saving data");
+        } else {
+            _lastSave = [NSDate new];
         }
-        
     }
 }
 

@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface PersistentStore<KeyType, ObjectType> : NSObject
 
-- (instancetype)initWithFilename:(NSString *)filename;
+- (instancetype)initWithFilename:(NSString *)filename andMinimumDelay:(NSTimeInterval)minimumDelay;
 - (void)setObject:(ObjectType)object forKey:(KeyType)key;
 - (nullable ObjectType)objectForKey:(KeyType)key;
 - (BOOL)load:(NSError **)error;

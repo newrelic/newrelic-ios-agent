@@ -97,7 +97,8 @@
 
 - (void)testWritesObjectToFile {
     // Given
-    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:testFilename];
+    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:testFilename
+                                                     andMinimumDelay:1];
 
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
                                             sessionElapsedTimeInSeconds:50
@@ -123,7 +124,8 @@
     XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
     XCTAssertEqual([retrievedDictionary count], 1);
     
-    PersistentStore *anotherOne = [[PersistentStore alloc] initWithFilename:testFilename];
+    PersistentStore *anotherOne = [[PersistentStore alloc] initWithFilename:testFilename
+                                                            andMinimumDelay:1];
     [anotherOne load:&error];
     XCTAssertNil(error, "Error loading previous events: %@", [error localizedDescription]);
     TestEvent *anotherEvent = [anotherOne objectForKey:@"aKey"];
@@ -134,8 +136,10 @@
 }
 
 - (void)testStoreReturnsNoIfFileDoesNotExist {
-    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:@"FileDoesNotExist"];
+    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:@"FileDoesNotExist"
+                                                     andMinimumDelay:1];
     NSError *error = nil;
     XCTAssertFalse([sut load:&error]);
 }
+
 @end
