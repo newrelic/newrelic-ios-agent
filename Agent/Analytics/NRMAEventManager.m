@@ -14,7 +14,7 @@
 #import "NRMANetworkErrorEvent.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;
-static const NSUInteger kDefaultBufferTimeSeconds = 600; // 5 Minutes
+static const NSUInteger kDefaultBufferTimeSeconds = 600; // 10 Minutes
 static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 
 @implementation NRMAEventManager {
@@ -30,7 +30,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 - (nonnull instancetype)init {
     self = [super init];
     if (self) {
-        events = [[NSMutableArray alloc] init];
+        events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
         maxBufferSize = kDefaultBufferSize;
         maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
         totalAttemptedInserts = 0;
@@ -102,7 +102,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
     }
 }
 
-- (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error {
+- (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents {
     NSString *eventJsonString = nil;
     @synchronized (events) {
         @try {
@@ -119,6 +119,9 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
         } @catch (NSException *e) {
             NRLOG_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }
+    }
+    if (clearEvents){
+        [self empty];
     }
     return eventJsonString;
 }

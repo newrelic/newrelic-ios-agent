@@ -32,6 +32,9 @@
 #import "BlockAttributeValidator.h"
 #import "NRMASessionEvent.h"
 
+//******************* THIS FILE HAS ARC DISABLED *******************
+// TODO: RE-ENABLE ARC WHEN THE C++ IS REMOVED
+
 using namespace NewRelic;
 @implementation NRMAAnalytics
 {
@@ -174,7 +177,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                     [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_sessionDuration];
                 }
             }
-
         }
         // Use old Event system
         else {
@@ -231,6 +233,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (void) dealloc {
     [__eventTypeRegex release];
+    [_eventManager dealloc];
+    [_sessionAttributeManager dealloc];
+    [_attributeValidator release];
 
     [super dealloc];
 }
@@ -244,7 +249,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                      withAttributeValidator:_attributeValidator];
         [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
         
-        return [_eventManager addEvent:event];
+        return [_eventManager addEvent:[event autorelease]];
     } else {
         return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
     }
@@ -338,7 +343,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:kNRMA_Attrib_contentType value:contentType];
         }
         
-        return [_eventManager addEvent:event];
+        return [_eventManager addEvent:[event autorelease]];
     } @catch (NSException *exception) {
         NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
     }
@@ -352,7 +357,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if(event == nil){ return NO; }
         [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_Network];
             
-        return [_eventManager addEvent:event];
+        return [_eventManager addEvent:[event autorelease]];
     }
     return NO;
 }
@@ -365,7 +370,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if(event == nil){ return NO; }
         [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_HTTP];
 
-        return [_eventManager addEvent:event];
+        return [_eventManager addEvent:[event autorelease]];
     }
     return NO;
 }
@@ -708,7 +713,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:key value:obj];
         }];
         
-        return [_eventManager addEvent:event];
+        return [_eventManager addEvent:[event autorelease]];
     } else {
         try {
             auto event = _analyticsController->newEvent(name.UTF8String);
@@ -738,7 +743,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             NRLOG_ERROR(@"Breadcrumb must be named.");
             return NO;
         }
-        
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
                                                                   timestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
@@ -754,7 +758,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:key value:obj];
         }];
         
-        return [_eventManager addEvent:event];
+        return [_eventManager addEvent:[event autorelease]];
     } else {
         try {
             
@@ -815,7 +819,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [event addAttribute:key value:obj];
             }];
-            [_eventManager addEvent:event];
+            [_eventManager addEvent:[event autorelease]];
             
             return YES;
         } else {
@@ -905,7 +909,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [event addAttribute:kNRMA_RA_orientation value:deviceOrientation];
     }
 
-    return [_eventManager addEvent:event];
+    return [_eventManager addEvent:[event autorelease]];
 }
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number
@@ -926,7 +930,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (NSString*) analyticsJSONString {
     if([NRMAFlags shouldEnableNewEventSystem]){
         NSError *error = nil;
-        return [_eventManager getEventJSONStringWithError:&error];
+        return [_eventManager getEventJSONStringWithError:&error clearEvents:true];
     } else {
         try {
             auto events = _analyticsController->getEventsJSON(true);
@@ -1108,7 +1112,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                               sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                                  category:@"Session" withAttributeValidator:_attributeValidator];
 
-    return [_eventManager addEvent:event];
+    return [_eventManager addEvent:[event autorelease]];
 }
 
 #pragma mark Static helpers.
