@@ -49,11 +49,39 @@ An example app which demonstrates usage of the New Relic iOS Agent is included i
 By default, the New Relic iOS Agent will report crashes to New Relic. In order to view symbolicated crashes, your app must upload its debugging symbols to New Relic. The Agent contains the run-symbol-tool script for this purpose.
 
 - Xcode Run Script: Copy and paste the following line, replacing `APP_TOKEN` with your [application token](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile/maintenance/viewing-your-application-token):
+
+#### iOS agent 7.4.0 or higher:
 ```
-"${BUILD_DIR%/Build/*}/SourcePackages/artifacts/newrelic-ios-agent/NewRelic.xcframework/Resources/run-symbol-tool" "APP_TOKEN"
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name run-symbol-tool | head -n 1`
+/bin/sh "${SCRIPT}" "APP_TOKEN"
 ```
-- Add `-spm` to path if using the `newrelic-ios-agent-spm` repo for SPM url.
+
 - Add `--debug` as additional argument after the app token to write additional details to the `upload_dsym_results.log` file.
+
+#### iOS agent 7.3.8 or lower:
+```
+SCRIPT=`/usr/bin/find "${SRCROOT}" -name newrelic_postbuild.sh | head -n 1`
+
+if [ -z "${SCRIPT}"]; then
+    ARTIFACT_DIR="${BUILD_DIR%Build/*}SourcePackages/artifacts"
+    SCRIPT=`/usr/bin/find "${ARTIFACT_DIR}" -name newrelic_postbuild.sh | head -n 1`
+fi
+
+/bin/sh "${SCRIPT}" "APP_TOKEN"
+```
+
+#### OPTIONAL:
+Add the following lines to your build script above the existing lines to skip symbol upload during debugging:
+```
+if [ ${CONFIGURATION} = "Debug" ]; then
+    echo "Skipping DSYM upload CONFIGURATION: ${CONFIGURATION}"
+    exit 0
+fi
+```
+
+#### Note for Cocoapods or manual XCFramework integration:
+With the 7.4.6 release the dsym-upload-tools are no longer included inside the XCFramework. The dsym-upload-tools are available in the dsym-upload-tools folder of the https://github.com/newrelic/newrelic-ios-agent-spm Swift Package Manager repository. Please copy this dsym-upload-tools directory to your applications source code directory if you are integrating the New Relic iOS Agent by copying XCFramework into project or using cocoapods.
 
 The run-symbol-tool Run script must be added to your app's Xcode project build phases.
 
