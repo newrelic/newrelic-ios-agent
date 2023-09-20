@@ -25,16 +25,19 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
     
     NSUInteger totalAttemptedInserts;
     NSTimeInterval oldestEventTimestamp;
+    
+    PersistentEventStore *_persistentStore;
 }
 
-- (nonnull instancetype)init {
+- (nonnull instancetype)initWithPersistentStore:(PersistentEventStore *)store {
     self = [super init];
     if (self) {
-        events = [[NSMutableArray alloc] init];
+        events = [[NSMutableArray<NRMAAnalyticEventProtocol>  alloc] init];
         maxBufferSize = kDefaultBufferSize;
         maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
         totalAttemptedInserts = 0;
         oldestEventTimestamp = 0;
+        _persistentStore = store;
     }
     return self;
 }
@@ -77,6 +80,11 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
         // The event fits within the buffer
         if (events.count < maxBufferSize) {
             [events addObject:event];
+            // Event Key Format String: TimeStamp|SessionElapsedTime|EventType
+            NSString *formatString = @"%f|%f|%@";
+            
+            [_persistentStore setObject:event forKey:[NSString stringWithFormat:formatString, event.timestamp, event.sessionElapsedTimeSeconds, event.eventType]];
+            
             if(events.count == 1) {
                 oldestEventTimestamp = event.timestamp;
             }
@@ -87,6 +95,11 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
             if (evictionIndex < events.count) {
                 [events removeObjectAtIndex:evictionIndex];
                 [events addObject:event];
+                // Event Key Format String: TimeStamp|SessionElapsedTime|EventType
+                NSString *formatString = @"%f|%f|%@";
+                NSString *evictionKey = [NSString stringWithFormat:formatString, event.timestamp, event.sessionElapsedTimeSeconds, event.eventType];
+                
+                [_persistentStore removeObjectForKey:evictionKey];
             }
         }
     }

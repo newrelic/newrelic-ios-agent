@@ -14,17 +14,20 @@
 #import "BlockAttributeValidator.h"
 
 
-@interface TestIntegratedEventManager : XCTestCase
+@interface TestIntegratedEventManager : XCTestCase {
+    NRMAEventManager *sut;
+    BlockAttributeValidator *agreeableAttributeValidator;
+}
 @end
 
 @implementation TestIntegratedEventManager
-    NRMAEventManager *sut;
-    BlockAttributeValidator *agreeableAttributeValidator;
 
+    static NSString *testFilename = @"fbstest_tempStore";
 
 - (void)setUp {
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    sut = [NRMAEventManager new];
+    sut = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:testFilename
+                                                                                           andMinimumDelay:1]];
     
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {

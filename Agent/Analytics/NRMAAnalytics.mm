@@ -98,7 +98,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(self){
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            _eventManager = [NRMAEventManager new];
+            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:[NewRelicInternalUtils getStorePath] andMinimumDelay:30];
+            
+            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
                 if ([name length] == 0) {
                     NRLOG_ERROR(@"invalid attribute: name length = 0");

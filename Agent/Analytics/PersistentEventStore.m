@@ -6,11 +6,11 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
-#import "PersistentStore.h"
+#import "PersistentEventStore.h"
 
 #import "NRLogger.h"
 
-@implementation PersistentStore {
+@implementation PersistentEventStore {
     NSMutableDictionary *store;
     NSString *_filename;
     NSTimeInterval _minimumDelay;
@@ -36,6 +36,11 @@
 //    if(delay == 0) {
         [self saveToFile];
 //    }
+}
+
+- (void)removeObjectForKey:(id)key {
+    [store removeObjectForKey:key];
+    [self saveToFile];
 }
 
 - (nullable id)objectForKey:(nonnull id)key {

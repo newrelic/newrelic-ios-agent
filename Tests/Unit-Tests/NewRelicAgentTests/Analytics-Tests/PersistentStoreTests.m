@@ -8,7 +8,7 @@
 
 #import <XCTest/XCTest.h>
 
-#import "PersistentStore.h"
+#import "PersistentEventStore.h"
 
 #import "NRMAMobileEvent.h"
 #import "NRMACustomEvent.h"
@@ -65,7 +65,7 @@
     BlockAttributeValidator *agreeableAttributeValidator;
 }
 
-NSString *testFilename = @"fbstest_tempStore";
+static NSString *testFilename = @"fbstest_tempStore";
 
 
 
@@ -94,21 +94,9 @@ NSString *testFilename = @"fbstest_tempStore";
     }
 }
 
-//- (void)testExample {
-//    // This is an example of a functional test case.
-//    // Use XCTAssert and related functions to verify your tests produce the correct results.
-//}
-//
-//- (void)testPerformanceExample {
-//    // This is an example of a performance test case.
-//    [self measureBlock:^{
-//        // Put the code you want to measure the time of here.
-//    }];
-//}
-
 - (void)testStoresObject {
     // Given
-    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:testFilename
+    PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                      andMinimumDelay:1];
     
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
@@ -125,7 +113,7 @@ NSString *testFilename = @"fbstest_tempStore";
 
 - (void)testWritesObjectToFile {
     // Given
-    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:testFilename
+    PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                      andMinimumDelay:1];
 
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
@@ -152,7 +140,7 @@ NSString *testFilename = @"fbstest_tempStore";
     XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
     XCTAssertEqual([retrievedDictionary count], 1);
     
-    PersistentStore *anotherOne = [[PersistentStore alloc] initWithFilename:testFilename
+    PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                             andMinimumDelay:1];
     [anotherOne load:&error];
     XCTAssertNil(error, "Error loading previous events: %@", [error localizedDescription]);
@@ -164,7 +152,7 @@ NSString *testFilename = @"fbstest_tempStore";
 }
 
 - (void)testStoreReturnsNoIfFileDoesNotExist {
-    PersistentStore *sut = [[PersistentStore alloc] initWithFilename:@"FileDoesNotExist"
+    PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:@"FileDoesNotExist"
                                                      andMinimumDelay:1];
     NSError *error = nil;
     XCTAssertFalse([sut load:&error]);
@@ -172,7 +160,7 @@ NSString *testFilename = @"fbstest_tempStore";
 
 - (void)testStoreHandlesDifferentTypesOfEvents {
     // Given
-    PersistentStore *originalStore = [[PersistentStore alloc] initWithFilename:testFilename
+    PersistentEventStore *originalStore = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                      andMinimumDelay:1];
     NSError *error = nil;
 
@@ -196,7 +184,7 @@ NSString *testFilename = @"fbstest_tempStore";
 //    NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
 //                                                                                            error:&error];
     
-    PersistentStore *anotherOne = [[PersistentStore alloc] initWithFilename:testFilename
+    PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                             andMinimumDelay:1];
 
     [anotherOne load:&error];
@@ -214,6 +202,37 @@ NSString *testFilename = @"fbstest_tempStore";
     XCTAssertEqual(retrievedRequest.timestamp, requestEvent.timestamp);
     XCTAssertEqual(retrievedRequest.sessionElapsedTimeSeconds, requestEvent.sessionElapsedTimeSeconds);
     XCTAssertEqualObjects(retrievedRequest.eventType, requestEvent.eventType);
+}
+
+- (void)testEventRemoval {
+    // Given
+    PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
+                                                      andMinimumDelay:1];
+    
+    NSError *error = nil;
+    
+    NRMACustomEvent *customEvent = [self createCustomEvent];
+    NRMARequestEvent *requestEvent = [self createRequestEvent];
+    NRMAInteractionEvent *interactionEvent = [self createInteractionEvent];
+
+    [sut setObject:customEvent forKey:@"Custom Event"];
+    [sut setObject:requestEvent forKey:@"Request Event"];
+    [sut setObject:interactionEvent forKey:@"Interaction Event"];
+    sleep(1);
+    
+    // When
+    [sut removeObjectForKey:@"Request Event"];
+    
+    
+    // Then
+    XCTAssertNil([sut objectForKey:@"Request Event"]);
+    
+    PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
+                                                            andMinimumDelay:1];
+
+    [anotherOne load:&error];
+    
+    XCTAssertNil([anotherOne objectForKey:@"Request Event"]);
 }
 
 - (NRMACustomEvent *)createCustomEvent {
