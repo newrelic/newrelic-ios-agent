@@ -212,4 +212,37 @@
     XCTAssertFalse([sut didReachMaxQueueTime:2000]);
 }
 
+-(void)testGettingEventJSONClearsEvents {
+    // Given
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventThree = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 3"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    [sut addEvent:customEventOne];
+    [sut addEvent:customEventTwo];
+    [sut addEvent:customEventThree];
+    
+    // When
+    NSError *error = nil;
+    NSString *firstJSONEvents = [sut getEventJSONStringWithError:&error];
+    
+    // Then
+    NSString *secondJSONEvents = [sut getEventJSONStringWithError:&error];
+    NSArray *decode = [NSJSONSerialization JSONObjectWithData:[secondJSONEvents dataUsingEncoding:NSUTF8StringEncoding]
+                                                    options:0
+                                                      error:nil];
+    XCTAssertEqual(decode.count, 0);
+}
+
 @end

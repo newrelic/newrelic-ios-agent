@@ -129,6 +129,8 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
                                                            error:&error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
+            [events removeAllObjects];
+            [_persistentStore clearAll];
         } @catch (NSException *e) {
             NRLOG_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }

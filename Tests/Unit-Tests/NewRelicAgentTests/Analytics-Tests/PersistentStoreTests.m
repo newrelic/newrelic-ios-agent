@@ -235,6 +235,40 @@ static NSString *testFilename = @"fbstest_tempStore";
     XCTAssertNil([anotherOne objectForKey:@"Request Event"]);
 }
 
+- (void)testClearAllEvents {
+    // Given
+    PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
+                                                      andMinimumDelay:1];
+    
+    NSError *error = nil;
+    
+    NRMACustomEvent *customEvent = [self createCustomEvent];
+    NRMARequestEvent *requestEvent = [self createRequestEvent];
+    NRMAInteractionEvent *interactionEvent = [self createInteractionEvent];
+
+    [sut setObject:customEvent forKey:@"Custom Event"];
+    [sut setObject:requestEvent forKey:@"Request Event"];
+    [sut setObject:interactionEvent forKey:@"Interaction Event"];
+    sleep(1);
+    
+    // When
+    [sut clearAll];
+    
+    // Then
+    XCTAssertNil([sut objectForKey:@"Custom Event"]);
+    XCTAssertNil([sut objectForKey:@"Request Event"]);
+    XCTAssertNil([sut objectForKey:@"Interaction Event"]);
+    
+    PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
+                                                            andMinimumDelay:1];
+
+    [anotherOne load:&error];
+    
+    XCTAssertNil([anotherOne objectForKey:@"Custom Event"]);
+    XCTAssertNil([anotherOne objectForKey:@"Request Event"]);
+    XCTAssertNil([anotherOne objectForKey:@"Interaction Event"]);
+}
+
 - (NRMACustomEvent *)createCustomEvent {
     NSTimeInterval timestamp = arc4random() % 100;
     NSTimeInterval elapsedTime = arc4random() % 50;

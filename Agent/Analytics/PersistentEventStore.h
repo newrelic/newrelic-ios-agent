@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable ObjectType)objectForKey:(KeyType)key;
 - (void) removeObjectForKey:(KeyType)key;
 - (BOOL)load:(NSError **)error;
+- (void)clearAll;
 
 @end
 

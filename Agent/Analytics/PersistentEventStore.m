@@ -47,6 +47,11 @@
     return store[key];
 }
 
+- (void)clearAll {
+    [store removeAllObjects];
+    [self saveToFile];
+}
+
 - (BOOL)load:(NSError **)error {
     NSData *storedData = [NSData dataWithContentsOfFile:_filename
                                                 options:0
