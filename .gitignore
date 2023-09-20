@@ -7,6 +7,7 @@ CMakeFiles/
 Makefile
 Testing/
 build/
+examples/cocoapods/CocoapodsExample/Pods/
 
 # idea project files
 # Xcode
@@ -87,4 +88,3 @@ fastlane/test_output
 
 iOSInjectionProject/
 .DS_Store
-
