@@ -30,11 +30,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing)
 #endif
 
-        // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
-        // NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_LogReporting)
-
-        NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
-
         // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
         guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
         
@@ -52,14 +47,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                            andCrashCollectorAddress: crashCollectorAddress)
         }
 
-        // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
-        if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {
-            NRLogger.setLogIngestKey(logIngestKey)
-        }
-        else {
-            NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
-
-        }
         NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }
