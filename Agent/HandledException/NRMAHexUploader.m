@@ -47,12 +47,11 @@
     if (request == nil) return;
 
     request.HTTPMethod = @"POST";
-    request.HTTPBody = data;
 
     [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu",(unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
     
-    if([[request HTTPBody] length] > kNRMAMaxPayloadSizeLimit) {
+    if([data length] > kNRMAMaxPayloadSizeLimit) {
         NRLOG_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
         return;
@@ -60,7 +59,14 @@
     
     NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
 
-    NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
+    NSMutableURLRequest *modifiedRequest = [request mutableCopy];
+    [modifiedRequest setHTTPBody:nil];
+
+    NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:modifiedRequest fromData:data];
+
+    // Note: Previously the NRMAHexUploader used uploadTaskWithStreamedRequest
+    //NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
+
     [self.taskStore track:uploadTask.originalRequest];
     [uploadTask resume];
 }
