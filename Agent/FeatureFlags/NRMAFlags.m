@@ -162,7 +162,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_SwiftAsyncURLSessionSupport) != 0;
 }
 + (BOOL) shouldEnableLogReporting {
-    return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
+    return NO;
+    //return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
 }
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
@@ -215,9 +216,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
         [retArray addObject:@"SwiftAsyncURLSessionSupport"];
     }
 
-    if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
-        [retArray addObject:@"LogReporting"];
-    }
+    // NOTE: Temporarily removed NRFeatureFlag_LogReporting
+//    if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
+//        [retArray addObject:@"LogReporting"];
+//    }
     return retArray;
 }
 
