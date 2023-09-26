@@ -286,7 +286,8 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
  */
 + (BOOL)isNewRelicServiceRequest:(NSURLRequest *)request
 {
-    return [request valueForHTTPHeaderField:X_APP_LICENSE_KEY_REQUEST_HEADER] != nil;
+    return [request valueForHTTPHeaderField:X_APP_LICENSE_KEY_REQUEST_HEADER] != nil ||
+           [request.URL.absoluteString containsString:@".newrelic.com/log/v1"];
 }
 
 #pragma mark
