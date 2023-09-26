@@ -47,7 +47,7 @@ jobs:
     name : TestTVOS
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-latest 
+    runs-on: macos-13 
     steps:
     - uses: actions/checkout@v3
       with: 
@@ -148,7 +148,7 @@ jobs:
   # Create NewRelicAgent.podspec & Package.swift with new version number and checksum.
   deployStagingSpecs:
     name: DeployStagingSpecs
-    runs-on: macos-latest 
+    runs-on: macos-13 
     needs: [deployS3]
     if: github.ref == 'refs/heads/staging'
     steps:
