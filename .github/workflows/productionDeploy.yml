@@ -12,7 +12,7 @@ jobs:
   # inputs: version (String): The version number to promote to production. (ex 7.4.0)
   deployS3Production:
     name: deployS3Production
-    runs-on: macos-13 
+    runs-on: macos-13
     if: github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
@@ -44,7 +44,7 @@ jobs:
   # The deployProductionSpecs job creates the prod Podspec and Prod Package.swift from template and pushes to cp trunk.
   deployProductionSpecs:
     name: deployProductionSpecs
-    runs-on: macos-13 
+    runs-on: macos-13
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     steps:
