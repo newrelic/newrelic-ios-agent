@@ -72,8 +72,12 @@
     NRLOG_VERBOSE(@"NEWRELIC - REQUEST: %@", post);
     NRLOG_VERBOSE(@"NEWRELIC - REQUEST BODY: %@", post.HTTPBody);
 
-    [[self.harvestSession uploadTaskWithRequest:post
-                                       fromData:post.HTTPBody
+    NSData *initialReqBody = [post.HTTPBody copy];
+    NSMutableURLRequest *modifiedRequest = [post mutableCopy];
+    [modifiedRequest setHTTPBody:nil];
+
+    [[self.harvestSession uploadTaskWithRequest:modifiedRequest
+                                       fromData:initialReqBody
                               completionHandler:^(NSData* responseBody, NSURLResponse* bresponse, NSError* berror){
         @autoreleasepool {
             data = responseBody;
