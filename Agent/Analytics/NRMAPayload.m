@@ -9,6 +9,14 @@
 #import <Foundation/Foundation.h>
 #import "NRMAPayload.h"
 
+static NSString* const kTimestampKey        = @"Timestamp";
+static NSString* const kAccountIdKey        = @"AccountId";
+static NSString* const kAppIdKey            = @"AppId";
+static NSString* const kIdKey               = @"id";
+static NSString* const kTraceIdKey          = @"TraceId";
+static NSString* const kParentIdKey         = @"ParentId";
+static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
+
 @implementation NRMAPayload {
     NSString *version;
 }
@@ -64,26 +72,26 @@
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder {
-    [coder encodeDouble:_timestamp forKey:@"Timestamp"];
-    [coder encodeObject:_accountId forKey:@"AccountId"];
-    [coder encodeObject:_appId forKey:@"AppId"];
-    [coder encodeObject:_id forKey:@"id"];
-    [coder encodeObject:_traceId forKey:@"TraceId"];
-    [coder encodeObject:_parentId forKey:@"ParentId"];
-    [coder encodeObject:_trustedAccountKey forKey:@"TrustedAccountKey"];
+    [coder encodeDouble:_timestamp forKey:kTimestampKey];
+    [coder encodeObject:_accountId forKey:kAccountIdKey];
+    [coder encodeObject:_appId forKey:kAppIdKey];
+    [coder encodeObject:_id forKey:kIdKey];
+    [coder encodeObject:_traceId forKey:kTraceIdKey];
+    [coder encodeObject:_parentId forKey:kParentIdKey];
+    [coder encodeObject:_trustedAccountKey forKey:kTrustedAccountKey];
 }
 
 - (nullable instancetype)initWithCoder:(NSCoder *)coder {
     self = [super init];
     if (self) {
-        _timestamp = [coder decodeDoubleForKey:@"Timestamp"];
+        _timestamp = [coder decodeDoubleForKey:kTimestampKey];
         _payloadType = @"mobile";
-        _accountId = [coder decodeObjectForKey:@"AccountId"];
-        _appId = [coder decodeObjectForKey:@"AppId"];
-        _id = [coder decodeObjectForKey:@"id"];
-        _traceId = [coder decodeObjectForKey:@"TraceId"];
-        _parentId = [coder decodeObjectForKey:@"ParentId"];
-        _trustedAccountKey = [coder decodeObjectForKey:@"TrustedAccountKey"];
+        _accountId = [coder decodeObjectForKey:kAccountIdKey];
+        _appId = [coder decodeObjectForKey:kAppIdKey];
+        _id = [coder decodeObjectForKey:kIdKey];
+        _traceId = [coder decodeObjectForKey:kTraceIdKey];
+        _parentId = [coder decodeObjectForKey:kParentIdKey];
+        _trustedAccountKey = [coder decodeObjectForKey:kTrustedAccountKey];
         _dtEnabled = false;
         self->version = @"[0,2]";
     }
