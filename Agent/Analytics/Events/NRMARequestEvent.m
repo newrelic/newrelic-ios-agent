@@ -10,6 +10,8 @@
 #import "NRMARequestEvent.h"
 #import "Constants.h"
 
+static NSString* const kPayloadKey = @"Payload";
+
 @implementation NRMARequestEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -37,13 +39,13 @@
 - (void)encodeWithCoder:(NSCoder *)coder {
     [super encodeWithCoder:coder];
     
-    [coder encodeObject:_payload forKey:@"Payload"];
+    [coder encodeObject:_payload forKey:kPayloadKey];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.payload = [coder decodeObjectForKey:@"Payload"];
+        self.payload = [coder decodeObjectForKey:kPayloadKey];
     }
     
     return self;

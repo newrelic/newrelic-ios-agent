@@ -9,6 +9,9 @@
 #import "NRMAInteractionEvent.h"
 #import "Constants.h"
 
+static NSString* const kCategoryKey = @"Category";
+static NSString* const kNameKey = @"Name";
+
 @implementation NRMAInteractionEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -39,15 +42,15 @@
 - (void)encodeWithCoder:(NSCoder *)coder {
     [super encodeWithCoder:coder];
     
-    [coder encodeObject:self.category forKey:@"Category"];
-    [coder encodeObject:self.name forKey:@"Name"];
+    [coder encodeObject:self.category forKey:kCategoryKey];
+    [coder encodeObject:self.name forKey:kNameKey];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.category = [coder decodeObjectForKey:@"Category"];
-        self.name = [coder decodeObjectForKey:@"Name"];
+        self.category = [coder decodeObjectForKey:kCategoryKey];
+        self.name = [coder decodeObjectForKey:kNameKey];
     }
     
     return self;

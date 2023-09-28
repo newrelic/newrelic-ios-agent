@@ -9,6 +9,11 @@
 #import "NRMAMobileEvent.h"
 #import "Constants.h"
 
+static NSString* const kTimestampKey = @"Timestamp";
+static NSString* const kSessionElapsedTimeKey = @"SessionElapsedTime";
+static NSString* const kEventTypeKey = @"EventType";
+static NSString* const kAttributesKey = @"Attributes";
+
 @implementation NRMAMobileEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -56,19 +61,19 @@
 }
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder {
-    [coder encodeObject:_eventType forKey:@"EventType"];
-    [coder encodeDouble:_timestamp forKey:@"Timestamp"];
-    [coder encodeDouble:_sessionElapsedTimeSeconds forKey:@"SessionElapsedTime"];
-    [coder encodeObject:_attributes forKey:@"Attributes"];
+    [coder encodeDouble:_timestamp forKey:kTimestampKey];
+    [coder encodeDouble:_sessionElapsedTimeSeconds forKey:kSessionElapsedTimeKey];
+    [coder encodeObject:_eventType forKey:kEventTypeKey];
+    [coder encodeObject:_attributes forKey:kAttributesKey];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super init];
     if(self) {
-        self.timestamp = [coder decodeDoubleForKey:@"Timestamp"];
-        self.eventType = [coder decodeObjectForKey:@"EventType"];
-        self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:@"SessionElapsedTime"];
-        self.attributes = [coder decodeObjectForKey:@"Attributes"];
+        self.timestamp = [coder decodeDoubleForKey:kTimestampKey];
+        self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:kSessionElapsedTimeKey];
+        self.eventType = [coder decodeObjectForKey:kEventTypeKey];
+        self.attributes = [coder decodeObjectForKey:kAttributesKey];
     }
     
     return self;

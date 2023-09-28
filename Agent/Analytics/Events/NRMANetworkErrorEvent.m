@@ -10,6 +10,9 @@
 #import "NRMANetworkErrorEvent.h"
 #include "Constants.h"
 
+static NSString* const kEncodedResponseKey = @"EncodedResponseBody";
+static NSString* const kAppDataHeaderKey = @"AppDataHeader";
+
 @implementation NRMANetworkErrorEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -42,15 +45,15 @@
 - (void)encodeWithCoder:(NSCoder *)coder {
     [super encodeWithCoder:coder];
     
-    [coder encodeObject:self.encodedResponseBody forKey:@"EncodedResponseBody"];
-    [coder encodeObject:self.appDataHeader forKey:@"AppDataHeader"];
+    [coder encodeObject:self.encodedResponseBody forKey:kEncodedResponseKey];
+    [coder encodeObject:self.appDataHeader forKey:kAppDataHeaderKey];
 }
 
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.encodedResponseBody = [coder decodeObjectForKey:@"EncodedResponseBody"];
-        self.appDataHeader = [coder decodeObjectForKey:@"AppDataHeader"];
+        self.encodedResponseBody = [coder decodeObjectForKey:kEncodedResponseKey];
+        self.appDataHeader = [coder decodeObjectForKey:kAppDataHeaderKey];
     }
     
     return self;
