@@ -29,7 +29,7 @@
     NSDictionary *event = [super JSONObject];
 
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:event];
-    dict[kNRMA_RA_payload] = [_payload JSONObject];//TODO: make sure this is the right key
+    dict[kNRMA_RA_payload] = [_payload JSONObject];
 
     return [NSDictionary dictionaryWithDictionary:dict];
 }

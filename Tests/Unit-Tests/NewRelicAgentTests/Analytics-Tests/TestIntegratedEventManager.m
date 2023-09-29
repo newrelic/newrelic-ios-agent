@@ -54,7 +54,7 @@
     
     // When
     [sut addEvent:testEvent];
-    NSString *eventJSONString = [sut getEventJSONStringWithError:&error];
+    NSString *eventJSONString = [sut getEventJSONStringWithError:&error clearEvents:true];
     
     // Then
     XCTAssertNotNil(eventJSONString, "Event JSON String not properly created");
@@ -89,7 +89,7 @@
     
     // Then
     NSError *error = nil;
-    NSString *eventJSONString = [sut getEventJSONStringWithError:&error];
+    NSString *eventJSONString = [sut getEventJSONStringWithError:&error clearEvents:true];
     NSArray *decode = [NSJSONSerialization JSONObjectWithData:[eventJSONString dataUsingEncoding:NSUTF8StringEncoding]
                                                     options:0
                                                       error:nil];
@@ -106,7 +106,7 @@
     [sut addEvent:customEventOne];
     
     NSError *error = nil;
-    NSString *eventJSONString = [sut getEventJSONStringWithError:&error];
+    NSString *eventJSONString = [sut getEventJSONStringWithError:&error clearEvents:true];
     NSArray *decode = [NSJSONSerialization JSONObjectWithData:[eventJSONString dataUsingEncoding:NSUTF8StringEncoding]
                                                     options:0
                                                       error:nil];
@@ -163,7 +163,7 @@
     [sut addEvent:customEventThree];
 
     NSError *error = nil;
-    NSString *eventJSONString = [sut getEventJSONStringWithError:&error];
+    NSString *eventJSONString = [sut getEventJSONStringWithError:&error clearEvents:true];
     NSArray *decode = [NSJSONSerialization JSONObjectWithData:[eventJSONString dataUsingEncoding:NSUTF8StringEncoding]
                                                     options:0
                                                       error:nil];
@@ -173,7 +173,7 @@
     
     [sut empty];
     
-    NSString *emptyJSONString = [sut getEventJSONStringWithError:&error];
+    NSString *emptyJSONString = [sut getEventJSONStringWithError:&error clearEvents:true];
     NSArray *emptyDecode = [NSJSONSerialization JSONObjectWithData:[emptyJSONString dataUsingEncoding:NSUTF8StringEncoding]
                                                     options:0
                                                       error:nil];
