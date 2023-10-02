@@ -70,6 +70,9 @@
 
  - NRFeatureFlag_SwiftAsyncURLSessionSupport
     Disabled by default. Enable or disable (default) flag for automatic instrumentation of async URLSession functions in Swift.
+
+ - NRFeatureFlag_LogReporting
+    Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions..
 */
 
 
@@ -93,4 +96,7 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
     NRFeatureFlag_FedRampEnabled                        = 1 << 17, // Disabled by default
     NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 18, // Disabled by default
+
+    // NOTE: Temporarily removed NRFeatureFlag_LogReporting
+//    NRFeatureFlag_LogReporting                          = 1 << 19, // Disabled by default
 };
