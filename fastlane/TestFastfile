@@ -40,6 +40,34 @@ platform :ios do
     internalRunIOSTests
   end
 
+  desc "Run Agent tests for iOS beta"
+  lane :runIOSBetaTests do |options|
+
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: false,
+      scheme: "Agent-iOS",
+      device: "iPhone 14 Pro Max (#{options[:os_version]})",
+      output_style: 'raw'
+    )
+  end
+
+  desc "Run App tests for iOS beta"
+  lane :runIOSAppBetaTests do |options|
+
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: false,
+      scheme: "NRTestApp",
+      device: "iPhone 14 Pro Max (#{options[:os_version]})",
+      output_style: 'raw'
+    )
+  end
+
   # tvOS Tests
   
   desc "Run Agent tests for tvOS"
@@ -54,6 +82,34 @@ platform :ios do
       device: "Apple TV",
       disable_xcpretty: true
 
+    )
+  end
+
+  desc "Run Agent tests for tvOS beta"
+  lane :runTVOSBetaTests do |options|
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: false,
+      scheme: "Agent-tvOS",
+      device: "Apple TV 4K (3rd generation) (at 1080p) (#{options[:os_version]})",
+      output_style: 'raw'
+    )
+  end
+
+  desc "Run Agent tests for tvOS beta"
+  lane :runTVOSAppBetaTests do |options|
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: false,
+      scheme: "NRTestApp (tvOS)",
+      device: "Apple TV 4K (3rd generation) (at 1080p) (#{options[:os_version]})",
+      output_style: 'raw'
     )
   end
 
