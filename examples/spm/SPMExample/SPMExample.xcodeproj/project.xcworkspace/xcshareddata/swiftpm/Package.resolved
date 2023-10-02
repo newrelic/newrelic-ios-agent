@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/newrelic/newrelic-ios-agent-spm.git",
       "state" : {
-        "revision" : "afe2a62cc15729b9f74c16ca26846814c9e2240b",
-        "version" : "7.4.6"
+        "revision" : "d138dbaa610cb318a7143b32e066756331d168bf",
+        "version" : "7.4.7"
       }
     }
   ],
