@@ -31,4 +31,20 @@ platform :ios do
 
       end
   end
+
+  desc "Add an API key to the plist file"
+  lane :addAPIKeyToPlist do |options|
+      Dir.chdir("../scripts/") do
+        begin
+          sh ("./plist_editor.swift -valueToAdd #{options[:valueToAdd]}")
+
+        rescue => ex
+          # handle error
+        ensure
+          # do something that always run like clean up
+        end
+
+      end
+      
+  end
 end
