@@ -13,6 +13,7 @@
 #import <objc/runtime.h>
 #import "NRLogger.h"
 #import "NRMAHTTPUtilities.h"
+#import "NRMANetworkFacade.h"
 #import "NRMAFlags.h"
 
 static IMP NRMAOriginal__resume;
@@ -110,14 +111,19 @@ void NRMAOverride__resume(id self, SEL _cmd)
     ((void(*)(id,SEL))NRMAOriginal__resume)(self,_cmd);
 }
 
+// This is the only way we have right now to record an swift async await web request.
 void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSURLSessionTaskState *newState)
 {
     @synchronized(lock) {
         @synchronized(task) {
             if ([NRMAURLSessionTaskOverride isSupportedTaskType: task]) {
-
-                NSURL *url = [[task currentRequest] URL];
-
+                // Checking for NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY in the headers here. The data usually isn't link to the task yet here so, if that header exists we are handling the task elsewhere and have a better chance of getting the data so we don't need to record it here.
+                NSURLRequest  *currentRequest = task.currentRequest;
+                if(currentRequest != nil && [currentRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY] != nil) {
+                    return;
+                }
+                
+                NSURL *url = [currentRequest URL];
                 if (url != nil &&
                     newState != NSURLSessionTaskStateRunning && task.state == NSURLSessionTaskStateRunning) {
                     // get response code

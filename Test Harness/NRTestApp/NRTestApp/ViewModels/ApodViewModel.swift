@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NewRelic
 
 class ApodViewModel {
     let apodResponse: Variable<ApodResult?> = Variable(nil)
@@ -23,8 +24,12 @@ class ApodViewModel {
                     self?.loadApodData()
                     return
                 }
+                NewRelic.logInfo("ApodViewModel loadApodData finished.")
+
                 self?.apodResponse.value = response
             case .failure(let error):
+                NewRelic.logError("ApodViewModel loadApodData encountered error=error=\(error.localizedDescription).")
+
                 self?.error.value = error
             }
         })
@@ -43,9 +48,13 @@ class ApodViewModel {
             if decoded.media_type == "video" {
                 return await loadApodDataAsync()
             }
-            
+            NewRelic.logInfo("ApodViewModel loadApodDataAsync finished.")
+
             self.apodResponse.value = decoded
         } catch {
+
+            NewRelic.logError("ApodViewModel loadApodDataAsync encountered error=\(error.localizedDescription).")
+
             self.error.value = error
         }
     }
