@@ -10,11 +10,19 @@
 
 #import "NRLogger.h"
 
+@interface PersistentEventStore ()
+@property (nonatomic, strong) dispatch_queue_t writeQueue;
+@property (nonatomic, strong, nullable) dispatch_source_t writeTimer;
+@end
+
 @implementation PersistentEventStore {
     NSMutableDictionary *store;
     NSString *_filename;
     NSTimeInterval _minimumDelay;
     NSDate *_lastSave;
+    
+    dispatch_queue_t _writeQueue;
+    dispatch_source_t _writeTimer;
 }
 
 - (nonnull instancetype)initWithFilename:(NSString *)filename
@@ -25,6 +33,8 @@
         _filename = filename;
         _minimumDelay = minimumDelay;
         _lastSave = [NSDate new];
+        
+        _writeQueue = dispatch_queue_create("com.newrelic.persistentce", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -32,15 +42,40 @@
 - (void)setObject:(nonnull id)object forKey:(nonnull id)key {
     store[key] = object;
     
-//    NSTimeInterval delay = [[NSDate new] timeIntervalSinceDate:_lastSave] > _minimumDelay ? 0: _minimumDelay;
-//    if(delay == 0) {
-        [self saveToFile];
-//    }
+    // Check if we're already in a write delay
+    if(self.writeTimer) {
+        return;
+    }
+    
+    self.writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _writeQueue);
+    dispatch_source_set_timer(self.writeTimer, dispatch_walltime(NULL, 0), _minimumDelay * NSEC_PER_SEC, 1000);
+    
+    __weak __typeof(self) weakSelf = self;
+    dispatch_source_set_event_handler(self.writeTimer, ^{
+        __strong __typeof(weakSelf) strongSelf = weakSelf;
+        
+        [strongSelf saveToFile];
+        
+        dispatch_source_cancel(strongSelf.writeTimer);
+        strongSelf.writeTimer = nil;
+    });
+    
+    dispatch_resume(self.writeTimer);
 }
 
 - (void)removeObjectForKey:(id)key {
     [store removeObjectForKey:key];
-    [self saveToFile];
+    
+    __weak __typeof(self) weakSelf = self;
+    dispatch_after(DISPATCH_WALLTIME_NOW, self.writeQueue, ^{
+        __strong __typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf saveToFile];
+        
+        if(strongSelf.writeTimer) {
+            dispatch_source_cancel(strongSelf.writeTimer);
+            strongSelf.writeTimer = nil;
+        }
+    });
 }
 
 - (nullable id)objectForKey:(nonnull id)key {
@@ -49,7 +84,17 @@
 
 - (void)clearAll {
     [store removeAllObjects];
-    [self saveToFile];
+    
+    __weak __typeof(self) weakSelf = self;
+    dispatch_after(DISPATCH_WALLTIME_NOW, self.writeQueue, ^{
+        __strong __typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf saveToFile];
+        
+        if(strongSelf.writeTimer) {
+            dispatch_source_cancel(strongSelf.writeTimer);
+            strongSelf.writeTimer = nil;
+        }
+    });
 }
 
 - (BOOL)load:(NSError **)error {

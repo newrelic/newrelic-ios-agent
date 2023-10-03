@@ -66,7 +66,7 @@
 }
 
 static NSString *testFilename = @"fbstest_tempStore";
-
+static NSTimeInterval shortTimeInterval = 1;
 
 
 - (void)setUp {
@@ -97,7 +97,7 @@ static NSString *testFilename = @"fbstest_tempStore";
 - (void)testStoresObject {
     // Given
     PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                     andMinimumDelay:1];
+                                                     andMinimumDelay:shortTimeInterval];
     
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
                                             sessionElapsedTimeInSeconds:50
@@ -113,8 +113,9 @@ static NSString *testFilename = @"fbstest_tempStore";
 
 - (void)testWritesObjectToFile {
     // Given
+    XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
     PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                     andMinimumDelay:1];
+                                                     andMinimumDelay:shortTimeInterval];
 
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
                                             sessionElapsedTimeInSeconds:50
@@ -127,11 +128,14 @@ static NSString *testFilename = @"fbstest_tempStore";
     // When
     [sut setObject:testEvent forKey:@"aKey"];
 
-
     // Then
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
-    XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+
+        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        [writeExpectation fulfill];
+    });
+    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
     
     NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
     NSError *error = nil;
@@ -160,8 +164,9 @@ static NSString *testFilename = @"fbstest_tempStore";
 
 - (void)testStoreHandlesDifferentTypesOfEvents {
     // Given
+    XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
     PersistentEventStore *originalStore = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                     andMinimumDelay:1];
+                                                     andMinimumDelay:shortTimeInterval];
     NSError *error = nil;
 
     // When
@@ -172,17 +177,15 @@ static NSString *testFilename = @"fbstest_tempStore";
     [originalStore setObject:customEvent forKey:@"Custom Event"];
     [originalStore setObject:requestEvent forKey:@"Request Event"];
     [originalStore setObject:interactionEvent forKey:@"Interaction Event"];
-    sleep(1);
 
     // Then
-//    NSFileManager *fileManager = [NSFileManager defaultManager];
-//
-//    XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
-//
-//    NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
-//    NSError *error = nil;
-//    NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
-//                                                                                            error:&error];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+
+        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        [writeExpectation fulfill];
+    });
+    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
     
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                             andMinimumDelay:1];
@@ -206,8 +209,9 @@ static NSString *testFilename = @"fbstest_tempStore";
 
 - (void)testEventRemoval {
     // Given
+    XCTestExpectation *waitForInitialWriteExpectation = [self expectationWithDescription:@"Waiting for the first time the file is written"];
     PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                      andMinimumDelay:1];
+                                                      andMinimumDelay:shortTimeInterval];
     
     NSError *error = nil;
     
@@ -218,27 +222,44 @@ static NSString *testFilename = @"fbstest_tempStore";
     [sut setObject:customEvent forKey:@"Custom Event"];
     [sut setObject:requestEvent forKey:@"Request Event"];
     [sut setObject:interactionEvent forKey:@"Interaction Event"];
-    sleep(1);
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (shortTimeInterval+1)*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        
+        [waitForInitialWriteExpectation fulfill];
+    });
+    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
     
     // When
     [sut removeObjectForKey:@"Request Event"];
     
-    
     // Then
+    XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+
+        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        [writeExpectation fulfill];
+    });
+    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
     XCTAssertNil([sut objectForKey:@"Request Event"]);
     
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                            andMinimumDelay:1];
+                                                            andMinimumDelay:shortTimeInterval];
 
     [anotherOne load:&error];
     
     XCTAssertNil([anotherOne objectForKey:@"Request Event"]);
+    XCTAssertNotNil([anotherOne objectForKey:@"Custom Event"]);
+    XCTAssertNotNil([anotherOne objectForKey:@"Interaction Event"]);
 }
 
 - (void)testClearAllEvents {
     // Given
+    XCTestExpectation *waitForInitialWriteExpectation = [self expectationWithDescription:@"Waiting for the first time the file is written"];
     PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                      andMinimumDelay:1];
+                                                      andMinimumDelay:shortTimeInterval];
     
     NSError *error = nil;
     
@@ -249,24 +270,48 @@ static NSString *testFilename = @"fbstest_tempStore";
     [sut setObject:customEvent forKey:@"Custom Event"];
     [sut setObject:requestEvent forKey:@"Request Event"];
     [sut setObject:interactionEvent forKey:@"Interaction Event"];
-    sleep(1);
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (shortTimeInterval+1)*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+
+        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        [waitForInitialWriteExpectation fulfill];
+    });
+    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
     
     // When
     [sut clearAll];
     
     // Then
+    XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+
+        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        [writeExpectation fulfill];
+    });
+    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
+    
     XCTAssertNil([sut objectForKey:@"Custom Event"]);
     XCTAssertNil([sut objectForKey:@"Request Event"]);
     XCTAssertNil([sut objectForKey:@"Interaction Event"]);
     
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                            andMinimumDelay:1];
+                                                            andMinimumDelay:shortTimeInterval];
 
     [anotherOne load:&error];
     
     XCTAssertNil([anotherOne objectForKey:@"Custom Event"]);
     XCTAssertNil([anotherOne objectForKey:@"Request Event"]);
     XCTAssertNil([anotherOne objectForKey:@"Interaction Event"]);
+}
+
+- (void)testWritesAreBatched {
+    // Given
+    
+    // When
+    
+    // Then
 }
 
 - (NRMACustomEvent *)createCustomEvent {
