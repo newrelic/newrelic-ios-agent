@@ -98,7 +98,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(self){
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:[NewRelicInternalUtils getStorePath] andMinimumDelay:30];
+            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:@"eventsStore.txt"];
+
+            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:30];
             
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
