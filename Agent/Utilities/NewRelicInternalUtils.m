@@ -174,10 +174,17 @@ static NSString* _osVersion;
     }
 }
 
++ (NSString*) connectionType {
+    NRMANetworkMonitor* nm = [self networkMonitor];
+    @synchronized(nm) {
+        return [nm getConnectionType];
+    }
+}
+
 // Returns the carrier name, or 'wifi' if the device is on a wifi network.
 + (NSString*) carrierName {
 #if TARGET_OS_TV
-    return @"wifi";
+    return [self connectionType];
 #else
 #ifdef NRMA_REACHABILITY_DEBUG
     static NRMADEBUG_Reachability* debugLog;
@@ -429,6 +436,17 @@ static NSString* _osVersion;
         r = [NRMAReachability reachability];
     });
     return r;
+}
+
++ (NRMANetworkMonitor*) networkMonitor {
+    static NRMANetworkMonitor* nm = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (@available(tvOS 12.0, *)) {
+            nm = [[NRMANetworkMonitor alloc] init];
+        }
+    });
+    return nm;
 }
 
 // Returns the device model.  Ex.  iPhone4,1
