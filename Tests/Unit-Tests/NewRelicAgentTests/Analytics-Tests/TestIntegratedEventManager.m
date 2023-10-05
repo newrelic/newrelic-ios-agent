@@ -235,10 +235,10 @@
     
     // When
     NSError *error = nil;
-    NSString *firstJSONEvents = [sut getEventJSONStringWithError:&error];
+    NSString *firstJSONEvents = [sut getEventJSONStringWithError:&error clearEvents:YES];
     
     // Then
-    NSString *secondJSONEvents = [sut getEventJSONStringWithError:&error];
+    NSString *secondJSONEvents = [sut getEventJSONStringWithError:&error clearEvents:YES];
     NSArray *decode = [NSJSONSerialization JSONObjectWithData:[secondJSONEvents dataUsingEncoding:NSUTF8StringEncoding]
                                                     options:0
                                                       error:nil];
