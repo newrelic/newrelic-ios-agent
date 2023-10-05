@@ -14,7 +14,7 @@
 #import "NRMANetworkErrorEvent.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;
-static const NSUInteger kDefaultBufferTimeSeconds = 600; // 5 Minutes
+static const NSUInteger kDefaultBufferTimeSeconds = 600; // 10 Minutes
 static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 
 // Event Key Format String: TimeStamp|SessionElapsedTime|EventType
@@ -35,7 +35,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 - (nonnull instancetype)initWithPersistentStore:(PersistentEventStore *)store {
     self = [super init];
     if (self) {
-        events = [[NSMutableArray<NRMAAnalyticEventProtocol>  alloc] init];
+        events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
         maxBufferSize = kDefaultBufferSize;
         maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
         totalAttemptedInserts = 0;
@@ -118,7 +118,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     }
 }
 
-- (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error {
+- (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents {
     NSString *eventJsonString = nil;
     @synchronized (events) {
         @try {
@@ -136,6 +136,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         } @catch (NSException *e) {
             NRLOG_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }
+    }
+    if (clearEvents){
+        [self empty];
     }
     return eventJsonString;
 }

@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
 - (void)empty;
-- (nullable NSString *)getEventJSONStringWithError:( NSError * _Nullable *)error;
+- (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents;
 @end
 
 NS_ASSUME_NONNULL_END
