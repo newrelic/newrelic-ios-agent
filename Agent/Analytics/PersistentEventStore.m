@@ -67,7 +67,7 @@
     [store removeObjectForKey:key];
     
     __weak __typeof(self) weakSelf = self;
-    dispatch_after(DISPATCH_WALLTIME_NOW, self.writeQueue, ^{
+    dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
         __strong __typeof(weakSelf) strongSelf = weakSelf;
         [strongSelf saveToFile];
         
@@ -86,10 +86,10 @@
     [store removeAllObjects];
     
     __weak __typeof(self) weakSelf = self;
-    dispatch_after(DISPATCH_WALLTIME_NOW, self.writeQueue, ^{
+    dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
         __strong __typeof(weakSelf) strongSelf = weakSelf;
         [strongSelf saveToFile];
-        
+
         if(strongSelf.writeTimer) {
             dispatch_source_cancel(strongSelf.writeTimer);
             strongSelf.writeTimer = nil;
