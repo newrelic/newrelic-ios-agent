@@ -12,8 +12,9 @@
 
 #import "NewRelicInternalUtils.h"
 #import "NRMAMethodSwizzling.h"
+#if !TARGET_OS_TV
 #import <CoreTelephony/CTCarrier.h>
-
+#endif
 
 #pragma mark Methods to override the NRMAReachability currentReachabilityStatus method
 
@@ -21,9 +22,11 @@ NRMANetworkStatus ReachableViaWWANMethod(void) {
     return ReachableViaWWAN;
 }
 
+#if !TARGET_OS_TV
 CTCarrier* ReachableGetCarrierMethod(void) {
     return [[CTCarrier alloc] init];
 }
+#endif
 
 NRMANetworkStatus NotReachableMethod(void) {
     return NotReachable;
@@ -69,6 +72,7 @@ NRMANetworkStatus NotReachableMethod(void) {
     }
 }
 
+#if !TARGET_OS_TV
 -(void)testCarrierNameReachableViaWWANWithCarrierInfo
 {
     // the caching is managed with static function-local variables
@@ -80,15 +84,13 @@ NRMANetworkStatus NotReachableMethod(void) {
 
     @try {
         NSString* carrier = [NewRelicInternalUtils carrierName];
-#if !TARGET_OS_TV
         XCTAssertTrue([carrier isEqualToString:@"unknown"], @"Carrier should be 'unknown', but is actually '%@'", carrier);
-#endif
     } @finally {
         NRMAReplaceInstanceMethod([NRMAReachability class], @selector(currentReachabilityStatus), origMethod);
         NRMAReplaceInstanceMethod([NRMAReachability class], @selector(getCarrierInfo), origMethodGetCarrierInfo);
     }
 }
-
+#endif
 
 -(void)testCarrierNameCache
 {
