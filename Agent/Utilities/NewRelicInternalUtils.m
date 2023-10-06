@@ -224,7 +224,8 @@ static NSString* _osVersion;
                     // Set a default carrier if the value returned is nil, blank, or 'carrier'.
                     if (carrier.carrierName == nil ||
                             carrier.carrierName.length == 0 ||
-                            [carrier.carrierName caseInsensitiveCompare:@"carrier"] == NSOrderedSame) {
+                            [carrier.carrierName caseInsensitiveCompare:@"carrier"] == NSOrderedSame ||
+                        [carrier.carrierName caseInsensitiveCompare:@"--"] == NSOrderedSame) {
                         cachedCarrierName = NRMA_CARRIER_OTHER;
                     } else {
                         cachedCarrierName = carrier.carrierName;
