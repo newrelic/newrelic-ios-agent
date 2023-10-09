@@ -107,9 +107,12 @@
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
 
+#if TARGET_OS_TV
+        NSString* connectionType = [NewRelicInternalUtils connectionType];
+#else
         // getCurrentWanType shouldn't be called on the main thread.
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
-        
+#endif
         NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
         NSURL *replacedURL = [transformer transformURL:request.URL];
         if(!replacedURL) {
@@ -203,7 +206,12 @@
 
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
+#if TARGET_OS_TV
+        NSString* connectionType = [NewRelicInternalUtils connectionType];
+#else
+        // getCurrentWanType shouldn't be called on the main thread.
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
+#endif
         
         NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
         NSURL *replacedURL = [transformer transformURL:request.URL];
