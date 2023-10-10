@@ -10,6 +10,7 @@
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAAnalytics.h"
 #import "NRMACrashDataUploader.h"
+#import "NRLogger.h"
 
 @implementation NRMAExceptionHandlerStartupManager
 
@@ -52,10 +53,12 @@
             } @catch (NSException* e) {
                 NRLOG_VERBOSE(@"failed to serialize event json: %@",e.reason);
             }
+#if  !TARGET_OS_VISION
 
             [NRMAExceptionHandlerManager startHandlerWithLastSessionsAttributes:attributes
                                                              andAnalyticsEvents:events
                                                                   uploadManager:uploader];
+#endif
         }
     });
 }

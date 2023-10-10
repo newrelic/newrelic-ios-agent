@@ -7,9 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
-		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
+		2BBD893D2AD616EF00AA64AD /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		F824A30229A811E8000886A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F824A30129A811E8000886A6 /* Assets.xcassets */; };
 		F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */; };
 		F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */; };
@@ -64,6 +62,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2B8621D22AD6129000175D3C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 2B5FD93B2AD609DE002F455C;
+			remoteInfo = Agent_visionOS;
+		};
 		F8302B0C296F5EFB003EC291 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
@@ -122,7 +127,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -188,8 +192,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
-				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
+				2BBD893D2AD616EF00AA64AD /* NewRelic.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,6 +280,7 @@
 				F8302B6629705766003EC291 /* Agent_Tests.xctest */,
 				F8302B6829705766003EC291 /* Agent_tvos_Tests.xctest */,
 				F8302B6A29705766003EC291 /* Stress Tests.xctest */,
+				2B8621D32AD6129000175D3C /* NewRelic.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -512,6 +516,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		2B8621D32AD6129000175D3C /* NewRelic.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = NewRelic.framework;
+			remoteRef = 2B8621D22AD6129000175D3C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		F8302B6229705766003EC291 /* NewRelic.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
@@ -880,7 +891,7 @@
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRApp.bitcode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -888,7 +899,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "NRTestApp/Helpers/NRTestApp-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
 			name = Debug;
 		};
@@ -930,13 +941,13 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = iOSAgentiOSDist;
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = iOSAgentDist;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator xros xrsimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "NRTestApp/Helpers/NRTestApp-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,7";
 			};
 			name = Release;
 		};

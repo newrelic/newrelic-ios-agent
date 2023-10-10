@@ -497,8 +497,10 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
+#if !TARGET_OS_VISION
 
         [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+#endif
     }
     
     if([NRMAFlags shouldEnableGestureInstrumentation])
