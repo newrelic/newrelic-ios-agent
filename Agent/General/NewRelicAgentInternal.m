@@ -863,11 +863,7 @@ static UIBackgroundTaskIdentifier background_task;
 + (void) startWithApplicationToken:(NSString*)appToken
                andCollectorAddress:(NSString*)url
           andCrashCollectorAddress:(NSString*)crashCollector {
-    if ([NRMANonARCMethods OSMajorVersion] < 5) {
-        NRLOG_WARNING(@"NewRelic: Cowardly avoiding initialization on pre-iOS 5 device");
-        return;
-    }
-
+    
     static dispatch_once_t onceToken = 0;
     if (_NRMAAgentTestModeEnabled) {
         onceToken = 0;
