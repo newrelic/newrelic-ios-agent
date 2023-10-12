@@ -115,7 +115,7 @@ static NSTimeInterval shortTimeInterval = 1;
     // Given
     XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
     PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                     andMinimumDelay:shortTimeInterval];
+                                                     andMinimumDelay:0];
 
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
                                             sessionElapsedTimeInSeconds:50
@@ -185,7 +185,8 @@ static NSTimeInterval shortTimeInterval = 1;
         XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
         [writeExpectation fulfill];
     });
-    [self waitForExpectationsWithTimeout:shortTimeInterval*6 handler:nil];
+//    [self waitForExpectationsWithTimeout:shortTimeInterval*6 handler:nil];
+    [self waitForExpectations:@[writeExpectation]];
     
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                             andMinimumDelay:0];
@@ -269,9 +270,6 @@ static NSTimeInterval shortTimeInterval = 1;
 
 - (void)testClearAllEvents {
     // Given
-    XCTWaiter *firstWaiter = [[XCTWaiter alloc] initWithDelegate:self];
-    XCTestExpectation *waitForInitialWriteExpectation = [[XCTestExpectation alloc] initWithDescription:@"Waiting for initial write of file"];
-//    XCTestExpectation *waitForInitialWriteExpectation = [self expectationWithDescription:@"Waiting for the first time the file is written"];
     PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
                                                       andMinimumDelay:0];
     
@@ -284,42 +282,11 @@ static NSTimeInterval shortTimeInterval = 1;
     [sut setObject:customEvent forKey:@"Custom Event"];
     [sut setObject:requestEvent forKey:@"Request Event"];
     [sut setObject:interactionEvent forKey:@"Interaction Event"];
-    
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC*4), dispatch_get_main_queue(), ^{
-        NSFileManager *fileManager = [NSFileManager defaultManager];
 
-        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
-        if([fileManager fileExistsAtPath:testFilename]) {
-            NSLog(@"Initial File found");
-        } else {
-            NSLog(@"File doesn't Exist yet");
-        }
-        [waitForInitialWriteExpectation fulfill];
-    });
-//    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
-    [firstWaiter waitForExpectations:@[waitForInitialWriteExpectation] timeout:shortTimeInterval*6];
-    
     // When
     [sut clearAll];
     
     // Then
-    XCTWaiter *waiter = [[XCTWaiter alloc] initWithDelegate:self];
-//    XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
-    XCTestExpectation *writeExpectation = [[XCTestExpectation alloc] initWithDescription:@"Waiting for file to clear"];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC*2), dispatch_get_main_queue(), ^{
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-
-//        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
-        if([fileManager fileExistsAtPath:testFilename]) {
-            NSLog(@"Rewritten File found");
-        } else {
-            NSLog(@"File Deleted");
-        }
-        [writeExpectation fulfill];
-    });
-//    [self waitForExpectations:@[writeExpectation] timeout:shortTimeInterval*3];
-    [waiter waitForExpectations:@[writeExpectation] timeout:shortTimeInterval*6];
-    
     XCTAssertNil([sut objectForKey:@"Custom Event"]);
     XCTAssertNil([sut objectForKey:@"Request Event"]);
     XCTAssertNil([sut objectForKey:@"Interaction Event"]);

@@ -109,7 +109,6 @@
     
     NSMutableDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:storedData
                                                                                          error:error];
-    
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
             return NO;
