@@ -48,6 +48,8 @@ using namespace NewRelic;
     id<AttributeValidatorProtocol> _attributeValidator;
 }
 
+static NSString* const eventStoreFilename = @"eventsStore.txt";
+
 static PersistentStore<std::string,BaseValue>* __attributeStore;
 + (PersistentStore<std::string, BaseValue> &) attributeDupStore
 {
@@ -101,7 +103,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(self){
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:@"eventsStore.txt"];
+            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
 
             PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:30];
             

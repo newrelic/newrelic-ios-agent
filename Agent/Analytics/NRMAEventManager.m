@@ -106,7 +106,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 }
 
 - (NSString *)createKeyForEvent:(id<NRMAAnalyticEventProtocol>)event {
-    return [NSString stringWithFormat:eventKeyFormat, event.timestamp, event. sessionElapsedTimeSeconds, event.eventType];
+    return [NSString stringWithFormat:eventKeyFormat, event.timestamp, event.sessionElapsedTimeSeconds, event.eventType];
 }
 
 - (void)empty {
