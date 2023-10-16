@@ -132,27 +132,32 @@ static NSTimeInterval shortTimeInterval = 1;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
         NSFileManager *fileManager = [NSFileManager defaultManager];
 
-        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        while(1) {
+            if([fileManager fileExistsAtPath:testFilename]) {
+                NSLog(@"File Found");
+                break;
+            }
+            sleep(1);
+        }
+        NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
+        NSError *error = nil;
+        NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
+                                                                                                error:&error];
+        XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
+        XCTAssertEqual([retrievedDictionary count], 1);
+        
+        PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
+                                                                andMinimumDelay:1];
+        [anotherOne load:&error];
+        XCTAssertNil(error, "Error loading previous events: %@", [error localizedDescription]);
+        TestEvent *anotherEvent = [anotherOne objectForKey:@"aKey"];
+        XCTAssertNotNil(anotherEvent);
+        XCTAssertEqual(anotherEvent.timestamp, testEvent.timestamp);
+        XCTAssertEqual(anotherEvent.sessionElapsedTimeSeconds, testEvent.sessionElapsedTimeSeconds);
+        XCTAssertEqual([anotherEvent.attributes count], [testEvent.attributes count]);
         [writeExpectation fulfill];
     });
     [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
-    
-    NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
-    NSError *error = nil;
-    NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
-                                                                                            error:&error];
-    XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
-    XCTAssertEqual([retrievedDictionary count], 1);
-    
-    PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                            andMinimumDelay:1];
-    [anotherOne load:&error];
-    XCTAssertNil(error, "Error loading previous events: %@", [error localizedDescription]);
-    TestEvent *anotherEvent = [anotherOne objectForKey:@"aKey"];
-    XCTAssertNotNil(anotherEvent);
-    XCTAssertEqual(anotherEvent.timestamp, testEvent.timestamp);
-    XCTAssertEqual(anotherEvent.sessionElapsedTimeSeconds, testEvent.sessionElapsedTimeSeconds);
-    XCTAssertEqual([anotherEvent.attributes count], [testEvent.attributes count]);
 }
 
 - (void)testStoreReturnsNoIfFileDoesNotExist {
@@ -166,7 +171,7 @@ static NSTimeInterval shortTimeInterval = 1;
     // Given
     XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
     PersistentEventStore *originalStore = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                     andMinimumDelay:0];
+                                                     andMinimumDelay:1];
     NSError *error = nil;
 
     // When
@@ -179,15 +184,29 @@ static NSTimeInterval shortTimeInterval = 1;
     [originalStore setObject:interactionEvent forKey:@"Interaction Event"];
 
     // Then
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC*4), dispatch_get_main_queue(), ^{
-        NSFileManager *fileManager = [NSFileManager defaultManager];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
 
-        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
+        while(1) {
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+
+            if(![fileManager fileExistsAtPath:testFilename]) {
+                continue;
+            }
+            NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
+            NSError *error = nil;
+            NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
+                                                                                                    error:&error];
+            if(retrievedDictionary.count == 3) {
+                NSLog(@"Found full file");
+                break;
+            } else {
+                NSLog(@"Found file with %d entries: ", retrievedDictionary.count);
+            }
+        }
         [writeExpectation fulfill];
     });
-//    [self waitForExpectationsWithTimeout:shortTimeInterval*6 handler:nil];
-    [self waitForExpectations:@[writeExpectation]];
-    
+    [self waitForExpectationsWithTimeout:shortTimeInterval*5 handler:nil];
+
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                             andMinimumDelay:0];
 
@@ -218,7 +237,7 @@ static NSTimeInterval shortTimeInterval = 1;
     // Given
     XCTestExpectation *waitForInitialWriteExpectation = [self expectationWithDescription:@"Waiting for the first time the file is written"];
     PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                      andMinimumDelay:0];
+                                                      andMinimumDelay:1];
     
     NSError *error = nil;
     
@@ -231,11 +250,17 @@ static NSTimeInterval shortTimeInterval = 1;
     [sut setObject:interactionEvent forKey:@"Interaction Event"];
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        NSFileManager *fileManager = [NSFileManager defaultManager];
 
-        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
-        if([fileManager fileExistsAtPath:testFilename]) {
-            NSLog(@"Initial File found");
+        while(1) {
+            NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
+            NSError *error = nil;
+            NSMutableDictionary *retrievedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:retrievedData
+                                                                                                    error:&error];
+            if(retrievedDictionary.count == 3) {
+                NSLog(@"Initial file found and full");
+                break;
+            }
+            sleep(1);
         }
         [waitForInitialWriteExpectation fulfill];
     });
@@ -243,10 +268,11 @@ static NSTimeInterval shortTimeInterval = 1;
     
     // When
     [sut removeObjectForKey:@"Request Event"];
+    sleep(1);
     
     // Then
     XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
         NSFileManager *fileManager = [NSFileManager defaultManager];
 
         XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
@@ -255,7 +281,7 @@ static NSTimeInterval shortTimeInterval = 1;
         }
         [writeExpectation fulfill];
     });
-    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
+    [self waitForExpectationsWithTimeout:shortTimeInterval*5 handler:nil];
     XCTAssertNil([sut objectForKey:@"Request Event"]);
     
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename

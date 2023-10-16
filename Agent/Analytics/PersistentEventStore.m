@@ -48,7 +48,7 @@
     }
     
     self.writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _writeQueue);
-    dispatch_source_set_timer(self.writeTimer, dispatch_walltime(NULL, 0), _minimumDelay * NSEC_PER_SEC, 1000);
+    dispatch_source_set_timer(self.writeTimer, dispatch_walltime(NULL, 0), _minimumDelay * NSEC_PER_SEC, 100);
     
     __weak __typeof(self) weakSelf = self;
     dispatch_source_set_event_handler(self.writeTimer, ^{
