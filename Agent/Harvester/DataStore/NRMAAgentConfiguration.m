@@ -50,7 +50,11 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
         [self setCrashCollectorHost:crashHost];
         [self setLoggingURL];
 
-        _useSSL = YES;
+        if ([[NSProcessInfo processInfo] environment][@"UITesting"]) {
+            _useSSL = NO;
+        } else {
+            _useSSL = YES;
+        }
     }
     return self;
 }

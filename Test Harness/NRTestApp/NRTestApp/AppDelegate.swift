@@ -29,32 +29,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #if Enable_SWIFT_INTERACTION_TRACING
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing)
 #endif
+         NewRelic.replaceDeviceIdentifier("myDeviceId")
 
-        // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
-        guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
-        
-        // Changing the collector and crash collector addresses is not necessary to use New Relic production servers.
-        guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPI-Info") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPI-Info") as? String else { return true }
-       
-        // If the entries for collectorAddress or crashCollectorAddress are empty in NRAPI-Info.plist, start the New Relic agent with default production endpoints.
-        if collectorAddress.isEmpty || crashCollectorAddress.isEmpty {
-            // Start the agent using default endpoints.
-            NewRelic.start(withApplicationToken:apiKey)
-        } else {
-            // Start the agent with custom endpoints.
-            NewRelic.start(withApplicationToken:apiKey,
-                           andCollectorAddress: collectorAddress,
-                           andCrashCollectorAddress: crashCollectorAddress)
+        if ProcessInfo.processInfo.environment["UITesting"] != nil {
+            NewRelic.start(withApplicationToken: "APP-TOKEN-NRMA",
+                           andCollectorAddress: "localhost:8080",
+                           andCrashCollectorAddress: "localhost:8080")
+        }
+        else {
+            // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
+            guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
+            
+            // Changing the collector and crash collector addresses is not necessary to use New Relic production servers.
+            guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPI-Info") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPI-Info") as? String else { return true }
+            
+            // If the entries for collectorAddress or crashCollectorAddress are empty in NRAPI-Info.plist, start the New Relic agent with default production endpoints.
+            if collectorAddress.isEmpty || crashCollectorAddress.isEmpty {
+                // Start the agent using default endpoints.
+                NewRelic.start(withApplicationToken:apiKey)
+            } else {
+                // Start the agent with custom endpoints.
+                NewRelic.start(withApplicationToken:apiKey,
+                               andCollectorAddress: collectorAddress,
+                               andCrashCollectorAddress: crashCollectorAddress)
+            }
         }
 
         // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
-        if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {
-            NRLogger.setLogIngestKey(logIngestKey)
-        }
-        else {
-            NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
-
-        }
+//        if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {
+//            NRLogger.setLogIngestKey(logIngestKey)
+//        }
+//        else {
+//            NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
+//
+//        }
         NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }
