@@ -1007,6 +1007,8 @@
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
 		F891686729E4500500763BD7 /* NRMAViewControllerTimeTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F891685129E44E6000763BD7 /* NRMAViewControllerTimeTrackerTests.swift */; };
 		F891686829E4500500763BD7 /* NRMAViewControllerTimeTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F891685129E44E6000763BD7 /* NRMAViewControllerTimeTrackerTests.swift */; };
+		F8728E412ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
+		F8728E422ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
 		F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABB324E704A600E45C90 /* NRMAWKWebViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
@@ -1893,6 +1895,8 @@
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
 		F891685129E44E6000763BD7 /* NRMAViewControllerTimeTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMAViewControllerTimeTrackerTests.swift; sourceTree = "<group>"; };
+		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
+		F8728E562ACC9F840056F641 /* NRMANetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkMonitor.h; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
@@ -3028,6 +3032,8 @@
 				02FF4A8D24DC652D00115469 /* NRMAUDIDManager.m */,
 				02FF4A8B24DC652D00115469 /* NRMAUUIDStore.h */,
 				02FF4A8824DC652C00115469 /* NRMAUUIDStore.m */,
+				F8728E562ACC9F840056F641 /* NRMANetworkMonitor.h */,
+				F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -4349,6 +4355,7 @@
 				02FF49F124DC645B00115469 /* NRMAAppUpgradeMetricGenerator.m in Sources */,
 				02FF48DA24DC622700115469 /* NRMATimestampContainer.m in Sources */,
 				F824A5EB29C4B385000886A6 /* NRMAViewControllerTimeTracker.m in Sources */,
+				F8728E412ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */,
 				02FF49AE24DC62B800115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF489C24DC61D200115469 /* NRMAURLSessionOverride.m in Sources */,
 				02FF49CB24DC62B800115469 /* NRMAHarvestableMetric.m in Sources */,
@@ -4687,6 +4694,7 @@
 				02FF4C8124E3201400115469 /* NRMAInteractionHistoryObjCInterface.m in Sources */,
 				02FF4C8224E3201400115469 /* NRMAActivityTraceMeasurementProducer.m in Sources */,
 				02FF4C8324E3201400115469 /* NRMAExceptionMetaDataStore.m in Sources */,
+				F8728E422ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */,
 				02FF4C8424E3201400115469 /* NRMASummaryMeasurementConsumer.m in Sources */,
 				02FF4C8524E3201400115469 /* NRMAFlags.m in Sources */,
 				02FF4C8624E3201400115469 /* NRMACrashDataWriter.m in Sources */,
@@ -5158,6 +5166,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -5214,6 +5223,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
