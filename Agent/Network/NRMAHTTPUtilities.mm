@@ -154,4 +154,35 @@
     return std::unique_ptr<NewRelic::Connectivity::Payload>(nullptr);
 }
 
++ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMAPayloadContainer*)payloadContainer {
+    NSString* operationName = headers[@"X-APOLLO-OPERATION-NAME"];
+    NSString* operationType = headers[@"X-APOLLO-OPERATION-TYPE"];
+    NSString* operationId = headers[@"X-APOLLO-OPERATION-ID"];
+    
+    if (operationName != nil || operationType != nil || operationId != nil) {
+        NSMutableDictionary* graphQLDict = [[NSMutableDictionary alloc] init];
+        
+        if (operationName != nil) {
+            [graphQLDict setObject:operationName forKey:@"X-APOLLO-OPERATION-NAME"];
+        }
+        if (operationType != nil) {
+            [graphQLDict setObject:operationType forKey:@"X-APOLLO-OPERATION-TYPE"];
+        }
+        if (operationId != nil) {
+            [graphQLDict setObject:operationId forKey:@"X-APOLLO-OPERATION-ID"];
+        }
+        std::map<std::string, std::string> cDict;
+        NSArray* keys = [graphQLDict allKeys];
+        for(NSString* key in keys)
+        {
+            NSString* value = [graphQLDict objectForKey: key];
+            std::string cValue = std::string(value.UTF8String);
+            std::string cKey = std::string(key.UTF8String);
+            cDict[cKey] = cValue;
+        }
+        const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
+        payload->setGraphQLHeaders(cDict);
+    }
+}
+
 @end

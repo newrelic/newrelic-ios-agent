@@ -63,6 +63,10 @@ public:
 
     void setDistributedTracing(bool enabled);
     
+    std::map<std::string, std::string> getGraphQLHeaders() const;
+
+    void setGraphQLHeaders(std::map<std::string, std::string> graphQLHeaders);
+    
 private:
 
     //current spec has version 0,2 this won't change from build to build
@@ -94,6 +98,9 @@ private:
     
     //is Distributed Tracing enabled for this payload
     bool dtEnabled = false;
+    
+    // A dictionary to hold graphQL header information
+    std::map<std::string, std::string> graphQLHeaders;
 };
 
 } //namespace Connectivity

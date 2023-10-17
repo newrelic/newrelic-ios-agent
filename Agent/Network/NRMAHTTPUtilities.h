@@ -21,4 +21,5 @@
 + (void) attachPayload:(NRMAPayloadContainer*)payload to:(id)object;
 + (NRMAPayloadContainer *)generatePayload;
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer;
++ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMAPayloadContainer*)payloadContainer;
 @end

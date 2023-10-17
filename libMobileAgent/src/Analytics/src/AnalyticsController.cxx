@@ -306,11 +306,13 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
             // copy DT fields before payload gets std::move()
             std::string distributedTracingId("");
             std::string traceId("");
+            std::map<std::string, std::string> graphQLHeaders;
             bool addDistributedTracing = false;
             if (payload != nullptr) {
                 distributedTracingId = payload->getId();
                 traceId = payload->getTraceId();
                 addDistributedTracing = payload->getDistributedTracing();
+                graphQLHeaders = payload->getGraphQLHeaders();
             }
             
             auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
@@ -377,6 +379,19 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
                 if ((strlens(contentType) > 0)) {
                     event->addAttribute(__kNRMA_Attrib_contentType, contentType);
                 }
+                
+                std::map<std::string, std::string>::iterator it
+                    = graphQLHeaders.begin();
+                // Iterating over the map using Iterator till map end.
+                while (it != graphQLHeaders.end()) {
+                    // Accessing the key
+                    std::string key = it->first;
+                    // Accessing the value
+                    std::string value = it->second;
+                    event->addAttribute(key.c_str(), value.c_str());
+                    // iterator incremented to point next item
+                    it++;
+                }
 
                 return _eventManager.addEvent(event);
             }
@@ -436,11 +451,13 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
             // copy DT fields before payload gets std::move()
             std::string distributedTracingId("");
             std::string traceId("");
+            std::map<std::string, std::string> graphQLHeaders;
             bool addDistributedTracing = false;
             if (payload != nullptr) {
                 distributedTracingId = payload->getId();
                 traceId = payload->getTraceId();
                 addDistributedTracing = payload->getDistributedTracing();
+                graphQLHeaders = payload->getGraphQLHeaders();
             }
             
             auto requestUrl = requestData.getRequestUrl();
@@ -516,6 +533,20 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
 
                 if (statusCode != 0) {
                     event->addAttribute(__kNRMA_Attrib_statusCode, statusCode);
+                }
+                
+                std::map<std::string, std::string>::iterator it
+                    = graphQLHeaders.begin();
+              
+                // Iterating over the map using Iterator till map end.
+                while (it != graphQLHeaders.end()) {
+                    // Accessing the key
+                    std::string key = it->first;
+                    // Accessing the value
+                    std::string value = it->second;
+                    event->addAttribute(key.c_str(), value.c_str());
+                    // iterator incremented to point next item
+                    it++;
                 }
 
                 return event;

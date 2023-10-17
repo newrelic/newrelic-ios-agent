@@ -91,6 +91,14 @@ void NewRelic::Connectivity::Payload::setDistributedTracing(bool enabled) {
     Payload::dtEnabled = enabled;
 }
 
+std::map<std::string, std::string> NewRelic::Connectivity::Payload::getGraphQLHeaders() const {
+    return graphQLHeaders;
+}
+
+void NewRelic::Connectivity::Payload::setGraphQLHeaders(std::map<std::string, std::string> graphQLHeaders) {
+    Payload::graphQLHeaders = graphQLHeaders;
+}
+
 NRJSON::JsonObject NewRelic::Connectivity::Payload::toJSON() {
     NRJSON::JsonObject json{};
     static const std::string versionKey   = "v";
