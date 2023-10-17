@@ -1,6 +1,10 @@
 import "ConstantsFastfile"
 
 platform :ios do
+  lane :clean do
+    deleteBuildArtifacts
+  end
+  
   desc "Delete derived data and Frameworks and build directory"
   lane :deleteBuildArtifacts do
 
@@ -13,7 +17,12 @@ platform :ios do
           sh "rm -rf #{Constants::ARCHIVES}"
           sh "rm -rf Frameworks"
           sh "rm -rf libMobileAgent/build"
+
           sh "rm -rf #{Constants::DD}"
+          sh "rm -rf build"
+          sh "rm -rf build.out"
+          sh "rm -rf cocoapods/NewRelic.xcframework"
+
         rescue => ex
           # handle error
         ensure
@@ -21,5 +30,21 @@ platform :ios do
         end
 
       end
+  end
+
+  desc "Add an API key to the plist file"
+  lane :addAPIKeyToPlist do |options|
+      Dir.chdir("../scripts/") do
+        begin
+          sh ("./plist_editor.swift -valueToAdd #{options[:valueToAdd]}")
+
+        rescue => ex
+          # handle error
+        ensure
+          # do something that always run like clean up
+        end
+
+      end
+      
   end
 end

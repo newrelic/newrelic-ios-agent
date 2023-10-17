@@ -109,8 +109,13 @@ didFailProvisionalNavigation:(WKNavigation*)navigation
                                   withError:error];
 
     if ([self.realDelegate respondsToSelector:_cmd]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigation,error);
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigation)],
+                                   [NSValue valueWithPointer: &(error)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     }
 }
 
@@ -133,36 +138,74 @@ didFailNavigation:(WKNavigation*)navigation
                                   withError:error];
     
     if ([self.realDelegate respondsToSelector:_cmd]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigation,error);
-    }
-}
-
-- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
-{
-    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationAction,decisionHandler);
-    } else {
-        decisionHandler(WKNavigationActionPolicyAllow);
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigation)],
+                                   [NSValue valueWithPointer: &(error)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     }
 }
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction preferences:(WKWebpagePreferences *)preferences decisionHandler:(void (^)(WKNavigationActionPolicy, WKWebpagePreferences *))decisionHandler API_AVAILABLE(ios(13.0))
 {
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:preferences:decisionHandler:)]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationAction,preferences,decisionHandler);
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigationAction)],
+                                   [NSValue valueWithPointer: &(preferences)],
+                                   [NSValue valueWithPointer: &(decisionHandler)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
+    } else if([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]){
+        SEL cmd = @selector(webView:decidePolicyForNavigationAction:decisionHandler:);
+        
+        typedef void (^DecisionHandler)(WKNavigationActionPolicy);
+        DecisionHandler newDecisionHandler = ^void(WKNavigationActionPolicy navigationActionPolicy) {
+            decisionHandler(navigationActionPolicy, preferences);
+        };
+        
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigationAction)],
+                                   [NSValue valueWithPointer: &(newDecisionHandler)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:cmd] selector:cmd parameters:parameters];
     } else {
         decisionHandler(WKNavigationActionPolicyAllow, preferences);
+    }
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+{
+    if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationAction:decisionHandler:)]) {
+        if([self.realDelegate respondsToSelector:_cmd]) {
+            NSArray* parameters = [NSArray arrayWithObjects:
+                                       [NSValue valueWithPointer: &(webView)],
+                                       [NSValue valueWithPointer: &(navigationAction)],
+                                       [NSValue valueWithPointer: &(decisionHandler)],
+                                       nil
+                                    ];
+            [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
+        }
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow);
     }
 }
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
 {
     if ([self.realDelegate respondsToSelector:@selector(webView:decidePolicyForNavigationResponse:decisionHandler:)]) {
-        Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-        ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,navigationResponse,decisionHandler);
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(navigationResponse)],
+                                   [NSValue valueWithPointer: &(decisionHandler)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     } else {
         decisionHandler(WKNavigationResponsePolicyAllow);
     }
@@ -170,11 +213,29 @@ didFailNavigation:(WKNavigation*)navigation
 
 - (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler {
     if ([self.realDelegate respondsToSelector:@selector(webView:didReceiveAuthenticationChallenge:completionHandler:)]) {
-            Method m = class_getInstanceMethod([self.realDelegate class], _cmd);
-            ((void(*)(id,SEL,id,id,id))method_getImplementation(m))(self.realDelegate,_cmd, webView,challenge,completionHandler);
+        NSArray* parameters = [NSArray arrayWithObjects:
+                                   [NSValue valueWithPointer: &(webView)],
+                                   [NSValue valueWithPointer: &(challenge)],
+                                   [NSValue valueWithPointer: &(completionHandler)],
+                                   nil
+                                ];
+        [self invokeMethod:[self.realDelegate methodSignatureForSelector:_cmd] selector:_cmd parameters:parameters];
     } else {
         completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
     }
+}
+
+-(void)invokeMethod:(NSMethodSignature*) methodSignature selector:(SEL)selector parameters:(NSArray*)parameters {
+    NSInvocation *inv = [NSInvocation invocationWithMethodSignature:[self.realDelegate methodSignatureForSelector:selector]];
+    [inv setSelector:selector];
+    [inv setTarget:self.realDelegate];
+
+    for(int i = 0; i < parameters.count; i++) {
+        NSValue *value = [parameters objectAtIndex:i];
+        [inv setArgument:[value pointerValue] atIndex:i+2];//arguments 0 and 1 are self.realDelegate and _cmd respectively, automatically set by NSInvocation
+    }
+    
+    [inv invoke];
 }
 
 + (NSURL*) navigationURL:(WKNavigation*)nav

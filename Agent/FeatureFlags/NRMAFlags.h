@@ -43,6 +43,12 @@
 
 + (BOOL) shouldEnableAppStartMetrics;
 
++ (BOOL) shouldEnableFedRampSupport;
+
++ (BOOL) shouldEnableSwiftAsyncURLSessionSupport;
+
++ (BOOL) shouldEnableLogReporting;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

@@ -9,6 +9,9 @@
 #import "NRLogger.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAJSON.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAHarvestController.h"
+#import "NRMAHarvesterConfiguration.h"
 
 NRLogger *_nr_logger = nil;
 
@@ -47,7 +50,7 @@ withMessage:(NSString *)message {
                                file, NRLogMessageFileKey,
                                [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
                                method, NRLogMessageMethodKey,
-                               [[[NSDate alloc] init] description], NRLogMessageTimestampKey,
+                               [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
                                message, NRLogMessageMessageKey,
                                nil]];
     }
@@ -65,6 +68,15 @@ withMessage:(NSString *)message {
     [[NRLogger logger] setLogTargets:targets];
 }
 
++ (void)setLogIngestKey:(NSString*)key {
+    [[NRLogger logger] setLogIngestKey:key];
+}
+
++ (void)setLogURL:(NSString*) url {
+    [[NRLogger logger] setLogURL:url];
+
+}
+
 + (NSString *)logFilePath {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
     NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
@@ -79,6 +91,10 @@ withMessage:(NSString *)message {
     [[NRLogger logger] clearLog];
 }
 
++ (void)upload {
+    [[NRLogger logger] upload];
+}
+
 #pragma mark -- internal
 
 - (id)init {
@@ -87,6 +103,7 @@ withMessage:(NSString *)message {
         self->logLevels = NRLogLevelError | NRLogLevelWarning;
         self->logTargets = NRLogTargetConsole;
         self->logFile = nil;
+        self->logQueue = dispatch_queue_create("com.newrelicagent.loggingfilequeue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -102,7 +119,8 @@ withMessage:(NSString *)message {
 
 - (void)addLogMessage:(NSDictionary *)message {
     // The static method checks the log level before we get here.
-    @synchronized(self) {
+    //    @synchronized(self) {
+    dispatch_async(logQueue, ^{
         if (self->logTargets & NRLogTargetConsole) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
@@ -111,31 +129,47 @@ withMessage:(NSString *)message {
                   [message objectForKey:NRLogMessageLineNumberKey],
                   [message objectForKey:NRLogMessageMethodKey],
                   [message objectForKey:NRLogMessageMessageKey]);
+
         }
         if (self->logTargets & NRLogTargetFile) {
-            NSData *json = [self jsonDictonary:message];
+            NSData *json = [self jsonDictionary:message];
             if (json) {
                 if ([self->logFile offsetInFile]) {
                     [self->logFile writeData:[NSData dataWithBytes:"," length:1]];
                 }
                 [self->logFile writeData:json];
+
+                dispatch_async(self->logQueue, ^{
+                    NSFileHandle *handleForReadingAtPath = [NSFileHandle fileHandleForReadingAtPath:[NRLogger logFilePath]];
+                    self->lastFileSize = [handleForReadingAtPath seekToEndOfFile];
+                   // NSLog(@"logs fileSize = %llu", self->lastFileSize);
+                    if (self->lastFileSize > kNRMAMaxPayloadSizeLimit) {
+                       // NSLog(@"logs fileSize exceeds 1MB , upload logs");
+                        [self upload];
+                    }
+                    [handleForReadingAtPath closeFile];
+                });
             }
         }
-    }
+    });
 }
 
-- (NSData*) jsonDictonary:(NSDictionary*)message {
-    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n}",
+- (NSData*) jsonDictionary:(NSDictionary*)message {
+    NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
+    NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
+    NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
+    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
                       NRLogMessageLevelKey, [message objectForKey:NRLogMessageLevelKey],
                       NRLogMessageFileKey, [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       NRLogMessageLineNumberKey,[message objectForKey:NRLogMessageLineNumberKey],
                       NRLogMessageMethodKey,[[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
-                      NRLogMessageTimestampKey,[[message objectForKey:NRLogMessageTimestampKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
-                      NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""]];
+                      NRLogMessageTimestampKey,[message objectForKey:NRLogMessageTimestampKey],
+                      NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
+                      @"sessionId", nrSessiondId,
+                      @"appId", nrAppId];
 
     return [json dataUsingEncoding:NSUTF8StringEncoding];
 }
-
 
 - (void)setLogLevels:(unsigned int)levels {
     @synchronized(self) {
@@ -158,10 +192,9 @@ withMessage:(NSString *)message {
     }
 }
 
-    - (NRLogLevels) logLevels {
-        return self->logLevels;
-    }
-
+- (NRLogLevels) logLevels {
+    return self->logLevels;
+}
 
 - (void)setLogTargets:(unsigned int)targets {
     NSString *fileOpenError = nil;
@@ -241,6 +274,54 @@ withMessage:(NSString *)message {
             [self setLogTargets:self->logTargets];
         }
     }
+}
+
+- (void)setLogIngestKey:(NSString*)url {
+    self->logIngestKey = url;
+}
+- (void)setLogURL:(NSString*)url {
+    self->logURL = url;
+}
+- (void)upload {
+    dispatch_async(logQueue, ^{
+        if (self->logFile) {
+            // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
+            if (!self->logIngestKey || !self->logURL) { return; }
+
+            NSString *path = [NRLogger logFilePath];
+            NSData* logData = [NSData dataWithContentsOfFile:path];
+
+            NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+            NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
+            NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
+            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
+            [req setValue:self->logIngestKey forHTTPHeaderField:@"Api-Key"];
+
+            req.HTTPMethod = @"POST";
+
+            NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+
+                BOOL errorCode = false;
+                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                    NSInteger responseCode = ((NSHTTPURLResponse*)response).statusCode;
+                    errorCode = responseCode >= 300;
+                }
+                if (!error && !errorCode) {
+                    NRLOG_VERBOSE(@"Logs uploaded successfully.");
+                }
+                else if (errorCode) {
+                    NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
+
+                }
+                else {
+                    NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
+                }
+            }];
+
+            [uploadTask resume];
+            [self clearLog];
+        }
+    });
 }
 
 @end

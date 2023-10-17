@@ -6,8 +6,8 @@
 #ifndef LIBMOBILEAGENT_ATTRIBUTES_HPP
 #define LIBMOBILEAGENT_ATTRIBUTES_HPP
 
-#include "flatbuffers/flatbuffers.h"
-#include "map"
+#include <flatbuffers/flatbuffers.h>
+#include <map>
 
 namespace NewRelic {
     namespace Hex {

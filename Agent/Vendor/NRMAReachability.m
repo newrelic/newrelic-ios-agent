@@ -116,7 +116,9 @@
 
 - (NSString *)getCurrentWanNetworkType:(NRMANetworkStatus)networkStatus
 {
-#if !TARGET_OS_TV
+#if TARGET_OS_TV
+    return NRMA_CARRIER_WIFI;
+#else
     @synchronized (_wanNetworkType) {
         if (networkStatus != ReachableViaWWAN) {
             return nil;
@@ -145,11 +147,18 @@
             if ([_wanNetworkType isEqualToString:CTRadioAccessTechnologyeHRPD]) {return @"HRPD";}
             
             if ([_wanNetworkType isEqualToString:CTRadioAccessTechnologyLTE]) {return @"LTE";}
+
+            if (@available(iOS 14.1, *)) {
+                if ([_wanNetworkType isEqualToString:CTRadioAccessTechnologyNR] || [_wanNetworkType isEqualToString:CTRadioAccessTechnologyNRNSA]) {return @"5G";}
+            } else {
+                // Fallback on earlier versions
+            }
+
         }
     }
 #endif
     //_wanNetworkType didn't equal any of the expected Technologies, or currentRadioAccessTechnology isn't available.
-    return @"unknown";
+    return NRMA_CARRIER_OTHER;
 }
 
 

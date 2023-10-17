@@ -14,7 +14,6 @@ import NewRelic
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
 #if DEBUG
         // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
         NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
@@ -30,6 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #if Enable_SWIFT_INTERACTION_TRACING
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing)
 #endif
+
         // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
         guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
         
@@ -47,10 +47,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                            andCrashCollectorAddress: crashCollectorAddress)
         }
 
-        // These must be called after NewRelic.start(withApplicationToken:)
-        NewRelic.setMaxEventPoolSize(5000)
-        NewRelic.setMaxEventBufferTime(60)
-        
+        NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }
 

@@ -41,7 +41,7 @@ extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
 #line 25 "/Users/bryce/Repo/NewRelic/Mobile/Agents/libMobileAgent/Agent/ext/JSON/json.y" /* yacc.c:1915  */
- #include "json_st.hh" 
+#include <JSON/json_st.hh>
 
 #line 47 "/Users/bryce/Repo/NewRelic/Mobile/Agents/libMobileAgent/Agent/ext/JSON/json.tab.hh" /* yacc.c:1915  */
 

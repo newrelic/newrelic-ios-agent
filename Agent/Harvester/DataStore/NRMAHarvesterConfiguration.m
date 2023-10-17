@@ -33,6 +33,8 @@
         self.encoding_key = [dict valueForKey:kNRMA_ENCODING_KEY];
         self.account_id = [[dict valueForKey:kNRMA_ACCOUNT_ID] longLongValue];
         self.application_id = [[dict valueForKey:kNMRA_APPLICATION_ID] longLongValue];
+        self.trusted_account_key = [dict valueForKey:kNRMA_TRUSTED_ACCOUNT_KEY];
+
         // The collector does not currently send down this key, but we still want a sane default
         if ([dict objectForKey:kNRMA_AT_MAX_SEND_ATTEMPTS]) {
             self.activity_trace_max_send_attempts = [[dict valueForKey:kNRMA_AT_MAX_SEND_ATTEMPTS] intValue];
@@ -56,6 +58,8 @@
     configuration.activity_trace_max_size = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SIZE;
     configuration.activity_trace_max_send_attempts = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SEND_ATTEMPTS;
     configuration.activity_trace_min_utilization = NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION;
+    configuration.trusted_account_key = @"";
+
     configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
     return configuration;
 }
@@ -93,6 +97,8 @@
     dictionary[kNMRA_APPLICATION_ID] = @(self.application_id);
     dictionary[kNRMA_ACCOUNT_ID] = @(self.account_id);
     dictionary[kNRMA_ENCODING_KEY] = self.encoding_key;
+    dictionary[kNRMA_TRUSTED_ACCOUNT_KEY] = self.trusted_account_key;
+
     return dictionary;
 }
 

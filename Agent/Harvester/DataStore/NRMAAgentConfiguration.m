@@ -12,6 +12,8 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionhandlerConstants.h"
 #import "NRMAAppToken.h"
+#import "NRMAFlags.h"
+#import "NRLogger.h"
 
 static NSString* __NRMA__customAppVersionString = nil;
 static NSString* __NRMA__customAppBuildString = nil;
@@ -46,6 +48,7 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
 
         [self setCollectorHost:collectorHost];
         [self setCrashCollectorHost:crashHost];
+        [self setLoggingURL];
 
         _useSSL = YES;
     }
@@ -62,7 +65,9 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
     if (host) {
         _collectorHost = host;
     } else {
-        if (self.applicationToken.regionCode.length) {
+        if ([NRMAFlags shouldEnableFedRampSupport]) {
+            _collectorHost = kNRMA_FEDRAMP_COLLECTOR_HOST;
+        } else if (self.applicationToken.regionCode.length) {
             _collectorHost = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_COLLECTOR_HOST,self.applicationToken.regionCode];
         } else {
             _collectorHost = kNRMA_DEFAULT_COLLECTOR_HOST;
@@ -79,12 +84,36 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
     if (host) {
          _crashCollectorHost  = host;
     } else {
-        if (self.applicationToken.regionCode.length) {
+        if ([NRMAFlags shouldEnableFedRampSupport]) {
+            _crashCollectorHost = KNRMA_FEDRAMP_CRASH_COLLECTOR_HOST;
+        } else if (self.applicationToken.regionCode.length) {
             _crashCollectorHost = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_CRASH_HOST,self.applicationToken.regionCode];
         } else {
             _crashCollectorHost = kNRMA_DEFAULT_CRASH_COLLECTOR_HOST;
         }
     }
+}
+
+- (void) setLoggingURL {
+    if (![NRMAFlags shouldEnableLogReporting]) { return; }
+
+    if (self.applicationToken.regionCode.length) {
+        _loggingURL = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_LOGGING_HOST,self.applicationToken.regionCode];
+    }
+    else if ([self.collectorHost isEqualToString:@"staging-mobile-collector.newrelic.com"]) {
+        _loggingURL = kNRMA_STAGING_LOGGING_HOST;
+    }
+    else if ([NRMAFlags shouldEnableFedRampSupport]) {
+        _loggingURL = kNRMA_FEDRAMP_LOGGING_HOST;
+    }
+    else {
+        _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
+    }
+    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1"];
+
+    NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
+
+    [NRLogger setLogURL:logURL];
 }
 
 + (NRMAConnectInformation*) connectionInformation

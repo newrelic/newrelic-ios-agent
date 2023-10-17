@@ -13,13 +13,21 @@
 
 #define kNRMA_DEFAULT_COLLECTOR_HOST         @"mobile-collector.newrelic.com"
 #define kNRMA_DEFAULT_CRASH_COLLECTOR_HOST   @"mobile-crash.newrelic.com"
+#define kNRMA_FEDRAMP_COLLECTOR_HOST         @"gov-mobile-collector.newrelic.com"
+#define KNRMA_FEDRAMP_CRASH_COLLECTOR_HOST   @"gov-mobile-crash.newrelic.com"
 #define kNRMA_REGION_SPECIFIC_COLLECTOR_HOST @"mobile-collector.%@.nr-data.net"
 #define kNRMA_REGION_SPECIFIC_CRASH_HOST     @"mobile-crash.%@.nr-data.net"
+
+#define kNRMA_DEFAULT_LOGGING_HOST           @"log-api.newrelic.com"
+#define kNRMA_REGION_SPECIFIC_LOGGING_HOST   @"log-api.%@.newrelic.com"
+#define kNRMA_STAGING_LOGGING_HOST           @"staging-log-api.newrelic.com"
+#define kNRMA_FEDRAMP_LOGGING_HOST           @"gov-log-api.newrelic.com"
 
 @interface NRMAAgentConfiguration : NSObject
 
 @property(readonly,strong) NSString* collectorHost;
 @property(readonly,strong) NSString* crashCollectorHost;
+@property(readonly,strong) NSString* loggingURL;
 @property(readonly,strong) NRMAAppToken* applicationToken;
 @property(atomic,strong) NSString* sessionIdentifier;
 @property(nonatomic,readonly) BOOL      useSSL;

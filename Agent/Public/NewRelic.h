@@ -56,6 +56,17 @@ extern "C" {
 
 + (void) crashNow;
 
+#pragma mark - Logging
+
++ (void) logInfo:(NSString* __nonnull) message;
+
++ (void) logError:(NSString* __nonnull) message;
+
++ (void) logVerbose:(NSString* __nonnull) message;
++ (void) logWarning:(NSString* __nonnull) message;
+
++ (void) logAudit:(NSString* __nonnull) message;
+
 
 #pragma mark - Configuring the New Relic SDK
 
