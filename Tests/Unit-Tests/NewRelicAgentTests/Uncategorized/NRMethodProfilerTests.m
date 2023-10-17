@@ -214,7 +214,7 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
     dispatch_once(&onceToken, ^{
         __traceMethodList = @{
                               @"SwizzleParent":@[@"swizzleMe:", @"callMe:", @"callMe:withBlock:"],
-                              @"UIViewController":@[@"viewWillAppear:"],
+                              @"UIViewController":@[@"viewWillAppear:",@"viewDidAppear:",@"viewDidDisappear:"],
                               @"UIImage":@[@"imageWithData:"]
                             };
     });
