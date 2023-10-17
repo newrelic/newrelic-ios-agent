@@ -160,26 +160,24 @@
     NSString* operationId = headers[@"X-APOLLO-OPERATION-ID"];
     
     if (operationName != nil || operationType != nil || operationId != nil) {
-        NSMutableDictionary* graphQLDict = [[NSMutableDictionary alloc] init];
+        std::map<std::string, std::string> cDict;
         
         if (operationName != nil) {
-            [graphQLDict setObject:operationName forKey:@"X-APOLLO-OPERATION-NAME"];
-        }
-        if (operationType != nil) {
-            [graphQLDict setObject:operationType forKey:@"X-APOLLO-OPERATION-TYPE"];
-        }
-        if (operationId != nil) {
-            [graphQLDict setObject:operationId forKey:@"X-APOLLO-OPERATION-ID"];
-        }
-        std::map<std::string, std::string> cDict;
-        NSArray* keys = [graphQLDict allKeys];
-        for(NSString* key in keys)
-        {
-            NSString* value = [graphQLDict objectForKey: key];
-            std::string cValue = std::string(value.UTF8String);
-            std::string cKey = std::string(key.UTF8String);
+            std::string cValue = std::string(operationName.UTF8String);
+            std::string cKey = std::string("X-APOLLO-OPERATION-NAME");
             cDict[cKey] = cValue;
         }
+        if (operationType != nil) {
+            std::string cValue = std::string(operationType.UTF8String);
+            std::string cKey = std::string("X-APOLLO-OPERATION-TYPE");
+            cDict[cKey] = cValue;
+        }
+        if (operationId != nil) {
+            std::string cValue = std::string(operationId.UTF8String);
+            std::string cKey = std::string("X-APOLLO-OPERATION-ID");
+            cDict[cKey] = cValue;
+        }
+
         const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
         payload->setGraphQLHeaders(cDict);
     }
