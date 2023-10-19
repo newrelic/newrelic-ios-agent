@@ -10,6 +10,8 @@
 #import "NRMARequestEvent.h"
 #import "Constants.h"
 
+static NSString* const kPayloadKey = @"Payload";
+
 @implementation NRMARequestEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -19,7 +21,7 @@
     self = [super initWithTimestamp:timestamp sessionElapsedTimeInSeconds:sessionElapsedTimeSeconds withAttributeValidator:attributeValidator];
     if (self) {
         self.eventType = kNRMA_RET_mobileRequest;
-        _payload = payload;
+        self.payload = payload;
     }
     
     return self;
@@ -32,6 +34,21 @@
     dict[kNRMA_RA_payload] = [_payload JSONObject];
 
     return [NSDictionary dictionaryWithDictionary:dict];
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder {
+    [super encodeWithCoder:coder];
+    
+    [coder encodeObject:_payload forKey:kPayloadKey];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if(self) {
+        self.payload = [coder decodeObjectForKey:kPayloadKey];
+    }
+    
+    return self;
 }
 
 @end

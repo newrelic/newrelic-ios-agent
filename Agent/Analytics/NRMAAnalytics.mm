@@ -48,6 +48,8 @@ using namespace NewRelic;
     id<AttributeValidatorProtocol> _attributeValidator;
 }
 
+static NSString* const eventStoreFilename = @"eventsStore.txt";
+
 static PersistentStore<std::string,BaseValue>* __attributeStore;
 + (PersistentStore<std::string, BaseValue> &) attributeDupStore
 {
@@ -101,7 +103,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(self){
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            _eventManager = [NRMAEventManager new];
+            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
+
+            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:30];
+            
+            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
                 if ([name length] == 0) {
                     NRLOG_ERROR(@"invalid attribute: name length = 0");

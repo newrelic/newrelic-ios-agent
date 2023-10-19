@@ -10,6 +10,8 @@
 #import "NRMASessionEvent.h"
 #import "Constants.h"
 
+static NSString* const kCategoryKey = @"Category";
+
 @implementation NRMASessionEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -32,6 +34,21 @@
     dict[kNRMA_RA_category] = self.category;
     
     return [NSDictionary dictionaryWithDictionary:dict];
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder {
+    [super encodeWithCoder:coder];
+    
+    [coder encodeObject:self.category forKey:kCategoryKey];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if(self) {
+        self.category = [coder decodeObjectForKey:kCategoryKey];
+    }
+    
+    return self;
 }
 
 @end

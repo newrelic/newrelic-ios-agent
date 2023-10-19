@@ -11,7 +11,7 @@
 
 #import "NRMAJSON.h"
 
-@protocol NRMAAnalyticEventProtocol <NSObject, NRMAJSONABLE>
+@protocol NRMAAnalyticEventProtocol <NSObject, NRMAJSONABLE, NSCoding>
 
 @property (readonly) NSTimeInterval timestamp;
 @property (readonly) NSTimeInterval sessionElapsedTimeSeconds;

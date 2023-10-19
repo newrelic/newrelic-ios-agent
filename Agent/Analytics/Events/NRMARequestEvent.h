@@ -15,7 +15,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMARequestEvent : NRMAMobileEvent
-@property (weak) NRMAPayload* payload;
+@property (nonatomic, strong) NRMAPayload* payload;
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds

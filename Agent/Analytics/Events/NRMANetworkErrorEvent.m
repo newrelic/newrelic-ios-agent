@@ -10,6 +10,9 @@
 #import "NRMANetworkErrorEvent.h"
 #include "Constants.h"
 
+static NSString* const kEncodedResponseKey = @"EncodedResponseBody";
+static NSString* const kAppDataHeaderKey = @"AppDataHeader";
+
 @implementation NRMANetworkErrorEvent
 
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -37,6 +40,23 @@
     dict[kNRMA_RA_appDataHeader] = self.appDataHeader;
 
     return [NSDictionary dictionaryWithDictionary:dict];
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder {
+    [super encodeWithCoder:coder];
+    
+    [coder encodeObject:self.encodedResponseBody forKey:kEncodedResponseKey];
+    [coder encodeObject:self.appDataHeader forKey:kAppDataHeaderKey];
+}
+
+- (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
+    self = [super initWithCoder:coder];
+    if(self) {
+        self.encodedResponseBody = [coder decodeObjectForKey:kEncodedResponseKey];
+        self.appDataHeader = [coder decodeObjectForKey:kAppDataHeaderKey];
+    }
+    
+    return self;
 }
 
 @end

@@ -17,6 +17,9 @@ static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 600; // 10 Minutes
 static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 
+// Event Key Format String: TimeStamp|SessionElapsedTime|EventType
+static NSString* const eventKeyFormat = @"%f|%f|%@";
+
 @implementation NRMAEventManager {
     NSMutableArray<NRMAAnalyticEventProtocol> *events;
     
@@ -25,9 +28,11 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
     
     NSUInteger totalAttemptedInserts;
     NSTimeInterval oldestEventTimestamp;
+    
+    PersistentEventStore *_persistentStore;
 }
 
-- (nonnull instancetype)init {
+- (nonnull instancetype)initWithPersistentStore:(PersistentEventStore *)store {
     self = [super init];
     if (self) {
         events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
@@ -35,6 +40,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
         maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
         totalAttemptedInserts = 0;
         oldestEventTimestamp = 0;
+        _persistentStore = store;
     }
     return self;
 }
@@ -77,6 +83,9 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
         // The event fits within the buffer
         if (events.count < maxBufferSize) {
             [events addObject:event];
+            
+            [_persistentStore setObject:event forKey:[self createKeyForEvent:event]];
+            
             if(events.count == 1) {
                 oldestEventTimestamp = event.timestamp;
             }
@@ -87,6 +96,8 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
             if (evictionIndex < events.count) {
                 [events removeObjectAtIndex:evictionIndex];
                 [events addObject:event];
+                
+                [_persistentStore removeObjectForKey:[self createKeyForEvent:event]];
             }
         }
     }
@@ -94,9 +105,14 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
     return YES;
 }
 
+- (NSString *)createKeyForEvent:(id<NRMAAnalyticEventProtocol>)event {
+    return [NSString stringWithFormat:eventKeyFormat, event.timestamp, event.sessionElapsedTimeSeconds, event.eventType];
+}
+
 - (void)empty {
     @synchronized (events) {
         [events removeAllObjects];
+        [_persistentStore clearAll];
         oldestEventTimestamp = 0;
         totalAttemptedInserts = 0;
     }
@@ -116,6 +132,7 @@ static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
                                                            error:&error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
+            [self empty];
         } @catch (NSException *e) {
             NRLOG_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }

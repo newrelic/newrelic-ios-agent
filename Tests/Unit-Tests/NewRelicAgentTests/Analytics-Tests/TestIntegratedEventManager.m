@@ -14,17 +14,20 @@
 #import "BlockAttributeValidator.h"
 
 
-@interface TestIntegratedEventManager : XCTestCase
+@interface TestIntegratedEventManager : XCTestCase {
+    NRMAEventManager *sut;
+    BlockAttributeValidator *agreeableAttributeValidator;
+}
 @end
 
 @implementation TestIntegratedEventManager
-    NRMAEventManager *sut;
-    BlockAttributeValidator *agreeableAttributeValidator;
 
+    static NSString *testFilename = @"fbstest_tempStore";
 
 - (void)setUp {
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    sut = [NRMAEventManager new];
+    sut = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:testFilename
+                                                                                           andMinimumDelay:1]];
     
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
@@ -207,6 +210,39 @@
     [sut empty];
 
     XCTAssertFalse([sut didReachMaxQueueTime:2000]);
+}
+
+-(void)testGettingEventJSONClearsEvents {
+    // Given
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    NRMACustomEvent *customEventThree = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 3"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    
+    [sut addEvent:customEventOne];
+    [sut addEvent:customEventTwo];
+    [sut addEvent:customEventThree];
+    
+    // When
+    NSError *error = nil;
+    NSString *firstJSONEvents = [sut getEventJSONStringWithError:&error clearEvents:YES];
+    
+    // Then
+    NSString *secondJSONEvents = [sut getEventJSONStringWithError:&error clearEvents:YES];
+    NSArray *decode = [NSJSONSerialization JSONObjectWithData:[secondJSONEvents dataUsingEncoding:NSUTF8StringEncoding]
+                                                    options:0
+                                                      error:nil];
+    XCTAssertEqual(decode.count, 0);
 }
 
 @end
