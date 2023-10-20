@@ -39,25 +39,41 @@ IMP NRMAOriginal__NoticeNetworkRequest;
     self.mockSession = [OCMockObject partialMockForObject:session];
     [NRMAURLSessionGraphQLCPPHelper sharedInstance].networkFinished = NO;
     
+}
+
+- (void) swizzleNoticeNetworkRequest {
     id clazz = objc_getClass("NRMANetworkFacade");
     if (clazz) {
         NRMAOriginal__NoticeNetworkRequest = NRMASwapImplementations(clazz,@selector(noticeNetworkRequest:response:withTimer:bytesSent:bytesReceived:responseData:traceHeaders:params:), (IMP)NRMAOverride__noticeNetworkRequest);
     }
 }
 
-- (void)tearDown {
-    [self.mockSession stopMocking];
-    [NRMAURLSessionOverride deinstrument];
-    
+- (void) deSwizzleNoticeNetworkRequest {
     id clazz = objc_getClass("NRMANetworkFacade");
     if (clazz) {
         NRMASwapImplementations(clazz, @selector(noticeNetworkRequest:response:withTimer:bytesSent:bytesReceived:responseData:traceHeaders:params:), (IMP)NRMAOriginal__NoticeNetworkRequest);
+        NRMAOriginal__NoticeNetworkRequest = nil;
     }
+}
+
+- (void)tearDown {
+    [self.mockSession stopMocking];
+    [NRMAURLSessionOverride deinstrument];
 
     [super tearDown];
 }
 
+- (NSMutableURLRequest*) createRequestWithGraphQLHeaders {
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.newrelic.com"]];
+    [request setValue:@"Test name" forHTTPHeaderField:@"X-APOLLO-OPERATION-NAME"];
+    [request setValue:@"Test type" forHTTPHeaderField:@"X-APOLLO-OPERATION-TYPE"];
+    [request setValue:@"Test id" forHTTPHeaderField:@"X-APOLLO-OPERATION-ID"];
+    
+    return request;
+}
+
 - (void) testDataTaskWithRequestGraphQL {
+    [self swizzleNoticeNetworkRequest];
     
     NRMAHarvestController* controller = [NRMAHarvestController harvestController];
 
@@ -71,10 +87,7 @@ IMP NRMAOriginal__NoticeNetworkRequest;
     [[controller harvester] configureHarvester:harvesterConfig];
     
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.newrelic.com"]];
-    [request setValue:@"Test name" forHTTPHeaderField:@"X-APOLLO-OPERATION-NAME"];
-    [request setValue:@"Test type" forHTTPHeaderField:@"X-APOLLO-OPERATION-TYPE"];
-    [request setValue:@"Test id" forHTTPHeaderField:@"X-APOLLO-OPERATION-ID"];
+    NSMutableURLRequest * request = [self createRequestWithGraphQLHeaders];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
 
@@ -104,7 +117,61 @@ IMP NRMAOriginal__NoticeNetworkRequest;
     XCTAssertTrue([decode[0][@"operationName"] isEqualToString:@"Test name"]);
     XCTAssertTrue([decode[0][@"operationType"] isEqualToString:@"Test type"]);
     XCTAssertTrue([decode[0][@"operationId"] isEqualToString:@"Test id"]);
+    [self deSwizzleNoticeNetworkRequest];
 
+
+}
+
+- (void) testNoticeNetworkRequestGraphQL {
+    NRTimer* timer = [[NRTimer alloc] init];
+    NSMutableURLRequest * request = [self createRequestWithGraphQLHeaders];
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:request.URL
+                                                              statusCode:200
+                                                             HTTPVersion:nil
+                                                            headerFields:nil];
+    XCTAssertNoThrow([NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:timer
+                                  bytesSent:0
+                              bytesReceived:0
+                               responseData:nil
+                               traceHeaders:nil
+                                     params:nil]);
+    
+}
+
+- (void) testNoticeNetworkRequestFailureWithStartAndEndTimeGraphQL
+{
+    double startTime = 6000;
+    double endTime = 10000;
+    NSMutableURLRequest * request = [self createRequestWithGraphQLHeaders];
+    
+    NSError* error = [NSError errorWithDomain:(NSString*)kCFErrorDomainCFNetwork
+                                         code:kCFURLErrorDNSLookupFailed
+                                     userInfo:nil];
+    
+    XCTAssertNoThrow([NRMANetworkFacade noticeNetworkFailure:request
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  withError:error]);
+}
+
+- (void) testNoticeNetworkRequestWithTraceHeadersGraphQL
+{
+    double startTime = 6000;
+    double endTime = 10000;
+    NSMutableURLRequest * request = [self createRequestWithGraphQLHeaders];
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:request.URL
+                                                              statusCode:200
+                                                             HTTPVersion:nil
+                                                            headerFields:nil];
+    XCTAssertNoThrow([NRMANetworkFacade noticeNetworkRequest:request
+                                   response:response
+                                  withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
+                                  bytesSent:0
+                              bytesReceived:0
+                               responseData:nil
+                               traceHeaders:@{@"traceparent":@"parent-awesomeid-verycool"}
+                                     params:nil]);
 }
 
 void NRMAOverride__noticeNetworkRequest(id self,

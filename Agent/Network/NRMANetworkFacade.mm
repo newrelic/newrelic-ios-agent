@@ -124,6 +124,8 @@
                                                                                          connectionType:connectionType
                                                                                             contentType:[NRMANetworkFacade contentType:response]
                                                                                               bytesSent:bytesSent];
+        [NRMAHTTPUtilities addGraphQLHeaders:request.allHTTPHeaderFields to:networkRequestData];
+        
         NSUInteger modifiedBytesReceived = bytesReceived;
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
         NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
@@ -219,16 +221,14 @@
             replacedURL = request.URL;
         }
 
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
-                                                                                                                                   httpMethod:[request HTTPMethod]
-                                                                                                                               connectionType:connectionType
-                                                                                                                                  contentType:[request allHTTPHeaderFields][@"Content-Type"]
-                                                                                                                                    bytesSent:0]
-                                                                              withResponse:[[NRMANetworkResponseData alloc] initWithNetworkError:error.code
-                                                                                                                                   bytesReceived:0
-                                                                                                                                    responseTime:timer.timeElapsedInSeconds
-                                                                                                                             networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+        NRMANetworkRequestData* networkRequestData = [[NRMANetworkRequestData alloc]initWithRequestUrl:replacedURL
+                                                                                            httpMethod:[request HTTPMethod]
+                                                                                        connectionType:connectionType
+                                                                                           contentType:[request allHTTPHeaderFields][@"Content-Type"]
+                                                                                             bytesSent:0];
+        [NRMAHTTPUtilities addGraphQLHeaders:request.allHTTPHeaderFields to:networkRequestData];
+
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData withResponse:[[NRMANetworkResponseData alloc] initWithNetworkError:error.code bytesReceived:0 responseTime:timer.timeElapsedInSeconds networkErrorMessage:error.localizedDescription] withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
         // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags
         [NRMATaskQueue queue:[[NRMAHTTPTransaction alloc] initWithURL:replacedURL.absoluteString

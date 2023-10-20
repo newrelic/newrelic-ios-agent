@@ -48,4 +48,12 @@ namespace NewRelic {
         return _bytesSent;
     }
 
+    std::map<std::string, std::string> NetworkRequestData::getGraphQLHeaders() const {
+        return graphQLHeaders;
+    }
+
+    void NetworkRequestData::setGraphQLHeaders(std::map<std::string, std::string> graphQLHeaders) {
+        NetworkRequestData::graphQLHeaders = graphQLHeaders;
+    }
+
 }

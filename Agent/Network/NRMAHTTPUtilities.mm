@@ -25,6 +25,7 @@
 #import "NRMATraceContext.h"
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
+#import "NRMANetworkRequestData+CppInterface.h"
 
 @implementation NRMAHTTPUtilities
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
@@ -154,8 +155,8 @@
     return std::unique_ptr<NewRelic::Connectivity::Payload>(nullptr);
 }
 
-+ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMAPayloadContainer*)payloadContainer {
-    if (payloadContainer == nil) {
++ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData {
+    if (requestData == nil) {
         return;
     }
     
@@ -181,9 +182,9 @@
             std::string cKey = std::string("operationId");
             cDict[cKey] = cValue;
         }
-
-        const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
-        payload->setGraphQLHeaders(cDict);
+        
+        NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
+        wrappedRequestData->setGraphQLHeaders(cDict);
     }
 }
 

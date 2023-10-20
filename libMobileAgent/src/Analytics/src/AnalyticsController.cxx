@@ -320,13 +320,11 @@ namespace NewRelic {
             // copy DT fields before payload gets std::move()
             std::string distributedTracingId("");
             std::string traceId("");
-            std::map<std::string, std::string> graphQLHeaders;
             bool addDistributedTracing = false;
             if (payload != nullptr) {
                 distributedTracingId = payload->getId();
                 traceId = payload->getTraceId();
                 addDistributedTracing = payload->getDistributedTracing();
-                graphQLHeaders = payload->getGraphQLHeaders();
             }
             
             auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
@@ -346,6 +344,7 @@ namespace NewRelic {
             auto responseTime = responseData.getResponseTime();
             auto bytesReceived = responseData.getBytesReceived();
             auto statusCode = responseData.getStatusCode();
+            std::map<std::string, std::string> graphQLHeaders = requestData.getGraphQLHeaders();
 
             if ((strlens(requestUrl) == 0)) {
                 LLOG_INFO("unable to add NetworkErrorEvent with empty URL.");
@@ -456,13 +455,11 @@ namespace NewRelic {
             // copy DT fields before payload gets std::move()
             std::string distributedTracingId("");
             std::string traceId("");
-            std::map<std::string, std::string> graphQLHeaders;
             bool addDistributedTracing = false;
             if (payload != nullptr) {
                 distributedTracingId = payload->getId();
                 traceId = payload->getTraceId();
                 addDistributedTracing = payload->getDistributedTracing();
-                graphQLHeaders = payload->getGraphQLHeaders();
             }
             
             auto requestUrl = requestData.getRequestUrl();
@@ -479,6 +476,8 @@ namespace NewRelic {
             auto networkErrorMessage = responseData.getNetworkErrorMessage();
             auto networkErrorCode = responseData.getNetworkErrorCode();
             auto statusCode = responseData.getStatusCode();
+            std::map<std::string, std::string> graphQLHeaders = requestData.getGraphQLHeaders();
+
 
             auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
             auto sessionDuration_sec = getCurrentSessionDuration_sec(currentTime_ms);

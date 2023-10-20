@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "NRMAPayloadContainer.h"
+#include "NRMANetworkRequestData.h"
 
 #define NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY               @"newrelic"
 #define W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY               @"tracestate"
@@ -21,5 +22,5 @@
 + (void) attachPayload:(NRMAPayloadContainer*)payload to:(id)object;
 + (NRMAPayloadContainer *)generatePayload;
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer;
-+ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMAPayloadContainer*)payloadContainer;
++ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData;
 @end

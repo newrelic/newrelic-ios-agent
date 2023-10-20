@@ -58,6 +58,8 @@ static NRMAURLSessionGraphQLCPPHelper* _sharedInstance;
 
         NRMANetworkRequestData* networkRequestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL httpMethod:[request HTTPMethod] connectionType:connectionType contentType:[NRMANetworkFacade contentType:response] bytesSent:bytesSent];
         
+        [NRMAHTTPUtilities addGraphQLHeaders:request.allHTTPHeaderFields to:networkRequestData];
+        
         [[[NRMAURLSessionGraphQLCPPHelper sharedInstance] analytics] addNetworkRequestEvent:networkRequestData
                                                                                 withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
                                                                                                                                            bytesReceived:bytesReceived

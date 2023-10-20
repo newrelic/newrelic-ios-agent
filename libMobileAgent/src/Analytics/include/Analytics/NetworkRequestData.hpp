@@ -2,6 +2,7 @@
 
 #ifndef LIBMOBILEAGENT_NETWORKREQUESTDATA_HPP
 #define LIBMOBILEAGENT_NETWORKREQUESTDATA_HPP
+#include <JSON/IJsonable.hpp>
 
 namespace NewRelic {
     class NetworkRequestData {
@@ -20,6 +21,10 @@ namespace NewRelic {
         const char* getConnectionType() const;
         const char* getContentType() const;
         unsigned int getBytesSent() const;
+        
+        std::map<std::string, std::string> getGraphQLHeaders() const;
+
+        void setGraphQLHeaders(std::map<std::string, std::string> graphQLHeaders);
 
     private:
         const char *_requestUrl;
@@ -29,6 +34,8 @@ namespace NewRelic {
         const char *_connectionType;
         const char *_contentType;
         unsigned int _bytesSent;
+        // A dictionary to hold graphQL header information
+        std::map<std::string, std::string> graphQLHeaders;
     };
 }
 

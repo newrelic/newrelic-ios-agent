@@ -212,7 +212,6 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
 
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,request);
     
-    [NRMAHTTPUtilities addGraphQLHeaders:request.allHTTPHeaderFields to:payload];
     [NRMAHTTPUtilities attachPayload:payload
                                   to:task.originalRequest];
     
