@@ -1003,6 +1003,10 @@
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
+		F858F3602AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m */; };
+		F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m */; };
+		F858F37E2AE1BD6D00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = F858F37D2AE1BD6C00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm */; };
+		F858F37F2AE1BD6D00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = F858F37D2AE1BD6C00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm */; };
 		F8728E412ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
 		F8728E422ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
 		F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABB324E704A600E45C90 /* NRMAWKWebViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -1888,6 +1892,9 @@
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
+		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionGraphQLTests.m; sourceTree = "<group>"; };
+		F858F37D2AE1BD6C00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAURLSessionGraphQLCPPHelper.mm; sourceTree = "<group>"; };
+		F858F3802AE1BDFE00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLSessionGraphQLCPPHelper.h; sourceTree = "<group>"; };
 		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
 		F8728E562ACC9F840056F641 /* NRMANetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkMonitor.h; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -2131,6 +2138,9 @@
 		0209ABCE24E7067F00E45C90 /* NSURLSession-Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m */,
+				F858F37D2AE1BD6C00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm */,
+				F858F3802AE1BDFE00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.h */,
 				0209ABFC24E7070800E45C90 /* NRMASessionExclusivityWithDelegateTests.m */,
 				0209ABF824E7070800E45C90 /* NRMASessionExclusivityWithoutDelegateTests.m */,
 				0209ABF624E7070800E45C90 /* NRMAURLSessionNetworkErrorTests.m */,
@@ -4176,6 +4186,7 @@
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
 				C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */,
+				F858F3602AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m in Sources */,
 				0209ACA224E7393300E45C90 /* NRThreadInfoTest.m in Sources */,
 				0209ABF524E706FA00E45C90 /* NRGCDOverrideTest.m in Sources */,
 				0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */,
@@ -4283,6 +4294,7 @@
 				02FF47D924DB563600115469 /* NewRelic.m in Sources */,
 				F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */,
 				02FF47FD24DB56B100115469 /* NRMATaskQueue.m in Sources */,
+				F858F37E2AE1BD6D00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm in Sources */,
 				02FF484624DC614200115469 /* NRMATraceController.m in Sources */,
 				02FF4A9B24DC652E00115469 /* NRMAFileCleanup.m in Sources */,
 				02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */,
@@ -4462,6 +4474,7 @@
 				0256581F24EB19BF00FE3125 /* NRHarvestableVitalsTest.m in Sources */,
 				0256582024EB19BF00FE3125 /* NRMACrashDataUploaderTest.m in Sources */,
 				F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */,
+				F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionGraphQLTests.m in Sources */,
 				0256582124EB19BF00FE3125 /* NRThreadInfoTest.m in Sources */,
 				0256582224EB19BF00FE3125 /* NRGCDOverrideTest.m in Sources */,
 				0256582324EB19BF00FE3125 /* NRAgentTestBase.m in Sources */,
@@ -4580,6 +4593,7 @@
 				02FF4C1C24E3201400115469 /* NRMAAnalyticsEvents.m in Sources */,
 				02FF4C1D24E3201400115469 /* NRMAUserActionFacade.mm in Sources */,
 				2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */,
+				F858F37F2AE1BD6D00CF9EB5 /* NRMAURLSessionGraphQLCPPHelper.mm in Sources */,
 				02FF4C1E24E3201400115469 /* NRMABool.m in Sources */,
 				02FF4C1F24E3201400115469 /* NRMAThreadTransition.m in Sources */,
 				02FF4C2024E3201400115469 /* NewRelic.m in Sources */,

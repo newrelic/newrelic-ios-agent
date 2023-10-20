@@ -188,7 +188,7 @@ namespace NewRelic {
         }
     }
 
-bool AnalyticsController::addUserActionEvent(const char *functionName,
+    bool AnalyticsController::addUserActionEvent(const char *functionName,
                                              const char *targetObject,
                                              const char *label,
                                              const char *accessibility,
@@ -196,7 +196,7 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
                                              const char *actionType,
                                              const char *controlFrame,
                                              const char *orientation) {
-    try {
+        try {
             unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms();//throws std::logic_error
             auto event = _eventManager.newUserActionEvent(current_time_ms,
                                                           getCurrentSessionDuration_sec(current_time_ms),
@@ -296,6 +296,20 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
         return false;
     }
 
+    void addGraphQLHeaders(std::map<std::string, std::string> graphQLHeaders, std::shared_ptr<IntrinsicEvent> event) {
+        std::map<std::string, std::string>::iterator it
+        = graphQLHeaders.begin();
+        // Iterating over the map using Iterator till map end.
+        while (it != graphQLHeaders.end()) {
+            // Accessing the key
+            std::string key = it->first;
+            // Accessing the value
+            std::string value = it->second;
+            event->addAttribute(key.c_str(), value.c_str());
+            // iterator incremented to point next item
+            it++;
+        }
+    }
 
     bool AnalyticsController::addRequestEvent(const NewRelic::NetworkRequestData& requestData,
                                               const NewRelic::NetworkResponseData& responseData,
@@ -380,17 +394,8 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
                     event->addAttribute(__kNRMA_Attrib_contentType, contentType);
                 }
                 
-                std::map<std::string, std::string>::iterator it
-                    = graphQLHeaders.begin();
-                // Iterating over the map using Iterator till map end.
-                while (it != graphQLHeaders.end()) {
-                    // Accessing the key
-                    std::string key = it->first;
-                    // Accessing the value
-                    std::string value = it->second;
-                    event->addAttribute(key.c_str(), value.c_str());
-                    // iterator incremented to point next item
-                    it++;
+                if(graphQLHeaders.size() != 0) {
+                    addGraphQLHeaders(graphQLHeaders, event);
                 }
 
                 return _eventManager.addEvent(event);
@@ -534,19 +539,9 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
                 if (statusCode != 0) {
                     event->addAttribute(__kNRMA_Attrib_statusCode, statusCode);
                 }
-                
-                std::map<std::string, std::string>::iterator it
-                    = graphQLHeaders.begin();
               
-                // Iterating over the map using Iterator till map end.
-                while (it != graphQLHeaders.end()) {
-                    // Accessing the key
-                    std::string key = it->first;
-                    // Accessing the value
-                    std::string value = it->second;
-                    event->addAttribute(key.c_str(), value.c_str());
-                    // iterator incremented to point next item
-                    it++;
+                if(graphQLHeaders.size() != 0) {
+                    addGraphQLHeaders(graphQLHeaders, event);
                 }
 
                 return event;

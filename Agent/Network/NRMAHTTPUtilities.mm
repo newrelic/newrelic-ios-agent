@@ -155,6 +155,10 @@
 }
 
 + (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMAPayloadContainer*)payloadContainer {
+    if (payloadContainer == nil) {
+        return;
+    }
+    
     NSString* operationName = headers[@"X-APOLLO-OPERATION-NAME"];
     NSString* operationType = headers[@"X-APOLLO-OPERATION-TYPE"];
     NSString* operationId = headers[@"X-APOLLO-OPERATION-ID"];
@@ -164,17 +168,17 @@
         
         if (operationName != nil) {
             std::string cValue = std::string(operationName.UTF8String);
-            std::string cKey = std::string("X-APOLLO-OPERATION-NAME");
+            std::string cKey = std::string("operationName");
             cDict[cKey] = cValue;
         }
         if (operationType != nil) {
             std::string cValue = std::string(operationType.UTF8String);
-            std::string cKey = std::string("X-APOLLO-OPERATION-TYPE");
+            std::string cKey = std::string("operationType");
             cDict[cKey] = cValue;
         }
         if (operationId != nil) {
             std::string cValue = std::string(operationId.UTF8String);
-            std::string cKey = std::string("X-APOLLO-OPERATION-ID");
+            std::string cKey = std::string("operationId");
             cDict[cKey] = cValue;
         }
 
