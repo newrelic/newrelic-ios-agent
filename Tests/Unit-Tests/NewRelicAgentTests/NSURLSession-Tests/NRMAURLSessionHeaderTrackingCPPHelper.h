@@ -1,5 +1,5 @@
 //
-//  NRMAURLSessionGraphQLCPPHelper.h
+//  NRMAURLSessionHeaderTrackingCPPHelper.h
 //  Agent
 //
 //  Created by Mike Bruin on 10/19/23.
@@ -10,7 +10,7 @@
 #import "NRMAAnalytics.h"
 
 NS_ASSUME_NONNULL_BEGIN
-@interface NRMAURLSessionGraphQLCPPHelper : NSObject
+@interface NRMAURLSessionHeaderTrackingCPPHelper : NSObject
 
 @property(atomic,strong) NRMAAnalytics* analytics;
 
@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void) startHelper;
 
-+ (NRMAURLSessionGraphQLCPPHelper*) sharedInstance;
++ (NRMAURLSessionHeaderTrackingCPPHelper*) sharedInstance;
 
 + (void) noticeNetworkRequest:(NSURLRequest*)request
                      response:(NSURLResponse*)response

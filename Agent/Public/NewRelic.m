@@ -329,6 +329,11 @@
     return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
 }
 
++  (void)addHTTPHeaderTrackingFor:(NSArray *_Nonnull)headers {
+    [NRMAHTTPUtilities addHTTPHeaderTrackingFor:headers];
+}
+
+
 #pragma mark - Interactions
 
 + (NSString*) startInteractionWithName:(NSString*)interactionName

@@ -15,10 +15,11 @@
 #import "NRMAAppToken.h"
 #import "NRMAHarvestController.h"
 #import "NRTestConstants.h"
-#import "NRMAURLSessionGraphQLCPPHelper.h"
+#import "NRMAURLSessionHeaderTrackingCPPHelper.h"
 #import <objc/runtime.h>
 #import "NRMAMethodSwizzling.h"
 #import "NRMAFlags.h"
+#import "NRMAHTTPUtilities.h"
 
 IMP NRMAOriginal__NoticeNetworkRequest;
 
@@ -32,12 +33,23 @@ IMP NRMAOriginal__NoticeNetworkRequest;
 - (void)setUp {
     [super setUp];
     [NRMAURLSessionOverride beginInstrumentation];
-    [NRMAURLSessionGraphQLCPPHelper startHelper];
+    [NRMAURLSessionHeaderTrackingCPPHelper startHelper];
 
     self.queue = [[NSOperationQueue alloc] init];
     NSURLSession* session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:self.queue];
     self.mockSession = [OCMockObject partialMockForObject:session];
-    [NRMAURLSessionGraphQLCPPHelper sharedInstance].networkFinished = NO;
+    [NRMAURLSessionHeaderTrackingCPPHelper sharedInstance].networkFinished = NO;
+    
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+
+    NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                  collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                      crashAddress:nil];
+    [NRMAHarvestController initialize:config];
+
+    NRMAHarvesterConfiguration* harvesterConfig = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+    [harvesterConfig setTrusted_account_key:@"777"];
+    [[controller harvester] configureHarvester:harvesterConfig];
     
 }
 
@@ -75,29 +87,18 @@ IMP NRMAOriginal__NoticeNetworkRequest;
 - (void) testDataTaskWithRequestGraphQL {
     [self swizzleNoticeNetworkRequest];
     
-    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-
-    NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
-                                                  collectorAddress:KNRMA_TEST_COLLECTOR_HOST
-                                                      crashAddress:nil];
-    [NRMAHarvestController initialize:config];
-
-    NRMAHarvesterConfiguration* harvesterConfig = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
-    [harvesterConfig setTrusted_account_key:@"777"];
-    [[controller harvester] configureHarvester:harvesterConfig];
-    
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NSMutableURLRequest * request = [self createRequestWithGraphQLHeaders];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [NRMAURLSessionGraphQLCPPHelper sharedInstance].networkFinished = YES;
+        [NRMAURLSessionHeaderTrackingCPPHelper sharedInstance].networkFinished = YES;
     });
 
-    while (CFRunLoopGetMain() && ![NRMAURLSessionGraphQLCPPHelper sharedInstance].networkFinished) {}
+    while (CFRunLoopGetMain() && ![NRMAURLSessionHeaderTrackingCPPHelper sharedInstance].networkFinished) {}
     
-    NSString* json = [[[NRMAURLSessionGraphQLCPPHelper sharedInstance] analytics] analyticsJSONString];
+    NSString* json = [[[NRMAURLSessionHeaderTrackingCPPHelper sharedInstance] analytics] analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                       options:0
                                                         error:nil];
@@ -114,12 +115,52 @@ IMP NRMAOriginal__NoticeNetworkRequest;
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
-    XCTAssertTrue([decode[0][@"operationName"] isEqualToString:@"Test name"]);
-    XCTAssertTrue([decode[0][@"operationType"] isEqualToString:@"Test type"]);
-    XCTAssertTrue([decode[0][@"operationId"] isEqualToString:@"Test id"]);
+    XCTAssertTrue([decode[0][@"X-APOLLO-OPERATION-NAME"] isEqualToString:@"Test name"]);
+    XCTAssertTrue([decode[0][@"X-APOLLO-OPERATION-TYPE"] isEqualToString:@"Test type"]);
+    XCTAssertTrue([decode[0][@"X-APOLLO-OPERATION-ID"] isEqualToString:@"Test id"]);
     [self deSwizzleNoticeNetworkRequest];
 
 
+}
+
+- (void) testDataTaskWithRequestHeaderTracking {
+    [self swizzleNoticeNetworkRequest];
+    
+    [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.newrelic.com"]];
+    [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
+    NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
+    [task resume];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [NRMAURLSessionHeaderTrackingCPPHelper sharedInstance].networkFinished = YES;
+    });
+
+    while (CFRunLoopGetMain() && ![NRMAURLSessionHeaderTrackingCPPHelper sharedInstance].networkFinished) {}
+    
+    NSString* json = [[[NRMAURLSessionHeaderTrackingCPPHelper sharedInstance] analytics] analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+    
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertNotNil(decode[0][@"connectionType"]);
+    XCTAssertNotNil(decode[0][@"contentType"]);
+    XCTAssertNotNil(decode[0][@"responseTime"]);
+    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"www.newrelic.com"]);
+    XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
+    XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
+    XCTAssertFalse([decode[0][@"bytesReceived"] isEqual:@0]);
+    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
+    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
+    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
+    XCTAssertTrue([decode[0][@"TEST_CUSTOM"] isEqualToString:@"Test custom"]);
+    XCTAssertNil(decode[0][@"TEST_NOT_PRESENT"]);
+
+    [self deSwizzleNoticeNetworkRequest];
 }
 
 - (void) testNoticeNetworkRequestGraphQL {
@@ -184,7 +225,7 @@ void NRMAOverride__noticeNetworkRequest(id self,
                                                  NSData* responseData,
                                                  NSDictionary<NSString*,NSString*>* traceHeaders,
                                                  NSDictionary* params){
-    [NRMAURLSessionGraphQLCPPHelper noticeNetworkRequest:request response:response withTimer:timer bytesSent:bytesSent bytesReceived:bytesReceived responseData:responseData traceHeaders:traceHeaders params:params];
+    [NRMAURLSessionHeaderTrackingCPPHelper noticeNetworkRequest:request response:response withTimer:timer bytesSent:bytesSent bytesReceived:bytesReceived responseData:responseData traceHeaders:traceHeaders params:params];
 }
 
 @end

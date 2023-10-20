@@ -1,12 +1,12 @@
 //
-//  NRMAURLSessionGraphQLCPPHelper.m
+//  NRMAURLSessionHeaderTrackingCPPHelper.m
 //  Agent
 //
 //  Created by Mike Bruin on 10/19/23.
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
-#import "NRMAURLSessionGraphQLCPPHelper.h"
+#import "NRMAURLSessionHeaderTrackingCPPHelper.h"
 #import "NRMANetworkFacade.h"
 #import "NewRelicAgentInternal.h"
 #import <Connectivity/Payload.hpp>
@@ -16,15 +16,15 @@
 
 IMP NRMAOriginal__NoticeNetworkRequest;
 
-static NRMAURLSessionGraphQLCPPHelper* _sharedInstance;
+static NRMAURLSessionHeaderTrackingCPPHelper* _sharedInstance;
 
 
-@implementation NRMAURLSessionGraphQLCPPHelper
+@implementation NRMAURLSessionHeaderTrackingCPPHelper
 {
     
 }
 
-+ (NRMAURLSessionGraphQLCPPHelper*) sharedInstance {
++ (NRMAURLSessionHeaderTrackingCPPHelper*) sharedInstance {
     return _sharedInstance;
 }
 
@@ -33,7 +33,7 @@ static NRMAURLSessionGraphQLCPPHelper* _sharedInstance;
     
     dispatch_once(&onceToken,
                   ^{
-        _sharedInstance = [[NRMAURLSessionGraphQLCPPHelper alloc] init];
+        _sharedInstance = [[NRMAURLSessionHeaderTrackingCPPHelper alloc] init];
     });
 }
 
@@ -60,7 +60,7 @@ static NRMAURLSessionGraphQLCPPHelper* _sharedInstance;
         
         [NRMAHTTPUtilities addGraphQLHeaders:request.allHTTPHeaderFields to:networkRequestData];
         
-        [[[NRMAURLSessionGraphQLCPPHelper sharedInstance] analytics] addNetworkRequestEvent:networkRequestData
+        [[[NRMAURLSessionHeaderTrackingCPPHelper sharedInstance] analytics] addNetworkRequestEvent:networkRequestData
                                                                                 withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response]
                                                                                                                                            bytesReceived:bytesReceived
                                                                                                                                             responseTime:[timer timeElapsedInSeconds]]

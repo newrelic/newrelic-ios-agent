@@ -27,7 +27,23 @@
 #import "W3CTraceState.h"
 #import "NRMANetworkRequestData+CppInterface.h"
 
+static NSArray* _trackedHeaderFields;
+
 @implementation NRMAHTTPUtilities
+
++ (NSArray*) trackedHeaderFields
+{
+    static dispatch_once_t defaultFeatureToken;
+    dispatch_once(&defaultFeatureToken,
+                  ^{
+        _trackedHeaderFields = (NSMutableArray*)@[@"X-APOLLO-OPERATION-NAME",
+                                                           @"X-APOLLO-OPERATION-TYPE",
+                                                           @"X-APOLLO-OPERATION-ID"];
+                  });
+
+    return _trackedHeaderFields;
+}
+
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
 
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
@@ -155,37 +171,32 @@
     return std::unique_ptr<NewRelic::Connectivity::Payload>(nullptr);
 }
 
++  (void)addHTTPHeaderTrackingFor:(NSArray *)headers {
+    NSArray *array = [self trackedHeaderFields];
+    NSArray *newArray = array?[array arrayByAddingObjectsFromArray:headers]:[[NSArray alloc] initWithArray:headers];
+
+    _trackedHeaderFields = (NSArray *)[[NSSet setWithArray:newArray] allObjects];
+
+}
+
 + (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData {
-    if (requestData == nil) {
+    if (requestData == nil || headers == nil) {
         return;
     }
     
-    NSString* operationName = headers[@"X-APOLLO-OPERATION-NAME"];
-    NSString* operationType = headers[@"X-APOLLO-OPERATION-TYPE"];
-    NSString* operationId = headers[@"X-APOLLO-OPERATION-ID"];
-    
-    if (operationName != nil || operationType != nil || operationId != nil) {
-        std::map<std::string, std::string> cDict;
+    std::map<std::string, std::string> cDict;
+    for(NSString* key in [self trackedHeaderFields]) {
+        NSString* value = headers[key];
         
-        if (operationName != nil) {
-            std::string cValue = std::string(operationName.UTF8String);
-            std::string cKey = std::string("operationName");
+        if(value != nil) {
+            std::string cValue = std::string(value.UTF8String);
+            std::string cKey = std::string(key.UTF8String);
             cDict[cKey] = cValue;
         }
-        if (operationType != nil) {
-            std::string cValue = std::string(operationType.UTF8String);
-            std::string cKey = std::string("operationType");
-            cDict[cKey] = cValue;
-        }
-        if (operationId != nil) {
-            std::string cValue = std::string(operationId.UTF8String);
-            std::string cKey = std::string("operationId");
-            cDict[cKey] = cValue;
-        }
-        
-        NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
-        wrappedRequestData->setGraphQLHeaders(cDict);
     }
+    
+    NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
+    wrappedRequestData->setGraphQLHeaders(cDict);
 }
 
 @end
