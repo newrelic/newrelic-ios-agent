@@ -10,10 +10,7 @@ import XCTest
 
 final class NRTestAppUITests: XCTestCase {
 
-
     func testConnectRequest(){
-        Springboard.deleteMyApp()
-
         let vendorId = "myDeviceId"
         let harvestConnector = "[[\"NRTestApp\",\"4.7\",\"com.newrelic.NRApp.bitcode\"],[\"iOS\",\"17.0\",\"arm64\",\"iOSAgent\",\"DEV\",\"\(vendorId)\",\"\",\"\",\"Apple Inc.\",{\"platform\":\"Native\",\"platformVersion\":\"DEV\"}]]"
 

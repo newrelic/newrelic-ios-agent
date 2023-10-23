@@ -32,6 +32,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
          NewRelic.replaceDeviceIdentifier("myDeviceId")
 
         if ProcessInfo.processInfo.environment["UITesting"] != nil {
+            
+            clearConnectUserDefaults()
+
             NewRelic.start(withApplicationToken: "APP-TOKEN-NRMA",
                            andCollectorAddress: "localhost:8080",
                            andCrashCollectorAddress: "localhost:8080")
