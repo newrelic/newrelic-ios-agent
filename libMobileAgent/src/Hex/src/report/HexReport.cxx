@@ -59,6 +59,59 @@ void HexReport::setAttributes(std::map<std::string, std::shared_ptr<AttributeBas
     }
 }
 
+
+
+// New Event System
+
+void HexReport::setAttributeNoValidation(const char* key,
+                             long long value) {
+    try {
+        //if (_attributeValidator.getNameValidator()(key)) {
+            _longAttributes->add(std::string(key), value);
+       // }
+    } catch (std::exception& e) {
+        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%d': %s", key, value,
+                   e.what());
+    }
+}
+
+void HexReport::setAttributeNoValidation(const char* key,
+                                         double value) {
+    try {
+      //  if (_attributeValidator.getNameValidator()(key)) {
+            _doubleAttributes->add(std::string(key), value);
+      //  }
+    } catch (std::exception& e) {
+        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%f': %s", key, value,
+                   e.what());
+    }
+}
+void HexReport::setAttributeNoValidation(const char* key,
+                             const char* value) {
+    try {
+       // if (_attributeValidator.getNameValidator()(key) &&
+       //     _attributeValidator.getValueValidator()(value)) {
+            _stringAttributes->add(std::string(key), std::string(value));
+       // }
+    } catch (std::exception& e) {
+        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key, value,
+                   e.what());
+    }
+}
+
+void HexReport::setAttributeNoValidation(const char* key,
+                             bool value) {
+    try {
+       // if (_attributeValidator.getNameValidator()(key)) {
+            _booleanAttributes->add(std::string(key), value);
+       // }
+    } catch (std::exception& e) {
+        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key,
+                   value ? "true" : "false", e.what());
+    }
+}
+
+// Old Event System
 void HexReport::setAttribute(const char* key,
                              long long value) {
     try {
@@ -70,7 +123,6 @@ void HexReport::setAttribute(const char* key,
                    e.what());
     }
 }
-
 void HexReport::setAttribute(const char* key,
                              double value) {
     try {

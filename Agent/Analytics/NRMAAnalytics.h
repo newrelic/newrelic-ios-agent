@@ -30,6 +30,8 @@
 - (BOOL) addNetworkErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload*)payload;
 
 - (NSString*) analyticsJSONString;
+- (NSString*) sessionAttributeJSONString;
+
 - (void) sessionWillEnd;
 //value is either a NSString or NSNumber;
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value;
