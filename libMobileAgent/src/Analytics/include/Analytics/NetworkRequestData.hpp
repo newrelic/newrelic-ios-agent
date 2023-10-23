@@ -22,9 +22,9 @@ namespace NewRelic {
         const char* getContentType() const;
         unsigned int getBytesSent() const;
         
-        std::map<std::string, std::string> getGraphQLHeaders() const;
+        std::map<std::string, std::string> getTrackedHeaders() const;
 
-        void setGraphQLHeaders(std::map<std::string, std::string> graphQLHeaders);
+        void setTrackedHeaders(std::map<std::string, std::string> trackedHeaders);
 
     private:
         const char *_requestUrl;
@@ -34,8 +34,8 @@ namespace NewRelic {
         const char *_connectionType;
         const char *_contentType;
         unsigned int _bytesSent;
-        // A dictionary to hold graphQL header information
-        std::map<std::string, std::string> graphQLHeaders;
+        // A dictionary to hold the tracked header's information
+        std::map<std::string, std::string> trackedHeaders;
     };
 }
 

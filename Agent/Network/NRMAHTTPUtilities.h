@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "NRMAPayloadContainer.h"
-#include "NRMANetworkRequestData.h"
+#import "NRMANetworkRequestData.h"
 
 #define NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY               @"newrelic"
 #define W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY               @"tracestate"

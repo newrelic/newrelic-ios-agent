@@ -329,7 +329,7 @@
     return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
 }
 
-+  (void)addHTTPHeaderTrackingFor:(NSArray *_Nonnull)headers {
++  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*> *_Nonnull)headers {
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:headers];
 }
 

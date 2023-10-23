@@ -196,7 +196,7 @@ static NSArray* _trackedHeaderFields;
     }
     
     NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
-    wrappedRequestData->setGraphQLHeaders(cDict);
+    wrappedRequestData->setTrackedHeaders(cDict);
 }
 
 @end

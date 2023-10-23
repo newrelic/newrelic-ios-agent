@@ -296,11 +296,11 @@ namespace NewRelic {
         return false;
     }
 
-    void addGraphQLHeaders(std::map<std::string, std::string> graphQLHeaders, std::shared_ptr<IntrinsicEvent> event) {
+    void addTrackedHeaders(std::map<std::string, std::string> trackedHeaders, std::shared_ptr<IntrinsicEvent> event) {
         std::map<std::string, std::string>::iterator it
-        = graphQLHeaders.begin();
+        = trackedHeaders.begin();
         // Iterating over the map using Iterator till map end.
-        while (it != graphQLHeaders.end()) {
+        while (it != trackedHeaders.end()) {
             // Accessing the key
             std::string key = it->first;
             // Accessing the value
@@ -344,7 +344,7 @@ namespace NewRelic {
             auto responseTime = responseData.getResponseTime();
             auto bytesReceived = responseData.getBytesReceived();
             auto statusCode = responseData.getStatusCode();
-            std::map<std::string, std::string> graphQLHeaders = requestData.getGraphQLHeaders();
+            std::map<std::string, std::string> trackedHeaders = requestData.getTrackedHeaders();
 
             if ((strlens(requestUrl) == 0)) {
                 LLOG_INFO("unable to add NetworkErrorEvent with empty URL.");
@@ -393,8 +393,8 @@ namespace NewRelic {
                     event->addAttribute(__kNRMA_Attrib_contentType, contentType);
                 }
                 
-                if(graphQLHeaders.size() != 0) {
-                    addGraphQLHeaders(graphQLHeaders, event);
+                if(trackedHeaders.size() != 0) {
+                    addTrackedHeaders(trackedHeaders, event);
                 }
 
                 return _eventManager.addEvent(event);
@@ -476,7 +476,7 @@ namespace NewRelic {
             auto networkErrorMessage = responseData.getNetworkErrorMessage();
             auto networkErrorCode = responseData.getNetworkErrorCode();
             auto statusCode = responseData.getStatusCode();
-            std::map<std::string, std::string> graphQLHeaders = requestData.getGraphQLHeaders();
+            std::map<std::string, std::string> trackedHeaders = requestData.getTrackedHeaders();
 
 
             auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
@@ -539,8 +539,8 @@ namespace NewRelic {
                     event->addAttribute(__kNRMA_Attrib_statusCode, statusCode);
                 }
               
-                if(graphQLHeaders.size() != 0) {
-                    addGraphQLHeaders(graphQLHeaders, event);
+                if(trackedHeaders.size() != 0) {
+                    addTrackedHeaders(trackedHeaders, event);
                 }
 
                 return event;
