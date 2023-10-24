@@ -111,6 +111,64 @@
     XCTAssertNoThrow([exceptions recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]]);
 }
 
+- (void) testBadParamsNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+
+    [NRLogger setLogLevels:NRLogLevelALL];
+    XCTAssertNoThrow([[NRMAHandledExceptions alloc] initWithAnalyticsController:nil
+                                                               sessionStartTime:0
+                                                             agentConfiguration:nil
+                                                                       platform:nil
+                                                                      sessionId:nil]);
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAHandledExceptions* exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:nil
+                                                                                  sessionStartTime:0
+                                                                                agentConfiguration:nil
+                                                                                          platform:nil
+                                                                                         sessionId:nil];
+
+
+    XCTAssertTrue(exceptions == nil);
+
+    XCTAssertNoThrow([exceptions recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]]);
+
+    exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                           sessionStartTime:0
+                                                         agentConfiguration:nil
+                                                                   platform:nil
+                                                                  sessionId:nil];
+
+    XCTAssertTrue(exceptions == nil);
+
+    XCTAssertNoThrow([exceptions recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]]);
+
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"12345"]
+                                                                          collectorAddress:nil
+                                                                              crashAddress:nil];
+    exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                           sessionStartTime:0
+                                                         agentConfiguration:agentConfig
+                                                                   platform:nil
+                                                                  sessionId:nil];
+
+    XCTAssertTrue(exceptions == nil);
+
+    XCTAssertNoThrow([exceptions recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]]);
+
+    exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                           sessionStartTime:0
+                                                         agentConfiguration:agentConfig
+                                                                   platform:@"iOS"
+                                                                  sessionId:nil];
+
+    XCTAssertTrue(exceptions == nil);
+
+    XCTAssertNoThrow([exceptions recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]]);
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+}
+
 - (void) testHandleException {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
@@ -279,4 +337,38 @@
     //[hexController recordError:nil attributes:nil]
     
 }
+
+- (void) testRecordErrorNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
+                                                                          collectorAddress:nil
+                                                                              crashAddress:nil];
+    agentConfig.sessionIdentifier = @"1234-567-890";
+
+    NRMAHandledExceptions* hexController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                                                     sessionStartTime:[NSDate new]
+                                                                                   agentConfiguration:agentConfig
+                                                                                             platform:[NewRelicInternalUtils osName]
+                                                                                            sessionId:@"sessionId"];
+
+
+    NSError* error = [NSError errorWithDomain:@"" code:NSURLErrorUnknown userInfo:@{}];
+
+    XCTAssertNoThrow([hexController recordError:error attributes:@{@"":[NSNull new]}]);
+
+    // Error.Domain being nil should be throwing an exception (declared as NONNULL)
+    XCTAssertThrowsSpecificNamed([NSError errorWithDomain:nil code:NSURLErrorUnknown userInfo:@{}], NSException, NSInvalidArgumentException);
+
+    // Error.localizedDescription being nil should be throwing an exception (declared as NONNULL)
+    error = [NSError errorWithDomain:@"Unknown" code:NSURLErrorUnknown userInfo:@{NSLocalizedDescriptionKey:[NSNull new]}];
+    XCTAssertThrowsSpecificNamed([hexController recordError:error attributes:nil], NSException, NSInvalidArgumentException);
+
+    // User should not have access to call recordError:nil, will crash if nil is passed (warning will be given)
+    //[hexController recordError:nil attributes:nil]
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+
+}
+
 @end

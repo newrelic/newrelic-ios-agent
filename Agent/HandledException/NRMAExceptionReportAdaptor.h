@@ -5,16 +5,18 @@
 
 #import <Foundation/Foundation.h>
 #include <Hex/HexReport.hpp>
+#import "NRMAAnalytics.h"
 
 @interface NRMAExceptionReportAdaptor : NSObject
 {
     std::shared_ptr<NewRelic::Hex::Report::HexReport> _report;
+    NRMAAnalytics *_analytics;
 }
 
-- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>) report;
+- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>) report analytics:(NRMAAnalytics*) analytics;
 
 - (void) addAttributes:(NSDictionary*)attributes;
-- (void) addAttributesNoValidation:(NSDictionary*)attributes;
+- (void) addAttributesNewValidation:(NSDictionary*)attributes;
 
 - (std::shared_ptr<NewRelic::Hex::Report::HexReport>) report;
 

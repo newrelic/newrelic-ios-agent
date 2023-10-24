@@ -8,10 +8,11 @@
 #import "NRMABool.h"
 
 @implementation NRMAExceptionReportAdaptor
-- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>)context {
+- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>)context analytics:(NRMAAnalytics*) analytics {
     self = [super init];
     if(self) {
         _report = context;
+        _analytics = analytics;
     }
     return self;
 }
@@ -19,6 +20,8 @@
 - (std::shared_ptr<NewRelic::Hex::Report::HexReport>) report {
     return _report;
 }
+
+// Old Event System
 
 - (void) addAttributes:(NSDictionary*)attributes {
     for (NSString* key in attributes) {
@@ -31,22 +34,6 @@
              numberValue:(NSNumber*)obj];
         } else if ([obj isKindOfClass:[NRMABool class]]) {
             [self addKey:key
-               boolValue:(NRMABool*)obj];
-        }
-    }
-}
-
-- (void) addAttributesNoValidation:(NSDictionary*)attributes {
-    for (NSString* key in attributes) {
-        NSObject* obj = attributes[key];
-        if ([obj isKindOfClass:[NSString class]]) {
-            [self addKeyNoValidation:key
-             stringValue:(NSString*)obj];
-        } else if ([obj isKindOfClass:[NSNumber class]]) {
-            [self addKeyNoValidation:key
-             numberValue:(NSNumber*)obj];
-        } else if ([obj isKindOfClass:[NRMABool class]]) {
-            [self addKeyNoValidation:key
                boolValue:(NRMABool*)obj];
         }
     }
@@ -71,6 +58,36 @@
 - (void) addKey:(NSString*)key
       boolValue:(NRMABool*)boolean {
     _report->setAttribute(key.UTF8String, (bool)boolean.value);
+}
+
+// New Event System
+
+- (void) addAttributesNewValidation:(NSDictionary*)attributes {
+    for (NSString* key in attributes) {
+        NSObject* obj = attributes[key];
+
+
+        id attributeValidator = [_analytics getAttributeValidator];
+
+        if(attributeValidator != nil && ![attributeValidator nameValidator:key]) {
+            continue;
+        }
+
+        if(attributeValidator != nil && ![attributeValidator valueValidator:obj]) {
+            continue;
+        }
+
+        if ([obj isKindOfClass:[NSString class]]) {
+            [self addKeyNoValidation:key
+             stringValue:(NSString*)obj];
+        } else if ([obj isKindOfClass:[NSNumber class]]) {
+            [self addKeyNoValidation:key
+             numberValue:(NSNumber*)obj];
+        } else if ([obj isKindOfClass:[NRMABool class]]) {
+            [self addKeyNoValidation:key
+               boolValue:(NRMABool*)obj];
+        }
+    }
 }
 
 - (void) addKeyNoValidation:(NSString*)key

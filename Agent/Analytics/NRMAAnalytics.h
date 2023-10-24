@@ -62,6 +62,8 @@
 - (BOOL) addSessionEndAttribute;
 - (BOOL) addSessionEvent;
 
+- (id<AttributeValidatorProtocol>) getAttributeValidator;
+
 + (int64_t) currentTimeMillis;
 + (NSArray<NSString*>*) reservedKeywords;
 
