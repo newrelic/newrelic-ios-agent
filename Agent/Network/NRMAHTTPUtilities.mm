@@ -36,7 +36,7 @@ static NSArray* _trackedHeaderFields;
     static dispatch_once_t defaultFeatureToken;
     dispatch_once(&defaultFeatureToken,
                   ^{
-        _trackedHeaderFields = (NSMutableArray*)@[@"X-APOLLO-OPERATION-NAME",
+        _trackedHeaderFields = (NSArray*)@[@"X-APOLLO-OPERATION-NAME",
                                                            @"X-APOLLO-OPERATION-TYPE",
                                                            @"X-APOLLO-OPERATION-ID"];
                   });
@@ -179,7 +179,7 @@ static NSArray* _trackedHeaderFields;
 
 }
 
-+ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData {
++ (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData {
     if (requestData == nil || headers == nil) {
         return;
     }

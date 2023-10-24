@@ -25,6 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer;
 + (NSArray*) trackedHeaderFields;
 + (void) addHTTPHeaderTrackingFor:(NSArray *)headers;
-+ (void) addGraphQLHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData;
++ (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData;
 @end
 NS_ASSUME_NONNULL_END

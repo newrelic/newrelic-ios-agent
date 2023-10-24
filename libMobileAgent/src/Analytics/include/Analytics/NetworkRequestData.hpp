@@ -2,7 +2,8 @@
 
 #ifndef LIBMOBILEAGENT_NETWORKREQUESTDATA_HPP
 #define LIBMOBILEAGENT_NETWORKREQUESTDATA_HPP
-#include <JSON/IJsonable.hpp>
+#include <string>
+#include <map>
 
 namespace NewRelic {
     class NetworkRequestData {
@@ -35,7 +36,7 @@ namespace NewRelic {
         const char *_contentType;
         unsigned int _bytesSent;
         // A dictionary to hold the tracked header's information
-        std::map<std::string, std::string> trackedHeaders;
+        std::map<std::string, std::string> _trackedHeaders;
     };
 }
 

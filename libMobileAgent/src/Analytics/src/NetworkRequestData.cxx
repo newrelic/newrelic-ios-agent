@@ -49,11 +49,11 @@ namespace NewRelic {
     }
 
     std::map<std::string, std::string> NetworkRequestData::getTrackedHeaders() const {
-        return trackedHeaders;
+        return _trackedHeaders;
     }
 
     void NetworkRequestData::setTrackedHeaders(std::map<std::string, std::string> trackedHeaders) {
-        NetworkRequestData::trackedHeaders = trackedHeaders;
+        NetworkRequestData::_trackedHeaders = trackedHeaders;
     }
 
 }
