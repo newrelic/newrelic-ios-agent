@@ -14,6 +14,8 @@
 - (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>) report;
 
 - (void) addAttributes:(NSDictionary*)attributes;
+- (void) addAttributesNoValidation:(NSDictionary*)attributes;
+
 - (std::shared_ptr<NewRelic::Hex::Report::HexReport>) report;
 
 @end

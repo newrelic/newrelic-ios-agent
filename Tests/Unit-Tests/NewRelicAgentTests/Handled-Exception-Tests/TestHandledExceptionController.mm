@@ -19,6 +19,8 @@
 #import "NRLogger.h"
 #import "NRMAAppToken.h"
 #import <OCMock/OCMock.h>
+#import "NRMAFlags.h"
+
 @interface TestHandledExceptionController : NRMAAgentTestBase {
     unsigned long long epoch_time_ms;
     const char* sessionDataPath;
@@ -139,6 +141,7 @@
                                                 attributes:dict]);
 }
 
+// Old Event System
 - (void) testHandleExceptionWithStackTrace {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
@@ -161,6 +164,37 @@
                 @"appVersion": @"8"};
 
     XCTAssertNoThrow([hexController recordHandledExceptionWithStackTrace:dict]);
+}
+
+// New Event System
+- (void) testHandleExceptionWithStackTraceNewEventSystem {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
+                                                                          collectorAddress:nil
+                                                                              crashAddress:nil];
+    agentConfig.sessionIdentifier = @"1234-567-890";
+
+    NRMAHandledExceptions* hexController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:analytics
+                                                                                     sessionStartTime:[NSDate new]
+                                                                                   agentConfiguration:agentConfig
+                                                                                             platform:[NewRelicInternalUtils osName]
+                                                                                            sessionId:@"sessionId"];
+
+    id dict = @{@"name": @"Exception name not found",
+                @"reason": @"Reason not found",
+                @"cause": @"Reason not found",
+                @"fatal": @false,
+                @"stackTraceElements": @[@{@"class": @"className", @"method": @"methodName", @"file": @"fileName", @"line": @"1"}],
+                @"appBuild": @"8",
+                @"appVersion": @"8"};
+
+    XCTAssertNoThrow([hexController recordHandledExceptionWithStackTrace:dict]);
+
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+
 }
 
 - (void) testPlatform {

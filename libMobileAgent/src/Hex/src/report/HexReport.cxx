@@ -59,8 +59,6 @@ void HexReport::setAttributes(std::map<std::string, std::shared_ptr<AttributeBas
     }
 }
 
-
-
 // New Event System
 
 void HexReport::setAttributeNoValidation(const char* key,

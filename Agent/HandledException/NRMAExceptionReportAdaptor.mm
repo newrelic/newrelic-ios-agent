@@ -36,6 +36,22 @@
     }
 }
 
+- (void) addAttributesNoValidation:(NSDictionary*)attributes {
+    for (NSString* key in attributes) {
+        NSObject* obj = attributes[key];
+        if ([obj isKindOfClass:[NSString class]]) {
+            [self addKeyNoValidation:key
+             stringValue:(NSString*)obj];
+        } else if ([obj isKindOfClass:[NSNumber class]]) {
+            [self addKeyNoValidation:key
+             numberValue:(NSNumber*)obj];
+        } else if ([obj isKindOfClass:[NRMABool class]]) {
+            [self addKeyNoValidation:key
+               boolValue:(NRMABool*)obj];
+        }
+    }
+}
+
 - (void) addKey:(NSString*)key
     numberValue:(NSNumber*)num
 {
@@ -55,5 +71,26 @@
 - (void) addKey:(NSString*)key
       boolValue:(NRMABool*)boolean {
     _report->setAttribute(key.UTF8String, (bool)boolean.value);
+}
+
+- (void) addKeyNoValidation:(NSString*)key
+    numberValue:(NSNumber*)num
+{
+    // objcType returns a char*, but all primitives are denoted by a single character.
+    if ([NewRelicInternalUtils isInteger:num]) {
+        _report->setAttributeNoValidation(key.UTF8String, [num longLongValue]);
+    } else if([NewRelicInternalUtils isFloat:num]) {
+        _report->setAttributeNoValidation(key.UTF8String, [num doubleValue]);
+    }
+}
+
+- (void) addKeyNoValidation:(NSString*)key
+    stringValue:(NSString*)string {
+    _report->setAttributeNoValidation(key.UTF8String, (string.UTF8String));
+}
+
+- (void) addKeyNoValidation:(NSString*)key
+      boolValue:(NRMABool*)boolean {
+    _report->setAttributeNoValidation(key.UTF8String, (bool)boolean.value);
 }
 @end

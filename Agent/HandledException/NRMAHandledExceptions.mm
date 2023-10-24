@@ -161,7 +161,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report] autorelease];
 
         if (attributes != nil) {
-            [contextAdapter addAttributes:attributes];
+            [contextAdapter addAttributesNoValidation:attributes];
         }
 
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
@@ -226,7 +226,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report] autorelease];
 
         if (attributes != nil) {
-            [contextAdapter addAttributes:attributes];
+            [contextAdapter addAttributesNoValidation:attributes];
         }
 
         _controller->submit(report);
@@ -327,7 +327,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report] autorelease];
 
         if (exceptionDictionary != nil) {
-            [contextAdapter addAttributes:exceptionDictionary];
+            [contextAdapter addAttributesNoValidation:exceptionDictionary];
         }
 
         _controller->submit(report);
