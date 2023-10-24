@@ -10,10 +10,10 @@
 @interface NRMAExceptionReportAdaptor : NSObject
 {
     std::shared_ptr<NewRelic::Hex::Report::HexReport> _report;
-    NRMAAnalytics *_analytics;
+    id<AttributeValidatorProtocol> _attributeValidator;
 }
 
-- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>) report analytics:(NRMAAnalytics*) analytics;
+- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>) report attributeValidator:(id<AttributeValidatorProtocol>) attributeValidator;
 
 - (void) addAttributes:(NSDictionary*)attributes;
 - (void) addAttributesNewValidation:(NSDictionary*)attributes;

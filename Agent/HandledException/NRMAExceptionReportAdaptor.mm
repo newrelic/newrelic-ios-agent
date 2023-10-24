@@ -8,11 +8,11 @@
 #import "NRMABool.h"
 
 @implementation NRMAExceptionReportAdaptor
-- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>)context analytics:(NRMAAnalytics*) analytics {
+- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>)context attributeValidator:(id<AttributeValidatorProtocol>) attributeValidator {
     self = [super init];
     if(self) {
         _report = context;
-        _analytics = analytics;
+        _attributeValidator = attributeValidator;
     }
     return self;
 }
@@ -66,14 +66,11 @@
     for (NSString* key in attributes) {
         NSObject* obj = attributes[key];
 
-
-        id attributeValidator = [_analytics getAttributeValidator];
-
-        if(attributeValidator != nil && ![attributeValidator nameValidator:key]) {
+        if(_attributeValidator != nil && ![_attributeValidator nameValidator:key]) {
             continue;
         }
 
-        if(attributeValidator != nil && ![attributeValidator valueValidator:obj]) {
+        if(_attributeValidator != nil && ![_attributeValidator valueValidator:obj]) {
             continue;
         }
 
