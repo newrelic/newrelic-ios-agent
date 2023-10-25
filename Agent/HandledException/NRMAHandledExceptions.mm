@@ -158,7 +158,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 resultMap,
                                                 [self createThreadVector:callstack length:frames]
                                                 );
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report analytics: analyticsParent] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributesNewValidation:attributes];
@@ -177,7 +177,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 [self createThreadVector:callstack length:frames]
                                                 );
         
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report analytics: analyticsParent] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributes:attributes];
@@ -223,7 +223,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 );
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report analytics: analyticsParent] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributesNewValidation:attributes];
@@ -241,7 +241,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
 
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report analytics: analyticsParent] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributes:attributes];
@@ -324,7 +324,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 threadVector);
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report analytics: analyticsParent] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
         if (exceptionDictionary != nil) {
             [contextAdapter addAttributesNewValidation:exceptionDictionary];
@@ -340,7 +340,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
         report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report analytics: analyticsParent] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
         if (exceptionDictionary != nil) {
             [contextAdapter addAttributes:exceptionDictionary];
