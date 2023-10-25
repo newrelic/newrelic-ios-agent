@@ -29,6 +29,10 @@
 
 static NSArray* _trackedHeaderFields;
 
+static NSString* _operationName = @"X-APOLLO-OPERATION-NAME";
+static NSString* _operationType = @"X-APOLLO-OPERATION-TYPE";
+static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
+
 @implementation NRMAHTTPUtilities
 
 + (NSArray*) trackedHeaderFields
@@ -36,9 +40,9 @@ static NSArray* _trackedHeaderFields;
     static dispatch_once_t defaultFeatureToken;
     dispatch_once(&defaultFeatureToken,
                   ^{
-        _trackedHeaderFields = (NSArray*)@[@"X-APOLLO-OPERATION-NAME",
-                                                           @"X-APOLLO-OPERATION-TYPE",
-                                                           @"X-APOLLO-OPERATION-ID"];
+        _trackedHeaderFields = (NSArray*)@[_operationName,
+                                           _operationType,
+                                           _operationId];
                   });
 
     return _trackedHeaderFields;
@@ -179,8 +183,19 @@ static NSArray* _trackedHeaderFields;
 
 }
 
++ (NSString*) normalizeApolloHeaders:(NSString*) headerField {
+    if ([headerField compare:_operationName] == NSOrderedSame) {
+        headerField = @"operationName";
+    } else if ([headerField compare:_operationType] == NSOrderedSame) {
+        headerField = @"operationType";
+    } else if ([headerField compare:_operationId] == NSOrderedSame) {
+        headerField = @"operationId";
+    }
+    return headerField;
+}
+
 + (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData {
-    if (requestData == nil || headers == nil) {
+    if (requestData == nil || headers == nil || headers.count == 0) {
         return;
     }
     
@@ -189,8 +204,9 @@ static NSArray* _trackedHeaderFields;
         NSString* value = headers[key];
         
         if(value != nil) {
+            NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
             std::string cValue = std::string(value.UTF8String);
-            std::string cKey = std::string(key.UTF8String);
+            std::string cKey = std::string(normalizedKey.UTF8String);
             cDict[cKey] = cValue;
         }
     }

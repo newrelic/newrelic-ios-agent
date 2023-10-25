@@ -1,5 +1,5 @@
 //
-//  NRMAURLSessionGraphQLTests.m
+//  NRMAURLSessionHeaderTrackingTests.m
 //  Agent
 //
 //  Created by Mike Bruin on 10/18/23.
@@ -20,7 +20,7 @@
 
 static NewRelicAgentInternal* _sharedInstance;
 
-@interface NRMAURLSessionGraphQLTests : XCTestCase <NSURLSessionDelegate,NSURLSessionDataDelegate,NSURLSessionTaskDelegate>
+@interface NRMAURLSessionHeaderTrackingTests : XCTestCase <NSURLSessionDelegate,NSURLSessionDataDelegate,NSURLSessionTaskDelegate>
 @property(strong) id mockSession;
 @property(strong) NSOperationQueue* queue;
 
@@ -28,10 +28,9 @@ static NewRelicAgentInternal* _sharedInstance;
 
 @property bool finished;
 
-
 @end
 
-@implementation NRMAURLSessionGraphQLTests
+@implementation NRMAURLSessionHeaderTrackingTests
 
 - (void)setUp {
     [super setUp];
@@ -107,10 +106,9 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
-    XCTAssertTrue([decode[0][@"X-APOLLO-OPERATION-NAME"] isEqualToString:@"Test name"]);
-    XCTAssertTrue([decode[0][@"X-APOLLO-OPERATION-TYPE"] isEqualToString:@"Test type"]);
-    XCTAssertTrue([decode[0][@"X-APOLLO-OPERATION-ID"] isEqualToString:@"Test id"]);
-
+    XCTAssertTrue([decode[0][@"operationName"] isEqualToString:@"Test name"]);
+    XCTAssertTrue([decode[0][@"operationType"] isEqualToString:@"Test type"]);
+    XCTAssertTrue([decode[0][@"operationId"] isEqualToString:@"Test id"]);
 
 }
 
