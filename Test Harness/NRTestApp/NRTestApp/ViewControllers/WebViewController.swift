@@ -9,23 +9,64 @@ import UIKit
 #if os(iOS)
 import WebKit
 
-class WebViewController: UIViewController {
+class WebViewController: UIViewController, UITextFieldDelegate {
     let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
-    
+    let textField = UITextField()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
         self.title = "Web View"
-        webView.navigationDelegate = self
+
+        setupViews()
+        setupConstraints()
+        loadWebsite()
     }
     
-    override func loadView() {
-        super.loadView()
 
-        if let url = URL(string: "https://www.newrelic.com") {
+    func setupViews() {
+        webView.navigationDelegate = self
+        textField.borderStyle = .roundedRect
+        textField.text = "https://www.newrelic.com"
+
+        view.addSubview(webView)
+        view.addSubview(textField)
+
+        textField.delegate = self
+    }
+
+    func setupConstraints() {
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        textField.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            textField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            textField.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            textField.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textField.heightAnchor.constraint(equalToConstant: 50),
+
+            webView.topAnchor.constraint(equalTo: textField.bottomAnchor),
+            webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+        ])
+    }
+
+    func loadWebsite() {
+        if let url = URL(string: textField.text ?? "") {
             webView.load(URLRequest(url: url))
-            view = webView
         }
+    }
+
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+
+        textField.resignFirstResponder()
+
+        loadWebsite()
+
+        return true
     }
 }
 
