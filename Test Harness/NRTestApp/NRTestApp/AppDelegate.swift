@@ -32,8 +32,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
          NewRelic.replaceDeviceIdentifier("myDeviceId")
 
         if ProcessInfo.processInfo.environment["UITesting"] != nil {
-            
-            clearConnectUserDefaults()
+            if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
+                clearConnectUserDefaults()
+            }
 
             NewRelic.start(withApplicationToken: "APP-TOKEN-NRMA",
                            andCollectorAddress: "localhost:8080",
@@ -57,6 +58,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                andCrashCollectorAddress: crashCollectorAddress)
             }
         }
+
+        NewRelic.setMaxEventPoolSize(5000)
+        NewRelic.setMaxEventBufferTime(60)
 
         // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
 //        if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {

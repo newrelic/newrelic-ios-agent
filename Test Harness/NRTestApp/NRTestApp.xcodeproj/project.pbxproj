@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -163,6 +164,7 @@
 
 /* Begin PBXFileReference section */
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
@@ -303,6 +305,7 @@
 		2BD05DF02ADF32BF00C0C972 /* Stubs */ = {
 			isa = PBXGroup;
 			children = (
+				2B2B3FB32AEB166E00C24897 /* harvestCollector.json */,
 				2BD05DF12ADF32D300C0C972 /* harvestConnector.json */,
 			);
 			path = Stubs;
@@ -638,6 +641,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */,
+				2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
