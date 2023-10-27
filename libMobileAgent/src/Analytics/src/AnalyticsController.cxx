@@ -297,16 +297,12 @@ namespace NewRelic {
     }
 
     void addTrackedHeaders(std::map<std::string, std::string> trackedHeaders, std::shared_ptr<IntrinsicEvent> event) {
-        std::map<std::string, std::string>::iterator it
-        = trackedHeaders.begin();
-        // Iterating over the map using Iterator till map end.
+        std::map<std::string, std::string>::iterator it = trackedHeaders.begin();
+
         while (it != trackedHeaders.end()) {
-            // Accessing the key
             std::string key = it->first;
-            // Accessing the value
             std::string value = it->second;
             event->addAttribute(key.c_str(), value.c_str());
-            // iterator incremented to point next item
             it++;
         }
     }
