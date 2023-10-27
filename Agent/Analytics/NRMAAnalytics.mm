@@ -1121,6 +1121,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return [_eventManager addEvent:[event autorelease]];
 }
 
+- (id<AttributeValidatorProtocol>) getAttributeValidator {
+    return _attributeValidator;
+}
+
 #pragma mark Static helpers.
 
 + (int64_t) currentTimeMillis {
