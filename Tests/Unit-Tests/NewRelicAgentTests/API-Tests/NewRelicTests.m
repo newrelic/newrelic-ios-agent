@@ -429,5 +429,20 @@
 
 }
 
+- (void) testRecordHandledExceptionsNewEventSystem {
+    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
+    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+                                                                              reason:@"testing"
+                                                                            userInfo:@{}]]);
+    XCTAssertNoThrow([NewRelic recordHandledException:nil withAttributes: nil]);
+    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+                                                                              reason:@"testing"
+                                                                            userInfo:@{}] withAttributes: nil]);
+    NSDictionary *dict = @{ @"name" : @"test name", @"reason" : @"test reason"};
+    XCTAssertNoThrow([NewRelic recordHandledExceptionWithStackTrace: dict]);
+    [NewRelic disableFeatures:NRFeatureFlag_NewEventSystem];
+
+}
+
 @end
 
