@@ -139,8 +139,8 @@ class UtilViewModel {
         let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: taskProcessor, delegateQueue: nil)
         guard let url = URL(string: "https://www.google.com") else { return }
 
-        let request = URLRequest(url: url)
-
+        var request = URLRequest(url: url)
+        request.addValue("Sucsess", forHTTPHeaderField: "Test")
         let dataTask = urlSession.dataTask(with: request)
 
         dataTask.resume()
