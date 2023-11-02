@@ -994,27 +994,31 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 + (NSString*) getLastSessionsEvents{
-    try {
-        auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
-        std::stringstream stream;
-        stream << std::setprecision(13) << *events;
-        
-        NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
-        
-        if (!jsonString.length) {
-            return nil;
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
+        return [NRMAEventManager getLastSessionEventsFromFilename:filename];
+    } else {
+        try {
+            auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
+            std::stringstream stream;
+            stream << std::setprecision(13) << *events;
+            
+            NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
+            
+            if (!jsonString.length) {
+                return nil;
+            }
+            
+            return jsonString;
+        } catch (std::exception& e) {
+            NRLOG_VERBOSE(@"Failed to fetch event dup store: %s",e.what());
+            
+        } catch (...) {
+            NRLOG_VERBOSE(@"Failed to fetch event dup store.");
         }
-        
-        return jsonString;
-    } catch (std::exception& e) {
-        NRLOG_VERBOSE(@"Failed to fetch event dup store: %s",e.what());
-        
-    } catch (...) {
-        NRLOG_VERBOSE(@"Failed to fetch event dup store.");
     }
-
-    return nil;
     
+    return nil;
 }
 
 + (void) clearDuplicationStores

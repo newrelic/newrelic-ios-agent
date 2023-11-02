@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
 - (void)empty;
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents;
+
++ (nullable NSString *)getLastSessionEventsFromFilename:(NSString *)filename;
 @end
 
 NS_ASSUME_NONNULL_END

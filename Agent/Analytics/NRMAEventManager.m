@@ -143,4 +143,28 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     return eventJsonString;
 }
 
++ (NSString *)getLastSessionEventsFromFilename:(NSString *)filename {
+    NSDictionary *lastSessionEvents = [PersistentEventStore getLastSessionEventsFromFilename:filename];
+    NSString *lastSessionEventJsonString = nil;
+    @synchronized (lastSessionEvents) {
+        @try {
+            NSMutableArray *jsonEvents = [[NSMutableArray alloc] init];
+            for(id<NRMAAnalyticEventProtocol> event in lastSessionEvents.allValues) {
+                [jsonEvents addObject:[event JSONObject]];
+                
+                NSData *lastSessionEventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
+                                                                        options:0
+                                                                          error:nil];
+                lastSessionEventJsonString = [[NSString alloc] initWithData:lastSessionEventJsonData
+                                                                   encoding:NSUTF8StringEncoding];
+            }
+        }
+        @catch (NSException *e) {
+            NRLOG_ERROR(@"FAILED TO CREATE LAST SESSION EVENT JSON: %@", e.reason);
+        }
+    }
+    
+    return lastSessionEventJsonString;
+}
+
 @end
