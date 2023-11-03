@@ -158,7 +158,10 @@ withMessage:(NSString *)message {
     NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
     NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
     NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
-    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
+    // TODO: Get this value from /connect response
+    NSString* entityGuid = @"MTA4MTY5OTR8TU9CSUxFfEFQUExJQ0FUSU9OfDM5MDI3NDMz";
+
+    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
                       NRLogMessageLevelKey, [message objectForKey:NRLogMessageLevelKey],
                       NRLogMessageFileKey, [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       NRLogMessageLineNumberKey,[message objectForKey:NRLogMessageLineNumberKey],
@@ -166,7 +169,8 @@ withMessage:(NSString *)message {
                       NRLogMessageTimestampKey,[message objectForKey:NRLogMessageTimestampKey],
                       NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
                       @"sessionId", nrSessiondId,
-                      @"appId", nrAppId];
+                      @"appId", nrAppId,
+                      @"entity.guid", entityGuid];
 
     return [json dataUsingEncoding:NSUTF8StringEncoding];
 }
