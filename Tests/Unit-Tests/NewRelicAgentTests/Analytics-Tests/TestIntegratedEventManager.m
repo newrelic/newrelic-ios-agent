@@ -12,7 +12,7 @@
 
 #import "NRMACustomEvent.h"
 #import "BlockAttributeValidator.h"
-
+#import "NRMAFlags.h"
 
 @interface TestIntegratedEventManager : XCTestCase {
     NRMAEventManager *sut;
@@ -25,6 +25,9 @@
     static NSString *testFilename = @"fbstest_tempStore";
 
 - (void)setUp {
+    
+    [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+
     // Put setup code here. This method is called before the invocation of each test method in the class.
     sut = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:testFilename
                                                                                            andMinimumDelay:1]];
@@ -42,6 +45,7 @@
 
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
 }
 
 - (void)testRetrieveEventJSON {

@@ -47,8 +47,7 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_NetworkRequestEvents | 
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
-                              NRFeatureFlag_AppStartMetrics |
-                              NRFeatureFlag_NewEventSystem;
+                              NRFeatureFlag_AppStartMetrics;
                   });
     return __flags;
 }
