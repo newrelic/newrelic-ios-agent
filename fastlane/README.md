@@ -47,6 +47,22 @@ Run Agent tests for iOS and generate code coverage
 
 Run Agent tests for iOS
 
+### ios runIOSBetaTests
+
+```sh
+[bundle exec] fastlane ios runIOSBetaTests
+```
+
+Run Agent tests for iOS beta
+
+### ios runIOSAppBetaTests
+
+```sh
+[bundle exec] fastlane ios runIOSAppBetaTests
+```
+
+Run App tests for iOS beta
+
 ### ios runTVOSTests
 
 ```sh
@@ -54,6 +70,22 @@ Run Agent tests for iOS
 ```
 
 Run Agent tests for tvOS
+
+### ios runTVOSBetaTests
+
+```sh
+[bundle exec] fastlane ios runTVOSBetaTests
+```
+
+Run Agent tests for tvOS beta
+
+### ios runTVOSAppBetaTests
+
+```sh
+[bundle exec] fastlane ios runTVOSAppBetaTests
+```
+
+Run Agent tests for tvOS beta
 
 ### ios coverage
 
@@ -86,6 +118,14 @@ Run dSYM Upload Tools test
 ```
 
 Delete derived data and Frameworks and build directory
+
+### ios addAPIKeyToPlist
+
+```sh
+[bundle exec] fastlane ios addAPIKeyToPlist
+```
+
+Add an API key to the plist file
 
 ### ios internalOutputXCFramework
 

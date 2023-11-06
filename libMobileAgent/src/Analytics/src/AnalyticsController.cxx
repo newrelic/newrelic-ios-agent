@@ -188,7 +188,7 @@ namespace NewRelic {
         }
     }
 
-bool AnalyticsController::addUserActionEvent(const char *functionName,
+    bool AnalyticsController::addUserActionEvent(const char *functionName,
                                              const char *targetObject,
                                              const char *label,
                                              const char *accessibility,
@@ -196,7 +196,7 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
                                              const char *actionType,
                                              const char *controlFrame,
                                              const char *orientation) {
-    try {
+        try {
             unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms();//throws std::logic_error
             auto event = _eventManager.newUserActionEvent(current_time_ms,
                                                           getCurrentSessionDuration_sec(current_time_ms),
@@ -296,6 +296,16 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
         return false;
     }
 
+    void addTrackedHeaders(std::map<std::string, std::string> trackedHeaders, std::shared_ptr<IntrinsicEvent> event) {
+        std::map<std::string, std::string>::iterator it = trackedHeaders.begin();
+
+        while (it != trackedHeaders.end()) {
+            std::string key = it->first;
+            std::string value = it->second;
+            event->addAttribute(key.c_str(), value.c_str());
+            it++;
+        }
+    }
 
     bool AnalyticsController::addRequestEvent(const NewRelic::NetworkRequestData& requestData,
                                               const NewRelic::NetworkResponseData& responseData,
@@ -330,6 +340,7 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
             auto responseTime = responseData.getResponseTime();
             auto bytesReceived = responseData.getBytesReceived();
             auto statusCode = responseData.getStatusCode();
+            std::map<std::string, std::string> trackedHeaders = requestData.getTrackedHeaders();
 
             if ((strlens(requestUrl) == 0)) {
                 LLOG_INFO("unable to add NetworkErrorEvent with empty URL.");
@@ -376,6 +387,10 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
 
                 if ((strlens(contentType) > 0)) {
                     event->addAttribute(__kNRMA_Attrib_contentType, contentType);
+                }
+                
+                if(trackedHeaders.size() != 0) {
+                    addTrackedHeaders(trackedHeaders, event);
                 }
 
                 return _eventManager.addEvent(event);
@@ -457,6 +472,8 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
             auto networkErrorMessage = responseData.getNetworkErrorMessage();
             auto networkErrorCode = responseData.getNetworkErrorCode();
             auto statusCode = responseData.getStatusCode();
+            std::map<std::string, std::string> trackedHeaders = requestData.getTrackedHeaders();
+
 
             auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
             auto sessionDuration_sec = getCurrentSessionDuration_sec(currentTime_ms);
@@ -516,6 +533,10 @@ bool AnalyticsController::addUserActionEvent(const char *functionName,
 
                 if (statusCode != 0) {
                     event->addAttribute(__kNRMA_Attrib_statusCode, statusCode);
+                }
+              
+                if(trackedHeaders.size() != 0) {
+                    addTrackedHeaders(trackedHeaders, event);
                 }
 
                 return event;

@@ -77,7 +77,61 @@
     XCTAssertTrue(measurement.statusCode == 200,@"statusCode %d doesn't match sent status code",measurement.statusCode);
     XCTAssertTrue(measurement.bytesSent == 1024,@"bytesSent %lld doesn't max sent bytesSent",measurement.bytesSent);
     XCTAssertTrue(measurement.bytesReceived == 1023,@"bytesReceived %lld doesn't match bytesReceived",measurement.bytesReceived);
+#if TARGET_OS_TV
+    XCTAssertTrue([measurement.wanType isEqualToString:@"ethernet"] || [measurement.wanType isEqualToString:@"wifi"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#else
     XCTAssertTrue([measurement.wanType isEqualToString:@"CDMA"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#endif
+}
+
+- (void) testWanTypeInHarvestController5G
+{
+    __block BOOL completed = NO;
+    NRTimer* timer = [NewRelic createAndStartTimer];
+    __block NRMAHarvestableHTTPTransaction* measurement = nil;
+    id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
+    [[[[mockUtils stub] classMethod] andReturn:@"5G"] getCurrentWanType];
+
+    id mockHarvestableHTTPTransactionGeneration = [OCMockObject mockForClass:[NRMAHarvestController class]];
+
+
+    [[[[mockHarvestableHTTPTransactionGeneration stub] classMethod] andDo:^(NSInvocation * invoke) {
+        NRMAHarvestableHTTPTransaction* localMeasurement;
+        [invoke getArgument:&localMeasurement atIndex:2];
+        measurement = [localMeasurement retain];
+        completed = YES;
+    }] addHarvestableHTTPTransaction:OCMOCK_ANY];
+
+    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+                              httpMethod:@"post"
+                               withTimer:timer
+                         responseHeaders:nil
+                              statusCode:200
+                               bytesSent:1024
+                           bytesReceived:1023
+                            responseData:nil
+                            traceHeaders:nil
+                               andParams:nil];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        //test timed out.
+        completed = YES;
+    });
+    while (CFRunLoopGetCurrent() && !completed) {
+    }
+    [mockUtils stopMocking];
+    [mockHarvestableHTTPTransactionGeneration stopMocking];
+
+    XCTAssertNotNil(measurement,@"measurement is nil. mockHarvestableHTTPTransactionGeneration is not getting metrics");
+    XCTAssertTrue([measurement.url isEqualToString:@"google.com"],@"url %@ doesn't match sent url",measurement.url);
+    XCTAssertTrue(measurement.statusCode == 200,@"statusCode %d doesn't match sent status code",measurement.statusCode);
+    XCTAssertTrue(measurement.bytesSent == 1024,@"bytesSent %lld doesn't max sent bytesSent",measurement.bytesSent);
+    XCTAssertTrue(measurement.bytesReceived == 1023,@"bytesReceived %lld doesn't match bytesReceived",measurement.bytesReceived);
+#if TARGET_OS_TV
+    XCTAssertTrue([measurement.wanType isEqualToString:@"ethernet"] || [measurement.wanType isEqualToString:@"wifi"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#else
+    XCTAssertTrue([measurement.wanType isEqualToString:@"5G"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#endif
 }
 
 // TODO: Rewrite this test without HTTPError

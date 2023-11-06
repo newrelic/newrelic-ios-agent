@@ -107,9 +107,12 @@
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
 
+#if TARGET_OS_TV
+        NSString* connectionType = [NewRelicInternalUtils connectionType];
+#else
         // getCurrentWanType shouldn't be called on the main thread.
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
-        
+#endif
         NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
         NSURL *replacedURL = [transformer transformURL:request.URL];
         if(!replacedURL) {
@@ -121,6 +124,8 @@
                                                                                          connectionType:connectionType
                                                                                             contentType:[NRMANetworkFacade contentType:response]
                                                                                               bytesSent:bytesSent];
+        [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
+        
         NSUInteger modifiedBytesReceived = bytesReceived;
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
         NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
@@ -203,7 +208,12 @@
 
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
+#if TARGET_OS_TV
+        NSString* connectionType = [NewRelicInternalUtils connectionType];
+#else
+        // getCurrentWanType shouldn't be called on the main thread.
         NSString* connectionType = [NewRelicInternalUtils getCurrentWanType];
+#endif
         
         NRMAURLTransformer *transformer = [NewRelicAgentInternal getURLTransformer];
         NSURL *replacedURL = [transformer transformURL:request.URL];
@@ -211,15 +221,19 @@
             replacedURL = request.URL;
         }
 
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:[[NRMANetworkRequestData alloc] initWithRequestUrl:replacedURL
-                                                                                                                                   httpMethod:[request HTTPMethod]
-                                                                                                                               connectionType:connectionType
-                                                                                                                                  contentType:[request allHTTPHeaderFields][@"Content-Type"]
-                                                                                                                                    bytesSent:0]
-                                                                              withResponse:[[NRMANetworkResponseData alloc] initWithNetworkError:error.code
-                                                                                                                                   bytesReceived:0
-                                                                                                                                    responseTime:timer.timeElapsedInSeconds
-                                                                                                                             networkErrorMessage:error.localizedDescription]
+        NRMANetworkRequestData* networkRequestData = [[NRMANetworkRequestData alloc]initWithRequestUrl:replacedURL
+                                                                                            httpMethod:[request HTTPMethod]
+                                                                                        connectionType:connectionType
+                                                                                           contentType:[request allHTTPHeaderFields][@"Content-Type"]
+                                                                                             bytesSent:0];
+        [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
+
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData 
+                                                                              withResponse:[[NRMANetworkResponseData alloc]
+                                                                                            initWithNetworkError:error.code
+                                                                                            bytesReceived:0
+                                                                                            responseTime:timer.timeElapsedInSeconds
+                                                                                            networkErrorMessage:error.localizedDescription]
                                                                                withPayload:[NRMAHTTPUtilities retrievePayload:request]];
 
         // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags

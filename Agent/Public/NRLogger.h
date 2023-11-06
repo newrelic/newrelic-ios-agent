@@ -90,6 +90,12 @@ typedef enum _NRLogTargets {
     unsigned int logLevels;
     unsigned int logTargets;
     NSFileHandle *logFile;
+    NSString *logURL;
+
+    NSString *logIngestKey;
+    dispatch_queue_t logQueue;
+    unsigned long long lastFileSize;
+
 }
 
 + (void)log:(unsigned int)level
@@ -119,6 +125,16 @@ withMessage:(NSString *)message;
  */
 + (void)setLogTargets:(unsigned int)targets;
 
+/*
+Configure the New Relic headerless logging API URL.
+
+@param url A single NSString constant, the logging API URL.
+*/
++ (void)setLogIngestKey:(NSString*) key;
+
+
++ (void)setLogURL:(NSString*) url;
+
 /*!
  @result the path of the file to which the New Relic agent is logging.
 
@@ -130,6 +146,11 @@ withMessage:(NSString *)message;
  Truncate the log file used by the New Relic agent for data logging.
  */
 + (void)clearLog;
+
+/*!
+ Upload current log since last upload.
+ */
++ (void)upload;
 
 /*!
  return currently set logLevels

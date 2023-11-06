@@ -56,6 +56,17 @@ extern "C" {
 
 + (void) crashNow;
 
+#pragma mark - Logging
+
++ (void) logInfo:(NSString* __nonnull) message;
+
++ (void) logError:(NSString* __nonnull) message;
+
++ (void) logVerbose:(NSString* __nonnull) message;
++ (void) logWarning:(NSString* __nonnull) message;
+
++ (void) logAudit:(NSString* __nonnull) message;
+
 
 #pragma mark - Configuring the New Relic SDK
 
@@ -609,6 +620,13 @@ extern "C" {
  * automatically instrumenting network connections
  *******************************************************************************/
 + (NSDictionary<NSString*,NSString*>* _Nonnull)generateDistributedTracingHeaders;
+
+/*******************************************************************************
+ * Add a NSArray of NSStrings of the header
+ * fields you want added to network events
+ *******************************************************************************/
++  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*>*_Nonnull)headers;
+
 #pragma mark - Recording custom events
 
 /*!

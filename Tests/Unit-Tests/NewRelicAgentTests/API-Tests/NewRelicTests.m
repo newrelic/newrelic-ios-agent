@@ -24,6 +24,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NewRelicAgentTests.h"
 #import "NRMAHarvestController.h"
+#import "NRMAHTTPUtilities.h"
 
 @interface NewRelicTests : XCTestCase {
 }
@@ -347,6 +348,30 @@
     [NewRelic shutdown];
 }
 
+-(void) testAddHTTPHeaderTrackingDefault {
+    XCTAssertNil([NewRelicAgentInternal sharedInstance]);
+    XCTAssertNotNil([NRMAHTTPUtilities trackedHeaderFields]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-NAME"]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-TYPE"]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-ID"]);
+}
+
+-(void) testAddHTTPHeaderTracking {
+    XCTAssertNil([NewRelicAgentInternal sharedInstance]);
+
+    // Add a new header value to track
+    [NewRelic addHTTPHeaderTrackingFor:@[@"Test"]];
+
+    XCTAssertNotNil([NRMAHTTPUtilities trackedHeaderFields]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"Test"]);
+    XCTAssertFalse([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"Fake"]);
+    
+    // Make sure you can't add duplicates
+    NSUInteger count = [NRMAHTTPUtilities trackedHeaderFields].count;
+    [NewRelic addHTTPHeaderTrackingFor:@[@"Test", @"X-APOLLO-OPERATION-TYPE"]];
+    XCTAssertTrue([NRMAHTTPUtilities trackedHeaderFields].count == count);
+}
+
 -(void) testSetShutdown {
 
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
@@ -403,5 +428,15 @@
     // Can't assert
     [NewRelic recordCustomEvent:@"EventName" attributes:dict];
 }
+
+- (void) testLogging {
+    XCTAssertNoThrow([NewRelic logInfo:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logError:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+
+}
+
 @end
 

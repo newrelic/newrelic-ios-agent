@@ -36,6 +36,26 @@
 {
     [self crashNow:nil];
 }
+
++ (void) logInfo:(NSString* __nonnull) message {
+    NRLOG_INFO(@"%@", message);
+}
+
++ (void) logError:(NSString* __nonnull) message {
+    NRLOG_ERROR(@"%@", message);
+}
+
++ (void) logVerbose:(NSString* __nonnull) message {
+    NRLOG_VERBOSE(@"%@", message);
+}
++ (void) logWarning:(NSString* __nonnull) message {
+    NRLOG_WARNING(@"%@", message);
+}
+
++ (void) logAudit:(NSString* __nonnull) message {
+    NRLOG_AUDIT(@"%@", message);
+}
+
 + (void) crashNow:(NSString*)message
 {
     // If Agent is shutdown we shouldn't respond.
@@ -308,6 +328,11 @@
 + (NSDictionary<NSString*,NSString*>*)generateDistributedTracingHeaders {
     return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
 }
+
++  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*> *_Nonnull)headers {
+    [NRMAHTTPUtilities addHTTPHeaderTrackingFor:headers];
+}
+
 
 #pragma mark - Interactions
 

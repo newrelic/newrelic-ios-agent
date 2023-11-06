@@ -13,6 +13,7 @@
 #import "NRMAExceptionhandlerConstants.h"
 #import "NRMAAppToken.h"
 #import "NRMAFlags.h"
+#import "NRLogger.h"
 
 static NSString* __NRMA__customAppVersionString = nil;
 static NSString* __NRMA__customAppBuildString = nil;
@@ -47,6 +48,7 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
 
         [self setCollectorHost:collectorHost];
         [self setCrashCollectorHost:crashHost];
+        [self setLoggingURL];
 
         _useSSL = YES;
     }
@@ -90,6 +92,28 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
             _crashCollectorHost = kNRMA_DEFAULT_CRASH_COLLECTOR_HOST;
         }
     }
+}
+
+- (void) setLoggingURL {
+    if (![NRMAFlags shouldEnableLogReporting]) { return; }
+
+    if (self.applicationToken.regionCode.length) {
+        _loggingURL = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_LOGGING_HOST,self.applicationToken.regionCode];
+    }
+    else if ([self.collectorHost isEqualToString:@"staging-mobile-collector.newrelic.com"]) {
+        _loggingURL = kNRMA_STAGING_LOGGING_HOST;
+    }
+    else if ([NRMAFlags shouldEnableFedRampSupport]) {
+        _loggingURL = kNRMA_FEDRAMP_LOGGING_HOST;
+    }
+    else {
+        _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
+    }
+    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1"];
+
+    NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
+
+    [NRLogger setLogURL:logURL];
 }
 
 + (NRMAConnectInformation*) connectionInformation
