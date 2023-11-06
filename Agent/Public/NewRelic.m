@@ -326,7 +326,11 @@
 }
 
 + (NSDictionary<NSString*,NSString*>*)generateDistributedTracingHeaders {
-    return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:[NRMAHTTPUtilities generateNRMAPayload]];
+    } else {
+        return [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
+    }
 }
 
 +  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*> *_Nonnull)headers {
@@ -519,8 +523,7 @@
     }
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:name
-                                                                                     value:value
-                                                                                persistent:YES];
+                                                                                     value:value];
 }
 
 + (BOOL) incrementAttribute:(NSString*)name {
@@ -535,14 +538,12 @@
     }
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController incrementSessionAttribute:name
-                                                                                           value:value
-                                                                                      persistent:YES];
+                                                                                           value:value];
 }
 
 + (BOOL) setUserId:(NSString*)userId {
     return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:@"userId"
-                                                                                     value:userId
-                                                                                persistent:YES];
+                                                                                     value:userId];
 }
 
 + (BOOL) removeAttribute:(NSString*)name {

@@ -12,7 +12,7 @@
 #import "NRMAMetric.h"
 #import "NRMAAnalytics.h"
 #import "NRMABool.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NRMASupportMetricHelper.h"
 
 @interface NRMAAppUpgradeMetricGenerator ()
@@ -125,7 +125,7 @@
 }
 
 - (void) sendAppUpgradeToAnalytics:(NRMAAnalytics*)analyticsController {
-    [analyticsController setNRSessionAttribute:@(__kNRMA_RA_upgradeFrom) value:self.lastVersion];
+    [analyticsController setNRSessionAttribute:kNRMA_RA_upgradeFrom value:self.lastVersion];
 }
 
 - (void) onHarvestBefore {

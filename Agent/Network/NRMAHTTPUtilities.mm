@@ -26,6 +26,8 @@
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
 #import "NRMANetworkRequestData+CppInterface.h"
+#include <Utilities/Application.hpp>
+#import "NRMAHarvestController.h"
 
 static NSArray* _trackedHeaderFields;
 
@@ -34,6 +36,8 @@ static NSString* _operationType = @"X-APOLLO-OPERATION-TYPE";
 static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
 
 @implementation NRMAHTTPUtilities
+NSString* currentTraceId;
+NSString* currentParentId;
 
 + (NSArray*) trackedHeaderFields
 {
@@ -76,10 +80,60 @@ static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
 
 + (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest*)request {
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities makeMutable:request];
-    [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
-                                  to:mutableRequest];
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [NRMAHTTPUtilities attachNRMAPayload:[NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]
+                                          to:mutableRequest];
+    } else {
+        [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
+                                      to:mutableRequest];
+    }
     return mutableRequest;
+}
 
++ (NRMAPayload*) addConnectivityHeaderNRMAPayload:(NSMutableURLRequest*)request {
+    if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
+    
+    NRMAPayload *payload = [NRMAHTTPUtilities generateNRMAPayload];
+    if(payload == nil) { return nil; }
+    
+    NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:payload];
+    
+    if(connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY]
+       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
+    }
+    
+    BOOL dtError = false;
+    if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY]
+       forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+    } else {
+        dtError = true;
+    }
+    
+    if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY]
+       forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
+    } else {
+        dtError = true;
+    }
+        
+    if (dtError) {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Exception"
+                           value:@1
+                       scope:@""]];
+    } else {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Success"
+                           value:@1
+                       scope:@""]];
+    }
+    
+    return payload;
+}
+
++ (NRMAPayload *) generateNRMAPayload {
+
+    return [NRMAHTTPUtilities startTrip];
 }
 
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request {
@@ -131,6 +185,64 @@ static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
     if(payload == nullptr) { return nil; }
     payload->setDistributedTracing(true);
     return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
+}
+
++ (NRMAPayload *) startTrip {
+    if(!NewRelic::Application::getInstance().isValid()) {
+        return nil;
+    }
+    
+    @synchronized (currentTraceId) {
+        NSString * accountID = @(NewRelic::Application::getInstance().getContext().getAccountId().c_str());
+        NSString * appId = @(NewRelic::Application::getInstance().getContext().getApplicationId().c_str());
+        NSString * trustedAccountKey =  @(NewRelic::Application::getInstance().getContext().getTrustedAccountKey().c_str());
+        NSTimeInterval currentTimeStamp = [[NSDate date] timeIntervalSince1970];
+
+        currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
+        currentParentId = @"";
+        
+        NRMAPayload * payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
+        payload.dtEnabled = [NRMAFlags shouldEnableDistributedTracing];
+        currentParentId = [payload id];
+
+        return payload;
+    }
+}
+
++ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload {
+    NSDictionary *json;
+    
+    if(payload != nil) {
+        json = [payload JSONObject];
+    }
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload:payload];
+    NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
+    NSString *traceState = [W3CTraceState headerFromContext:traceContext];
+    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[NSJSONSerialization  dataWithJSONObject:json options:0 error:nil]];
+    
+    return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:encodedPayloadHeader,
+             W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
+             W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY:traceState};
+}
+
++ (void) attachNRMAPayload:(NRMAPayload*)payload to:(id)object {
+    [NRMAAssociate attach:payload to:object with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+}
+
++ (NRMAPayload*) retrieveNRMAPayload:(id)object {
+    id associatedObject = [NRMAAssociate retrieveFrom:object
+                                    with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+
+    [NRMAAssociate removeFrom:object
+                         with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+
+    if ([associatedObject isKindOfClass:[NRMAPayload class]]) {
+
+        return associatedObject;
+    }
+
+    return nil;
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {

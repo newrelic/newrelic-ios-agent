@@ -105,10 +105,10 @@
                 [self.analytics sessionWillEnd];
                 break;
             case 3:
-                [self.analytics setSessionAttribute:name value:@1234 persistent:YES];
+                [self.analytics setSessionAttribute:name value:@1234];
                 break;
             case 4:
-                [self.analytics setSessionAttribute:name value:@1234 persistent:NO];
+                [self.analytics setSessionAttribute:name value:@1234];
                 break;
             case 5:
                 [self.analytics incrementSessionAttribute:name value:@1];
@@ -117,10 +117,10 @@
                 [self.analytics setSessionAttribute:name value:@"world"];
                 break;
             case 7:
-                [self.analytics incrementSessionAttribute:name value:@1 persistent:YES];
+                [self.analytics incrementSessionAttribute:name value:@1];
                 break;
             case 8:
-                [self.analytics incrementSessionAttribute:name value:@1 persistent:NO];
+                [self.analytics incrementSessionAttribute:name value:@1];
                 break;
             case 9:
                 [self.analytics removeSessionAttributeNamed:name];

@@ -49,6 +49,8 @@
 
 + (BOOL) shouldEnableLogReporting;
 
++ (BOOL) shouldEnableNewEventSystem;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

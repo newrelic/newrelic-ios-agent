@@ -26,6 +26,24 @@
     // Put teardown code here. This method is called after the invocation of each test method in the class.
 }
 
+- (void)testContextWhenNRMAPayloadProvided {
+    NSString* accountStr = @"accountForTesting";
+    NSString* appIdStd = @"appIdForTesting";
+    NSString* spanId = @"17172750e6ff8549";
+    NSString* traceId = @"spanIdForTesting";
+    long long timestamp = 1609970157093;
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
+
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
+    
+    XCTAssert([accountStr isEqualToString: traceContext.accountId]);
+    XCTAssert([appIdStd isEqualToString: traceContext.appId]);
+    XCTAssert([traceId isEqualToString: traceContext.traceId]);
+    XCTAssert([payload.id isEqualToString: traceContext.spanId]);
+
+    XCTAssertEqual(timestamp, traceContext.timestamp);
+}
+
 - (void)testContextWhenPayloadProvided {
     // arrange
     auto payload = std::make_unique<NewRelic::Connectivity::Payload>();
