@@ -134,4 +134,26 @@
     }
 }
 
++ (NSDictionary *)getLastSessionEventsFromFilename:(NSString *)filename {
+    NSError * __autoreleasing *error = nil;
+    NSData *storedData = [NSData dataWithContentsOfFile:filename
+                                                options:0
+                                                  error:error];
+    if(storedData == nil) {
+        if(error != NULL && *error != nil) {
+            return @{};
+        }
+    }
+    
+    NSDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:storedData
+                                                                                  error:error];
+    if(storedDictionary == nil) {
+        if(error != NULL && *error != nil) {
+            return @{};
+        }
+    }
+
+    return storedDictionary;
+}
+
 @end
