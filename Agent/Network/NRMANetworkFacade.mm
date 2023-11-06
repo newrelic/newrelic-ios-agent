@@ -168,7 +168,9 @@
                     }
                 }
                 
-                [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]] withNRMAPayload: retrievedPayload];
+                [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData 
+                                                                                        withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]]
+                                                                                     withNRMAPayload: retrievedPayload];
             } else {
                 std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
                 if(traceHeaders) {
@@ -258,7 +260,7 @@
                                                                                             bytesReceived:0
                                                                                             responseTime:timer.timeElapsedInSeconds
                                                                                             networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+                                                                           withNRMAPayload:[NRMAHTTPUtilities retrieveNRMAPayload:request]];
         }else{
         [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData 
                                                                               withResponse:[[NRMANetworkResponseData alloc]
@@ -267,7 +269,6 @@
                                                                                             responseTime:timer.timeElapsedInSeconds
                                                                                             networkErrorMessage:error.localizedDescription]
                                                                                withPayload:[NRMAHTTPUtilities retrievePayload:request]];
-                                                                                   withPayload:[NRMAHTTPUtilities retrievePayload:request]];
         }
 
          // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags
