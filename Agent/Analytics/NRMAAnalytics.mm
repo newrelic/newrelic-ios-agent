@@ -302,7 +302,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSNumber* bytesReceived = @(responseData.bytesReceived);
         NSNumber* statusCode = @(responseData.statusCode);
         
-        if ((requestUrl.length == 0)) {
+        if (requestUrl.length == 0) {
             NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
             return false;
         }
@@ -317,15 +317,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:kNRMA_Attrib_traceId value:traceId];
         }
         
-        if ((requestDomain.length > 0)) {
+        if (requestDomain.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
         }
         
-        if ((requestPath.length > 0)) {
+        if (requestPath.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
         }
         
-        if ((requestMethod.length > 0)) {
+        if (requestMethod.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
         }
         
@@ -345,8 +345,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
         }
         
-        if ((contentType.length > 0)) {
+        if (contentType.length > 0) {
             [event addAttribute:kNRMA_Attrib_contentType value:contentType];
+        }
+        
+        if (requestData.trackedHeaders.count > 0) {
+            for(NSString* key in requestData.trackedHeaders.allKeys) {
+                [event addAttribute:key value:requestData.trackedHeaders[key]];
+            }
         }
         
         return [_eventManager addEvent:[event autorelease]];
@@ -411,7 +417,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSNumber* bytesReceived = @(responseData.bytesReceived);
         NSNumber* statusCode = @(responseData.statusCode);
         
-        if ((requestUrl.length == 0)) {
+        if (requestUrl.length == 0) {
             NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
             return nil;
         }
@@ -430,19 +436,19 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
         }
         
-        if ((requestDomain.length > 0)) {
+        if (requestDomain.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
         }
         
-        if ((requestPath.length > 0)) {
+        if (requestPath.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
         }
         
-        if ((requestMethod.length > 0)) {
+        if (requestMethod.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
         }
         
-        if ((connectionType.length > 0)) {
+        if (connectionType.length > 0) {
             [event addAttribute:kNRMA_Attrib_connectionType value:connectionType];
         }
         
@@ -470,8 +476,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
         }
         
-        if ((contentType.length > 0)) {
+        if (contentType.length > 0) {
             [event addAttribute:kNRMA_Attrib_contentType value:contentType];
+        }
+        
+        if (requestData.trackedHeaders.count > 0) {
+            for(NSString* key in requestData.trackedHeaders.allKeys) {
+                [event addAttribute:key value:requestData.trackedHeaders[key]];
+            }
         }
         
         return event;

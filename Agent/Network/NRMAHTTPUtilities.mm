@@ -310,21 +310,33 @@ NSString* currentParentId;
     if (requestData == nil || headers == nil || headers.count == 0) {
         return;
     }
-    
-    std::map<std::string, std::string> cDict;
-    for(NSString* key in [self trackedHeaderFields]) {
-        NSString* value = headers[key];
-        
-        if(value != nil) {
-            NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
-            std::string cValue = std::string(value.UTF8String);
-            std::string cKey = std::string(normalizedKey.UTF8String);
-            cDict[cKey] = cValue;
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+        for(NSString* key in [self trackedHeaderFields]) {
+            NSString* value = headers[key];
+            
+            if(value != nil) {
+                NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
+                [dict setValue:value forKey:normalizedKey];
+            }
         }
+        requestData.trackedHeaders = dict;
+    } else {
+        std::map<std::string, std::string> cDict;
+        for(NSString* key in [self trackedHeaderFields]) {
+            NSString* value = headers[key];
+            
+            if(value != nil) {
+                NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
+                std::string cValue = std::string(value.UTF8String);
+                std::string cKey = std::string(normalizedKey.UTF8String);
+                cDict[cKey] = cValue;
+            }
+        }
+        
+        NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
+        wrappedRequestData->setTrackedHeaders(cDict);
     }
-    
-    NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
-    wrappedRequestData->setTrackedHeaders(cDict);
 }
 
 @end
