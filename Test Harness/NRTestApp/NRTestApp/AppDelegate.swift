@@ -27,10 +27,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         ])
 #endif
         
-        NewRelic.setMaxEventBufferTime(60)
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
-        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing,
-                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
+                                 NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing])
+
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
 
         // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
         guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
@@ -48,6 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                            andCollectorAddress: collectorAddress,
                            andCrashCollectorAddress: crashCollectorAddress)
         }
+        NewRelic.setMaxEventBufferTime(60)
 
         // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
         if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {
