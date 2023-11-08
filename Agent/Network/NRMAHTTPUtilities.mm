@@ -25,12 +25,32 @@
 #import "NRMATraceContext.h"
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
+#import "NRMANetworkRequestData+CppInterface.h"
 #include <Utilities/Application.hpp>
 #import "NRMAHarvestController.h"
+
+static NSArray* _trackedHeaderFields;
+
+static NSString* _operationName = @"X-APOLLO-OPERATION-NAME";
+static NSString* _operationType = @"X-APOLLO-OPERATION-TYPE";
+static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
 
 @implementation NRMAHTTPUtilities
 NSString* currentTraceId;
 NSString* currentParentId;
+
++ (NSArray*) trackedHeaderFields
+{
+    static dispatch_once_t defaultFeatureToken;
+    dispatch_once(&defaultFeatureToken,
+                  ^{
+        _trackedHeaderFields = (NSArray*)@[_operationName,
+                                           _operationType,
+                                           _operationId];
+                  });
+
+    return _trackedHeaderFields;
+}
 
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
 
@@ -265,6 +285,46 @@ NSString* currentParentId;
     }
 
     return std::unique_ptr<NewRelic::Connectivity::Payload>(nullptr);
+}
+
++  (void)addHTTPHeaderTrackingFor:(NSArray *)headers {
+    NSArray *array = [self trackedHeaderFields];
+    NSArray *newArray = array?[array arrayByAddingObjectsFromArray:headers]:[[NSArray alloc] initWithArray:headers];
+
+    _trackedHeaderFields = (NSArray *)[[NSSet setWithArray:newArray] allObjects];
+
+}
+
++ (NSString*) normalizeApolloHeaders:(NSString*) headerField {
+    if ([headerField compare:_operationName] == NSOrderedSame) {
+        headerField = @"operationName";
+    } else if ([headerField compare:_operationType] == NSOrderedSame) {
+        headerField = @"operationType";
+    } else if ([headerField compare:_operationId] == NSOrderedSame) {
+        headerField = @"operationId";
+    }
+    return headerField;
+}
+
++ (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData {
+    if (requestData == nil || headers == nil || headers.count == 0) {
+        return;
+    }
+    
+    std::map<std::string, std::string> cDict;
+    for(NSString* key in [self trackedHeaderFields]) {
+        NSString* value = headers[key];
+        
+        if(value != nil) {
+            NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
+            std::string cValue = std::string(value.UTF8String);
+            std::string cKey = std::string(normalizedKey.UTF8String);
+            cDict[cKey] = cValue;
+        }
+    }
+    
+    NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
+    wrappedRequestData->setTrackedHeaders(cDict);
 }
 
 @end

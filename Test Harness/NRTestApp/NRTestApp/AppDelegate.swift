@@ -26,6 +26,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NRMAFeatureFlags.NRFeatureFlag_WebViewInstrumentation
         ])
 #endif
+        
+        NewRelic.setMaxEventBufferTime(60)
+        NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing,
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
 
@@ -54,6 +57,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
 
         }
+
         NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }

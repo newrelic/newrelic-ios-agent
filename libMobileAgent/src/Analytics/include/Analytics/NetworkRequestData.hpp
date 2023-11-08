@@ -2,6 +2,8 @@
 
 #ifndef LIBMOBILEAGENT_NETWORKREQUESTDATA_HPP
 #define LIBMOBILEAGENT_NETWORKREQUESTDATA_HPP
+#include <string>
+#include <map>
 
 namespace NewRelic {
     class NetworkRequestData {
@@ -20,6 +22,10 @@ namespace NewRelic {
         const char* getConnectionType() const;
         const char* getContentType() const;
         unsigned int getBytesSent() const;
+        
+        std::map<std::string, std::string> getTrackedHeaders() const;
+
+        void setTrackedHeaders(std::map<std::string, std::string> trackedHeaders);
 
     private:
         const char *_requestUrl;
@@ -29,6 +35,8 @@ namespace NewRelic {
         const char *_connectionType;
         const char *_contentType;
         unsigned int _bytesSent;
+        // A dictionary to hold the tracked header's information
+        std::map<std::string, std::string> _trackedHeaders;
     };
 }
 
