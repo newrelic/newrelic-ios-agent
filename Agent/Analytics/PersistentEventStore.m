@@ -53,22 +53,20 @@
         // should schedule a write.
         if( (self.writeTimer != nil) 
            && (dispatch_source_testcancel(self.writeTimer) == 0)) {
-            NSLog(@"Not Scheduling block; last wrote at %d", _lastSave);
+            NRLOG_VERBOSE(@"Not Scheduling block; last wrote at %d", _lastSave);
             return;
         }
         
-        NSLog(@"Scheduling block");
+        NRLOG_VERBOSE(@"Scheduling block");
         self.writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _writeQueue);
         dispatch_source_set_timer(self.writeTimer, dispatch_time(DISPATCH_TIME_NOW, _minimumDelay * NSEC_PER_SEC), DISPATCH_TIME_FOREVER, 100);
         
-        NSLog(@"Entered block");
-//        __weak __typeof(self) weakSelf = self;
+        NRLOG_VERBOSE(@"Entered block");
         dispatch_source_set_event_handler(self.writeTimer, ^{
-//            __strong __typeof(weakSelf) strongSelf = weakSelf;
             
             @synchronized (self) {
                 if(!self->_dirty) {
-                    NSLog(@"Not writing file because it's not dirty");
+                    NRLOG_VERBOSE(@"Not writing file because it's not dirty");
                     return;
                 }
             }
@@ -77,7 +75,6 @@
             self->_dirty = NO;
             
             dispatch_source_cancel(self.writeTimer);
-//            self.writeTimer = nil;
         });
         
         dispatch_resume(self.writeTimer);   
@@ -88,16 +85,14 @@
     @synchronized (store) {
         [store removeObjectForKey:key];
         _dirty = YES;
-        NSLog(@"Marked dirty for removing");
+        NRLOG_VERBOSE(@"Marked dirty for removing");
     }
     
-//    __weak __typeof(self) weakSelf = self;
     dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
         NSLog(@"Entered Remove Block");
-//        __strong __typeof(weakSelf) strongSelf = weakSelf;
         @synchronized (self) {
             if(!self->_dirty) {
-                NSLog(@"Not writing removed item file because it's not dirty");
+                NRLOG_VERBOSE(@"Not writing removed item file because it's not dirty");
                 return;
             }
         }
@@ -106,7 +101,6 @@
         
         if(self.writeTimer) {
             dispatch_source_cancel(self.writeTimer);
-//            strongSelf.writeTimer = nil;
         }
     });
 }
@@ -119,16 +113,14 @@
     @synchronized (store) {
         [store removeAllObjects];
         _dirty = YES;
-        NSLog(@"Marked dirty for clearing");
+        NRLOG_VERBOSE(@"Marked dirty for clearing");
     }
     
-//    __weak __typeof(self) weakSelf = self;
     dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-//        __strong __typeof(weakSelf) strongSelf = weakSelf;
-        NSLog(@"Entered Clear Block");
+        NRLOG_VERBOSE(@"Entered Clear Block");
         @synchronized (self) {
             if(!self->_dirty) {
-                NSLog(@"Not writing cleared file because it's not dirty");
+                NRLOG_VERBOSE(@"Not writing cleared file because it's not dirty");
                 return;
             }
         }
@@ -137,7 +129,6 @@
 
         if(self.writeTimer) {
             dispatch_source_cancel(self.writeTimer);
-//            self.writeTimer = nil;
         }
     });
 }
@@ -167,7 +158,6 @@
 }
 
 - (void)saveToFile {
-//    NSData *saveData = [NSKeyedArchiver archivedDataWithRootObject:store];
     NSError *error = nil;
     NSData *saveData = nil;
     @synchronized (store) {
@@ -181,9 +171,9 @@
                                      options:NSDataWritingAtomic
                                        error:&error];
         if(!success) {
-            NSLog(@"Error saving data");
+            NRLOG_VERBOSE(@"Error saving data");
         } else {
-            NSLog(@"Wrote file");
+            NRLOG_VERBOSE(@"Wrote file");
             _lastSave = [NSDate new];
         }
     }
