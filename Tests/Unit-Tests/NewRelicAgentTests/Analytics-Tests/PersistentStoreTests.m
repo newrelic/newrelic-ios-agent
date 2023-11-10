@@ -115,7 +115,7 @@ static NSTimeInterval shortTimeInterval = 1;
     // Given
     XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
     PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                     andMinimumDelay:0];
+                                                     andMinimumDelay:1];
 
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
                                             sessionElapsedTimeInSeconds:50
@@ -259,6 +259,8 @@ static NSTimeInterval shortTimeInterval = 1;
             if(retrievedDictionary.count == 3) {
                 NSLog(@"Initial file found and full");
                 break;
+            } else {
+                NSLog(@"File not found or not full");
             }
             sleep(1);
         }
@@ -297,7 +299,7 @@ static NSTimeInterval shortTimeInterval = 1;
 - (void)testClearAllEvents {
     // Given
     PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                      andMinimumDelay:0];
+                                                      andMinimumDelay:1];
     
     NSError *error = nil;
     
