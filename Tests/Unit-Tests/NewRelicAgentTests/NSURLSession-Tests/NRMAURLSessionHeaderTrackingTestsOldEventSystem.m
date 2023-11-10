@@ -1,8 +1,8 @@
 //
-//  NRMAURLSessionHeaderTrackingTests.m
+//  NRMAURLSessionHeaderTrackingTestsOldEventSystem.m
 //  Agent
 //
-//  Created by Mike Bruin on 10/18/23.
+//  Created by Mike Bruin on 11/8/23.
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
@@ -20,7 +20,7 @@
 
 static NewRelicAgentInternal* _sharedInstance;
 
-@interface NRMAURLSessionHeaderTrackingTests : XCTestCase <NSURLSessionDelegate,NSURLSessionDataDelegate,NSURLSessionTaskDelegate>
+@interface NRMAURLSessionHeaderTrackingTestsOldEventSystem : XCTestCase <NSURLSessionDelegate,NSURLSessionDataDelegate,NSURLSessionTaskDelegate>
 @property(strong) id mockSession;
 @property(strong) NSOperationQueue* queue;
 
@@ -30,11 +30,12 @@ static NewRelicAgentInternal* _sharedInstance;
 
 @end
 
-@implementation NRMAURLSessionHeaderTrackingTests
+@implementation NRMAURLSessionHeaderTrackingTestsOldEventSystem
 
 - (void)setUp {
     [super setUp];
-    [NRMAFlags enableFeatures: NRFeatureFlag_NetworkRequestEvents | NRFeatureFlag_NewEventSystem];
+    [NRMAFlags enableFeatures: NRFeatureFlag_NetworkRequestEvents];
+    [NRMAFlags disableFeatures: NRFeatureFlag_NewEventSystem];
 
     [NRMAURLSessionOverride beginInstrumentation];
     self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
@@ -78,8 +79,8 @@ static NewRelicAgentInternal* _sharedInstance;
     return request;
 }
 
-- (void) testDataTaskWithRequestGraphQL {
-    
+- (void) testDataTaskWithRequestGraphQLOldEventSystem {
+
     NSMutableURLRequest * request = [self createRequestWithGraphQLHeaders];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
@@ -113,7 +114,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
 }
 
-- (void) testDataTaskWithRequestHeaderTracking {
+- (void) testDataTaskWithRequestHeaderTrackingOldEventSystem {
     
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
 
@@ -150,7 +151,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
 }
 
-- (void) testDataTaskErrorWithRequestHeaderTracking {
+- (void) testDataTaskErrorWithRequestHeaderTrackingOldEventSystem {
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
 
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"www.newrelic.com"]];
