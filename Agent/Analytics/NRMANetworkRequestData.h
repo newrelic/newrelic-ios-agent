@@ -13,6 +13,7 @@
 @property (nonatomic) NSString *connectionType;
 @property (nonatomic) NSString *contentType;
 @property (nonatomic) NSInteger bytesSent;
+@property (nonatomic) NSDictionary *trackedHeaders;
 
 -(id) initWithRequestUrl:(NSURL*)requestUrl
               httpMethod:(NSString*)requestMethod

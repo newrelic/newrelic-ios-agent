@@ -119,4 +119,21 @@ final class NRTestAppTests: XCTestCase, URLAuthenticationChallengeSender {
         XCTAssertNil(testChallenge.receivedCredential);
         XCTAssertEqual(testChallenge.receivedChallenge, .performDefaultHandling);
     }
+
+
+    func testAsyncInstrumentation() async {
+        let promise = expectation(description: "apodResponse async completion handler invoked")
+        viewModel.apodResponse.onUpdate = { _ in
+            Task {
+                if let url = self.viewModel.apodResponse.value?.url {
+                    await UIImageView().loadImage(withUrl: url)
+                    promise.fulfill()
+                }
+            }
+        }
+
+        await viewModel.loadApodDataAsync()
+
+        await fulfillment(of: [promise], timeout: 5)
+    }
 }

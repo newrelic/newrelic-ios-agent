@@ -29,6 +29,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #if Enable_SWIFT_INTERACTION_TRACING
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing)
 #endif
+
+
+NewRelic.addHTTPHeaderTracking(for: ["Test"])
+NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
+NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing])
+
+NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
+
          NewRelic.replaceDeviceIdentifier("myDeviceId")
 
         if ProcessInfo.processInfo.environment["UITesting"] != nil {
@@ -62,14 +70,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
 
-        // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
-//        if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {
-//            NRLogger.setLogIngestKey(logIngestKey)
-//        }
-//        else {
-//            NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
-//
-//        }
         NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }

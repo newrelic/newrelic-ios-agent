@@ -32,6 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 + (void) noticeNetworkFailure:(NSURLRequest*)request
                     withTimer:(NRTimer*)timer
                     withError:(NSError*)error;
+
++ (NSString*) contentType:(NSURLResponse*)response;
++ (NSInteger) statusCode:(NSURLResponse*)response;
 @end
 
 

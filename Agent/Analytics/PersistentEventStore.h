@@ -19,6 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)load:(NSError **)error;
 - (void)clearAll;
 
++ (NSDictionary *)getLastSessionEventsFromFilename:(NSString *)filename;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -333,6 +333,11 @@
     }
 }
 
++  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*> *_Nonnull)headers {
+    [NRMAHTTPUtilities addHTTPHeaderTrackingFor:headers];
+}
+
+
 #pragma mark - Interactions
 
 + (NSString*) startInteractionWithName:(NSString*)interactionName
