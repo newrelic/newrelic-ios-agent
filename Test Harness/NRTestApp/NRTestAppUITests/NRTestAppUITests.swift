@@ -100,12 +100,27 @@ final class NRTestAppUITests: XCTestCase {
 
             //let jsonMatch = dynamicStubs.dataToJSON(data: (self.harvestCollector.data(using: .utf8))!) as! Array<Any>
             let jsonActualArray = dynamicStubs.dataToJSON(data: actualRequestBody.data(using: .utf8)!) as! Array<Any>
-
+            var metricSeen = false
             if let urlArray = jsonActualArray[3] as? [NSObject] {
                 for array in urlArray {
                     if let array = array as? [AnyObject] {
                         if let url = array[0] as? String  {
                             if url == "https://api.nasa.gov/planetary/apod" {
+                                metricSeen = true
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Get events array
+            if let eventArray = jsonActualArray[9] as? [[String: Any]] {
+                for event in eventArray {
+                    if let eventType = event["eventType"] as? String {
+                        if eventType == "MobileRequest" {
+                            // If the metric was seen and we see an event with type == "MobileRequest" that means harvesting Network Requests is working.
+                            if metricSeen {
                                 expectation3.fulfill()
                                 break
                             }
