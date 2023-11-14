@@ -12,6 +12,7 @@
 #import "NRMAJSON.h"
 #import "NRMARequestEvent.h"
 #import "NRMANetworkErrorEvent.h"
+#import "NRMAAgentConfiguration.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 600; // 10 Minutes
@@ -37,7 +38,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     if (self) {
         events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
         maxBufferSize = kDefaultBufferSize;
-        maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
+        maxBufferTimeSeconds = [NRMAAgentConfiguration getMaxEventBufferTime];
         totalAttemptedInserts = 0;
         oldestEventTimestamp = 0;
         _persistentStore = store;

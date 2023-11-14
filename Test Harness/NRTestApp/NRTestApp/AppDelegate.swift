@@ -31,14 +31,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #endif
 
 
-NewRelic.addHTTPHeaderTracking(for: ["Test"])
-NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
-NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing])
+        NewRelic.addHTTPHeaderTracking(for: ["Test"])
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
+        NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing])
 
-NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
 
          NewRelic.replaceDeviceIdentifier("myDeviceId")
 
+        NewRelic.setMaxEventBufferTime(60)
+
+        
         if ProcessInfo.processInfo.environment["UITesting"] != nil {
             if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
                 clearConnectUserDefaults()

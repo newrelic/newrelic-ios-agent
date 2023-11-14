@@ -19,6 +19,10 @@ static NSString* __NRMA__customAppVersionString = nil;
 static NSString* __NRMA__customAppBuildString = nil;
 static NRMAApplicationPlatform __NRMA__applicationPlatform = NRMAPlatform_Native;
 static NSString* __NRMA__applicationPlatformVersion = nil;
+
+// Default max event buffer time is 10 minutes (600 seconds).
+static NSUInteger __NRMA__maxEventBufferTime = 600;
+
 @implementation NRMAAgentConfiguration
 
 + (void)setApplicationVersion:(NSString *)versionString
@@ -36,6 +40,13 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
 + (void) setPlatformVersion:(NSString*)platformVersion
 {
     __NRMA__applicationPlatformVersion = platformVersion;
+}
+
++ (void) setMaxEventBufferTime:(NSUInteger)seconds {
+    __NRMA__maxEventBufferTime = seconds;
+}
++ (NSUInteger) getMaxEventBufferTime {
+    return __NRMA__maxEventBufferTime;
 }
 
 - (id) initWithAppToken:(NRMAAppToken*)token
