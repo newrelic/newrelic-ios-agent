@@ -9,6 +9,7 @@
 #import <XCTest/XCTest.h>
 #import "NRMAAnalytics.h"
 #import "NRMAStressTestHelper.h"
+#import "NRMAFlags.h"
 
 @interface NRMAAnalyticsControllerStressor : XCTestCase
 {
@@ -26,6 +27,7 @@
 
 - (void)setUp {
     [super setUp];
+    [NRMAFlags enableFeatures: NRFeatureFlag_NewEventSystem];
     kSessionAttributeNames = @[@"1234", @"Hello", @"Pew",@"Test",@"Red",@"Yellow",@"Blue"];
     self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
