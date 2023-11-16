@@ -20,6 +20,7 @@
     NSString *_filename;
     NSTimeInterval _minimumDelay;
     NSDate *_lastSave;
+    BOOL _dirty;
     
     dispatch_queue_t _writeQueue;
     dispatch_source_t _writeTimer;
@@ -33,6 +34,7 @@
         _filename = filename;
         _minimumDelay = minimumDelay;
         _lastSave = [NSDate new];
+        _dirty = NO;
         
         _writeQueue = dispatch_queue_create("com.newrelic.persistentce", DISPATCH_QUEUE_SERIAL);
     }
@@ -40,40 +42,65 @@
 }
 
 - (void)setObject:(nonnull id)object forKey:(nonnull id)key {
-    store[key] = object;
-    
-    // Check if we're already in a write delay
-    if(self.writeTimer) {
-        return;
+    @synchronized (store) {
+        store[key] = object;
+        _dirty = YES;
+        NSLog(@"Marked dirty for adding");
     }
     
-    self.writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _writeQueue);
-    dispatch_source_set_timer(self.writeTimer, dispatch_walltime(NULL, 0), _minimumDelay * NSEC_PER_SEC, 100);
-    
-    __weak __typeof(self) weakSelf = self;
-    dispatch_source_set_event_handler(self.writeTimer, ^{
-        __strong __typeof(weakSelf) strongSelf = weakSelf;
+    @synchronized (self) {
+        // If the timer itself is not initialized, or if the timer is cancelled, then we
+        // should schedule a write.
+        if( (self.writeTimer != nil) 
+           && (dispatch_source_testcancel(self.writeTimer) == 0)) {
+            NRLOG_VERBOSE(@"Not Scheduling block; last wrote at %d", _lastSave);
+            return;
+        }
         
-        [strongSelf saveToFile];
+        NRLOG_VERBOSE(@"Scheduling block");
+        self.writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _writeQueue);
+        dispatch_source_set_timer(self.writeTimer, dispatch_time(DISPATCH_TIME_NOW, _minimumDelay * NSEC_PER_SEC), DISPATCH_TIME_FOREVER, 100);
         
-        dispatch_source_cancel(strongSelf.writeTimer);
-        strongSelf.writeTimer = nil;
-    });
-    
-    dispatch_resume(self.writeTimer);
+        NRLOG_VERBOSE(@"Entered block");
+        dispatch_source_set_event_handler(self.writeTimer, ^{
+            
+            @synchronized (self) {
+                if(!self->_dirty) {
+                    NRLOG_VERBOSE(@"Not writing file because it's not dirty");
+                    return;
+                }
+            }
+            
+            [self saveToFile];
+            self->_dirty = NO;
+            
+            dispatch_source_cancel(self.writeTimer);
+        });
+        
+        dispatch_resume(self.writeTimer);   
+    }
 }
 
 - (void)removeObjectForKey:(id)key {
-    [store removeObjectForKey:key];
+    @synchronized (store) {
+        [store removeObjectForKey:key];
+        _dirty = YES;
+        NRLOG_VERBOSE(@"Marked dirty for removing");
+    }
     
-    __weak __typeof(self) weakSelf = self;
     dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-        __strong __typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf saveToFile];
+        NSLog(@"Entered Remove Block");
+        @synchronized (self) {
+            if(!self->_dirty) {
+                NRLOG_VERBOSE(@"Not writing removed item file because it's not dirty");
+                return;
+            }
+        }
+        [self saveToFile];
+        self->_dirty = NO;
         
-        if(strongSelf.writeTimer) {
-            dispatch_source_cancel(strongSelf.writeTimer);
-            strongSelf.writeTimer = nil;
+        if(self.writeTimer) {
+            dispatch_source_cancel(self.writeTimer);
         }
     });
 }
@@ -83,16 +110,25 @@
 }
 
 - (void)clearAll {
-    [store removeAllObjects];
+    @synchronized (store) {
+        [store removeAllObjects];
+        _dirty = YES;
+        NRLOG_VERBOSE(@"Marked dirty for clearing");
+    }
     
-    __weak __typeof(self) weakSelf = self;
     dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-        __strong __typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf saveToFile];
+        NRLOG_VERBOSE(@"Entered Clear Block");
+        @synchronized (self) {
+            if(!self->_dirty) {
+                NRLOG_VERBOSE(@"Not writing cleared file because it's not dirty");
+                return;
+            }
+        }
+        [self saveToFile];
+        self->_dirty = NO;
 
-        if(strongSelf.writeTimer) {
-            dispatch_source_cancel(strongSelf.writeTimer);
-            strongSelf.writeTimer = nil;
+        if(self.writeTimer) {
+            dispatch_source_cancel(self.writeTimer);
         }
     });
 }
@@ -115,20 +151,29 @@
         }
     }
     
-    [store addEntriesFromDictionary:storedDictionary];
+    @synchronized (store) {
+        [store addEntriesFromDictionary:storedDictionary];
+    }
     return YES;
 }
 
 - (void)saveToFile {
-    NSData *saveData = [NSKeyedArchiver archivedDataWithRootObject:store];
+    NSError *error = nil;
+    NSData *saveData = nil;
+    @synchronized (store) {
+        saveData = [NSKeyedArchiver archivedDataWithRootObject:store
+                                                 requiringSecureCoding:NO
+                                                                 error:&error];
+    }
+
     if (saveData) {
-        NSError *error = nil;
         BOOL success = [saveData writeToFile:_filename
                                      options:NSDataWritingAtomic
                                        error:&error];
         if(!success) {
-            NSLog(@"Error saving data");
+            NRLOG_VERBOSE(@"Error saving data");
         } else {
+            NRLOG_VERBOSE(@"Wrote file");
             _lastSave = [NSDate new];
         }
     }
