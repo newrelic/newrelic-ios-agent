@@ -1,0 +1,94 @@
+[
+    [601332269, 601332279],
+    ["iOS", "17.0", "arm64", "iOSAgent", "DEV", "myDeviceId", "", "", "Apple Inc.", {
+        "platform": "Native",
+        "platformVersion": "DEV"
+    }], 0, [],
+    [
+        [{
+            "name": "Method\/UIViewController\/viewWillLayoutSubviews",
+            "scope": "Mobile\/Activity\/Name\/Display _TtGC7SwiftUI19UIHostingControllerGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__"
+        }, {
+            "sum_of_squares": 0,
+            "min": 1.8066406249999999e-05,
+            "exclusive": 1.8066406249999999e-05,
+            "count": 1,
+            "max": 1.8066406249999999e-05,
+            "total": 1.8066406249999999e-05
+        }],
+        [{
+            "name": "Supportability\/Mobile\/iOS\/UUID\/Overridden",
+            "scope": ""
+        }, {
+            "sum_of_squares": 0,
+            "min": 1,
+            "count": 1,
+            "max": 1,
+            "total": 1
+        }],
+        [{
+            "name": "CPU\/System\/Utilization",
+            "scope": ""
+        }, {
+            "sum_of_squares": 0,
+            "min": 1.0793864074641348,
+            "count": 1,
+            "max": 1.0793864074641348,
+            "total": 1.0793864074641348
+        }],
+        [{
+            "name": "Session\/Start",
+            "scope": ""
+        }, {
+            "sum_of_squares": 0,
+            "min": 1,
+            "count": 1,
+            "max": 1,
+            "total": 1
+        }],
+        [{
+            "name": "CPU\/User\/Utilization",
+            "scope": ""
+        }, {
+            "sum_of_squares": 0,
+            "min": 2.9472856125887081,
+            "count": 1,
+            "max": 2.9472856125887081,
+            "total": 2.9472856125887081
+        }],
+        [{
+            "name": "Memory\/Used",
+            "scope": ""
+        }, {
+            "sum_of_squares": 0,
+            "min": 76.6015625,
+            "count": 1,
+            "max": 76.6015625,
+            "total": 76.6015625
+        }],
+        [{
+            "name": "Method\/UIViewController\/viewWillLayoutSubviews",
+            "scope": ""
+        }, {
+            "sum_of_squares": 0,
+            "min": 1.8066406249999999e-05,
+            "exclusive": 1.8066406249999999e-05,
+            "count": 1,
+            "max": 1.8066406249999999e-05,
+            "total": 1.8066406249999999e-05
+        }],
+        [{
+            "name": "CPU\/Total\/Utilization",
+            "scope": ""
+        }, {
+            "sum_of_squares": 0,
+            "min": 4.0266720200528425,
+            "count": 1,
+            "max": 4.0266720200528425,
+            "total": 4.0266720200528425
+        }]
+    ],
+    [],
+    [],
+    [], {}, []
+]

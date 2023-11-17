@@ -32,6 +32,7 @@
 @property(atomic,strong) NSString* sessionIdentifier;
 @property(nonatomic,readonly) BOOL      useSSL;
 @property(atomic,assign) NRMAApplicationPlatform platform;
+
 - (id) initWithAppToken:(NRMAAppToken*)token collectorAddress:(NSString*)collectorAddress crashAddress:(NSString*)crashAddress;
 
 + (NRMAConnectInformation*) connectionInformation;
@@ -39,4 +40,8 @@
 + (void)setApplicationBuild:(NSString *)buildString;
 + (void) setPlatform:(NRMAApplicationPlatform)platform;
 + (void) setPlatformVersion:(NSString*)platformVersion;
+
++ (void) setMaxEventBufferTime:(NSUInteger)seconds;
++ (NSUInteger) getMaxEventBufferTime;
+
 @end

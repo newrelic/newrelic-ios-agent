@@ -98,5 +98,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 18, // Disabled by default
 
     // NOTE: Temporarily removed NRFeatureFlag_LogReporting
-//    NRFeatureFlag_LogReporting                          = 1 << 19, // Disabled by default
+    NRFeatureFlag_NewEventSystem                        = 1 << 20, // Disabled by default
 };

@@ -40,6 +40,14 @@
 
         NSString* safeUrl = [NewRelicInternalUtils normalizedStringFromString:safeUrlBuilder];
         
+        self.requestUrl = safeUrl;
+        self.requestDomain = requestDomain;
+        self.requestPath = requestPath;
+        self.requestMethod = requestMethod;
+        self.connectionType = connectionType;
+        self.contentType = contentType;
+        self.bytesSent = bytesSent;
+        
         wrappedNetworkRequestData = new NewRelic::NetworkRequestData(safeUrl.UTF8String,
                                                                      requestDomain.UTF8String,
                                                                      requestPath.UTF8String,

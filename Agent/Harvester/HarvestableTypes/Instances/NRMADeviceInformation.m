@@ -10,7 +10,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NewRelicInternalUtils.h"
 
-#include <Analytics/Constants.hpp>
+#import "Constants.h"
 
 @implementation NRMADeviceInformation
 @synthesize misc = _misc;
@@ -44,8 +44,8 @@
 
 - (NSMutableDictionary*) misc {
     NSMutableDictionary* temp = [NSMutableDictionary dictionaryWithDictionary:_misc];
-    temp[@(__kNRMA_RA_platform)] = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:self.platform];
-    temp[@(__kNRMA_RA_platformVersion)] =  self.platformVersion?:self.agentVersion;
+    temp[kNRMA_RA_platform] = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:self.platform];
+    temp[kNRMA_RA_platformVersion] =  self.platformVersion?:self.agentVersion;
     return temp;
 }
 
