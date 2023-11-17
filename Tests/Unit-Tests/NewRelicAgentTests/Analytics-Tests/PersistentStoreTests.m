@@ -16,6 +16,7 @@
 #import "NRMAInteractionEvent.h"
 
 #import "BlockAttributeValidator.h"
+#import "NRMAFlags.h"
 
 @interface TestEvent : NRMAMobileEvent <NSCoding>
 - (instancetype) initWithTimestamp:(NSTimeInterval)timestamp
@@ -70,6 +71,8 @@ static NSTimeInterval shortTimeInterval = 1;
 
 
 - (void)setUp {
+    [super setUp];
+
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *) {
             return YES;
@@ -84,6 +87,9 @@ static NSTimeInterval shortTimeInterval = 1;
     if([fileManager fileExistsAtPath:testFilename]) {
         [fileManager removeItemAtPath:testFilename error:nil];
     }
+    
+    [NRMAFlags enableFeatures: NRFeatureFlag_NewEventSystem];
+
 }
 
 - (void)tearDown {
@@ -92,6 +98,11 @@ static NSTimeInterval shortTimeInterval = 1;
     if([fileManager fileExistsAtPath:testFilename]) {
         [fileManager removeItemAtPath:testFilename error:nil];
     }
+
+    [NRMAFlags disableFeatures: NRFeatureFlag_NewEventSystem];
+
+    [super tearDown];
+
 }
 
 - (void)testStoresObject {
