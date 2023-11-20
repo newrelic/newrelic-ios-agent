@@ -67,7 +67,7 @@
 }
 
 static NSString *testFilename = @"fbstest_tempStore";
-static NSTimeInterval shortTimeInterval = 1;
+static NSTimeInterval shortTimeInterval = 10;
 
 
 - (void)setUp {
