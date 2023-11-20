@@ -48,6 +48,27 @@
     payload->setTimestamp(timestamp);
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
+    
+    [traceContext setTrustedAccount:NRTraceContext];
+    
+    NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
+    NSString *desiredHeader = @"00-edd7db371b2faa5b-17172750e6ff8549-00";
+    
+    // assert
+    XCTAssert([traceParent isEqualToString: desiredHeader]);
+}
+
+- (void)testHeaderStringNRMAPayload {
+    NSString* accountStr = @"10816994";
+    NSString* appIdStd = @"25789457";
+    NSString* spanId = @"17172750e6ff8549";
+    NSString* traceId = @"edd7db371b2faa5b";
+    long long timestamp = 1609970157093;
+    NRMAPayload* payload = [[NRMAPayload alloc] initWithTimestamp:timestamp accountID:accountStr appID:appIdStd traceID:traceId parentID:spanId trustedAccountKey:@"1"];
+    payload.id = spanId;
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
+    
     [traceContext setTrustedAccount:NRTraceContext];
     
     NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
