@@ -287,8 +287,8 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
                                                                    duration:[NSNumber numberWithDouble:(activityTrace.endTime - activityTrace.startTime)]];
             [NRMATaskQueue queue:activityTrace];
 
-            [[NSNotificationCenter defaultCenter] postNotificationName:kNRInteractionDidCompleteNotification
-                                                                object:activityTrace];
+            [[NewRelicAgentInternal sharedInstance].analyticsController  addInteractionEvent:activityTrace.name
+                                      interactionDuration:activityTrace.endTime - activityTrace.startTime];
 
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         } @catch (NSException* exception) {

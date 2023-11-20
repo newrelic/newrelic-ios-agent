@@ -49,6 +49,15 @@ namespace NewRelic {
                 void setAttribute(const char* key,
                                   bool value);
 
+                void setAttributeNoValidation(const char* key,
+                                              long long value);
+                void setAttributeNoValidation(const char* key,
+                                              double value);
+                void setAttributeNoValidation(const char* key,
+                                              const char* value);
+                void setAttributeNoValidation(const char* key,
+                                              bool value);
+                
                 const std::shared_ptr<BooleanAttributes>& getBooleanAttributes() const;
 
                 const std::shared_ptr<StringAttributes>& getStringAttributes() const;

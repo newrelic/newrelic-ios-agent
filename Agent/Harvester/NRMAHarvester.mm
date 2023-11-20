@@ -501,6 +501,7 @@
     }
     return config;
 }
+
 - (void) changeState:(NRMAHarvesterState)state
 {
     NRLOG_VERBOSE(@"Harvester changing state: %d -> %d",self.currentState, state);

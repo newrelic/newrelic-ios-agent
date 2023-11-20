@@ -164,6 +164,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
 + (BOOL) shouldEnableLogReporting {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
 }
++ (BOOL) shouldEnableNewEventSystem {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_NewEventSystem) != 0;
+}
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -214,9 +217,11 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_SwiftAsyncURLSessionSupport) == NRFeatureFlag_SwiftAsyncURLSessionSupport) {
         [retArray addObject:@"SwiftAsyncURLSessionSupport"];
     }
-
     if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
         [retArray addObject:@"LogReporting"];
+    }
+    if ((flags & NRFeatureFlag_NewEventSystem) == NRFeatureFlag_NewEventSystem) {
+        [retArray addObject:@"NewEventSystem"];
     }
     return retArray;
 }

@@ -13,7 +13,11 @@
 + (NSString *) trustedAccountKeyFor:(NRMATraceContext*) traceContext {
     switch (traceContext.trustedAccount) {
         case NRTraceContext:
-            return [NSString stringWithFormat:@"%@@nr", traceContext.trustedAccountKeyString];
+            if(traceContext.trustedAccountKeyString){
+                return [NSString stringWithFormat:@"%@@nr", traceContext.trustedAccountKeyString];
+            } else {
+                return @"@nr";
+            }
         default:
             return @"";
     }
