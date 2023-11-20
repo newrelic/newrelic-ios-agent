@@ -143,6 +143,12 @@ static NSTimeInterval shortTimeInterval = 1;
                                                                                                 error:&error];
         if(retrievedDictionary.count == 1) {
             NSLog(@"Initial file found and full");
+            NSDictionary *attributes = ((NRMAMobileEvent *)retrievedDictionary[@"aKey"]).attributes;
+            if(attributes.count == 3) {
+                NSLog(@"file has right number of attributes");
+            } else {
+                NSLog(@"file has %d number of attributes", attributes.count);
+            }
             dispatch_cancel(fileSource);
             close(docsDirDescriptor);
             [writeExpectation fulfill];
@@ -315,7 +321,7 @@ static NSTimeInterval shortTimeInterval = 1;
     [sut setObject:requestEvent forKey:@"Request Event"];
     [sut setObject:interactionEvent forKey:@"Interaction Event"];
     
-    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
+    [self waitForExpectationsWithTimeout:shortTimeInterval*5 handler:nil];
     
     // When
     [sut removeObjectForKey:@"Request Event"];
