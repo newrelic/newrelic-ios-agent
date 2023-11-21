@@ -3,3 +3,4 @@
 //
 
 #import "triggerException.h"
+#import "NewRelic+Replace.h"

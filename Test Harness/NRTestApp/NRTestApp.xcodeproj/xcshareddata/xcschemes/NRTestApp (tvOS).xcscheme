@@ -50,6 +50,17 @@
                ReferencedContainer = "container:NRTestApp.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F848CDE02AA270E80082052F"
+               BuildableName = "NRTestApp(tvOS)Tests.xctest"
+               BlueprintName = "NRTestApp(tvOS)Tests"
+               ReferencedContainer = "container:NRTestApp.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

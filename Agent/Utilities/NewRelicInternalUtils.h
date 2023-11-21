@@ -8,6 +8,7 @@
 
 #import "NRMAReachability.h"
 #import "NRConstants.h"
+#import "NRMANetworkMonitor.h"
 
 #if __LP64__
 #define NRMA_NSI "ld"
@@ -48,6 +49,9 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 // Returns the carrier name, or 'wifi' if the device is on a wifi network.
 + (NSString*) carrierName;
 
+// Returns the connection type, wifi, ethernet, or cellular.
++ (NSString*) connectionType;
+
 // Returns the NRMANetworkStatus
 + (NRMANetworkStatus) networkStatus;
 
@@ -86,6 +90,8 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 + (BOOL)isDebuggerAttached;
 
 + (BOOL)isSimulator;
+
++ (NRMANetworkMonitor*) networkMonitor;
 
 @end
 
