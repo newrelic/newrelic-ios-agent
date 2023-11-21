@@ -11,6 +11,7 @@
 #import "NRLogger.h"
 #import "NRMAJSON.h"
 #import "NRMAConnection.h"
+#import "NRMAOfflineStorage.h"
 
 #define kCOLLECTOR_CONNECT_URI         @"/mobile/v4/connect"
 #define kCOLLECTOR_DATA_URL            @"/mobile/v3/data"
@@ -23,6 +24,7 @@
 @property(assign) long long             serverTimestamp;
 @property(strong) NRMAConnectInformation* connectionInformation;
 @property(strong) NSURLSession* harvestSession;
+@property(strong) NRMAOfflineStorage* offlineStorage;
 
 - (id) init;
 - (NSURLRequest*) createPostWithURI:(NSString*)uri message:(NSString*)message;
@@ -31,4 +33,5 @@
 - (NRMAHarvestResponse*) sendData:(NRMAHarvestable*)harvestable;
 - (NSURLRequest*) createConnectPost:(NSString*)message;
 - (NSURLRequest*) createDataPost:(NSString*)message;
+- (void) sendOfflineStorage;
 @end

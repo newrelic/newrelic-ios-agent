@@ -22,9 +22,30 @@
     self = [super init];
     if (self) {
         self.harvestSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+        self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"data"];
     }
     return self;
 }
+
+-(void) sendOfflineStorage {
+    NSArray<NSData *> * offlineData = [self.offlineStorage getAllOfflineData];
+    NSLog(@"%@", offlineData);
+    
+    [offlineData enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        NSData *jsonData = (NSData *)obj;
+        
+        NSURLRequest* post = [self createDataPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
+        if (post == nil) {
+            NRLOG_ERROR(@"Failed to create data POST");
+            return;
+        }
+        
+        NRLOG_VERBOSE(@"NEWRELIC - OFFLINE DATA: %@", jsonData);
+        
+        [self send:post];
+    }];
+}
+
 - (NSURLRequest*) createPostWithURI:(NSString*)url message:(NSString*)message
 {
     NSMutableURLRequest * postRequest = [super newPostWithURI:url];
@@ -169,6 +190,19 @@
         NRLOG_ERROR(@"Failed to generate JSON");
         return nil;
     }
+    
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    @synchronized(r) {
+        NRMANetworkStatus status = [r currentReachabilityStatus];
+        
+        if(status == NotReachable){
+            [self.offlineStorage persistDataToDisk:jsonData];
+            return nil;
+        } else {
+            [self sendOfflineStorage];
+        }
+    }
+        
     NSURLRequest* post = [self createDataPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
     if (post == nil) {
         NRLOG_ERROR(@"Failed to create data POST");
