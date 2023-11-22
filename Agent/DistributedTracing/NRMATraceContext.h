@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Connectivity/Payload.hpp>
+#import "NRMAPayload.h"
 
 typedef enum trustedAccountKeys: NSUInteger {
     NRTraceContext,
@@ -28,7 +29,10 @@ typedef enum trustedAccountKeys: NSUInteger {
 // For optional/not supported fields
 @property (strong) NSString*   TRACE_FIELD_UNUSED;
 
+- (id) initWithNRMAPayload: (NRMAPayload*)payload;
+
 - (id) initWithPayload: (const std::unique_ptr<NewRelic::Connectivity::Payload>&)payload;
+
 - (void) setTrustedAccountKey: (AccountType) trustedAccount;
 
 @end

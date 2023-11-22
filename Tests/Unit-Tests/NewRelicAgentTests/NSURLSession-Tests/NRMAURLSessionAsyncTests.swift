@@ -40,10 +40,12 @@ class NRMAURLSessionAsyncTests: XCTestCase {
         try super.tearDownWithError()
     }
 
+    // built-in
+
     func testAsyncURLSessionDataForRequest() async throws {
         let request = URLRequest(url: URL(string: "http://www.google.com")!)
         let (_, _) = try await URLSession.shared.data(for: request)
-
+        
         sleep(1)
 
         let result = helper?.result as? NRMAHTTPTransactionMeasurement
@@ -64,6 +66,58 @@ class NRMAURLSessionAsyncTests: XCTestCase {
     func testAsyncURLSessionUploadForRequest() async throws {
         let request = URLRequest(url: URL(string: "http://www.google.com")!)
         let (_, _) = try await URLSession.shared.upload(for: request, from: Data())
+
+        sleep(1)
+
+        let result = helper?.result as? NRMAHTTPTransactionMeasurement
+
+        XCTAssertEqual(result?.url, "http://www.google.com")
+    }
+
+    // ephemeral
+
+    func testAsyncURLSessionDataForRequestCustomURLSession() async throws {
+        let request = URLRequest(url: URL(string: "http://www.google.com")!)
+
+        let urlSession =  URLSession(configuration: .ephemeral)
+        let (_, _) = try await urlSession.data(for: request)
+
+        sleep(1)
+
+        let result = helper?.result as? NRMAHTTPTransactionMeasurement
+
+        XCTAssertEqual(result?.url, "http://www.google.com")
+    }
+
+    func testAsyncURLSessionDataForURLCustomURLSession() async throws {
+
+        let urlSession =  URLSession(configuration: .ephemeral)
+        let (_, _) = try await urlSession.data(from: URL(string: "http://www.google.com")!)
+
+        sleep(1)
+
+        let result = helper?.result as? NRMAHTTPTransactionMeasurement
+
+        XCTAssertEqual(result?.url, "http://www.google.com")
+    }
+    // default
+    func testAsyncURLSessionDataForRequestCustomURLSessionDefault() async throws {
+        let request = URLRequest(url: URL(string: "http://www.google.com")!)
+
+        let urlSession =  URLSession(configuration: .default)
+        let (_, _) = try await urlSession.data(for: request)
+
+        sleep(1)
+
+        let result = helper?.result as? NRMAHTTPTransactionMeasurement
+
+        XCTAssertEqual(result?.url, "http://www.google.com")
+    }
+
+    func testAsyncURLSessionDataForURLCustomURLSessionDefault() async throws {
+
+        let urlSession =  URLSession(configuration: .default)
+        let (_, _) = try await urlSession.data(from: URL(string: "http://www.google.com")!)
 
         sleep(1)
 

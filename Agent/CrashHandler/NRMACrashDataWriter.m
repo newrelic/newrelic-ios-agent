@@ -14,7 +14,7 @@
 #import "NRLogger.h"
 #import "NRConstants.h"
 #import "NRMAExceptionhandlerConstants.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NRMATimestampContainer.h"
 
 #define kNRMASYSOS_iOS              @"iOS Device"
@@ -166,8 +166,8 @@
     double rawSessionStartTime = ((NSString*)metaDictionary[[NSString stringWithUTF8String:kNRMAMetaKey_SessionStartTime]]).doubleValue;
     NRMATimestampContainer* sessionStartTime = [[NRMATimestampContainer alloc] initWithTimestamp:rawSessionStartTime];
 
-    if (mutableAttributes[[NSString stringWithUTF8String:__kNRMA_RA_sessionDuration]] == nil && [sessionStartTime toSeconds] >= 0) {
-        mutableAttributes[[NSString stringWithUTF8String:__kNRMA_RA_sessionDuration]] = @([crashTime toSeconds] - [sessionStartTime toSeconds]);
+    if (mutableAttributes[kNRMA_RA_sessionDuration] == nil && [sessionStartTime toSeconds] >= 0) {
+        mutableAttributes[kNRMA_RA_sessionDuration] = @([crashTime toSeconds] - [sessionStartTime toSeconds]);
     }
     NRMACrashReport* nrmaReport = [[NRMACrashReport alloc] initWithUUID:(NSString*)CFBridgingRelease(CFUUIDCreateString(NULL, report.uuidRef))
                                                         buildIdentifier:buildIdentifier

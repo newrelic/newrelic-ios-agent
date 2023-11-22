@@ -25,8 +25,33 @@
 #import "NRMATraceContext.h"
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
+#import "NRMANetworkRequestData+CppInterface.h"
+#include <Utilities/Application.hpp>
+#import "NRMAHarvestController.h"
+
+static NSArray* _trackedHeaderFields;
+
+static NSString* _operationName = @"X-APOLLO-OPERATION-NAME";
+static NSString* _operationType = @"X-APOLLO-OPERATION-TYPE";
+static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
 
 @implementation NRMAHTTPUtilities
+NSString* currentTraceId;
+NSString* currentParentId;
+
++ (NSArray*) trackedHeaderFields
+{
+    static dispatch_once_t defaultFeatureToken;
+    dispatch_once(&defaultFeatureToken,
+                  ^{
+        _trackedHeaderFields = (NSArray*)@[_operationName,
+                                           _operationType,
+                                           _operationId];
+                  });
+
+    return _trackedHeaderFields;
+}
+
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
 
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
@@ -55,10 +80,60 @@
 
 + (NSMutableURLRequest*) addConnectivityHeaderAndPayload:(NSURLRequest*)request {
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities makeMutable:request];
-    [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
-                                  to:mutableRequest];
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [NRMAHTTPUtilities attachNRMAPayload:[NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]
+                                          to:mutableRequest];
+    } else {
+        [NRMAHTTPUtilities attachPayload:[NRMAHTTPUtilities addConnectivityHeader:mutableRequest]
+                                      to:mutableRequest];
+    }
     return mutableRequest;
+}
 
++ (NRMAPayload*) addConnectivityHeaderNRMAPayload:(NSMutableURLRequest*)request {
+    if(![NRMAFlags shouldEnableDistributedTracing]) { return nil; }
+    
+    NRMAPayload *payload = [NRMAHTTPUtilities generateNRMAPayload];
+    if(payload == nil) { return nil; }
+    
+    NSDictionary<NSString*, NSString*> *connectivityHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:payload];
+    
+    if(connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY]
+       forHTTPHeaderField:NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY];
+    }
+    
+    BOOL dtError = false;
+    if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY]
+       forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+    } else {
+        dtError = true;
+    }
+    
+    if(connectivityHeaders[W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY].length) {
+        [request setValue:connectivityHeaders[W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY]
+       forHTTPHeaderField:W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY];
+    } else {
+        dtError = true;
+    }
+        
+    if (dtError) {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Exception"
+                           value:@1
+                       scope:@""]];
+    } else {
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Success"
+                           value:@1
+                       scope:@""]];
+    }
+    
+    return payload;
+}
+
++ (NRMAPayload *) generateNRMAPayload {
+
+    return [NRMAHTTPUtilities startTrip];
 }
 
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request {
@@ -112,6 +187,64 @@
     return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
 }
 
++ (NRMAPayload *) startTrip {
+    if(!NewRelic::Application::getInstance().isValid()) {
+        return nil;
+    }
+    
+    @synchronized (currentTraceId) {
+        NSString * accountID = @(NewRelic::Application::getInstance().getContext().getAccountId().c_str());
+        NSString * appId = @(NewRelic::Application::getInstance().getContext().getApplicationId().c_str());
+        NSString * trustedAccountKey =  @(NewRelic::Application::getInstance().getContext().getTrustedAccountKey().c_str());
+        NSTimeInterval currentTimeStamp = [[NSDate date] timeIntervalSince1970];
+
+        currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
+        currentParentId = @"";
+        
+        NRMAPayload * payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
+        payload.dtEnabled = [NRMAFlags shouldEnableDistributedTracing];
+        currentParentId = [payload id];
+
+        return payload;
+    }
+}
+
++ (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload {
+    NSDictionary *json;
+    
+    if(payload != nil) {
+        json = [payload JSONObject];
+    }
+    
+    NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload:payload];
+    NSString *traceParent = [W3CTraceParent headerFromContext:traceContext];
+    NSString *traceState = [W3CTraceState headerFromContext:traceContext];
+    NSString *encodedPayloadHeader = [NRMABase64 encodeFromData:[NSJSONSerialization  dataWithJSONObject:json options:0 error:nil]];
+    
+    return @{NEW_RELIC_DISTRIBUTED_TRACING_HEADER_KEY:encodedPayloadHeader,
+             W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY:traceParent,
+             W3C_DISTRIBUTED_TRACING_STATE_HEADER_KEY:traceState};
+}
+
++ (void) attachNRMAPayload:(NRMAPayload*)payload to:(id)object {
+    [NRMAAssociate attach:payload to:object with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+}
+
++ (NRMAPayload*) retrieveNRMAPayload:(id)object {
+    id associatedObject = [NRMAAssociate retrieveFrom:object
+                                    with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+
+    [NRMAAssociate removeFrom:object
+                         with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
+
+    if ([associatedObject isKindOfClass:[NRMAPayload class]]) {
+
+        return associatedObject;
+    }
+
+    return nil;
+}
+
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {
     NSString *payloadHeader;
     const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
@@ -152,6 +285,58 @@
     }
 
     return std::unique_ptr<NewRelic::Connectivity::Payload>(nullptr);
+}
+
++  (void)addHTTPHeaderTrackingFor:(NSArray *)headers {
+    NSArray *array = [self trackedHeaderFields];
+    NSArray *newArray = array?[array arrayByAddingObjectsFromArray:headers]:[[NSArray alloc] initWithArray:headers];
+
+    _trackedHeaderFields = (NSArray *)[[NSSet setWithArray:newArray] allObjects];
+
+}
+
++ (NSString*) normalizeApolloHeaders:(NSString*) headerField {
+    if ([headerField compare:_operationName] == NSOrderedSame) {
+        headerField = @"operationName";
+    } else if ([headerField compare:_operationType] == NSOrderedSame) {
+        headerField = @"operationType";
+    } else if ([headerField compare:_operationId] == NSOrderedSame) {
+        headerField = @"operationId";
+    }
+    return headerField;
+}
+
++ (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData {
+    if (requestData == nil || headers == nil || headers.count == 0) {
+        return;
+    }
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+        for(NSString* key in [self trackedHeaderFields]) {
+            NSString* value = headers[key];
+            
+            if(value != nil) {
+                NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
+                [dict setValue:value forKey:normalizedKey];
+            }
+        }
+        requestData.trackedHeaders = dict;
+    } else {
+        std::map<std::string, std::string> cDict;
+        for(NSString* key in [self trackedHeaderFields]) {
+            NSString* value = headers[key];
+            
+            if(value != nil) {
+                NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
+                std::string cValue = std::string(value.UTF8String);
+                std::string cKey = std::string(normalizedKey.UTF8String);
+                cDict[cKey] = cValue;
+            }
+        }
+        
+        NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
+        wrappedRequestData->setTrackedHeaders(cDict);
+    }
 }
 
 @end
