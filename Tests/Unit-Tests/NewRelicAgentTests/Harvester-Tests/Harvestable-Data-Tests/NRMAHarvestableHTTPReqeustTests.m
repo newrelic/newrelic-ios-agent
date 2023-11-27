@@ -77,7 +77,11 @@
     XCTAssertTrue(measurement.statusCode == 200,@"statusCode %d doesn't match sent status code",measurement.statusCode);
     XCTAssertTrue(measurement.bytesSent == 1024,@"bytesSent %lld doesn't max sent bytesSent",measurement.bytesSent);
     XCTAssertTrue(measurement.bytesReceived == 1023,@"bytesReceived %lld doesn't match bytesReceived",measurement.bytesReceived);
+#if TARGET_OS_TV
+    XCTAssertTrue([measurement.wanType isEqualToString:@"ethernet"] || [measurement.wanType isEqualToString:@"wifi"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#else
     XCTAssertTrue([measurement.wanType isEqualToString:@"CDMA"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#endif
 }
 
 - (void) testWanTypeInHarvestController5G
@@ -123,7 +127,11 @@
     XCTAssertTrue(measurement.statusCode == 200,@"statusCode %d doesn't match sent status code",measurement.statusCode);
     XCTAssertTrue(measurement.bytesSent == 1024,@"bytesSent %lld doesn't max sent bytesSent",measurement.bytesSent);
     XCTAssertTrue(measurement.bytesReceived == 1023,@"bytesReceived %lld doesn't match bytesReceived",measurement.bytesReceived);
+#if TARGET_OS_TV
+    XCTAssertTrue([measurement.wanType isEqualToString:@"ethernet"] || [measurement.wanType isEqualToString:@"wifi"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#else
     XCTAssertTrue([measurement.wanType isEqualToString:@"5G"],@"measurement.wanType %@ doesn't match expected connection type",measurement.wanType);
+#endif
 }
 
 // TODO: Rewrite this test without HTTPError

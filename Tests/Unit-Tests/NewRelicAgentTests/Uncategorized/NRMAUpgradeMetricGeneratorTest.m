@@ -14,7 +14,7 @@
 #import <OCMock/OCMock.h>
 #import "NRMABool.h"
 #import "NRMAAnalytics.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NRMASupportMetricHelper.h"
 
 @interface NRMAUpgradeMetricGeneratorTest : XCTestCase
@@ -92,7 +92,7 @@
         [invocation getArgument:&value atIndex:3];
 
         XCTAssertTrue([lastVersion isEqualToString:value], @"verison value doesn't match");
-        XCTAssertTrue([@(__kNRMA_RA_upgradeFrom) isEqualToString:attribute],@"incorrect attribute string.");
+        XCTAssertTrue([kNRMA_RA_upgradeFrom isEqualToString:attribute],@"incorrect attribute string.");
 
 
         sessionAttributeAdded = YES;
@@ -130,7 +130,7 @@
         [invocation getArgument:&value atIndex:3];
 
         XCTAssertTrue([lastVersion isEqualToString:value], @"verison value doesn't match");
-        XCTAssertTrue([@(__kNRMA_RA_upgradeFrom) isEqualToString:attribute],@"incorrect attribute string.");
+        XCTAssertTrue([kNRMA_RA_upgradeFrom isEqualToString:attribute],@"incorrect attribute string.");
 
 
         sessionAttributeAdded = YES;
