@@ -37,6 +37,26 @@ HexController::HexController(std::shared_ptr<const AnalyticsController>&& analyt
         _keyContext(std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator())) {
 }
 
+// New Event System
+std::shared_ptr<Report::HexReport> HexController::createReport(uint64_t epochMs,
+                                                               const char* message,
+                                                               const char* name,
+                                                               const std::map <std::string, std::shared_ptr<AttributeBase>> attributes,
+                                                               std::vector<std::shared_ptr<Report::Thread>> threads) {
+
+    auto exception = std::make_shared<Report::HandledException>(_sessionId,
+                                                                epochMs,
+                                                                message,
+                                                                name,
+                                                                threads);
+    auto report = _keyContext->createReport(exception);
+
+    report->setAttributes(attributes);
+
+    return report;
+}
+
+// Old Event System
 std::shared_ptr<Report::HexReport> HexController::createReport(uint64_t epochMs,
                                                                const char* message,
                                                                const char* name,

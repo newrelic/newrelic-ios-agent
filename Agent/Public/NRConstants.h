@@ -69,7 +69,6 @@ enum NRTraceType {
 #define kNRNetworkStatusDidChangeNotification @"com.newrelic.networkstatus.changed"
 #define kNRCarrierNameDidUpdateNotification   @"com.newrelic.carrierName.changed"
 #define kNRMemoryUsageDidChangeNotification   @"com.newrelic.memoryusage.changed"
-#define kNRInteractionDidCompleteNotification @"com.newrelic.interaction.complete"
 
 #define kNRMAAnalyticsInitializedNotification @"com.newrelic.analytics.initialized"
 #define kNRMAAnalyticsControllerKey           @"AnalyticsController"
