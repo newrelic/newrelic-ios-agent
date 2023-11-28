@@ -302,9 +302,7 @@ withMessage:(NSString *)message {
             [req setValue:self->logIngestKey forHTTPHeaderField:@"Api-Key"];
 
             req.HTTPMethod = @"POST";
-
-            // TODO: Remove Logging Debugging Logging
-            NRLOG_VERBOSE(@"Logs data = %@", logMessagesJson);
+            NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
 
             NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 
@@ -314,7 +312,10 @@ withMessage:(NSString *)message {
                     errorCode = responseCode >= 300;
                 }
                 if (!error && !errorCode) {
-                    NRLOG_VERBOSE(@"Logs uploaded successfully.");
+                    // TODO: Only use the below less line
+                    //  NRLOG_VERBOSE(@"Logs uploaded successfully.");
+
+                    NRLOG_VERBOSE(@"Logs uploaded successfully w/ sessionId = %@",nrSessiondId);
                 }
                 else if (errorCode) {
                     NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
