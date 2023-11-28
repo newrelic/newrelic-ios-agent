@@ -124,6 +124,8 @@ let regex = """
     "New Relic HTTP Auth Headers and API Key": "(?i)(x|newrelic|nr)-?(admin|partner|account|query|insert|api|license)-?(id|key)[\\\\s[[:punct:]]]{1,4}\\\\b[\\\\w-]{32,47}\\\\b",
     "New Relic API Key Service Key (new format)": "(?i)NRAK-[A-Z0-9]{27}",
     "New Relic APM License Key (new format)": "(?i)[a-f0-9]{36}NRAL",
+    "New Relic Mobile App Token (new format)": "(?i)[a-f0-9]{42}-NRMA",
+
     "New Relic APM License Key (new format, region-aware)": "(?i)[a-z]{2}[0-9]{2}xx[a-f0-9]{30}NRAL",
     "New Relic REST API Key (new format)": "(?i)NRRA-[a-f0-9]{42}",
     "New Relic Admin API Key (new format)": "(?i)NRAA-[a-f0-9]{27}",
