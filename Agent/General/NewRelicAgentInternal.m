@@ -465,6 +465,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                             uuid);
     self->_agentConfiguration.sessionIdentifier = uuid_String;
 
+    // TODO: Remove Logging Debugging Logging
+    NRLOG_VERBOSE(@"Set new sessionId = %@",uuid_String);
+
     CFRelease(uuid);
     if (self->_agentConfiguration.sessionIdentifier.length > 0) {
         NRMA_setSessionId([self->_agentConfiguration.sessionIdentifier UTF8String]);

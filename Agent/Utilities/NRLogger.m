@@ -303,6 +303,9 @@ withMessage:(NSString *)message {
 
             req.HTTPMethod = @"POST";
 
+            // TODO: Remove Logging Debugging Logging
+            NRLOG_VERBOSE(@"Logs data = %@", logMessagesJson);
+
             NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 
                 BOOL errorCode = false;

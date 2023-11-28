@@ -113,6 +113,10 @@
         [self removeCrashLogAtpath:path];
         return;
    }
+    }
+    // TODO: Remove Logging Debugging Logging
+    NSString *debugPrintData = [[NSString alloc] initWithData:reqData encoding:NSUTF8StringEncoding];
+    NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Perform crash upload w/ data: %@", debugPrintData);
     
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
         NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
