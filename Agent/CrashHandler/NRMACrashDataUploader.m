@@ -25,7 +25,7 @@
     self = [super init];
     if (self) {
         self.uploadSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-
+        
         _fileManager = [NSFileManager defaultManager];
         self.applicationToken = token;
         self.applicationVersion = connectionInformation.applicationInformation.appVersion;
@@ -38,27 +38,27 @@
 - (NSArray*) crashReportURLs:(NSError* __autoreleasing*)error
 {
     NSString* reportPath = [NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),kNRMA_CR_ReportPath];
-
+    
     BOOL isDir;
-
+    
     // If the directory doesn't even exist we shouldn't call contentsOfDirectoryAtURL on it.
     if (![_fileManager fileExistsAtPath:reportPath isDirectory: &isDir]) {
         if (!isDir)
             return @[];
     }
-
+    
     NSArray* fileList = [_fileManager contentsOfDirectoryAtURL:[NSURL fileURLWithPath:reportPath]
                                     includingPropertiesForKeys:nil
                                                        options:NSDirectoryEnumerationSkipsHiddenFiles| NSDirectoryEnumerationSkipsPackageDescendants | NSDirectoryEnumerationSkipsSubdirectoryDescendants
                                                          error:error];
-
+    
     NSMutableArray* crashReports = [NSMutableArray new];
     for (NSURL* url in fileList) {
         if ([url.pathExtension isEqualToString:kNRMA_CR_ReportExtension]) {
             [crashReports addObject:url];
         }
     }
-
+    
     return crashReports;
 }
 
@@ -74,7 +74,7 @@
         }
         return;
     }
-
+    
     for (NSURL* fileURL in reportURLs) {
         [self uploadFileAtPath:fileURL];
     }
@@ -86,12 +86,12 @@
         NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash collector address was not set. Unable to upload crash.");
         return;
     }
-
+    
     if (path == nil) {
         NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - CrashData path was not set. Unable to upload crash.");
         return;
     }
-
+    
     // Start tracking file upload attempts.
     if (![self shouldUploadFileWithUniqueIdentifier:path.absoluteString]) {
         NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Reached upload retry limit for a crash report. Removing crash report: %@",path.absoluteString);
@@ -112,7 +112,6 @@
         // Remove the crash log even though we couldn't upload so we don't try every time.
         [self removeCrashLogAtpath:path];
         return;
-   }
     }
     // TODO: Remove Logging Debugging Logging
     NSString *debugPrintData = [[NSString alloc] initWithData:reqData encoding:NSUTF8StringEncoding];
@@ -125,17 +124,17 @@
         }
         
         if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-
+            
             unsigned long long requestLength = [reqData length];
             reqData = nil;
-
+            
             if(((NSHTTPURLResponse*)response).statusCode == 200 || ((NSHTTPURLResponse*)response).statusCode == 500) {
-
+                
                 // Enqueue Data Usage Supportability Metric for /mobile_crash is request successful.
                 [NRMASupportMetricHelper enqueueDataUseMetric:@"mobile_crash"
                                                          size:requestLength
                                                      received:response.expectedContentLength];
-
+                
                 [self removeCrashLogAtpath:path];
             } else {
                 NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - failed to upload crash log: %@, to try again later.",path.path);
@@ -149,7 +148,7 @@
     //stop tracking the file's upload attempts.
     [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
     BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
-
+    
     if (error) {
         NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file :%@, %@",path.path, error.description);
     } else if (!didRemoveFile) {
@@ -159,7 +158,7 @@
 
 - (NSURLRequest*) buildPost {
     NSMutableURLRequest* request = [super newPostWithURI:[NSString stringWithFormat:@"%@%@/%@",_useSSL?@"https://":@"http://",_crashCollectorHost,kNRMA_CR_CrashCollectorPath]];
-
+    
     return request;
 }
 
@@ -177,14 +176,14 @@
     } else {
         value = @1;
     }
-
+    
     if (value.integerValue > kNRMAMaxCrashUploadRetry) {
         [self stopTrackingFileUploadWithUniqueIdentifier:key];
-
+        
         
         return NO;
     }
-
+    
     [defaults setObject:value forKey:key];
     [defaults synchronize];
     return YES;
