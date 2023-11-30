@@ -22,6 +22,8 @@ class UtilViewModel {
     var badAttribute = false
     var attributes = ""
     var events = 0
+    
+    var timer:Timer?
 
     var uniqueInteractionTraceIdentifier: String? =  nil
 
@@ -37,13 +39,25 @@ class UtilViewModel {
         options.append(UtilOption(title: "Record Error", handler: { [self] in makeError()}))
         options.append(UtilOption(title: "Record Handled Exception", handler: { triggerException.testing()}))
         options.append(UtilOption(title: "Set UserID", handler: { [self] in changeUserID()}))
-        options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
+        options.append(UtilOption(title: "Make 100 events every 10 seconds", handler: { [self] in startCustomEventTimer()}))
+        options.append(UtilOption(title: "Stop 100 events every 10 seconds", handler: { [self] in stopCustomEventTimer()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
+    }
+    
+    func startCustomEventTimer(){
+        NewRelic.logInfo("Staring custom event timer")
+        timer = Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(make100Events), userInfo: nil, repeats: true)
+    }
+    
+    func stopCustomEventTimer(){
+        NewRelic.logInfo("Stopping custom event timer")
+        timer?.invalidate()
+        timer = nil
     }
 
     func crash() {
@@ -101,7 +115,7 @@ class UtilViewModel {
         }
     }
 
-    func make100Events() {
+    @objc func make100Events() {
         for _ in 0...100 {
             NewRelic.recordCustomEvent("ButtonPress")
         }

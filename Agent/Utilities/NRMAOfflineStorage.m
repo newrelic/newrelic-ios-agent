@@ -65,50 +65,15 @@ static NSString* _name;
             [combinedPosts addObject:data];
         }];
         
-        [self clearAll];
+        [self clearAllOfflineFiles];
         
         return [combinedPosts copy];
     }
 }
 
-- (BOOL) clearAll {
+- (BOOL) clearAllOfflineFiles {
     return [[NSFileManager defaultManager] removeItemAtPath:[NRMAOfflineStorage offlineDirectoryPath] error:NULL];
 }
-
-/*- (NSArray<NSDictionary *> *) getAllOfflineData {
-    NSMutableArray<NSDictionary *> *combinedDictionaries = [NSMutableArray array];
-    __block NSMutableDictionary *currentDictionary = [NSMutableDictionary dictionary];
-    __block NSUInteger currentSize = 0;
-    const NSUInteger maxSize = 1024 * 1024; // 1 MB in bytes
-    
-    NSArray* dirs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NRMAOfflineStorage offlineDirectoryPath]
-                                                                        error:NULL];
-    [dirs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-        NSString *filename = (NSString *)obj;
-        NSData * data = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@",[NRMAOfflineStorage offlineDirectoryPath],filename]];
-        NSUInteger dictSize = [data length];
-
-        NSArray* arr = [NRMAJSON JSONObjectWithData:data options:0 error:nil];
-        
-        NSMutableArray* events = [[NSMutableArray alloc]initWithArray: arr[3]];
-        NSMutableArray* metrics = [[NSMutableArray alloc]initWithArray: arr[4]];
-
-        if (currentSize + dictSize <= maxSize) {
-           // [currentDictionary addEntriesFromDictionary:dict];
-            currentSize += dictSize;
-        } else {
-            [combinedDictionaries addObject:[currentDictionary copy]];
-           // currentDictionary = [NSMutableDictionary dictionaryWithDictionary:dict];
-            currentSize = dictSize;
-        }
-    
-        if ([currentDictionary count] > 0) {
-            [combinedDictionaries addObject:[currentDictionary copy]];
-        }
-    }];
-
-    return [combinedDictionaries copy];
-}*/
 
 + (NSString*)offlineDirectoryPath {
     return [NSString stringWithFormat:@"%@/%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Offline_file,_name];

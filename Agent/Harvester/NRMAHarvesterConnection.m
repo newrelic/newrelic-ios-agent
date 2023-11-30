@@ -29,7 +29,10 @@
 
 -(void) sendOfflineStorage {
     NSArray<NSData *> * offlineData = [self.offlineStorage getAllOfflineData];
-    NSLog(@"%@", offlineData);
+    if(offlineData.count == 0){
+        return;
+    }
+    NRLOG_VERBOSE(@"Number of offline data posts: %lu", (unsigned long)offlineData.count);
     
     [offlineData enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         NSData *jsonData = (NSData *)obj;
@@ -39,9 +42,7 @@
             NRLOG_ERROR(@"Failed to create data POST");
             return;
         }
-        
-        NRLOG_VERBOSE(@"NEWRELIC - OFFLINE DATA: %@", jsonData);
-        
+                
         [self send:post];
     }];
 }
@@ -189,18 +190,6 @@
     if (error) {
         NRLOG_ERROR(@"Failed to generate JSON");
         return nil;
-    }
-    
-    NRMAReachability* r = [NewRelicInternalUtils reachability];
-    @synchronized(r) {
-        NRMANetworkStatus status = [r currentReachabilityStatus];
-        
-        if(status == NotReachable){
-            [self.offlineStorage persistDataToDisk:jsonData];
-            return nil;
-        } else {
-            [self sendOfflineStorage];
-        }
     }
         
     NSURLRequest* post = [self createDataPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];

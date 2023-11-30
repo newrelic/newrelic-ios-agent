@@ -333,13 +333,25 @@
     //TODO: add addition collector response processing.
     if (response.isError) {
         // failure
-        [self fireOnHarvestFailure];
+        if(response.error.code == NSURLErrorNotConnectedToInternet || response.error.code == NSURLErrorTimedOut) {
+            NSError* error = nil;
+            NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.harvestData options:0 error:&error];
+            if (error) {
+                NRLOG_ERROR(@"Failed to generate JSON");
+                goto continues;
+            }
+            [connection.offlineStorage persistDataToDisk:jsonData];
+            [self.harvestData clear];
+        } else {
+            [self fireOnHarvestFailure];
+        }
     } else {
         // success
         [self.harvestData clear];
+        [connection sendOfflineStorage];
     }
     //Supportability/MobileAgent/Collector/Harvest
-    
+continues:
     [harvestTimer stopTimer];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
