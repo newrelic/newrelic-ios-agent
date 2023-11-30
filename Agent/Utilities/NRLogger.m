@@ -100,7 +100,8 @@ withMessage:(NSString *)message {
 - (id)init {
     self = [super init];
     if (self) {
-        self->logLevels = NRLogLevelError | NRLogLevelWarning;
+        // This was including Error and warning previously but since warning is the highest we want to emit by default this will emit warning and error by default.
+        self->logLevels = NRLogLevelWarning;
         self->logTargets = NRLogTargetConsole;
         self->logFile = nil;
         self->logQueue = dispatch_queue_create("com.newrelicagent.loggingfilequeue", DISPATCH_QUEUE_SERIAL);
@@ -158,9 +159,12 @@ withMessage:(NSString *)message {
     NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
     NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
     NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
-    // TODO: Get this value from /connect response
-    NSString* entityGuid = @"MTA4MTY5OTR8TU9CSUxFfEFQUExJQ0FUSU9OfDM5MDI3NDMz";
 
+    // TODO: Remove hardcoded entityId and Get this value from /connect response
+    NSString* entityGuid = [NSString stringWithFormat:@"%@", configuration.entity_guid];
+    if ([entityGuid length] == 0) {
+        entityGuid = @"MTA4MTY5OTR8TU9CSUxFfEFQUExJQ0FUSU9OfDM5MDI3NDMz";
+    }
     NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
                       NRLogMessageLevelKey, [message objectForKey:NRLogMessageLevelKey],
                       NRLogMessageFileKey, [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],

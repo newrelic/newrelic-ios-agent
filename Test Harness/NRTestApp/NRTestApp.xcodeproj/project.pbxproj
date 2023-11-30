@@ -33,6 +33,7 @@
 		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
+		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F824A30229A811E8000886A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F824A30129A811E8000886A6 /* Assets.xcassets */; };
 		F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */; };
@@ -199,6 +200,7 @@
 		2BD05DD12ADF323A00C0C972 /* NRTestAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NRTestAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppUITests.swift; sourceTree = "<group>"; };
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
+		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
 		F824A30129A811E8000886A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
@@ -324,6 +326,7 @@
 		2BD05DF02ADF32BF00C0C972 /* Stubs */ = {
 			isa = PBXGroup;
 			children = (
+				2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */,
 				2B2B3FB32AEB166E00C24897 /* harvestCollector.json */,
 				2BD05DF12ADF32D300C0C972 /* harvestConnector.json */,
 			);
@@ -694,6 +697,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */,
+				2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */,
 				2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
