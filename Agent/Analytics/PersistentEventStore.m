@@ -45,7 +45,7 @@
     @synchronized (store) {
         store[key] = object;
         _dirty = YES;
-        NSLog(@"Marked dirty for adding");
+        NRLOG_VERBOSE(@"Marked dirty for adding");
     }
     
     @synchronized (self) {
