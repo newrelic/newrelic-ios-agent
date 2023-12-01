@@ -95,6 +95,28 @@ withMessage:(NSString *)message {
     [[NRLogger logger] upload];
 }
 
++ (NRLogLevels)stringToLevel:(NSString*)string {
+    if ([ string isEqualToString:@"ERROR"]) {
+        return NRLogLevelError;
+    }
+    else if ([string isEqualToString:@"WARN"]) { //TODO: VERIFY IF SHOULD BE WARNING
+        return NRLogLevelWarning;
+    }
+    else if ([string isEqualToString:@"INFO"]) {
+        return NRLogLevelInfo;
+    }
+    else if ([string isEqualToString:@"VERBOSE"]) {
+        return NRLogLevelVerbose;
+    }
+    else if ([string isEqualToString:@"AUDIT"]) {
+        return NRLogLevelAudit;
+    }
+    else if ([string isEqualToString:@"DEBUG"]) {
+        return NRLogLevelDebug;
+    }
+    return NRLogLevelError;
+}
+
 #pragma mark -- internal
 
 - (id)init {
@@ -193,6 +215,8 @@ withMessage:(NSString *)message {
                 l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose; break;
             case NRLogLevelAudit:
                 l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit ; break;
+            case NRLogLevelDebug:
+                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit | NRLogLevelDebug ; break;
             default:
                 l = levels; break;
         }

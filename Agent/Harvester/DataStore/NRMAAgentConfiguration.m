@@ -110,8 +110,6 @@ static NSUInteger __NRMA__maxEventBufferTime = 600;
 }
 
 - (void) setLoggingURL {
-    if (![NRMAFlags shouldEnableLogReporting]) { return; }
-
     if (self.applicationToken.regionCode.length) {
         _loggingURL = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_LOGGING_HOST,self.applicationToken.regionCode];
     }

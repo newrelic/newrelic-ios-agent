@@ -409,6 +409,21 @@
         }
         // Configuration saved here.
         configuration.application_token = connection.applicationToken;
+
+        // Code for dynamically enabling or disabling logging at runtime based on the state of 
+        if (configuration.log_reporting_enabled) {
+            // it is required to enable NRLogTargetFile when using LogReporting.
+            [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
+            // Parse NSString into NRLogLevel
+            NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
+            [NRLogger setLogLevels:level];
+
+            [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+        }
+        else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+        }
+
         [self saveHarvesterConfiguration:configuration];
 
         [NRMASupportMetricHelper processDeferredMetrics];
@@ -516,7 +531,6 @@
 //        @"}";
 //
 //         NSData *dataFromResp = [cannedConnect dataUsingEncoding:NSUTF8StringEncoding];
-
 
          NSData *dataFromResp = [response.responseBody dataUsingEncoding:NSUTF8StringEncoding];
 

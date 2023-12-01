@@ -64,6 +64,9 @@
 @property(nonatomic,strong) NSString* trusted_account_key;
 @property(nonatomic,strong) NSString* entity_guid;
 @property(nonatomic,assign) BOOL      log_reporting_enabled;
+
+// CAN BE
+// NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
 @property(nonatomic,assign) NSString* log_reporting_level;
 
 + (id) defaultHarvesterConfiguration;

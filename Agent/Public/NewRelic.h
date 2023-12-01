@@ -59,14 +59,12 @@ extern "C" {
 #pragma mark - Logging
 
 + (void) logInfo:(NSString* __nonnull) message;
-
 + (void) logError:(NSString* __nonnull) message;
-
 + (void) logVerbose:(NSString* __nonnull) message;
 + (void) logWarning:(NSString* __nonnull) message;
-
 + (void) logAudit:(NSString* __nonnull) message;
-
++ (void) logDebug:(NSString* __nonnull) message;
++ (void) log:(NSString* __nonnull)message level:(NRLogLevels)level;
 
 #pragma mark - Configuring the New Relic SDK
 

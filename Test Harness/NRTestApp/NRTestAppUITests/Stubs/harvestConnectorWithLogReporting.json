@@ -16,7 +16,7 @@
     "account_id":"13313993",
     "application_id":"19225431",
     "trusted_account_key":"1",
-    "entity_guid": "MTA4MTY5OTR8TU9ASUxFfEFQUExDQ0FUSU9OfDM5MDI3NDMz"
+    "entity_guid": "MTA4MTY5OTR8TU9ASUxFfEFQUExDQ0FUSU9OfDM5MDI3NDMz",
     "log_reporting": {
         "enabled": true,
         "level": "VERBOSE"

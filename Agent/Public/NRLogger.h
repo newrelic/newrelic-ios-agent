@@ -56,6 +56,7 @@ typedef enum _NRLogLevels {
     NRLogLevelInfo    = 1 << 2,
     NRLogLevelVerbose = 1 << 3,
     NRLogLevelAudit   = 1 << 4,
+    NRLogLevelDebug   = 1 << 5,
     NRLogLevelALL     = 0xffff
 } NRLogLevels;
 
@@ -152,6 +153,12 @@ Configure the New Relic headerless logging API URL.
  */
 + (void)upload;
 
+
+/*
+ Convert NSString to NRLogLevel.
+ */
++ (NRLogLevels)stringToLevel:(NSString*)string;
+
 /*!
  return currently set logLevels
  */
@@ -168,6 +175,7 @@ Configure the New Relic headerless logging API URL.
 #define NRLOG_INFO(format, ...) NRLOG(NRLogLevelInfo, format, ##__VA_ARGS__)
 #define NRLOG_VERBOSE(format, ...) NRLOG(NRLogLevelVerbose, format, ##__VA_ARGS__)
 #define NRLOG_AUDIT(format, ...) NRLOG(NRLogLevelAudit, format, ##__VA_ARGS__)
+#define NRLOG_DEBUG(format, ...) NRLOG(NRLogLevelDebug, format, ##__VA_ARGS__)
 
 #endif // _NEWRELIC_AGENT_LOGGING_
 
