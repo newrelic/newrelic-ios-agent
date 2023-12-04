@@ -113,10 +113,17 @@
     dictionary[kNMRA_APPLICATION_ID] = @(self.application_id);
     dictionary[kNRMA_ACCOUNT_ID] = @(self.account_id);
     dictionary[kNRMA_ENCODING_KEY] = self.encoding_key;
-    dictionary[kNRMA_TRUSTED_ACCOUNT_KEY] = self.trusted_account_key;
-    dictionary[kNRMA_ENTITY_GUID_KEY] = self.entity_guid;
 
-    dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level};
+    if ([self.trusted_account_key length]) {
+        dictionary[kNRMA_TRUSTED_ACCOUNT_KEY] = self.trusted_account_key;
+    }
+
+    if ([self.entity_guid length]) {
+        dictionary[kNRMA_ENTITY_GUID_KEY] = self.entity_guid;
+    }
+
+    // TODO: Check the right way to handle this inner Dict.
+    //dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level};
 
     return dictionary;
 }

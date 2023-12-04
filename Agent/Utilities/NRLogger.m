@@ -99,7 +99,7 @@ withMessage:(NSString *)message {
     if ([ string isEqualToString:@"ERROR"]) {
         return NRLogLevelError;
     }
-    else if ([string isEqualToString:@"WARN"]) { //TODO: VERIFY IF SHOULD BE WARNING
+    else if ([string isEqualToString:@"WARN"]) { //TODO: VERIFY IF SHOULD BE "WARNING"
         return NRLogLevelWarning;
     }
     else if ([string isEqualToString:@"INFO"]) {
@@ -187,16 +187,17 @@ withMessage:(NSString *)message {
     if ([entityGuid length] == 0) {
         entityGuid = @"MTA4MTY5OTR8TU9CSUxFfEFQUExJQ0FUSU9OfDM5MDI3NDMz";
     }
-    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n,\n  \"%@\" : \"%@\"\n, \n  \"%@\" : \"%@\"\n}",
-                      NRLogMessageLevelKey, [message objectForKey:NRLogMessageLevelKey],
-                      NRLogMessageFileKey, [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
-                      NRLogMessageLineNumberKey,[message objectForKey:NRLogMessageLineNumberKey],
-                      NRLogMessageMethodKey,[[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
-                      NRLogMessageTimestampKey,[message objectForKey:NRLogMessageTimestampKey],
-                      NRLogMessageMessageKey,[[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],
-                      @"sessionId", nrSessiondId,
-                      @"appId", nrAppId,
-                      @"entity.guid", entityGuid];
+    //                                                    1                 2                    3                   4                  5                   6                     7                     8                      9
+    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\", \n  \"%@\" : \"%@\"\n}",
+                      NRLogMessageLevelKey,      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
+                      NRLogMessageFileKey,       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
+                      NRLogMessageLineNumberKey, [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
+                      NRLogMessageMethodKey,     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
+                      NRLogMessageTimestampKey,  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
+                      NRLogMessageMessageKey,    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
+                      @"sessionId", nrSessiondId,                                                                                                             // 7
+                      @"appId", nrAppId,                                                                                                                      // 8
+                      @"entity.guid", entityGuid];                                                                                                            // 9
 
     return [json dataUsingEncoding:NSUTF8StringEncoding];
 }

@@ -367,6 +367,8 @@
         configuration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
     }
 
+    [self handleLoggingConfigurationUpdate];
+
     // If we have a data token (config is valid), then skip the connect call.
     if (configuration.isValid && [configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
         [NRMAMeasurements recordSessionStartMetric];
@@ -410,19 +412,7 @@
         // Configuration saved here.
         configuration.application_token = connection.applicationToken;
 
-        // Code for dynamically enabling or disabling logging at runtime based on the state of 
-        if (configuration.log_reporting_enabled) {
-            // it is required to enable NRLogTargetFile when using LogReporting.
-            [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
-            // Parse NSString into NRLogLevel
-            NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
-            [NRLogger setLogLevels:level];
-
-            [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
-        }
-        else {
-            [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
-        }
+        [self handleLoggingConfigurationUpdate];
 
         [self saveHarvesterConfiguration:configuration];
 
@@ -504,7 +494,9 @@
     @try {
         NSError* error = nil;
         
-        // TODO: Remove CannedConnect response
+//        // TODO: Remove CannedConnect response
+////
+//        // Obfuscated secrets values.
 //        NSString *cannedConnect = @"{\n"
 //            @" \"server_timestamp\":1701302638,"
 //            @" \"collect_network_errors\":true,"
@@ -519,23 +511,25 @@
 //            @" \"at_capture\":[1,[]],"
 //            @" \"data_token\":[31111113,52222220],"
 //            @" \"cross_process_id\":\"VQYPSFAaAQcRV1hSBQYDLVc=\","
-//            @" \"encoding_key\":\"d67afd830dab717fd263bfcb1b8b88423e9a1a3c\","
+//            @" \"encoding_key\":\"d67afd830dab717fd263bfcb1b8b88423e9a1a3c\",\n"
 //            @" \"account_id\":\"13313993\","
 //            @" \"application_id\":\"19225431\","
 //            @" \"trusted_account_key\":\"1\","
 //            @" \"entity_guid\": \"MTA4MTY5OTR8TU9ASUxFfEFQUExDQ0FUSU9OfDM5MDI3NDMz\","
 //            @" \"log_reporting\": {"
 //             @"   \"enabled\": true,"
-//             @"   \"level\": \"VERBOSE\""
-//            @"}"
+//             @"   \"level\": \"NONE \""
+//           @"}"
 //        @"}";
-//
-//         NSData *dataFromResp = [cannedConnect dataUsingEncoding:NSUTF8StringEncoding];
+//        // CANNED CONFIG
+//        NRLOG_VERBOSE(@"Harvest config canned: %@", cannedConnect);
+//        id jsonObject = [NRMAJSON JSONObjectWithData: [cannedConnect dataUsingEncoding:NSUTF8StringEncoding]
+//                                             options:0
+//                                               error:&error];
 
-         NSData *dataFromResp = [response.responseBody dataUsingEncoding:NSUTF8StringEncoding];
-
+        // REAL CONFIG
         NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
-        id jsonObject = [NRMAJSON JSONObjectWithData:dataFromResp
+        id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
                                              options:0
                                                error:&error];
         if (!error) {
@@ -740,6 +734,29 @@
             }
         }
     }
+}
+
+- (void) handleLoggingConfigurationUpdate {
+    // TODO: Evaluating if this is the best spot?
+    
+    // Should it check if remote logs are already on?
+    
+    // Code for dynamically enabling or disabling remote logging at runtime based on the state of configuration.log_reporting_enabled and the existing state of NRFlags.NRFeatureFlag_LogReporting
+    if (configuration.log_reporting_enabled) {
+        // it is required to enable NRLogTargetFile when using LogReporting.
+        // Should this be done programmatically?
+        [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
+        // Parse NSString into NRLogLevel
+        NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
+        [NRLogger setLogLevels:level];
+
+        [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+    }
+    //TODO:
+//    // OVERWRITE user selected value for LogReporting -- Should must be included once API returns log_reporting { enabled: false} reliably.
+//    else {
+//        [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+//    }
 }
 
 @end
