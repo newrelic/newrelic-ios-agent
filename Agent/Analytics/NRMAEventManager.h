@@ -18,7 +18,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAEventManager : NSObject
 
-- (instancetype)initWithPersistentStore:(PersistentEventStore *)store;
 - (void)setMaxEventBufferSize:(NSUInteger)size;
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds;
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
@@ -26,6 +25,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)empty;
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents;
 
++ (NSString *)getLastSessionEventsString;
++ (NSMutableArray<NRMAAnalyticEventProtocol> *)getLastSessionEventsArray;
++ (void) clearDuplicationStores;
 + (nullable NSString *)getLastSessionEventsFromFilename:(NSString *)filename;
 @end
 

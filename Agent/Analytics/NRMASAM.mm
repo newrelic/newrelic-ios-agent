@@ -13,6 +13,10 @@
 #import "AttributeValidatorProtocol.h"
 #import "Constants.h"
 #import "NRMAAnalytics.h"
+#import "PersistentEventStore.h"
+
+@interface NRMASAM ()
+@end
 
 @implementation NRMASAM {
     NSMutableDictionary<NSString*, id> *attributeDict;
@@ -21,40 +25,44 @@
     __nullable id<AttributeValidatorProtocol> attributeValidator;
 }
 
+static PersistentEventStore* __attributePersistentStore;
++ (PersistentEventStore*) attributePersistentStore
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString *attributeFilePath = [NRMASAM attributeFilePath];
+        __attributePersistentStore = [[PersistentEventStore alloc] initWithFilename:attributeFilePath andMinimumDelay:.025];
+    });
+    return (__attributePersistentStore);
+}
+
+static PersistentEventStore* __privateAttributePersistentStore;
++ (PersistentEventStore*) privateAttributePersistentStore
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString *privateAttributeFilePath = [NRMASAM privateAttributeFilePath];
+        __privateAttributePersistentStore = [[PersistentEventStore alloc] initWithFilename:privateAttributeFilePath andMinimumDelay:.025];
+    });
+    return (__privateAttributePersistentStore);
+}
+
 - (id)initWithAttributeValidator:(__nullable id<AttributeValidatorProtocol>)validator {
     self = [super init];
     if (self) {
 
-        // Load public attributes from file.
-        NSError *error;
-
-        NSData *existingData = [NSData dataWithContentsOfFile:[NRMASAM attributeFilePath]];
-        if (existingData != nil) {
-            attributeDict = [[NSJSONSerialization JSONObjectWithData:existingData options:kNilOptions error:&error] mutableCopy];
-
-            if (error == nil) {
-                NRLOG_VERBOSE(@"Loaded %lu public attributes from file.", (unsigned long)attributeDict.count);
-            }
-            else {
-                NRLOG_ERROR(@"Error loading public attributes from file: %@", error);
-            }
+        NSDictionary *lastSessionAttributes = [[NRMASAM attributePersistentStore] getLastSessionEvents];
+        if (lastSessionAttributes != nil) {
+            attributeDict = [lastSessionAttributes mutableCopy];
         }
         if (!attributeDict) {
             attributeDict = [[NSMutableDictionary alloc] init];
         }
 
         // Load private attributes from file.
-        NSData *existingPrivateData = [NSData dataWithContentsOfFile:[NRMASAM privateAttributeFilePath]];
-
+        NSDictionary *existingPrivateData = [[NRMASAM privateAttributePersistentStore] getLastSessionEvents];
         if (existingPrivateData != nil) {
-            privateAttributeDict = [[NSJSONSerialization JSONObjectWithData:existingPrivateData options:kNilOptions error:&error] mutableCopy];
-
-            if (error == nil) {
-                NRLOG_VERBOSE(@"Loaded %lu private attributes from file.", (unsigned long)privateAttributeDict.count);
-            }
-            else {
-                NRLOG_ERROR(@"Error loading private attributes from file: %@", error);
-            }
+            privateAttributeDict = [existingPrivateData mutableCopy];
         }
         if (!privateAttributeDict) {
             privateAttributeDict = [[NSMutableDictionary alloc] init];
@@ -78,7 +86,7 @@
     @synchronized (privateAttributeDict) {
         [privateAttributeDict setValue:value forKey:name];
 
-        [self persistPrivateAttributesToDisk];
+        [[NRMASAM privateAttributePersistentStore] setObject:value forKey:name];
     }
     return YES;
 }
@@ -106,7 +114,7 @@
 
     @synchronized (attributeDict) {
         [attributeDict setValue:value forKey:name];
-        [self persistToDisk];
+        [[NRMASAM attributePersistentStore] setObject:value forKey:name];
     }
 
     return YES;
@@ -122,7 +130,7 @@
 
         if (value) {
             [attributeDict removeObjectForKey:name];
-            [self persistToDisk];
+            [[NRMASAM attributePersistentStore] removeObjectForKey:name];
             return YES;
         }
         else {
@@ -133,6 +141,12 @@
     }
 }
 
++ (void) clearDuplicationStores
+{
+    [[NRMASAM attributePersistentStore] clearAll];
+    [[NRMASAM privateAttributePersistentStore] clearAll];
+}
+
 - (BOOL) removeAllSessionAttributes {
     @synchronized (attributeDict) {
         @synchronized (privateAttributeDict) {
@@ -140,16 +154,17 @@
             [attributeDict removeAllObjects];
             [privateAttributeDict removeAllObjects];
 
-            [self persistToDisk];
-            [self persistPrivateAttributesToDisk];
+            [NRMASAM clearDuplicationStores];
         }
     }
     return YES;
 }
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number {
-    id existingValue = [attributeDict objectForKey:name];
-
+    id existingValue;
+    @synchronized (attributeDict) {
+        existingValue = [attributeDict objectForKey:name];
+    }
     NSNumber *newValue;
 
     // if the existing value doesn't exist, the user meant to call setAttribute.
@@ -182,7 +197,7 @@
 
     @synchronized (attributeDict) {
         [attributeDict setValue:newValue forKey:name];
-        [self persistToDisk];
+        [[NRMASAM attributePersistentStore] setObject:newValue forKey:name];
     }
 
     return YES;
@@ -239,13 +254,22 @@
 }
 
 + (NSString*) getLastSessionsAttributes {
-    NSData *data = [NSData dataWithContentsOfFile:[self attributeFilePath]];
-    if (data) {
-        NSString* jsonString =  [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-
-        return jsonString;
+    NSDictionary *lastSessionAttributes = [[NRMASAM attributePersistentStore] getLastSessionEvents];
+    NSString *lastSessionAttributesJsonString = nil;
+    @synchronized (lastSessionAttributes) {
+        @try {
+            NSData *lastSessionAttributesJsonData = [NRMAJSON dataWithJSONObject:lastSessionAttributes
+                                                                         options:0
+                                                                           error:nil];
+            lastSessionAttributesJsonString = [[NSString alloc] initWithData:lastSessionAttributesJsonData
+                                                                    encoding:NSUTF8StringEncoding];
+        }
+        @catch (NSException *e) {
+            NRLOG_ERROR(@"FAILED TO CREATE LAST SESSION ATTRIBUTE JSON: %@", e.reason);
+        }
     }
-    return nil;
+    
+    return lastSessionAttributesJsonString;
 }
 
 - (void) clearLastSessionsAnalytics {
@@ -253,58 +277,11 @@
         @synchronized (privateAttributeDict) {
             [attributeDict removeAllObjects];
             [privateAttributeDict removeAllObjects];
+            
+            [NRMASAM clearDuplicationStores];
         }
     }
 
-}
-
-- (void) clearPersistedSessionAnalytics {
-    @synchronized (attributeDict) {
-        @synchronized (privateAttributeDict) {
-
-            [attributeDict removeAllObjects];
-            [privateAttributeDict removeAllObjects];
-
-            NSError* error;
-            [[NSFileManager defaultManager] removeItemAtPath:[NRMASAM attributeFilePath] error:&error];
-            if (error) {
-                NRLOG_VERBOSE(@"Failed to clear Persisted Session Analytics w/ error = %@", error);
-            }
-
-            [[NSFileManager defaultManager] removeItemAtPath:[NRMASAM privateAttributeFilePath] error:&error];
-            if (error) {
-                NRLOG_VERBOSE(@"Failed to clear Persisted Private Session Analytics w/ error = %@", error);
-            }
-        }
-    }
-}
-
-- (BOOL) persistToDisk {
-    NSString* currentAttributes = [self publicSessionAttributeJSONString];
-
-    NSData* data = [currentAttributes dataUsingEncoding:NSUTF8StringEncoding];
-    if (data) {
-        if ([data writeToFile:[NRMASAM attributeFilePath] atomically:true]) {
-            return YES;
-        }
-    }
-    NRLOG_ERROR(@"Failed to persist public attributes to disk");
-
-    return NO;
-}
-
-- (BOOL) persistPrivateAttributesToDisk {
-    NSString* currentAttributes = [self privateSessionAttributeJSONString];
-
-    NSData* data = [currentAttributes dataUsingEncoding:NSUTF8StringEncoding];
-    if (data) {
-        if ([data writeToFile:[NRMASAM privateAttributeFilePath] atomically:true]) {
-            return YES;
-        }
-    }
-    NRLOG_ERROR(@"Failed to persist private attributes to disk");
-
-    return NO;
 }
 
 // Helpers

@@ -12,12 +12,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface PersistentEventStore<KeyType, ObjectType> : NSObject
 
-- (instancetype)initWithFilename:(NSString *)filename andMinimumDelay:(NSTimeInterval)minimumDelay;
+- (instancetype)initWithFilename:(NSString *)filename andMinimumDelay:(NSTimeInterval)secondsDelay;
 - (void)setObject:(ObjectType)object forKey:(KeyType)key;
 - (nullable ObjectType)objectForKey:(KeyType)key;
 - (void) removeObjectForKey:(KeyType)key;
 - (BOOL)load:(NSError **)error;
 - (void)clearAll;
+- (NSDictionary *)getLastSessionEvents;
 
 + (NSDictionary *)getLastSessionEventsFromFilename:(NSString *)filename;
 

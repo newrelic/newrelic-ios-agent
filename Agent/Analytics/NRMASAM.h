@@ -25,10 +25,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString*) getLastSessionsAttributes;
 - (void) clearLastSessionsAnalytics;
-- (void) clearPersistedSessionAnalytics;
 
 - (NSString*) sessionAttributeJSONString;
 - (BOOL) setLastInteraction:(NSString*)name;
+
++ (void) clearDuplicationStores;
 @end
 
 NS_ASSUME_NONNULL_END

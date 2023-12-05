@@ -13,6 +13,8 @@
 #import "NRMARequestEvent.h"
 #import "NRMANetworkErrorEvent.h"
 #import "NRMAAgentConfiguration.h"
+#import "NewRelicInternalUtils.h"
+#import "Constants.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 600; // 10 Minutes
@@ -29,19 +31,38 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     
     NSUInteger totalAttemptedInserts;
     NSTimeInterval oldestEventTimestamp;
-    
-    PersistentEventStore *_persistentStore;
 }
 
-- (nonnull instancetype)initWithPersistentStore:(PersistentEventStore *)store {
+static PersistentEventStore* __persistentEventStore;
++ (PersistentEventStore*) persistentEventStore
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
+        __persistentEventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
+    });
+    return (__persistentEventStore);
+}
+
+- (nonnull instancetype)init {
     self = [super init];
     if (self) {
-        events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
-        maxBufferSize = kDefaultBufferSize;
+        events = [NRMAEventManager getLastSessionEventsArray];
+        maxBufferSize = [NRMAAgentConfiguration getMaxEventBufferSize];
         maxBufferTimeSeconds = [NRMAAgentConfiguration getMaxEventBufferTime];
         totalAttemptedInserts = 0;
         oldestEventTimestamp = 0;
-        _persistentStore = store;
+    }
+    return self;
+}
+- (nonnull instancetype)initWithFilename:(NSString*) filename {
+    self = [super init];
+    if (self) {
+        events = [NRMAEventManager getLastSessionEventsArray];
+        maxBufferSize = [NRMAAgentConfiguration getMaxEventBufferSize];
+        maxBufferTimeSeconds = [NRMAAgentConfiguration getMaxEventBufferTime];
+        totalAttemptedInserts = 0;
+        oldestEventTimestamp = 0;
     }
     return self;
 }
@@ -85,7 +106,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         if (events.count < maxBufferSize) {
             [events addObject:event];
             
-            [_persistentStore setObject:event forKey:[self createKeyForEvent:event]];
+            [[NRMAEventManager persistentEventStore] setObject:event forKey:[self createKeyForEvent:event]];
             
             if(events.count == 1) {
                 oldestEventTimestamp = event.timestamp;
@@ -98,7 +119,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
                 [events removeObjectAtIndex:evictionIndex];
                 [events addObject:event];
                 
-                [_persistentStore removeObjectForKey:[self createKeyForEvent:event]];
+                [[NRMAEventManager persistentEventStore] removeObjectForKey:[self createKeyForEvent:event]];
             }
         }
     }
@@ -113,7 +134,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 - (void)empty {
     @synchronized (events) {
         [events removeAllObjects];
-        [_persistentStore clearAll];
+        [[NRMAEventManager persistentEventStore] clearAll];
         oldestEventTimestamp = 0;
         totalAttemptedInserts = 0;
     }
@@ -142,6 +163,42 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         [self empty];
     }
     return eventJsonString;
+}
+
++ (NSMutableArray<NRMAAnalyticEventProtocol> *)getLastSessionEventsArray
+ {
+    NSDictionary *lastSessionEvents = [[NRMAEventManager persistentEventStore] getLastSessionEvents];
+    NSMutableArray<NRMAAnalyticEventProtocol> * events = (NSMutableArray<NRMAAnalyticEventProtocol> *)[[NSMutableArray alloc] initWithArray:[lastSessionEvents allValues]];
+    return events;
+}
+
++ (NSString *)getLastSessionEventsString {
+    NSDictionary *lastSessionEvents = [[NRMAEventManager persistentEventStore] getLastSessionEvents];
+    NSString *lastSessionEventJsonString = nil;
+    @synchronized (lastSessionEvents) {
+        @try {
+            NSMutableArray *jsonEvents = [[NSMutableArray alloc] init];
+            for(id<NRMAAnalyticEventProtocol> event in lastSessionEvents.allValues) {
+                [jsonEvents addObject:[event JSONObject]];
+                
+                NSData *lastSessionEventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
+                                                                        options:0
+                                                                          error:nil];
+                lastSessionEventJsonString = [[NSString alloc] initWithData:lastSessionEventJsonData
+                                                                   encoding:NSUTF8StringEncoding];
+            }
+        }
+        @catch (NSException *e) {
+            NRLOG_ERROR(@"FAILED TO CREATE LAST SESSION EVENT JSON: %@", e.reason);
+        }
+    }
+    
+    return lastSessionEventJsonString;
+}
+
++ (void) clearDuplicationStores
+{
+    [[NRMAEventManager persistentEventStore] clearAll];
 }
 
 + (NSString *)getLastSessionEventsFromFilename:(NSString *)filename {

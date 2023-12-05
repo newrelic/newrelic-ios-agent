@@ -27,10 +27,10 @@
 - (void)setUp {
     
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+    [NRMAEventManager clearDuplicationStores];
 
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    sut = [[NRMAEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:testFilename
-                                                                                           andMinimumDelay:1]];
+    sut = [[NRMAEventManager alloc] init];
     
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
@@ -46,6 +46,7 @@
 - (void)tearDown {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+    [NRMAEventManager clearDuplicationStores];
 }
 
 - (void)testRetrieveEventJSON {

@@ -623,6 +623,8 @@
  * previously recorded events in the buffer.
  */
 + (void) setMaxEventPoolSize:(unsigned int)size {
+    [NRMAAgentConfiguration setMaxEventBufferSize:size];
+
     [[NewRelicAgentInternal sharedInstance].analyticsController setMaxEventBufferSize:size];
 }
 

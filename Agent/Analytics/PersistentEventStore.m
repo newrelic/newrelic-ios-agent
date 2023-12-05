@@ -7,12 +7,10 @@
 //
 
 #import "PersistentEventStore.h"
-
 #import "NRLogger.h"
 
 @interface PersistentEventStore ()
-@property (nonatomic, strong) dispatch_queue_t writeQueue;
-@property (nonatomic, strong, nullable) dispatch_source_t writeTimer;
+@property (strong) NSOperationQueue *workQueue;
 @end
 
 @implementation PersistentEventStore {
@@ -21,24 +19,32 @@
     NSTimeInterval _minimumDelay;
     NSDate *_lastSave;
     BOOL _dirty;
-    
-    dispatch_queue_t _writeQueue;
-    dispatch_source_t _writeTimer;
 }
 
 - (nonnull instancetype)initWithFilename:(NSString *)filename
-                         andMinimumDelay:(NSTimeInterval)minimumDelay {
+                         andMinimumDelay:(NSTimeInterval)secondsDelay {
     self = [super init];
     if (self) {
         store = [NSMutableDictionary new];
         _filename = filename;
-        _minimumDelay = minimumDelay;
+        _minimumDelay = secondsDelay;
         _lastSave = [NSDate new];
         _dirty = NO;
-        
-        _writeQueue = dispatch_queue_create("com.newrelic.persistentce", DISPATCH_QUEUE_SERIAL);
+        _workQueue = [[NSOperationQueue alloc] init];
     }
     return self;
+}
+
+- (void)saveFile {
+    if ([_lastSave timeIntervalSinceReferenceDate] < _minimumDelay) {
+        [NSThread sleepForTimeInterval:_minimumDelay];
+    }
+    if(!_dirty) {
+        NRLOG_VERBOSE(@"Not writing file because it's not dirty");
+        return;
+    }
+    [self saveToFile];
+    _dirty = NO;
 }
 
 - (void)setObject:(nonnull id)object forKey:(nonnull id)key {
@@ -48,36 +54,18 @@
         NRLOG_VERBOSE(@"Marked dirty for adding");
     }
     
-    @synchronized (self) {
-        // If the timer itself is not initialized, or if the timer is cancelled, then we
-        // should schedule a write.
-        if( (self.writeTimer != nil) 
-           && (dispatch_source_testcancel(self.writeTimer) == 0)) {
-            NRLOG_VERBOSE(@"Not Scheduling block; last wrote at %d", _lastSave);
-            return;
-        }
-        
-        NRLOG_VERBOSE(@"Scheduling block");
-        self.writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _writeQueue);
-        dispatch_source_set_timer(self.writeTimer, dispatch_time(DISPATCH_TIME_NOW, _minimumDelay * NSEC_PER_SEC), DISPATCH_TIME_FOREVER, 100);
-        
-        NRLOG_VERBOSE(@"Entered block");
-        dispatch_source_set_event_handler(self.writeTimer, ^{
-            
-            @synchronized (self) {
-                if(!self->_dirty) {
-                    NRLOG_VERBOSE(@"Not writing file because it's not dirty");
-                    return;
-                }
-            }
-            
-            [self saveToFile];
-            self->_dirty = NO;
-            
-            dispatch_source_cancel(self.writeTimer);
-        });
-        
-        dispatch_resume(self.writeTimer);   
+    __block PersistentEventStore *blockSafeSelf = self;
+    if (@available(iOS 13.0, *)) {
+        [_workQueue addBarrierBlock:^{
+            NRLOG_VERBOSE(@"Entered Add Block");
+            [blockSafeSelf saveFile];
+        }];
+    } else {
+        [_workQueue addOperationWithBlock:^{
+            NRLOG_VERBOSE(@"Entered Add Block");
+            [blockSafeSelf saveFile];
+        }];
+        [_workQueue waitUntilAllOperationsAreFinished];
     }
 }
 
@@ -88,21 +76,19 @@
         NRLOG_VERBOSE(@"Marked dirty for removing");
     }
     
-    dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-        NSLog(@"Entered Remove Block");
-        @synchronized (self) {
-            if(!self->_dirty) {
-                NRLOG_VERBOSE(@"Not writing removed item file because it's not dirty");
-                return;
-            }
-        }
-        [self saveToFile];
-        self->_dirty = NO;
-        
-        if(self.writeTimer) {
-            dispatch_source_cancel(self.writeTimer);
-        }
-    });
+    __block PersistentEventStore *blockSafeSelf = self;
+    if (@available(iOS 13.0, *)) {
+        [_workQueue addBarrierBlock:^{
+            NRLOG_VERBOSE(@"Entered Remove Block");
+            [blockSafeSelf saveFile];
+        }];
+    } else {
+        [_workQueue addOperationWithBlock:^{
+            NRLOG_VERBOSE(@"Entered Remove Block");
+            [blockSafeSelf saveFile];
+        }];
+        [_workQueue waitUntilAllOperationsAreFinished];
+    }
 }
 
 - (nullable id)objectForKey:(nonnull id)key {
@@ -115,28 +101,42 @@
         _dirty = YES;
         NRLOG_VERBOSE(@"Marked dirty for clearing");
     }
-    
-    dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-        NRLOG_VERBOSE(@"Entered Clear Block");
-        @synchronized (self) {
-            if(!self->_dirty) {
-                NRLOG_VERBOSE(@"Not writing cleared file because it's not dirty");
-                return;
-            }
-        }
-        [self saveToFile];
-        self->_dirty = NO;
+    __block PersistentEventStore *blockSafeSelf = self;
+    if (@available(iOS 13.0, *)) {
+        [_workQueue addBarrierBlock:^{
+            NRLOG_VERBOSE(@"Entered Clear Block");
+            [blockSafeSelf removeFile];
+        }];
+    } else {
+        [_workQueue addOperationWithBlock:^{
+            NRLOG_VERBOSE(@"Entered Clear Block");
+            [blockSafeSelf removeFile];
+        }];
+        [_workQueue waitUntilAllOperationsAreFinished];
+    }
+}
 
-        if(self.writeTimer) {
-            dispatch_source_cancel(self.writeTimer);
+- (void)removeFile {
+    @synchronized (self) {
+        if(![[NSFileManager defaultManager] fileExistsAtPath:_filename]){
+            return;
         }
-    });
+        NSError* error;
+        [[NSFileManager defaultManager] removeItemAtPath:_filename error:&error];
+        if (error) {
+            NRLOG_ERROR(@"Failed to clear Persisted data w/ error = %@", error);
+        }
+        _dirty = NO;
+    }
 }
 
 - (BOOL)load:(NSError **)error {
-    NSData *storedData = [NSData dataWithContentsOfFile:_filename
-                                                options:0
-                                                  error:&error];
+    NSData *storedData;
+    @synchronized (self) {
+        storedData = [NSData dataWithContentsOfFile:_filename
+                                                    options:0
+                                                      error:&error];
+    }
     if(storedData == nil) {
         if(error != NULL && *error != nil) {
             return NO;
@@ -161,31 +161,40 @@
     NSError *error = nil;
     NSData *saveData = nil;
     @synchronized (store) {
-        saveData = [NSKeyedArchiver archivedDataWithRootObject:store
-                                                 requiringSecureCoding:NO
-                                                                 error:&error];
-    }
-
-    if (saveData) {
-        BOOL success = [saveData writeToFile:_filename
-                                     options:NSDataWritingAtomic
-                                       error:&error];
-        if(!success) {
-            NRLOG_VERBOSE(@"Error saving data");
+        if (@available(iOS 11.0, *)) {
+            saveData = [NSKeyedArchiver archivedDataWithRootObject:store
+                                             requiringSecureCoding:NO
+                                                             error:&error];
         } else {
-            NRLOG_VERBOSE(@"Wrote file");
-            _lastSave = [NSDate new];
+            saveData = [NSKeyedArchiver archivedDataWithRootObject:store];
+        }
+    }
+    @synchronized (self) {
+        if (saveData) {
+            BOOL success = [saveData writeToFile:_filename
+                                         options:NSDataWritingAtomic
+                                           error:&error];
+            if(!success) {
+                NRLOG_ERROR(@"Error saving data: %@", error);
+            } else {
+                NRLOG_VERBOSE(@"Wrote file");
+                _lastSave = [NSDate new];
+            }
         }
     }
 }
 
-+ (NSDictionary *)getLastSessionEventsFromFilename:(NSString *)filename {
+- (NSDictionary *)getLastSessionEvents {
+    NSData *storedData;
     NSError * __autoreleasing *error = nil;
-    NSData *storedData = [NSData dataWithContentsOfFile:filename
-                                                options:0
-                                                  error:error];
+    @synchronized (self) {
+        storedData = [NSData dataWithContentsOfFile:_filename
+                                                    options:0
+                                                      error:error];
+    }
     if(storedData == nil) {
         if(error != NULL && *error != nil) {
+            NRLOG_ERROR(@"Error getting last sessions saved events: %@", *error);
             return @{};
         }
     }
@@ -194,10 +203,38 @@
                                                                                   error:error];
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
+            NRLOG_ERROR(@"Error converting last sessions saved events to dictionary: %@", *error);
             return @{};
         }
     }
+    
+    return storedDictionary;
+}
 
++ (NSDictionary *)getLastSessionEventsFromFilename:(NSString *)filename {
+    NSError * __autoreleasing *error = nil;
+    NSData *storedData;
+    @synchronized (self) {
+        storedData = [NSData dataWithContentsOfFile:filename
+                                                    options:0
+                                                      error:error];
+    }
+    if(storedData == nil) {
+        if(error != NULL && *error != nil) {
+            NRLOG_ERROR(@"Error getting last sessions saved events: %@", *error);
+            return @{};
+        }
+    }
+    
+    NSDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveTopLevelObjectWithData:storedData
+                                                                                  error:error];
+    if(storedDictionary == nil) {
+        if(error != NULL && *error != nil) {
+            NRLOG_ERROR(@"Error converting last sessions saved events to dictionary: %@", *error);
+            return @{};
+        }
+    }
+    
     return storedDictionary;
 }
 

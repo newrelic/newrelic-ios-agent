@@ -48,8 +48,6 @@ using namespace NewRelic;
     id<AttributeValidatorProtocol> _attributeValidator;
 }
 
-static NSString* const eventStoreFilename = @"eventsStore.txt";
-
 static PersistentStore<std::string,BaseValue>* __attributeStore;
 + (PersistentStore<std::string, BaseValue> &) attributeDupStore
 {
@@ -103,11 +101,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(self){
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
-
-            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:30];
             
-            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
+            _eventManager = [[NRMAEventManager alloc] init];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
                 if ([name length] == 0) {
                     NRLOG_ERROR(@"invalid attribute: name length = 0");
@@ -1005,10 +1000,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
-+ (NSString*) getLastSessionsEvents{
++ (NSString*) getLastSessionsEvents {
     if([NRMAFlags shouldEnableNewEventSystem]) {
-        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
-        return [NRMAEventManager getLastSessionEventsFromFilename:filename];
+        return [NRMAEventManager getLastSessionEventsString];
     } else {
         try {
             auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
@@ -1035,13 +1029,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 + (void) clearDuplicationStores
 {
-    try {
-        [self attributeDupStore].clear();
-        [self eventDupStore].clear();
-    } catch (std::exception& e) {
-        NRLOG_VERBOSE(@"Failed to clear dup stores: %s",e.what());
-    } catch(...) {
-        NRLOG_VERBOSE(@"Failed to clear dup stores.");
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        [NRMAEventManager clearDuplicationStores];
+        [NRMASAM clearDuplicationStores];
+    } else {
+        try {
+            [self attributeDupStore].clear();
+            [self eventDupStore].clear();
+        } catch (std::exception& e) {
+            NRLOG_VERBOSE(@"Failed to clear dup stores: %s",e.what());
+        } catch(...) {
+            NRLOG_VERBOSE(@"Failed to clear dup stores.");
+        }
     }
 }
 

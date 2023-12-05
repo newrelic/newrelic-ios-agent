@@ -24,8 +24,13 @@
 - (void)setUp {
     [super setUp];
 
-    NRMASAM *manager = [self samTest];
-    [manager removeAllSessionAttributes];
+    [NRMASAM clearDuplicationStores];
+}
+
+- (void) tearDown {
+    [super tearDown];
+    
+    [NRMASAM clearDuplicationStores];
 }
 
 - (NRMASAM*) samTest {
@@ -273,7 +278,7 @@
     XCTAssertTrue([manager setNRSessionAttribute:attribute3 value:@"blurg2"], @"Failed to successfully set private session attribute");
 
 
-    [manager clearPersistedSessionAnalytics];
+    [manager clearLastSessionsAnalytics];
     NSString* attributes = [manager sessionAttributeJSONString];
 
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
