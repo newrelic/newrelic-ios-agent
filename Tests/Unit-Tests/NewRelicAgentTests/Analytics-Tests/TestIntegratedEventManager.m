@@ -27,10 +27,10 @@
 - (void)setUp {
     
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
-    [NRMAEventManager clearDuplicationStores];
 
     // Put setup code here. This method is called before the invocation of each test method in the class.
     sut = [[NRMAEventManager alloc] init];
+    [sut empty];
     
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
@@ -132,7 +132,7 @@
     [sut addEvent:customEventOne];
     
     // Then
-    XCTAssertFalse([sut didReachMaxQueueTime:[[NSDate now] timeIntervalSince1970]]);
+    XCTAssertFalse([sut didReachMaxQueueTime:[[NSDate date] timeIntervalSince1970]]);
 }
 
 - (void)testAgedOutEvents {
@@ -146,7 +146,7 @@
     [sut addEvent:customEventOne];
     
     // Then
-    XCTAssertTrue([sut didReachMaxQueueTime:[[NSDate now] timeIntervalSince1970]]);
+    XCTAssertTrue([sut didReachMaxQueueTime:[[NSDate date] timeIntervalSince1970]]);
 }
 
 - (void)testEmptyEvents {

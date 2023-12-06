@@ -31,6 +31,7 @@
         _lastSave = [NSDate new];
         _dirty = NO;
         _workQueue = [[NSOperationQueue alloc] init];
+        [_workQueue setMaxConcurrentOperationCount:1];
     }
     return self;
 }
@@ -55,18 +56,10 @@
     }
     
     __block PersistentEventStore *blockSafeSelf = self;
-    if (@available(iOS 13.0, *)) {
-        [_workQueue addBarrierBlock:^{
-            NRLOG_VERBOSE(@"Entered Add Block");
-            [blockSafeSelf saveFile];
-        }];
-    } else {
-        [_workQueue addOperationWithBlock:^{
-            NRLOG_VERBOSE(@"Entered Add Block");
-            [blockSafeSelf saveFile];
-        }];
-        [_workQueue waitUntilAllOperationsAreFinished];
-    }
+    [_workQueue addOperationWithBlock:^{
+        NRLOG_VERBOSE(@"Entered Save Block");
+        [blockSafeSelf saveFile];
+    }];
 }
 
 - (void)removeObjectForKey:(id)key {
@@ -77,18 +70,11 @@
     }
     
     __block PersistentEventStore *blockSafeSelf = self;
-    if (@available(iOS 13.0, *)) {
-        [_workQueue addBarrierBlock:^{
-            NRLOG_VERBOSE(@"Entered Remove Block");
-            [blockSafeSelf saveFile];
-        }];
-    } else {
-        [_workQueue addOperationWithBlock:^{
-            NRLOG_VERBOSE(@"Entered Remove Block");
-            [blockSafeSelf saveFile];
-        }];
-        [_workQueue waitUntilAllOperationsAreFinished];
-    }
+    [_workQueue addOperationWithBlock:^{
+        NRLOG_VERBOSE(@"Entered Remove Block");
+        [blockSafeSelf saveFile];
+    }];
+
 }
 
 - (nullable id)objectForKey:(nonnull id)key {
@@ -98,22 +84,13 @@
 - (void)clearAll {
     @synchronized (store) {
         [store removeAllObjects];
-        _dirty = YES;
         NRLOG_VERBOSE(@"Marked dirty for clearing");
     }
     __block PersistentEventStore *blockSafeSelf = self;
-    if (@available(iOS 13.0, *)) {
-        [_workQueue addBarrierBlock:^{
-            NRLOG_VERBOSE(@"Entered Clear Block");
-            [blockSafeSelf removeFile];
-        }];
-    } else {
-        [_workQueue addOperationWithBlock:^{
-            NRLOG_VERBOSE(@"Entered Clear Block");
-            [blockSafeSelf removeFile];
-        }];
-        [_workQueue waitUntilAllOperationsAreFinished];
-    }
+    [_workQueue addOperationWithBlock:^{
+        NRLOG_VERBOSE(@"Entered Remove Block");
+        [blockSafeSelf removeFile];
+    }];
 }
 
 - (void)removeFile {
@@ -123,10 +100,10 @@
         }
         NSError* error;
         [[NSFileManager defaultManager] removeItemAtPath:_filename error:&error];
+        _lastSave = [NSDate new];
         if (error) {
             NRLOG_ERROR(@"Failed to clear Persisted data w/ error = %@", error);
         }
-        _dirty = NO;
     }
 }
 
