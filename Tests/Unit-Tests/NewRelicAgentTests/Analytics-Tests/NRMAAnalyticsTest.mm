@@ -1065,30 +1065,37 @@
 
 - (void) testDuplicateStore {
     //todo: reenable test (disabled for beta 1, no persistent store)
-    //    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    //    [analytics setSessionAttribute:@"12345" value:@5];
-    //    [analytics addEventNamed:@"blah" withAttributes:@{@"pew pew":@"asdf"}];
-    //    [analytics setSessionAttribute:@"test" value:@"hello"];
-    //
-    //    NSDictionary* dict = [NRMAAnalytics getLastSessionsAttributes];
-    //    NSArray* array = [NRMAAnalytics getLastSessionsEvents];
-    //
-    //    XCTAssertTrue([dict[@"12345"] isEqual:@5], @"failed to correctly fetch from dup attribute store.");
-    //    XCTAssertTrue([dict[@"test"] isEqual:@"hello"],@"failed to correctly fetch from dup attribute store.");
-    //    XCTAssertTrue([array[0][@"name"]  isEqualToString: @"blah"], @"failed to correctly fetch dup event store.");
-    //
-    //    dict = [NRMAAnalytics getLastSessionsAttributes];
-    //    array = [NRMAAnalytics getLastSessionsEvents];
-    //
-    //    XCTAssertTrue(dict.count == 0, @"dup stores should be empty.");
-    //    XCTAssertTrue(array.count == 0, @"dup stores should be empty.");
-    //
-    //    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    //    dict = [NRMAAnalytics getLastSessionsAttributes];
-    //    array = [NRMAAnalytics getLastSessionsEvents];
-    //    XCTAssertTrue([dict[@"test"] isEqualToString:@"hello"],@"persistent attribute was not added to the dup store");
-    //    XCTAssertTrue(array.count == 0, @"dup events not empty after Analytics persistent data restored.");
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    
+    [analytics setSessionAttribute:@"12345" value:@5];
+    [analytics addEventNamed:@"blah" withAttributes:@{@"pew pew":@"asdf"}];
+    [analytics setSessionAttribute:@"test" value:@"hello"];
+    
+    NSString* attributes = [NRMAAnalytics getLastSessionsAttributes];
+    NSData *data = [attributes dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *aDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    
+    NSString* events = [NRMAAnalytics getLastSessionsEvents];
+    data = [events dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray *eArray = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    
+    XCTAssertTrue([aDict[@"12345"] isEqual:@5], @"failed to correctly fetch from dup attribute store.");
+    XCTAssertTrue([aDict[@"test"] isEqual:@"hello"],@"failed to correctly fetch from dup attribute store.");
+    XCTAssertTrue([eArray[0][@"eventType"]  isEqualToString: @"blah"], @"failed to correctly fetch dup event store.");
+
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    attributes = [NRMAAnalytics getLastSessionsAttributes];
+    data = [attributes dataUsingEncoding:NSUTF8StringEncoding];
+    aDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    
+    events = [NRMAAnalytics getLastSessionsEvents];
+    data = [events dataUsingEncoding:NSUTF8StringEncoding];
+    eArray = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    
+    XCTAssertTrue([aDict[@"test"] isEqualToString:@"hello"],@"persistent attribute was not added to the dup store");
+    XCTAssertTrue(eArray.count != 0, @"dup events not empty after Analytics persistent data restored.");
 }
+
 
 - (void) testMidSessionHarvest {
     //todo: reenable test (disabled for beta 1, no persistent store)

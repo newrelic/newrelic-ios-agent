@@ -10,7 +10,6 @@
 #import "NRLogger.h"
 
 @interface PersistentEventStore ()
-@property (strong) NSOperationQueue *workQueue;
 @end
 
 @implementation PersistentEventStore {
@@ -19,6 +18,8 @@
     NSTimeInterval _minimumDelay;
     NSDate *_lastSave;
     BOOL _dirty;
+    
+    dispatch_queue_t workQueue;
 }
 
 - (nonnull instancetype)initWithFilename:(NSString *)filename
@@ -30,8 +31,7 @@
         _minimumDelay = secondsDelay;
         _lastSave = [NSDate new];
         _dirty = NO;
-        _workQueue = [[NSOperationQueue alloc] init];
-        [_workQueue setMaxConcurrentOperationCount:1];
+        workQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     }
     return self;
 }
@@ -56,10 +56,10 @@
     }
     
     __block PersistentEventStore *blockSafeSelf = self;
-    [_workQueue addOperationWithBlock:^{
+    dispatch_sync(workQueue, ^{
         NRLOG_VERBOSE(@"Entered Save Block");
         [blockSafeSelf saveFile];
-    }];
+    });
 }
 
 - (void)removeObjectForKey:(id)key {
@@ -70,11 +70,10 @@
     }
     
     __block PersistentEventStore *blockSafeSelf = self;
-    [_workQueue addOperationWithBlock:^{
+    dispatch_sync(workQueue, ^{
         NRLOG_VERBOSE(@"Entered Remove Block");
         [blockSafeSelf saveFile];
-    }];
-
+    });
 }
 
 - (nullable id)objectForKey:(nonnull id)key {
@@ -87,10 +86,10 @@
         NRLOG_VERBOSE(@"Marked dirty for clearing");
     }
     __block PersistentEventStore *blockSafeSelf = self;
-    [_workQueue addOperationWithBlock:^{
+    dispatch_sync(workQueue, ^{
         NRLOG_VERBOSE(@"Entered Remove Block");
         [blockSafeSelf removeFile];
-    }];
+    });
 }
 
 - (void)removeFile {
@@ -162,13 +161,16 @@
 }
 
 - (NSDictionary *)getLastSessionEvents {
-    NSData *storedData;
-    NSError * __autoreleasing *error = nil;
-    @synchronized (self) {
-        storedData = [NSData dataWithContentsOfFile:_filename
-                                                    options:0
-                                                      error:error];
-    }
+    __block NSData *storedData;
+    __block NSError * __autoreleasing *error = nil;
+    __block PersistentEventStore *blockSafeSelf = self;
+    dispatch_sync(workQueue, ^{
+        @synchronized (self) {
+            storedData = [NSData dataWithContentsOfFile:blockSafeSelf->_filename
+                                                options:0
+                                                  error:error];
+        }
+    });
     if(storedData == nil) {
         if(error != NULL && *error != nil) {
             NRLOG_ERROR(@"Error getting last sessions saved events: %@", *error);
