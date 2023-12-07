@@ -34,7 +34,7 @@
 }
 
 - (NRMASAM*) samTest {
-    return [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+    NRMASAM* sam = [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
         if ([name length] == 0) {
             NRLOG_ERROR(@"invalid attribute: name length = 0");
             return NO;
@@ -82,6 +82,8 @@
     } andEventTypeValidator:^BOOL(NSString *eventType) {
         return YES;
     }]];
+    [sam clearLastSessionsAnalytics];
+    return sam;
 }
 
 - (void) testSetSessionAttribute {
