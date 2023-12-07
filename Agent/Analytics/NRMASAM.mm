@@ -164,38 +164,36 @@ static PersistentEventStore* __privateAttributePersistentStore;
     id existingValue;
     @synchronized (attributeDict) {
         existingValue = [attributeDict objectForKey:name];
-    }
-    NSNumber *newValue;
+        NSNumber *newValue;
 
-    // if the existing value doesn't exist, the user meant to call setAttribute.
-    // Should this return NO, to indicate the attribute doesn't exist?
-    if (!existingValue) {
-        return [self setAttribute:name value:number];
-    }
+        // if the existing value doesn't exist, the user meant to call setAttribute.
+        // Should this return NO, to indicate the attribute doesn't exist?
+        if (!existingValue) {
+            return [self setAttribute:name value:number];
+        }
 
-    // cannot increment with non number values
-    if (![NewRelicInternalUtils isInteger:number] && ![NewRelicInternalUtils isFloat:number]) {
-        return NO;
-    }
+        // cannot increment with non number values
+        if (![NewRelicInternalUtils isInteger:number] && ![NewRelicInternalUtils isFloat:number]) {
+            return NO;
+        }
 
-    // Cannot increment a non-number attribute
-    if (![existingValue isKindOfClass:[NSNumber class]] ||
-        (![NewRelicInternalUtils isInteger:existingValue] && ![NewRelicInternalUtils isFloat:existingValue])) {
-        return NO;
-    }
+        // Cannot increment a non-number attribute
+        if (![existingValue isKindOfClass:[NSNumber class]] ||
+            (![NewRelicInternalUtils isInteger:existingValue] && ![NewRelicInternalUtils isFloat:existingValue])) {
+            return NO;
+        }
 
-    if ([NewRelicInternalUtils isInteger:existingValue]) {
-        unsigned long long incrementValueLongLong = [number unsignedLongLongValue];
-        newValue = [NSNumber numberWithUnsignedLongLong:[existingValue unsignedLongLongValue] + incrementValueLongLong];
-    } else if ([NewRelicInternalUtils isFloat:existingValue]) {
-        double incrementValueDouble = [number doubleValue];
-        newValue = [NSNumber numberWithDouble:[existingValue doubleValue] + incrementValueDouble];
-    } else {
-        // something that's not an integer or a floating point number got through
-        return NO;
-    }
+        if ([NewRelicInternalUtils isInteger:existingValue]) {
+            unsigned long long incrementValueLongLong = [number unsignedLongLongValue];
+            newValue = [NSNumber numberWithUnsignedLongLong:[existingValue unsignedLongLongValue] + incrementValueLongLong];
+        } else if ([NewRelicInternalUtils isFloat:existingValue]) {
+            double incrementValueDouble = [number doubleValue];
+            newValue = [NSNumber numberWithDouble:[existingValue doubleValue] + incrementValueDouble];
+        } else {
+            // something that's not an integer or a floating point number got through
+            return NO;
+        }
 
-    @synchronized (attributeDict) {
         [attributeDict setValue:newValue forKey:name];
         [[NRMASAM attributePersistentStore] setObject:newValue forKey:name];
     }

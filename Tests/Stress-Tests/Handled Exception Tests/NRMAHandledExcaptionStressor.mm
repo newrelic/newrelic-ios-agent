@@ -15,6 +15,7 @@
 #import <objc/runtime.h>
 #import "NRAgentTestBase.h"
 #import "NRMAAppToken.h"
+#import "NRMAFlags.h"
 
 #define TEST_COLLECTOR_HOST @"staging-mobile-collector.newrelic.com"
 
@@ -37,6 +38,8 @@ void NR__OVERRIDE_NRMAHexUploader_sendData(id self, SEL _cmd, id data) {
 
 - (void)setUp {
     [super setUp];
+    [NRMAFlags enableFeatures: NRFeatureFlag_NewEventSystem];
+
     [self replaceNetCalls];
     NRMAAgentConfiguration* _agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"APP_TOKEN"] collectorAddress:TEST_COLLECTOR_HOST crashAddress:nil];
 

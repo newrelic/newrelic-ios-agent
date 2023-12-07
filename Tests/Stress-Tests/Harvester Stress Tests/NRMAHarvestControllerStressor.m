@@ -14,6 +14,7 @@
 #import "OCMock/OCMock.h"
 #import "NRAgentTestBase.h"
 #import "NRMAAppToken.h"
+#import "NRMAFlags.h"
 
 #define TEST_COLLECTOR_HOST @"staging-mobile-collector.newrelic.com"
 
@@ -33,6 +34,9 @@
 - (void)setUp
 {
     [super setUp];
+
+    [NRMAFlags enableFeatures: NRFeatureFlag_NewEventSystem];
+
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
     self.semaphore = dispatch_semaphore_create(procCount*kNRMASemaphoreMultiplier);
     config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"APP_TOKEN"] collectorAddress:TEST_COLLECTOR_HOST crashAddress:nil];
