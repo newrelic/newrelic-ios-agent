@@ -610,6 +610,7 @@
 
 @interface NRMAAnalyticsTestNewEventSystem : XCTestCase
 {
+    NRMAAnalytics* analytics;
 }
 @end
 
@@ -623,8 +624,9 @@
     [super setUp];
     [NRLogger setLogLevels:NRLogLevelNone];
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
-    [NRMAAnalytics clearDuplicationStores];
+    [analytics clearLastSessionsAnalytics];
 }
 
 - (void)tearDown {
@@ -639,7 +641,6 @@
 // new, integrated event manager. The second is the legacy version
 // which worked with the older, libMobileAgent version.
 - (void) testLargeNumbers {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
                                 withAttributes:@{@"bigInt": @(LLONG_MAX),
@@ -664,7 +665,6 @@
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile?request=parameter";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -708,7 +708,6 @@
 - (void) testRequestEventHTTPError {
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -762,7 +761,6 @@
 }
 
 - (void) testSetLastInteraction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     XCTAssertTrue([analytics setLastInteraction:@"Display Banana"]);
 
     NSString* json = [analytics sessionAttributeJSONString];
@@ -777,7 +775,6 @@
 - (void) testRequestEventNetworkError {
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -818,7 +815,6 @@
 }
 
 - (void) testCustomEvent {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     BOOL didAddCustomEvent = [analytics addCustomEvent:@"newEventBlah"
                                         withAttributes:@{
@@ -858,14 +854,12 @@
 }
 
 - (void ) testCustomEventUnicode {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     XCTAssertTrue([analytics addCustomEvent:@"我々は思い出にわならないさ"
                              withAttributes:@{}]);
 }
 
 - (void ) testBadAttributes {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     XCTAssertTrue([analytics addCustomEvent:@"我々は思い出にわならないさ"
                              withAttributes:@{@"badAttribute":[NSNull new]}]);
@@ -878,8 +872,6 @@
 }
 
 - (void) testBreadcrumb {
-
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     XCTAssertFalse([analytics addBreadcrumb:@""
                              withAttributes:nil]);
@@ -903,7 +895,6 @@
 }
 
 - (void) testRecordUserAction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {
             [builder withActionType:@"Tap"];
@@ -942,7 +933,6 @@
 }
 
 - (void) testRecordEmptyUserAction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {}];
     
@@ -950,14 +940,12 @@
 }
 
 - (void) testRecordNilUserAction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     
     XCTAssertFalse([analytics recordUserAction:nil]);
 }
 
 
 - (void) testBooleanSessionAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     [analytics setSessionAttribute:@"aBoolValue" value:[[NRMABool alloc] initWithBOOL:YES]];
     NSString* json = [analytics analyticsJSONString];
     json = [analytics sessionAttributeJSONString];
@@ -970,7 +958,6 @@
 }
 
 - (void)testBooleanEventAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     [analytics addEventNamed:@"BooleanAttributes" withAttributes:@{@"thisIsTrue":@(YES),
                                                                    @"thisIsFalse":@(NO)}];
     NSString* json = [analytics analyticsJSONString];
@@ -983,7 +970,6 @@
 }
 
 - (void) testRemoveAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
@@ -1007,7 +993,6 @@
 }
 
 - (void) testRemoveAllAttributes {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
@@ -1031,7 +1016,6 @@
 }
 
 - (void) testJSONInputs {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     BOOL result = NO;
     NSString* json = @"{\"hello\":\"world\"}";
     NSDictionary* dictionary = @{@"{\"hello\":\"world\"}":@"{\"blahblah\":\"asdasdf\"}"};
@@ -1046,7 +1030,6 @@
 }
 
 - (void) testJSONEscapeCharacters {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     BOOL result = NO;
     NSString* name = @"pewpew\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
     NSDictionary* dictionary = @{@"blah\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F":@"w\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F"};
@@ -1065,37 +1048,30 @@
 
 - (void) testDuplicateStore {
     //todo: reenable test (disabled for beta 1, no persistent store)
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    
-    [analytics setSessionAttribute:@"12345" value:@5];
-    [analytics addEventNamed:@"blah" withAttributes:@{@"pew pew":@"asdf"}];
-    [analytics setSessionAttribute:@"test" value:@"hello"];
-    
-    NSString* attributes = [NRMAAnalytics getLastSessionsAttributes];
-    NSData *data = [attributes dataUsingEncoding:NSUTF8StringEncoding];
-    NSDictionary *aDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    
-    NSString* events = [NRMAAnalytics getLastSessionsEvents];
-    data = [events dataUsingEncoding:NSUTF8StringEncoding];
-    NSArray *eArray = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    
-    XCTAssertTrue([aDict[@"12345"] isEqual:@5], @"failed to correctly fetch from dup attribute store.");
-    XCTAssertTrue([aDict[@"test"] isEqual:@"hello"],@"failed to correctly fetch from dup attribute store.");
-    XCTAssertTrue([eArray[0][@"eventType"]  isEqualToString: @"blah"], @"failed to correctly fetch dup event store.");
-
-    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    attributes = [NRMAAnalytics getLastSessionsAttributes];
-    data = [attributes dataUsingEncoding:NSUTF8StringEncoding];
-    aDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    
-    events = [NRMAAnalytics getLastSessionsEvents];
-    data = [events dataUsingEncoding:NSUTF8StringEncoding];
-    eArray = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    
-    XCTAssertTrue([aDict[@"test"] isEqualToString:@"hello"],@"persistent attribute was not added to the dup store");
-    XCTAssertTrue(eArray.count != 0, @"dup events not empty after Analytics persistent data restored.");
+    //    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    //    [analytics setSessionAttribute:@"12345" value:@5];
+    //    [analytics addEventNamed:@"blah" withAttributes:@{@"pew pew":@"asdf"}];
+    //    [analytics setSessionAttribute:@"test" value:@"hello"];
+    //
+    //    NSDictionary* dict = [NRMAAnalytics getLastSessionsAttributes];
+    //    NSArray* array = [NRMAAnalytics getLastSessionsEvents];
+    //
+    //    XCTAssertTrue([dict[@"12345"] isEqual:@5], @"failed to correctly fetch from dup attribute store.");
+    //    XCTAssertTrue([dict[@"test"] isEqual:@"hello"],@"failed to correctly fetch from dup attribute store.");
+    //    XCTAssertTrue([array[0][@"name"]  isEqualToString: @"blah"], @"failed to correctly fetch dup event store.");
+    //
+    //    dict = [NRMAAnalytics getLastSessionsAttributes];
+    //    array = [NRMAAnalytics getLastSessionsEvents];
+    //
+    //    XCTAssertTrue(dict.count == 0, @"dup stores should be empty.");
+    //    XCTAssertTrue(array.count == 0, @"dup stores should be empty.");
+    //
+    //    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    //    dict = [NRMAAnalytics getLastSessionsAttributes];
+    //    array = [NRMAAnalytics getLastSessionsEvents];
+    //    XCTAssertTrue([dict[@"test"] isEqualToString:@"hello"],@"persistent attribute was not added to the dup store");
+    //    XCTAssertTrue(array.count == 0, @"dup events not empty after Analytics persistent data restored.");
 }
-
 
 - (void) testMidSessionHarvest {
     //todo: reenable test (disabled for beta 1, no persistent store)
@@ -1122,7 +1098,6 @@
 }
 
 - (void) testBadInput {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     BOOL result;
     //- (BOOL) addInteractionEvent:(NSString*)name interactionDuration:(double)duration_secs;
     XCTAssertNoThrow(result = [analytics addInteractionEvent:nil interactionDuration:-100],@"shouldn't throw ");

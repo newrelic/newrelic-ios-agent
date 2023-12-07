@@ -1048,6 +1048,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (void) clearLastSessionsAnalytics {
     if([NRMAFlags shouldEnableNewEventSystem]){
         [_sessionAttributeManager clearLastSessionsAnalytics];
+        [_eventManager empty];
     } else {
         try {
             _analyticsController->clearAttributesDuplicationStore();

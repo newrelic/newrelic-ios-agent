@@ -286,14 +286,6 @@
                                                              error:nil];
     XCTAssertEqual(decode.count, 0, @"Should have emptied session attributes.");
 
-
-    NSString *publicAttributePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file];
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:publicAttributePath], @"Data had value but it should be nil");
-
-
-    NSString *privateAttributePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private];
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:privateAttributePath], @"Private Data had value but it should be nil");
-
 }
 
 -(void) testSetSessionAttributeNameFailed {
