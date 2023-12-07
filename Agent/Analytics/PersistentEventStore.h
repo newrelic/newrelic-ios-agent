@@ -18,9 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) removeObjectForKey:(KeyType)key;
 - (BOOL)load:(NSError **)error;
 - (void)clearAll;
-- (NSDictionary *)getLastSessionEvents;
 
-+ (NSDictionary *)getLastSessionEventsFromFilename:(NSString *)filename;
+- (NSDictionary *)getLastSessionEvents;
 
 @end
 
