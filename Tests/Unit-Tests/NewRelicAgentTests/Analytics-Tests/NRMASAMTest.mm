@@ -39,7 +39,6 @@
 - (void) tearDown {
     [super tearDown];
     
-    [NRMASAM clearDuplicationStores];
 }
 
 - (NRMASAM*) samTest {

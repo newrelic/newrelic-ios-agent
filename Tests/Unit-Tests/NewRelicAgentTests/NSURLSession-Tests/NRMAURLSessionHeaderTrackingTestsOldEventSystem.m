@@ -17,6 +17,8 @@
 #import "NRTestConstants.h"
 #import "NRMAFlags.h"
 #import "NRMAHTTPUtilities.h"
+#import "NewRelicInternalUtils.h"
+#import "Constants.h"
 
 static NewRelicAgentInternal* _sharedInstance;
 
@@ -34,6 +36,13 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (void)setUp {
     [super setUp];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString* testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
+    
     [NRMAFlags enableFeatures: NRFeatureFlag_NetworkRequestEvents];
     [NRMAFlags disableFeatures: NRFeatureFlag_NewEventSystem];
 
