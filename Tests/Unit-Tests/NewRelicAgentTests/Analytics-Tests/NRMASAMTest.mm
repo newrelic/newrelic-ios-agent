@@ -23,8 +23,17 @@
 
 - (void)setUp {
     [super setUp];
-
-    [NRMASAM clearDuplicationStores];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString* testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_Attrib_file];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
+    
+    testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_Attrib_file_private];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
 }
 
 - (void) tearDown {
@@ -34,7 +43,7 @@
 }
 
 - (NRMASAM*) samTest {
-    NRMASAM* sam = [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+    return [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
         if ([name length] == 0) {
             NRLOG_ERROR(@"invalid attribute: name length = 0");
             return NO;
@@ -82,8 +91,6 @@
     } andEventTypeValidator:^BOOL(NSString *eventType) {
         return YES;
     }]];
-    [sam clearLastSessionsAnalytics];
-    return sam;
 }
 
 - (void) testSetSessionAttribute {

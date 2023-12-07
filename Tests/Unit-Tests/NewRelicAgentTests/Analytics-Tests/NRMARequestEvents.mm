@@ -10,6 +10,8 @@
 #import "NRMAAnalytics+cppInterface.h"
 #import "NRMAFlags.h"
 #import "NRMASupportMetricHelper.h"
+#import "NewRelicInternalUtils.h"
+#import "Constants.h"
 
 @interface NRMARequestEvents : XCTestCase
 
@@ -24,13 +26,17 @@ static NRMAFeatureFlags __originalFlags;
 
 - (void)setUp {
     [super setUp];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString* testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
+    
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         __originalFlags = [NRMAFlags featureFlags];
     });
     [NRMAFlags setFeatureFlags:0];
-
-    [NRMAAnalytics clearDuplicationStores];
 }
 
 - (void)tearDown {

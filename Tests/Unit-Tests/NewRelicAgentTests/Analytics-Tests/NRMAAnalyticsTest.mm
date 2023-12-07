@@ -15,6 +15,8 @@
 #import "NRMABool.h"
 #import "NRLogger.h"
 #import "NRMASupportMetricHelper.h"
+#import "NewRelicInternalUtils.h"
+#import "Constants.h"
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -622,11 +624,26 @@
 
 - (void)setUp {
     [super setUp];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString* testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
+    
+    testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_Attrib_file];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
+    
+    testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_Attrib_file_private];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
+    
     [NRLogger setLogLevels:NRLogLevelNone];
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
     analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
-    [analytics clearLastSessionsAnalytics];
 }
 
 - (void)tearDown {

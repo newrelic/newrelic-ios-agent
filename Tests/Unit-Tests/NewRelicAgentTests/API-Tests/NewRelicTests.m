@@ -344,6 +344,16 @@
     XCTAssertEqual([analytics addBreadcrumb:@"test" withAttributes:nil], [NewRelic recordBreadcrumb:@"test" attributes:nil]);
 }
 
+-(void) testSetMaxEventBufferTime {
+    NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
+    XCTAssertNoThrow([analytics setMaxEventBufferTime:1]);
+}
+
+-(void) testSetMaxEventBufferSize {
+    NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
+    XCTAssertNoThrow([analytics setMaxEventBufferSize:1]);
+}
+
 -(void) testURLRegexRules {
     NSDictionary<NSString *, NSString *> *regexs =
     @{ @"^http(s{0,1})://(http).*/(\\d)\\d*" : @"https://httpbin.org/status/418"

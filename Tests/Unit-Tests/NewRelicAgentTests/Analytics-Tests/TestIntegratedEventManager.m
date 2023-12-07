@@ -13,6 +13,8 @@
 #import "NRMACustomEvent.h"
 #import "BlockAttributeValidator.h"
 #import "NRMAFlags.h"
+#import "NewRelicInternalUtils.h"
+#import "Constants.h"
 
 @interface TestIntegratedEventManager : XCTestCase {
     NRMAEventManager *sut;
@@ -25,6 +27,12 @@
     static NSString *testFilename = @"fbstest_tempStore";
 
 - (void)setUp {
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString* testFileName = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
+    if([fileManager fileExistsAtPath:testFileName]) {
+        [fileManager removeItemAtPath:testFileName error:nil];
+    }
     
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
 
