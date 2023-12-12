@@ -136,6 +136,8 @@ typedef NSString NRMetricUnit;
 
 #define kNRMAExceptionHandlerHijackedMetric kNRAgentHealthPrefix @"/Hijacked/ExceptionHandler"
 
+#define kNRMAConfigurationUpdated        @"Supportability/Mobile/iOS/Configuration/Updated"
+
 //Network info cache constants
 #define kNRCarrierNameCacheLifetime     50 // milliseconds
 #define kNRWanTypeCacheLifetime         25 // milliseconds

@@ -327,6 +327,13 @@
         case ENTITY_TOO_LARGE:
             [self.harvestData clear];
             break;
+        case CONFIGURATION_UPDATE:
+            // WHEN RECEIVING A 409 status code from the /data endpoint we will PERFORM A CONNECT CALL TO REFRESH THE CONFIG.
+            [self clearStoredHarvesterConfiguration];
+            [self transition:NRMA_HARVEST_DISCONNECTED];
+            // Reconnect performed here.
+            [self execute];
+            break;
         default:
             break;
     }

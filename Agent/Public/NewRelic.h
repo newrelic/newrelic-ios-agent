@@ -64,7 +64,10 @@ extern "C" {
 + (void) logWarning:(NSString* __nonnull) message;
 + (void) logAudit:(NSString* __nonnull) message;
 + (void) logDebug:(NSString* __nonnull) message;
-+ (void) log:(NSString* __nonnull)message level:(NRLogLevels)level;
+// Only one level can be passed, no passing bitsets (multiple log levels at once.)
++ (void) log:(NSString* __nonnull) message level:(NRLogLevels)level;
+// Dict should contain at minimum => String: "message" and String: "logLevel" where logLevel is one of NONE < ERROR < WARN < INFO < DEBUG < VERBOSE
++ (void) logAll:(NSDictionary* __nonnull) dict;
 
 #pragma mark - Configuring the New Relic SDK
 

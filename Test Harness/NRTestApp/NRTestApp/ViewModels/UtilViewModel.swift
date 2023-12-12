@@ -47,6 +47,7 @@ class UtilViewModel {
 
 
 //        options.append(UtilOption(title: "Toggle Remote Logging On/Off", handler: { [self] in toggleRemoteLogging()}))
+        options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
 
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
@@ -151,6 +152,13 @@ class UtilViewModel {
 //            logEnabled = false
 //        }
 //    }
+
+    func testLogDict() {
+        NewRelic.logAll([
+            "logLevel": "WARNING",
+            "message": "This is a test message for the New Relic logging system."
+        ])
+    }
 
     func noticeNWRequest() {
         NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],

@@ -589,6 +589,26 @@
     [mockConnection stopMocking];
 }
 
+- (void) testConfigUpdateResponse {
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    NRMAHarvestResponse* request = [[NRMAHarvestResponse alloc] init];
+    request.statusCode = CONFIGURATION_UPDATE;
+
+    [[[mockConnection stub] andReturn:request] sendData:OCMOCK_ANY];
+
+    XCTAssertNoThrow([mockHarvester connected],@"assert we don't crash if something goes wrong in connected");
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
+
 - (void) testConectedv3AppsDontCrashApp {
     id mockHarvester = [OCMockObject partialMockForObject:harvester];
     id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];

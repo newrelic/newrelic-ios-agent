@@ -56,6 +56,44 @@
     NRLOG_AUDIT(@"%@", message);
 }
 
++ (void) logDebug:(NSString* __nonnull) message {
+    NRLOG_DEBUG(@"%@", message);
+}
+
++ (void) log:(NSString* __nonnull) message level:(NRLogLevels)level {
+    switch (level) {
+        case NRLogLevelError:
+            NRLOG_ERROR(@"%@", message);
+            break;
+        case NRLogLevelWarning:
+            NRLOG_WARNING(@"%@", message);
+            break;
+        case NRLogLevelInfo:
+            NRLOG_INFO(@"%@", message);
+            break;
+        case NRLogLevelVerbose:
+            NRLOG_VERBOSE(@"%@", message);
+            break;
+        case NRLogLevelAudit:
+            NRLOG_AUDIT(@"%@", message);
+            break;
+        case NRLogLevelDebug:
+            NRLOG_DEBUG(@"%@", message);
+            break;
+        default:
+            break;
+    }
+}
+
++ (void) logAll:(NSDictionary* __nonnull) dict {
+    NSString* message = [dict objectForKey:@"message"];
+    NSString* level = [dict objectForKey:@"logLevel"];
+
+    NRLogLevels levels = [NRLogger stringToLevel: level];
+
+    [self log:message level:levels];
+}
+
 + (void) crashNow:(NSString*)message
 {
     // If Agent is shutdown we shouldn't respond.
