@@ -403,7 +403,7 @@
 			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 7.4.6;
+				minimumVersion = 7.4.8;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
