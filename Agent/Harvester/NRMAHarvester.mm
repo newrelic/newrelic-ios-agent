@@ -333,14 +333,7 @@
     //TODO: add addition collector response processing.
     if (response.isError) {
         // failure
-        if(response.error.code == NSURLErrorNotConnectedToInternet || response.error.code == NSURLErrorTimedOut) {
-            NSError* error = nil;
-            NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.harvestData options:0 error:&error];
-            if (error) {
-                NRLOG_ERROR(@"Failed to generate JSON");
-                goto continues;
-            }
-            [connection.offlineStorage persistDataToDisk:jsonData];
+        if([self checkResponseAndPersist:response]) {
             [self.harvestData clear];
         } else {
             [self fireOnHarvestFailure];
@@ -367,6 +360,20 @@ continues:
     }
 #endif
     [self fireOnHarvestComplete];
+}
+
+- (BOOL) checkResponseAndPersist:(NRMAHarvestResponse*) response {
+    if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
+        NSError* error = nil;
+        NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.harvestData options:0 error:&error];
+        if (error) {
+            NRLOG_ERROR(@"Failed to generate JSON");
+            return false;
+        }
+        [connection.offlineStorage persistDataToDisk:jsonData];
+        return true;
+    }
+    return false;
 }
 
 - (void) disconnected

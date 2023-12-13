@@ -133,8 +133,8 @@
     return mockNSURLSession;
 }
 
-- (id) makeMockURLSessionResponseError {
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:403 HTTPVersion:@"1.1" headerFields:nil];
+- (id) makeMockURLSessionResponseError:(NSError*) error statusCode:(NSInteger)statusCode {
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:statusCode HTTPVersion:@"1.1" headerFields:nil];
     
     id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
     [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
@@ -148,7 +148,6 @@
     }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
 
     [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        NSError *error = [NSError errorWithDomain:@"" code:403 userInfo:@{@"Error reason": @"Invalid Input"}];
         completionHandler([@"DISABLE_NEW_RELIC" dataUsingEncoding:NSUTF8StringEncoding], bresponse, error);
     }] resume];
     
@@ -252,6 +251,55 @@
 
     [connectionMock  stopMocking];
     [harvesterMock stopMocking];
+}
+
+- (void) testOfflineStorage
+{
+    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+    id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+
+    id mockHarvester = [OCMockObject partialMockForObject:newHarvester];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+    [mockHarvester setAgentConfiguration:agentConfig];
+    
+    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
+    [connectionMock setApplicationToken:@"APP_TOKEN"];
+    
+    NRMAHarvesterConfiguration* v3config = [[NRMAHarvesterConfiguration alloc] init];
+    v3config.collect_network_errors = YES;
+    v3config.cross_process_id = @"cross_process_id";
+    v3config.data_report_period = 60;
+    v3config.data_token = [[NRMADataToken alloc] init];
+    v3config.data_token.clusterAgentId = 36920;
+    v3config.data_token.realAgentId = 36921;
+    v3config.error_limit = 50;
+    v3config.report_max_transaction_age = 600;
+    v3config.report_max_transaction_count =1000;
+    v3config.response_body_limit = 2048;
+    v3config.server_timestamp = 1379548800;
+    v3config.stack_trace_limit = 100;
+    v3config.account_id = 1;
+    v3config.application_id = 1;
+    v3config.encoding_key = @"encoding_key";
+    v3config.application_token = @"APP_TOKEN";
+    [[[mockHarvester stub] andReturn:v3config] fetchHarvestConfiguration];
+        
+    [mockHarvester connected];
+    
+    NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
+    XCTAssertTrue(offlineData.count > 0);
+
+    mockNSURLSession = [self makeMockURLSession];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+    
+    [mockHarvester connected];
+    
+    offlineData = [newHarvester.connection getOfflineData];
+    XCTAssertTrue(offlineData.count == 0);
+
+    [mockHarvester stopMocking];
+    [connectionMock stopMocking];
 }
 
 // TODO: Reenable/rewrite these tests related to Harvester/Stored Data. JIRA: NR-96516
@@ -431,7 +479,7 @@
 
 - (void) testUninitializedToDisabled
 {
-    id mockNSURLSession = [self makeMockURLSessionResponseError];
+    id mockNSURLSession = [self makeMockURLSessionResponseError:[NSError errorWithDomain:@"" code:403 userInfo:@{@"Error reason": @"Invalid Input"}] statusCode:403];
     harvester.connection.harvestSession = mockNSURLSession;
 
    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_UNINITIALIZED, @"expected uninitizlized");

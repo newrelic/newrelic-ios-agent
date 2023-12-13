@@ -37,12 +37,13 @@ static NSString* _name;
 }
 
 - (BOOL) persistDataToDisk:(NSData*) data {
-    @synchronized (_name) {
+    @synchronized (self) {
         [self createDirectory];
         
         NSError *error = nil;
         if (data) {
             if ([data writeToFile:[NRMAOfflineStorage newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
+                NRLOG_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage.");
                 return YES;
             }
         }
@@ -52,8 +53,8 @@ static NSString* _name;
     }
 }
 
-- (NSArray<NSData *> *) getAllOfflineData {
-    @synchronized (_name) {
+- (NSArray<NSData *> *) getAllOfflineData:(BOOL) clear {
+    @synchronized (self) {
         NSMutableArray<NSData *> *combinedPosts = [NSMutableArray array];
         
         NSArray* dirs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NRMAOfflineStorage offlineDirectoryPath]
@@ -61,11 +62,14 @@ static NSString* _name;
         [dirs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             NSString *filename = (NSString *)obj;
             NSData * data = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@",[NRMAOfflineStorage offlineDirectoryPath],filename]];
+            NRLOG_VERBOSE(@"Offline storage to be uploaded from %@", filename);
             
             [combinedPosts addObject:data];
         }];
         
-        [self clearAllOfflineFiles];
+        if(clear){
+            [self clearAllOfflineFiles];
+        }
         
         return [combinedPosts copy];
     }
@@ -85,6 +89,11 @@ static NSString* _name;
     NSString *date = [dateFormatter stringFromDate:[NSDate date]];
 
     return [NSString stringWithFormat:@"%@/%@%@",[NRMAOfflineStorage offlineDirectoryPath],date,@".txt"];
+}
+
++ (BOOL)checkErrorToPersist:(NSError*) error {
+    return (error.code == NSURLErrorNotConnectedToInternet || error.code == NSURLErrorTimedOut);
+
 }
 
 @end

@@ -11,6 +11,7 @@
 
 - (id)initWithEndpoint:(NSString*) name;
 - (BOOL)persistDataToDisk:(NSData*) data;
-- (NSArray<NSData *> *) getAllOfflineData;
+- (NSArray<NSData *> *) getAllOfflineData:(BOOL) clear;
++ (BOOL)checkErrorToPersist:(NSError*) error;
 
 @end

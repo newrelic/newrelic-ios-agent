@@ -12,6 +12,7 @@
 #import "NRMAJSON.h"
 #import "NRMAConnection.h"
 #import "NRMAOfflineStorage.h"
+#import "NRMAHarvestData.h"
 
 #define kCOLLECTOR_CONNECT_URI         @"/mobile/v4/connect"
 #define kCOLLECTOR_DATA_URL            @"/mobile/v3/data"
@@ -33,5 +34,6 @@
 - (NRMAHarvestResponse*) sendData:(NRMAHarvestable*)harvestable;
 - (NSURLRequest*) createConnectPost:(NSString*)message;
 - (NSURLRequest*) createDataPost:(NSString*)message;
+- (NSArray<NSData *> *) getOfflineData;
 - (void) sendOfflineStorage;
 @end

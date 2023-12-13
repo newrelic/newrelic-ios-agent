@@ -27,8 +27,12 @@
     return self;
 }
 
+- (NSArray<NSData *> *) getOfflineData {
+    return [self.offlineStorage getAllOfflineData:NO];
+}
+
 -(void) sendOfflineStorage {
-    NSArray<NSData *> * offlineData = [self.offlineStorage getAllOfflineData];
+    NSArray<NSData *> * offlineData = [self.offlineStorage getAllOfflineData:YES];
     if(offlineData.count == 0){
         return;
     }
@@ -43,7 +47,11 @@
             return;
         }
                 
-        [self send:post];
+        NRMAHarvestResponse* response = [self send:post];
+        
+        if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
+            [_offlineStorage persistDataToDisk:jsonData];
+        }
     }];
 }
 
