@@ -12,6 +12,7 @@
 #import "NRMAOfflineStorage.h"
 #import "Constants.h"
 #import "NRMAJSON.h"
+#import "NRMASupportMetricHelper.h"
 
 @implementation NRMAOfflineStorage {
 }
@@ -92,8 +93,7 @@ static NSString* _name;
 }
 
 + (BOOL)checkErrorToPersist:(NSError*) error {
-    return (error.code == NSURLErrorNotConnectedToInternet || error.code == NSURLErrorTimedOut);
-
+    return (error.code == NSURLErrorNotConnectedToInternet || error.code == NSURLErrorTimedOut || error.code == NSURLErrorCannotFindHost || error.code == NSURLErrorNetworkConnectionLost || error.code == NSURLErrorCannotConnectToHost);
 }
 
 @end

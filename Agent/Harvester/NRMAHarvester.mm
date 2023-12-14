@@ -333,7 +333,8 @@
     //TODO: add addition collector response processing.
     if (response.isError) {
         // failure
-        if([self checkResponseAndPersist:response]) {
+        if([self checkOfflineAndPersist:response]) {
+            // If the harvest was persisted for offline storage clear the harvest.
             [self.harvestData clear];
         } else {
             [self fireOnHarvestFailure];
@@ -341,10 +342,11 @@
     } else {
         // success
         [self.harvestData clear];
+        // If there was a successful harvest upload send the persisted offline payloads.
         [connection sendOfflineStorage];
     }
     //Supportability/MobileAgent/Collector/Harvest
-continues:
+
     [harvestTimer stopTimer];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
@@ -362,7 +364,7 @@ continues:
     [self fireOnHarvestComplete];
 }
 
-- (BOOL) checkResponseAndPersist:(NRMAHarvestResponse*) response {
+- (BOOL) checkOfflineAndPersist:(NRMAHarvestResponse*) response {
     if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
         NSError* error = nil;
         NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.harvestData options:0 error:&error];

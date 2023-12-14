@@ -46,11 +46,12 @@
             NRLOG_ERROR(@"Failed to create data POST");
             return;
         }
-                
+        [NRMASupportMetricHelper enqueueOfflinePayloadMetric:@"data" size:[post.HTTPBody length]];
+
         NRMAHarvestResponse* response = [self send:post];
         
         if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
-            [_offlineStorage persistDataToDisk:jsonData];
+         //   [_offlineStorage persistDataToDisk:jsonData]; Re-save if failed to send again?
         }
     }];
 }

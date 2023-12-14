@@ -8,6 +8,7 @@
 
 #import "NRMAMobileEvent.h"
 #import "Constants.h"
+#import "NewRelicInternalUtils.h"
 
 static NSString* const kTimestampKey = @"Timestamp";
 static NSString* const kSessionElapsedTimeKey = @"SessionElapsedTime";
@@ -56,7 +57,14 @@ static NSString* const kAttributesKey = @"Attributes";
     dict[kNRMA_RA_timestamp] = @(self.timestamp);
     dict[kNRMA_RA_sessionElapsedTime] = @(self.sessionElapsedTimeSeconds);
     dict[kNRMA_RA_eventType] = self.eventType;
-
+    
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    @synchronized(r) {
+        NRMANetworkStatus status = [r currentReachabilityStatus];
+        if (status == NotReachable) {
+            dict[@"Offline"] = [[NSNumber alloc] initWithBool:TRUE];
+        }
+    }
     return [NSDictionary dictionaryWithDictionary:dict];
 }
 
