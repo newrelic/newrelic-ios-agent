@@ -129,6 +129,22 @@
     XCTAssertNotNil([NewRelic startInteractionWithName:@"test"]);
 }
 
+- (void) testEnableNewEventSystem {
+    [NRMAFlags setFeatureFlags:0];
+    NRMAFeatureFlags flags = [NRMAFlags featureFlags];
+    XCTAssertFalse(flags, @"flags should be empty");
+    
+    XCTAssertFalse([NRMAFlags shouldEnableNewEventSystem], @"flags should be empty");
+    //XCTAssertNil([NewRelic startInteractionWithName:@"test"], @"should be nil when Interaction Tracing is disabled");
+    
+    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
+    flags = [NRMAFlags featureFlags];
+    XCTAssertTrue(flags & NRFeatureFlag_NewEventSystem, @"flags should have New Event System enabled");
+    XCTAssertFalse(flags & ~NRFeatureFlag_NewEventSystem , @"flags shouldn't have any other bit enabled.");
+    
+   // XCTAssertNotNil([NewRelic startInteractionWithName:@"test"]);
+}
+
 - (void) testRecordMetricsConsistency
 {
     NRMAMeasurementConsumerHelper* metricHelper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
@@ -435,6 +451,21 @@
     XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
     XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
     XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+
+}
+
+- (void) testRecordHandledExceptionsNewEventSystem {
+    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
+    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+                                                                              reason:@"testing"
+                                                                            userInfo:@{}]]);
+    XCTAssertNoThrow([NewRelic recordHandledException:nil withAttributes: nil]);
+    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+                                                                              reason:@"testing"
+                                                                            userInfo:@{}] withAttributes: nil]);
+    NSDictionary *dict = @{ @"name" : @"test name", @"reason" : @"test reason"};
+    XCTAssertNoThrow([NewRelic recordHandledExceptionWithStackTrace: dict]);
+    [NewRelic disableFeatures:NRFeatureFlag_NewEventSystem];
 
 }
 

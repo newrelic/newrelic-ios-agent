@@ -13,7 +13,7 @@
 #import "NRMAMetric.h"
 #import "NRMAAnalytics.h"
 #import "NRMABool.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NRMASupportMetricHelper.h"
 
 @interface NRMAAppInstallMetricGenerator ()
@@ -140,7 +140,7 @@
 }
 
 - (void) sendInstallAttributeToAnalytics:(NRMAAnalytics*)analytics {
-    [analytics setNRSessionAttribute:@(__kNRMA_RA_install)
+    [analytics setNRSessionAttribute:kNRMA_RA_install
                                value:[[NRMABool alloc] initWithBOOL:YES]];
 }
 - (void) didInitializeAnalytics:(NSNotification*)notif {

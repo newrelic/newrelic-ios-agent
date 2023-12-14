@@ -8,10 +8,11 @@
 #import "NRMABool.h"
 
 @implementation NRMAExceptionReportAdaptor
-- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>)context {
+- (instancetype) initWithReport:(std::shared_ptr<NewRelic::Hex::Report::HexReport>)context attributeValidator:(id<AttributeValidatorProtocol>) attributeValidator {
     self = [super init];
     if(self) {
         _report = context;
+        _attributeValidator = attributeValidator;
     }
     return self;
 }
@@ -19,6 +20,8 @@
 - (std::shared_ptr<NewRelic::Hex::Report::HexReport>) report {
     return _report;
 }
+
+// Old Event System
 
 - (void) addAttributes:(NSDictionary*)attributes {
     for (NSString* key in attributes) {
@@ -55,5 +58,53 @@
 - (void) addKey:(NSString*)key
       boolValue:(NRMABool*)boolean {
     _report->setAttribute(key.UTF8String, (bool)boolean.value);
+}
+
+// New Event System
+
+- (void) addAttributesNewValidation:(NSDictionary*)attributes {
+    for (NSString* key in attributes) {
+        NSObject* obj = attributes[key];
+
+        if(_attributeValidator != nil && ![_attributeValidator nameValidator:key]) {
+            continue;
+        }
+
+        if(_attributeValidator != nil && ![_attributeValidator valueValidator:obj]) {
+            continue;
+        }
+
+        if ([obj isKindOfClass:[NSString class]]) {
+            [self addKeyNoValidation:key
+             stringValue:(NSString*)obj];
+        } else if ([obj isKindOfClass:[NSNumber class]]) {
+            [self addKeyNoValidation:key
+             numberValue:(NSNumber*)obj];
+        } else if ([obj isKindOfClass:[NRMABool class]]) {
+            [self addKeyNoValidation:key
+               boolValue:(NRMABool*)obj];
+        }
+    }
+}
+
+- (void) addKeyNoValidation:(NSString*)key
+    numberValue:(NSNumber*)num
+{
+    // objcType returns a char*, but all primitives are denoted by a single character.
+    if ([NewRelicInternalUtils isInteger:num]) {
+        _report->setAttributeNoValidation(key.UTF8String, [num longLongValue]);
+    } else if([NewRelicInternalUtils isFloat:num]) {
+        _report->setAttributeNoValidation(key.UTF8String, [num doubleValue]);
+    }
+}
+
+- (void) addKeyNoValidation:(NSString*)key
+    stringValue:(NSString*)string {
+    _report->setAttributeNoValidation(key.UTF8String, (string.UTF8String));
+}
+
+- (void) addKeyNoValidation:(NSString*)key
+      boolValue:(NRMABool*)boolean {
+    _report->setAttributeNoValidation(key.UTF8String, (bool)boolean.value);
 }
 @end

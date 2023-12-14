@@ -7,7 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2BBD893D2AD616EF00AA64AD /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; platformFilters = (ios, maccatalyst, ); };
+		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
+		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
+		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
+		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
+		2BD05DDE2ADF326A00C0C972 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
+		2BD05DDF2ADF326A00C0C972 /* HttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA92ADF2DF600C0C972 /* HttpServer.swift */; };
+		2BD05DE02ADF326A00C0C972 /* String+BASE64.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAC2ADF2DF600C0C972 /* String+BASE64.swift */; };
+		2BD05DE12ADF326A00C0C972 /* Socket+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAB2ADF2DF600C0C972 /* Socket+File.swift */; };
+		2BD05DE22ADF326A00C0C972 /* String+Misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAD2ADF2DF600C0C972 /* String+Misc.swift */; };
+		2BD05DE32ADF326A00C0C972 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
+		2BD05DE42ADF326A00C0C972 /* HTTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAF2ADF2DF600C0C972 /* HTTPParser.swift */; };
+		2BD05DE52ADF326A00C0C972 /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB12ADF2DF600C0C972 /* Socket.swift */; };
+		2BD05DE62ADF326A00C0C972 /* HttpRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA72ADF2DF600C0C972 /* HttpRequest.swift */; };
+		2BD05DE72ADF326A00C0C972 /* HttpServerIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */; };
+		2BD05DE82ADF326A00C0C972 /* String+SHA1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA42ADF2DF600C0C972 /* String+SHA1.swift */; };
+		2BD05DE92ADF326A00C0C972 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */; };
+		2BD05DEA2ADF326A00C0C972 /* Socket+Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA32ADF2DF600C0C972 /* Socket+Server.swift */; };
+		2BD05DEB2ADF326A00C0C972 /* Errno.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAA2ADF2DF600C0C972 /* Errno.swift */; };
+		2BD05DEC2ADF326A00C0C972 /* HttpRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAE2ADF2DF600C0C972 /* HttpRouter.swift */; };
+		2BD05DED2ADF326A00C0C972 /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA62ADF2DF600C0C972 /* Files.swift */; };
+		2BD05DEE2ADF326A00C0C972 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
+		2BD05DEF2ADF326A00C0C972 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
+		2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD05DF12ADF32D300C0C972 /* harvestConnector.json */; };
+		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
+		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
+		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F824A30229A811E8000886A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F824A30129A811E8000886A6 /* Assets.xcassets */; };
 		F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */; };
 		F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */; };
@@ -62,6 +88,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2BD05DD72ADF323A00C0C972 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F8302AF4296F5EFA003EC291;
+			remoteInfo = NRTestApp;
+		};
 		2B8621D22AD6129000175D3C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
@@ -145,7 +178,34 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
+		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
+		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
+		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
+		2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpServerIO.swift; sourceTree = "<group>"; };
+		2BD05DA22ADF2DF600C0C972 /* Process.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Process.swift; sourceTree = "<group>"; };
+		2BD05DA32ADF2DF600C0C972 /* Socket+Server.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Socket+Server.swift"; sourceTree = "<group>"; };
+		2BD05DA42ADF2DF600C0C972 /* String+SHA1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+SHA1.swift"; sourceTree = "<group>"; };
+		2BD05DA52ADF2DF600C0C972 /* String+File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+File.swift"; sourceTree = "<group>"; };
+		2BD05DA62ADF2DF600C0C972 /* Files.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
+		2BD05DA72ADF2DF600C0C972 /* HttpRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpRequest.swift; sourceTree = "<group>"; };
+		2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpResponse.swift; sourceTree = "<group>"; };
+		2BD05DA92ADF2DF600C0C972 /* HttpServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpServer.swift; sourceTree = "<group>"; };
+		2BD05DAA2ADF2DF600C0C972 /* Errno.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Errno.swift; sourceTree = "<group>"; };
+		2BD05DAB2ADF2DF600C0C972 /* Socket+File.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Socket+File.swift"; sourceTree = "<group>"; };
+		2BD05DAC2ADF2DF600C0C972 /* String+BASE64.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+BASE64.swift"; sourceTree = "<group>"; };
+		2BD05DAD2ADF2DF600C0C972 /* String+Misc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Misc.swift"; sourceTree = "<group>"; };
+		2BD05DAE2ADF2DF600C0C972 /* HttpRouter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpRouter.swift; sourceTree = "<group>"; };
+		2BD05DAF2ADF2DF600C0C972 /* HTTPParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPParser.swift; sourceTree = "<group>"; };
+		2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MimeTypes.swift; sourceTree = "<group>"; };
+		2BD05DB12ADF2DF600C0C972 /* Socket.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Socket.swift; sourceTree = "<group>"; };
+		2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPDynamicStubs.swift; sourceTree = "<group>"; };
+		2BD05DD12ADF323A00C0C972 /* NRTestAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NRTestAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppUITests.swift; sourceTree = "<group>"; };
+		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
+		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
 		F824A30129A811E8000886A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
 		F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageFullScreen.swift; sourceTree = "<group>"; };
@@ -188,6 +248,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		2BD05DCE2ADF323A00C0C972 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F8302AF2296F5EFA003EC291 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -221,6 +288,53 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2BD05D9D2ADF2DF600C0C972 /* Swifter */ = {
+			isa = PBXGroup;
+			children = (
+				2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */,
+				2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */,
+				2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */,
+				2BD05DA22ADF2DF600C0C972 /* Process.swift */,
+				2BD05DA32ADF2DF600C0C972 /* Socket+Server.swift */,
+				2BD05DA42ADF2DF600C0C972 /* String+SHA1.swift */,
+				2BD05DA52ADF2DF600C0C972 /* String+File.swift */,
+				2BD05DA62ADF2DF600C0C972 /* Files.swift */,
+				2BD05DA72ADF2DF600C0C972 /* HttpRequest.swift */,
+				2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */,
+				2BD05DA92ADF2DF600C0C972 /* HttpServer.swift */,
+				2BD05DAA2ADF2DF600C0C972 /* Errno.swift */,
+				2BD05DAB2ADF2DF600C0C972 /* Socket+File.swift */,
+				2BD05DAC2ADF2DF600C0C972 /* String+BASE64.swift */,
+				2BD05DAD2ADF2DF600C0C972 /* String+Misc.swift */,
+				2BD05DAE2ADF2DF600C0C972 /* HttpRouter.swift */,
+				2BD05DAF2ADF2DF600C0C972 /* HTTPParser.swift */,
+				2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */,
+				2BD05DB12ADF2DF600C0C972 /* Socket.swift */,
+			);
+			path = Swifter;
+			sourceTree = "<group>";
+		};
+		2BD05DD22ADF323A00C0C972 /* NRTestAppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				2B2317DE2ADF442100D521E1 /* Info.plist */,
+				2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */,
+				2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */,
+				2BD05DF02ADF32BF00C0C972 /* Stubs */,
+				2BD05D9D2ADF2DF600C0C972 /* Swifter */,
+			);
+			path = NRTestAppUITests;
+			sourceTree = "<group>";
+		};
+		2BD05DF02ADF32BF00C0C972 /* Stubs */ = {
+			isa = PBXGroup;
+			children = (
+				2B2B3FB32AEB166E00C24897 /* harvestCollector.json */,
+				2BD05DF12ADF32D300C0C972 /* harvestConnector.json */,
+			);
+			path = Stubs;
+			sourceTree = "<group>";
+		};
 		F8302AEC296F5EFA003EC291 = {
 			isa = PBXGroup;
 			children = (
@@ -229,6 +343,7 @@
 				F8302B0E296F5EFB003EC291 /* NRTestAppTests */,
 				F86428EB2979CDAF002ABA01 /* NRTestApp (tvOS) */,
 				F848CDE22AA270E80082052F /* NRTestApp(tvOS)Tests */,
+				2BD05DD22ADF323A00C0C972 /* NRTestAppUITests */,
 				F8302AF6296F5EFA003EC291 /* Products */,
 				F8302B8129705B28003EC291 /* Frameworks */,
 			);
@@ -241,6 +356,7 @@
 				F8302B0B296F5EFB003EC291 /* NRTestAppTests.xctest */,
 				F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */,
 				F848CDE12AA270E80082052F /* NRTestApp(tvOS)Tests.xctest */,
+				2BD05DD12ADF323A00C0C972 /* NRTestAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -251,6 +367,7 @@
 				2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */,
 				F86428492971DF80002ABA01 /* Helpers */,
 				F8302AF8296F5EFA003EC291 /* AppDelegate.swift */,
+				2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */,
 				F8302B872970769E003EC291 /* Navigation */,
 				F8302B8C29707828003EC291 /* ViewControllers */,
 				F8302B8F297078F2003EC291 /* ViewModels */,
@@ -360,6 +477,7 @@
 				F8302B9C2970B3E0003EC291 /* ApodURL.swift */,
 				F864286229775023002ABA01 /* plistHelper.swift */,
 				F864284B2971DFA5002ABA01 /* triggerException.m */,
+				2B708A982ADF3AD80063110E /* NewRelic+Replace.h */,
 				F864284D2971DFC9002ABA01 /* triggerException.h */,
 				F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */,
 			);
@@ -387,6 +505,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		2BD05DD02ADF323A00C0C972 /* NRTestAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2BD05DD92ADF323A00C0C972 /* Build configuration list for PBXNativeTarget "NRTestAppUITests" */;
+			buildPhases = (
+				2BD05DCD2ADF323A00C0C972 /* Sources */,
+				2BD05DCE2ADF323A00C0C972 /* Frameworks */,
+				2BD05DCF2ADF323A00C0C972 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2BD05DD82ADF323A00C0C972 /* PBXTargetDependency */,
+			);
+			name = NRTestAppUITests;
+			productName = NRTestAppUITests;
+			productReference = 2BD05DD12ADF323A00C0C972 /* NRTestAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		F8302AF4296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F8302B1F296F5EFB003EC291 /* Build configuration list for PBXNativeTarget "NRTestApp" */;
@@ -468,9 +604,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1430;
+				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1420;
 				TargetAttributes = {
+					2BD05DD02ADF323A00C0C972 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = F8302AF4296F5EFA003EC291;
+					};
 					F8302AF4296F5EFA003EC291 = {
 						CreatedOnToolsVersion = 14.2;
 						LastSwiftMigration = 1420;
@@ -511,6 +651,7 @@
 				F86428E92979CDAF002ABA01 /* NRTestApp (tvOS) */,
 				F8302B0A296F5EFB003EC291 /* NRTestAppTests */,
 				F848CDE02AA270E80082052F /* NRTestApp(tvOS)Tests */,
+				2BD05DD02ADF323A00C0C972 /* NRTestAppUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -561,6 +702,15 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		2BD05DCF2ADF323A00C0C972 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */,
+				2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F8302AF3296F5EFA003EC291 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -639,6 +789,34 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2BD05DCD2ADF323A00C0C972 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BD05DE12ADF326A00C0C972 /* Socket+File.swift in Sources */,
+				2BD05DDE2ADF326A00C0C972 /* HttpResponse.swift in Sources */,
+				2BD05DE22ADF326A00C0C972 /* String+Misc.swift in Sources */,
+				2BD05DE02ADF326A00C0C972 /* String+BASE64.swift in Sources */,
+				2BD05DE42ADF326A00C0C972 /* HTTPParser.swift in Sources */,
+				2BD05DE82ADF326A00C0C972 /* String+SHA1.swift in Sources */,
+				2BD05DEB2ADF326A00C0C972 /* Errno.swift in Sources */,
+				2BD05DE62ADF326A00C0C972 /* HttpRequest.swift in Sources */,
+				2BD05DEC2ADF326A00C0C972 /* HttpRouter.swift in Sources */,
+				2BD05DED2ADF326A00C0C972 /* Files.swift in Sources */,
+				2BD05DE32ADF326A00C0C972 /* WebSockets.swift in Sources */,
+				2BD05DE52ADF326A00C0C972 /* Socket.swift in Sources */,
+				2BD05DEA2ADF326A00C0C972 /* Socket+Server.swift in Sources */,
+				2BD05DE92ADF326A00C0C972 /* Scopes.swift in Sources */,
+				2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */,
+				2BD05DEE2ADF326A00C0C972 /* MimeTypes.swift in Sources */,
+				2BD05DE72ADF326A00C0C972 /* HttpServerIO.swift in Sources */,
+				2BD05DDF2ADF326A00C0C972 /* HttpServer.swift in Sources */,
+				2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */,
+				2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */,
+				2BD05DEF2ADF326A00C0C972 /* Process.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F8302AF1296F5EFA003EC291 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -658,6 +836,7 @@
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
+				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
@@ -713,6 +892,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2BD05DD82ADF323A00C0C972 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
+			targetProxy = 2BD05DD72ADF323A00C0C972 /* PBXContainerItemProxy */;
+		};
 		F8302B0D296F5EFB003EC291 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
@@ -745,6 +929,61 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		2BD05DDA2ADF323A00C0C972 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NRTestAppUITests/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRTestAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NRTestApp;
+			};
+			name = Debug;
+		};
+		2BD05DDB2ADF323A00C0C972 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NRTestAppUITests/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRTestAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NRTestApp;
+			};
+			name = Release;
+		};
 		F8302B1D296F5EFB003EC291 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1104,6 +1343,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2BD05DD92ADF323A00C0C972 /* Build configuration list for PBXNativeTarget "NRTestAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2BD05DDA2ADF323A00C0C972 /* Debug */,
+				2BD05DDB2ADF323A00C0C972 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F8302AF0296F5EFA003EC291 /* Build configuration list for PBXProject "NRTestApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
