@@ -58,13 +58,6 @@ static NSString* const kAttributesKey = @"Attributes";
     dict[kNRMA_RA_sessionElapsedTime] = @(self.sessionElapsedTimeSeconds);
     dict[kNRMA_RA_eventType] = self.eventType;
     
-    NRMAReachability* r = [NewRelicInternalUtils reachability];
-    @synchronized(r) {
-        NRMANetworkStatus status = [r currentReachabilityStatus];
-        if (status == NotReachable) {
-            dict[@"Offline"] = [[NSNumber alloc] initWithBool:TRUE];
-        }
-    }
     return [NSDictionary dictionaryWithDictionary:dict];
 }
 

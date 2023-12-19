@@ -11,9 +11,9 @@
 #import "NRLogger.h"
 #include <libkern/OSAtomic.h>
 #import "NRMASupportMetricHelper.h"
+#import "NRConstants.h"
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
-#define kNRMAMaxPayloadSizeLimit 1000000
 
 @interface NRMAHexUploader()
 @property(strong) NSString* host;

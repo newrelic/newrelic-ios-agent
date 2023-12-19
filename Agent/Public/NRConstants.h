@@ -124,7 +124,7 @@ typedef NSString NRMetricUnit;
 #define kNRMAMaxPayloadSizeLimitSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/MaxPayloadSizeLimit/%@"
 #define kNRMAMaxPayloadSizeLimit         1000000 // bytes
 
-#define kNRMAOfflineSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/Offline/bytes"
+#define kNRMAOfflineSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/OfflinePayload/bytes"
 
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"

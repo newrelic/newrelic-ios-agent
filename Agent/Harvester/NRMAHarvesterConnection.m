@@ -46,7 +46,7 @@
             NRLOG_ERROR(@"Failed to create data POST");
             return;
         }
-        [NRMASupportMetricHelper enqueueOfflinePayloadMetric:@"data" size:[post.HTTPBody length]];
+        [NRMASupportMetricHelper enqueueOfflinePayloadMetric:[post.HTTPBody length]];
 
         NRMAHarvestResponse* response = [self send:post];
         

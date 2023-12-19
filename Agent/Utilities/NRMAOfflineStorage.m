@@ -28,11 +28,11 @@ static NSString* _name;
 }
 
 - (void) createDirectory {
-    BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:[NRMAOfflineStorage offlineDirectoryPath] isDirectory:nil];
+    BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:[self offlineDirectoryPath] isDirectory:nil];
     if(!fileExists){
         NSError *error = nil;
-        if(![[NSFileManager defaultManager] createDirectoryAtPath:[NRMAOfflineStorage offlineDirectoryPath] withIntermediateDirectories:YES attributes:nil error:&error]) {
-            NSLog(@"Failed to create directory \"%@\". Error: %@", [NRMAOfflineStorage offlineDirectoryPath], error);
+        if(![[NSFileManager defaultManager] createDirectoryAtPath:[self offlineDirectoryPath] withIntermediateDirectories:YES attributes:nil error:&error]) {
+            NSLog(@"Failed to create directory \"%@\". Error: %@", [self offlineDirectoryPath], error);
         }
     }
 }
@@ -43,7 +43,7 @@ static NSString* _name;
         
         NSError *error = nil;
         if (data) {
-            if ([data writeToFile:[NRMAOfflineStorage newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
+            if ([data writeToFile:[self newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
                 NRLOG_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage.");
                 return YES;
             }
@@ -58,11 +58,11 @@ static NSString* _name;
     @synchronized (self) {
         NSMutableArray<NSData *> *combinedPosts = [NSMutableArray array];
         
-        NSArray* dirs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NRMAOfflineStorage offlineDirectoryPath]
+        NSArray* dirs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[self offlineDirectoryPath]
                                                                             error:NULL];
         [dirs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             NSString *filename = (NSString *)obj;
-            NSData * data = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@",[NRMAOfflineStorage offlineDirectoryPath],filename]];
+            NSData * data = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@",[self offlineDirectoryPath],filename]];
             NRLOG_VERBOSE(@"Offline storage to be uploaded from %@", filename);
             
             [combinedPosts addObject:data];
@@ -77,19 +77,19 @@ static NSString* _name;
 }
 
 - (BOOL) clearAllOfflineFiles {
-    return [[NSFileManager defaultManager] removeItemAtPath:[NRMAOfflineStorage offlineDirectoryPath] error:NULL];
+    return [[NSFileManager defaultManager] removeItemAtPath:[self offlineDirectoryPath] error:NULL];
 }
 
-+ (NSString*)offlineDirectoryPath {
+- (NSString*)offlineDirectoryPath {
     return [NSString stringWithFormat:@"%@/%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Offline_file,_name];
 }
 
-+ (NSString*)newOfflineFilePath {
+- (NSString*)newOfflineFilePath {
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss"];
     NSString *date = [dateFormatter stringFromDate:[NSDate date]];
 
-    return [NSString stringWithFormat:@"%@/%@%@",[NRMAOfflineStorage offlineDirectoryPath],date,@".txt"];
+    return [NSString stringWithFormat:@"%@/%@%@",[self offlineDirectoryPath],date,@".txt"];
 }
 
 + (BOOL)checkErrorToPersist:(NSError*) error {

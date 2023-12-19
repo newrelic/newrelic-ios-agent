@@ -475,6 +475,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
     [self initializeAnalytics];
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
 
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController
@@ -483,7 +484,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                              platform:[NewRelicInternalUtils osName]
                                                                                             sessionId:[self currentSessionId]];
 
-        [self.handledExceptionsController processAndPublishPersistedReports];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            if (status != NotReachable) {
+                [self.handledExceptionsController processAndPublishPersistedReports];
+            }
+        }
 
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
 
@@ -493,8 +499,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
-
-        [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            if (status != NotReachable) {
+                [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+            }
+        }
     }
     
     if([NRMAFlags shouldEnableGestureInstrumentation])
