@@ -72,6 +72,10 @@ withMessage:(NSString *)message {
     [[NRLogger logger] setLogIngestKey:key];
 }
 
++ (void)setLogEntityGuid:(NSString*)key {
+    [[NRLogger logger] setLogEntityGuid:key];
+}
+
 + (void)setLogURL:(NSString*) url {
     [[NRLogger logger] setLogURL:url];
 
@@ -185,7 +189,9 @@ withMessage:(NSString *)message {
     // TODO: Remove hardcoded entityId and Get this value from /connect response
     NSString* entityGuid = [NSString stringWithFormat:@"%@", configuration.entity_guid];
     if ([entityGuid length] == 0) {
-        entityGuid = @"MTA4MTY5OTR8TU9CSUxFfEFQUExJQ0FUSU9OfDM5MDI3NDMz";
+        if (logEntityGuid != nil) {
+            entityGuid = logEntityGuid;
+        }
     }
     //                                                    1                 2                    3                   4                  5                   6                     7                     8                      9
     NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\", \n  \"%@\" : \"%@\"\n}",
@@ -312,6 +318,11 @@ withMessage:(NSString *)message {
 - (void)setLogIngestKey:(NSString*)url {
     self->logIngestKey = url;
 }
+
+- (void)setLogEntityGuid:(NSString*)url {
+    self->logEntityGuid = url;
+}
+
 - (void)setLogURL:(NSString*)url {
     self->logURL = url;
 }

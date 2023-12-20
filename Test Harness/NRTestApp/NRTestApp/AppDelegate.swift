@@ -87,6 +87,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
         }
 
+        if let logEntityGuid = plistHelper.objectFor(key: "logEntityGuid", plist: "NRAPI-Info") as? String, !logEntityGuid.isEmpty {
+            NRLogger.setLogEntityGuid(logEntityGuid)
+        }
+        else {
+            NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
+        }
+
         NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }

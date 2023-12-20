@@ -94,6 +94,8 @@ typedef enum _NRLogTargets {
     NSString *logURL;
 
     NSString *logIngestKey;
+    NSString *logEntityGuid;
+
     dispatch_queue_t logQueue;
     unsigned long long lastFileSize;
 
@@ -127,12 +129,18 @@ withMessage:(NSString *)message;
 + (void)setLogTargets:(unsigned int)targets;
 
 /*
-Configure the New Relic headerless logging API URL.
+Configure the New Relic logging API.
 
 @param url A single NSString constant, the logging API URL.
 */
 + (void)setLogIngestKey:(NSString*) key;
 
+/*
+ Configure the New Relic logging API.
+
+@param url A single NSString constant, the logging API URL.
+*/
++ (void)setLogEntityGuid:(NSString*) key;
 
 + (void)setLogURL:(NSString*) url;
 
