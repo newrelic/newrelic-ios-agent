@@ -39,6 +39,7 @@ class UtilViewModel {
         options.append(UtilOption(title: "Record Error", handler: { [self] in makeError()}))
         options.append(UtilOption(title: "Record Handled Exception", handler: { triggerException.testing()}))
         options.append(UtilOption(title: "Set UserID", handler: { [self] in changeUserID()}))
+        options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
         options.append(UtilOption(title: "Make 100 events every 10 seconds", handler: { [self] in startCustomEventTimer()}))
         options.append(UtilOption(title: "Stop 100 events every 10 seconds", handler: { [self] in stopCustomEventTimer()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
