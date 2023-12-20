@@ -18,5 +18,6 @@ static NSMutableArray *deferredMetrics = NULL;
 + (void) enqueueMaxPayloadSizeLimitMetric:(NSString*)endpoint;
 + (void) enqueueUpgradeMetric;
 + (void) enqueueStopAgentMetric;
++ (void) enqueueConfigurationUpdateMetric;
 + (void) processDeferredMetrics;
 @end

@@ -78,6 +78,16 @@
                                                           scope:nil]];
 }
 
++ (void) enqueueConfigurationUpdateMetric {
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
+    }
+    NSString* metricString = [NSString stringWithFormat:kNRMAConfigurationUpdated, [NewRelicInternalUtils osName], kPlatformPlaceholder];
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
+                                                          value:@1
+                                                          scope:nil]];
+}
+
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {
