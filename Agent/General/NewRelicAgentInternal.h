@@ -13,6 +13,8 @@
 #import "NRMAUserActionFacade.h"
 #import "NRMAURLTransformer.h"
 
+#import <BackgroundTasks/BackgroundTasks.h>
+
 // Keys used for harvester data request.
 #define NEW_RELIC_APP_VERSION_HEADER_KEY        @"X-NewRelic-App-Version"
 #define NEW_RELIC_OS_NAME_HEADER_KEY            @"X-NewRelic-OS-Name"

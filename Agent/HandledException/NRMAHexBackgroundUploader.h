@@ -6,10 +6,10 @@
 #import <Foundation/Foundation.h>
 #import "NRMAConnection.h"
 
-@interface NRMAHexBackgroundUploader : NRMAConnection<NSURLSessionDelegate>
-@property(strong) NSString* hexHost;
-
-- (instancetype) initWithHexHost:(NSString*)hexHost;
-
-- (void) sendData:(NSData*)data;
-@end
+//@interface NRMAHexBackgroundUploader : NRMAConnection<NSURLSessionDelegate>
+//@property(strong) NSString* hexHost;
+//
+//- (instancetype) initWithHexHost:(NSString*)hexHost;
+//
+//- (void) sendData:(NSData*)data;
+//@end

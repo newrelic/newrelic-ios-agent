@@ -149,6 +149,18 @@ static NewRelicAgentInternal* _sharedInstance;
 
     self = [super init];
     if (self) {
+
+        
+        // TODO: Check if this is the right place for this code?
+        if (@available(iOS 13.0, *)) {
+            [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:@"com.newrelic.NRApp.bitcode" usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
+                [self handleAppRefreshTask: task];
+            }];
+        } else {
+            // Fallback on earlier versions
+        }
+
+
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
         if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
@@ -186,6 +198,9 @@ static NewRelicAgentInternal* _sharedInstance;
                                                      selector:@selector(applicationWillTerminate)
                                                          name:UIApplicationWillTerminateNotification
                                                        object:[UIApplication sharedApplication]];
+            
+            // TODO: Is this the right place to put this?
+            [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
 
             NRLOG_INFO(@"Agent enabled");
 
@@ -644,7 +659,7 @@ static UIBackgroundTaskIdentifier background_task;
     if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)] &&
         [[UIDevice currentDevice] isMultitaskingSupported]) {
 
-
+        // Current One time background task is dispatched upon going to the background.
         UIApplication* application = [UIApplication sharedApplication];
 
         // Mark the start of our background task.
@@ -692,6 +707,8 @@ static UIBackgroundTaskIdentifier background_task;
                     if (self.appWillTerminate) {
                         return;
                     }
+
+                    // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -700,7 +717,13 @@ static UIBackgroundTaskIdentifier background_task;
                                                         class:NSStringFromClass([NRMAHarvester class])
                                                      selector:@"execute"];
                 } @finally {
-                    [self agentShutdown];
+
+
+                    // What would happen if we didn't call agentShutdown?
+
+                    NRLOG_VERBOSE(@"used to agentShutdown.");
+
+                   // [self agentShutdown];
                 }
 #endif
 
@@ -709,6 +732,11 @@ static UIBackgroundTaskIdentifier background_task;
                 [application endBackgroundTask:background_task];
                 // Invalidate the background_task.
                 background_task = UIBackgroundTaskInvalid;
+
+
+
+                // Schedule the next background harvest.
+                [self scheduleHeartbeatTask];
             }
         });
     } else {
@@ -740,6 +768,59 @@ static UIBackgroundTaskIdentifier background_task;
     }
 
     [NRMALastActivityTraceController clearLastActivityStamp];
+}
+
+// We only support background featch in iOS 13+
+- (void) scheduleHeartbeatTask {
+    if (@available(iOS 13.0, *)) {
+        // TODO: Pass instrumented app bundle id
+        BGAppRefreshTaskRequest *request = [[BGAppRefreshTaskRequest alloc] initWithIdentifier:@"com.newrelic.NRApp.bitcode"];
+        request.earliestBeginDate = [NSDate dateWithTimeIntervalSinceNow:5 * 60];
+
+        NSError *error = nil;
+
+            [[BGTaskScheduler sharedScheduler] submitTaskRequest:request error:&error];
+
+        if (error) {
+            NRLOG_ERROR(@"Error schedule heartbeat: %@", error);
+        }
+        else {
+            NRLOG_VERBOSE(@"Scheduled heartbeat");
+
+        }
+    } else {
+        // Fallback on earlier versions
+    }
+
+}
+
+- (void) handleAppRefreshTask:(BGAppRefreshTask *)task {
+    NRLOG_VERBOSE(@"handleAppRefreshTask BGAppRefreshTask");
+    if (@available(iOS 13.0, *)) {
+
+        [task setExpirationHandler:^{
+            __weak BGTask *weakTask = task;
+            if (weakTask) {
+                [weakTask setTaskCompletedWithSuccess:false];
+            }
+            //TODO: Invalidate and cancel the harvest request
+            //      PokeManager.urlSession.invalidateAndCancel()
+
+        }];
+
+        [[[NRMAHarvestController harvestController] harvester] execute];
+
+        // TODO: Make sure this is the right place to call this.
+        [task setTaskCompletedWithSuccess:true];
+
+        // We always reschedule the heartbeat task.
+        [self scheduleHeartbeatTask];
+    }
+    else {
+        NRLOG_VERBOSE(@"No background tasks pre iOS 13");
+
+    }
+
 }
 
 + (BOOL) harvestNow {
