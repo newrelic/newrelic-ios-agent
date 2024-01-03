@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
+		2BB147062B45C6BF00FCCEEA /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -862,6 +863,7 @@
 				F86429342979CDFA002ABA01 /* plistHelper.swift in Sources */,
 				F86429352979CDFA002ABA01 /* triggerException.m in Sources */,
 				F86429382979CDFA002ABA01 /* AppDelegate.swift in Sources */,
+				2BB147062B45C6BF00FCCEEA /* AppDelegate+UITest.swift in Sources */,
 				F86429392979CDFA002ABA01 /* SceneDelegate.swift in Sources */,
 				F864293A2979CDFA002ABA01 /* ViewControllerProvider.swift in Sources */,
 				F864293B2979CDFA002ABA01 /* Coordinator.swift in Sources */,
