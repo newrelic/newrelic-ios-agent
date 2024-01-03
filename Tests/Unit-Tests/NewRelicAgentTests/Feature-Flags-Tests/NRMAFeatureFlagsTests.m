@@ -249,4 +249,17 @@ static NRMAFeatureFlags __originalFlags;
     
     XCTAssertFalse([NRMAFlags shouldEnableFedRampSupport], @"FedRamp Support should be disabled");
 }
+
+- (void) testBackgroundInstrumentationEnable
+{
+    XCTAssertFalse([NRMAFlags shouldEnableBackgroundInstrumentation], @"Since no flags have been set, BackgroundInstrumentation Support should be false");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_BackgroundInstrumentation];
+
+    XCTAssertTrue([NRMAFlags shouldEnableBackgroundInstrumentation], @"BackgroundInstrumentation Should be enabled");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_BackgroundInstrumentation];
+
+    XCTAssertFalse([NRMAFlags shouldEnableBackgroundInstrumentation], @"BackgroundInstrumentation should be disabled");
+}
 @end

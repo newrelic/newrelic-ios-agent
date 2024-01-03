@@ -51,6 +51,8 @@
 
 + (BOOL) shouldEnableNewEventSystem;
 
++ (BOOL) shouldEnableBackgroundInstrumentation;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

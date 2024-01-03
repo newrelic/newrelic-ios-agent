@@ -151,13 +151,15 @@ static NewRelicAgentInternal* _sharedInstance;
     if (self) {
 
         
-        // TODO: Check if this is the right place for this code?
-        if (@available(iOS 13.0, *)) {
-            [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:@"com.newrelic.NRApp.bitcode" usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
-                [self handleAppRefreshTask: task];
-            }];
-        } else {
-            // Fallback on earlier versions
+        if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+            // TODO: Check if this is the right place for this code?
+            if (@available(iOS 13.0, *)) {
+                [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:@"com.newrelic.NRApp.bitcode" usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
+                    [self handleAppRefreshTask: task];
+                }];
+            } else {
+                // Fallback on earlier versions
+            }
         }
 
 
@@ -198,9 +200,11 @@ static NewRelicAgentInternal* _sharedInstance;
                                                      selector:@selector(applicationWillTerminate)
                                                          name:UIApplicationWillTerminateNotification
                                                        object:[UIApplication sharedApplication]];
-            
-            // TODO: Is this the right place to put this?
-            [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
+
+            if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+                // TODO: Is this the right place to put this?
+                [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
+            }
 
             NRLOG_INFO(@"Agent enabled");
 
@@ -721,9 +725,13 @@ static UIBackgroundTaskIdentifier background_task;
 
                     // What would happen if we didn't call agentShutdown?
 
-                    NRLOG_VERBOSE(@"used to agentShutdown.");
 
-                   // [self agentShutdown];
+                    if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+                        NRLOG_VERBOSE(@"used to agentShutdown. Continuing since BackgroundInstrumentation enabled.");
+                    }
+                    else {
+                         [self agentShutdown];
+                    }
                 }
 #endif
 
@@ -733,10 +741,10 @@ static UIBackgroundTaskIdentifier background_task;
                 // Invalidate the background_task.
                 background_task = UIBackgroundTaskInvalid;
 
-
-
-                // Schedule the next background harvest.
-                [self scheduleHeartbeatTask];
+                if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+                    // Schedule the next background harvest.
+                    [self scheduleHeartbeatTask];
+                }
             }
         });
     } else {
@@ -770,7 +778,7 @@ static UIBackgroundTaskIdentifier background_task;
     [NRMALastActivityTraceController clearLastActivityStamp];
 }
 
-// We only support background featch in iOS 13+
+// We only support background fetch in iOS 13+
 - (void) scheduleHeartbeatTask {
     if (@available(iOS 13.0, *)) {
         // TODO: Pass instrumented app bundle id

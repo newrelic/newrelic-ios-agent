@@ -35,8 +35,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 //        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
 
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundInstrumentation])
+
         NewRelic.replaceDeviceIdentifier("myDeviceId")
 
+        NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
 
         if ProcessInfo.processInfo.environment["UITesting"] != nil {
