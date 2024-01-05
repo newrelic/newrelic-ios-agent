@@ -365,6 +365,9 @@
 }
 
 - (BOOL) checkOfflineAndPersist:(NRMAHarvestResponse*) response {
+    if (![NRMAFlags shouldEnableOfflineStorage]) {
+        return false;
+    }
     if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
         NSMutableDictionary *tempAnalyticsAttributes = [[NSMutableDictionary alloc] initWithDictionary:self.harvestData.analyticsAttributes];
         [tempAnalyticsAttributes setValue:[NSNumber numberWithBool:YES] forKey:@"offline"];
@@ -719,6 +722,10 @@
             }
         }
     }
+}
+
+- (void) setMaxOfflineStorageSize:(NSUInteger) size {
+    [connection setMaxOfflineStorageSize:size];
 }
 
 @end

@@ -35,4 +35,5 @@
 - (NSURLRequest*) createDataPost:(NSString*)message;
 - (NSArray<NSData *> *) getOfflineData;
 - (void) sendOfflineStorage;
+- (void) setMaxOfflineStorageSize:(NSUInteger) size;
 @end

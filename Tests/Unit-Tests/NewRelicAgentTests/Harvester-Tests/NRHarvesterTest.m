@@ -255,6 +255,9 @@
 
 - (void) testOfflineStorage
 {
+    XCTAssertNoThrow([NewRelic setMaxOfflineStorageSize:1000]);
+    [NewRelic enableFeatures:NRFeatureFlag_OfflineStorage];
+
     NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
     id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
     newHarvester.connection.harvestSession = mockNSURLSession;
@@ -284,11 +287,13 @@
     v3config.encoding_key = @"encoding_key";
     v3config.application_token = @"APP_TOKEN";
     [[[mockHarvester stub] andReturn:v3config] fetchHarvestConfiguration];
-        
+
     [mockHarvester connected];
-    
+   
+    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
     XCTAssertTrue(offlineData.count > 0);
+    XCTAssertTrue(currentOfflineStorageSize > 0);
 
     mockNSURLSession = [self makeMockURLSession];
     newHarvester.connection.harvestSession = mockNSURLSession;
@@ -296,7 +301,66 @@
     [mockHarvester connected];
     
     offlineData = [newHarvester.connection getOfflineData];
+    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     XCTAssertTrue(offlineData.count == 0);
+    XCTAssertTrue(currentOfflineStorageSize == 0);
+
+    [mockHarvester stopMocking];
+    [connectionMock stopMocking];
+    [NewRelic disableFeatures:NRFeatureFlag_OfflineStorage];
+}
+
+- (void) testOfflineStorageDisabled
+{
+    [NewRelic disableFeatures:NRFeatureFlag_OfflineStorage];
+    XCTAssertNoThrow([NewRelic setMaxOfflineStorageSize:1000]);
+
+    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+    id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+
+    id mockHarvester = [OCMockObject partialMockForObject:newHarvester];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+    [mockHarvester setAgentConfiguration:agentConfig];
+    
+    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
+    [connectionMock setApplicationToken:@"APP_TOKEN"];
+    
+    NRMAHarvesterConfiguration* v3config = [[NRMAHarvesterConfiguration alloc] init];
+    v3config.collect_network_errors = YES;
+    v3config.cross_process_id = @"cross_process_id";
+    v3config.data_report_period = 60;
+    v3config.data_token = [[NRMADataToken alloc] init];
+    v3config.data_token.clusterAgentId = 36920;
+    v3config.data_token.realAgentId = 36921;
+    v3config.error_limit = 50;
+    v3config.report_max_transaction_age = 600;
+    v3config.report_max_transaction_count =1000;
+    v3config.response_body_limit = 2048;
+    v3config.server_timestamp = 1379548800;
+    v3config.stack_trace_limit = 100;
+    v3config.account_id = 1;
+    v3config.application_id = 1;
+    v3config.encoding_key = @"encoding_key";
+    v3config.application_token = @"APP_TOKEN";
+    [[[mockHarvester stub] andReturn:v3config] fetchHarvestConfiguration];
+
+    [mockHarvester connected];
+   
+    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
+    NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
+    XCTAssertTrue(offlineData.count == 0);
+    XCTAssertTrue(currentOfflineStorageSize == 0);
+
+    mockNSURLSession = [self makeMockURLSession];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+    
+    [mockHarvester connected];
+    
+    offlineData = [newHarvester.connection getOfflineData];
+    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
+    XCTAssertTrue(offlineData.count == 0);
+    XCTAssertTrue(currentOfflineStorageSize == 0);
 
     [mockHarvester stopMocking];
     [connectionMock stopMocking];

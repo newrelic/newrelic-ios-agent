@@ -14,15 +14,18 @@
 #import "NRMAJSON.h"
 #import "NRMASupportMetricHelper.h"
 
+#define kNRMAOfflineStorageCurrentSize @"com.newrelic.offlineStorageCurrentSize"
+
 @implementation NRMAOfflineStorage {
+    NSUInteger maxOfflineStorageSize;
 }
 static NSString* _name;
-
 
 - (id)initWithEndpoint:(NSString*) name {
     self = [super init];
     if (self) {
         _name = name;
+        maxOfflineStorageSize = 1000000;
     }
     return self;
 }
@@ -41,10 +44,18 @@ static NSString* _name;
     @synchronized (self) {
         [self createDirectory];
         
+        NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:kNRMAOfflineStorageCurrentSize];
+        currentOfflineStorageSize += data.length;
+        if(currentOfflineStorageSize > maxOfflineStorageSize){
+            NRLOG_WARNING(@"Not saving to offline storage because max storage size has been reached.");
+            return NO;
+        }
+        
         NSError *error = nil;
         if (data) {
             if ([data writeToFile:[self newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
-                NRLOG_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage.");
+                [[NSUserDefaults standardUserDefaults] setInteger:currentOfflineStorageSize forKey:kNRMAOfflineStorageCurrentSize]; // If we successfully save the data save the new current total size
+                NRLOG_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %lu", (unsigned long)currentOfflineStorageSize);
                 return YES;
             }
         }
@@ -77,19 +88,27 @@ static NSString* _name;
 }
 
 - (BOOL) clearAllOfflineFiles {
-    return [[NSFileManager defaultManager] removeItemAtPath:[self offlineDirectoryPath] error:NULL];
+    if ([[NSFileManager defaultManager] removeItemAtPath:[self offlineDirectoryPath] error:NULL]) {
+        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSize];
+        return true;
+    }
+    return false;
 }
 
-- (NSString*)offlineDirectoryPath {
+- (NSString*) offlineDirectoryPath {
     return [NSString stringWithFormat:@"%@/%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Offline_file,_name];
 }
 
-- (NSString*)newOfflineFilePath {
+- (NSString*) newOfflineFilePath {
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss"];
     NSString *date = [dateFormatter stringFromDate:[NSDate date]];
 
     return [NSString stringWithFormat:@"%@/%@%@",[self offlineDirectoryPath],date,@".txt"];
+}
+
+- (void) setMaxOfflineStorageSize:(NSUInteger) size {
+    maxOfflineStorageSize = (size * 1000000);
 }
 
 + (BOOL)checkErrorToPersist:(NSError*) error {

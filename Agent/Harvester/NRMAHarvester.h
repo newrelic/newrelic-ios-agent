@@ -67,6 +67,8 @@ typedef enum {
 - (void) removeHarvestAwareObject:(id<NRMAHarvestAware>)harvestAware;
 - (void) fireOnHarvestStart;
 - (void) stop;
+
+- (void) setMaxOfflineStorageSize:(NSUInteger) size;
 @end
 
 #ifdef __cplusplus

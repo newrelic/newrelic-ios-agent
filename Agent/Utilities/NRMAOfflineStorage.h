@@ -10,8 +10,11 @@
 
 
 - (id)initWithEndpoint:(NSString*) name;
-- (BOOL)persistDataToDisk:(NSData*) data;
+- (BOOL) persistDataToDisk:(NSData*) data;
 - (NSArray<NSData *> *) getAllOfflineData:(BOOL) clear;
-+ (BOOL)checkErrorToPersist:(NSError*) error;
++ (BOOL) checkErrorToPersist:(NSError*) error;
+- (BOOL) clearAllOfflineFiles;
+- (void) setMaxOfflineStorageSize:(NSUInteger) size;
+- (NSString*) offlineDirectoryPath;
 
 @end

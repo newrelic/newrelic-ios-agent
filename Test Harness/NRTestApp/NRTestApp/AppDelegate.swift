@@ -31,9 +31,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #endif
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
-                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
-
-//        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
+                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
+                                 NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
 
         NewRelic.replaceDeviceIdentifier("myDeviceId")
 
@@ -68,7 +67,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         NewRelic.setMaxEventPoolSize(5000)
-        NewRelic.setMaxEventBufferTime(60)
+        NewRelic.setMaxEventBufferTime(600)
 
         NewRelic.logVerbose("NewRelic.start was called.")
         return true

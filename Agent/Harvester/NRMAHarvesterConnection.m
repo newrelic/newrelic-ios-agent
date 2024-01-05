@@ -14,6 +14,7 @@
 #import <time.h>
 #import "NRMAHarvesterConnection+GZip.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
 
 @implementation NRMAHarvesterConnection
 @synthesize connectionInformation = _connectionInformation;
@@ -23,6 +24,7 @@
     if (self) {
         self.harvestSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"data"];
+        [_offlineStorage setMaxOfflineStorageSize:[NRMAAgentConfiguration getMaxOfflineStorageSize]];
     }
     return self;
 }
@@ -32,6 +34,9 @@
 }
 
 -(void) sendOfflineStorage {
+    if (![NRMAFlags shouldEnableOfflineStorage]) {
+        return;
+    }
     NSArray<NSData *> * offlineData = [self.offlineStorage getAllOfflineData:YES];
     if(offlineData.count == 0){
         return;
@@ -51,7 +56,7 @@
         NRMAHarvestResponse* response = [self send:post];
         
         if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
-         //   [_offlineStorage persistDataToDisk:jsonData]; Re-save if failed to send again?
+            [_offlineStorage persistDataToDisk:jsonData];
         }
     }];
 }
@@ -235,6 +240,10 @@
 {
     NSString* protocol = self.useSSL ? @"https://":@"http://";
     return [NSString stringWithFormat:@"%@%@%@",protocol,self.collectorHost,resource];
+}
+
+- (void) setMaxOfflineStorageSize:(NSUInteger) size {
+    [_offlineStorage setMaxOfflineStorageSize:size];
 }
 
 @end

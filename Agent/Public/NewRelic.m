@@ -626,6 +626,16 @@
     [[NewRelicAgentInternal sharedInstance].analyticsController setMaxEventBufferSize:size];
 }
 
+/*
+ * this method sets the maximum size for offline storage that the can be collected in the agent.
+ * this means: once the maximum size has been met the agent will stop storing offline payloads until
+ * more room is made.
+ */
++ (void) setMaxOfflineStorageSize:(unsigned int)megaBytes {
+    [NRMAAgentConfiguration setMaxOfflineStorageSize:megaBytes];
+
+    [NRMAHarvestController setMaxOfflineStorageSize:megaBytes];
+}
 #pragma mark - Hidden APIs
 
 

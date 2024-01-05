@@ -99,4 +99,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
 
     // NOTE: Temporarily removed NRFeatureFlag_LogReporting
     NRFeatureFlag_NewEventSystem                        = 1 << 20, // Disabled by default
+    NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
 };
