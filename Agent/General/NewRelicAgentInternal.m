@@ -783,7 +783,7 @@ static UIBackgroundTaskIdentifier background_task;
     if (@available(iOS 13.0, *)) {
         // TODO: Pass instrumented app bundle id
         BGAppRefreshTaskRequest *request = [[BGAppRefreshTaskRequest alloc] initWithIdentifier:@"com.newrelic.NRApp.bitcode"];
-        request.earliestBeginDate = [NSDate dateWithTimeIntervalSinceNow:5 * 60];
+        request.earliestBeginDate = nil;//[NSDate dateWithTimeIntervalSinceNow:5 * 60];
 
         NSError *error = nil;
 
@@ -806,13 +806,16 @@ static UIBackgroundTaskIdentifier background_task;
     NRLOG_VERBOSE(@"handleAppRefreshTask BGAppRefreshTask");
     if (@available(iOS 13.0, *)) {
 
+        // We always reschedule the heartbeat task.
+        [self scheduleHeartbeatTask];
+
         [task setExpirationHandler:^{
             __weak BGTask *weakTask = task;
             if (weakTask) {
                 [weakTask setTaskCompletedWithSuccess:false];
             }
             //TODO: Invalidate and cancel the harvest request
-            //      PokeManager.urlSession.invalidateAndCancel()
+            // weakTask.invalidateAndCancel()
 
         }];
 
@@ -821,8 +824,6 @@ static UIBackgroundTaskIdentifier background_task;
         // TODO: Make sure this is the right place to call this.
         [task setTaskCompletedWithSuccess:true];
 
-        // We always reschedule the heartbeat task.
-        [self scheduleHeartbeatTask];
     }
     else {
         NRLOG_VERBOSE(@"No background tasks pre iOS 13");
