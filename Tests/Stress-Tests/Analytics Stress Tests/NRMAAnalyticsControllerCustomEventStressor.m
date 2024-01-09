@@ -8,6 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import "NewRelic/NewRelic.h"
+#import "NRMAFlags.h"
 
 @interface NRMAAnalyticsControllerCustomEventStressor : XCTestCase
 {
@@ -19,6 +20,7 @@
 
 - (void)setUp {
     [super setUp];
+    [NRMAFlags enableFeatures: NRFeatureFlag_NewEventSystem];
 }
 
 - (void) testStress {

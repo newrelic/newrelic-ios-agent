@@ -24,6 +24,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NewRelicAgentTests.h"
 #import "NRMAHarvestController.h"
+#import "NRMAHTTPUtilities.h"
 
 @interface NewRelicTests : XCTestCase {
 }
@@ -126,6 +127,22 @@
     XCTAssertFalse(flags & ~NRFeatureFlag_InteractionTracing , @"flags shouldn't have any other bit enabled.");
     
     XCTAssertNotNil([NewRelic startInteractionWithName:@"test"]);
+}
+
+- (void) testEnableNewEventSystem {
+    [NRMAFlags setFeatureFlags:0];
+    NRMAFeatureFlags flags = [NRMAFlags featureFlags];
+    XCTAssertFalse(flags, @"flags should be empty");
+    
+    XCTAssertFalse([NRMAFlags shouldEnableNewEventSystem], @"flags should be empty");
+    //XCTAssertNil([NewRelic startInteractionWithName:@"test"], @"should be nil when Interaction Tracing is disabled");
+    
+    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
+    flags = [NRMAFlags featureFlags];
+    XCTAssertTrue(flags & NRFeatureFlag_NewEventSystem, @"flags should have New Event System enabled");
+    XCTAssertFalse(flags & ~NRFeatureFlag_NewEventSystem , @"flags shouldn't have any other bit enabled.");
+    
+   // XCTAssertNotNil([NewRelic startInteractionWithName:@"test"]);
 }
 
 - (void) testRecordMetricsConsistency
@@ -347,6 +364,30 @@
     [NewRelic shutdown];
 }
 
+-(void) testAddHTTPHeaderTrackingDefault {
+    XCTAssertNil([NewRelicAgentInternal sharedInstance]);
+    XCTAssertNotNil([NRMAHTTPUtilities trackedHeaderFields]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-NAME"]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-TYPE"]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-ID"]);
+}
+
+-(void) testAddHTTPHeaderTracking {
+    XCTAssertNil([NewRelicAgentInternal sharedInstance]);
+
+    // Add a new header value to track
+    [NewRelic addHTTPHeaderTrackingFor:@[@"Test"]];
+
+    XCTAssertNotNil([NRMAHTTPUtilities trackedHeaderFields]);
+    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"Test"]);
+    XCTAssertFalse([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"Fake"]);
+    
+    // Make sure you can't add duplicates
+    NSUInteger count = [NRMAHTTPUtilities trackedHeaderFields].count;
+    [NewRelic addHTTPHeaderTrackingFor:@[@"Test", @"X-APOLLO-OPERATION-TYPE"]];
+    XCTAssertTrue([NRMAHTTPUtilities trackedHeaderFields].count == count);
+}
+
 -(void) testSetShutdown {
 
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
@@ -410,6 +451,21 @@
     XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
     XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
     XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+
+}
+
+- (void) testRecordHandledExceptionsNewEventSystem {
+    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
+    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+                                                                              reason:@"testing"
+                                                                            userInfo:@{}]]);
+    XCTAssertNoThrow([NewRelic recordHandledException:nil withAttributes: nil]);
+    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+                                                                              reason:@"testing"
+                                                                            userInfo:@{}] withAttributes: nil]);
+    NSDictionary *dict = @{ @"name" : @"test name", @"reason" : @"test reason"};
+    XCTAssertNoThrow([NewRelic recordHandledExceptionWithStackTrace: dict]);
+    [NewRelic disableFeatures:NRFeatureFlag_NewEventSystem];
 
 }
 

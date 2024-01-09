@@ -9,7 +9,7 @@
 #import <XCTest/XCTest.h>
 #import "NRMADeviceInformation.h"
 #import "NRConstants.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NewRelicInternalUtils.h"
 @interface NRMADeviceInformationTests : XCTestCase
 
@@ -64,8 +64,8 @@
     devInfo.manufacturer = manufacturer;
     devInfo.misc = [NSMutableDictionary new];
     NSString* platformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:platform];
-    NSDictionary* dict =  @{@(__kNRMA_RA_platform):
-                                platformString, @(__kNRMA_RA_platformVersion):agentVersion};
+    NSDictionary* dict =  @{kNRMA_RA_platform:
+                                platformString, kNRMA_RA_platformVersion:agentVersion};
     XCTAssertTrue([platformString isEqualToString:expectedPlatformString]);
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoOSName], osName);
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoOSVersion], osVersion);
@@ -79,7 +79,7 @@
     XCTAssertEqualObjects([devInfo asDictionary][kNRMADeviceInfoMisc],dict);
 
     //platform version should be the agent version if not explicitly set
-    XCTAssertEqualObjects([devInfo JSONObject][9][@(__kNRMA_RA_platformVersion)], agentVersion);
+    XCTAssertEqualObjects([devInfo JSONObject][9][kNRMA_RA_platformVersion], agentVersion);
 
     XCTAssertEqual([devInfo asDictionary][kNRMADeviceInfoRegionCode], regionCode);
 
@@ -95,8 +95,8 @@
     XCTAssertEqualObjects([devInfo JSONObject][6], countryCode);
     XCTAssertEqualObjects([devInfo JSONObject][7], regionCode);
     XCTAssertEqualObjects([devInfo JSONObject][8], manufacturer);
-    XCTAssertEqualObjects([devInfo JSONObject][9][@(__kNRMA_RA_platform)], [NewRelicInternalUtils stringFromNRMAApplicationPlatform:platform]);
-    XCTAssertEqualObjects([devInfo JSONObject][9][@(__kNRMA_RA_platformVersion)], @"666");
+    XCTAssertEqualObjects([devInfo JSONObject][9][kNRMA_RA_platform], [NewRelicInternalUtils stringFromNRMAApplicationPlatform:platform]);
+    XCTAssertEqualObjects([devInfo JSONObject][9][kNRMA_RA_platformVersion], @"666");
 
     NSString* expectedFlutterString = @"Flutter";
 

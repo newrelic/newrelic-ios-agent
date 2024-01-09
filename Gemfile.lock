@@ -212,7 +212,7 @@ PLATFORMS
   universal-darwin-22
 
 DEPENDENCIES
-  fastlane
+  fastlane (= 2.216.0)
 
 BUNDLED WITH
-   2.4.19
+   2.4.22
