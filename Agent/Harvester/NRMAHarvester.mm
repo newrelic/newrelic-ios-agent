@@ -333,10 +333,10 @@
             [self transition:NRMA_HARVEST_DISCONNECTED];
             // Reconnect performed here.
             [self execute];
-            
-            // TODO: Is this the right place to send the configuration update Spt Metric?
+
             // Send Supportability metric when received 409 to indicate that a config update should happen or send it when actual /connect call finishes which refreshes the data.
             [NRMASupportMetricHelper enqueueConfigurationUpdateMetric];
+            
             break;
         default:
             break;

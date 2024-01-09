@@ -149,13 +149,6 @@
     if (self.application_id != that.application_id) return NO;
     if (![self.encoding_key isEqualToString:that.encoding_key]) return NO;
 
-    // Should trusted_account_key be considered in Equality
-
-    // Should entity_guid be considered in Equality?
-
-    // Should log_reporting be considered in Equality?
-
-
     // [ <account id> , <app id> ];
     return [self.data_token isEqual:that.data_token];
 }
@@ -179,12 +172,6 @@
     result = 31 * result + (unsigned int)self.application_id;
     result = 31 * result + self.encoding_key.hash;
     
-    // Should trusted_account_key be considered in Hash?
-
-    // Should entity_guid be considered in Hash?
-
-    // Should log_reporting be considered in Hash?
-
     return result;
 }
 @end

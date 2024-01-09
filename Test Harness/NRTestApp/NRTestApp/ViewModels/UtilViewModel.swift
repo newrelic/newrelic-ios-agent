@@ -43,10 +43,6 @@ class UtilViewModel {
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
 
-        options.append(UtilOption(title: "Notice Network Failure W Single Quotes", handler: { [self] in noticeFailedNWRequestWSingleQuotes()}))
-
-
-        options.append(UtilOption(title: "Toggle Remote Logging On/Off", handler: { [self] in toggleRemoteLogging()}))
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
 
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
@@ -131,26 +127,6 @@ class UtilViewModel {
     func noticeFailedNWRequest() {
         NewRelic.noticeNetworkFailure(for: URL(string: "https://www.google.com"), httpMethod: "GET",
                                       with: NRTimer(), andFailureCode: NSURLErrorTimedOut)
-    }
-
-    func noticeFailedNWRequestWSingleQuotes() {
-        NewRelic.noticeNetworkFailure(for: URL(string: "http://test.com/test('test')"), httpMethod: "GET",
-                                      with: NRTimer(), andFailureCode: NSURLErrorTimedOut)
-    }
-    
-    var logEnabled = false
-    
-    // testing only: this won't work once server supports settings this.
-    // Does not sync initial state.
-    func toggleRemoteLogging() {
-        if !logEnabled {
-            NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_LogReporting])
-            logEnabled = true
-        }
-        else {
-            NewRelic.disableFeatures([NRMAFeatureFlags.NRFeatureFlag_LogReporting])
-            logEnabled = false
-        }
     }
 
     func testLogDict() {
