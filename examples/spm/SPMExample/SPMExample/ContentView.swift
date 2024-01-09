@@ -10,23 +10,20 @@ import NewRelic
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-            Text("Hello, world!")
-
-            Button {
-                crash()
-            } label: {
-                Text("Test crash")
+        NavigationView {
+            VStack {
+                Image(systemName: "globe")
+                    .imageScale(.large)
+                Text("Hello, world!")
+            }
+            .navigationBarTitle("SPMExample")
+            .toolbar {
+                HStack {
+                    NavigationLink(destination: UtilityView(viewModel: UtilityView.ViewModel())) { Text("Utilities") }
+                }
             }
         }
-        .padding()
-    }
-
-    func crash() {
-        // This will cause a crash to test the crash uploader, crash files will not get recorded if the debugger is running.
-        NewRelic.crashNow("New Relic intentionally crashed to test Utils")
+        .NRTrackView(name: "ContentView")
     }
 }
 
