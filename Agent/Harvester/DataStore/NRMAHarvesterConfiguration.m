@@ -15,15 +15,48 @@
     self = [super init];
     if (self) {
         self.application_token = [dict valueForKey:kNRMA_LICENSE_KEY];
-        self.collect_network_errors = [[dict valueForKey:kNRMA_COLLECT_NETWORK_ERRORS] boolValue];
+
+        if ([dict objectForKey:kNRMA_COLLECT_NETWORK_ERRORS]) {
+            self.collect_network_errors = [[dict valueForKey:kNRMA_COLLECT_NETWORK_ERRORS] boolValue];
+        }
+        else {
+            self.collect_network_errors = true;
+        }
+        
         self.cross_process_id = [dict valueForKey:kNRMA_CROSS_PROCESS_ID];
-        self.data_report_period = [[dict valueForKey:kNRMA_DATA_REPORT_PERIOD] intValue];
+
+        if ([dict objectForKey:kNRMA_DATA_REPORT_PERIOD]) {
+            self.data_report_period = [[dict valueForKey:kNRMA_DATA_REPORT_PERIOD] intValue];
+        }
+        else {
+            self.data_report_period = NRMA_DEFAULT_REPORT_PERIOD;
+        }
+
         self.data_token = [[NRMADataToken alloc] init];
         self.data_token.clusterAgentId  = [[[dict valueForKey:kNRMA_DATA_TOKEN] objectAtIndex:0] longLongValue];
         self.data_token.realAgentId = [[[dict valueForKey:kNRMA_DATA_TOKEN] objectAtIndex:1] longLongValue];
-        self.error_limit = [[dict valueForKey:kNRMA_ERROR_LIMIT] intValue];
-        self.report_max_transaction_age = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_AGE] intValue];
-        self.report_max_transaction_count = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_COUNT]intValue];
+        if ([dict objectForKey:kNRMA_ERROR_LIMIT]) {
+
+            self.error_limit = [[dict valueForKey:kNRMA_ERROR_LIMIT] intValue];
+        }
+        else {
+            self.error_limit = NRMA_DEFAULT_ERROR_LIMIT;
+        }
+
+        if ([dict objectForKey:kNRMA_REPORT_MAX_TRANSACTION_AGE]) {
+
+            self.report_max_transaction_age = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_AGE] intValue];
+        }
+        else {
+            self.report_max_transaction_age = NRMA_DEFAULT_MAX_TRANSACTION_AGE;
+        }
+        if ([dict objectForKey:kNRMA_REPORT_MAX_TRANSACTION_COUNT]) {
+            self.report_max_transaction_count = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_COUNT]intValue];
+        }
+        else {
+            self.report_max_transaction_count = NRMA_DEFAULT_MAX_TRANSACTION_COUNT;
+        }
+
         self.response_body_limit = [[dict valueForKey:kNRMA_RESPONSE_BODY_LIMIT] intValue];
         self.server_timestamp = [[dict valueForKey:kNRMA_SERVER_TIMESTAMP] longLongValue];
         self.stack_trace_limit = [[dict valueForKey:kNRMA_STACK_TRACE_LIMIT] intValue];
@@ -145,7 +178,9 @@
     result = 31 * result + (unsigned int)self.account_id;
     result = 31 * result + (unsigned int)self.application_id;
     result = 31 * result + self.encoding_key.hash;
-    
+    // Is this a chill addition?
+    result = 31 * result + self.trusted_account_key.hash;
+
     return result;
 }
 @end

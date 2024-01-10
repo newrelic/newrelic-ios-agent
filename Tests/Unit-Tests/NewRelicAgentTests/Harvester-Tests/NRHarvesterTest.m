@@ -163,6 +163,11 @@
     XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
 }
 
+- (void) testBadHarvestConfiguration {
+// add a test that tests what happens if the kNRMA_REPORT_MAX_TRANSACTION_COUNT is missing 
+}
+
+
 - (void) testActivityTraceConfiguration
 {
     NSArray* at_capture;
