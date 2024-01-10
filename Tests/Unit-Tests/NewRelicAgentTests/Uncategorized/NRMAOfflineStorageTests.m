@@ -21,10 +21,12 @@
     [super setUp];
     self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"Test"];
     [self.offlineStorage clearAllOfflineFiles];
+    [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:@"com.newrelic.offlineStorageCurrentSize"];
 }
 
 -(void) tearDown {
     [super tearDown];
+    [self.offlineStorage clearAllOfflineFiles];
 }
 
 - (unsigned long long)folderSize:(NSString *)folderPath {

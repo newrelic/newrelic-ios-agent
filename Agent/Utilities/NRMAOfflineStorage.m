@@ -13,8 +13,9 @@
 #import "Constants.h"
 #import "NRMAJSON.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAAgentConfiguration.h"
 
-#define kNRMAOfflineStorageCurrentSize @"com.newrelic.offlineStorageCurrentSize"
+#define kNRMAOfflineStorageCurrentSizeKey @"com.newrelic.offlineStorageCurrentSize"
 
 @implementation NRMAOfflineStorage {
     NSUInteger maxOfflineStorageSize;
@@ -25,7 +26,7 @@ static NSString* _name;
     self = [super init];
     if (self) {
         _name = name;
-        maxOfflineStorageSize = 1000000;
+        maxOfflineStorageSize = [NRMAAgentConfiguration getMaxOfflineStorageSize];
     }
     return self;
 }
@@ -44,7 +45,7 @@ static NSString* _name;
     @synchronized (self) {
         [self createDirectory];
         
-        NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:kNRMAOfflineStorageCurrentSize];
+        NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:kNRMAOfflineStorageCurrentSizeKey];
         currentOfflineStorageSize += data.length;
         if(currentOfflineStorageSize > maxOfflineStorageSize){
             NRLOG_WARNING(@"Not saving to offline storage because max storage size has been reached.");
@@ -54,7 +55,7 @@ static NSString* _name;
         NSError *error = nil;
         if (data) {
             if ([data writeToFile:[self newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
-                [[NSUserDefaults standardUserDefaults] setInteger:currentOfflineStorageSize forKey:kNRMAOfflineStorageCurrentSize]; // If we successfully save the data save the new current total size
+                [[NSUserDefaults standardUserDefaults] setInteger:currentOfflineStorageSize forKey:kNRMAOfflineStorageCurrentSizeKey]; // If we successfully save the data save the new current total size
                 NRLOG_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %lu", (unsigned long)currentOfflineStorageSize);
                 return YES;
             }
@@ -88,10 +89,12 @@ static NSString* _name;
 }
 
 - (BOOL) clearAllOfflineFiles {
-    if ([[NSFileManager defaultManager] removeItemAtPath:[self offlineDirectoryPath] error:NULL]) {
-        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSize];
+    NSError* error;
+    if ([[NSFileManager defaultManager] removeItemAtPath:[self offlineDirectoryPath] error:&error]) {
+        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSizeKey];
         return true;
     }
+    NRLOG_ERROR(@"Failed to clear offline storage: %@", error);
     return false;
 }
 

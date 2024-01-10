@@ -24,7 +24,6 @@
     if (self) {
         self.harvestSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"data"];
-        [_offlineStorage setMaxOfflineStorageSize:[NRMAAgentConfiguration getMaxOfflineStorageSize]];
     }
     return self;
 }
@@ -42,7 +41,7 @@
         return;
     }
     NRLOG_VERBOSE(@"Number of offline data posts: %lu", (unsigned long)offlineData.count);
-    
+    __block NSUInteger totalSize = 0;
     [offlineData enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         NSData *jsonData = (NSData *)obj;
         
@@ -51,14 +50,16 @@
             NRLOG_ERROR(@"Failed to create data POST");
             return;
         }
-        [NRMASupportMetricHelper enqueueOfflinePayloadMetric:[post.HTTPBody length]];
 
         NRMAHarvestResponse* response = [self send:post];
         
         if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
             [_offlineStorage persistDataToDisk:jsonData];
+        } else {
+            totalSize += [post.HTTPBody length];
         }
     }];
+    [NRMASupportMetricHelper enqueueOfflinePayloadMetric:totalSize];
 }
 
 - (NSURLRequest*) createPostWithURI:(NSString*)url message:(NSString*)message
