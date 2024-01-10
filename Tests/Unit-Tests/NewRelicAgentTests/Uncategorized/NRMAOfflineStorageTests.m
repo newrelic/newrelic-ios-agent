@@ -44,6 +44,7 @@
 }
 
 -(void) testOfflineStorage {
+    [self.offlineStorage setMaxOfflineStorageSize:100];
     NSData *data = [NRMAFakeDataHelper makeDataDictionary:1000];
     
     XCTAssertTrue([self.offlineStorage persistDataToDisk:data]);
@@ -58,7 +59,7 @@
     XCTAssertEqualObjects(data, savedData[0]);
 }
 
--(void) testMaxOfflineStorageSize {
+-(void) testOfflineStorageMaxSize {
     [self.offlineStorage setMaxOfflineStorageSize:1];
     NSData *data = [NRMAFakeDataHelper makeDataDictionary:5000];
     
