@@ -89,6 +89,10 @@ static NSString* _name;
 }
 
 - (BOOL) clearAllOfflineFiles {
+    if(![[NSFileManager defaultManager] fileExistsAtPath:[self offlineDirectoryPath] isDirectory:nil]){
+        return true;
+    }
+    
     NSError* error;
     if ([[NSFileManager defaultManager] removeItemAtPath:[self offlineDirectoryPath] error:&error]) {
         [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSizeKey];
