@@ -20,6 +20,7 @@
 #include <Utilities/Application.hpp>
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
+#import "Constants.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -370,7 +371,7 @@
     }
     if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
         NSMutableDictionary *tempAnalyticsAttributes = [[NSMutableDictionary alloc] initWithDictionary:self.harvestData.analyticsAttributes];
-        [tempAnalyticsAttributes setValue:[NSNumber numberWithBool:YES] forKey:@"offline"];
+        [tempAnalyticsAttributes setValue:[NSNumber numberWithBool:YES] forKey:kNRMA_Attrib_offline];
         [self.harvestData setAnalyticsAttributes:[[NSDictionary alloc] initWithDictionary:tempAnalyticsAttributes]];
                 
         NSError* error = nil;

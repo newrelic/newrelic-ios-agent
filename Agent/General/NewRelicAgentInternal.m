@@ -476,7 +476,10 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
     [self initializeAnalytics];
     NRMAReachability* r = [NewRelicInternalUtils reachability];
-
+    NRMANetworkStatus status;
+    @synchronized(r) {
+        status = [r currentReachabilityStatus];
+    }
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController
                                                                                      sessionStartTime:self.appSessionStartDate
@@ -484,11 +487,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                              platform:[NewRelicInternalUtils osName]
                                                                                             sessionId:[self currentSessionId]];
 
-        @synchronized(r) {
-            NRMANetworkStatus status = [r currentReachabilityStatus];
-            if (status != NotReachable) {
-                [self.handledExceptionsController processAndPublishPersistedReports];
-            }
+
+        if (status != NotReachable) {
+            [self.handledExceptionsController processAndPublishPersistedReports];
         }
 
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
@@ -499,11 +500,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
-        @synchronized(r) {
-            NRMANetworkStatus status = [r currentReachabilityStatus];
-            if (status != NotReachable) {
-                [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
-            }
+        if (status != NotReachable) {
+            [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
         }
     }
     

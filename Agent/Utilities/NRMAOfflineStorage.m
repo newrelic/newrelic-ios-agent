@@ -99,7 +99,7 @@ static NSString* _name;
 }
 
 - (NSString*) offlineDirectoryPath {
-    return [NSString stringWithFormat:@"%@/%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Offline_file,_name];
+    return [NSString stringWithFormat:@"%@/%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Offline_folder,_name];
 }
 
 - (NSString*) newOfflineFilePath {
