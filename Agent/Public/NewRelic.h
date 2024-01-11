@@ -694,7 +694,7 @@ extern "C" {
 + (void) setMaxEventPoolSize:(unsigned int)size;
 
 /*!
- Change the maximum size in mega bytes that the agent will store for offline storage.
+ Change the maximum size in megabytes that the agent will store for offline storage.
  
  @param megaBytes the maximum size in mega bytes of offline storage that can be stored in the local file system
  
