@@ -123,13 +123,19 @@ static NSString* _osVersion;
     else if([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_WATCHOS]) {
         return NRMA_OSNAME_WATCHOS;
     }
-    
+    else if([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_VISIONOS]) {
+        return NRMA_OSNAME_VISIONOS;
+    }
+
     return NRMA_OSNAME_IOS;
 }
 
 + (NSString*) agentName {
     if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_TVOS]) {
         return @"tvOSAgent";
+    }
+    else if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_VISIONOS]) {
+        return @"visionOSAgent";
     }
     return @"iOSAgent";
 }

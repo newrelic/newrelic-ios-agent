@@ -31,8 +31,8 @@
 		2BD05DEF2ADF326A00C0C972 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
 		2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD05DF12ADF32D300C0C972 /* harvestConnector.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
-		2BF1FDF52B50B61A006978F9 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; platformFilters = (ios, xros, ); };
-		2BF1FDF62B50B61A006978F9 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; platformFilters = (ios, xros, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2BF1FDF52B50B61A006978F9 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; platformFilters = (ios, maccatalyst, ); };
+		2BF1FDF62B50B61A006978F9 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; platformFilters = (ios, maccatalyst, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2BF1FDF82B50B716006978F9 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B8621D32AD6129000175D3C /* NewRelic.framework */; platformFilters = (xros, ); };
 		2BF1FDF92B50B716006978F9 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2B8621D32AD6129000175D3C /* NewRelic.framework */; platformFilters = (xros, ); settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2BF1FDFA2B50B71F006978F9 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B8621D32AD6129000175D3C /* NewRelic.framework */; platformFilters = (xros, ); };
