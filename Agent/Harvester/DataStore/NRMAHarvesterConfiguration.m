@@ -20,7 +20,7 @@
             self.collect_network_errors = [[dict valueForKey:kNRMA_COLLECT_NETWORK_ERRORS] boolValue];
         }
         else {
-            self.collect_network_errors = true;
+            self.collect_network_errors = NRMA_DEFAULT_COLLECT_NETWORK_ERRORS;
         }
         
         self.cross_process_id = [dict valueForKey:kNRMA_CROSS_PROCESS_ID];
