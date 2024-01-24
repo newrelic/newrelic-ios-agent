@@ -494,6 +494,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
 
+        // DOUBLE REPORT POSSIBLE: Upload crash reports is called when "onSessionStart" fires due to [NewRelicAgentInternal applicationWillEnterForeground];
         [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
     }
     

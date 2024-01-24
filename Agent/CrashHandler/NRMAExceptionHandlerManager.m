@@ -107,6 +107,7 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
             [_reportManager processReportsWithSessionAttributes:attributes
                                                 analyticsEvents:events];
 
+            // DOUBLE REPORT POSSIBLE: [NRMAExceptionHandler calls uploadCrashReports when _crashReporter hasPendingCrashreport] is true on app launch.
             [self.uploader uploadCrashReports];
         }
 
