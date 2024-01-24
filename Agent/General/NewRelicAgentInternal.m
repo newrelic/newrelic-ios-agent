@@ -491,11 +491,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
 
-    // Attempt to upload crash report files (if any exist)
-    if ([NRMAFlags shouldEnableCrashReporting]) {
-
-        [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
-    }
+    // We used to attempt to upload crashes here as well as in [NRMAExceptionHandlerManager initWithLastSessionsAttributes];
+//    // Attempt to upload crash report files (if any exist)
+//    if ([NRMAFlags shouldEnableCrashReporting]) {
+//
+//        [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+//    }
     
     if([NRMAFlags shouldEnableGestureInstrumentation])
     {
