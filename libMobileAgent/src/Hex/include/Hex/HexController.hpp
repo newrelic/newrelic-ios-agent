@@ -40,7 +40,7 @@ namespace NewRelic {
 
             void submit(std::shared_ptr<Report::HexReport> report);
 
-            void publish();
+            bool publish();
 
             void setSessionId(const char* sessionId);
 

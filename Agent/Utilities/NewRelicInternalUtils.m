@@ -230,6 +230,8 @@ static NSString* _osVersion;
                     } else {
                         cachedCarrierName = carrier.carrierName;
                     }
+                } else if (internetStatus == NotReachable) {
+                       cachedCarrierName = @"";
                 } else {
                     cachedCarrierName = NRMA_CARRIER_WIFI;
                 }

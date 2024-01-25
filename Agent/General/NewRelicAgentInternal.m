@@ -488,7 +488,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                             sessionId:[self currentSessionId]];
 
 
-        if (status != NotReachable) {
+        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
             [self.handledExceptionsController processAndPublishPersistedReports];
         }
 
@@ -500,7 +500,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
-        if (status != NotReachable) {
+        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
             [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
         }
     }

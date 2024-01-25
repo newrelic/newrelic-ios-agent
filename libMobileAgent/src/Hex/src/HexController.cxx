@@ -84,12 +84,14 @@ std::shared_ptr<HexReportContext> HexController::detachKeyContext() {
 }
 
 
-void HexController::publish() {
+bool HexController::publish() {
     auto context = detachKeyContext();
     if (context->reports() > 0) {
         context->finalize();
         _publisher->publish(context);
+        return true;
     }
+    return false;
 }
 
 void HexController::submit(std::shared_ptr<Report::HexReport> report) {

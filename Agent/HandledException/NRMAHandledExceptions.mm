@@ -131,9 +131,18 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) onHarvest {
-    _controller->publish();
-    _store->clear();
-    _publisher->retry();
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    @synchronized(r) {
+        NRMANetworkStatus status = [r currentReachabilityStatus];
+        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions reports
+            if(!_controller->publish()) { // If there are no reports in the controller to publish we still want to try and send persisted reports before we clear.
+                [self processAndPublishPersistedReports];
+            } else {
+                _store->clear();
+                _publisher->retry();
+            }
+        }
+    }
 }
 
 - (fbs::Platform) fbsPlatformFromString:(NSString*)platform {
