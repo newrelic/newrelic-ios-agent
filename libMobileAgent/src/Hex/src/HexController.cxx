@@ -8,7 +8,6 @@
 #include "Hex/HexPublisher.hpp"
 #include "Hex/HexController.hpp"
 
-
 using namespace NewRelic::Hex;
 
 HexController::HexController(std::shared_ptr<const AnalyticsController>& analytics,
@@ -83,15 +82,17 @@ std::shared_ptr<HexReportContext> HexController::detachKeyContext() {
     return context;
 }
 
+void HexController::resetKeyContext() {
+    std::unique_lock<std::mutex> resetLock(_keyContextMutex);
+    _keyContext = std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator());
+}
 
-bool HexController::publish() {
+void HexController::publish() {
     auto context = detachKeyContext();
     if (context->reports() > 0) {
         context->finalize();
         _publisher->publish(context);
-        return true;
     }
-    return false;
 }
 
 void HexController::submit(std::shared_ptr<Report::HexReport> report) {

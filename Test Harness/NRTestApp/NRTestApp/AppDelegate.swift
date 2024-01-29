@@ -67,7 +67,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         NewRelic.setMaxEventPoolSize(5000)
-        NewRelic.setMaxEventBufferTime(600)
+        NewRelic.setMaxEventBufferTime(60)
 
         NewRelic.logVerbose("NewRelic.start was called.")
         return true

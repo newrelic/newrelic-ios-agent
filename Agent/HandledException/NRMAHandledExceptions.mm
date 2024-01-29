@@ -131,17 +131,20 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) onHarvest {
-    NRMAReachability* r = [NewRelicInternalUtils reachability];
-    @synchronized(r) {
-        NRMANetworkStatus status = [r currentReachabilityStatus];
-        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions reports
-            if(!_controller->publish()) { // If there are no reports in the controller to publish we still want to try and send persisted reports before we clear.
-                [self processAndPublishPersistedReports];
-            } else {
-                _store->clear();
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        NRMAReachability* r = [NewRelicInternalUtils reachability];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            if (status != NotReachable) {
+                [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
+                _controller->resetKeyContext();
                 _publisher->retry();
             }
         }
+    } else {
+        _controller->publish();
+        _store->clear();
+        _publisher->retry();
     }
 }
 
