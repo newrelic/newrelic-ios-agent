@@ -15,19 +15,70 @@
     self = [super init];
     if (self) {
         self.application_token = [dict valueForKey:kNRMA_LICENSE_KEY];
-        self.collect_network_errors = [[dict valueForKey:kNRMA_COLLECT_NETWORK_ERRORS] boolValue];
+
+        if ([dict objectForKey:kNRMA_COLLECT_NETWORK_ERRORS]) {
+            self.collect_network_errors = [[dict valueForKey:kNRMA_COLLECT_NETWORK_ERRORS] boolValue];
+        }
+        else {
+            self.collect_network_errors = NRMA_DEFAULT_COLLECT_NETWORK_ERRORS;
+        }
+        
         self.cross_process_id = [dict valueForKey:kNRMA_CROSS_PROCESS_ID];
-        self.data_report_period = [[dict valueForKey:kNRMA_DATA_REPORT_PERIOD] intValue];
+
+        if ([dict objectForKey:kNRMA_DATA_REPORT_PERIOD]) {
+            self.data_report_period = [[dict valueForKey:kNRMA_DATA_REPORT_PERIOD] intValue];
+        }
+        else {
+            self.data_report_period = NRMA_DEFAULT_REPORT_PERIOD;
+        }
+
         self.data_token = [[NRMADataToken alloc] init];
         self.data_token.clusterAgentId  = [[[dict valueForKey:kNRMA_DATA_TOKEN] objectAtIndex:0] longLongValue];
         self.data_token.realAgentId = [[[dict valueForKey:kNRMA_DATA_TOKEN] objectAtIndex:1] longLongValue];
-        self.error_limit = [[dict valueForKey:kNRMA_ERROR_LIMIT] intValue];
-        self.report_max_transaction_age = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_AGE] intValue];
-        self.report_max_transaction_count = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_COUNT]intValue];
-        self.response_body_limit = [[dict valueForKey:kNRMA_RESPONSE_BODY_LIMIT] intValue];
+
+        if ([dict objectForKey:kNRMA_ERROR_LIMIT]) {
+            self.error_limit = [[dict valueForKey:kNRMA_ERROR_LIMIT] intValue];
+        }
+        else {
+            self.error_limit = NRMA_DEFAULT_ERROR_LIMIT;
+        }
+
+        if ([dict objectForKey:kNRMA_REPORT_MAX_TRANSACTION_AGE]) {
+
+            self.report_max_transaction_age = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_AGE] intValue];
+        }
+        else {
+            self.report_max_transaction_age = NRMA_DEFAULT_MAX_TRANSACTION_AGE;
+        }
+        if ([dict objectForKey:kNRMA_REPORT_MAX_TRANSACTION_COUNT]) {
+            self.report_max_transaction_count = [[dict valueForKey:kNRMA_REPORT_MAX_TRANSACTION_COUNT]intValue];
+        }
+        else {
+            self.report_max_transaction_count = NRMA_DEFAULT_MAX_TRANSACTION_COUNT;
+        }
+
+        if ([dict objectForKey:kNRMA_RESPONSE_BODY_LIMIT]) {
+            self.response_body_limit = [[dict valueForKey:kNRMA_RESPONSE_BODY_LIMIT] intValue];
+        }
+        else {
+            self.response_body_limit = NRMA_DEFAULT_RESPONSE_BODY_LIMIT;
+        }
+
         self.server_timestamp = [[dict valueForKey:kNRMA_SERVER_TIMESTAMP] longLongValue];
-        self.stack_trace_limit = [[dict valueForKey:kNRMA_STACK_TRACE_LIMIT] intValue];
-        self.activity_trace_max_size =[[dict valueForKey:kNRMA_AT_MAX_SIZE] intValue];
+        
+        if ([dict objectForKey:kNRMA_STACK_TRACE_LIMIT]) {
+            self.stack_trace_limit = [[dict valueForKey:kNRMA_STACK_TRACE_LIMIT] intValue];
+        }
+        else {
+            self.stack_trace_limit = NRMA_DEFAULT_STACK_TRACE_LIMIT;
+        }
+        if ([dict objectForKey:kNRMA_AT_MAX_SIZE]) {
+            self.activity_trace_max_size =[[dict valueForKey:kNRMA_AT_MAX_SIZE] intValue];
+        }
+        else {
+            self.activity_trace_max_size = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SIZE;
+        }
+
         self.at_capture = [[NRMATraceConfigurations alloc] initWithArray:[dict valueForKey:kNRMA_AT_CAPTURE]];
         self.activity_trace_min_utilization = [[dict valueForKey:KNRMA_AT_MIN_UTILIZATION] doubleValue];
         self.encoding_key = [dict valueForKey:kNRMA_ENCODING_KEY];
@@ -171,7 +222,9 @@
     result = 31 * result + (unsigned int)self.account_id;
     result = 31 * result + (unsigned int)self.application_id;
     result = 31 * result + self.encoding_key.hash;
-    
+    // Is this a chill addition?
+    result = 31 * result + self.trusted_account_key.hash;
+
     return result;
 }
 @end
