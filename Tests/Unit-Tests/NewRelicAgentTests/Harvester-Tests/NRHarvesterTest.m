@@ -162,6 +162,28 @@
     XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
 }
 
+- (void) testBadHarvestConfiguration {
+
+    // Test what happens if any value is missing from passed dictionary
+
+    NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[NSDictionary dictionary]];
+    XCTAssertEqual(NRMA_DEFAULT_REPORT_PERIOD, config.data_report_period, @"A bad dictionary should parse default report period to its default.");
+    // if kNRMA_COLLECT_NETWORK_ERRORS is missing.
+    XCTAssertEqual(true, config.collect_network_errors, @"A bad dictionary should parse default report period to its default.");
+    // if kNRMA_ERROR_LIMIT is missing
+    XCTAssertEqual(NRMA_DEFAULT_ERROR_LIMIT, config.error_limit, @"A bad dictionary should parse default error limit to its default.");
+    // if kNRMA_REPORT_MAX_TRANSACTION_AGE is missing
+    XCTAssertEqual(NRMA_DEFAULT_MAX_TRANSACTION_AGE, config.report_max_transaction_age, @"A bad dictionary should parse default max transaction aget limit to its default.");
+    // if kNRMA_REPORT_MAX_TRANSACTION_COUNT is missing
+    XCTAssertEqual(NRMA_DEFAULT_MAX_TRANSACTION_COUNT, config.report_max_transaction_count, @"A bad dictionary should parse max transactions to its default.");
+    // if kNRMA_RESPONSE_BODY_LIMIT is missing
+    XCTAssertEqual(NRMA_DEFAULT_RESPONSE_BODY_LIMIT, config.response_body_limit, @"A bad dictionary should parse response body limit to its default.");
+    // if kNRMA_STACK_TRACE_LIMIT is missing
+    XCTAssertEqual(NRMA_DEFAULT_STACK_TRACE_LIMIT, config.stack_trace_limit, @"A bad dictionary should parse response body limit to its default.");
+    // if kNRMA_AT_MAX_SIZE is missing
+    XCTAssertEqual(NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SIZE, config.activity_trace_max_size, @"A bad dictionary should parse activity trace max size limit to its default.");
+}
+
 - (void) testActivityTraceConfiguration
 {
     NSArray* at_capture;
