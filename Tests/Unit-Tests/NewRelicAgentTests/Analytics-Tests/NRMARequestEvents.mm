@@ -30,7 +30,6 @@ static NRMAFeatureFlags __originalFlags;
     });
     [NRMAFlags setFeatureFlags:0];
 
-    [NRMAAnalytics clearDuplicationStores];
 }
 
 - (void)tearDown {

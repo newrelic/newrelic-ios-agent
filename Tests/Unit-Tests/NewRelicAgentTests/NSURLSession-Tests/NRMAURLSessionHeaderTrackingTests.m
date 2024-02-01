@@ -35,7 +35,6 @@ static NewRelicAgentInternal* _sharedInstance;
 - (void)setUp {
     [super setUp];
     [NRMAFlags enableFeatures: NRFeatureFlag_NetworkRequestEvents | NRFeatureFlag_NewEventSystem];
-    [NRMAAnalytics clearDuplicationStores];
 
     [NRMAURLSessionOverride beginInstrumentation];
     self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];

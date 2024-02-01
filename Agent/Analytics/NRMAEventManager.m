@@ -47,7 +47,7 @@ static PersistentEventStore* __persistentEventStore;
 - (nonnull instancetype)init {
     self = [super init];
     if (self) {
-        events = [NRMAEventManager getLastSessionEventsArray];
+        events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
         maxBufferSize = [NRMAAgentConfiguration getMaxEventBufferSize];
         maxBufferTimeSeconds = [NRMAAgentConfiguration getMaxEventBufferTime];
         totalAttemptedInserts = 0;

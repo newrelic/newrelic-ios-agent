@@ -31,7 +31,7 @@
         _lastSave = [NSDate new];
         _dirty = NO;
         _workQueue = [[NSOperationQueue alloc] init];
-        [_workQueue setMaxConcurrentOperationCount:1];
+       // [_workQueue setMaxConcurrentOperationCount:1];
     }
     return self;
 }
