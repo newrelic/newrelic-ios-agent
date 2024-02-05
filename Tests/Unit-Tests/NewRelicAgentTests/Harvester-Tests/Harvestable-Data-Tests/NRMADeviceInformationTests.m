@@ -109,6 +109,12 @@
     NRMAApplicationPlatform capacitor = NRMAPlatform_Capacitor;
     NSString* capacitorPlatformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:capacitor];
     XCTAssertTrue([capacitorPlatformString isEqualToString:expectedCapacitorString]);
+    
+    NSString* expectedUnrealString = @"Unreal";
+
+    NRMAApplicationPlatform Unreal = NRMAPlatform_Unreal;
+    NSString* UnrealPlatformString = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:Unreal];
+    XCTAssertTrue([UnrealPlatformString isEqualToString:expectedUnrealString]);
 }
 
 
