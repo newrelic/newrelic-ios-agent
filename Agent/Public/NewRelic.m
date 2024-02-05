@@ -613,8 +613,6 @@
  * harvest cycle.
  */
 + (void) setMaxEventBufferTime:(unsigned int)seconds {
-    [NRMAAgentConfiguration setMaxEventBufferTime:seconds];
-
     [[NewRelicAgentInternal sharedInstance].analyticsController setMaxEventBufferTime:seconds];
 }
 /*

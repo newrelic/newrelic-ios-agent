@@ -20,7 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithPersistentStore:(PersistentEventStore *)store;
 - (void)setMaxEventBufferSize:(NSUInteger)size;
+- (NSUInteger)getMaxEventBufferSize;
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds;
+- (NSUInteger)getMaxEventBufferTimeInSeconds;
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
 - (void)empty;

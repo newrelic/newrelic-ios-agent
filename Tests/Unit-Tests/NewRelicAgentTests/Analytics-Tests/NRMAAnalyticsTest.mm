@@ -420,7 +420,27 @@
 
 }
 
+-(void)testSetMaxEventBufferSize {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
 
+    [analytics setMaxEventBufferSize:2000];
+    
+    XCTAssertEqual([analytics getMaxEventBufferSize], 2000);
+    
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertEqual([analytics getMaxEventBufferSize], 2000);
+}
+
+-(void)testSetMaxEventBufferTime {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics setMaxEventBufferTime:2000];
+    
+    XCTAssertEqual([analytics getMaxEventBufferTime], 2000);
+    
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertEqual([analytics getMaxEventBufferTime], 2000);
+}
 
 - (void) testDuplicateStore {
     //todo: reenable test (disabled for beta 1, no persistent store)
