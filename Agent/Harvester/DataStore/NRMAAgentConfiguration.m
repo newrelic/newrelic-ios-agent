@@ -122,11 +122,13 @@ static NSUInteger __NRMA__maxEventBufferTime = 600;
     else {
         _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
     }
-    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1"];
+    _loggingURL = [_loggingURL stringByAppendingFormat:@"/mobile/logs"];
 
     NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
-
+    
     [NRLogger setLogURL:logURL];
+
+    [NRLogger setLogIngestKey:self.applicationToken.value];
 }
 
 + (NRMAConnectInformation*) connectionInformation

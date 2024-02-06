@@ -77,21 +77,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
-        
-        // REMOTE LOGGING WORKAROUND: This is required to use a New Relic Ingest Key for logging (until Mobile app token is valid for authenticating with the logs endpoint.)
-        // Comment out the following if else statement if log API starts accepting applicationToken as Api-Key.
-        if let logIngestKey = plistHelper.objectFor(key: "logIngestKey", plist: "NRAPI-Info") as? String, !logIngestKey.isEmpty {
-            NRLogger.setLogIngestKey(logIngestKey)
-        }
-        else {
-            NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
-        }
+
+        // REMOTE LOGGING: This is required to use a New Relic Mobile Logging.
 
         if let logEntityGuid = plistHelper.objectFor(key: "logEntityGuid", plist: "NRAPI-Info") as? String, !logEntityGuid.isEmpty {
             NRLogger.setLogEntityGuid(logEntityGuid)
         }
         else {
-            NewRelic.logInfo("NRLogger API uploading disabled. No URL given.")
+            NewRelic.logInfo("NRLogger API uploading disabled. No Entity Guid given.")
         }
 
         NewRelic.logVerbose("NewRelic.start was called.")

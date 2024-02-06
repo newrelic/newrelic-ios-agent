@@ -339,7 +339,7 @@ withMessage:(NSString *)message {
             NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
             NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
-            [req setValue:self->logIngestKey forHTTPHeaderField:@"Api-Key"];
+            [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
 
             req.HTTPMethod = @"POST";
             NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
