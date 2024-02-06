@@ -50,9 +50,8 @@ static NSUInteger __NRMA__maxEventBufferSize = 1000;
     return __NRMA__maxEventBufferTime;
 }
 
-
-+ (void) setMaxEventBufferSize:(NSUInteger)seconds {
-    __NRMA__maxEventBufferSize = seconds;
++ (void) setMaxEventBufferSize:(NSUInteger)size {
+    __NRMA__maxEventBufferSize = size;
 }
 + (NSUInteger) getMaxEventBufferSize {
     return __NRMA__maxEventBufferSize;

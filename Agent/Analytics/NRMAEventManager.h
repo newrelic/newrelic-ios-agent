@@ -19,7 +19,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NRMAEventManager : NSObject
 
 - (void)setMaxEventBufferSize:(NSUInteger)size;
+- (NSUInteger)getMaxEventBufferSize;
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds;
+- (NSUInteger)getMaxEventBufferTimeInSeconds;
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
 - (void)empty;

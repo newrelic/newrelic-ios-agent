@@ -71,6 +71,10 @@ static PersistentEventStore* __persistentEventStore;
     maxBufferSize = size;
 }
 
+- (NSUInteger)getMaxEventBufferSize {
+    return maxBufferSize;
+}
+
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds {
     if(seconds < kMinBufferTimeSeconds) {
         NRLOG_ERROR(@"Buffer Time cannot be less than %lu Seconds", (unsigned long)kMinBufferTimeSeconds);
@@ -81,6 +85,10 @@ static PersistentEventStore* __persistentEventStore;
     }
     
     maxBufferTimeSeconds = seconds;
+}
+
+- (NSUInteger)getMaxEventBufferTimeInSeconds {
+    return maxBufferTimeSeconds;
 }
 
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds {
