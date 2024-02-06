@@ -81,6 +81,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) setMaxEventBufferSize:(unsigned int) size {
+    [NRMAAgentConfiguration setMaxEventBufferSize:size];
     if([NRMAFlags shouldEnableNewEventSystem]){
         [_eventManager setMaxEventBufferSize:size];
     }
@@ -88,14 +89,21 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         _analyticsController->setMaxEventBufferSize(size);
     }
 }
+- (NSUInteger) getMaxEventBufferSize {
+    return [_eventManager getMaxEventBufferSize];
+}
 - (void) setMaxEventBufferTime:(unsigned int)seconds
 {
+    [NRMAAgentConfiguration setMaxEventBufferTime:seconds];
     if([NRMAFlags shouldEnableNewEventSystem]){
         [_eventManager setMaxEventBufferTimeInSeconds:seconds];
     }
     else {
         _analyticsController->setMaxEventBufferTime(seconds);
     }
+}
+- (NSUInteger) getMaxEventBufferTime {
+    return [_eventManager getMaxEventBufferTimeInSeconds];
 }
 
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime {

@@ -44,4 +44,6 @@
 + (void) setMaxEventBufferTime:(NSUInteger)seconds;
 + (NSUInteger) getMaxEventBufferTime;
 
++ (void) setMaxEventBufferSize:(NSUInteger)size;
++ (NSUInteger) getMaxEventBufferSize;
 @end
