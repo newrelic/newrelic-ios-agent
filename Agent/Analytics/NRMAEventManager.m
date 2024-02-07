@@ -55,17 +55,6 @@ static PersistentEventStore* __persistentEventStore;
     }
     return self;
 }
-- (nonnull instancetype)initWithFilename:(NSString*) filename {
-    self = [super init];
-    if (self) {
-        events = [NRMAEventManager getLastSessionEventsArray];
-        maxBufferSize = [NRMAAgentConfiguration getMaxEventBufferSize];
-        maxBufferTimeSeconds = [NRMAAgentConfiguration getMaxEventBufferTime];
-        totalAttemptedInserts = 0;
-        oldestEventTimestamp = 0;
-    }
-    return self;
-}
 
 - (void)setMaxEventBufferSize:(NSUInteger)size {
     maxBufferSize = size;
@@ -171,13 +160,6 @@ static PersistentEventStore* __persistentEventStore;
         [self empty];
     }
     return eventJsonString;
-}
-
-+ (NSMutableArray<NRMAAnalyticEventProtocol> *)getLastSessionEventsArray
- {
-    NSDictionary *lastSessionEvents = [[NRMAEventManager persistentEventStore] getLastSessionEvents];
-    NSMutableArray<NRMAAnalyticEventProtocol> * events = (NSMutableArray<NRMAAnalyticEventProtocol> *)[[NSMutableArray alloc] initWithArray:[lastSessionEvents allValues]];
-    return events;
 }
 
 + (NSString *)getLastSessionEventsString {

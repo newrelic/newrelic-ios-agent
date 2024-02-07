@@ -28,7 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents;
 
 + (NSString *)getLastSessionEventsString;
-+ (NSMutableArray<NRMAAnalyticEventProtocol> *)getLastSessionEventsArray;
 + (void) clearDuplicationStores;
 + (nullable NSString *)getLastSessionEventsFromFilename:(NSString *)filename;
 @end
