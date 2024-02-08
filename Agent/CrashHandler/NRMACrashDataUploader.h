@@ -19,6 +19,7 @@
 
 @property(strong) NSURLSession* uploadSession;
 
++ (BOOL) inProgress;
 
 - (void) uploadCrashReports;
 

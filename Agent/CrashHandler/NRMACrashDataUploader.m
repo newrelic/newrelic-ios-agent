@@ -15,7 +15,13 @@
 #import "NRMATaskQueue.h"
 #import "NRMASupportMetricHelper.h"
 
+static BOOL __NRMACrashDataUploaderInProgress = NO;
+
 @implementation NRMACrashDataUploader
+
++ (BOOL) inProgress {
+    return __NRMACrashDataUploaderInProgress;
+}
 
 - (instancetype) initWithCrashCollectorURL:(NSString*)url
                           applicationToken:(NSString*)token
@@ -64,6 +70,9 @@
 
 - (void) uploadCrashReports
 {
+    if (__NRMACrashDataUploaderInProgress) {
+        return;
+    }
     NSError* error = nil;
     NSArray* reportURLs = [self crashReportURLs:&error];
     if ([reportURLs count] <= 0) {
@@ -76,8 +85,10 @@
     }
 
     for (NSURL* fileURL in reportURLs) {
+        __NRMACrashDataUploaderInProgress = YES;
         [self uploadFileAtPath:fileURL];
     }
+
 }
 
 - (void) uploadFileAtPath:(NSURL*)path
@@ -115,6 +126,8 @@
    }
     
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
+        __NRMACrashDataUploaderInProgress = NO;
+
         NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
         if(responseError) {
             NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
