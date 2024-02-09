@@ -73,6 +73,38 @@
     [nrMock stopMocking];
 }
 
+- (void) testTimerCreationAndTaskCompletionNoCompletionHandler
+{
+    __block BOOL finished = NO;
+    id nrMock = [OCMockObject mockForClass:[NRMANetworkFacade class]];
+    __block NRTimer* timer;
+    [[[[[nrMock expect] ignoringNonObjectArgs] classMethod] andDo:^(NSInvocation* inv) {
+        __autoreleasing NRTimer* localTimer;
+        [inv getArgument:&localTimer
+                 atIndex:4];
+        timer = localTimer;
+        [inv invoke];
+        finished = YES;
+    }] noticeNetworkRequest:OCMOCK_ANY
+                   response:OCMOCK_ANY
+                  withTimer:OCMOCK_ANY
+                  bytesSent:0
+              bytesReceived:0
+               responseData:OCMOCK_ANY
+               traceHeaders:OCMOCK_ANY
+                     params:OCMOCK_ANY];
+
+    __block NSURLSessionDataTask* task = [self.session dataTaskWithURL:[NSURL URLWithString:@"http://google.com"]];
+
+    XCTAssertTrue([self verifyTaskSwizzled:task],@"task's method 'resume' was not instrumented!");
+
+    [task resume];
+    while (CFRunLoopGetCurrent() && !finished) {}
+    XCTAssertTrue([timer timeElapsedInMilliSeconds] > 0, @"timer was never stopped");
+    [nrMock stopMocking];
+}
+
+
 - (void) testRecordNetworkActivity
 {
 
