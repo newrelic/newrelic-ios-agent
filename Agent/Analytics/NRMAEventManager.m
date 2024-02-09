@@ -37,7 +37,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     self = [super init];
     if (self) {
         events = [[NSMutableArray<NRMAAnalyticEventProtocol> alloc] init];
-        maxBufferSize = kDefaultBufferSize;
+        maxBufferSize = [NRMAAgentConfiguration getMaxEventBufferSize];
         maxBufferTimeSeconds = [NRMAAgentConfiguration getMaxEventBufferTime];
         totalAttemptedInserts = 0;
         oldestEventTimestamp = 0;
@@ -50,6 +50,10 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     maxBufferSize = size;
 }
 
+- (NSUInteger)getMaxEventBufferSize {
+    return maxBufferSize;
+}
+
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds {
     if(seconds < kMinBufferTimeSeconds) {
         NRLOG_ERROR(@"Buffer Time cannot be less than %lu Seconds", (unsigned long)kMinBufferTimeSeconds);
@@ -60,6 +64,10 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     }
     
     maxBufferTimeSeconds = seconds;
+}
+
+- (NSUInteger)getMaxEventBufferTimeInSeconds {
+    return maxBufferTimeSeconds;
 }
 
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds {

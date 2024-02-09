@@ -16,8 +16,9 @@
 
 @interface NRMAAnalytics : NSObject <NRMAHarvestAware>
 - (void) setMaxEventBufferTime:(unsigned int) seconds;
-
+- (NSUInteger) getMaxEventBufferSize;
 - (void) setMaxEventBufferSize:(unsigned int) size;
+- (NSUInteger) getMaxEventBufferTime;
 
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime;
 

@@ -171,6 +171,8 @@ static NSString* _osVersion;
             return kNRMAPlatformString_Capacitor;
         case NRMAPlatform_MAUI:
             return kNRMAPlatformString_MAUI;
+        case NRMAPlatform_Unreal:
+            return kNRMAPlatformString_Unreal;
     }
 }
 
