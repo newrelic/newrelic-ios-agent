@@ -370,11 +370,6 @@
         return false;
     }
     if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
-        NSMutableDictionary *tempAnalyticsAttributes = [[NSMutableDictionary alloc] initWithDictionary:self.harvestData.analyticsAttributes];
-        if(tempAnalyticsAttributes.count > 0){
-            [tempAnalyticsAttributes setValue:[NSNumber numberWithBool:YES] forKey:kNRMA_Attrib_offline];
-            [self.harvestData setAnalyticsAttributes:[[NSDictionary alloc] initWithDictionary:tempAnalyticsAttributes]];
-        }
         NSError* error = nil;
         NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.harvestData options:0 error:&error];
         if (error) {

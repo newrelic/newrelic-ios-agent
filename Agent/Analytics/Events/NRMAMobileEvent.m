@@ -8,6 +8,8 @@
 
 #import "NRMAMobileEvent.h"
 #import "Constants.h"
+#import "NRMAFlags.h"
+#import "NewRelicInternalUtils.h"
 
 static NSString* const kTimestampKey = @"Timestamp";
 static NSString* const kSessionElapsedTimeKey = @"SessionElapsedTime";
@@ -26,6 +28,17 @@ static NSString* const kAttributesKey = @"Attributes";
         _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _attributeValidator = attributeValidator;
         _attributes = [[NSMutableDictionary alloc] init];
+        
+        if([NRMAFlags shouldEnableOfflineStorage]) {
+            NRMAReachability* r = [NewRelicInternalUtils reachability];
+            @synchronized(r) {
+                NRMANetworkStatus status = [r currentReachabilityStatus];
+                if (status != NotReachable) {
+                    [self addAttribute:kNRMA_Attrib_offline value:@YES];
+                    
+                }
+            }
+        }
     }
     
     return self;
