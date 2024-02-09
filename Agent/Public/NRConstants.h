@@ -32,7 +32,8 @@ extern "C" {
         NRMAPlatform_ReactNative,
         NRMAPlatform_Flutter,
         NRMAPlatform_Capacitor,
-        NRMAPlatform_MAUI
+        NRMAPlatform_MAUI,
+        NRMAPlatform_Unreal
     };
 
 // these constants are paired with enum values of NRMAApplicationPlatform
@@ -49,6 +50,7 @@ extern "C" {
 #define kNRMAPlatformString_Flutter      @"Flutter"
 #define kNRMAPlatformString_Capacitor    @"Capacitor"
 #define kNRMAPlatformString_MAUI         @"MAUI"
+#define kNRMAPlatformString_Unreal       @"Unreal"
 
 
 //Custom Trace Types
