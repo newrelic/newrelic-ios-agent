@@ -33,9 +33,8 @@ static NSString* const kAttributesKey = @"Attributes";
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {
                 NRMANetworkStatus status = [r currentReachabilityStatus];
-                if (status != NotReachable) {
+                if (status == NotReachable) {
                     [self addAttribute:kNRMA_Attrib_offline value:@YES];
-                    
                 }
             }
         }

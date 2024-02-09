@@ -162,7 +162,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         NRMAReachability* r = [NewRelicInternalUtils reachability];
         @synchronized(r) {
             NRMANetworkStatus status = [r currentReachabilityStatus];
-            if (status != NotReachable) {
+            if (status == NotReachable) {
                 report->setAttributeNoValidation("offline", true);
             }
         }
