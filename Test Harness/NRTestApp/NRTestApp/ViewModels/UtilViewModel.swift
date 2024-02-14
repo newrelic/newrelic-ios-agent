@@ -45,6 +45,8 @@ class UtilViewModel {
 
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
 
+        options.append(UtilOption(title: "Make 100 Logs", handler: { [self] in make100Logs()}))
+
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
@@ -131,10 +133,12 @@ class UtilViewModel {
 
     func testLogDict() {
         NewRelic.logAll([
-            "logLevel": "WARNING",
+            "logLevel": "WARN",
             "message": "This is a test message for the New Relic logging system."
         ])
     }
+
+
 
     func noticeNWRequest() {
         NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
@@ -166,6 +170,24 @@ class UtilViewModel {
 
         dataTask.resume()
     }
+
+    @objc func make100Logs() {
+        for i in 0...100 {
+            NewRelic.logInfo("/")
+            NewRelic.logInfo("\\")
+            NewRelic.logInfo(";")
+            NewRelic.logInfo(":")
+            NewRelic.logInfo("!")
+            NewRelic.logInfo("#")
+            NewRelic.logInfo("&")
+            NewRelic.logInfo("-")
+            NewRelic.logInfo("?")
+            NewRelic.logInfo("'")
+            NewRelic.logInfo("$")
+
+        }
+    }
+
 
     func shutDown() {
         NewRelic.shutdown()

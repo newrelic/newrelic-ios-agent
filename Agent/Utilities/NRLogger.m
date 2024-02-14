@@ -46,7 +46,7 @@ withMessage:(NSString *)message {
 
     if (shouldLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
-                               [NSNumber numberWithUnsignedInt:level], NRLogMessageLevelKey,
+                               [self levelToString:level], NRLogMessageLevelKey,
                                file, NRLogMessageFileKey,
                                [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
                                method, NRLogMessageMethodKey,
@@ -121,6 +121,29 @@ withMessage:(NSString *)message {
     return NRLogLevelError;
 }
 
++ (NSString*)levelToString:(NRLogLevels)level {
+
+    if (level ==  NRLogLevelError) {
+        return @"ERROR";
+    }
+    else if (level ==  NRLogLevelWarning) {
+        return @"WARN";
+    }
+    else if (level ==  NRLogLevelInfo) {
+        return @"INFO";
+    }
+    else if (level ==  NRLogLevelVerbose) {
+        return @"VERBOSE";
+    }
+    else if (level ==  NRLogLevelAudit) {
+        return @"AUDIT";
+    }
+    else if (level ==  NRLogLevelDebug) {
+        return @"DEBUG";
+    }
+    return @"ERROR";
+}
+
 #pragma mark -- internal
 
 - (id)init {
@@ -146,7 +169,6 @@ withMessage:(NSString *)message {
 
 - (void)addLogMessage:(NSDictionary *)message {
     // The static method checks the log level before we get here.
-    //    @synchronized(self) {
     dispatch_async(logQueue, ^{
         if (self->logTargets & NRLogTargetConsole) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
@@ -166,16 +188,14 @@ withMessage:(NSString *)message {
                 }
                 [self->logFile writeData:json];
 
-                dispatch_async(self->logQueue, ^{
-                    NSFileHandle *handleForReadingAtPath = [NSFileHandle fileHandleForReadingAtPath:[NRLogger logFilePath]];
-                    self->lastFileSize = [handleForReadingAtPath seekToEndOfFile];
-                   // NSLog(@"logs fileSize = %llu", self->lastFileSize);
-                    if (self->lastFileSize > kNRMAMaxPayloadSizeLimit) {
-                       // NSLog(@"logs fileSize exceeds 1MB , upload logs");
-                        [self upload];
-                    }
-                    [handleForReadingAtPath closeFile];
-                });
+                NSFileHandle *handleForReadingAtPath = [NSFileHandle fileHandleForReadingAtPath:[NRLogger logFilePath]];
+                self->lastFileSize = [handleForReadingAtPath seekToEndOfFile];
+                NSLog(@"logs fileSize = %llu", self->lastFileSize);
+                if (self->lastFileSize > kNRMAMaxPayloadSizeLimit) {
+                    NSLog(@"logs fileSize exceeds 1MB , upload logs");
+                    [self upload];
+                }
+                [handleForReadingAtPath closeFile];
             }
         }
     });
@@ -327,49 +347,56 @@ withMessage:(NSString *)message {
     self->logURL = url;
 }
 - (void)upload {
-    dispatch_async(logQueue, ^{
-        if (self->logFile) {
-            // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
-            if (!self->logIngestKey || !self->logURL) { return; }
 
-            NSString *path = [NRLogger logFilePath];
-            NSData* logData = [NSData dataWithContentsOfFile:path];
+    NSLog(@"Log Upload called..");
+    @synchronized(self) {
 
-            NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-            NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-            NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
-            [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
+        dispatch_async(logQueue, ^{
+            if (self->logFile) {
+                // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
+                if (!self->logIngestKey || !self->logURL) { return; }
 
-            req.HTTPMethod = @"POST";
-            NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
+                NSString *path = [NRLogger logFilePath];
+                NSData* logData = [NSData dataWithContentsOfFile:path];
 
-            NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+                NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
+                NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
+                NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
+                [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
 
-                BOOL errorCode = false;
-                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                    NSInteger responseCode = ((NSHTTPURLResponse*)response).statusCode;
-                    errorCode = responseCode >= 300;
-                }
-                if (!error && !errorCode) {
-                    // TODO: Only use the below less line
-                    //  NRLOG_VERBOSE(@"Logs uploaded successfully.");
+                req.HTTPMethod = @"POST";
+                //                NSString* nrSessionId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
 
-                    NRLOG_VERBOSE(@"Logs uploaded successfully w/ sessionId = %@",nrSessiondId);
-                }
-                else if (errorCode) {
-                    NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
+                NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 
-                }
-                else {
-                    NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
-                }
-            }];
+                    BOOL errorCode = false;
+                    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                        NSInteger responseCode = ((NSHTTPURLResponse*)response).statusCode;
+                        errorCode = responseCode >= 300;
+                    }
+                    if (!error && !errorCode) {
+                        NRLOG_VERBOSE(@"Logs uploaded successfully.");
+                        //                        NRLOG_VERBOSE(@"Logs uploaded successfully w/ sessionId = %@",nrSessiondId);
+                    }
+                    else if (errorCode) {
+                        NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
 
-            [uploadTask resume];
-            [self clearLog];
-        }
-    });
+                    }
+                    else {
+                        NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
+                    }
+                }];
+
+                [uploadTask resume];
+
+                //TODO: Fix this to not blow away data until it is successful.
+                // We clear the log when the request is successful or fails...
+                [self clearLog];
+
+            }
+        });
+    }
 }
 
 @end
