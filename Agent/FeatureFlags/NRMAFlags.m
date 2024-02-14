@@ -47,7 +47,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_NetworkRequestEvents | 
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
-                              NRFeatureFlag_AppStartMetrics;
+                              NRFeatureFlag_AppStartMetrics |
+                              NRFeatureFlag_OfflineStorage;
                   });
     return __flags;
 }
@@ -161,6 +162,11 @@ static NSString* __deviceIdentifierReplacement = NULL;
 + (BOOL) shouldEnableSwiftAsyncURLSessionSupport {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_SwiftAsyncURLSessionSupport) != 0;
 }
+
++ (BOOL) shouldEnableOfflineStorage {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_OfflineStorage) != 0;
+}
+
 + (BOOL) shouldEnableLogReporting {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
 }
@@ -216,6 +222,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
     }
     if ((flags & NRFeatureFlag_SwiftAsyncURLSessionSupport) == NRFeatureFlag_SwiftAsyncURLSessionSupport) {
         [retArray addObject:@"SwiftAsyncURLSessionSupport"];
+    }
+    if ((flags & NRFeatureFlag_OfflineStorage) == NRFeatureFlag_OfflineStorage) {
+        [retArray addObject:@"OfflineStorage"];
     }
     if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
         [retArray addObject:@"LogReporting"];

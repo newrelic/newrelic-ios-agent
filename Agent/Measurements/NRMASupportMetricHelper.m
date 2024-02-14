@@ -59,6 +59,14 @@
                                                     scope:nil]];
 }
 
++ (void) enqueueOfflinePayloadMetric:(long)size {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMAOfflineSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest]
+                                                    value:[NSNumber numberWithLongLong:size]
+                                                    scope:nil]];
+}
+
 + (void) enqueueUpgradeMetric {
     if (deferredMetrics == nil) {
         deferredMetrics = [NSMutableArray array];

@@ -32,7 +32,8 @@ extern "C" {
         NRMAPlatform_ReactNative,
         NRMAPlatform_Flutter,
         NRMAPlatform_Capacitor,
-        NRMAPlatform_MAUI
+        NRMAPlatform_MAUI,
+        NRMAPlatform_Unreal
     };
 
 // these constants are paired with enum values of NRMAApplicationPlatform
@@ -49,6 +50,7 @@ extern "C" {
 #define kNRMAPlatformString_Flutter      @"Flutter"
 #define kNRMAPlatformString_Capacitor    @"Capacitor"
 #define kNRMAPlatformString_MAUI         @"MAUI"
+#define kNRMAPlatformString_Unreal       @"Unreal"
 
 
 //Custom Trace Types
@@ -123,6 +125,8 @@ typedef NSString NRMetricUnit;
 // Defines Format string where 4 arguments are NativePlatform, Platform, Destination and Endpoint.
 #define kNRMAMaxPayloadSizeLimitSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/MaxPayloadSizeLimit/%@"
 #define kNRMAMaxPayloadSizeLimit         1000000 // bytes
+
+#define kNRMAOfflineSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/OfflinePayload/bytes"
 
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"

@@ -20,6 +20,7 @@
 #include <Utilities/Application.hpp>
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
+#import "Constants.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -344,13 +345,20 @@
     //TODO: add addition collector response processing.
     if (response.isError) {
         // failure
-        [self fireOnHarvestFailure];
+        if([self checkOfflineAndPersist:response]) {
+            // If the harvest was persisted for offline storage clear the harvest.
+            [self.harvestData clear];
+        } else {
+            [self fireOnHarvestFailure];
+        }
     } else {
         // success
         [self.harvestData clear];
+        // If there was a successful harvest upload send the persisted offline payloads.
+        [connection sendOfflineStorage];
     }
     //Supportability/MobileAgent/Collector/Harvest
-    
+
     [harvestTimer stopTimer];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
@@ -366,6 +374,23 @@
     }
 #endif
     [self fireOnHarvestComplete];
+}
+
+- (BOOL) checkOfflineAndPersist:(NRMAHarvestResponse*) response {
+    if (![NRMAFlags shouldEnableOfflineStorage]) {
+        return false;
+    }
+    if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
+        NSError* error = nil;
+        NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.harvestData options:0 error:&error];
+        if (error) {
+            NRLOG_ERROR(@"Failed to generate JSON");
+            return false;
+        }
+        [connection.offlineStorage persistDataToDisk:jsonData];
+        return true;
+    }
+    return false;
 }
 
 - (void) disconnected
@@ -745,6 +770,10 @@
             }
         }
     }
+}
+
+- (void) setMaxOfflineStorageSize:(NSUInteger) size {
+    [connection setMaxOfflineStorageSize:size];
 }
 
 - (void) handleLoggingConfigurationUpdate {

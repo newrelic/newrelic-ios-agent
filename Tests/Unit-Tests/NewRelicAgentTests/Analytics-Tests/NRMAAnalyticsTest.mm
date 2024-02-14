@@ -420,8 +420,6 @@
 
 }
 
-
-
 - (void) testDuplicateStore {
     //todo: reenable test (disabled for beta 1, no persistent store)
     //    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
@@ -1112,6 +1110,28 @@
     //    XCTAssertTrue([dict[@"123"] isEqualToString:@"123"], @"dup store doesn't contain expected value");
     //
     //    XCTAssertTrue(array.count == 0, @"dup events should have been cleared out on harvest before.");
+}
+
+-(void)testSetMaxEventBufferSize {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics setMaxEventBufferSize:2000];
+    
+    XCTAssertEqual([analytics getMaxEventBufferSize], 2000);
+    
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertEqual([analytics getMaxEventBufferSize], 2000);
+}
+
+-(void)testSetMaxEventBufferTime {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics setMaxEventBufferTime:2000];
+    
+    XCTAssertEqual([analytics getMaxEventBufferTime], 2000);
+    
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertEqual([analytics getMaxEventBufferTime], 2000);
 }
 
 - (void) testBadInput {

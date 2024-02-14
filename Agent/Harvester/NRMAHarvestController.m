@@ -317,6 +317,10 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
         [harvestData.activityTraces addActivityTraces:activity];
     }
 }
+
++ (void) setMaxOfflineStorageSize:(NSUInteger) size {
+    [[[NRMAHarvestController harvestController] harvester] setMaxOfflineStorageSize:size];
+}
 @end
 
 #ifdef __cplusplus

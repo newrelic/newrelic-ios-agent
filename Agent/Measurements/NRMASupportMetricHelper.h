@@ -20,4 +20,5 @@ static NSMutableArray *deferredMetrics = NULL;
 + (void) enqueueStopAgentMetric;
 + (void) enqueueConfigurationUpdateMetric;
 + (void) processDeferredMetrics;
++ (void) enqueueOfflinePayloadMetric:(long)size;
 @end

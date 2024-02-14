@@ -28,6 +28,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #endif
 
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
+                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
+                                 NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
 
         // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
 
@@ -37,10 +40,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Note: Disabled by default, it is required to enable NRLogTargetFile when using LogReporting.
         NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
 
-        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
-                                 NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing])
-
-        //        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
 
         NewRelic.replaceDeviceIdentifier("myDeviceId")
         
