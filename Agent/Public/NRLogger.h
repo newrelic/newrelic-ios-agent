@@ -99,6 +99,10 @@ typedef enum _NRLogTargets {
     dispatch_queue_t logQueue;
     unsigned long long lastFileSize;
 
+    NSMutableArray *uploadQueue;
+    BOOL isUploading;
+    unsigned int failureCount;
+
 }
 
 + (void)log:(unsigned int)level
@@ -157,9 +161,9 @@ Configure the New Relic logging API.
 + (void)clearLog;
 
 /*!
- Upload current log since last upload.
+ Enqueue current log since last upload.
  */
-+ (void)upload;
++ (void)enqueueLogUpload;
 
 
 /*

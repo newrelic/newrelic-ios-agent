@@ -682,7 +682,7 @@
         }
         if ([NRMAFlags shouldEnableLogReporting]) {
             // Do log upload
-            [NRLogger upload];
+            [NRLogger enqueueLogUpload];
         }
     }
 }

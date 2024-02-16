@@ -15,6 +15,8 @@
 
 NRLogger *_nr_logger = nil;
 
+#define kNRMAMaxLogUploadRetry 3
+
 @interface NRLogger()
 - (void)addLogMessage:(NSDictionary *)message;
 - (void)setLogLevels:(unsigned int)levels;
@@ -40,9 +42,11 @@ withMessage:(NSString *)message {
 
     NRLogger *logger = [NRLogger logger];
     BOOL shouldLog = NO;
-    @synchronized(logger) {
+
+    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
+   // @synchronized(logger) {
         shouldLog = (logger->logLevels & level) != 0;
-    }
+   // }
 
     if (shouldLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
@@ -78,7 +82,6 @@ withMessage:(NSString *)message {
 
 + (void)setLogURL:(NSString*) url {
     [[NRLogger logger] setLogURL:url];
-
 }
 
 + (NSString *)logFilePath {
@@ -95,15 +98,15 @@ withMessage:(NSString *)message {
     [[NRLogger logger] clearLog];
 }
 
-+ (void)upload {
-    [[NRLogger logger] upload];
++ (void)enqueueLogUpload {
+    [[NRLogger logger] enqueueLogUpload];
 }
 
 + (NRLogLevels)stringToLevel:(NSString*)string {
     if ([ string isEqualToString:@"ERROR"]) {
         return NRLogLevelError;
     }
-    else if ([string isEqualToString:@"WARN"]) { //TODO: VERIFY IF SHOULD BE "WARNING"
+    else if ([string isEqualToString:@"WARN"]) {
         return NRLogLevelWarning;
     }
     else if ([string isEqualToString:@"INFO"]) {
@@ -149,7 +152,13 @@ withMessage:(NSString *)message {
 - (id)init {
     self = [super init];
     if (self) {
+
+        self->uploadQueue = [NSMutableArray array];
+        self->isUploading = NO;
+        self->failureCount = 0;
+
         // This was including Error and warning previously but since warning is the highest we want to emit by default this will emit warning and error by default.
+
         self->logLevels = NRLogLevelWarning;
         self->logTargets = NRLogTargetConsole;
         self->logFile = nil;
@@ -181,33 +190,43 @@ withMessage:(NSString *)message {
 
         }
         if (self->logTargets & NRLogTargetFile) {
-            NSData *json = [self jsonDictionary:message];
-            if (json) {
-                if ([self->logFile offsetInFile]) {
-                    [self->logFile writeData:[NSData dataWithBytes:"," length:1]];
-                }
-                [self->logFile writeData:json];
+            @synchronized(self) {
+                
+                NSData *json = [self jsonDictionary:message];
+                if (json) {
+                    if ([self->logFile offsetInFile]) {
+                        [self->logFile writeData:[NSData dataWithBytes:"," length:1]];
+                    }
+                    [self->logFile writeData:json];
+                    
+                    NSFileHandle *handleForReadingAtPath = [NSFileHandle fileHandleForReadingAtPath:[NRLogger logFilePath]];
+                    self->lastFileSize = [handleForReadingAtPath seekToEndOfFile];
+                    // NSLog(@"logs fileSize = %llu", self->lastFileSize);
 
-                NSFileHandle *handleForReadingAtPath = [NSFileHandle fileHandleForReadingAtPath:[NRLogger logFilePath]];
-                self->lastFileSize = [handleForReadingAtPath seekToEndOfFile];
-                NSLog(@"logs fileSize = %llu", self->lastFileSize);
-                if (self->lastFileSize > kNRMAMaxPayloadSizeLimit) {
-                    NSLog(@"logs fileSize exceeds 1MB , upload logs");
-                    [self upload];
+                    if (self->lastFileSize > (kNRMAMaxLogPayloadSizeLimit)) {
+                       // NSLog(@"logs fileSize exceeds kNRMAMaxLogPayloadSizeLimit , split logs and enqueue upload task");
+
+                        [self enqueueLogUpload];
+                    }
+                    [handleForReadingAtPath closeFile];
                 }
-                [handleForReadingAtPath closeFile];
             }
         }
     });
 }
 
 - (NSData*) jsonDictionary:(NSDictionary*)message {
-    NSString* nrSessiondId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
+    NSString* NRSessionId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
     NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
-    NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
 
-    // TODO: Remove hardcoded entityId and Get this value from /connect response
+    NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
     NSString* entityGuid = [NSString stringWithFormat:@"%@", configuration.entity_guid];
+
+    if (!configuration) {
+        nrAppId = nil;
+        entityGuid = nil;
+    }
+
     if ([entityGuid length] == 0) {
         if (logEntityGuid != nil) {
             entityGuid = logEntityGuid;
@@ -221,7 +240,7 @@ withMessage:(NSString *)message {
                       NRLogMessageMethodKey,     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
                       NRLogMessageTimestampKey,  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
                       NRLogMessageMessageKey,    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
-                      @"sessionId", nrSessiondId,                                                                                                             // 7
+                      @"sessionId", NRSessionId,                                                                                                              // 7
                       @"appId", nrAppId,                                                                                                                      // 8
                       @"entity.guid", entityGuid];                                                                                                            // 9
 
@@ -318,6 +337,8 @@ withMessage:(NSString *)message {
     @synchronized(self) {
         if (self->logFile) {
             // Close the log file if it's open.
+            self->lastFileSize = 0;
+
             [self->logFile closeFile];
             self->logFile = nil;
 
@@ -346,57 +367,101 @@ withMessage:(NSString *)message {
 - (void)setLogURL:(NSString*)url {
     self->logURL = url;
 }
-- (void)upload {
 
-    NSLog(@"Log Upload called..");
+//  Enqueue an upload task for this specific logData , represented by the "formattedData" below.
+- (void)enqueueLogUpload {
     @synchronized(self) {
+        if (self->logFile) {
 
-        dispatch_async(logQueue, ^{
-            if (self->logFile) {
-                // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
-                if (!self->logIngestKey || !self->logURL) { return; }
+//             NSLog(@"Logs enqueueLogUpload called..");
 
-                NSString *path = [NRLogger logFilePath];
-                NSData* logData = [NSData dataWithContentsOfFile:path];
+            NSString *path = [NRLogger logFilePath];
+            NSData* logData = [NSData dataWithContentsOfFile:path];
 
-                NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-                NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-                NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-                NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
-                [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
+            NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+            NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
 
-                req.HTTPMethod = @"POST";
-                //                NSString* nrSessionId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
+            // We clear the log when we save the existing logs to uploadQueue.
+            [self clearLog];
 
-                NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+            // Save formatted Data as an upload at the end of the upload queue.
+            [self->uploadQueue addObject:formattedData];
 
-                    BOOL errorCode = false;
-                    if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                        NSInteger responseCode = ((NSHTTPURLResponse*)response).statusCode;
-                        errorCode = responseCode >= 300;
-                    }
-                    if (!error && !errorCode) {
-                        NRLOG_VERBOSE(@"Logs uploaded successfully.");
-                        //                        NRLOG_VERBOSE(@"Logs uploaded successfully w/ sessionId = %@",nrSessiondId);
-                    }
-                    else if (errorCode) {
-                        NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
-
-                    }
-                    else {
-                        NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
-                    }
-                }];
-
-                [uploadTask resume];
-
-                //TODO: Fix this to not blow away data until it is successful.
-                // We clear the log when the request is successful or fails...
-                [self clearLog];
-
-            }
-        });
+            [self processNextUploadTask];
+        }
+        else {
+            NSLog(@"Logs upload failed due to missing logFile. failing.");
+        }
     }
+}
+
+// Perform upload task for specific logData, saved into uploadQueue previously.
+- (void) processNextUploadTask {
+        dispatch_async(logQueue, ^{
+            // If we are already uploading, or we've reached the end of the upload queue, do nothing.
+            if (self->isUploading || self->uploadQueue.count == 0) {
+                return;
+            }
+
+            // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
+            if (!self->logIngestKey || !self->logURL) {
+                NRLOG_ERROR(@"Attempted to upload logs without log ingest key or logURL set. Failing.");
+                return;
+            }
+
+            self->isUploading = YES;
+//            NSLog(@"isUploading ==> TRUE");
+
+            NSData *formattedData = [self->uploadQueue firstObject];
+
+            NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
+            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
+            [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
+
+            req.HTTPMethod = @"POST";
+
+            NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+
+                BOOL errorCode = false;
+                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                    errorCode = ((NSHTTPURLResponse*)response).statusCode >= 300;
+                }
+                if (!error && !errorCode) {
+                    NRLOG_VERBOSE(@"Logs uploaded successfully.");
+                    // Remove the first element from the upload queue.
+                    [self->uploadQueue removeObjectAtIndex:0];
+                    self->failureCount = 0;
+                }
+                else if (errorCode) {
+                    NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
+                    self->failureCount = self->failureCount + 1;
+                }
+                else {
+                    NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
+                    self->failureCount = self->failureCount + 1;
+                }
+
+                if (self->failureCount > kNRMAMaxLogUploadRetry) {
+                    [self->uploadQueue removeObjectAtIndex:0];
+                    self->failureCount = 0;
+                }
+
+                // isUploading is turned off upon successful or failed logs request.
+                self->isUploading = NO;
+//                NSLog(@"isUploading ==> FALSE");
+                 //Uncomment the following code for log upload queue debugging.
+//                if (self->uploadQueue.count > 0) {
+//                    NSLog(@"logs uploadQueue has contents, proceeding with additional uploads");
+//                }
+//                for (NSData *data in self->uploadQueue) {
+//                    NSLog(@"logs item: length=%lu",(unsigned long)data.length);
+//                }
+
+                [self processNextUploadTask];
+            }];
+
+            [uploadTask resume];
+        });
 }
 
 @end

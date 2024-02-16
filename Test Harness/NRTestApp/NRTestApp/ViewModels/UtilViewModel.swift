@@ -173,17 +173,32 @@ class UtilViewModel {
 
     @objc func make100Logs() {
         for i in 0...100 {
-            NewRelic.logInfo("/")
-            NewRelic.logInfo("\\")
-            NewRelic.logInfo(";")
-            NewRelic.logInfo(":")
-            NewRelic.logInfo("!")
-            NewRelic.logInfo("#")
-            NewRelic.logInfo("&")
-            NewRelic.logInfo("-")
-            NewRelic.logInfo("?")
-            NewRelic.logInfo("'")
-            NewRelic.logInfo("$")
+            //NewRelic.logInfo("/")
+            //NewRelic.logInfo("\\")
+
+//            NewRelic.logInfo(";")
+//            NewRelic.logInfo(":")
+//            NewRelic.logInfo("!")
+//            NewRelic.logInfo("#")
+//            NewRelic.logInfo("&")
+//            NewRelic.logInfo("-")
+//            NewRelic.logInfo("?")
+//            NewRelic.logInfo("'")
+//            NewRelic.logInfo("$")
+
+            NewRelic.logInfo("I")
+            NewRelic.logInfo("L")
+            NewRelic.logInfo("O")
+            NewRelic.logInfo("V")
+            NewRelic.logInfo("E")
+            NewRelic.logInfo("N")
+            NewRelic.logInfo("E")
+            NewRelic.logInfo("W")
+            NewRelic.logInfo("R")
+            NewRelic.logInfo("E")
+            NewRelic.logInfo("L")
+            NewRelic.logInfo("I")
+            NewRelic.logInfo("C")
 
         }
     }
