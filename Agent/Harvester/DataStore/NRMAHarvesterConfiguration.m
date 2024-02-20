@@ -174,7 +174,6 @@
     if (self.application_id != that.application_id) return NO;
     if (![self.encoding_key isEqualToString:that.encoding_key]) return NO;
 
-    // [ <account id> , <app id> ];
     return [self.data_token isEqual:that.data_token];
 }
 
@@ -196,7 +195,6 @@
     result = 31 * result + (unsigned int)self.account_id;
     result = 31 * result + (unsigned int)self.application_id;
     result = 31 * result + self.encoding_key.hash;
-    // Is this a chill addition?
     result = 31 * result + self.trusted_account_key.hash;
 
     return result;
