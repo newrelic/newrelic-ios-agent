@@ -410,7 +410,7 @@ withMessage:(NSString *)message {
             }
 
             self->isUploading = YES;
-//            NSLog(@"isUploading ==> TRUE");
+            // NSLog(@"Logs isUploading ==> TRUE");
 
             NSData *formattedData = [self->uploadQueue firstObject];
 
@@ -456,6 +456,7 @@ withMessage:(NSString *)message {
 //                for (NSData *data in self->uploadQueue) {
 //                    NSLog(@"logs item: length=%lu",(unsigned long)data.length);
 //                }
+                // NSLog(@"Logs isUploading ==> FALSE");
 
                 [self processNextUploadTask];
             }];
