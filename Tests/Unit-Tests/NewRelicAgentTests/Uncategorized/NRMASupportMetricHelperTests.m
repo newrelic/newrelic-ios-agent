@@ -73,4 +73,21 @@
     XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
 }
 
+-(void)testOfflinePayloadSupportMetric {
+
+    [NRMASupportMetricHelper enqueueOfflinePayloadMetric:1];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([helper.result isKindOfClass:[NRMANamedValueMeasurement class]], @"The result is not a named value.");
+    
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+
+    NSString* fullMetricName = [NSString stringWithFormat: kNRMAOfflineSupportabilityFormatString, [NewRelicInternalUtils osName], [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform], kNRMACollectorDest];
+    XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @1]), @"Value is not generated properly.");
+}
+
 @end
