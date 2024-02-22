@@ -135,14 +135,24 @@
     XCTAssertFalse(flags, @"flags should be empty");
     
     XCTAssertFalse([NRMAFlags shouldEnableNewEventSystem], @"flags should be empty");
-    //XCTAssertNil([NewRelic startInteractionWithName:@"test"], @"should be nil when Interaction Tracing is disabled");
     
     [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
     flags = [NRMAFlags featureFlags];
     XCTAssertTrue(flags & NRFeatureFlag_NewEventSystem, @"flags should have New Event System enabled");
     XCTAssertFalse(flags & ~NRFeatureFlag_NewEventSystem , @"flags shouldn't have any other bit enabled.");
+}
+
+- (void) testEnableOfflineStorage {
+    [NRMAFlags setFeatureFlags:0];
+    NRMAFeatureFlags flags = [NRMAFlags featureFlags];
+    XCTAssertFalse(flags, @"flags should be empty");
     
-   // XCTAssertNotNil([NewRelic startInteractionWithName:@"test"]);
+    XCTAssertFalse([NRMAFlags shouldEnableOfflineStorage], @"flags should be empty");
+    
+    [NewRelic enableFeatures:NRFeatureFlag_OfflineStorage];
+    flags = [NRMAFlags featureFlags];
+    XCTAssertTrue(flags & NRFeatureFlag_OfflineStorage, @"flags should have offline storage enabled");
+    XCTAssertFalse(flags & ~NRFeatureFlag_OfflineStorage , @"flags shouldn't have any other bit enabled.");
 }
 
 - (void) testRecordMetricsConsistency

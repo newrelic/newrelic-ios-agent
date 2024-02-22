@@ -14,6 +14,7 @@
 #import <time.h>
 #import "NRMAHarvesterConnection+GZip.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
 
 @implementation NRMAHarvesterConnection
 @synthesize connectionInformation = _connectionInformation;
@@ -22,9 +23,45 @@
     self = [super init];
     if (self) {
         self.harvestSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
+        self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"data"];
     }
     return self;
 }
+
+- (NSArray<NSData *> *) getOfflineData {
+    return [self.offlineStorage getAllOfflineData:NO];
+}
+
+-(void) sendOfflineStorage {
+    if (![NRMAFlags shouldEnableOfflineStorage]) {
+        return;
+    }
+    NSArray<NSData *> * offlineData = [self.offlineStorage getAllOfflineData:YES];
+    if(offlineData.count == 0){
+        return;
+    }
+    NRLOG_VERBOSE(@"Number of offline data posts: %lu", (unsigned long)offlineData.count);
+    __block NSUInteger totalSize = 0;
+    [offlineData enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        NSData *jsonData = (NSData *)obj;
+        
+        NSURLRequest* post = [self createDataPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
+        if (post == nil) {
+            NRLOG_ERROR(@"Failed to create data POST");
+            return;
+        }
+
+        NRMAHarvestResponse* response = [self send:post];
+        
+        if([NRMAOfflineStorage checkErrorToPersist:response.error]) {
+            [_offlineStorage persistDataToDisk:jsonData];
+        } else {
+            totalSize += [post.HTTPBody length];
+        }
+    }];
+    [NRMASupportMetricHelper enqueueOfflinePayloadMetric:totalSize];
+}
+
 - (NSURLRequest*) createPostWithURI:(NSString*)url message:(NSString*)message
 {
     NSMutableURLRequest * postRequest = [super newPostWithURI:url];
@@ -169,6 +206,7 @@
         NRLOG_ERROR(@"Failed to generate JSON");
         return nil;
     }
+        
     NSURLRequest* post = [self createDataPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
     if (post == nil) {
         NRLOG_ERROR(@"Failed to create data POST");
@@ -203,6 +241,10 @@
 {
     NSString* protocol = self.useSSL ? @"https://":@"http://";
     return [NSString stringWithFormat:@"%@%@%@",protocol,self.collectorHost,resource];
+}
+
+- (void) setMaxOfflineStorageSize:(NSUInteger) size {
+    [_offlineStorage setMaxOfflineStorageSize:size];
 }
 
 @end
