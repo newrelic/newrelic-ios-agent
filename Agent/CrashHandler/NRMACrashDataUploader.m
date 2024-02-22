@@ -30,6 +30,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 {
     self = [super init];
     if (self) {
+        __NRMACrashDataUploaderInProgressRequestCount = 0;
         self.uploadSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
 
         _fileManager = [NSFileManager defaultManager];
