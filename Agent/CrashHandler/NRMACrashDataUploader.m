@@ -30,7 +30,6 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 {
     self = [super init];
     if (self) {
-        __NRMACrashDataUploaderInProgressRequestCount = 0;
         self.uploadSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
 
         _fileManager = [NSFileManager defaultManager];
@@ -97,11 +96,15 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 {
     if (!_crashCollectorHost.length) {
         NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash collector address was not set. Unable to upload crash.");
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
     }
 
     if (path == nil) {
         NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - CrashData path was not set. Unable to upload crash.");
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
     }
 
@@ -113,6 +116,9 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
                                                         value:@1
                                                         scope:nil]];
         [_fileManager removeItemAtURL:path error:nil];
+
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
     }
     // Get the size in bytes of the crash report to be uploaded via below uploadTaskWithRequest:fromFile call.
@@ -124,6 +130,8 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"mobile_crash"];
         // Remove the crash log even though we couldn't upload so we don't try every time.
         [self removeCrashLogAtpath:path];
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
    }
     
