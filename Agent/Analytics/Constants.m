@@ -84,6 +84,7 @@ NSString * const kNRMA_Attrib_dtGuid            = @"guid";
 NSString * const kNRMA_Attrib_dtId              = @"id";
 NSString * const kNRMA_Attrib_dtTraceId         = @"trace.id";
 NSString * const kNRMA_Attrib_name              = @"name";
+NSString * const kNRMA_Attrib_offline           = @"offline";
 
 NSString * const kNRMA_Val_errorType_HTTP       = @"HTTPError";
 NSString * const kNRMA_Val_errorType_Network    = @"NetworkFailure";
@@ -92,3 +93,5 @@ NSString * const kNRMA_Val_errorType_Network    = @"NetworkFailure";
 NSString * const kNRMA_Attrib_file       = @"attributes.txt";
 NSString * const kNRMA_Attrib_file_private    = @"privateAttributes.txt";
 NSString * const kNRMA_EventStoreFilename    = @"eventsStore.txt";
+
+NSString * const kNRMA_Offline_folder          = @"offlineStorage";
