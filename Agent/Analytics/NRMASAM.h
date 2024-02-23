@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "BlockAttributeValidator.h"
+#import "PersistentEventStore.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -24,8 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) removeAllSessionAttributes;
 
 + (NSString*) getLastSessionsAttributes;
-- (void) clearLastSessionsAnalytics;
-- (void) clearPersistedSessionAnalytics;
 
 - (NSString*) sessionAttributeJSONString;
 - (BOOL) setLastInteraction:(NSString*)name;

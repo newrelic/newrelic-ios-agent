@@ -91,3 +91,4 @@ NSString * const kNRMA_Val_errorType_Network    = @"NetworkFailure";
 
 NSString * const kNRMA_Attrib_file       = @"attributes.txt";
 NSString * const kNRMA_Attrib_file_private    = @"privateAttributes.txt";
+NSString * const kNRMA_EventStoreFilename    = @"eventsStore.txt";

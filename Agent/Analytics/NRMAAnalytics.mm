@@ -48,8 +48,6 @@ using namespace NewRelic;
     id<AttributeValidatorProtocol> _attributeValidator;
 }
 
-static NSString* const eventStoreFilename = @"eventsStore.txt";
-
 static PersistentStore<std::string,BaseValue>* __attributeStore;
 + (PersistentStore<std::string, BaseValue> &) attributeDupStore
 {
@@ -103,9 +101,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(self){
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
+            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
 
-            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:30];
+            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
             
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
@@ -1007,7 +1005,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 + (NSString*) getLastSessionsEvents{
     if([NRMAFlags shouldEnableNewEventSystem]) {
-        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
+        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
         return [NRMAEventManager getLastSessionEventsFromFilename:filename];
     } else {
         try {
@@ -1048,7 +1046,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (void) clearLastSessionsAnalytics {
     if([NRMAFlags shouldEnableNewEventSystem]){
-        [_sessionAttributeManager clearLastSessionsAnalytics];
+        [_sessionAttributeManager removeAllSessionAttributes];
+        [_eventManager empty];
     } else {
         try {
             _analyticsController->clearAttributesDuplicationStore();

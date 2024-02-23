@@ -12,7 +12,8 @@
 
 @interface PersistentEventStore ()
 @property (nonatomic, strong) dispatch_queue_t writeQueue;
-@property (nonatomic, strong, nullable) dispatch_source_t writeTimer;
+@property (strong, nonatomic) dispatch_queue_t throttleQueue;
+@property (strong, nonatomic) dispatch_block_t pendingBlock;
 @end
 
 @implementation PersistentEventStore {
@@ -23,22 +24,35 @@
     BOOL _dirty;
     
     dispatch_queue_t _writeQueue;
-    dispatch_source_t _writeTimer;
+    dispatch_queue_t _throttleQueue;
 }
 
 - (nonnull instancetype)initWithFilename:(NSString *)filename
-                         andMinimumDelay:(NSTimeInterval)minimumDelay {
+                         andMinimumDelay:(NSTimeInterval)secondsDelay {
     self = [super init];
     if (self) {
         store = [NSMutableDictionary new];
         _filename = filename;
-        _minimumDelay = minimumDelay;
+        _minimumDelay = secondsDelay;
         _lastSave = [NSDate new];
         _dirty = NO;
         
         _writeQueue = dispatch_queue_create("com.newrelic.persistentce", DISPATCH_QUEUE_SERIAL);
+        _throttleQueue = dispatch_queue_create("com.newrelicagent.writeThrottle", DISPATCH_QUEUE_SERIAL);
     }
     return self;
+}
+
+- (void)performWrite:(void (^)(void))writeBlock {
+    dispatch_async(self.writeQueue, ^{
+        if (self.pendingBlock != nil) {
+            dispatch_block_cancel(self.pendingBlock);
+        }
+        
+        self.pendingBlock = dispatch_block_create(0, writeBlock);
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self->_minimumDelay * NSEC_PER_SEC)), self->_throttleQueue, self.pendingBlock);
+    });
 }
 
 - (void)setObject:(nonnull id)object forKey:(nonnull id)key {
@@ -48,37 +62,18 @@
         NRLOG_VERBOSE(@"Marked dirty for adding");
     }
     
-    @synchronized (self) {
-        // If the timer itself is not initialized, or if the timer is cancelled, then we
-        // should schedule a write.
-        if( (self.writeTimer != nil) 
-           && (dispatch_source_testcancel(self.writeTimer) == 0)) {
-            NRLOG_VERBOSE(@"Not Scheduling block; last wrote at %d", _lastSave);
-            return;
-        }
-        
-        NRLOG_VERBOSE(@"Scheduling block");
-        self.writeTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, _writeQueue);
-        dispatch_source_set_timer(self.writeTimer, dispatch_time(DISPATCH_TIME_NOW, _minimumDelay * NSEC_PER_SEC), DISPATCH_TIME_FOREVER, 100);
-        
+    NRLOG_VERBOSE(@"Scheduling block");
+    [self performWrite: ^ {
         NRLOG_VERBOSE(@"Entered block");
-        dispatch_source_set_event_handler(self.writeTimer, ^{
-            
-            @synchronized (self) {
-                if(!self->_dirty) {
-                    NRLOG_VERBOSE(@"Not writing file because it's not dirty");
-                    return;
-                }
+        @synchronized (self) {
+            if(!self->_dirty) {
+                NRLOG_VERBOSE(@"Not writing file because it's not dirty");
+                return;
             }
-            
-            [self saveToFile];
-            self->_dirty = NO;
-            
-            dispatch_source_cancel(self.writeTimer);
-        });
-        
-        dispatch_resume(self.writeTimer);   
-    }
+        }
+        [self saveToFile];
+        self->_dirty = NO;
+    }];
 }
 
 - (void)removeObjectForKey:(id)key {
@@ -89,7 +84,7 @@
     }
     
     dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-        NSLog(@"Entered Remove Block");
+        NRLOG_VERBOSE(@"Entered Remove Block");
         @synchronized (self) {
             if(!self->_dirty) {
                 NRLOG_VERBOSE(@"Not writing removed item file because it's not dirty");
@@ -98,10 +93,6 @@
         }
         [self saveToFile];
         self->_dirty = NO;
-        
-        if(self.writeTimer) {
-            dispatch_source_cancel(self.writeTimer);
-        }
     });
 }
 
@@ -126,10 +117,6 @@
         }
         [self saveToFile];
         self->_dirty = NO;
-
-        if(self.writeTimer) {
-            dispatch_source_cancel(self.writeTimer);
-        }
     });
 }
 

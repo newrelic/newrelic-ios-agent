@@ -85,7 +85,7 @@ extern NSString *const kNRMA_Val_errorType_Network;
 
 extern NSString *const kNRMA_Attrib_file;
 extern NSString *const kNRMA_Attrib_file_private;
-
+extern NSString *const  kNRMA_EventStoreFilename;
 
 // Integer Analytics Constants
 static int kNRMA_Attrib_Max_Name_Length = 256;
