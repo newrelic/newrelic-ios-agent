@@ -15,7 +15,13 @@
 #import "NRMATaskQueue.h"
 #import "NRMASupportMetricHelper.h"
 
+static int __NRMACrashDataUploaderInProgressRequestCount = 0;
+
 @implementation NRMACrashDataUploader
+
++ (int) inProgressRequestCount {
+    return __NRMACrashDataUploaderInProgressRequestCount;
+}
 
 - (instancetype) initWithCrashCollectorURL:(NSString*)url
                           applicationToken:(NSString*)token
@@ -64,6 +70,10 @@
 
 - (void) uploadCrashReports
 {
+    if (__NRMACrashDataUploaderInProgressRequestCount > 0) {
+        
+        return;
+    }
     NSError* error = nil;
     NSArray* reportURLs = [self crashReportURLs:&error];
     if ([reportURLs count] <= 0) {
@@ -76,19 +86,25 @@
     }
 
     for (NSURL* fileURL in reportURLs) {
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount + 1;
         [self uploadFileAtPath:fileURL];
     }
+
 }
 
 - (void) uploadFileAtPath:(NSURL*)path
 {
     if (!_crashCollectorHost.length) {
         NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash collector address was not set. Unable to upload crash.");
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
     }
 
     if (path == nil) {
         NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - CrashData path was not set. Unable to upload crash.");
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
     }
 
@@ -100,6 +116,9 @@
                                                         value:@1
                                                         scope:nil]];
         [_fileManager removeItemAtURL:path error:nil];
+
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
     }
     // Get the size in bytes of the crash report to be uploaded via below uploadTaskWithRequest:fromFile call.
@@ -111,10 +130,14 @@
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"mobile_crash"];
         // Remove the crash log even though we couldn't upload so we don't try every time.
         [self removeCrashLogAtpath:path];
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         return;
    }
     
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
+        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+
         NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
         if(responseError) {
             NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
