@@ -30,12 +30,12 @@
 - (id)initWithAttributeValidator:(__nullable id<AttributeValidatorProtocol>)validator {
     self = [super init];
     if (self) {
-        _attributePersistentStore = [[PersistentEventStore alloc] initWithFilename:kNRMA_Attrib_file andMinimumDelay:.025];
+        _attributePersistentStore = [[PersistentEventStore alloc] initWithFilename:[NRMASAM attributeFilePath] andMinimumDelay:.025];
         
-        _privateAttributePersistentStore = [[PersistentEventStore alloc] initWithFilename:kNRMA_Attrib_file_private andMinimumDelay:.025];
+        _privateAttributePersistentStore = [[PersistentEventStore alloc] initWithFilename:[NRMASAM privateAttributeFilePath] andMinimumDelay:.025];
 
         // Load public attributes from file.
-        NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:kNRMA_Attrib_file];
+        NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM attributeFilePath]];
         if (lastSessionAttributes != nil) {
             attributeDict = [lastSessionAttributes mutableCopy];
         }
@@ -44,7 +44,7 @@
         }
 
         // Load private attributes from file.
-        NSDictionary *lastSessionPrivateAttributes = [PersistentEventStore getLastSessionEventsFromFilename:kNRMA_Attrib_file_private];
+        NSDictionary *lastSessionPrivateAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM privateAttributeFilePath]];
 
         if (lastSessionPrivateAttributes != nil) {
             privateAttributeDict = [lastSessionPrivateAttributes mutableCopy];

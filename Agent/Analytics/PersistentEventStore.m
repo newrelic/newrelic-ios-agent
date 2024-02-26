@@ -12,7 +12,6 @@
 
 @interface PersistentEventStore ()
 @property (nonatomic, strong) dispatch_queue_t writeQueue;
-@property (strong, nonatomic) dispatch_queue_t throttleQueue;
 @property (strong, nonatomic) dispatch_block_t pendingBlock;
 @end
 
@@ -24,7 +23,6 @@
     BOOL _dirty;
     
     dispatch_queue_t _writeQueue;
-    dispatch_queue_t _throttleQueue;
 }
 
 - (nonnull instancetype)initWithFilename:(NSString *)filename
@@ -38,7 +36,6 @@
         _dirty = NO;
         
         _writeQueue = dispatch_queue_create("com.newrelic.persistentce", DISPATCH_QUEUE_SERIAL);
-        _throttleQueue = dispatch_queue_create("com.newrelicagent.writeThrottle", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -51,7 +48,7 @@
         
         self.pendingBlock = dispatch_block_create(0, writeBlock);
         
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self->_minimumDelay * NSEC_PER_SEC)), self->_throttleQueue, self.pendingBlock);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self->_minimumDelay * NSEC_PER_SEC)), self->_writeQueue, self.pendingBlock);
     });
 }
 
@@ -158,7 +155,7 @@
                                      options:NSDataWritingAtomic
                                        error:&error];
         if(!success) {
-            NRLOG_VERBOSE(@"Error saving data");
+            NRLOG_ERROR(@"Error saving data: %@", error.description);
         } else {
             NRLOG_VERBOSE(@"Wrote file");
             _lastSave = [NSDate new];
