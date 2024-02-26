@@ -10,9 +10,6 @@
 
 @implementation NRMAURLSessionTaskSearch
 
-// Using same pattern from AFNetworkings code for URLSessionTask finding.
-// https://github.com/AFNetworking/AFNetworking/blob/4eaec5b586ddd897ebeda896e332a62a9fdab818/AFNetworking/AFURLSessionManager.m#L349-L418.
-
 + (NSArray<Class> *)urlSessionTaskClasses {
     NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration ephemeralSessionConfiguration];
     NSURLSession *ephemeralSession = [NSURLSession sessionWithConfiguration:configuration];
