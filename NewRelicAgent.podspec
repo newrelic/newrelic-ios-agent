@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name                   = "NewRelicAgent"
-  s.version                = "7.4.8"
+  s.version                = "7.4.9-rc.824"
   s.summary                = "Real-time performance data with your next iOS app release."
   s.homepage               = "http://newrelic.com/mobile-monitoring"
   s.license                = { :type => "Commercial", :file => "LICENSE" }
