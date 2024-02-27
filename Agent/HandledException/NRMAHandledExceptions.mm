@@ -20,6 +20,7 @@
 #import "NRMAFlags.h"
 #include <Analytics/AnalyticsController.hpp>
 #import "NRMABool.h"
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAAnalytics(Protected)
 // Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
@@ -131,9 +132,21 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) onHarvest {
-    _controller->publish();
-    _store->clear();
-    _publisher->retry();
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        NRMAReachability* r = [NewRelicInternalUtils reachability];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            if (status != NotReachable) {
+                [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
+                _controller->resetKeyContext();
+                _publisher->retry();
+            }
+        }
+    } else {
+        _controller->publish();
+        _store->clear();
+        _publisher->retry();
+    }
 }
 
 - (fbs::Platform) fbsPlatformFromString:(NSString*)platform {
@@ -141,6 +154,19 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         return fbs::Platform_tvOS;
     }
     return fbs::Platform_iOS;
+}
+
+- (void) checkOffline:(std::shared_ptr<NewRelic::Hex::Report::HexReport>) report
+{
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        NRMAReachability* r = [NewRelicInternalUtils reachability];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            if (status == NotReachable) {
+                report->setAttributeNoValidation("offline", true);
+            }
+        }
+    }
 }
 
 - (void) recordError:(NSError * _Nonnull)error
@@ -167,7 +193,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
 
         report->setAttributeNoValidation("isHandledError", true);
-
+        [self checkOffline:report];
+        
         _controller->submit(report);
     }
     else {
@@ -187,6 +214,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         
         report->setAttribute("isHandledError", true);
         
+        [self checkOffline:report];
+
         _controller->submit(report);
     }
 }
@@ -222,6 +251,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 [self createThreadVector:exception]
                                                 );
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        
+        [self checkOffline:report];
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
@@ -239,7 +270,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
 
         report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
-
+        
+        [self checkOffline:report];
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
@@ -323,6 +355,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 resultMap,
                                                 threadVector);
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        [self checkOffline:report];
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
@@ -339,6 +372,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 threadVector);
 
         report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        [self checkOffline:report];
 
         NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
