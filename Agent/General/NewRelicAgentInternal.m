@@ -53,6 +53,7 @@
 #import "NRMAStartTimer.h"
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMASessionReplay.h"
 
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
@@ -80,6 +81,7 @@ static NRMAURLTransformer* urlTransformer;
     NSMutableArray* _transactionDataList;
     double _appLastBackgrounded;
     NSTimeInterval _startTime_ms;
+    NRMASessionReplay* _sessionReplay;
 }
 
 // The token sent from the RPM service on connect that is used when sending data.
@@ -359,6 +361,8 @@ static NewRelicAgentInternal* _sharedInstance;
         [NRMAHarvestController start];
     }
 #endif
+    _sessionReplay = [[NRMASessionReplay alloc] init];
+    
 }
 
 // Initialize all of the categories which swizzle into existing classes.

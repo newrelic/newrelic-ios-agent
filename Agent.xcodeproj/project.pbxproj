@@ -1072,6 +1072,12 @@
 		3478A8A626B36F9C0056F3B3 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */; };
 		3478A8A826B36FA80056F3B3 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
 		3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A926B36FB10056F3B3 /* libc++.tbd */; };
+		348713E92B8D39E7005A264C /* NRMASessionReplay.h in Headers */ = {isa = PBXBuildFile; fileRef = 348713E72B8D39E7005A264C /* NRMASessionReplay.h */; };
+		348713EA2B8D39E7005A264C /* NRMASessionReplay.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713E82B8D39E7005A264C /* NRMASessionReplay.m */; };
+		348713ED2B8D56CB005A264C /* NRMAUIViewDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = 348713EB2B8D56CB005A264C /* NRMAUIViewDetails.h */; };
+		348713EE2B8D56CB005A264C /* NRMAUIViewDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */; };
+		348713F12B910A9B005A264C /* NRMAUILabelDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = 348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */; };
+		348713F22B910A9B005A264C /* NRMAUILabelDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713F02B910A9B005A264C /* NRMAUILabelDetails.m */; };
 		3482323C2BC5F0D10070FAC3 /* NewRelicAgentInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F524DB56B000115469 /* NewRelicAgentInternal.m */; };
 		3482323D2BC5F0D90070FAC3 /* NewRelicAgentInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47F324DB56B000115469 /* NewRelicAgentInternal.h */; };
 		3482323E2BC5F0DC0070FAC3 /* NRMAHTTPUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4ACA24DC657B00115469 /* NRMAHTTPUtilities.h */; };
@@ -2428,6 +2434,13 @@
 		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A926B36FB10056F3B3 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		348713E72B8D39E7005A264C /* NRMASessionReplay.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASessionReplay.h; sourceTree = "<group>"; };
+		348713E82B8D39E7005A264C /* NRMASessionReplay.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplay.m; sourceTree = "<group>"; };
+		348713EB2B8D56CB005A264C /* NRMAUIViewDetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUIViewDetails.h; sourceTree = "<group>"; };
+		348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUIViewDetails.m; sourceTree = "<group>"; };
+		348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUILabelDetails.h; sourceTree = "<group>"; };
+		348713F02B910A9B005A264C /* NRMAUILabelDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUILabelDetails.m; sourceTree = "<group>"; };
+		348713F32B910DFC005A264C /* NRMAViewDetailProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAViewDetailProtocol.h; sourceTree = "<group>"; };
 		348232222BC5EEE60070FAC3 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A929072912D502001449B6 /* Hex.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Hex.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9290A2912D605001449B6 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2954,6 +2967,7 @@
 		021A15BC24C9EEE700E8DFD5 /* Agent */ = {
 			isa = PBXGroup;
 			children = (
+				348713D32B8D39C1005A264C /* SessionReplay */,
 				022A81C62502F22F003748E6 /* General */,
 				02FF4AC824DC657100115469 /* Network */,
 				02FF4ABD24DC655900115469 /* Connectivity */,
@@ -3765,6 +3779,20 @@
 			path = NRMAStartTimer;
 			sourceTree = "<group>";
 		};
+		348713D32B8D39C1005A264C /* SessionReplay */ = {
+			isa = PBXGroup;
+			children = (
+				348713E72B8D39E7005A264C /* NRMASessionReplay.h */,
+				348713E82B8D39E7005A264C /* NRMASessionReplay.m */,
+				348713EB2B8D56CB005A264C /* NRMAUIViewDetails.h */,
+				348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */,
+				348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */,
+				348713F02B910A9B005A264C /* NRMAUILabelDetails.m */,
+				348713F32B910DFC005A264C /* NRMAViewDetailProtocol.h */,
+			);
+			path = SessionReplay;
+			sourceTree = "<group>";
+		};
 		34A929182912D721001449B6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -3902,6 +3930,7 @@
 				02FF48C124DC61F600115469 /* NRMAMethodSwizzling.h in Headers */,
 				02FF487C24DC61A100115469 /* NRMANSURLConnectionSupport.h in Headers */,
 				02FF481D24DB5B8100115469 /* NRMACollectionViewInstrumentation.h in Headers */,
+				348713E92B8D39E7005A264C /* NRMASessionReplay.h in Headers */,
 				02FF486224DC615A00115469 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				F6E79CEF25A66887006277FB /* NRMATraceContext.h in Headers */,
 				02FF49DD24DC636100115469 /* NRMAHarvestableProtocol.h in Headers */,
@@ -3994,11 +4023,13 @@
 				02FF48DE24DC622700115469 /* NRMACrashReportFileManager.h in Headers */,
 				02FF487024DC618F00115469 /* NRMAThreadTransition.h in Headers */,
 				02FF4ABC24DC654D00115469 /* NRMAReachability.h in Headers */,
+				348713F12B910A9B005A264C /* NRMAUILabelDetails.h in Headers */,
 				2B706113293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */,
 				02FF4AA624DC652E00115469 /* NRMAUUIDStore.h in Headers */,
 				02FF48DF24DC622700115469 /* NRMAUncaughtExceptionHandler.h in Headers */,
 				02FF48F724DC623400115469 /* NRMAExceptionMetaDataStore.h in Headers */,
 				02FF496724DC629000115469 /* NRMAHarvestResponse.h in Headers */,
+				348713ED2B8D56CB005A264C /* NRMAUIViewDetails.h in Headers */,
 				02FF4A6E24DC64E600115469 /* NRMAMeasurementProducer.h in Headers */,
 				02FF493724DC625A00115469 /* NRMAExceptionReportAdaptor.h in Headers */,
 				02FF49B424DC62B800115469 /* NRMAHarvestableTrace.h in Headers */,
@@ -5239,6 +5270,7 @@
 				02FF4A9824DC652E00115469 /* NRMACrashReporterRecorder.m in Sources */,
 				02FF492024DC624400115469 /* NRMACrashReport_CodeType.m in Sources */,
 				02FF49C624DC62B800115469 /* NRMAHarvestableHTTPTransaction.m in Sources */,
+				348713EE2B8D56CB005A264C /* NRMAUIViewDetails.m in Sources */,
 				02FF49B924DC62B800115469 /* NRMAHarvestableActivity.m in Sources */,
 				02FF4AA324DC652E00115469 /* NRMAUUIDStore.m in Sources */,
 				02FF47FE24DB56B100115469 /* NewRelicAgent.m in Sources */,
@@ -5318,6 +5350,7 @@
 				F8FBFA622A78416300CDC8C5 /* NRMAMobileEvent.m in Sources */,
 				02FF4AB224DC652E00115469 /* NRMAExceptionHandler.m in Sources */,
 				02FF490E24DC624400115469 /* NRMACrashReport_Symbol.m in Sources */,
+				348713EA2B8D39E7005A264C /* NRMASessionReplay.m in Sources */,
 				02FF491124DC624400115469 /* NRMACrashReport_Exception.m in Sources */,
 				02FF496C24DC629000115469 /* NRMATraceConfiguration.m in Sources */,
 				02FF48A824DC61E900115469 /* NRWKNavigationDelegateBase.m in Sources */,
@@ -5408,6 +5441,8 @@
 				02FF4AD124DC657B00115469 /* NRMAHTTPUtilities.mm in Sources */,
 				02FF49DF24DC636100115469 /* NRMATraceSegment.m in Sources */,
 				02FF48BB24DC61F600115469 /* NRMAClassNode.m in Sources */,
+				02FF493A24DC625A00115469 /* NRMASessionIdentifierManager.mm in Sources */,
+				348713F22B910A9B005A264C /* NRMAUILabelDetails.m in Sources */,
 				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
 				2BDCA8AA2A8C41160005740D /* NRMASAM.mm in Sources */,
 			);
