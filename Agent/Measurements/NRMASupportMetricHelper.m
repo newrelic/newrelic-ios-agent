@@ -96,6 +96,29 @@
                                                           scope:nil]];
 }
 
+// Logging
+
++ (void) enqueueLogSuccessMetric:(long)size {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMALoggingMetricSuccessfulSize, nativePlatform, platform]
+                                                    value:[NSNumber numberWithLongLong:size]
+                                                    scope:@""
+                                          produceUnscoped:YES
+                                          additionalValue:nil]];
+}
+
++ (void) enqueueLogFailedMetric {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMALoggingMetricFailedUpload, nativePlatform, platform]
+                                                    value:@1
+                                                    scope:nil]];
+
+}
+
+// End Logging
+
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {

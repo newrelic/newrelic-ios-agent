@@ -165,6 +165,11 @@ typedef NSString NRMetricUnit;
 #define NRMA_METRIC_APP_LAUNCH_COLD        @"AppLaunch/Cold"
 #define NRMA_METRIC_APP_LAUNCH_RESUME      @"AppLaunch/Hot"
 
+// Logging
+#define kNRMALoggingMetric kNRAgentHealthPrefix @"/%@/%@/LogReporting"
+#define kNRMALoggingMetricFailedUpload    kNRMALoggingMetric @"/FailedUpload"
+#define kNRMALoggingMetricSuccessfulSize    kNRMALoggingMetric @"/Size/Uncompressed"
+
 // Network Failure Codes
 enum NRNetworkFailureCode {
         NRURLErrorUnknown = -1,

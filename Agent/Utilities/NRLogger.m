@@ -12,6 +12,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConfiguration.h"
+#import "NRMASupportMetricHelper.h"
 
 NRLogger *_nr_logger = nil;
 
@@ -423,22 +424,32 @@ withMessage:(NSString *)message {
             NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
 
                 BOOL errorCode = false;
+                NSInteger errorCodeInt = 0;
+
                 if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
                     errorCode = ((NSHTTPURLResponse*)response).statusCode >= 300;
+                    errorCodeInt = ((NSHTTPURLResponse*)response).statusCode;
                 }
                 if (!error && !errorCode) {
                     NRLOG_VERBOSE(@"Logs uploaded successfully.");
                     // Remove the first element from the upload queue.
                     [self->uploadQueue removeObjectAtIndex:0];
                     self->failureCount = 0;
+
+                    [NRMASupportMetricHelper enqueueLogSuccessMetric: [formattedData length]];
                 }
                 else if (errorCode) {
                     NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
                     self->failureCount = self->failureCount + 1;
+
+                    [NRMASupportMetricHelper enqueueLogFailedMetric];
                 }
                 else {
                     NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
                     self->failureCount = self->failureCount + 1;
+
+                    // send log payload failed support metric
+                    [NRMASupportMetricHelper enqueueLogFailedMetric];
                 }
 
                 if (self->failureCount > kNRMAMaxLogUploadRetry) {
