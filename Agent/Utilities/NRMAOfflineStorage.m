@@ -102,8 +102,26 @@ static NSString* _name;
     return false;
 }
 
++ (BOOL) clearAllOfflineDirectories {
+    if(![[NSFileManager defaultManager] fileExistsAtPath:[NRMAOfflineStorage allOfflineDirectorysPath] isDirectory:nil]){
+        return true;
+    }
+    
+    NSError* error;
+    if ([[NSFileManager defaultManager] removeItemAtPath:[NRMAOfflineStorage allOfflineDirectorysPath] error:&error]) {
+        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSizeKey];
+        return true;
+    }
+    NRLOG_ERROR(@"Failed to clear offline storage: %@", error);
+    return false;
+}
+
 - (NSString*) offlineDirectoryPath {
     return [NSString stringWithFormat:@"%@/%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Offline_folder,_name];
+}
+
++ (NSString*) allOfflineDirectorysPath {
+    return [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Offline_folder];
 }
 
 - (NSString*) newOfflineFilePath {
