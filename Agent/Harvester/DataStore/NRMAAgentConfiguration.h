@@ -44,4 +44,9 @@
 + (void) setMaxEventBufferTime:(NSUInteger)seconds;
 + (NSUInteger) getMaxEventBufferTime;
 
++ (void) setMaxEventBufferSize:(NSUInteger)size;
++ (NSUInteger) getMaxEventBufferSize;
+
++ (void) setMaxOfflineStorageSize:(NSUInteger)megaBytes;
++ (NSUInteger) getMaxOfflineStorageSize;
 @end

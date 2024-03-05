@@ -494,7 +494,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
     [self initializeAnalytics];
-
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    NRMANetworkStatus status;
+    @synchronized(r) {
+        status = [r currentReachabilityStatus];
+    }
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController
                                                                                      sessionStartTime:self.appSessionStartDate
@@ -502,7 +506,10 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                              platform:[NewRelicInternalUtils osName]
                                                                                             sessionId:[self currentSessionId]];
 
-        [self.handledExceptionsController processAndPublishPersistedReports];
+
+        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
+            [self.handledExceptionsController processAndPublishPersistedReports];
+        }
 
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
 
@@ -512,8 +519,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
-
-        [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
+            [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+        }
     }
     
     if([NRMAFlags shouldEnableGestureInstrumentation])

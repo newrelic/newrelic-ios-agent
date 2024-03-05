@@ -31,9 +31,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #endif
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
-                                 NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing])
-
-//        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
+                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
+                                 NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
 
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundInstrumentation])
 

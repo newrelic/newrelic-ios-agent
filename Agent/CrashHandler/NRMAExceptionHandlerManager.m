@@ -107,7 +107,13 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
             [_reportManager processReportsWithSessionAttributes:attributes
                                                 analyticsEvents:events];
 
-            [self.uploader uploadCrashReports];
+            NRMAReachability* r = [NewRelicInternalUtils reachability];
+            @synchronized(r) {
+                NRMANetworkStatus status = [r currentReachabilityStatus];
+                if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
+                    [self.uploader uploadCrashReports];
+                }
+            }
         }
 
         self.handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:_crashReporter];

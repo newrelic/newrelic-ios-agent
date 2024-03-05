@@ -49,6 +49,8 @@
 
 + (BOOL) shouldEnableLogReporting;
 
++ (BOOL) shouldEnableOfflineStorage;
+
 + (BOOL) shouldEnableNewEventSystem;
 
 + (BOOL) shouldEnableBackgroundInstrumentation;
