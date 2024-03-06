@@ -78,5 +78,16 @@
     XCTAssertTrue(count == savedData.count);
 }
 
+-(void) testClearAllOfflineStorage {
+    [self.offlineStorage setMaxOfflineStorageSize:100];
+    NSData *data = [NRMAFakeDataHelper makeDataDictionary:1000];
+    
+    XCTAssertTrue([self.offlineStorage persistDataToDisk:data]);
+    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:[NRMAOfflineStorage allOfflineDirectorysPath] isDirectory:nil]);
+    
+    XCTAssertTrue([NRMAOfflineStorage clearAllOfflineDirectories]);
+    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:[NRMAOfflineStorage allOfflineDirectorysPath] isDirectory:nil]);
+}
+
 
 @end
