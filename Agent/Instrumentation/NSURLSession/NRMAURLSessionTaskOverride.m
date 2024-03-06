@@ -126,7 +126,7 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                 
                 NSURL *url = [currentRequest URL];
                 if (url != nil &&
-                    newState != NSURLSessionTaskStateRunning && task.state == NSURLSessionTaskStateRunning) {
+                    task.state == NSURLSessionTaskStateRunning) {
 
                     // Added this section to add Distributed Tracing traceId\trace.id, guid,id and payload.
                     //1

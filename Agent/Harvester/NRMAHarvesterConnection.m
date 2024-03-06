@@ -34,6 +34,7 @@
 
 -(void) sendOfflineStorage {
     if (![NRMAFlags shouldEnableOfflineStorage]) {
+        [NRMAOfflineStorage clearAllOfflineDirectories];
         return;
     }
     NSArray<NSData *> * offlineData = [self.offlineStorage getAllOfflineData:YES];
