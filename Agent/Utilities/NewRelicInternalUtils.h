@@ -94,5 +94,7 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 
 + (NRMANetworkMonitor*) networkMonitor;
 
++ (NRMAReachability*) reachability;
+
 @end
 

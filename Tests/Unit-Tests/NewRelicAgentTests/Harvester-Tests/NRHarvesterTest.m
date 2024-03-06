@@ -133,8 +133,8 @@
     return mockNSURLSession;
 }
 
-- (id) makeMockURLSessionResponseError {
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:403 HTTPVersion:@"1.1" headerFields:nil];
+- (id) makeMockURLSessionResponseError:(NSError*) error statusCode:(NSInteger)statusCode {
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://staging-mobile-collector.newrelic.com"] statusCode:statusCode HTTPVersion:@"1.1" headerFields:nil];
     
     id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
     [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
@@ -148,7 +148,6 @@
     }] uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
 
     [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
-        NSError *error = [NSError errorWithDomain:@"" code:403 userInfo:@{@"Error reason": @"Invalid Input"}];
         completionHandler([@"DISABLE_NEW_RELIC" dataUsingEncoding:NSUTF8StringEncoding], bresponse, error);
     }] resume];
     
@@ -161,6 +160,28 @@
     
     XCTAssertTrue([config isEqual:config], @"isEqual is correct");
     XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
+}
+
+- (void) testBadHarvestConfiguration {
+
+    // Test what happens if any value is missing from passed dictionary
+
+    NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[NSDictionary dictionary]];
+    XCTAssertEqual(NRMA_DEFAULT_REPORT_PERIOD, config.data_report_period, @"A bad dictionary should parse default report period to its default.");
+    // if kNRMA_COLLECT_NETWORK_ERRORS is missing.
+    XCTAssertEqual(true, config.collect_network_errors, @"A bad dictionary should parse default report period to its default.");
+    // if kNRMA_ERROR_LIMIT is missing
+    XCTAssertEqual(NRMA_DEFAULT_ERROR_LIMIT, config.error_limit, @"A bad dictionary should parse default error limit to its default.");
+    // if kNRMA_REPORT_MAX_TRANSACTION_AGE is missing
+    XCTAssertEqual(NRMA_DEFAULT_MAX_TRANSACTION_AGE, config.report_max_transaction_age, @"A bad dictionary should parse default max transaction aget limit to its default.");
+    // if kNRMA_REPORT_MAX_TRANSACTION_COUNT is missing
+    XCTAssertEqual(NRMA_DEFAULT_MAX_TRANSACTION_COUNT, config.report_max_transaction_count, @"A bad dictionary should parse max transactions to its default.");
+    // if kNRMA_RESPONSE_BODY_LIMIT is missing
+    XCTAssertEqual(NRMA_DEFAULT_RESPONSE_BODY_LIMIT, config.response_body_limit, @"A bad dictionary should parse response body limit to its default.");
+    // if kNRMA_STACK_TRACE_LIMIT is missing
+    XCTAssertEqual(NRMA_DEFAULT_STACK_TRACE_LIMIT, config.stack_trace_limit, @"A bad dictionary should parse response body limit to its default.");
+    // if kNRMA_AT_MAX_SIZE is missing
+    XCTAssertEqual(NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SIZE, config.activity_trace_max_size, @"A bad dictionary should parse activity trace max size limit to its default.");
 }
 
 - (void) testActivityTraceConfiguration
@@ -252,6 +273,119 @@
 
     [connectionMock  stopMocking];
     [harvesterMock stopMocking];
+}
+
+- (void) testOfflineStorage
+{
+    XCTAssertNoThrow([NewRelic setMaxOfflineStorageSize:1000]);
+    [NewRelic enableFeatures:NRFeatureFlag_OfflineStorage];
+
+    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+    id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+
+    id mockHarvester = [OCMockObject partialMockForObject:newHarvester];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+    [mockHarvester setAgentConfiguration:agentConfig];
+    
+    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
+    [connectionMock setApplicationToken:@"APP_TOKEN"];
+    
+    NRMAHarvesterConfiguration* v3config = [[NRMAHarvesterConfiguration alloc] init];
+    v3config.collect_network_errors = YES;
+    v3config.cross_process_id = @"cross_process_id";
+    v3config.data_report_period = 60;
+    v3config.data_token = [[NRMADataToken alloc] init];
+    v3config.data_token.clusterAgentId = 36920;
+    v3config.data_token.realAgentId = 36921;
+    v3config.error_limit = 50;
+    v3config.report_max_transaction_age = 600;
+    v3config.report_max_transaction_count =1000;
+    v3config.response_body_limit = 2048;
+    v3config.server_timestamp = 1379548800;
+    v3config.stack_trace_limit = 100;
+    v3config.account_id = 1;
+    v3config.application_id = 1;
+    v3config.encoding_key = @"encoding_key";
+    v3config.application_token = @"APP_TOKEN";
+    [[[mockHarvester stub] andReturn:v3config] fetchHarvestConfiguration];
+
+    [mockHarvester connected];
+   
+    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
+    NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
+    XCTAssertTrue(offlineData.count > 0);
+    XCTAssertTrue(currentOfflineStorageSize > 0);
+
+    mockNSURLSession = [self makeMockURLSession];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+    
+    [mockHarvester connected];
+    
+    offlineData = [newHarvester.connection getOfflineData];
+    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
+    XCTAssertTrue(offlineData.count == 0);
+    XCTAssertTrue(currentOfflineStorageSize == 0);
+
+    [mockHarvester stopMocking];
+    [connectionMock stopMocking];
+    [NewRelic disableFeatures:NRFeatureFlag_OfflineStorage];
+}
+
+- (void) testOfflineStorageDisabled
+{
+    [NewRelic disableFeatures:NRFeatureFlag_OfflineStorage];
+    XCTAssertNoThrow([NewRelic setMaxOfflineStorageSize:1000]);
+
+    NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
+    id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+
+    id mockHarvester = [OCMockObject partialMockForObject:newHarvester];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+    [mockHarvester setAgentConfiguration:agentConfig];
+    
+    id connectionMock = [OCMockObject partialMockForObject:[newHarvester connection]];
+    [connectionMock setApplicationToken:@"APP_TOKEN"];
+    
+    NRMAHarvesterConfiguration* v3config = [[NRMAHarvesterConfiguration alloc] init];
+    v3config.collect_network_errors = YES;
+    v3config.cross_process_id = @"cross_process_id";
+    v3config.data_report_period = 60;
+    v3config.data_token = [[NRMADataToken alloc] init];
+    v3config.data_token.clusterAgentId = 36920;
+    v3config.data_token.realAgentId = 36921;
+    v3config.error_limit = 50;
+    v3config.report_max_transaction_age = 600;
+    v3config.report_max_transaction_count =1000;
+    v3config.response_body_limit = 2048;
+    v3config.server_timestamp = 1379548800;
+    v3config.stack_trace_limit = 100;
+    v3config.account_id = 1;
+    v3config.application_id = 1;
+    v3config.encoding_key = @"encoding_key";
+    v3config.application_token = @"APP_TOKEN";
+    [[[mockHarvester stub] andReturn:v3config] fetchHarvestConfiguration];
+
+    [mockHarvester connected];
+   
+    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
+    NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
+    XCTAssertTrue(offlineData.count == 0);
+    XCTAssertTrue(currentOfflineStorageSize == 0);
+
+    mockNSURLSession = [self makeMockURLSession];
+    newHarvester.connection.harvestSession = mockNSURLSession;
+    
+    [mockHarvester connected];
+    
+    offlineData = [newHarvester.connection getOfflineData];
+    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
+    XCTAssertTrue(offlineData.count == 0);
+    XCTAssertTrue(currentOfflineStorageSize == 0);
+
+    [mockHarvester stopMocking];
+    [connectionMock stopMocking];
 }
 
 // TODO: Reenable/rewrite these tests related to Harvester/Stored Data. JIRA: NR-96516
@@ -431,7 +565,7 @@
 
 - (void) testUninitializedToDisabled
 {
-    id mockNSURLSession = [self makeMockURLSessionResponseError];
+    id mockNSURLSession = [self makeMockURLSessionResponseError:[NSError errorWithDomain:@"" code:403 userInfo:@{@"Error reason": @"Invalid Input"}] statusCode:403];
     harvester.connection.harvestSession = mockNSURLSession;
 
    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_UNINITIALIZED, @"expected uninitizlized");

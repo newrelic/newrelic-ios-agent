@@ -34,7 +34,6 @@
 @end
 @interface NRMACrashDataUploaderTest : NRMAAgentTestBase
 {
-    NRMACrashDataUploader* crashUploader;
     NRMAMeasurementConsumerHelper* helper;
 }
 @end

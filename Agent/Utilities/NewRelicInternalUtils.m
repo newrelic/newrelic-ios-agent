@@ -177,6 +177,8 @@ static NSString* _osVersion;
             return kNRMAPlatformString_Capacitor;
         case NRMAPlatform_MAUI:
             return kNRMAPlatformString_MAUI;
+        case NRMAPlatform_Unreal:
+            return kNRMAPlatformString_Unreal;
     }
 }
 
@@ -236,6 +238,8 @@ static NSString* _osVersion;
                     } else {
                         cachedCarrierName = carrier.carrierName;
                     }
+                } else if (internetStatus == NotReachable) {
+                       cachedCarrierName = @"";
                 } else {
                     cachedCarrierName = NRMA_CARRIER_WIFI;
                 }
@@ -449,7 +453,7 @@ static NSString* _osVersion;
     static NRMANetworkMonitor* nm = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        if (@available(tvOS 12.0, *)) {
+        if (@available(iOS 12.0, tvOS 12.0, *)) {
             nm = [[NRMANetworkMonitor alloc] init];
         }
     });

@@ -40,6 +40,8 @@
 
 + (BOOL) shouldNotCollectTraces;
 
++ (void) setMaxOfflineStorageSize:(NSUInteger) size;
+
 #pragma mark - HarvestController interface
 
 + (NRMAHarvesterConfiguration*) configuration;
