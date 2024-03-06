@@ -1303,6 +1303,7 @@
 		2B5FD92E2AD609DE002F455C /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A926B36FB10056F3B3 /* libc++.tbd */; };
 		2B5FD9312AD609DE002F455C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3478A8A726B36FA70056F3B3 /* Foundation.framework */; };
 		2B5FD9332AD609DE002F455C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
+		2B699A142B98D83200B1850E /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		2B706113293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
 		2B706114293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
 		2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
@@ -5832,6 +5833,7 @@
 				2B5FD9062AD609DE002F455C /* NRMACrashReport_Thread.m in Sources */,
 				2B5FD9072AD609DE002F455C /* NRMAActivityTraces.m in Sources */,
 				2B5FD9082AD609DE002F455C /* NRMAHarvestableAnalytics.m in Sources */,
+				2B699A142B98D83200B1850E /* NRMAOfflineStorage.m in Sources */,
 				2B5FD9092AD609DE002F455C /* NRMAHexUploader.m in Sources */,
 				2B5FD90A2AD609DE002F455C /* NRMAURLSessionTaskSearch.m in Sources */,
 				2B5FD90B2AD609DE002F455C /* NRMADeviceInformation.m in Sources */,
