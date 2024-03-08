@@ -94,6 +94,21 @@
     [self log:message level:levels];
 }
 
++ (void) logAttributes:(NSDictionary* __nonnull) dict {
+    NSString* message = [dict objectForKey:@"message"];
+    NSString* level = [dict objectForKey:@"logLevel"];
+
+    NRLogLevels levels = [NRLogger stringToLevel: level];
+
+    [self log:message level:levels];
+}
+
++ (void) logErrorObject:(NSError* __nonnull) error {
+    NSString * errorDesc = error.localizedDescription;
+
+    [self logError:[NSString stringWithFormat:@"Error encountered: %@", errorDesc]];
+}
+
 + (void) crashNow:(NSString*)message
 {
     // If Agent is shutdown we shouldn't respond.

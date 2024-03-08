@@ -79,7 +79,6 @@
 */
 
 
-
 typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_InteractionTracing                    = 1 << 1,
     NRFeatureFlag_SwiftInteractionTracing               = 1 << 2, // Disabled by default

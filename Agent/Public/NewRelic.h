@@ -69,6 +69,10 @@ extern "C" {
 // Dict should contain at minimum => String: "message" and String: "logLevel" where logLevel is one of NONE < ERROR < WARN < INFO < DEBUG < VERBOSE
 + (void) logAll:(NSDictionary* __nonnull) dict;
 
++ (void) logAttributes:(NSDictionary* __nonnull) dict;
+
++ (void) logErrorObject:(NSError* __nonnull) error;
+
 #pragma mark - Configuring the New Relic SDK
 
 /*!
