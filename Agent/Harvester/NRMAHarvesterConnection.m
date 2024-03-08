@@ -120,10 +120,9 @@
         @autoreleasepool {
             data = responseBody;
             error = berror;
-            response = (NSHTTPURLResponse*)bresponse;
             dispatch_semaphore_signal(harvestRequestSemaphore);
             
-            NRLOG_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
+            NRLOG_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [bresponse debugDescription]);
             
             // Enqueue Data Usage Supportability Metric for /data or /connect if the harvest request was successful.
             if (!error) {
