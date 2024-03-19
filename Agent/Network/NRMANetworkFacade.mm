@@ -128,12 +128,13 @@
         [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
         
         NSUInteger modifiedBytesReceived = bytesReceived;
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
-        NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
-        if ([header isEqualToString:@"gzip"]) {
-            modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
+        if([response isKindOfClass:[NSHTTPURLResponse class]]) {
+            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
+            NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
+            if ([header isEqualToString:@"gzip"]) {
+                modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
+            }
         }
-
 
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
             if([NRMAFlags shouldEnableNewEventSystem]){
