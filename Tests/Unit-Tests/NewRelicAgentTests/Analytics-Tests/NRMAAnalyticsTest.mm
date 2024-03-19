@@ -131,6 +131,7 @@
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
+    XCTAssertFalse([json containsString:@"offline"]);
 
     [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
 }
@@ -217,7 +218,7 @@
 
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertNil(decode[0][@"networkErrorCode"]);
-
+    XCTAssertFalse([json containsString:@"offline"]);
 
 }
 
@@ -312,6 +313,7 @@
     XCTAssertTrue([decode[0][@"networkError"] isEqualToString:@"network failure"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertNil(decode[0][@"statusCode"]);
+    XCTAssertFalse([json containsString:@"offline"]);
 }
 
 - (void) testRequestEventNetworkErrorOffline {
@@ -363,6 +365,7 @@
     XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"newEventBlah"]);
     XCTAssertTrue([decode[0][@"blah"] isEqualToString:@"blah"]);
     XCTAssertTrue([decode[0][@"Winner"] isEqual:@1]);
+    XCTAssertFalse([json containsString:@"offline"]);
 }
 
 - (void) testInteractionEvent {
@@ -381,6 +384,7 @@
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"newEventBlah"]);
     XCTAssertTrue([decode[0][@"category"] isEqualToString:@"Interaction"]);
     XCTAssertTrue([decode[0][@"interactionDuration"] isEqual:@(1.0)]);    
+    XCTAssertFalse([json containsString:@"offline"]);
 }
 
 - (void) testInteractionEventOffline {
@@ -439,6 +443,7 @@
     XCTAssertNotNil(decode[0][@"eventType"]);
     XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileBreadcrumb"]);
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"testBreadcrumbs"]);
+    XCTAssertFalse([json containsString:@"offline"]);
 }
 
 - (void) testBreadcrumbOffline {
