@@ -121,6 +121,12 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                 NSURLRequest  *currentRequest = task.currentRequest;
                 
                 if(currentRequest != nil && [currentRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY] != nil) {
+                    
+                    if (NRMAOriginal__urlSessionTask_SetState!= nil) {
+                        // Call original setState function.
+                        ((void(*)(NSURLSessionTask *,SEL,NSURLSessionTaskState *))NRMAOriginal__urlSessionTask_SetState)(task, _cmd, newState);
+                    }
+
                     return;
                 }
                 
