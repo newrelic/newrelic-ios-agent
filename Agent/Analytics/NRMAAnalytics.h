@@ -53,6 +53,7 @@
 + (NSString*) getLastSessionsEvents;
 - (void) clearLastSessionsAnalytics;
 
+- (BOOL) checkOfflineStatus;
 
 //this utilizes setSessionAttribute:value: which validates the user input 'name'.
 - (BOOL) setLastInteraction:(NSString*)name;
