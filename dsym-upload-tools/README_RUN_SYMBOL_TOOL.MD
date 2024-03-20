@@ -15,7 +15,7 @@
 Optional:
 
 Note: A few environment variables can be set to modify the behavior of the map or dSYM uploader.
-- DSYM_UPLOAD_URL: Host URL to use when uploading to New Relic.
+- DSYM_UPLOAD_URL: Host URL to use when uploading to New Relic. default: "https://mobile-symbol-upload.newrelic.com"
 - NEWRELIC_SYMBOL_ENDPOINT: Symbol endpoint. default: "map"
 - NEWRELIC_DSYM_ENDPOINT: Dsym endpoint. default: "symbol"
 - NEWRELIC_SYMBOL_POST_KEY: Symbol Post Key used in Curl. default: "upload"
@@ -29,6 +29,18 @@ Add "--debug" after last line of script to enable debug logs in the output `uplo
 ```
 
 DSYM_UPLOAD_URL - define this environment variable above run script to override the New Relic server hostname
+
+
+```
+export DSYM_UPLOAD_URL="https://staging-mobile-symbol-upload.newrelic.com"
+```
+
+Repeat this line for each Env Var you'd like to set.
+
+```
+export NEWRELIC_SYMBOL_ENDPOINT="map2"
+```
+
 
 - Due to limitations with Swift scripting run-symbol-tool.swift is one file.
    Main script contents are in start() func. Helper functions are categorized at the end.

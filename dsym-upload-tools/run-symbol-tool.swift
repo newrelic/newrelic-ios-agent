@@ -44,6 +44,16 @@ var debug = false
 // Set to true for dSYM upload feature. (dSYM files are normally only uploaded if map file conversion fails.)
 let uploadDsymsOnly = false
 
+var symbolEndpointPath = "map"
+var dsymEndpointPath   = "symbol"
+var symbolUploadDataPostKey = "upload"
+var dsymUploadDataPostKey   = "dsym"
+
+var versionNumber = "7.4.10"
+var osName = "iOS"
+var platformName = "Native"
+var appVersionNumber = "1.2.3"
+
 enum SymbolToolError: Error {
     case failedToConvert
     case failedToUpload
@@ -86,11 +96,11 @@ func start() {
     /// Grab URLs and Keys from environment variables. 
     // Grab URL from set Env Var "$DSYM_UPLOAD_URL" or use default URL.
     var url = environment["DSYM_UPLOAD_URL"] ?? defaultURL
-    var symbolEndpointPath = environment["NEWRELIC_SYMBOL_ENDPOINT"] ?? "map"
-    var dsymEndpointPath   = environment["NEWRELIC_DSYM_ENDPOINT"] ?? "symbol"
+    symbolEndpointPath = environment["NEWRELIC_SYMBOL_ENDPOINT"] ?? "map"
+    dsymEndpointPath   = environment["NEWRELIC_DSYM_ENDPOINT"] ?? "symbol"
 
-    var symbolUploadDataPostKey = environment["NEWRELIC_SYMBOL_POST_KEY"] ?? "upload"
-    var dsymUploadDataPostKey   = environment["NEWRELIC_DSYM_POST_KEY"] ?? "dsym"
+    symbolUploadDataPostKey = environment["NEWRELIC_SYMBOL_POST_KEY"] ?? "upload"
+    dsymUploadDataPostKey   = environment["NEWRELIC_DSYM_POST_KEY"] ?? "dsym"
 // End Configure Env Vars //
 
 
@@ -476,7 +486,7 @@ func padHex(_ hexString: String) -> String {
 func uploadFile(_ path: String, _ apiKey: String, _ url: String, _ isDsym: Bool, _ size: UInt64) throws -> String? {
     var resultFromCurl: String? = nil
     do {
-        let command = "curl --retry 3 --write-out %{http_code} --silent --output /dev/null -F \(isDsym ? dsymUploadDataPostKey : symbolUploadDataPostKey)=@\"\(path)\" -H \"x-app-license-key: \(apiKey)\" -H \"Content-Disposition: attachment\" -H \"X-File-Size: \(size)\" \(url)/\(isDsym ? dsymEndpointPath : symbolEndpointPath)"
+        let command = "curl --retry 3 --write-out %{http_code} --silent --output /dev/null -F \(isDsym ? dsymUploadDataPostKey : symbolUploadDataPostKey)=@\"\(path)\" -H \"x-app-license-key: \(apiKey)\" -H \"Content-Disposition: attachment\" -H \"X-NewRelic-Agent-Version: \(versionNumber)\" -H \"X-NewRelic-OS-Name: \(osName)\" -H \"X-NewRelic-Platform: \(platformName)\" -H \"X-NewRelic-App-Version: \(appVersionNumber)\" -H \"X-File-Size: \(size)\" \(url)/\(isDsym ? dsymEndpointPath : symbolEndpointPath)"
 
        // let command = "curl --retry 3 --write-out %{http_code} --silent --output /dev/null -F \(isDsym ? "dsym" : "upload")=@\"\(path)\" -H \"x-app-license-key: \(apiKey)\" -H \"Content-Disposition: attachment\" -H \"X-File-Size: \(size)\" \(url)/\(isDsym ? "symbol" : "map")"
 
