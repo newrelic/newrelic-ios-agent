@@ -72,6 +72,7 @@ const char* __kNRMA_Attrib_contentType       = "contentType";
 const char* __kNRMA_Attrib_dtGuid            = "guid";
 const char* __kNRMA_Attrib_dtId              = "id";
 const char* __kNRMA_Attrib_dtTraceId         = "trace.id";
+const char* __kNRMA_Attrib_offline           = "offline";
 
 const char* __kNRMA_Val_errorType_HTTP       = "HTTPError";
 const char* __kNRMA_Val_errorType_Network    = "NetworkFailure";

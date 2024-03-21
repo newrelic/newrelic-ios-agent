@@ -115,14 +115,15 @@ didCompleteWithError:(nullable NSError*)error {
            dataTask:(NSURLSessionDataTask*)dataTask
  didReceiveResponse:(NSURLResponse*)response
   completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
-    NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+//    NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+//
+//    NSInteger statusCode = httpResponse.statusCode;
 
-    NSInteger statusCode = httpResponse.statusCode;
-
-    NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", httpResponse);
+    NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", response);
     
-    if (statusCode >= 400) {
-        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", httpResponse.description);
+    if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
+        ((NSHTTPURLResponse*)response).statusCode >= 400) {
+        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
         [self handledErroredRequest:dataTask.originalRequest];
     }
     else {
