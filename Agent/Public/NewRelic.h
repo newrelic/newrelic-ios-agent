@@ -696,12 +696,12 @@ extern "C" {
 /*!
  Change the maximum size in megabytes that the agent will store for offline storage.
  
- @param megaBytes the maximum size in mega bytes of offline storage that can be stored in the local file system
+ @param megabytes the maximum size in mega bytes of offline storage that can be stored in the local file system
  
  By default the SDK will store up to 100 MB worth of offline payloads in the local file system.
  */
 
-+ (void) setMaxOfflineStorageSize:(unsigned int)megaBytes;
++ (void) setMaxOfflineStorageSize:(unsigned int)megabytes;
 
 #pragma mark - Tracking global attributes
 

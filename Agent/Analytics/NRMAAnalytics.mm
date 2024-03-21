@@ -265,7 +265,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
         return [_eventManager addEvent:[event autorelease]];
     } else {
-        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
+        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkOfflineStatus]);
     }
 }
 
@@ -506,7 +506,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
-        return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload));
+        return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus]);
     }
     return NO;
 }
@@ -518,7 +518,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
 
-        return _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData,std::move(payload));
+        return _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData,std::move(payload), [self checkOfflineStatus]);
     }
 
     return NO;
@@ -531,7 +531,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
 
-        return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload));
+        return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus]);
     }
     return NO;
 }
@@ -749,6 +749,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
             
             if ([self event:event withAttributes:attributes]) {
+                if([self checkOfflineStatus]){
+                    event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                }
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
@@ -801,6 +804,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             
             if ([self event:event withAttributes:attributes]) {
                 event->addAttribute("name",name.UTF8String);
+                if([self checkOfflineStatus]){
+                    event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                }
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
@@ -855,8 +861,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
                 return NO;
             }
-            
+                        
             if([self event:event withAttributes:attributes]) {
+                if([self checkOfflineStatus]){
+                    event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                }
                 return _analyticsController->addEvent(event);
             }
         }
@@ -893,6 +902,17 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
     }
     return YES;
+}
+
+- (BOOL) checkOfflineStatus {
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        NRMAReachability* r = [NewRelicInternalUtils reachability];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            return (status == NotReachable);
+        }
+    }
+    return false;
 }
 
 - (BOOL)recordUserAction:(NRMAUserAction *)userAction {

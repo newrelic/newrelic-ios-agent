@@ -38,6 +38,14 @@ IMP NRMAOriginal__uploadTaskWithStreamedRequest;
 
 void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplementation);
 
+@interface PayloadHolder : NSObject
+@property (nonatomic, retain) NRMAPayload *objcPayload;
+@property (nonatomic, retain) NRMAPayloadContainer *cppPayload;
+@end
+
+@implementation PayloadHolder
+@end
+
 @interface NRMAIMPContainer : NSObject
 @property(readonly) IMP imp;
 - (instancetype) initWithImp:(IMP)imp;
@@ -208,14 +216,20 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     IMP originalImp = NRMAOriginal__dataTaskWithRequest;
     
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-    NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,request);
+
+    PayloadHolder *payloadHolder = [[PayloadHolder alloc] init];
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        payloadHolder.objcPayload = ([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]);
+    } else {
+        payloadHolder.cppPayload = ([NRMAHTTPUtilities addConnectivityHeader:mutableRequest]);
+    }
+    
+    NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,mutableRequest);
     if([NRMAFlags shouldEnableNewEventSystem]){
-        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-        [NRMAHTTPUtilities attachNRMAPayload:payload
+        [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload
                                       to:task.originalRequest];
     } else {
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload
                                       to:task.originalRequest];
     }
 
@@ -248,17 +262,21 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     __block NSURLSessionTask* task = nil;
+    
+    PayloadHolder *payloadHolder = [[PayloadHolder alloc] init];
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        payloadHolder.objcPayload = ([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]);
+    } else {
+        payloadHolder.cppPayload = ([NRMAHTTPUtilities addConnectivityHeader:mutableRequest]);
+    }
+    
     if (completionHandler == nil) {
         task  = ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,completionHandler);
 
-        if([NRMAFlags shouldEnableNewEventSystem]){
-            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-            [NRMAHTTPUtilities attachNRMAPayload:payload
-                                          to:task.originalRequest];
+        if([NRMAFlags shouldEnableNewEventSystem]) {
+            [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
         } else {
-            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-            [NRMAHTTPUtilities attachPayload:payload
-                                          to:task.originalRequest];
+            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
         
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -267,14 +285,10 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
     
     task =  ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,^(NSData* data, NSURLResponse* response, NSError* error){
 
-        if([NRMAFlags shouldEnableNewEventSystem]){
-            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-            [NRMAHTTPUtilities attachNRMAPayload:payload
-                                          to:task.originalRequest];
+        if([NRMAFlags shouldEnableNewEventSystem]) {
+            [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
         } else {
-            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-            [NRMAHTTPUtilities attachPayload:payload
-                                          to:task.originalRequest];
+            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
 
         NRMA__recordTask(task,data,response,error);
@@ -392,17 +406,20 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     __block NSURLSessionUploadTask* task = nil;
+    PayloadHolder *payloadHolder = [[PayloadHolder alloc] init];
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        payloadHolder.objcPayload = ([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]);
+    } else {
+        payloadHolder.cppPayload = ([NRMAHTTPUtilities addConnectivityHeader:mutableRequest]);
+    }
+    
     if (completionHandler == nil) {
         task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,completionHandler);
         
-        if([NRMAFlags shouldEnableNewEventSystem]){
-            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-            [NRMAHTTPUtilities attachNRMAPayload:payload
-                                          to:task.originalRequest];
+        if([NRMAFlags shouldEnableNewEventSystem]) {
+            [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
         } else {
-            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-            [NRMAHTTPUtilities attachPayload:payload
-                                          to:task.originalRequest];
+            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
     
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -412,15 +429,12 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     task =  ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,^(NSData* data,
                                                                                                                                                         NSURLResponse* response,
                                                                                                                                                         NSError* error){
-        if([NRMAFlags shouldEnableNewEventSystem]){
-            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-            [NRMAHTTPUtilities attachNRMAPayload:payload
-                                              to:task.originalRequest];
+        if([NRMAFlags shouldEnableNewEventSystem]) {
+            [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
         } else {
-            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-            [NRMAHTTPUtilities attachPayload:payload
-                                          to:task.originalRequest];
+            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
+        
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
@@ -444,17 +458,21 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     __block NSURLSessionUploadTask* task = nil;
+    
+    PayloadHolder *payloadHolder = [[PayloadHolder alloc] init];
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        payloadHolder.objcPayload = ([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]);
+    } else {
+        payloadHolder.cppPayload = ([NRMAHTTPUtilities addConnectivityHeader:mutableRequest]);
+    }
+    
     if (completionHandler == nil) {
         task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,completionHandler);
 
-        if([NRMAFlags shouldEnableNewEventSystem]){
-            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-            [NRMAHTTPUtilities attachNRMAPayload:payload
-                                          to:task.originalRequest];
+        if([NRMAFlags shouldEnableNewEventSystem]) {
+            [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
         } else {
-            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-            [NRMAHTTPUtilities attachPayload:payload
-                                          to:task.originalRequest];
+            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
 
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -463,15 +481,12 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     
     task =  ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,^(NSData* data, NSURLResponse* response, NSError* error){
 
-        if([NRMAFlags shouldEnableNewEventSystem]){
-            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-            [NRMAHTTPUtilities attachNRMAPayload:payload
-                                          to:task.originalRequest];
+        if([NRMAFlags shouldEnableNewEventSystem]) {
+            [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
         } else {
-            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-            [NRMAHTTPUtilities attachPayload:payload
-                                          to:task.originalRequest];
+            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
+        
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
