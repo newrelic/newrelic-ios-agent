@@ -58,8 +58,8 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
     return __NRMA__maxEventBufferSize;
 }
 
-+ (void) setMaxOfflineStorageSize:(NSUInteger)megaBytes {
-    __NRMA__maxOfflineStorageSize = megaBytes;
++ (void) setMaxOfflineStorageSize:(NSUInteger)megabytes {
+    __NRMA__maxOfflineStorageSize = megabytes;
 }
 
 + (NSUInteger) getMaxOfflineStorageSize {
