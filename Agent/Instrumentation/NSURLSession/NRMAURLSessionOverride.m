@@ -216,14 +216,20 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     IMP originalImp = NRMAOriginal__dataTaskWithRequest;
     
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
-    NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,request);
+
+    PayloadHolder *payloadHolder = [[PayloadHolder alloc] init];
+    if([NRMAFlags shouldEnableNewEventSystem]) {
+        payloadHolder.objcPayload = ([NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest]);
+    } else {
+        payloadHolder.cppPayload = ([NRMAHTTPUtilities addConnectivityHeader:mutableRequest]);
+    }
+    
+    NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,mutableRequest);
     if([NRMAFlags shouldEnableNewEventSystem]){
-        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-        [NRMAHTTPUtilities attachNRMAPayload:payload
+        [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload
                                       to:task.originalRequest];
     } else {
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload
                                       to:task.originalRequest];
     }
 
