@@ -36,13 +36,13 @@
         }
         self.networkFinished = YES;
     }] noticeNetworkRequest:OCMOCK_ANY
-                   response:OCMOCK_ANY
-                  withTimer:OCMOCK_ANY
-                  bytesSent:0
-              bytesReceived:0
-               responseData:OCMOCK_ANY
-               traceHeaders:OCMOCK_ANY
-                     params:OCMOCK_ANY];
+     response:OCMOCK_ANY
+     withTimer:OCMOCK_ANY
+     bytesSent:0
+     bytesReceived:0
+     responseData:OCMOCK_ANY
+     traceHeaders:OCMOCK_ANY
+     params:OCMOCK_ANY];
 }
 
 - (void)tearDown {
@@ -56,7 +56,7 @@
 
 - (void) testDataTaskWithRequest {
 
-
+    // Expectations
     [[[self.mockSession expect] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY];
     [[self.mockSession reject]  dataTaskWithURL:OCMOCK_ANY];
     if( @available(iOS 13, *)) {
@@ -64,12 +64,23 @@
     } else if (@available(iOS 12,*)) {
         [[[self.mockSession expect] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     }
+
+    // Rejections
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[self.mockSession reject] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
-    NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com"]]];
+
+    NSURLRequest *urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com"]];
+    NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:urlRequest];
+
+    NSDictionary *headers = [[task currentRequest] allHTTPHeaderFields];
+
+    XCTAssertNotNil(headers[@"newrelic"]);
+    XCTAssertNotNil(headers[@"traceparent"]);
+    XCTAssertNotNil(headers[@"tracestate"]);
+
     [task resume];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -79,7 +90,7 @@
     while (CFRunLoopGetMain() && !self.networkFinished) {}
 
     XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 }
 
 
@@ -100,10 +111,17 @@
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithURL:[NSURL URLWithString:@"http://www.google.com"] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
 
     }];
+
+    NSDictionary *headers = [[task currentRequest] allHTTPHeaderFields];
+
+    XCTAssertNotNil(headers[@"newrelic"]);
+    XCTAssertNotNil(headers[@"traceparent"]);
+    XCTAssertNotNil(headers[@"tracestate"]);
+
     [task resume];
 
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)),dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         self.networkFinished = YES;
@@ -129,10 +147,17 @@
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithURL:[NSURL URLWithString:@"http://www.google.com"]];
+
+    NSDictionary *headers = [[task currentRequest] allHTTPHeaderFields];
+
+    XCTAssertNotNil(headers[@"newrelic"]);
+    XCTAssertNotNil(headers[@"traceparent"]);
+    XCTAssertNotNil(headers[@"tracestate"]);
+
     [task resume];
 
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)),dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         self.networkFinished = YES;
@@ -156,9 +181,15 @@
 
     }];
 
+    NSDictionary *headers = [[task currentRequest] allHTTPHeaderFields];
+
+    XCTAssertNotNil(headers[@"newrelic"]);
+    XCTAssertNotNil(headers[@"traceparent"]);
+    XCTAssertNotNil(headers[@"tracestate"]);
+
     [task resume];
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         self.networkFinished = YES;
@@ -191,7 +222,7 @@
                                                                   fromData:data];
     [task resume];
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         self.networkFinished = YES;
@@ -214,7 +245,7 @@
     [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://api.imgur.com/3/image"]];
-    
+
     [request addValue:@"Client-ID 3e81eb4ece83db7" forHTTPHeaderField:@"Authorization"];
     [request setHTTPMethod:@"POST"];
 
@@ -229,7 +260,7 @@
     [task resume];
 
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)),dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) , ^{
         self.networkFinished = YES;
@@ -263,7 +294,7 @@
     [task resume];
 
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         self.networkFinished = YES;
@@ -300,7 +331,7 @@
 
     [task resume];
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         self.networkFinished = YES;
@@ -328,12 +359,12 @@
 
     [request addValue:@"Client-ID 3e81eb4ece83db7" forHTTPHeaderField:@"Authorization"];
     [request setHTTPMethod:@"POST"];
- 
+
 
     NSURLSessionUploadTask* task = [self.mockSession uploadTaskWithStreamedRequest:request];
     [task resume];
 
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+    XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         self.networkFinished = YES;
