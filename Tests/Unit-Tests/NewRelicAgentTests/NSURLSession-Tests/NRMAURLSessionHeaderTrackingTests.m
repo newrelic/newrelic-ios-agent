@@ -34,6 +34,8 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (void)setUp {
     [super setUp];
+    [NRMAFlags enableFeatures: NRFeatureFlag_NetworkRequestEvents | NRFeatureFlag_NewEventSystem];
+
     [NRMAURLSessionOverride beginInstrumentation];
     self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
     _sharedInstance = [[NewRelicAgentInternal alloc] init];
@@ -78,7 +80,6 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (void) testDataTaskWithRequestGraphQL {
     
-    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NSMutableURLRequest * request = [self createRequestWithGraphQLHeaders];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
@@ -116,7 +117,6 @@ static NewRelicAgentInternal* _sharedInstance;
     
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
 
-    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.newrelic.com"]];
     [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
@@ -153,7 +153,6 @@ static NewRelicAgentInternal* _sharedInstance;
 - (void) testDataTaskErrorWithRequestHeaderTracking {
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
 
-    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"www.newrelic.com"]];
     [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];

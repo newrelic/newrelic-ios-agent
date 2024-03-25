@@ -42,7 +42,7 @@
 #import "NRMAAppUpgradeMetricGenerator.h"
 #import "NRMAAppInstallMetricGenerator.h"
 #import "NRMAAnalytics.h"
-#import <Analytics/Constants.hpp>
+#import "Constants.h"
 #import "NRMAWKWebViewInstrumentation.h"
 #import "NRMAExceptionHandlerStartupManager.h"
 #import "NRMAFlags.h"
@@ -187,10 +187,6 @@ static NewRelicAgentInternal* _sharedInstance;
                                                      selector:@selector(applicationWillTerminate)
                                                          name:UIApplicationWillTerminateNotification
                                                        object:[UIApplication sharedApplication]];
-            [[NSNotificationCenter defaultCenter] addObserver:self
-                                                     selector:@selector(didReceiveInteractionCompleteNotification:)
-                                                         name:kNRInteractionDidCompleteNotification
-                                                       object:nil];
 
             NRLOG_INFO(@"Agent enabled");
 
@@ -398,7 +394,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) initializeAnalytics {
     @synchronized(kNRMAAnalyticsInitializationLock) {
-        [NRMAAnalytics clearDuplicationStores];
+       // [NRMAAnalytics clearDuplicationStores];
         self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
     }
 
@@ -443,9 +439,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
     [self.analyticsController setNRSessionAttribute:@"appBuild"
                                               value:info.applicationInformation.appBuild];
-    [self.analyticsController setNRSessionAttribute:@(__kNRMA_RA_platform)
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_platform
                                               value:[NewRelicInternalUtils stringFromNRMAApplicationPlatform:info.deviceInformation.platform]];
-    [self.analyticsController setNRSessionAttribute:@(__kNRMA_RA_platformVersion)
+    [self.analyticsController setNRSessionAttribute:kNRMA_RA_platformVersion
                                               value:info.deviceInformation.platformVersion ?: info.deviceInformation.agentVersion];
 
     NSString* vendorId = [NRMAUDIDManager deviceIdentifier];
@@ -484,7 +480,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
     [self initializeAnalytics];
-
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    NRMANetworkStatus status;
+    @synchronized(r) {
+        status = [r currentReachabilityStatus];
+    }
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController
                                                                                      sessionStartTime:self.appSessionStartDate
@@ -492,7 +492,10 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                              platform:[NewRelicInternalUtils osName]
                                                                                             sessionId:[self currentSessionId]];
 
-        [self.handledExceptionsController processAndPublishPersistedReports];
+
+        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
+            [self.handledExceptionsController processAndPublishPersistedReports];
+        }
 
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
 
@@ -502,8 +505,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
-
-        [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+        if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
+            [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+        }
     }
     
     if([NRMAFlags shouldEnableGestureInstrumentation])
@@ -821,9 +825,7 @@ static UIBackgroundTaskIdentifier background_task;
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:UIApplicationWillTerminateNotification
                                                    object:[UIApplication sharedApplication]];
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:kNRInteractionDidCompleteNotification
-                                                   object:nil];
+
         // # disable logging
         [NRLogger setLogLevels:NRLogLevelNone];
         [NRLogger clearLog];

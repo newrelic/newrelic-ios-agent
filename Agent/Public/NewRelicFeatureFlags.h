@@ -72,7 +72,10 @@
     Disabled by default. Enable or disable (default) flag for automatic instrumentation of async URLSession functions in Swift.
 
  - NRFeatureFlag_LogReporting
-    Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions..
+    Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
+ 
+ - NRFeatureFlag_OfflineStorage
+    Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
 */
 
 - NRFeatureFlag_NSURLSessionWebSocketInstrumentation
@@ -102,5 +105,6 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_NSURLSessionWebSocketInstrumentation  = 1 << 19, // Disabled by default
 
     // NOTE: Temporarily removed NRFeatureFlag_LogReporting
-//    NRFeatureFlag_LogReporting                          = 1 << 19, // Disabled by default
+    NRFeatureFlag_NewEventSystem                        = 1 << 20, // Disabled by default
+    NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
 };

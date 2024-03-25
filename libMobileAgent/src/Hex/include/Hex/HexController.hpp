@@ -41,14 +41,21 @@ namespace NewRelic {
             void submit(std::shared_ptr<Report::HexReport> report);
 
             void publish();
+            
+            void resetKeyContext();
 
             void setSessionId(const char* sessionId);
 
             std::shared_ptr<Report::HexReport> createReport(uint64_t epochMs,
                                                             const char* message,
                                                             const char* name,
+                                                            const std::map <std::string, std::shared_ptr<AttributeBase>> attributesJson,
                                                             std::vector<std::shared_ptr<Report::Thread>> threads);
 
+            std::shared_ptr<Report::HexReport> createReport(uint64_t epochMs,
+                                                            const char* message,
+                                                            const char* name,
+                                                            std::vector<std::shared_ptr<Report::Thread>> threads);
 
             virtual ~HexController() = default;
 

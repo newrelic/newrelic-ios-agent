@@ -98,7 +98,7 @@
     XCTAssertTrue(boolMap[std::string("bool")] == false);
     XCTAssertTrue(strMap[std::string("Banana")] == std::string("Tally me."));
 
-    NRMAExceptionReportAdaptor* adaptor = [[NRMAExceptionReportAdaptor alloc] initWithReport:report];
+    NRMAExceptionReportAdaptor* adaptor = [[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[_analytics getAttributeValidator]];
 
     [adaptor addAttributes:@{
             @"bool":[[NRMABool alloc] initWithBOOL:YES],
@@ -129,7 +129,7 @@
 
     auto report = _controller->createReport(0, "msg", "name", std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>>());
 
-    NRMAExceptionReportAdaptor* adaptor = [[NRMAExceptionReportAdaptor alloc] initWithReport:report];
+    NRMAExceptionReportAdaptor* adaptor = [[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[_analytics getAttributeValidator]];
 
     id mockContextAdaptor = [OCMockObject partialMockForObject:adaptor];
 

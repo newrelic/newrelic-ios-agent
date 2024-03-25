@@ -16,8 +16,11 @@
 #import "HexUploadPublisher.hpp"
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
-#include <Analytics/Constants.hpp>
 #include <execinfo.h>
+#import "NRMAFlags.h"
+#include <Analytics/AnalyticsController.hpp>
+#import "NRMABool.h"
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAAnalytics(Protected)
 // Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
@@ -33,6 +36,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     std::shared_ptr<NewRelic::Hex::HexStore> _store;
     NewRelic::Hex::Report::ApplicationLicense* _appLicense;
     NewRelic::Hex::HexUploadPublisher* _publisher;
+
+    NRMAAnalytics *analyticsParent;
 }
 
 - (void) dealloc {
@@ -43,6 +48,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
     self.sessionId = nil;
     self.sessionStartDate = nil;
+
     [super dealloc];
 }
 
@@ -63,6 +69,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
     self = [super init];
     if (self) {
+        analyticsParent = analytics;
+
         _analytics = std::shared_ptr<NewRelic::AnalyticsController>([analytics analyticsController]);
         self.sessionStartDate = sessionStartDate;
         std::vector<std::shared_ptr<NewRelic::Hex::Report::Library>> libs;
@@ -124,9 +132,21 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) onHarvest {
-    _controller->publish();
-    _store->clear();
-    _publisher->retry();
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        NRMAReachability* r = [NewRelicInternalUtils reachability];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            if (status != NotReachable) {
+                [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
+                _controller->resetKeyContext();
+                _publisher->retry();
+            }
+        }
+    } else {
+        _controller->publish();
+        _store->clear();
+        _publisher->retry();
+    }
 }
 
 - (fbs::Platform) fbsPlatformFromString:(NSString*)platform {
@@ -136,29 +156,68 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     return fbs::Platform_iOS;
 }
 
+- (void) checkOffline:(std::shared_ptr<NewRelic::Hex::Report::HexReport>) report
+{
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        NRMAReachability* r = [NewRelicInternalUtils reachability];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            if (status == NotReachable) {
+                report->setAttributeNoValidation("offline", true);
+            }
+        }
+    }
+}
+
 - (void) recordError:(NSError * _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes
 {
     void* callstack[1024];
     int frames = backtrace(callstack,1024);
 
-    auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
-                                            error.localizedDescription.UTF8String,
-                                            error.domain.UTF8String,
-                                            [self createThreadVector:callstack length:frames]
-    );
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        auto resultMap = [self getSessionAttributesResultMap];
 
-    NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report] autorelease];
+        auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
+                                                error.localizedDescription.UTF8String,
+                                                error.domain.UTF8String,
+                                                resultMap,
+                                                [self createThreadVector:callstack length:frames]
+                                                );
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
-    if (attributes != nil) {
-        [contextAdapter addAttributes:attributes];
+        if (attributes != nil) {
+            [contextAdapter addAttributesNewValidation:attributes];
+        }
+
+        report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+
+        report->setAttributeNoValidation("isHandledError", true);
+        [self checkOffline:report];
+        
+        _controller->submit(report);
     }
+    else {
+        auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
+                                                error.localizedDescription.UTF8String,
+                                                error.domain.UTF8String,
+                                                [self createThreadVector:callstack length:frames]
+                                                );
+        
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
-    report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        if (attributes != nil) {
+            [contextAdapter addAttributes:attributes];
+        }
+        
+        report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        
+        report->setAttribute("isHandledError", true);
+        
+        [self checkOffline:report];
 
-    report->setAttribute("isHandledError", true);
-
-    _controller->submit(report);
+        _controller->submit(report);
+    }
 }
 
 - (void) recordHandledException:(NSException*)exception
@@ -183,23 +242,45 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     if(exception.reason) {
         eReason = exception.reason;
     }
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        auto resultMap = [self getSessionAttributesResultMap];
+        auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
+                                                eReason.UTF8String,
+                                                eName.UTF8String,
+                                                resultMap,
+                                                [self createThreadVector:exception]
+                                                );
+        report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        
+        [self checkOffline:report];
 
-    auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
-                                            eReason.UTF8String,
-                                            eName.UTF8String,
-                                            [self createThreadVector:exception]);
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
+        if (attributes != nil) {
+            [contextAdapter addAttributesNewValidation:attributes];
+        }
 
-    report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
-
-
-    NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report] autorelease];
-
-    if (attributes != nil) {
-        [contextAdapter addAttributes:attributes];
+        _controller->submit(report);
     }
+    else {
+        auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
+                                                eReason.UTF8String,
+                                                eName.UTF8String,
+                                                [self createThreadVector:exception]);
 
-    _controller->submit(report);
+
+        report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        
+        [self checkOffline:report];
+
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
+
+        if (attributes != nil) {
+            [contextAdapter addAttributes:attributes];
+        }
+
+        _controller->submit(report);
+    }
 }
 
 - (void) recordHandledException:(NSException*)exception {
@@ -265,20 +346,93 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     threadVector.push_back(std::make_shared<NewRelic::Hex::Report::Thread>(frameVector));
     // END: Assemble threadVector from the stackTraceElements dict.
 
-    auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
-                                            eReason.UTF8String,
-                                            eName.UTF8String,
-                                            threadVector);
 
-    report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        auto resultMap = [self getSessionAttributesResultMap];
+        auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
+                                                eReason.UTF8String,
+                                                eName.UTF8String,
+                                                resultMap,
+                                                threadVector);
+        report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        [self checkOffline:report];
 
-    NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
 
-    if (exceptionDictionary != nil) {
-        [contextAdapter addAttributes:exceptionDictionary];
+        if (exceptionDictionary != nil) {
+            [contextAdapter addAttributesNewValidation:exceptionDictionary];
+        }
+
+        _controller->submit(report);
+    }
+    else {
+        auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
+                                                eReason.UTF8String,
+                                                eName.UTF8String,
+                                                threadVector);
+
+        report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
+        [self checkOffline:report];
+
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[analyticsParent getAttributeValidator]] autorelease];
+
+        if (exceptionDictionary != nil) {
+            [contextAdapter addAttributes:exceptionDictionary];
+        }
+
+        _controller->submit(report);
+    }
+}
+
+- (std::map<std::string, std::shared_ptr<NewRelic::AttributeBase> >) getSessionAttributesResultMap {
+    NSString *sessionAttributes = [analyticsParent sessionAttributeJSONString];
+    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
+
+    // Convert NSDictionary => std::map<std::string, std::shared_ptr<NewRelic::AttributeBase> >
+    std::map<std::string, std::shared_ptr<NewRelic::AttributeBase> > resultMap;
+
+    for (NSString *key in dictionary) {
+        id value = [dictionary objectForKey:key];
+
+        if ([value isKindOfClass:[NSNumber class]]) {
+            NSNumber* number = (NSNumber*)value;
+            if ([NewRelicInternalUtils isFloat:number]) {
+
+                auto baseValue = NewRelic::Value::createValue([number floatValue]);
+
+                auto attribute = std::make_shared<NewRelic::AttributeBase>(NewRelic::AttributeBase([key UTF8String],baseValue));
+
+                resultMap.insert(std::make_pair([key UTF8String], attribute));
+            }
+            else if ([NewRelicInternalUtils isInteger:number]) {
+
+                auto baseValue = NewRelic::Value::createValue([number longLongValue]);
+
+                auto attribute = std::make_shared<NewRelic::AttributeBase>(NewRelic::AttributeBase([key UTF8String],baseValue));
+
+                resultMap.insert(std::make_pair([key UTF8String], attribute));
+            }
+        } else if ([value isKindOfClass:[NSString class]]) {
+            auto baseValue = NewRelic::Value::createValue([value UTF8String]);
+
+            auto attribute = std::make_shared<NewRelic::AttributeBase>(NewRelic::AttributeBase([key UTF8String],baseValue));
+
+            resultMap.insert(std::make_pair([key UTF8String], attribute));
+        } else if([value isKindOfClass:[NRMABool class]]) {
+            long long longValue = ((NRMABool*)value).value;
+            auto baseValue = NewRelic::Value::createValue(longValue);
+
+            auto attribute = std::make_shared<NewRelic::AttributeBase>(NewRelic::AttributeBase([key UTF8String],baseValue));
+
+            resultMap.insert(std::make_pair([key UTF8String], attribute));
+        } else {
+            continue;
+        }
     }
 
-    _controller->submit(report);
+    return resultMap;
 }
 
 @end

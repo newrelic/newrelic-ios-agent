@@ -75,6 +75,7 @@ extern const char* __kNRMA_Attrib_contentType;
 extern const char* __kNRMA_Attrib_dtGuid;
 extern const char* __kNRMA_Attrib_dtId;
 extern const char* __kNRMA_Attrib_dtTraceId;
+extern const char* __kNRMA_Attrib_offline;
 
 extern const char* __kNRMA_Val_errorType_HTTP;
 extern const char* __kNRMA_Val_errorType_Network;
