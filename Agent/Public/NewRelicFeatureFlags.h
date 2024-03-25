@@ -78,6 +78,9 @@
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
 */
 
+- NRFeatureFlag_NSURLSessionWebSocketInstrumentation
+   Disabled by default. Enable or disable (default) flag for automatic instrumentation NSURLSessionWebSocketTasks.
+*/
 
 
 typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
@@ -99,6 +102,7 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
     NRFeatureFlag_FedRampEnabled                        = 1 << 17, // Disabled by default
     NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 18, // Disabled by default
+    NRFeatureFlag_NSURLSessionWebSocketInstrumentation  = 1 << 19, // Disabled by default
 
     // NOTE: Temporarily removed NRFeatureFlag_LogReporting
     NRFeatureFlag_NewEventSystem                        = 1 << 20, // Disabled by default

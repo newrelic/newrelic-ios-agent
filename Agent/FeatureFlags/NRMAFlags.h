@@ -47,6 +47,8 @@
 
 + (BOOL) shouldEnableSwiftAsyncURLSessionSupport;
 
++ (BOOL) shouldEnableNSURLSessionWebSocketInstrumentationSupport;
+
 + (BOOL) shouldEnableLogReporting;
 
 + (BOOL) shouldEnableOfflineStorage;

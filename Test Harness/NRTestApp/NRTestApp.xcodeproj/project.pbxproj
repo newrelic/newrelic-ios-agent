@@ -56,6 +56,10 @@
 		F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B982970ADC1003EC291 /* UIImageView.swift */; };
 		F8302B9B2970B29D003EC291 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9A2970B29D003EC291 /* Date.swift */; };
 		F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9C2970B3E0003EC291 /* ApodURL.swift */; };
+		F83D61A32A69B82C00965855 /* WebSocketViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F83D61A22A69B82C00965855 /* WebSocketViewController.swift */; };
+		F83D61A42A69B82C00965855 /* WebSocketViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F83D61A22A69B82C00965855 /* WebSocketViewController.swift */; };
+		F851E69F2A608F3900BCDD62 /* ScriptWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F851E69E2A608F3900BCDD62 /* ScriptWebView.swift */; };
+		F851E6A62A608F8500BCDD62 /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = F851E6A52A608F8500BCDD62 /* index.html */; };
 		F848CDE42AA270E80082052F /* NRTestApp_tvOS_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */; };
 		F848CDE62AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */; };
 		F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */; };
@@ -226,6 +230,9 @@
 		F8302B982970ADC1003EC291 /* UIImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageView.swift; sourceTree = "<group>"; };
 		F8302B9A2970B29D003EC291 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		F8302B9C2970B3E0003EC291 /* ApodURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApodURL.swift; sourceTree = "<group>"; };
+		F83D61A22A69B82C00965855 /* WebSocketViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketViewController.swift; sourceTree = "<group>"; };
+		F851E69E2A608F3900BCDD62 /* ScriptWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptWebView.swift; sourceTree = "<group>"; };
+		F851E6A52A608F8500BCDD62 /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		F848CDE12AA270E80082052F /* NRTestApp(tvOS)Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp(tvOS)Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_Tests.swift; sourceTree = "<group>"; };
 		F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_TestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -422,6 +429,8 @@
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
+				F851E69E2A608F3900BCDD62 /* ScriptWebView.swift */,
+				F83D61A22A69B82C00965855 /* WebSocketViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -475,6 +484,7 @@
 				2B708A982ADF3AD80063110E /* NewRelic+Replace.h */,
 				F864284D2971DFC9002ABA01 /* triggerException.h */,
 				F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */,
+				F851E6A52A608F8500BCDD62 /* index.html */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -704,6 +714,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
+				F851E6A62A608F8500BCDD62 /* index.html in Resources */,
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
 			);
@@ -818,10 +829,12 @@
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
+				F851E69F2A608F3900BCDD62 /* ScriptWebView.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
+				F83D61A32A69B82C00965855 /* WebSocketViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
@@ -875,6 +888,7 @@
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
+				F83D61A42A69B82C00965855 /* WebSocketViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
