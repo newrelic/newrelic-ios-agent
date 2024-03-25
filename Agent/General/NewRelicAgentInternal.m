@@ -151,7 +151,7 @@ static NewRelicAgentInternal* _sharedInstance;
     if (self) {
 
         
-        if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+        if ([NRMAFlags shouldEnableBackgroundReporting]) {
             // TODO: Check if this is the right place for this code?
             if (@available(iOS 13.0, *)) {
                 [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:@"com.newrelic.NRApp.bitcode" usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
@@ -201,7 +201,7 @@ static NewRelicAgentInternal* _sharedInstance;
                                                          name:UIApplicationWillTerminateNotification
                                                        object:[UIApplication sharedApplication]];
 
-            if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+            if ([NRMAFlags shouldEnableBackgroundReporting]) {
                 // TODO: Is this the right place to put this?
                 [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
             }
@@ -734,7 +734,7 @@ static UIBackgroundTaskIdentifier background_task;
                     // What would happen if we didn't call agentShutdown?
 
 
-                    if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+                    if ([NRMAFlags shouldEnableBackgroundReporting]) {
                         NRLOG_VERBOSE(@"used to agentShutdown. Continuing since BackgroundInstrumentation enabled.");
                     }
                     else {
@@ -749,7 +749,7 @@ static UIBackgroundTaskIdentifier background_task;
                 // Invalidate the background_task.
                 background_task = UIBackgroundTaskInvalid;
 
-                if ([NRMAFlags shouldEnableBackgroundInstrumentation]) {
+                if ([NRMAFlags shouldEnableBackgroundReporting]) {
                     // Schedule the next background harvest.
                     [self scheduleHeartbeatTask];
                 }

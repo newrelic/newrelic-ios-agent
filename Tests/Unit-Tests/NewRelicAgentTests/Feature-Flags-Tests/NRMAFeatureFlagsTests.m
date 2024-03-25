@@ -252,14 +252,14 @@ static NRMAFeatureFlags __originalFlags;
 
 - (void) testBackgroundInstrumentationEnable
 {
-    XCTAssertFalse([NRMAFlags shouldEnableBackgroundInstrumentation], @"Since no flags have been set, BackgroundInstrumentation Support should be false");
+    XCTAssertFalse([NRMAFlags shouldEnableBackgroundReporting], @"Since no flags have been set, BackgroundInstrumentation Support should be false");
 
-    [NRMAFlags enableFeatures:NRFeatureFlag_BackgroundInstrumentation];
+    [NRMAFlags enableFeatures:NRFeatureFlag_BackgroundReporting];
 
-    XCTAssertTrue([NRMAFlags shouldEnableBackgroundInstrumentation], @"BackgroundInstrumentation Should be enabled");
+    XCTAssertTrue([NRMAFlags shouldEnableBackgroundReporting], @"BackgroundInstrumentation Should be enabled");
 
-    [NRMAFlags disableFeatures:NRFeatureFlag_BackgroundInstrumentation];
+    [NRMAFlags disableFeatures:NRFeatureFlag_BackgroundReporting];
 
-    XCTAssertFalse([NRMAFlags shouldEnableBackgroundInstrumentation], @"BackgroundInstrumentation should be disabled");
+    XCTAssertFalse([NRMAFlags shouldEnableBackgroundReporting], @"BackgroundInstrumentation should be disabled");
 }
 @end

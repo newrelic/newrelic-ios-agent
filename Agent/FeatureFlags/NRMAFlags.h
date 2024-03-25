@@ -53,7 +53,7 @@
 
 + (BOOL) shouldEnableNewEventSystem;
 
-+ (BOOL) shouldEnableBackgroundInstrumentation;
++ (BOOL) shouldEnableBackgroundReporting;
 
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 

@@ -34,7 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
 
-        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundInstrumentation])
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
 
         NewRelic.replaceDeviceIdentifier("myDeviceId")
 
