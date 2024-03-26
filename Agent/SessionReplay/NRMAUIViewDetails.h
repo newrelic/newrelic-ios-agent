@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAUIViewDetails : NSObject<NRMAViewDetailProtocol>
 
+@property (nonatomic, assign) NSInteger viewId;
 @property (nonatomic, assign) CGRect frame;
 @property (nonatomic, strong) UIColor* backgroundColor;
 @property (nonatomic, assign) BOOL isHidden;

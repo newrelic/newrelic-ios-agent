@@ -991,6 +991,8 @@
 		348713EE2B8D56CB005A264C /* NRMAUIViewDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */; };
 		348713F12B910A9B005A264C /* NRMAUILabelDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = 348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */; };
 		348713F22B910A9B005A264C /* NRMAUILabelDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713F02B910A9B005A264C /* NRMAUILabelDetails.m */; };
+		348714242B979517005A264C /* NRMAIdGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 348714222B979517005A264C /* NRMAIdGenerator.h */; };
+		348714252B979517005A264C /* NRMAIdGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 348714232B979517005A264C /* NRMAIdGenerator.m */; };
 		34C1854F292464E500F10825 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929222912D726001449B6 /* Analytics.framework */; };
 		34C18550292464E500F10825 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929282912D72A001449B6 /* Connectivity.framework */; };
 		34C18551292464E500F10825 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
@@ -1942,6 +1944,8 @@
 		348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUILabelDetails.h; sourceTree = "<group>"; };
 		348713F02B910A9B005A264C /* NRMAUILabelDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUILabelDetails.m; sourceTree = "<group>"; };
 		348713F32B910DFC005A264C /* NRMAViewDetailProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAViewDetailProtocol.h; sourceTree = "<group>"; };
+		348714222B979517005A264C /* NRMAIdGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAIdGenerator.h; sourceTree = "<group>"; };
+		348714232B979517005A264C /* NRMAIdGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAIdGenerator.m; sourceTree = "<group>"; };
 		34A929072912D502001449B6 /* Hex.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Hex.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9290A2912D605001449B6 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9290E2912D65B001449B6 /* Analytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Analytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3264,6 +3268,8 @@
 				348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */,
 				348713F02B910A9B005A264C /* NRMAUILabelDetails.m */,
 				348713F32B910DFC005A264C /* NRMAViewDetailProtocol.h */,
+				348714222B979517005A264C /* NRMAIdGenerator.h */,
+				348714232B979517005A264C /* NRMAIdGenerator.m */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -3435,6 +3441,7 @@
 				02FF4A9A24DC652E00115469 /* NRMACrashReporterRecorder.h in Headers */,
 				02FF48BF24DC61F600115469 /* NRMAClassNode.h in Headers */,
 				02FF486124DC615A00115469 /* NRMANetworkRequestData+CppInterface.h in Headers */,
+				348714242B979517005A264C /* NRMAIdGenerator.h in Headers */,
 				02FF4B0224DC8CB200115469 /* flexbuffers.h in Headers */,
 				02FF488124DC61A100115469 /* NRMANSURLConnectionDelegateBase.h in Headers */,
 				02FF487124DC618F00115469 /* NRMAThread.h in Headers */,
@@ -4485,6 +4492,7 @@
 				34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
 				02FF4A7B24DC64FC00115469 /* NRMACustomTrace.m in Sources */,
 				02FF496524DC629000115469 /* NRMATraceConfigurations.m in Sources */,
+				348714252B979517005A264C /* NRMAIdGenerator.m in Sources */,
 				02FF4A0324DC647200115469 /* NRMAMeasurements.m in Sources */,
 				02FF48DD24DC622700115469 /* NRMAUncaughtExceptionHandler.m in Sources */,
 				02FF48EC24DC622700115469 /* NRMAExceptionHandlerJSONKeys.m in Sources */,

@@ -7,13 +7,14 @@
 //
 
 #import "NRMAUILabelDetails.h"
+#import "NRMAIdGenerator.h"
 
 @implementation NRMAUILabelDetails
 
 - (instancetype)initWithView:(UIView *)view {
     self = [super init];
     if(self) {
-        _frame = view.frame;
+        _frame = [view convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
         _backgroundColor = view.backgroundColor;
         _isHidden = view.isHidden;
         _viewName = NSStringFromClass([view class]);
@@ -21,13 +22,17 @@
                                        withString:@"x"
                                   startingAtIndex:0];
         _textColor = ((UILabel *)view).textColor;
+        _fontSize = ((UILabel *)view).font.pointSize;
+        _fontName = ((UILabel *)view).font.fontName;
+        _fontFamily = ((UILabel *)view).font.familyName;
+        _viewId = [NRMAIdGenerator generateID];
     }
     return self;
 }
 
 - (NSString *)description {
     //    NSString *descriptionString = [NSString stringWithFormat:@"View: %@\n\tFrame: %@\n\tBackground Color: %@", self.viewName, frameString, colorString];"
-    NSMutableString *descriptionString = [NSMutableString stringWithFormat:@"View: %@\n", self.viewName];
+    NSMutableString *descriptionString = [NSMutableString stringWithFormat:@"View: %@\n, id: %d", self.viewName, self.viewId];
     NSString *frameString = [NSString stringWithFormat:@"View Frame: {%f, %f}, {%f, %f}",
                              self.frame.origin.x, self.frame.origin.y,
                              self.frame.size.width, self.frame.size.height];
@@ -36,21 +41,21 @@
     
     if(self.backgroundColor != nil) {
         CGFloat *colorComponents = CGColorGetComponents(self.backgroundColor.CGColor);
-        NSString *colorString = [NSString stringWithFormat:@"Background Color: %f, %f, %f",
-                                 colorComponents[0],
-                                 colorComponents[1],
-                                 colorComponents[2],
-                                 colorComponents[3]];
+        NSString *colorString = [NSString stringWithFormat:@"#%02lX%02lX%02lX%02lX",
+                                 lroundf(colorComponents[0] * 255),
+                                 lroundf(colorComponents[1] * 255),
+                                 lroundf(colorComponents[2] * 255),
+                                 lroundf(colorComponents[3] * 255)];
         [descriptionString appendFormat:@"\t%@", colorString];
         
         [descriptionString appendFormat:@"\tText: %@", self.labelText];
         
         CGFloat *textColorComponents = CGColorGetComponents(self.textColor.CGColor);
-        NSString *textColor = [NSString stringWithFormat:@"Text Color: %f, %f, %f",
-                               textColorComponents[0],
-                               textColorComponents[1],
-                               textColorComponents[2],
-                               textColorComponents[3]];
+        NSString *textColor = [NSString stringWithFormat:@"#%02lX%02lX%02lX%02lX",
+                               lroundf(textColorComponents[0] * 255),
+                               lroundf(textColorComponents[1] * 255),
+                               lroundf(textColorComponents[2] * 255),
+                               lroundf(textColorComponents[3] * 255)];
         [descriptionString appendFormat:@"\t%@", textColor];
     }
     
@@ -58,26 +63,45 @@
 }
 
 - (NSDictionary *)jsonDescription {
-    CGFloat *backgroundColorComponents = CGColorGetComponents(self.backgroundColor.CGColor);
-    NSString *backgroundColor = [NSString stringWithFormat:@"%f, %f, %f",
-                             backgroundColorComponents[0],
-                             backgroundColorComponents[1],
-                             backgroundColorComponents[2],
-                             backgroundColorComponents[3]];
+    NSMutableDictionary *jsonDictionary = [[NSMutableDictionary alloc] init];
+    jsonDictionary[@"frame"] = NSStringFromCGRect(self.frame);
+    jsonDictionary[@"isHidden"] = @(self.isHidden);
+    jsonDictionary[@"name"] = self.viewName;
+    jsonDictionary[@"textContent"] = self.labelText;
+    jsonDictionary[@"id"] = @(self.viewId);
+    jsonDictionary[@"type"] = @(3);
     
     CGFloat *textColorComponents = CGColorGetComponents(self.textColor.CGColor);
-    NSString *textColor = [NSString stringWithFormat:@"%f, %f, %f",
-                           textColorComponents[0],
-                           textColorComponents[1],
-                           textColorComponents[2],
-                           textColorComponents[3]];
+    NSString *textColor = [NSString stringWithFormat:@"#%02lX%02lX%02lX",
+                           lroundf(textColorComponents[0] * 255),
+                           lroundf(textColorComponents[1] * 255),
+                           lroundf(textColorComponents[2] * 255)];
+    jsonDictionary[@"textColor"] = textColor;
     
-    NSDictionary *jsonDictionary = @{@"frame":NSStringFromCGRect(self.frame),
-                                     @"backgroundColor":backgroundColor,
-                                     @"isHidden":@(self.isHidden),
-                                     @"name":self.viewName,
-                                     @"text":self.labelText,
-                                     @"textColor":textColor};
+    NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
+
+    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%f;height:%f", self.frame.origin.x,
+                             self.frame.origin.y,
+                             self.frame.size.width,
+                             self.frame.size.height];
+    
+    frameString = [frameString stringByAppendingFormat:@";color:%@", textColor];
+    
+    frameString = [frameString stringByAppendingFormat:@";font: %fpt %@", self.fontSize, self.fontFamily];
+    
+    if(self.backgroundColor != nil) {
+        CGFloat *colorComponents = CGColorGetComponents(self.backgroundColor.CGColor);
+        NSString *colorString = [NSString stringWithFormat:@"#%02lX%02lX%02lX",
+                                 lroundf(colorComponents[0] * 255),
+                                 lroundf(colorComponents[1] * 255),
+                                 lroundf(colorComponents[2] * 255)];
+        jsonDictionary[@"backgroundColor"] = colorString;
+        frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
+    }
+    
+    attributesDictionary[@"style"] = frameString;
+    jsonDictionary[@"attributes"] = attributesDictionary;
+    
     return jsonDictionary;
 }
 
