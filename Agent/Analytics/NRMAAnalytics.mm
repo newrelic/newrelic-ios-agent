@@ -265,7 +265,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
         return [_eventManager addEvent:[event autorelease]];
     } else {
-        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkOfflineStatus]);
+        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
 }
 
@@ -506,7 +506,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
-        return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus]);
+        return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
     return NO;
 }
@@ -518,7 +518,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
 
-        return _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData,std::move(payload), [self checkOfflineStatus]);
+        return _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData,std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
 
     return NO;
@@ -531,7 +531,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
 
-        return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus]);
+        return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
     return NO;
 }
@@ -911,6 +911,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             NRMANetworkStatus status = [r currentReachabilityStatus];
             return (status == NotReachable);
         }
+    }
+    return false;
+}
+
+- (BOOL) checkBackgroundStatus {
+    if([NRMAFlags shouldEnableBackgroundReporting]) {
+
+        return [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
     }
     return false;
 }

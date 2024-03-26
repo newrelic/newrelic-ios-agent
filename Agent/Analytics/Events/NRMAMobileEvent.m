@@ -6,6 +6,8 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
+#import <UIKit/UIKit.h>
+
 #import "NRMAMobileEvent.h"
 #import "Constants.h"
 #import "NRMAFlags.h"
@@ -36,6 +38,12 @@ static NSString* const kAttributesKey = @"Attributes";
                 if (status == NotReachable) {
                     [self addAttribute:kNRMA_Attrib_offline value:@YES];
                 }
+            }
+        }
+        // Handle Background attribute addition.
+        if([NRMAFlags shouldEnableBackgroundReporting]) {
+            if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+                [self addAttribute:kNRMA_Attrib_background value:@YES];
             }
         }
     }

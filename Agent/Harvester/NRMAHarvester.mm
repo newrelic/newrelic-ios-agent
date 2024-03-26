@@ -352,7 +352,18 @@
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif
-        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Collector/Harvest"
+
+        // TODO: Modify this Support Metric to use NewRelicAgentInternal applicationState.
+        // We shouldn't use [UIApplication sharedApplication].applicationState on background thread.
+
+        NSString *name;
+        if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
+        }
+        else {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest";
+        }
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:name
                                                         value:[NSNumber numberWithDouble:harvestTimer.timeElapsedInSeconds]
                                                         scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
