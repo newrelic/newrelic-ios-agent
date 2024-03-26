@@ -15,11 +15,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAUILabelDetails : NSObject<NRMAViewDetailProtocol>
 
+@property (nonatomic, assign) NSInteger viewId;
 @property (nonatomic, assign) CGRect frame;
 @property (nonatomic, strong) UIColor* backgroundColor;
 @property (nonatomic, assign) BOOL isHidden;
 @property (nonatomic, strong) NSString* viewName;
 @property (nonatomic, strong) NSString* labelText;
+@property (nonatomic, assign) CGFloat fontSize;
+@property (nonatomic, strong) NSString* fontName;
+@property (nonatomic, strong) NSString* fontFamily; 
 @property (nonatomic, strong) UIColor* textColor;
 
 - (instancetype)initWithView:(UIView *)view;

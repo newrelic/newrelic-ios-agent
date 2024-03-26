@@ -17,32 +17,33 @@ class ViewController: UIViewController {
     var spaceImageView = UIImageView()
     var spaceLabel = UILabel()
     var spaceStack = UIStackView()
+    var helloButton = UIButton()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 #if os(iOS)
-        self.view.backgroundColor = .systemBackground
+        self.view.backgroundColor = .orange
 #endif
         setupSpaceStack()
-        setupButtonsTable()
+//        setupButtonsTable()
         
-        viewModel.error.onUpdate = { [weak self] _ in
-            if let error = self?.viewModel.error.value {
-                NewRelic.recordError(error)
-            }
-        }
-
-        viewModel.apodResponse.onUpdate = { [weak self] _ in
-            if let url = self?.viewModel.apodResponse.value?.url {
-                self?.spaceImageView.loadImage(withUrl: url)
-            }
-            if let title = self?.viewModel.apodResponse.value?.title, let date = self?.viewModel.apodResponse.value?.date{
-                self?.spaceLabel.text = title + ", " + date
-            }
-        }
-        
-        viewModel.loadApodData()
+//        viewModel.error.onUpdate = { [weak self] _ in
+//            if let error = self?.viewModel.error.value {
+//                NewRelic.recordError(error)
+//            }
+//        }
+//
+//        viewModel.apodResponse.onUpdate = { [weak self] _ in
+//            if let url = self?.viewModel.apodResponse.value?.url {
+//                self?.spaceImageView.loadImage(withUrl: url)
+//            }
+//            if let title = self?.viewModel.apodResponse.value?.title, let date = self?.viewModel.apodResponse.value?.date{
+//                self?.spaceLabel.text = title + ", " + date
+//            }
+//        }
+//        
+//        viewModel.loadApodData()
 
         NewRelic.logInfo("ViewController viewDidLoad finished.")
     }
@@ -60,9 +61,13 @@ class ViewController: UIViewController {
         
         //Text Label
         spaceLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
-        spaceLabel.text  = ""
+        spaceLabel.text  = "Hello, World"
         spaceLabel.textAlignment = .center
         spaceLabel.numberOfLines = 0
+        
+        //Button
+        helloButton.setTitleColor(.green, for: .normal)
+        helloButton.setTitle("Hello", for: .normal)
         
         //Stack View
         spaceStack.axis = .vertical
@@ -70,8 +75,9 @@ class ViewController: UIViewController {
         spaceStack.alignment = .center
         spaceStack.spacing = 16.0
 
-        spaceStack.addArrangedSubview(spaceImageView)
+//        spaceStack.addArrangedSubview(spaceImageView)
         spaceStack.addArrangedSubview(spaceLabel)
+        spaceStack.addArrangedSubview(helloButton)
         spaceStack.translatesAutoresizingMaskIntoConstraints = false
         
         self.view.addSubview(spaceStack)
