@@ -12,6 +12,7 @@
 #import "Constants.h"
 #import "NRMAFlags.h"
 #import "NewRelicInternalUtils.h"
+#import "NewRelicAgentInternal.h"
 
 static NSString* const kTimestampKey = @"Timestamp";
 static NSString* const kSessionElapsedTimeKey = @"SessionElapsedTime";
@@ -42,7 +43,7 @@ static NSString* const kAttributesKey = @"Attributes";
         }
         // Handle Background attribute addition.
         if([NRMAFlags shouldEnableBackgroundReporting]) {
-            if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+            if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
                 [self addAttribute:kNRMA_Attrib_background value:@YES];
             }
         }

@@ -150,18 +150,15 @@ static NewRelicAgentInternal* _sharedInstance;
     self = [super init];
     if (self) {
 
-        
         if ([NRMAFlags shouldEnableBackgroundReporting]) {
-            // TODO: Check if this is the right place for this code?
             if (@available(iOS 13.0, *)) {
-                [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:@"com.newrelic.NRApp.bitcode" usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
+                [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:[[NSBundle mainBundle] bundleIdentifier] usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
                     [self handleAppRefreshTask: task];
                 }];
             } else {
                 // Fallback on earlier versions
             }
         }
-
 
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
@@ -202,7 +199,6 @@ static NewRelicAgentInternal* _sharedInstance;
                                                        object:[UIApplication sharedApplication]];
 
             if ([NRMAFlags shouldEnableBackgroundReporting]) {
-                // TODO: Is this the right place to put this?
                 [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
             }
 
@@ -551,6 +547,8 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
         return;
     }
 
+    _currentApplicationState = UIApplicationStateActive;
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                              0),
                    ^{
@@ -640,6 +638,8 @@ static UIBackgroundTaskIdentifier background_task;
     }
     // We are leaving the background.
     didFireEnterForeground = NO;
+    
+    _currentApplicationState = UIApplicationStateBackground;
 
     [[NRMAHarvestController harvestController].harvestTimer stop];
 
@@ -730,10 +730,6 @@ static UIBackgroundTaskIdentifier background_task;
                                                      selector:@"execute"];
                 } @finally {
 
-
-                    // What would happen if we didn't call agentShutdown?
-
-
                     if ([NRMAFlags shouldEnableBackgroundReporting]) {
                         NRLOG_VERBOSE(@"used to agentShutdown. Continuing since BackgroundInstrumentation enabled.");
                     }
@@ -789,8 +785,7 @@ static UIBackgroundTaskIdentifier background_task;
 // We only support background fetch in iOS 13+
 - (void) scheduleHeartbeatTask {
     if (@available(iOS 13.0, *)) {
-        // TODO: Pass instrumented app bundle id
-        BGAppRefreshTaskRequest *request = [[BGAppRefreshTaskRequest alloc] initWithIdentifier:@"com.newrelic.NRApp.bitcode"];
+        BGAppRefreshTaskRequest *request = [[BGAppRefreshTaskRequest alloc] initWithIdentifier:[[NSBundle mainBundle] bundleIdentifier]];
         request.earliestBeginDate = nil;//[NSDate dateWithTimeIntervalSinceNow:5 * 60];
 
         NSError *error = nil;

@@ -21,6 +21,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
 #import "Constants.h"
+#import "NewRelicAgentInternal.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -357,7 +358,8 @@
         // We shouldn't use [UIApplication sharedApplication].applicationState on background thread.
 
         NSString *name;
-        if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+        
+        if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
             name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
         }
         else {

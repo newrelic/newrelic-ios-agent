@@ -46,6 +46,8 @@
 
 @property (nonatomic, assign) BOOL isShutdown;
 
+@property (nonatomic, readonly, assign) UIApplicationState currentApplicationState;
+
 + (void)shutdown;
 
 + (void)startWithApplicationToken:(NSString*)appToken
