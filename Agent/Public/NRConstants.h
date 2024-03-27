@@ -125,6 +125,7 @@ typedef NSString NRMetricUnit;
 // Defines Format string where 4 arguments are NativePlatform, Platform, Destination and Endpoint.
 #define kNRMAMaxPayloadSizeLimitSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/MaxPayloadSizeLimit/%@"
 #define kNRMAMaxPayloadSizeLimit         1000000 // bytes
+#define kNRMAMaxLogPayloadSizeLimit      700000 // bytes
 
 #define kNRMAOfflineSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/OfflinePayload/bytes"
 
@@ -139,6 +140,8 @@ typedef NSString NRMetricUnit;
 #define kNRMAMetricSuffixTime            @"Time"
 
 #define kNRMAExceptionHandlerHijackedMetric kNRAgentHealthPrefix @"/Hijacked/ExceptionHandler"
+
+#define kNRMAConfigurationUpdated        @"Supportability/Mobile/%@/%@/Configuration/Updated"
 
 //Network info cache constants
 #define kNRCarrierNameCacheLifetime     50 // milliseconds
@@ -161,6 +164,11 @@ typedef NSString NRMetricUnit;
 #define kPlatformPlaceholder            @"[PLATFORM]"
 #define NRMA_METRIC_APP_LAUNCH_COLD        @"AppLaunch/Cold"
 #define NRMA_METRIC_APP_LAUNCH_RESUME      @"AppLaunch/Hot"
+
+// Logging
+#define kNRMALoggingMetric kNRAgentHealthPrefix @"/%@/%@/LogReporting"
+#define kNRMALoggingMetricFailedUpload    kNRMALoggingMetric @"/FailedUpload"
+#define kNRMALoggingMetricSuccessfulSize    kNRMALoggingMetric @"/Size/Uncompressed"
 
 // Network Failure Codes
 enum NRNetworkFailureCode {

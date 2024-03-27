@@ -14,6 +14,7 @@
 #define UNAUTHORIZED           401
 #define FORBIDDEN              403
 #define NOT_FOUND              404
+#define CONFIGURATION_UPDATE   409
 #define ENTITY_TOO_LARGE       413
 #define INVALID_AGENT_ID       450
 #define UNSUPPORTED_MEDIA_TYPE 415

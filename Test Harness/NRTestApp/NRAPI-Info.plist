@@ -6,7 +6,7 @@
 	<string></string>
 	<key>collectorAddress</key>
 	<string></string>
-	<key>logIngestKey</key>
+	<key>logEntityGuid</key>
 	<string></string>
 	<key>NRAPIKey</key>
 	<string></string>

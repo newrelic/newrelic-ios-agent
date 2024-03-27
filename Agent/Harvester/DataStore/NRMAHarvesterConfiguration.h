@@ -29,6 +29,8 @@
 #define kNRMA_ACCOUNT_ID @"account_id"
 #define kNMRA_APPLICATION_ID @"application_id"
 #define kNRMA_TRUSTED_ACCOUNT_KEY @"trusted_account_key"
+#define kNRMA_ENTITY_GUID_KEY @"entity_guid"
+#define kNRMA_LOG_REPORTING_KEY @"log_reporting"
 
 #define NRMA_DEFAULT_COLLECT_NETWORK_ERRORS YES  // boolean
 #define NRMA_DEFAULT_REPORT_PERIOD 60            // seconds
@@ -60,6 +62,12 @@
 @property(nonatomic,assign) long long account_id;
 @property(nonatomic,assign) long long application_id;
 @property(nonatomic,strong) NSString* trusted_account_key;
+@property(nonatomic,strong) NSString* entity_guid;
+@property(nonatomic,assign) BOOL      log_reporting_enabled;
+
+// CAN BE
+// NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
+@property(nonatomic,assign) NSString* log_reporting_level;
 
 + (id) defaultHarvesterConfiguration;
 - (BOOL) isValid;

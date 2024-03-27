@@ -24,6 +24,7 @@ static const NSString* kDISABLE_STRING = @"DISABLE_NEW_RELIC";
         case FORBIDDEN:
         case INVALID_AGENT_ID:
         case UNSUPPORTED_MEDIA_TYPE:
+        case CONFIGURATION_UPDATE:
             return self.statusCode;
             break;
         default:
