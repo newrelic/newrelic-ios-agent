@@ -49,7 +49,7 @@
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/SystemConfiguration.h>
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
 #endif
 
@@ -68,7 +68,7 @@ typedef enum {
     NSString* _wanNetworkType;
 }
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
 - (CTCarrier*) getCarrierInfo;
 #endif
 - (NSString *)getCurrentWanNetworkType:(NRMANetworkStatus)networkStatus;

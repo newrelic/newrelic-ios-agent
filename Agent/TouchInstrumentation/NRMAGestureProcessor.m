@@ -72,7 +72,10 @@
     NSMutableArray* readableTouch = [NSMutableArray new];
     NSArray* touches = [[event allTouches] allObjects];
     for(UITouch* touch in touches) {
+#if !TARGET_OS_VISION
+
         [readableTouch addObject:NSStringFromCGPoint([touch locationInView:[[UIApplication sharedApplication] keyWindow]])];
+#endif
     }
 
     return [readableTouch componentsJoinedByString:@","];

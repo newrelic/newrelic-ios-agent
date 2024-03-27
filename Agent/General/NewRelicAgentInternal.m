@@ -500,9 +500,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
+#if !TARGET_OS_VISION
         if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
-            [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+           [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
         }
+#endif
     }
     
     if([NRMAFlags shouldEnableGestureInstrumentation])
@@ -863,11 +865,7 @@ static UIBackgroundTaskIdentifier background_task;
 + (void) startWithApplicationToken:(NSString*)appToken
                andCollectorAddress:(NSString*)url
           andCrashCollectorAddress:(NSString*)crashCollector {
-    if ([NRMANonARCMethods OSMajorVersion] < 5) {
-        NRLOG_WARNING(@"NewRelic: Cowardly avoiding initialization on pre-iOS 5 device");
-        return;
-    }
-
+    
     static dispatch_once_t onceToken = 0;
     if (_NRMAAgentTestModeEnabled) {
         onceToken = 0;

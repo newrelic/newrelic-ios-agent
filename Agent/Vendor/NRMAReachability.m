@@ -60,7 +60,7 @@
 #import "NRConstants.h"
 
 @interface NRMAReachability ()
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
 @property(strong, atomic) CTTelephonyNetworkInfo *networkInfo;
 #endif
 @end
@@ -71,7 +71,7 @@
 - (instancetype)init {
     self = [super init];
     if (self) {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
         self.networkInfo = [CTTelephonyNetworkInfo new];
         if(@available(iOS 12.0, *)) {
             if([self.networkInfo respondsToSelector:@selector(serviceCurrentRadioAccessTechnology)]
@@ -91,7 +91,7 @@
 }
 
 - (void)radioAccessDidChange:(NSNotification *)notif {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
     if(@available(iOS 12.0, *)) {
         if([self.networkInfo respondsToSelector:@selector(serviceCurrentRadioAccessTechnology)]
            && [self.networkInfo.serviceCurrentRadioAccessTechnology count]) {
@@ -103,7 +103,7 @@
 #endif
 }
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
 - (CTCarrier*) getCarrierInfo {
     return self.networkInfo.subscriberCellularProvider;
 }
@@ -116,7 +116,7 @@
 
 - (NSString *)getCurrentWanNetworkType:(NRMANetworkStatus)networkStatus
 {
-#if TARGET_OS_TV
+#if TARGET_OS_TV || TARGET_OS_VISION
     return NRMA_CARRIER_WIFI;
 #else
     @synchronized (_wanNetworkType) {
