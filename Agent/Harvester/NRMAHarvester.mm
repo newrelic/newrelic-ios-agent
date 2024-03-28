@@ -353,12 +353,7 @@
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif
-
-        // TODO: Modify this Support Metric to use NewRelicAgentInternal applicationState.
-        // We shouldn't use [UIApplication sharedApplication].applicationState on background thread.
-
         NSString *name;
-        
         if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
             name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
         }

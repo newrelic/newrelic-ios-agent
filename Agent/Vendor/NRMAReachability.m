@@ -150,10 +150,7 @@
 
             if (@available(iOS 14.1, *)) {
                 if ([_wanNetworkType isEqualToString:CTRadioAccessTechnologyNR] || [_wanNetworkType isEqualToString:CTRadioAccessTechnologyNRNSA]) {return @"5G";}
-            } else {
-                // Fallback on earlier versions
             }
-
         }
     }
 #endif

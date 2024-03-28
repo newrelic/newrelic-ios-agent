@@ -150,13 +150,12 @@ static NewRelicAgentInternal* _sharedInstance;
     self = [super init];
     if (self) {
 
+        // NOTE: BackgroundReporting is only enabled for iOS 13+.
         if ([NRMAFlags shouldEnableBackgroundReporting]) {
             if (@available(iOS 13.0, *)) {
                 [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:[[NSBundle mainBundle] bundleIdentifier] usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
                     [self handleAppRefreshTask: task];
                 }];
-            } else {
-                // Fallback on earlier versions
             }
         }
 
@@ -799,10 +798,7 @@ static UIBackgroundTaskIdentifier background_task;
             NRLOG_VERBOSE(@"Scheduled heartbeat");
 
         }
-    } else {
-        // Fallback on earlier versions
     }
-
 }
 
 - (void) handleAppRefreshTask:(BGAppRefreshTask *)task {
