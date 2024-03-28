@@ -91,9 +91,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 
-    // Background fetch handling\
-
-    // TODO: Must add this and then we will capture in NewRelicAgentInternal
+    // Background fetch handling.
     func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
 
         NewRelic.logVerbose("performFetchWithCompletionHandler called")

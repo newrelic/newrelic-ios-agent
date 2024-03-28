@@ -808,21 +808,18 @@ static UIBackgroundTaskIdentifier background_task;
         // We always reschedule the heartbeat task.
         [self scheduleHeartbeatTask];
 
-        [task setExpirationHandler:^{
-            __weak BGTask *weakTask = task;
-            if (weakTask) {
-                [weakTask setTaskCompletedWithSuccess:false];
-            }
-            //TODO: Invalidate and cancel the harvest request
-            // weakTask.invalidateAndCancel()
+        __weak BGAppRefreshTask *weakTask = task;
 
+        [task setExpirationHandler:^{
+            __strong BGAppRefreshTask *strongTask = weakTask;
+            if (strongTask) {
+                [strongTask setTaskCompletedWithSuccess:false];
+            }
         }];
 
         [[[NRMAHarvestController harvestController] harvester] execute];
 
-        // TODO: Make sure this is the right place to call this.
         [task setTaskCompletedWithSuccess:true];
-
     }
     else {
         NRLOG_VERBOSE(@"No background tasks pre iOS 13");
