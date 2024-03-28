@@ -154,6 +154,8 @@
     XCTAssertNoThrow([report JSONObject]);
 }
 
+// TODO: Debug occasional crash on CFUUIDCreateString(NULL, report.uuidRef)
+//                                 NRMACrashDataWriter
 -(void) testCrashDataWriter {
 
      NSError *error;

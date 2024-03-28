@@ -127,17 +127,20 @@ namespace NewRelic {
         bool addRequestEvent(const NewRelic::NetworkRequestData& requestData,
                              const NewRelic::NetworkResponseData& responseData,
                              std::unique_ptr<const Connectivity::Payload> payload,
-                             bool isOffline);
+                             bool isOffline,
+                             bool isBackground);
 
         bool addHTTPErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                const NewRelic::NetworkResponseData& responseData,
                                std::unique_ptr<const Connectivity::Payload> payload,
-                               bool isOffline);
+                               bool isOffline,
+                               bool isBackground);
 
         bool addNetworkErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                   const NewRelic::NetworkResponseData& responseData,
                                   std::unique_ptr<const Connectivity::Payload> payload,
-                                  bool isOffline);
+                                  bool isOffline,
+                                  bool isBackground);
 
         bool addUserActionEvent(const char *functionName,
                                 const char *targetObject,
@@ -147,9 +150,10 @@ namespace NewRelic {
                                 const char *actionType,
                                 const char *controlFrame,
                                 const char *orientation,
-                                bool isOffline);
+                                bool isOffline,
+                                bool isBackground);
 
-        bool addInteractionEvent(const char *name, double duration_sec, bool isOffline);
+        bool addInteractionEvent(const char *name, double duration_sec, bool isOffline, bool isBackground);
 
         std::shared_ptr <NRJSON::JsonArray> getEventsJSON(bool clearEvents);
 
