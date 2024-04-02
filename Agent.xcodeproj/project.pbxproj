@@ -3367,6 +3367,8 @@
 				F83D615A2A6976EA00965855 /* NRMAURLSessionWebSocketDelegateBase.h */,
 			);
 			path = NSURLSessionWebSocket;
+            sourceTree = "<group>";
+        };
 		F8FBFA3C2A71A32400CDC8C5 /* Events */ = {
 			isa = PBXGroup;
 			children = (
