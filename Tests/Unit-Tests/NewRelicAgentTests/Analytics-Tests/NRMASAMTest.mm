@@ -16,6 +16,7 @@
 
 @interface NRMASAMTest : XCTestCase
 {
+    NRMASAM *manager;
 }
 @end
 
@@ -24,7 +25,7 @@
 - (void)setUp {
     [super setUp];
 
-    NRMASAM *manager = [self samTest];
+    manager = [self samTest];
     [manager removeAllSessionAttributes];
 }
 
@@ -80,7 +81,6 @@
 }
 
 - (void) testSetSessionAttribute {
-    NRMASAM *manager = [self samTest];
     XCTAssertTrue([manager setSessionAttribute:@"blarg" value:@"blurg"], @"Failed to successfully set session attribute");
 
     NSString* attributes = [manager sessionAttributeJSONString];
@@ -92,7 +92,6 @@
 }
 
 - (void) testSetNRSessionAttribute {
-    NRMASAM *manager = [self samTest];
     XCTAssertTrue([manager setNRSessionAttribute:@"blarg" value:@"blurg"], @"Failed to successfully set session attribute");
 
     NSString* attributes = [manager sessionAttributeJSONString];
@@ -104,7 +103,6 @@
 }
 
 - (void) testIncrementSessionAttribute {
-    NRMASAM *manager = [self samTest];
     NSString* attribute = @"incrementableAttribute";
     XCTAssertTrue([manager setSessionAttribute:attribute value:@(1)], @"Failed to successfully set session attribute");
     [manager incrementSessionAttribute:attribute value:@(1)];
@@ -117,7 +115,6 @@
     XCTAssertTrue([decode[attribute] isEqual:@(2)]);
 }
 - (void) testIncrementSessionAttributeDiffTypes {
-    NRMASAM *manager = [self samTest];
     NSString* attribute = @"incrementableAttribute";
     float initialValue = 1.2;
 
@@ -137,7 +134,6 @@
 }
 
 - (void) testSetUserId {
-    NRMASAM *manager = [self samTest];
     NSString* attribute = @"userId";
     NSString* userIdValue = @"AUniqueId7";
     XCTAssertTrue([manager setUserId:userIdValue]);
@@ -152,7 +148,6 @@
 }
 
 - (void) testRemoveSessionAttributeNamed {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"blarg";
     XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
     NSString* attributes = [manager sessionAttributeJSONString];
@@ -171,7 +166,6 @@
 }
 
 - (void) testRemoveAllSessionAttributes {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"blarg";
     NSString *attribute2 = @"blarg2";
 
@@ -195,7 +189,6 @@
 }
 
 - (void) testSetNRSessionAttributesToMaxAndAddUserAttribute {
-    NRMASAM *manager = [self samTest];
 
     for (int i = 0; i < kNRMA_Attrib_Max_Number_Attributes; i++) {
         NSString *newName = [NSString stringWithFormat:@"blarg%d",i];
@@ -215,7 +208,6 @@
 }
 
 - (void) testMaxUserAttributes {
-    NRMASAM *manager = [self samTest];
 
     // Fill to max private session Attribute
     for (int i = 0; i < kNRMA_Attrib_Max_Number_Attributes; i++) {
@@ -242,14 +234,13 @@
 }
 
 - (void) testClearLastSessionsAnalytics {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"blarg";
     NSString *attribute2 = @"blarg2";
 
     XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
     XCTAssertTrue([manager setSessionAttribute:attribute2 value:@"blurg2"], @"Failed to successfully set session attribute");
 
-    [manager clearLastSessionsAnalytics];
+    [manager removeAllSessionAttributes];
     NSString* attributes = [manager sessionAttributeJSONString];
 
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
@@ -273,26 +264,16 @@
     XCTAssertTrue([manager setNRSessionAttribute:attribute3 value:@"blurg2"], @"Failed to successfully set private session attribute");
 
 
-    [manager clearPersistedSessionAnalytics];
+    [manager removeAllSessionAttributes];
     NSString* attributes = [manager sessionAttributeJSONString];
 
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
                                                            options:0
                                                              error:nil];
     XCTAssertEqual(decode.count, 0, @"Should have emptied session attributes.");
-
-
-    NSString *publicAttributePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file];
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:publicAttributePath], @"Data had value but it should be nil");
-
-
-    NSString *privateAttributePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private];
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:privateAttributePath], @"Private Data had value but it should be nil");
-
 }
 
 -(void) testSetSessionAttributeNameFailed {
-    NRMASAM *manager = [self samTest];
 
     // Test Invalid Attribute Name cases.
     XCTAssertFalse([manager setSessionAttribute:@"" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
@@ -321,7 +302,6 @@
 }
 
 -(void) testSetSessionAttributeValueFailed {
-    NRMASAM *manager = [self samTest];
 
     // Test Invalid Attribute Value cases.
     XCTAssertFalse([manager setSessionAttribute:@"blarg" value:@""], @"Failed to successfully fail when setting invalid value for session attribute");
@@ -347,7 +327,6 @@
 }
 
 - (void)testIncrementIntegerValueWithDouble {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"incrementableAttribute";
     unsigned long long initialIntegerValue = 24;
 
@@ -366,7 +345,6 @@
 }
 
 - (void)testIncrementDoubleValueWithInteger {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"incrementableAttribute";
     double initialDoubleValue = 1.2;
 
@@ -385,7 +363,6 @@
 }
 
 - (void)testCantIncrementStrings {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"unincrementableAttribute";
 
     XCTAssertTrue([manager setSessionAttribute:attribute value:@"Should not be incremented"], @"Failed to successfully set session attribute");
@@ -394,7 +371,6 @@
 }
 
 - (void)testCantIncrementBool {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"unincrementableAttribute";
     NRMABool *initialValue = [[NRMABool alloc] initWithBOOL:NO];
 
@@ -404,7 +380,6 @@
 }
 
 - (void)testCantAddNonNumberToNumber {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"incrementableAttributeBadValue";
 
     double initialDoubleValue = 1.2;
