@@ -76,7 +76,6 @@
  
  - NRFeatureFlag_OfflineStorage
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
-*/
 
 - NRFeatureFlag_NSURLSessionWebSocketInstrumentation
    Disabled by default. Enable or disable (default) flag for automatic instrumentation NSURLSessionWebSocketTasks.

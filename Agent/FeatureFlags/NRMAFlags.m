@@ -164,6 +164,7 @@ static NSString* __deviceIdentifierReplacement = NULL;
 
 + (BOOL) shouldEnableNSURLSessionWebSocketInstrumentationSupport {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_NSURLSessionWebSocketInstrumentation) != 0;
+}
 
 + (BOOL) shouldEnableOfflineStorage {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_OfflineStorage) != 0;
@@ -231,7 +232,7 @@ static NSString* __deviceIdentifierReplacement = NULL;
 
     if ((flags & NRFeatureFlag_NSURLSessionWebSocketInstrumentation) == NRFeatureFlag_NSURLSessionWebSocketInstrumentation) {
         [retArray addObject:@"NSURLSessionWebSocketInstrumentationSupport"];
-
+    }
     if ((flags & NRFeatureFlag_OfflineStorage) == NRFeatureFlag_OfflineStorage) {
         [retArray addObject:@"OfflineStorage"];
     }
@@ -241,7 +242,6 @@ static NSString* __deviceIdentifierReplacement = NULL;
 //        [retArray addObject:@"LogReporting"];
 //    }
 
-  return retArray;
     if ((flags & NRFeatureFlag_NewEventSystem) == NRFeatureFlag_NewEventSystem) {
         [retArray addObject:@"NewEventSystem"];
     }
