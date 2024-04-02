@@ -20,8 +20,8 @@ enum ViewControllerProvider {
         return viewController
     }
 #if os(iOS)
-    static var webViewController : WebViewController {
-        let viewController = WebViewController()
+    static var webViewController : WebSocketViewController {
+        let viewController = WebSocketViewController()
         return viewController
     }
 #endif

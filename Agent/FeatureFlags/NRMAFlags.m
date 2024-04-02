@@ -162,6 +162,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_SwiftAsyncURLSessionSupport) != 0;
 }
 
++ (BOOL) shouldEnableNSURLSessionWebSocketInstrumentationSupport {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_NSURLSessionWebSocketInstrumentation) != 0;
+}
+
 + (BOOL) shouldEnableOfflineStorage {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_OfflineStorage) != 0;
 }
@@ -170,9 +174,11 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return NO;
     //return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
 }
+
 + (BOOL) shouldEnableNewEventSystem {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_NewEventSystem) != 0;
 }
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -223,6 +229,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_SwiftAsyncURLSessionSupport) == NRFeatureFlag_SwiftAsyncURLSessionSupport) {
         [retArray addObject:@"SwiftAsyncURLSessionSupport"];
     }
+
+    if ((flags & NRFeatureFlag_NSURLSessionWebSocketInstrumentation) == NRFeatureFlag_NSURLSessionWebSocketInstrumentation) {
+        [retArray addObject:@"NSURLSessionWebSocketInstrumentationSupport"];
+    }
     if ((flags & NRFeatureFlag_OfflineStorage) == NRFeatureFlag_OfflineStorage) {
         [retArray addObject:@"OfflineStorage"];
     }
@@ -231,6 +241,7 @@ static NSString* __deviceIdentifierReplacement = NULL;
 //    if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
 //        [retArray addObject:@"LogReporting"];
 //    }
+
     if ((flags & NRFeatureFlag_NewEventSystem) == NRFeatureFlag_NewEventSystem) {
         [retArray addObject:@"NewEventSystem"];
     }
