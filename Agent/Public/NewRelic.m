@@ -523,7 +523,8 @@
     }
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:name
-                                                                                     value:value];
+                                                                                     value:value
+                                                                                    persistent:YES];
 }
 
 + (BOOL) incrementAttribute:(NSString*)name {
@@ -538,12 +539,15 @@
     }
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController incrementSessionAttribute:name
-                                                                                           value:value];
+                                                                                           value:value
+                                                                                      persistent:YES];
 }
 
 + (BOOL) setUserId:(NSString*)userId {
     return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:@"userId"
-                                                                                     value:userId];
+                                                                                     value:userId
+                                                                                persistent:YES];
+
 }
 
 + (BOOL) removeAttribute:(NSString*)name {

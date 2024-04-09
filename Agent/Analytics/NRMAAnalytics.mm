@@ -659,6 +659,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if([NewRelicInternalUtils isFloat:number]) {
                     return _analyticsController->addSessionAttribute([name UTF8String], [number doubleValue]);
                 }
+                if ([NewRelicInternalUtils isBool:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], (bool)[number boolValue]);
+                }
                 return NO;
             } else if ([value isKindOfClass:[NSString class]]) {
                 NSString* string = (NSString*)value;
@@ -965,6 +968,20 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue]); //has internal exception handling
         } else if ([NewRelicInternalUtils isFloat:number]) {
             return _analyticsController->incrementSessionAttribute([name UTF8String], [number doubleValue]); //has internal exception handling
+        } else {
+            return NO;
+        }
+    }
+}
+
+- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent {
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager incrementSessionAttribute:name value:number];
+    } else {
+        if ([NewRelicInternalUtils isInteger:number]) {
+            return _analyticsController->incrementSessionAttribute([name UTF8String], (unsigned long long)[number longLongValue],(bool)persistent); //has internal exception handling.
+        } else if ([NewRelicInternalUtils isFloat:number]) {
+            return _analyticsController->incrementSessionAttribute([name UTF8String], [number doubleValue],(bool)persistent); //has internal exception handling.
         } else {
             return NO;
         }
