@@ -54,7 +54,7 @@
 - (void) clearLastSessionsAnalytics;
 
 - (BOOL) checkOfflineStatus;
-
+- (BOOL) checkBackgroundStatus;
 //this utilizes setSessionAttribute:value: which validates the user input 'name'.
 - (BOOL) setLastInteraction:(NSString*)name;
 
