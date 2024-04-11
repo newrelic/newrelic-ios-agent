@@ -31,6 +31,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
+        // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
+
 
         // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
 
@@ -102,5 +105,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the user discards a scene session.
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+    }
+
+
+    // Background fetch handling.
+    func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+
+        NewRelic.logVerbose("performFetchWithCompletionHandler called")
+        completionHandler(.newData)
     }
 }

@@ -682,10 +682,10 @@
  * this means: once the maximum size has been met the agent will stop storing offline payloads until
  * more room is made.
  */
-+ (void) setMaxOfflineStorageSize:(unsigned int)megaBytes {
-    [NRMAAgentConfiguration setMaxOfflineStorageSize:megaBytes];
++ (void) setMaxOfflineStorageSize:(unsigned int)megabytes {
+    [NRMAAgentConfiguration setMaxOfflineStorageSize:megabytes];
 
-    [NRMAHarvestController setMaxOfflineStorageSize:megaBytes];
+    [NRMAHarvestController setMaxOfflineStorageSize:megabytes];
 }
 #pragma mark - Hidden APIs
 

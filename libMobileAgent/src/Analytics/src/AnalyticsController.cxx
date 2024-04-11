@@ -195,7 +195,9 @@ namespace NewRelic {
                                              const char *tapCoordinates,
                                              const char *actionType,
                                              const char *controlFrame,
-                                             const char *orientation) {
+                                             const char *orientation,
+                                             bool isOffline,
+                                             bool isBackground) {
         try {
             unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms();//throws std::logic_error
             auto event = _eventManager.newUserActionEvent(current_time_ms,
@@ -233,6 +235,13 @@ namespace NewRelic {
             if ((strlens(orientation) > 0)) {
                 event->addAttribute(__kNRMA_RA_orientation, orientation);
             }
+            
+            if(isOffline){
+                event->addAttribute(__kNRMA_Attrib_offline, true);
+            }
+            if(isBackground) {
+                event->addAttribute(__kNRMA_Attrib_background, true);
+            }
 
             return addEvent(event);
 
@@ -248,7 +257,7 @@ namespace NewRelic {
         }
     }
 
-    bool AnalyticsController::addInteractionEvent(const char *name, double duration_sec) {
+    bool AnalyticsController::addInteractionEvent(const char *name, double duration_sec, bool isOffline, bool isBackground) {
         try {
             if ((strlens(name) == 0)) {
                 //adding log under verbose as this is an internal agent method, and wont be called by customers.
@@ -262,7 +271,12 @@ namespace NewRelic {
                                                                    current_time_ms,
                                                                    getCurrentSessionDuration_sec(current_time_ms),
                                                                    _attributeValidator);
-
+            if(isOffline){
+                event->addAttribute(__kNRMA_Attrib_offline, true);
+            }
+            if(isBackground) {
+                event->addAttribute(__kNRMA_Attrib_background, true);
+            }
             if (!event->addAttribute(InteractionAnalyticEvent::kInteractionTraceDurationKey, duration_sec))
                 return false;
             return addEvent(event);
@@ -309,7 +323,9 @@ namespace NewRelic {
 
     bool AnalyticsController::addRequestEvent(const NewRelic::NetworkRequestData& requestData,
                                               const NewRelic::NetworkResponseData& responseData,
-                                              std::unique_ptr<const Connectivity::Payload> payload) {
+                                              std::unique_ptr<const Connectivity::Payload> payload,
+                                              bool isOffline,
+                                              bool isBackground) {
 
         try {
 
@@ -392,6 +408,13 @@ namespace NewRelic {
                 if(trackedHeaders.size() != 0) {
                     addTrackedHeaders(trackedHeaders, event);
                 }
+                
+                if(isOffline){
+                    event->addAttribute(__kNRMA_Attrib_offline, true);
+                }
+                if(isBackground) {
+                    event->addAttribute(__kNRMA_Attrib_background, true);
+                }
 
                 return _eventManager.addEvent(event);
             }
@@ -405,11 +428,19 @@ namespace NewRelic {
 
     bool AnalyticsController::addHTTPErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                                 const NewRelic::NetworkResponseData& responseData,
-                                                std::unique_ptr<const Connectivity::Payload> payload) {
+                                                std::unique_ptr<const Connectivity::Payload> payload,
+                                                bool isOffline,
+                                                bool isBackground) {
         try {
             auto event = createRequestErrorEvent(requestData, responseData, std::move(payload));
 
             if (event != nullptr) {
+                if(isOffline){
+                    event->addAttribute(__kNRMA_Attrib_offline, true);
+                }
+                if(isBackground) {
+                    event->addAttribute(__kNRMA_Attrib_background, true);
+                }
                 event->addAttribute(__kNRMA_Attrib_errorType, __kNRMA_Val_errorType_HTTP);
                 return _eventManager.addEvent(event);
             }
@@ -424,11 +455,19 @@ namespace NewRelic {
 
     bool AnalyticsController::addNetworkErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                                    const NewRelic::NetworkResponseData& responseData,
-                                                   std::unique_ptr<const Connectivity::Payload> payload) {
+                                                   std::unique_ptr<const Connectivity::Payload> payload,
+                                                   bool isOffline,
+                                                   bool isBackground) {
         try {
             auto event = createRequestErrorEvent(requestData, responseData, std::move(payload));
 
             if (event != nullptr) {
+                if(isOffline){
+                    event->addAttribute(__kNRMA_Attrib_offline, true);
+                }
+                if(isBackground) {
+                    event->addAttribute(__kNRMA_Attrib_background, true);
+                }
                 event->addAttribute(__kNRMA_Attrib_errorType, __kNRMA_Val_errorType_Network);
                 return _eventManager.addEvent(event);
             }

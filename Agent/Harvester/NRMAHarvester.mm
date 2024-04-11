@@ -21,6 +21,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
 #import "Constants.h"
+#import "NewRelicAgentInternal.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -363,7 +364,14 @@
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif
-        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Collector/Harvest"
+        NSString *name;
+        if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
+        }
+        else {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest";
+        }
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:name
                                                         value:[NSNumber numberWithDouble:harvestTimer.timeElapsedInSeconds]
                                                         scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER

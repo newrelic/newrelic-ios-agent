@@ -48,8 +48,6 @@ using namespace NewRelic;
     id<AttributeValidatorProtocol> _attributeValidator;
 }
 
-static NSString* const eventStoreFilename = @"eventsStore.txt";
-
 static PersistentStore<std::string,BaseValue>* __attributeStore;
 + (PersistentStore<std::string, BaseValue> &) attributeDupStore
 {
@@ -111,9 +109,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(self){
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
-            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
+            NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
 
-            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:30];
+            PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
             
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
@@ -265,7 +263,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
         return [_eventManager addEvent:[event autorelease]];
     } else {
-        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs);
+        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
 }
 
@@ -506,7 +504,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
-        return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload));
+        return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
     return NO;
 }
@@ -518,7 +516,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
 
-        return _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData,std::move(payload));
+        return _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData,std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
 
     return NO;
@@ -531,7 +529,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
 
-        return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload));
+        return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
     return NO;
 }
@@ -749,6 +747,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
             
             if ([self event:event withAttributes:attributes]) {
+                if([self checkOfflineStatus]){
+                    event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                }
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
@@ -801,6 +802,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             
             if ([self event:event withAttributes:attributes]) {
                 event->addAttribute("name",name.UTF8String);
+                if([self checkOfflineStatus]){
+                    event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                }
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
@@ -855,8 +859,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
                 return NO;
             }
-            
+                        
             if([self event:event withAttributes:attributes]) {
+                if([self checkOfflineStatus]){
+                    event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                }
                 return _analyticsController->addEvent(event);
             }
         }
@@ -893,6 +900,24 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
     }
     return YES;
+}
+
+- (BOOL) checkOfflineStatus {
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        NRMAReachability* r = [NewRelicInternalUtils reachability];
+        @synchronized(r) {
+            NRMANetworkStatus status = [r currentReachabilityStatus];
+            return (status == NotReachable);
+        }
+    }
+    return false;
+}
+
+- (BOOL) checkBackgroundStatus {
+    if([NRMAFlags shouldEnableBackgroundReporting]) {
+        return ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground);
+    }
+    return false;
 }
 
 - (BOOL)recordUserAction:(NRMAUserAction *)userAction {
@@ -1015,7 +1040,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 + (NSString*) getLastSessionsEvents{
     if([NRMAFlags shouldEnableNewEventSystem]) {
-        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:eventStoreFilename];
+        NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
         return [NRMAEventManager getLastSessionEventsFromFilename:filename];
     } else {
         try {
@@ -1056,7 +1081,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (void) clearLastSessionsAnalytics {
     if([NRMAFlags shouldEnableNewEventSystem]){
-        [_sessionAttributeManager clearLastSessionsAnalytics];
+        [_sessionAttributeManager removeAllSessionAttributes];
+        [_eventManager empty];
     } else {
         try {
             _analyticsController->clearAttributesDuplicationStore();

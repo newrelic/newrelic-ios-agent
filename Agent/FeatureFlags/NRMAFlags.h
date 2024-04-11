@@ -53,6 +53,8 @@
 
 + (BOOL) shouldEnableNewEventSystem;
 
++ (BOOL) shouldEnableBackgroundReporting;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting
