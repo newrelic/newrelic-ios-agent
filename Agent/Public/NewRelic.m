@@ -138,6 +138,10 @@
                                                                          attributes:attributes];
 }
 
++ (void)watchOSNotification:(NSString * _Nonnull)notification {
+    [[NewRelicAgentInternal sharedInstance] watchOSNotification:notification];
+}
+
 + (void) setPlatform:(NRMAApplicationPlatform)platform {
     [NRMAAgentConfiguration setPlatform:platform];
 }

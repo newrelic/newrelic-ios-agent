@@ -87,7 +87,7 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
 
         // We don't want to attempt to symbolicate at runtime due to the possibility of stack corruption
         // as well as it being inaccurate. Let's save it for the server where we have the dsym files!
-
+#if !TARGET_OS_WATCH
         PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:signalHandlerType
                                                                            symbolicationStrategy:PLCrashReporterSymbolicationStrategyNone];
         _crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
@@ -115,7 +115,7 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
                 }
             }
         }
-
+#endif
         self.handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:_crashReporter];
     }
     return self;
@@ -123,10 +123,13 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
 
 - (void) registerObservers
 {
+    // TODO: Add support for NSExtensionHostDidBecomeActiveNotification
+#if !TARGET_OS_WATCH
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(fireDelayedProcessing)
                                                  name:UIApplicationDidBecomeActiveNotification
                                                object:nil];
+#endif
 }
 
 

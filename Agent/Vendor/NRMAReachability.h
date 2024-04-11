@@ -47,9 +47,16 @@
 
 
 #import <Foundation/Foundation.h>
-#import <SystemConfiguration/SystemConfiguration.h>
 
-#if !TARGET_OS_TV
+#if TARGET_OS_WATCH
+#import <WatchConnectivity/WatchConnectivity.h>
+#endif
+
+#if !TARGET_OS_WATCH
+#import <SystemConfiguration/SystemConfiguration.h>
+#endif
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
 #endif
 
@@ -64,11 +71,13 @@ typedef enum {
 
 @interface NRMAReachability: NSObject
 {
+#if !TARGET_OS_WATCH
 	SCNetworkReachabilityRef reachabilityRef;
+#endif
     NSString* _wanNetworkType;
 }
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 - (CTCarrier*) getCarrierInfo;
 #endif
 - (NSString *)getCurrentWanNetworkType:(NRMANetworkStatus)networkStatus;

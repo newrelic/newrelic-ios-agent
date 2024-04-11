@@ -12,11 +12,15 @@
 #import "NRConstants.h"
 #import "NRTimer.h"
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
 #import <CoreTelephony/CTCarrier.h>
 
+#endif
+
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
 #endif
 
 #import "NRConstants.h"
@@ -110,28 +114,45 @@ static NSString* _osVersion;
 
 + (NSString*) osVersion {
     if (!_osVersion) {
+#if !TARGET_OS_WATCH
         _osVersion = [[UIDevice currentDevice] systemVersion];
+#elif TARGET_OS_WATCH
+        _osVersion = [[WKInterfaceDevice currentDevice] systemVersion];
+#endif
     }
     return _osVersion;
 }
 
 + (NSString*) osName {
     // We do this to retain the "iOS" value. +systemName returns "iphone OS" for iOS now.
+#if TARGET_OS_WATCH
+    // TODO: When support exists, have this return WatchOS, not IOS
+//    return NRMA_OSNAME_WATCHOS;
+    return NRMA_OSNAME_IOS;
+#else
     if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_TVOS]) {
         return NRMA_OSNAME_TVOS;
     }
     else if([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_WATCHOS]) {
         return NRMA_OSNAME_WATCHOS;
     }
-    
+
+
     return NRMA_OSNAME_IOS;
+#endif
 }
 
 + (NSString*) agentName {
+#if TARGET_OS_WATCH
+    // TODO: When support exists, have this return WatchOS, not IOS
+    return @"iOSAgent";
+    return @"watchOSAgent";
+#else
     if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_TVOS]) {
         return @"tvOSAgent";
     }
     return @"iOSAgent";
+#endif
 }
 
 // Returns true if the current thread is a known web view thread, namely 'WebCore: ...' or 'WebThread'.
@@ -218,7 +239,7 @@ static NSString* _osVersion;
                 NRMANetworkStatus internetStatus = [self networkStatus];
 
                 if (internetStatus == ReachableViaWWAN) {
-
+#if !TARGET_OS_WATCH
                     CTCarrier* carrier = [r getCarrierInfo];
 
                     NRLOG_VERBOSE(@"Carrier Name: %@", carrier.carrierName);
@@ -230,6 +251,7 @@ static NSString* _osVersion;
                         [carrier.carrierName caseInsensitiveCompare:@"--"] == NSOrderedSame) {
                         cachedCarrierName = NRMA_CARRIER_OTHER;
                     } else {
+#endif
                         cachedCarrierName = carrier.carrierName;
                     }
                 } else if (internetStatus == NotReachable) {
@@ -279,7 +301,7 @@ static NSString* _osVersion;
 + (NSString*) deviceOrientation {
 
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     switch ([[UIDevice currentDevice] orientation]) {
         case UIDeviceOrientationLandscapeLeft:
         case UIDeviceOrientationLandscapeRight:
@@ -468,8 +490,11 @@ static NSString* __mach_model;
         [self setMachModel:mach_model];
         return mach_model;
     }
-
+#if TARGET_OS_WATCH
+    return [[WKInterfaceDevice currentDevice] model];
+#else
     return [[UIDevice currentDevice] model];
+#endif
 }
 
 + (NSString*) machModel {

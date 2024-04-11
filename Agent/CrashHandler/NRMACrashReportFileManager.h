@@ -10,7 +10,10 @@
 #import "PLCrashNamespace.h"
 #import "PLCrashReporter.h"
 @interface NRMACrashReportFileManager : NSObject
+
+#if !TARGET_OS_WATCH
 - (instancetype) initWithCrashReporter:(PLCrashReporter*)crashReporter;
+#endif
 
 - (void) processReportsWithSessionAttributes:(NSDictionary*)attributes
                              analyticsEvents:(NSArray*)events;

@@ -66,7 +66,11 @@ static NSString* __processLock = @"NRMAProcessLock";
             return;
         }
 
+#if !TARGET_OS_WATCH
         PLCrashReport* report = [[PLCrashReport alloc] initWithData:crashData error:&error];
+#else
+        PLCrashReport* report = nil;
+#endif
 
         if (report == nil) {
             NRLOG_VERBOSE(@"could not parse crash report: %@",error);

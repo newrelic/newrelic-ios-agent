@@ -9,17 +9,25 @@
 #import "NRMAUncaughtExceptionHandler.h"
 #import "NRLogger.h"
 #import "NewRelicInternalUtils.h"
+#import <NewRelic/NewRelic.h>
 #import <sys/sysctl.h>
 
 @interface NRMAUncaughtExceptionHandler ()
+#if !TARGET_OS_WATCH
 @property(strong) PLCrashReporter* crashReporter;
+#endif
 @property(assign,getter = isAppStoreEnvironment) BOOL appStoreEnvironmentEnabled;
 @property(assign) NSUncaughtExceptionHandler* exceptionHandler;
 @property(assign,atomic) BOOL isStarted;
 @end
+
+static void uncaught_exception_handler(NSException *exception) {
+    [NewRelic recordHandledException:exception];
+}
+
 @implementation NRMAUncaughtExceptionHandler
 
-
+#if !TARGET_OS_WATCH
 - (instancetype) initWithCrashReporter:(PLCrashReporter*)crashReporter
 {
     self = [super init];
@@ -35,6 +43,21 @@
     }
     return self;
 }
+#elif TARGET_OS_WATCH
+- (instancetype) init {
+    self = [super init];
+    if (self) {
+        _isStarted = NO;
+        _appStoreEnvironmentEnabled = NO;
+#if  !TARGET_IPHONE_SIMULATOR
+        if (![[NSBundle mainBundle] pathForResource:@"embedded" ofType:@"mobileprovision"]) {
+            _appStoreEnvironmentEnabled = YES;
+        }
+#endif //!TARGET_IPHONE_SIMULATOR
+    }
+    return self;
+}
+#endif
 
 - (BOOL) isActive
 {
@@ -69,11 +92,16 @@
             NSUncaughtExceptionHandler* originalHandler = NSGetUncaughtExceptionHandler();
 
             NSError* error = nil;
+#if TARGET_OS_WATCH
+            NSSetUncaughtExceptionHandler(&uncaught_exception_handler);
+#else
+            
             if (![_crashReporter enableCrashReporterAndReturnError:&error]) {
                 NRLOG_ERROR(@"Could not start crash reporter: %@",[error localizedDescription]);
                 startSuccessful =  NO;
                 return;
             }
+#endif
 
             NSUncaughtExceptionHandler* newHandler = NSGetUncaughtExceptionHandler();
 
@@ -102,4 +130,5 @@
     NSUncaughtExceptionHandler* currentExceptionHandler = NSGetUncaughtExceptionHandler();
     return _exceptionHandler == currentExceptionHandler;
 }
+
 @end

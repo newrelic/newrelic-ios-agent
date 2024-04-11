@@ -808,6 +808,12 @@ extern "C" {
 + (void) recordError:(NSError* _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes;
 
+/*!
+  * Record an Error. This will be presented along side handled exceptions.
+  * @param error the error to record. It can be a swift error or an Objective-C NSError.
+  */
+ + (void) watchOSNotification:(NSString* _Nonnull)notification;
+
 @end
 
 // Deprecated class name, included for compatibility

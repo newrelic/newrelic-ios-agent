@@ -63,6 +63,8 @@
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
 
+- (void)watchOSNotification:(NSString*)notification;
+
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
