@@ -173,6 +173,11 @@ static NSString* __deviceIdentifierReplacement = NULL;
 + (BOOL) shouldEnableNewEventSystem {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_NewEventSystem) != 0;
 }
+
++ (BOOL) shouldEnableBackgroundReporting {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_BackgroundReporting) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -234,6 +239,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_NewEventSystem) == NRFeatureFlag_NewEventSystem) {
         [retArray addObject:@"NewEventSystem"];
     }
+    if ((flags & NRFeatureFlag_BackgroundReporting) == NRFeatureFlag_BackgroundReporting) {
+        [retArray addObject:@"BackgroundReporting"];
+    }
+    
     return retArray;
 }
 
