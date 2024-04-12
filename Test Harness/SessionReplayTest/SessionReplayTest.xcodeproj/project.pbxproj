@@ -15,7 +15,23 @@
 		343D4B602BC9E6990064F979 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 343D4B5E2BC9E6990064F979 /* LaunchScreen.storyboard */; };
 		343D4B682BC9EB980064F979 /* UIViewAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343D4B672BC9EB980064F979 /* UIViewAdditions.swift */; };
 		343D4B6A2BC9EC3E0064F979 /* DogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343D4B692BC9EC3E0064F979 /* DogView.swift */; };
+		343D4B6D2BC9F6210064F979 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 343D4B6C2BC9F6210064F979 /* NewRelic.framework */; };
+		343D4B6E2BC9F6210064F979 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 343D4B6C2BC9F6210064F979 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		343D4B6F2BC9F6210064F979 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				343D4B6E2BC9F6210064F979 /* NewRelic.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		343D4B502BC9E6980064F979 /* SessionReplayTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SessionReplayTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -28,6 +44,7 @@
 		343D4B612BC9E6990064F979 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		343D4B672BC9EB980064F979 /* UIViewAdditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewAdditions.swift; sourceTree = "<group>"; };
 		343D4B692BC9EC3E0064F979 /* DogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogView.swift; sourceTree = "<group>"; };
+		343D4B6C2BC9F6210064F979 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				343D4B6D2BC9F6210064F979 /* NewRelic.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +64,7 @@
 			children = (
 				343D4B522BC9E6980064F979 /* SessionReplayTest */,
 				343D4B512BC9E6980064F979 /* Products */,
+				343D4B6B2BC9F6210064F979 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -73,6 +92,14 @@
 			path = SessionReplayTest;
 			sourceTree = "<group>";
 		};
+		343D4B6B2BC9F6210064F979 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				343D4B6C2BC9F6210064F979 /* NewRelic.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -83,6 +110,7 @@
 				343D4B4C2BC9E6980064F979 /* Sources */,
 				343D4B4D2BC9E6980064F979 /* Frameworks */,
 				343D4B4E2BC9E6980064F979 /* Resources */,
+				343D4B6F2BC9F6210064F979 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

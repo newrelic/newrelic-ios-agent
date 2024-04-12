@@ -7,6 +7,9 @@
 
 import UIKit
 
+import NewRelic
+
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -14,6 +17,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+#if DEBUG
+        // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
+        NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
+#endif
+        
+        NewRelic.start(withApplicationToken:"AA2c7533565ddeeb163b23d649c453b397b8a2fd4e-NRMA",
+                       andCollectorAddress: "staging-mobile-collector.newrelic.com",
+                       andCrashCollectorAddress: "staging-mobile-crash.newrelic.com")
         return true
     }
 
