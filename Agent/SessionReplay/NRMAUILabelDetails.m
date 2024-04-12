@@ -8,6 +8,7 @@
 
 #import "NRMAUILabelDetails.h"
 #import "NRMAIdGenerator.h"
+#import "NRMAUIViewDetails.h"
 
 @implementation NRMAUILabelDetails
 
@@ -18,9 +19,10 @@
         _backgroundColor = view.backgroundColor;
         _isHidden = view.isHidden;
         _viewName = NSStringFromClass([view class]);
-        _labelText = [@"" stringByPaddingToLength:((UILabel*)view).text.length
-                                       withString:@"x"
-                                  startingAtIndex:0];
+//        _labelText = [@"" stringByPaddingToLength:((UILabel*)view).text.length
+//                                       withString:@"x"
+//                                  startingAtIndex:0];
+        _labelText = ((UILabel *)view).text;
         _textColor = ((UILabel *)view).textColor;
         _fontSize = ((UILabel *)view).font.pointSize;
         _fontName = ((UILabel *)view).font.fontName;
@@ -40,12 +42,7 @@
     [descriptionString appendFormat:@"\t%@\n", frameString];
     
     if(self.backgroundColor != nil) {
-        CGFloat *colorComponents = CGColorGetComponents(self.backgroundColor.CGColor);
-        NSString *colorString = [NSString stringWithFormat:@"#%02lX%02lX%02lX%02lX",
-                                 lroundf(colorComponents[0] * 255),
-                                 lroundf(colorComponents[1] * 255),
-                                 lroundf(colorComponents[2] * 255),
-                                 lroundf(colorComponents[3] * 255)];
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor.CGColor includingAlpha:YES];
         [descriptionString appendFormat:@"\t%@", colorString];
         
         [descriptionString appendFormat:@"\tText: %@", self.labelText];
@@ -71,11 +68,7 @@
     jsonDictionary[@"id"] = @(self.viewId);
     jsonDictionary[@"type"] = @(3);
     
-    CGFloat *textColorComponents = CGColorGetComponents(self.textColor.CGColor);
-    NSString *textColor = [NSString stringWithFormat:@"#%02lX%02lX%02lX",
-                           lroundf(textColorComponents[0] * 255),
-                           lroundf(textColorComponents[1] * 255),
-                           lroundf(textColorComponents[2] * 255)];
+    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor.CGColor includingAlpha:YES];
     jsonDictionary[@"textColor"] = textColor;
     
     NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
@@ -90,11 +83,7 @@
     frameString = [frameString stringByAppendingFormat:@";font: %fpt %@", self.fontSize, self.fontFamily];
     
     if(self.backgroundColor != nil) {
-        CGFloat *colorComponents = CGColorGetComponents(self.backgroundColor.CGColor);
-        NSString *colorString = [NSString stringWithFormat:@"#%02lX%02lX%02lX",
-                                 lroundf(colorComponents[0] * 255),
-                                 lroundf(colorComponents[1] * 255),
-                                 lroundf(colorComponents[2] * 255)];
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor.CGColor includingAlpha:YES];
         jsonDictionary[@"backgroundColor"] = colorString;
         frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
     }
