@@ -80,6 +80,7 @@ extern NSString *const kNRMA_Attrib_dtId;
 extern NSString *const kNRMA_Attrib_dtTraceId;
 extern NSString *const kNRMA_Attrib_name;
 extern NSString *const kNRMA_Attrib_offline;
+extern NSString *const kNRMA_Attrib_background;
 
 extern NSString *const kNRMA_Val_errorType_HTTP;
 extern NSString *const kNRMA_Val_errorType_Network;
