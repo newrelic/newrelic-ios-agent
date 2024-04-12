@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:Test Harness/SessionReplayTest/SessionReplayTest.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "container:Agent.xcodeproj">
    </FileRef>
    <FileRef
