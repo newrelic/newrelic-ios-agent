@@ -26,7 +26,13 @@
         _textColor = ((UILabel *)view).textColor;
         _fontSize = ((UILabel *)view).font.pointSize;
         _fontName = ((UILabel *)view).font.fontName;
+        if([_fontName hasPrefix:@"."] && (_fontName.length > 1)) {
+            _fontName = [_fontName substringFromIndex:1];
+        }
         _fontFamily = ((UILabel *)view).font.familyName;
+        if([_fontFamily hasPrefix:@"."] && (_fontFamily.length > 1)) {
+            _fontFamily = [_fontFamily substringFromIndex:1];
+        }
         _viewId = [NRMAIdGenerator generateID];
     }
     return self;
