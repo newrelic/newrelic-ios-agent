@@ -42,7 +42,7 @@
     [descriptionString appendFormat:@"\t%@\n", frameString];
     
     if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor.CGColor includingAlpha:YES];
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
         [descriptionString appendFormat:@"\t%@", colorString];
         
         [descriptionString appendFormat:@"\tText: %@", self.labelText];
@@ -68,7 +68,7 @@
     jsonDictionary[@"id"] = @(self.viewId);
     jsonDictionary[@"type"] = @(3);
     
-    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor.CGColor includingAlpha:YES];
+    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
     jsonDictionary[@"textColor"] = textColor;
     
     NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
@@ -83,7 +83,7 @@
     frameString = [frameString stringByAppendingFormat:@";font: %fpt %@", self.fontSize, self.fontFamily];
     
     if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor.CGColor includingAlpha:YES];
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
         jsonDictionary[@"backgroundColor"] = colorString;
         frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
     }

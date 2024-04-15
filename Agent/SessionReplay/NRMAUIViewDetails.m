@@ -33,7 +33,7 @@
     [descriptionString appendFormat:@"\t%@\n", frameString];
     
     if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor.CGColor includingAlpha:YES];
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
         [descriptionString appendFormat:@"\t%@", colorString];
     }
     
@@ -57,7 +57,7 @@
                              self.frame.size.height];
     
     if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor.CGColor includingAlpha:YES];
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
         jsonDictionary[@"backgroundColor"] = colorString;
         frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
     }
@@ -68,22 +68,40 @@
     return jsonDictionary;
 }
 
-+ (NSString *)colorToString:(CGColorRef)color includingAlpha:(BOOL)includingAlpha {
-    CGFloat *colorComponents = CGColorGetComponents(color);
++ (NSString *)colorToString:(UIColor *)color includingAlpha:(BOOL)includingAlpha {
+    CGFloat redColor = 0.0f;
+    CGFloat blueColor = 0.0f;
+    CGFloat greenColor = 0.0f;
+    CGFloat alpha = 0.0f;
+    
+    BOOL success = NO;
+    success = [color getRed:&redColor
+                      green:&greenColor
+                       blue:&blueColor
+                      alpha:&alpha];
+    
+    if(!success) {
+        NSLog(@"ERROR: UNABLE TO GET COLOR INFO");
+    }
+    
     NSString *colorFormatString = @"#%02lX%02lX%02lX";
     NSString *colorString = @"";
+    
+//    CGFloat *colorComponents = CGColorGetComponents(color);
+//    NSString *colorFormatString = @"#%02lX%02lX%02lX";
+//    NSString *colorString = @"";
     if(includingAlpha) {
         colorFormatString = [colorFormatString stringByAppendingString:@"%02lX"];
         colorString = [NSString stringWithFormat:colorFormatString,
-                       lroundf(colorComponents[0] * 255),
-                       lroundf(colorComponents[1] * 255),
-                       lroundf(colorComponents[2] * 255),
-                       lroundf(colorComponents[3] * 255)];
+                       lroundf(redColor * 255),
+                       lroundf(blueColor * 255),
+                       lroundf(greenColor * 255),
+                       lroundf(alpha * 255)];
     } else {
         NSString *colorString = [NSString stringWithFormat:colorFormatString,
-                                 lroundf(colorComponents[0] * 255),
-                                 lroundf(colorComponents[1] * 255),
-                                 lroundf(colorComponents[2] * 255)];
+                                 lroundf(redColor * 255),
+                                 lroundf(greenColor * 255),
+                                 lroundf(blueColor * 255)];
     }
     
     return colorString;

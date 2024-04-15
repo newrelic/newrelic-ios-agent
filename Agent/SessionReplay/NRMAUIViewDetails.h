@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithView:(UIView *)view;
 - (NSDictionary *)jsonDescription;
 
-+ (NSString *)colorToString:(CGColorRef)color includingAlpha:(BOOL)includingAlpha;
++ (NSString *)colorToString:(UIColor *)color includingAlpha:(BOOL)includingAlpha;
 @end
 
 NS_ASSUME_NONNULL_END
