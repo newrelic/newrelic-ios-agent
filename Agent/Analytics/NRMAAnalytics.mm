@@ -618,9 +618,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if([NewRelicInternalUtils isFloat:number]) {
                     return _analyticsController->addSessionAttribute([name UTF8String], [number doubleValue], (bool)isPersistent);
                 }
-//                if ([NewRelicInternalUtils isBool:number]) {
-//                    return _analyticsController->addSessionAttribute([name UTF8String], (bool)[number boolValue], (bool)isPersistent);
-//                }
+                if ([NewRelicInternalUtils isBool:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], (bool)[number boolValue], (bool)isPersistent);
+                }
                 return NO;
             } else if ([value isKindOfClass:[NSString class]]) {
                 NSString* string = (NSString*)value;
@@ -659,9 +659,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if([NewRelicInternalUtils isFloat:number]) {
                     return _analyticsController->addSessionAttribute([name UTF8String], [number doubleValue]);
                 }
-//                if ([NewRelicInternalUtils isBool:number]) {
-//                    return _analyticsController->addSessionAttribute([name UTF8String], (bool)[number boolValue]);
-//                }
+                if ([NewRelicInternalUtils isBool:number]) {
+                    return _analyticsController->addSessionAttribute([name UTF8String], (bool)[number boolValue]);
+                }
                 return NO;
             } else if ([value isKindOfClass:[NSString class]]) {
                 NSString* string = (NSString*)value;
