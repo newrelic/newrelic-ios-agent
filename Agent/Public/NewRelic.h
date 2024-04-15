@@ -624,8 +624,14 @@ extern "C" {
 /*******************************************************************************
  * Add a NSArray of NSStrings of the header
  * fields you want added to network events
- *******************************************************************************/
+ *******************************************************************************/ 
 +  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*>*_Nonnull)headers;
+
+/*******************************************************************************
+ * Returns the NSArray of NSStrings of the header
+ * fields that were added to network events
+ *******************************************************************************/
++ (NSArray<NSString*>* _Nonnull)httpHeadersAddedForTracking;
 
 #pragma mark - Recording custom events
 
