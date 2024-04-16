@@ -34,6 +34,16 @@ class MainCoordinator: Coordinator {
 #endif
     }
     
+    func showVideoViewController() {
+#if os(iOS)
+        if #available(iOS 14.2, *) {
+            let swiftUIVideoView = VideoPlayerView()
+            let swiftUIVideoViewController = UIHostingController(rootView: swiftUIVideoView)
+            navigationController.pushViewController(swiftUIVideoViewController, animated: true)
+        }
+#endif
+    }
+    
     func showUtilitiesViewController() {
         let utilitiesViewController = ViewControllerProvider.utilitiesViewController
         navigationController.pushViewController(utilitiesViewController, animated: true)

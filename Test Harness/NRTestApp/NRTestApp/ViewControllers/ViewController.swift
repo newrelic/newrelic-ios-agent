@@ -114,6 +114,8 @@ class ViewController: UIViewController {
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
+        options.append(UtilOption(title: "Video View", handler: { [self] in videoViewAction()}))
+
         options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
 
         options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
@@ -125,7 +127,11 @@ class ViewController: UIViewController {
     }
   
     func webViewAction() {
-        self.coordinator?.showWebViewController()
+        coordinator?.showWebViewController()
+    }
+    
+    func videoViewAction() {
+        coordinator?.showVideoViewController()
     }
 
     func refreshAction() {

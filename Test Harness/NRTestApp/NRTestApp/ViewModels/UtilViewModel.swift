@@ -47,7 +47,17 @@ class UtilViewModel {
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
+        options.append(UtilOption(title: "URLSession dataTask No Completion", handler: { [self] in doDataTaskNoCompletion()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
+    }
+    
+    func doDataTaskNoCompletion() {
+        let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: nil, delegateQueue: nil)
+        guard let url = URL(string: "https://www.google.com") else { return }
+
+        let dataTask = urlSession.dataTask(with: url)
+
+        dataTask.resume()
     }
     
     func startCustomEventTimer(){
@@ -180,7 +190,10 @@ class UtilViewModel {
 class TaskProcessor: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionTaskDelegate {
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-
+        if let httpResponse = response as? HTTPURLResponse {
+            let bytesSent = dataTask.originalRequest?.httpBody?.count
+            NewRelic.noticeNetworkRequest(for: dataTask.originalRequest?.url, httpMethod: dataTask.originalRequest?.httpMethod, with: NRTimer(), responseHeaders: dataTask.originalRequest?.allHTTPHeaderFields, statusCode: httpResponse.statusCode, bytesSent: 0, bytesReceived: 0, responseData: Data(), traceHeaders: nil, andParams: nil)
+        }
         completionHandler(.allow)
     }
 

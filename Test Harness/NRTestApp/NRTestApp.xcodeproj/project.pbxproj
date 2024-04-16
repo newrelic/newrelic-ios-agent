@@ -84,6 +84,7 @@
 		F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9329708027003EC291 /* ApodResult.swift */; };
 		F86429442979CE31002ABA01 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; };
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		F8C1D1F02B9F75FF0000B04D /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C1D1EF2B9F75FF0000B04D /* VideoPlayerView.swift */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 		F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 /* End PBXBuildFile section */
@@ -239,6 +240,7 @@
 		F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (tvOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F86428F62979CDB0002ABA01 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestApp--tvOS--Info.plist"; path = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
+		F8C1D1EF2B9F75FF0000B04D /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -422,6 +424,7 @@
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
+				F8C1D1EF2B9F75FF0000B04D /* VideoPlayerView.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -818,6 +821,7 @@
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
+				F8C1D1F02B9F75FF0000B04D /* VideoPlayerView.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
