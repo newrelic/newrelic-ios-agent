@@ -390,6 +390,10 @@
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:headers];
 }
 
++ (NSArray<NSString*>* _Nonnull)httpHeadersAddedForTracking {
+    return [NRMAHTTPUtilities trackedHeaderFields];
+}
+
 
 #pragma mark - Interactions
 
