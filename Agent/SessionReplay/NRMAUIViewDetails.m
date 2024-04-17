@@ -51,7 +51,7 @@
     
     NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
 
-    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%f;height:%f", self.frame.origin.y,
+    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx", self.frame.origin.y,
                              self.frame.origin.x,
                              self.frame.size.width,
                              self.frame.size.height];
