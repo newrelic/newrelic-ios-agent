@@ -37,12 +37,18 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
     }
     
     NRLOG_INFO(@"HarvestTimer: starting with a period of %lld ms",self.period);
-    self.timer = [NSTimer timerWithTimeInterval:((double)self.period) / (double)1000.0
-                                           target:self
-                                         selector:@selector(harvest)
-                                         userInfo:nil
-                                          repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSDefaultRunLoopMode];
+//    self.timer = [NSTimer timerWithTimeInterval:((double)self.period) / (double)1000.0
+//                                           target:self
+//                                         selector:@selector(harvest)
+//                                         userInfo:nil
+//                                          repeats:YES];
+//    [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSDefaultRunLoopMode];
+
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    double thePeriod = ((double)self.period) / (double)1000.0;
+     self.bgTimer = [self createDispatchSource:thePeriod :queue :^ {
+        [self harvest];
+    }];
     [self.harvester fireOnHarvestStart];
 }
 
@@ -118,5 +124,19 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
     NRLOG_VERBOSE(@"HarvestTime: %@ deallocated", self);
     self.harvester = nil;
     _timer = nil;
+}
+
+-(dispatch_source_t) createDispatchSource :(double)interval :(dispatch_queue_t)queue :(dispatch_block_t)block {
+    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,
+                                             0,
+                                             0,
+                                         queue);
+
+    if (timer) {
+        dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, interval * NSEC_PER_SEC),interval * NSEC_PER_SEC, (1ull * NSEC_PER_SEC) / 10);
+        dispatch_source_set_event_handler(timer, block);
+        dispatch_resume(timer);
+    }
+    return timer;
 }
 @end
