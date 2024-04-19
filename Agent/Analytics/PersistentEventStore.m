@@ -56,15 +56,15 @@
     @synchronized (store) {
         store[key] = object;
         _dirty = YES;
-        NRLOG_VERBOSE(@"Marked dirty for adding");
+        NRLOG_AUDIT(@"Marked dirty for adding");
     }
     
-    NRLOG_VERBOSE(@"Scheduling block");
+    NRLOG_AUDIT(@"Scheduling block");
     [self performWrite: ^ {
-        NRLOG_VERBOSE(@"Entered block");
+        NRLOG_AUDIT(@"Entered block");
         @synchronized (self) {
             if(!self->_dirty) {
-                NRLOG_VERBOSE(@"Not writing file because it's not dirty");
+                NRLOG_AUDIT(@"Not writing file because it's not dirty");
                 return;
             }
         }
@@ -157,7 +157,7 @@
         if(!success) {
             NRLOG_ERROR(@"Error saving data: %@", error.description);
         } else {
-            NRLOG_VERBOSE(@"Wrote file");
+            NRLOG_AUDIT(@"Wrote file");
             _lastSave = [NSDate new];
         }
     }

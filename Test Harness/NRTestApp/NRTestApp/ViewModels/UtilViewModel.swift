@@ -44,6 +44,8 @@ class UtilViewModel {
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
 
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
+        options.append(UtilOption(title: "Test Log Error", handler: { [self] in testLogError()}))
+        options.append(UtilOption(title: "Test Log Attributes", handler: { [self] in testLogAttributes()}))
 
         options.append(UtilOption(title: "Make 100 Logs", handler: { [self] in make100Logs()}))
         options.append(UtilOption(title: "Make 100 Special Character Logs", handler: { [self] in make100SpecialCharacterLogs()}))
@@ -138,7 +140,22 @@ class UtilViewModel {
             "message": "This is a test message for the New Relic logging system."
         ])
     }
+    func testLogError() {
 
+        do {
+            try errorMethod()
+        } catch {
+            NewRelic.logErrorObject(error)
+        }
+    }
+
+    // TODO: Wrap up attributes handling as a part of NR-227300
+    func testLogAttributes() {
+        NewRelic.logAttributes([
+            "logLevel": "WARN",
+            "message": "This is a test message for the New Relic logging system."
+        ])
+    }
 
 
     func noticeNWRequest() {
