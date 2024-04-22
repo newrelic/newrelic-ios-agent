@@ -10,6 +10,8 @@ xcodebuild -create-xcframework \
 	-framework build/appletvsimulator/NewRelic.framework \
 	-framework build/appletvos/NewRelic.framework \
 		-debug-symbols $(pwd)/build/appletvos/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
+    -framework build/watchos/NewRelic.framework \
+        -debug-symbols $(pwd)/build/watchos/watchOS.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-framework build/macosx/NewRelic.framework 	\
 		-debug-symbols $(pwd)/build/macosx/macosx.xcarchive/dSYMs/NewRelic.framework.dSYM \
 	-output build/NewRelic.xcframework

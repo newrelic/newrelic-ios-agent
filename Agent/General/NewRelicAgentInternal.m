@@ -705,8 +705,8 @@ static UIBackgroundTaskIdentifier background_task;
         }];
 #elif TARGET_OS_WATCH
         WKExtension *application = [WKExtension sharedExtension];
-        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
 #endif
+        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
         // Mark the start of the background task
         [processInfo performExpiringActivityWithReason:@"harvestOnAppBackground"
                                             usingBlock:^(BOOL expired) {
