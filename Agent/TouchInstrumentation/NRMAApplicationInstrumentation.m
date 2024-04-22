@@ -64,5 +64,6 @@ static BOOL sendAction_to_from_forEvent(id self, SEL _cmd, SEL msg, id target, i
     NRMA__UIApplication__sendAction_to_from_forEvent = NULL;
     return success;
 #endif
+    return NO;
 }
 @end

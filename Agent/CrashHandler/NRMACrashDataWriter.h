@@ -7,13 +7,16 @@
 //
 
 #import <Foundation/Foundation.h>
+#if !TARGET_OS_WATCH
 #import "PLCrashNamespace.h"
 #import "PLCrashReport.h"
-
+#endif
 @interface NRMACrashDataWriter : NSObject
 
+#if !TARGET_OS_WATCH
 + (BOOL) writeCrashReport:(PLCrashReport*)report
              withMetaData:(NSDictionary*)metaDictionary
         sessionAttributes:(NSDictionary*)attributes
           analyticsEvents:(NSArray*)events;
+#endif
 @end

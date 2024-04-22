@@ -25,7 +25,7 @@
 #define kNRMASYSOS_tvSim            @"tvOS Simulator"
 
 @implementation NRMACrashDataWriter
-
+#if !TARGET_OS_WATCH
 + (BOOL) writeCrashReport:(PLCrashReport* _Nonnull)report
              withMetaData:(NSDictionary* _Nonnull)metaDictionary
         sessionAttributes:(NSDictionary* _Nonnull)attributes
@@ -215,7 +215,7 @@
 
     return isWriteSuccessful;
 }
-
+#endif
 + (NSString*) getOperatingDevice:(PLCrashReportOperatingSystem)osEnum
 {
     switch (osEnum) {

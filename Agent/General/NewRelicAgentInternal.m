@@ -50,9 +50,7 @@
 #import "NRMAFileCleanup.h"
 #import "NRMAAppToken.h"
 #import "NRMAUDIDManager.h"
-#if !TARGET_OS_WATCH
 #import "NRMAStartTimer.h"
-#endif
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
 
@@ -355,10 +353,12 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 + (void) instrumentWebViews {
+#if !TARGET_OS_WATCH
 #if !TARGET_OS_TV
     if ([NRMAFlags shouldEnableWebViewInstrumentation]) {
         [NRMAWKWebViewInstrumentation instrument];
     }
+#endif
 #endif
 }
 
@@ -367,6 +367,7 @@ static NewRelicAgentInternal* _sharedInstance;
         NRLOG_VERBOSE(@"Failed to instrument UIApplication -sendAction:...");
     }
 
+#if !TARGET_OS_WATCH
     if (![NRMATableViewIntrumentation instrument]) {
         NRLOG_VERBOSE(@"failed to instrument UITableView.");
     }
@@ -374,7 +375,7 @@ static NewRelicAgentInternal* _sharedInstance;
     if (![NRMACollectionViewInstrumentation instrument]) {
         NRLOG_VERBOSE(@"Failed to instrument UICollectionView.");
     }
-
+#endif
     if (![NRMAGestureRecognizerInstrumentation instrumentUIGestureRecognizer]) {
         NRLOG_VERBOSE(@"Failed to instrument gesture recognizer.");
     }
@@ -382,8 +383,10 @@ static NewRelicAgentInternal* _sharedInstance;
 
 // De-initialize agent instrumentation
 - (void) deinitializeInstrumentation {
+#if !TARGET_OS_WATCH
 #if !TARGET_OS_TV
     [NRMAWKWebViewInstrumentation deinstrument];
+#endif
 #endif
 }
 
@@ -561,19 +564,19 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                    ^{
         @synchronized(kNRMA_BGFG_MUTEX) {
             @synchronized(kNRMA_APPLICATION_WILL_TERMINATE) {
-
+                
                 if (didFireEnterForeground == YES || self.appWillTerminate == YES) {
                     return;
                 }
                 didFireEnterForeground = YES;
                 self.appSessionStartDate = [NSDate date];
                 [NRMACPUVitals setAppStartCPUTime];
-
+                
                 [NRMAMeasurements shutdown];
                 [NRMAHarvestController stop];
-
+                
                 [NRMAHarvestController initialize:self->_agentConfiguration];
-
+                
                 /*
                  * NRMAMeasurements must be started before the
                  * harvest controller Or else there is a chance the
@@ -610,7 +613,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 }
 
 #if !TARGET_OS_WATCH
-
 - (void) applicationWillEnterForeground:(UIApplication*)application {
     [self applicationWillEnterForeground];
 }
@@ -633,9 +635,9 @@ static UIBackgroundTaskIdentifier background_task;
                 // Invalidate the background_task.
                 background_task = UIBackgroundTaskInvalid;
             }
+#endif
         }
     });
-#endif
 }
 
 - (void) watchOSNotification:(NSString *)notification {
@@ -704,7 +706,7 @@ static UIBackgroundTaskIdentifier background_task;
 #elif TARGET_OS_WATCH
         WKExtension *application = [WKExtension sharedExtension];
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-
+#endif
         // Mark the start of the background task
         [processInfo performExpiringActivityWithReason:@"harvestOnAppBackground"
                                             usingBlock:^(BOOL expired) {
@@ -760,7 +762,6 @@ static UIBackgroundTaskIdentifier background_task;
                 NRLOG_VERBOSE(@"Background Harvest Complete");
             }
         }];
-#endif
         
 #if !TARGET_OS_WATCH
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
@@ -855,7 +856,7 @@ static UIBackgroundTaskIdentifier background_task;
 }
 
 
-void applicationDidEnterBackgroundCF() {
+void applicationDidEnterBackgroundCF(void) {
     NRLOG_VERBOSE(@"applicationDidEnterBackground called before didEnterForeground called.");
     return;
 }
@@ -921,6 +922,7 @@ void applicationDidEnterBackgroundCF() {
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                         name:kNRMemoryUsageDidChangeNotification
                                                       object:nil];
+#if !TARGET_OS_WATCH
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:UIApplicationDidEnterBackgroundNotification
                                                    object:[UIApplication sharedApplication]];
@@ -930,17 +932,18 @@ void applicationDidEnterBackgroundCF() {
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:UIApplicationWillTerminateNotification
                                                    object:[UIApplication sharedApplication]];
-
+#endif
         // # disable logging
         [NRLogger setLogLevels:NRLogLevelNone];
         [NRLogger clearLog];
-        
+
+#if !TARGET_OS_WATCH
         if (background_task != UIBackgroundTaskInvalid) {
             [[UIApplication sharedApplication] endBackgroundTask:background_task];
             // Invalidate the background_task.
             background_task = UIBackgroundTaskInvalid;
         }
-
+#endif
         // NOTE: We are leaving things swizzled in:
         // 1. NRMAURLSessionOverride
         // 2. NRMAMethodProfiler.

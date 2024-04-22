@@ -251,9 +251,9 @@ static NSString* _osVersion;
                         [carrier.carrierName caseInsensitiveCompare:@"--"] == NSOrderedSame) {
                         cachedCarrierName = NRMA_CARRIER_OTHER;
                     } else {
-#endif
                         cachedCarrierName = carrier.carrierName;
                     }
+#endif
                 } else if (internetStatus == NotReachable) {
                        cachedCarrierName = @"";
                 } else {

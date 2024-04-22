@@ -71,6 +71,7 @@ static NRMAStartTimer *_sharedInstance;
 
     // This is used as "first draw" timestamp in the "time to first draw" calculation.
     // UIWindow Notifications
+#if !TARGET_OS_WATCH
     [NSNotificationCenter.defaultCenter addObserver:self
                                            selector:@selector(didBecomeVisible)
                                                name:UIWindowDidBecomeVisibleNotification
@@ -90,6 +91,7 @@ static NRMAStartTimer *_sharedInstance;
                                            selector:@selector(didEnterBackground)
                                                name:UIApplicationDidEnterBackgroundNotification
                                              object:nil];
+#endif
 }
 
 - (void)createDurationMetric {
