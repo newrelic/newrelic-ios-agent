@@ -167,12 +167,16 @@ static NSString* __deviceIdentifierReplacement = NULL;
 }
 
 + (BOOL) shouldEnableLogReporting {
-    return NO;
-    //return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
 }
 + (BOOL) shouldEnableNewEventSystem {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_NewEventSystem) != 0;
 }
+
++ (BOOL) shouldEnableBackgroundReporting {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_BackgroundReporting) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -226,14 +230,16 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_OfflineStorage) == NRFeatureFlag_OfflineStorage) {
         [retArray addObject:@"OfflineStorage"];
     }
-
-    // NOTE: Temporarily removed NRFeatureFlag_LogReporting
-//    if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
-//        [retArray addObject:@"LogReporting"];
-//    }
+    if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
+        [retArray addObject:@"LogReporting"];
+    }
     if ((flags & NRFeatureFlag_NewEventSystem) == NRFeatureFlag_NewEventSystem) {
         [retArray addObject:@"NewEventSystem"];
     }
+    if ((flags & NRFeatureFlag_BackgroundReporting) == NRFeatureFlag_BackgroundReporting) {
+        [retArray addObject:@"BackgroundReporting"];
+    }
+    
     return retArray;
 }
 

@@ -124,7 +124,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
     // Get the size in bytes of the crash report to be uploaded via below uploadTaskWithRequest:fromFile call.
     __block NSData* reqData = [NSData dataWithContentsOfURL:path options:0 error:nil];
     NSURLRequest* request = [self buildPost];
-    
+
     if ([reqData length] > kNRMAMaxPayloadSizeLimit) {
         NRLOG_ERROR(@"Unable to upload crash log because payload is larger than 1 MB, discarding crash report");
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"mobile_crash"];
@@ -133,8 +133,10 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
         __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
 
         return;
-   }
-    
+    }
+
+    NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Perform crash upload");
+
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
         __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
 
@@ -142,7 +144,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
         if(responseError) {
             NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
         }
-        
+
         if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
 
             unsigned long long requestLength = [reqData length];
@@ -200,7 +202,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
     if (value.integerValue > kNRMAMaxCrashUploadRetry) {
         [self stopTrackingFileUploadWithUniqueIdentifier:key];
 
-        
+
         return NO;
     }
 

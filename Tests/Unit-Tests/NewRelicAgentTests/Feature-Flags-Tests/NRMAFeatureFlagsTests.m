@@ -249,4 +249,36 @@ static NRMAFeatureFlags __originalFlags;
     
     XCTAssertFalse([NRMAFlags shouldEnableFedRampSupport], @"FedRamp Support should be disabled");
 }
+
+- (void) testBackgroundInstrumentationEnable
+{
+    XCTAssertFalse([NRMAFlags shouldEnableBackgroundReporting], @"Since no flags have been set, BackgroundInstrumentation Support should be false");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_BackgroundReporting];
+
+    XCTAssertTrue([NRMAFlags shouldEnableBackgroundReporting], @"BackgroundInstrumentation Should be enabled");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_BackgroundReporting];
+
+    XCTAssertFalse([NRMAFlags shouldEnableBackgroundReporting], @"BackgroundInstrumentation should be disabled");
+}
+
+- (void) testShouldEnableLogReporting
+{
+    XCTAssertFalse([NRMAFlags shouldEnableLogReporting], @"since no flags have been set this should be false!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+
+    XCTAssertFalse([NRMAFlags shouldEnableLogReporting], @"this should now be disabled");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+
+    XCTAssertTrue([NRMAFlags shouldEnableLogReporting], @"this again be true!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+
+    XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
+}
+
+
 @end

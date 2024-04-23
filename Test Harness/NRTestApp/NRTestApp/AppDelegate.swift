@@ -26,16 +26,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NRMAFeatureFlags.NRFeatureFlag_WebViewInstrumentation
         ])
 #endif
-#if Enable_SWIFT_INTERACTION_TRACING
-        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_SwiftInteractionTracing)
-#endif
+
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
+        // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
+
+
+        // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
+
+        // NOTE: SERVER VALUE OF log_reporting { enabled: true/false } will be respected above all else.
+        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_LogReporting)
+
+        // Note: Disabled by default, it is required to enable NRLogTargetFile when using LogReporting.
+        NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
+
 
         NewRelic.replaceDeviceIdentifier("myDeviceId")
-
+        
+        NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
 
         if ProcessInfo.processInfo.environment["UITesting"] != nil {
@@ -65,9 +76,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                andCrashCollectorAddress: crashCollectorAddress)
             }
         }
-
+        
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
+
+        // REMOTE LOGGING: This is required to use a New Relic Mobile Logging.
+
+        if let logEntityGuid = plistHelper.objectFor(key: "logEntityGuid", plist: "NRAPI-Info") as? String, !logEntityGuid.isEmpty {
+            NRLogger.setLogEntityGuid(logEntityGuid)
+        }
+        else {
+            NewRelic.logInfo("NRLogger API uploading disabled. No Entity Guid given.")
+        }
 
         NewRelic.logVerbose("NewRelic.start was called.")
         return true
@@ -85,5 +105,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the user discards a scene session.
         // If any sessions were discarded while the application was not running, this will be called shortly after application:didFinishLaunchingWithOptions.
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
+    }
+
+
+    // Background fetch handling.
+    func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+
+        NewRelic.logVerbose("performFetchWithCompletionHandler called")
+        completionHandler(.newData)
     }
 }

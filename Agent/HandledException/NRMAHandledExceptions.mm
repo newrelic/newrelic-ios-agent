@@ -163,7 +163,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         @synchronized(r) {
             NRMANetworkStatus status = [r currentReachabilityStatus];
             if (status == NotReachable) {
-                report->setAttributeNoValidation("offline", true);
+                report->setAttributeNoValidation(__kNRMA_Attrib_offline, true);
             }
         }
     }
