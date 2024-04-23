@@ -73,30 +73,35 @@
     jsonDictionary[@"textContent"] = self.labelText;
     jsonDictionary[@"id"] = @(self.viewId);
     jsonDictionary[@"type"] = @(3);
+    jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
+    jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+    jsonDictionary[@"textColor"] = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
+    jsonDictionary[@"fontSize"] = @(self.fontSize);
+    jsonDictionary[@"fontFamily"] = self.fontFamily;
     
-    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
-    jsonDictionary[@"textColor"] = textColor;
+//    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
+//    jsonDictionary[@"textColor"] = textColor;
     
     NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
 
-    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx", self.frame.origin.y,
-                             self.frame.origin.x,
-                             self.frame.size.width,
-                             self.frame.size.height];
-    
-    frameString = [frameString stringByAppendingFormat:@";color:%@", textColor];
+//    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx", self.frame.origin.y,
+//                             self.frame.origin.x,
+//                             self.frame.size.width,
+//                             self.frame.size.height];
+//    
+//    frameString = [frameString stringByAppendingFormat:@";color:%@", textColor];
     
     // using pixels for font size temporarily as it's closer, though it's actually in points; might need to do some calculations instead
-    frameString = [frameString stringByAppendingFormat:@";font: %fpx %@", self.fontSize, self.fontFamily];
-    
-    if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-        jsonDictionary[@"backgroundColor"] = colorString;
-        frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
-    }
-    
-    attributesDictionary[@"style"] = frameString;
-    jsonDictionary[@"attributes"] = attributesDictionary;
+//    frameString = [frameString stringByAppendingFormat:@";font: %fpx %@", self.fontSize, self.fontFamily];
+//    
+//    if(self.backgroundColor != nil) {
+//        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+//        jsonDictionary[@"backgroundColor"] = colorString;
+//        frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
+//    }
+//    
+//    attributesDictionary[@"style"] = frameString;
+//    jsonDictionary[@"attributes"] = attributesDictionary;
     
     return jsonDictionary;
 }
