@@ -60,6 +60,34 @@ platform :ios do
     )
   end 
 
+  desc "Build watchOS.xcarchive / watchOS Sim framework"
+  lane : buildWatchOS do 
+    # Build Device
+    xcodebuild(
+      archive: true,
+      verbose: true,
+      archive_path: "#{Constants::ARCHIVES}/watchOS.xcarchive",
+      configuration: "#{Constants::MODE}",
+      workspace: "Agent.xcworkspace",
+      scheme: "Agent-watchOS",
+      sdk: "watchos",
+      derivedDataPath: Constants::DD,
+      xcargs: "SKIP_INSTALL=NO BUILD_LIBRARIES_FOR_DISTRIBUTION=YES",
+      raw_buildlog: true
+    )
+    # Build Sim
+    xcodebuild(
+      build: true, 
+      verbose: true,
+      configuration: "#{Constants::MODE}",
+      workspace: "Agent.xcworkspace",
+      scheme: "Agent-watchOS",
+      sdk: "watchsimulator",
+      derivedDataPath: Constants::DD,
+      raw_buildlog: true
+    )
+  end 
+
   desc "Build macOS.xcarchive"
   lane :buildMacOS do 
 

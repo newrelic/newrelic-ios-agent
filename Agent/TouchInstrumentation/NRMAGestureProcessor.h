@@ -18,6 +18,8 @@
 + (NSString*) getLabel:(id)control;
 + (NSString*) getResponderChain:(id)control;
 + (NSString*) getAccessibility:(id)control;
+#if !TARGET_OS_WATCH
 + (NSString*) getTouchCoordinates:(UIEvent*)event;
+#endif
 + (NSString*) getFrame:(id)control;
 @end
