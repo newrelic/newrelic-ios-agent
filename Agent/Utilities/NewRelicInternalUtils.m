@@ -12,7 +12,7 @@
 #import "NRConstants.h"
 #import "NRTimer.h"
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
 
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
 #import <CoreTelephony/CTCarrier.h>
@@ -123,13 +123,19 @@ static NSString* _osVersion;
     else if([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_WATCHOS]) {
         return NRMA_OSNAME_WATCHOS;
     }
-    
+    else if([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_VISIONOS]) {
+        return NRMA_OSNAME_VISIONOS;
+    }
+
     return NRMA_OSNAME_IOS;
 }
 
 + (NSString*) agentName {
     if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_TVOS]) {
         return @"tvOSAgent";
+    }
+    else if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_VISIONOS]) {
+        return @"visionOSAgent";
     }
     return @"iOSAgent";
 }
@@ -185,7 +191,7 @@ static NSString* _osVersion;
 
 // Returns the carrier name, or 'wifi' if the device is on a wifi network.
 + (NSString*) carrierName {
-#if TARGET_OS_TV
+#if TARGET_OS_TV || TARGET_OS_VISION
     return [self connectionType];
 #else
 #ifdef NRMA_REACHABILITY_DEBUG
@@ -279,7 +285,7 @@ static NSString* _osVersion;
 + (NSString*) deviceOrientation {
 
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_VISION
     switch ([[UIDevice currentDevice] orientation]) {
         case UIDeviceOrientationLandscapeLeft:
         case UIDeviceOrientationLandscapeRight:
