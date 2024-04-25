@@ -798,7 +798,8 @@
         NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
         [NRLogger setLogLevels:level];
 
-        [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+        // TODO: LogReporting
+       // [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
     }
     //TODO:
 //    // OVERWRITE user selected value for LogReporting -- Should must be included once API returns log_reporting { enabled: false} reliably.

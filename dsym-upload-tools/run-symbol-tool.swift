@@ -49,7 +49,9 @@ var dsymEndpointPath   = "symbol"
 var symbolUploadDataPostKey = "upload"
 var dsymUploadDataPostKey   = "dsym"
 
-var versionNumber = "7.4.10"
+var versionNumber = "7.4.11"
+
+// TODO: Integrate other platform names.
 var osName = "iOS"
 var platformName = "Native"
 var appVersionNumber = "1.2.3"
