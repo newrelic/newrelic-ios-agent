@@ -463,6 +463,20 @@
     XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
     XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
 
+    NSDictionary *dict = @{@"logLevel": @"WARN",
+                           @"message": @"This is a test message for the New Relic logging system."};
+
+    XCTAssertNoThrow([NewRelic logAll:dict]);
+
+    NSError* error = [NSError errorWithDomain:@"NSErrorUnknownDomain" code:NSURLErrorUnknown userInfo:@{}];
+
+    XCTAssertNoThrow([NewRelic logErrorObject:error]);
+
+    NSDictionary *dict2 = @{@"logLevel": @"WARN",
+                           @"message": @"This is a test message for the New Relic logging system."};
+
+    XCTAssertNoThrow([NewRelic logAttributes:dict2]);
+
 }
 
 - (void) testRecordHandledExceptionsNewEventSystem {

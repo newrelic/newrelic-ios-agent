@@ -922,6 +922,8 @@
 		2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
+		2BCA57B42B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
+		2BCA57B52B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BDCA8A42A8C40D50005740D /* NRMASAM.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BDCA8A32A8C40D50005740D /* NRMASAM.h */; };
 		2BDCA8A52A8C40D50005740D /* NRMASAM.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BDCA8A32A8C40D50005740D /* NRMASAM.h */; };
 		2BDCA8AA2A8C41160005740D /* NRMASAM.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA8A92A8C41160005740D /* NRMASAM.mm */; };
@@ -1886,6 +1888,8 @@
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
 		2BBBE6FA28BD528F003CADF3 /* NRMAStartTimerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAStartTimerTests.h; sourceTree = "<group>"; };
 		2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimerTests.m; sourceTree = "<group>"; };
+		2BCA579F2B7E85AD00991C5E /* NRLoggerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRLoggerTests.h; sourceTree = "<group>"; };
+		2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRLoggerTests.m; sourceTree = "<group>"; };
 		2BDCA8A32A8C40D50005740D /* NRMASAM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASAM.h; sourceTree = "<group>"; };
 		2BDCA8A92A8C41160005740D /* NRMASAM.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMASAM.mm; sourceTree = "<group>"; };
 		2BDCA8B02A8C43040005740D /* NRMASAMTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMASAMTest.mm; sourceTree = "<group>"; };
@@ -2326,6 +2330,8 @@
 				0209AC7524E7392E00E45C90 /* NewRelicNonJenkinsTests-Bridging-Header.h */,
 				0209AC7124E7392E00E45C90 /* NRCPUVitalsTest.h */,
 				0209AC8224E7393100E45C90 /* NRCPUVitalsTest.m */,
+				2BCA579F2B7E85AD00991C5E /* NRLoggerTests.h */,
+				2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */,
 				0209AC7924E7392F00E45C90 /* NRCustomMetricsTests.h */,
 				0209AC8624E7393200E45C90 /* NRCustomMetricsTests.m */,
 				0209AC8B24E7393300E45C90 /* NRMA_Swift_Trouble_Class.h */,
@@ -4340,6 +4346,7 @@
 				0209AC3F24E7075200E45C90 /* NRHarvesterStateTest.m in Sources */,
 				0209AC2F24E7073800E45C90 /* NRMAHarvestableHTTPReqeustTests.m in Sources */,
 				0209ABD724E706AE00E45C90 /* TestHexUploader.m in Sources */,
+				2BCA57B42B7E85AD00991C5E /* NRLoggerTests.m in Sources */,
 				0209AC2924E7071F00E45C90 /* NRMeasurementPoolTest.m in Sources */,
 				0209AC0324E7070900E45C90 /* NRMASessionExclusivityWithDelegateTests.m in Sources */,
 				0209AC8E24E7393300E45C90 /* NRThreadTest.m in Sources */,
@@ -4575,6 +4582,7 @@
 				2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */,
 				025657FC24EB19BF00FE3125 /* TestUITableViewInstrumentation.m in Sources */,
 				025657FD24EB19BF00FE3125 /* TestHexUploadPublisher.mm in Sources */,
+				2BCA57B52B7E85AD00991C5E /* NRLoggerTests.m in Sources */,
 				025657FE24EB19BF00FE3125 /* NRMetricTests.m in Sources */,
 				343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0256580124EB19BF00FE3125 /* NRMAActingClassUtilsTest.m in Sources */,
