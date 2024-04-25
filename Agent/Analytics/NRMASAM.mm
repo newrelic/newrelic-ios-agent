@@ -209,44 +209,18 @@
     return nil;
 }
 
-// Public Attributes Only
-- (NSString*) publicSessionAttributeJSONString {
-
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:attributeDict options:0 error:&error];
-    if (!jsonData) {
-        NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
-    }
-    else {
-        NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-
-        return jsonString;
-    }
-    return nil;
-}
-
-// Private Attributes Only
-- (NSString*) privateSessionAttributeJSONString {
-
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:privateAttributeDict options:0 error:&error];
-    if (!jsonData) {
-        NRLOG_ERROR(@"Failed to create session attribute json w/ error = %@", error);
-    }
-    else {
-        NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-
-        return jsonString;
-    }
-    return nil;
-}
-
 + (NSString*) getLastSessionsAttributes {
     NSError *error;
     NSString *lastSessionAttributesJsonString = nil;
     NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[self attributeFilePath]];
+    NSDictionary *lastSessionPrivateAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM privateAttributeFilePath]];
+
+    NSMutableDictionary *mergedDictionary = [NSMutableDictionary dictionary];
+    [mergedDictionary addEntriesFromDictionary:lastSessionAttributes];
+    [mergedDictionary addEntriesFromDictionary:lastSessionPrivateAttributes];
+
     @try {
-         NSData *lastSessionAttributesJsonData = [NRMAJSON dataWithJSONObject:lastSessionAttributes
+         NSData *lastSessionAttributesJsonData = [NRMAJSON dataWithJSONObject:mergedDictionary
                                                                       options:0
                                                                         error:&error];
          lastSessionAttributesJsonString = [[NSString alloc] initWithData:lastSessionAttributesJsonData
