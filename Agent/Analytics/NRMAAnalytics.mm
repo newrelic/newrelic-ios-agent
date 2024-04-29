@@ -917,9 +917,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (BOOL) checkBackgroundStatus {
+#if !TARGET_OS_WATCH
     if([NRMAFlags shouldEnableBackgroundReporting]) {
         return ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground);
     }
+#endif
     return false;
 }
 
