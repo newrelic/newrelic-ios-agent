@@ -61,7 +61,7 @@ platform :ios do
   end 
 
   desc "Build watchOS.xcarchive / watchOS Sim framework"
-  lane : buildWatchOS do 
+  lane :buildWatchOS do 
     # Build Device
     xcodebuild(
       archive: true,
