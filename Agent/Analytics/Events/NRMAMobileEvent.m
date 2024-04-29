@@ -41,12 +41,14 @@ static NSString* const kAttributesKey = @"Attributes";
                 }
             }
         }
+#if !TARGET_OS_WATCH
         // Handle Background attribute addition.
         if([NRMAFlags shouldEnableBackgroundReporting]) {
             if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
                 [self addAttribute:kNRMA_Attrib_background value:@YES];
             }
         }
+#endif
     }
     
     return self;

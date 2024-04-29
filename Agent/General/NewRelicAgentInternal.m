@@ -159,6 +159,7 @@ static NewRelicAgentInternal* _sharedInstance;
     if (self) {
 
         // NOTE: BackgroundReporting is only enabled for iOS 13+.
+#if !TARGET_OS_WATCH
         if ([NRMAFlags shouldEnableBackgroundReporting]) {
             if (@available(iOS 13.0, *)) {
                 [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:[[NSBundle mainBundle] bundleIdentifier] usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
@@ -166,7 +167,7 @@ static NewRelicAgentInternal* _sharedInstance;
                 }];
             }
         }
-
+#endif
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
 #if TARGET_OS_WATCH
@@ -212,10 +213,11 @@ static NewRelicAgentInternal* _sharedInstance;
                                                        object:[UIApplication sharedApplication]];
 #endif
 
+#if !TARGET_OS_WATCH
             if ([NRMAFlags shouldEnableBackgroundReporting]) {
                 [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
             }
-
+#endif
             NRLOG_INFO(@"Agent enabled");
 
             // Store Data For Crash Reporter
@@ -570,8 +572,9 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
         return;
     }
 
+#if !TARGET_OS_WATCH
     _currentApplicationState = UIApplicationStateActive;
-
+#endif
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                              0),
                    ^{
@@ -676,8 +679,9 @@ static UIBackgroundTaskIdentifier background_task;
     // We are leaving the background.
     didFireEnterForeground = NO;
     
+#if !TARGET_OS_WATCH
     _currentApplicationState = UIApplicationStateBackground;
-
+#endif
     [[NRMAHarvestController harvestController].harvestTimer stop];
 
     // Disable observers.
@@ -889,6 +893,7 @@ void applicationDidEnterBackgroundCF(void) {
     return;
 }
 
+#if !TARGET_OS_WATCH
 // We only support background fetch in iOS 13+
 - (void) scheduleHeartbeatTask {
     if (@available(iOS 13.0, *)) {
@@ -935,7 +940,7 @@ void applicationDidEnterBackgroundCF(void) {
     }
 
 }
-
+#endif
 + (BOOL) harvestNow {
     return [NRMAHarvestController harvestNow];
 }

@@ -126,17 +126,11 @@ static NSString* _osVersion;
 + (NSString*) osName {
     // We do this to retain the "iOS" value. +systemName returns "iphone OS" for iOS now.
 #if TARGET_OS_WATCH
-    // TODO: When support exists, have this return WatchOS, not IOS
-//    return NRMA_OSNAME_WATCHOS;
-    return NRMA_OSNAME_IOS;
+    return NRMA_OSNAME_WATCHOS;
 #else
     if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_TVOS]) {
         return NRMA_OSNAME_TVOS;
     }
-    else if([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_WATCHOS]) {
-        return NRMA_OSNAME_WATCHOS;
-    }
-
 
     return NRMA_OSNAME_IOS;
 #endif
@@ -144,8 +138,6 @@ static NSString* _osVersion;
 
 + (NSString*) agentName {
 #if TARGET_OS_WATCH
-    // TODO: When support exists, have this return WatchOS, not IOS
-    return @"iOSAgent";
     return @"watchOSAgent";
 #else
     if ([[[UIDevice currentDevice] systemName] isEqualToString:NRMA_OSNAME_TVOS]) {
