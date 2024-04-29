@@ -108,7 +108,7 @@ didCompleteWithError:(nullable NSError*)error {
 #endif
         [self handledErroredRequest:task.originalRequest];
     } else {
-        NRLOG_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
+        NRLOG_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
     }
 }
 

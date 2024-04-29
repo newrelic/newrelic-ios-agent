@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>crashCollectorAddress</key>
-	<string>staging-mobile-crash.newrelic.com</string>
+	<string></string>
 	<key>collectorAddress</key>
-	<string>staging-mobile-collector.newrelic.com</string>
-	<key>logIngestKey</key>
+	<string></string>
+	<key>logEntityGuid</key>
 	<string></string>
 	<key>NRAPIKey</key>
-	<string>AA79b1eeb4e2a8f0ac23db15828c7720028e1360ec-NRMA</string>
+	<string></string>
 </dict>
 </plist>

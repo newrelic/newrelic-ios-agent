@@ -21,6 +21,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
 #import "Constants.h"
+#import "NewRelicAgentInternal.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -328,6 +329,17 @@
         case ENTITY_TOO_LARGE:
             [self.harvestData clear];
             break;
+        case CONFIGURATION_UPDATE:
+            // WHEN RECEIVING A 409 status code from the /data endpoint we will PERFORM A CONNECT CALL TO REFRESH THE CONFIG.
+            [self clearStoredHarvesterConfiguration];
+            [self transition:NRMA_HARVEST_DISCONNECTED];
+            // Reconnect performed here.
+            [self execute];
+
+            // Send Supportability metric when received 409 to indicate that a config update should happen or send it when actual /connect call finishes which refreshes the data.
+            [NRMASupportMetricHelper enqueueConfigurationUpdateMetric];
+            
+            break;
         default:
             break;
     }
@@ -352,7 +364,14 @@
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif
-        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Collector/Harvest"
+        NSString *name;
+        if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
+        }
+        else {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest";
+        }
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:name
                                                         value:[NSNumber numberWithDouble:harvestTimer.timeElapsedInSeconds]
                                                         scope:@""]];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -391,6 +410,8 @@
     if (configuration == nil) {
         configuration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
     }
+
+    [self handleLoggingConfigurationUpdate];
 
     // If we have a data token (config is valid), then skip the connect call.
     if (configuration.isValid && [configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
@@ -434,6 +455,9 @@
         }
         // Configuration saved here.
         configuration.application_token = connection.applicationToken;
+
+        [self handleLoggingConfigurationUpdate];
+
         [self saveHarvesterConfiguration:configuration];
 
         [NRMASupportMetricHelper processDeferredMetrics];
@@ -513,6 +537,41 @@
     NRMAHarvesterConfiguration* config = nil;
     @try {
         NSError* error = nil;
+        
+//        // TODO: Remove CannedConnect response
+////
+//        // Obfuscated secrets values.
+//        NSString *cannedConnect = @"{\n"
+//            @" \"server_timestamp\":1701302638,"
+//            @" \"collect_network_errors\":true,"
+//            @" \"activity_trace_max_size\":65535,"
+//            @" \"data_report_period\":60,"
+//            @" \"response_body_limit\":2048,"
+//            @" \"activity_trace_min_utilization\":0.3,"
+//            @" \"stack_trace_limit\":100,"
+//            @" \"report_max_transaction_age\":600,"
+//            @" \"report_max_transaction_count\":1000,"
+//            @" \"error_limit\":50,"
+//            @" \"at_capture\":[1,[]],"
+//            @" \"data_token\":[31111113,52222220],"
+//            @" \"cross_process_id\":\"VQYPSFAaAQcRV1hSBQYDLVc=\","
+//            @" \"encoding_key\":\"d67afd830dab717fd263bfcb1b8b88423e9a1a3c\",\n"
+//            @" \"account_id\":\"13313993\","
+//            @" \"application_id\":\"19225431\","
+//            @" \"trusted_account_key\":\"1\","
+//            @" \"entity_guid\": \"MTA4MTY5OTR8TU9ASUxFfEFQUExDQ0FUSU9OfDM5MDI3NDMz\","
+//            @" \"log_reporting\": {"
+//             @"   \"enabled\": true,"
+//             @"   \"level\": \"NONE \""
+//           @"}"
+//        @"}";
+//        // CANNED CONFIG
+//        NRLOG_VERBOSE(@"Harvest config canned: %@", cannedConnect);
+//        id jsonObject = [NRMAJSON JSONObjectWithData: [cannedConnect dataUsingEncoding:NSUTF8StringEncoding]
+//                                             options:0
+//                                               error:&error];
+
+        // REAL CONFIG
         NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
         id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
                                              options:0
@@ -631,7 +690,7 @@
         }
         if ([NRMAFlags shouldEnableLogReporting]) {
             // Do log upload
-            [NRLogger upload];
+            [NRLogger enqueueLogUpload];
         }
     }
 }
@@ -723,6 +782,30 @@
 
 - (void) setMaxOfflineStorageSize:(NSUInteger) size {
     [connection setMaxOfflineStorageSize:size];
+}
+
+- (void) handleLoggingConfigurationUpdate {
+    // TODO: Evaluating if this is the best spot?
+    
+    // Should it check if remote logs are already on?
+    
+    // Code for dynamically enabling or disabling remote logging at runtime based on the state of configuration.log_reporting_enabled and the existing state of NRFlags.NRFeatureFlag_LogReporting
+    if (configuration.log_reporting_enabled) {
+        // it is required to enable NRLogTargetFile when using LogReporting.
+        // Should this be done programmatically?
+        [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
+        // Parse NSString into NRLogLevel
+        NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
+        [NRLogger setLogLevels:level];
+
+        // TODO: LogReporting
+       // [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+    }
+    //TODO:
+//    // OVERWRITE user selected value for LogReporting -- Should must be included once API returns log_reporting { enabled: false} reliably.
+//    else {
+//        [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+//    }
 }
 
 @end
