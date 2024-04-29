@@ -86,6 +86,20 @@
         self.application_id = [[dict valueForKey:kNMRA_APPLICATION_ID] longLongValue];
         self.trusted_account_key = [dict valueForKey:kNRMA_TRUSTED_ACCOUNT_KEY];
 
+        if ([dict objectForKey:kNRMA_ENTITY_GUID_KEY]) {
+            self.entity_guid = [dict valueForKey:kNRMA_ENTITY_GUID_KEY];
+        } else {
+            self.entity_guid = @"";
+        }
+
+        // begin parsing log reporting section.
+        if ([dict objectForKey:kNRMA_LOG_REPORTING_KEY]) {
+            id innerDict = [dict objectForKey:kNRMA_LOG_REPORTING_KEY];
+            self.log_reporting_enabled = innerDict[@"enabled"];
+            self.log_reporting_level = innerDict[@"level"];
+        }
+        // end parsing log reporting section.
+
         // The collector does not currently send down this key, but we still want a sane default
         if ([dict objectForKey:kNRMA_AT_MAX_SEND_ATTEMPTS]) {
             self.activity_trace_max_send_attempts = [[dict valueForKey:kNRMA_AT_MAX_SEND_ATTEMPTS] intValue];
@@ -110,6 +124,8 @@
     configuration.activity_trace_max_send_attempts = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SEND_ATTEMPTS;
     configuration.activity_trace_min_utilization = NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION;
     configuration.trusted_account_key = @"";
+    configuration.entity_guid = @"";
+    configuration.log_reporting_level = @"WARNING";
 
     configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
     return configuration;
@@ -148,7 +164,17 @@
     dictionary[kNMRA_APPLICATION_ID] = @(self.application_id);
     dictionary[kNRMA_ACCOUNT_ID] = @(self.account_id);
     dictionary[kNRMA_ENCODING_KEY] = self.encoding_key;
-    dictionary[kNRMA_TRUSTED_ACCOUNT_KEY] = self.trusted_account_key;
+
+    if ([self.trusted_account_key length]) {
+        dictionary[kNRMA_TRUSTED_ACCOUNT_KEY] = self.trusted_account_key;
+    }
+
+    if ([self.entity_guid length]) {
+        dictionary[kNRMA_ENTITY_GUID_KEY] = self.entity_guid;
+    }
+
+    // TODO: Check the right way to handle this inner Dict.
+    //dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level};
 
     return dictionary;
 }

@@ -376,26 +376,27 @@
 
 -(void) testAddHTTPHeaderTrackingDefault {
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
-    XCTAssertNotNil([NRMAHTTPUtilities trackedHeaderFields]);
-    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-NAME"]);
-    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-TYPE"]);
-    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"X-APOLLO-OPERATION-ID"]);
+//    [NewRelic httpHeadersAddedForTracking]
+    XCTAssertNotNil([NewRelic httpHeadersAddedForTracking]);
+    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-NAME"]);
+    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-TYPE"]);
+    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-ID"]);
 }
 
 -(void) testAddHTTPHeaderTracking {
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
-
+    
     // Add a new header value to track
     [NewRelic addHTTPHeaderTrackingFor:@[@"Test"]];
 
-    XCTAssertNotNil([NRMAHTTPUtilities trackedHeaderFields]);
-    XCTAssertTrue([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"Test"]);
-    XCTAssertFalse([[NRMAHTTPUtilities trackedHeaderFields] containsObject:@"Fake"]);
+    XCTAssertNotNil([NewRelic httpHeadersAddedForTracking]);
+    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"Test"]);
+    XCTAssertFalse([[NewRelic httpHeadersAddedForTracking] containsObject:@"Fake"]);
     
     // Make sure you can't add duplicates
-    NSUInteger count = [NRMAHTTPUtilities trackedHeaderFields].count;
+    NSUInteger count = [NewRelic httpHeadersAddedForTracking].count;
     [NewRelic addHTTPHeaderTrackingFor:@[@"Test", @"X-APOLLO-OPERATION-TYPE"]];
-    XCTAssertTrue([NRMAHTTPUtilities trackedHeaderFields].count == count);
+    XCTAssertTrue([NewRelic httpHeadersAddedForTracking].count == count);
 }
 
 -(void) testSetShutdown {
@@ -461,6 +462,20 @@
     XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
     XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
     XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+
+    NSDictionary *dict = @{@"logLevel": @"WARN",
+                           @"message": @"This is a test message for the New Relic logging system."};
+
+    XCTAssertNoThrow([NewRelic logAll:dict]);
+
+    NSError* error = [NSError errorWithDomain:@"NSErrorUnknownDomain" code:NSURLErrorUnknown userInfo:@{}];
+
+    XCTAssertNoThrow([NewRelic logErrorObject:error]);
+
+    NSDictionary *dict2 = @{@"logLevel": @"WARN",
+                           @"message": @"This is a test message for the New Relic logging system."};
+
+    XCTAssertNoThrow([NewRelic logAttributes:dict2]);
 
 }
 

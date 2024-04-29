@@ -470,8 +470,44 @@
     NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                                options:0
                                                                  error:nil];
-
     XCTAssertTrue([dictionary[@"aBoolValue"] boolValue]);
+
+    // Test Persistent
+    [analytics setSessionAttribute:@"aBoolValueP" value:[[NRMABool alloc] initWithBOOL:YES] persistent:YES];
+    NSString* json2 = [analytics analyticsJSONString];
+    json2 = [analytics sessionAttributeJSONString];
+
+    NSDictionary* dictionary2 = [NSJSONSerialization JSONObjectWithData:[json2 dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
+
+    XCTAssertTrue([dictionary2[@"aBoolValueP"] boolValue]);
+}
+
+- (void) testRawBoolSessionAttribute {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setSessionAttribute:@"aBoolValue2" value:@YES];
+
+    NSString* json = [analytics analyticsJSONString];
+    json = [analytics sessionAttributeJSONString];
+
+    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
+    XCTAssertTrue([dictionary[@"aBoolValue2"] boolValue]);
+
+    // Test Persistent.
+
+    [analytics setSessionAttribute:@"aBoolValue2P" value:@YES persistent:YES];
+
+    NSString* json2 = [analytics analyticsJSONString];
+    json2 = [analytics sessionAttributeJSONString];
+
+    NSDictionary* dictionary2 = [NSJSONSerialization JSONObjectWithData:[json2 dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
+
+    XCTAssertTrue([dictionary2[@"aBoolValue2P"] boolValue]);
 }
 
 - (void)testBooleanEventAttribute {

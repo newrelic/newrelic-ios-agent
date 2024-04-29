@@ -56,6 +56,59 @@
     NRLOG_AUDIT(@"%@", message);
 }
 
++ (void) logDebug:(NSString* __nonnull) message {
+    NRLOG_DEBUG(@"%@", message);
+}
+
++ (void) log:(NSString* __nonnull) message level:(NRLogLevels)level {
+    switch (level) {
+        case NRLogLevelError:
+            NRLOG_ERROR(@"%@", message);
+            break;
+        case NRLogLevelWarning:
+            NRLOG_WARNING(@"%@", message);
+            break;
+        case NRLogLevelInfo:
+            NRLOG_INFO(@"%@", message);
+            break;
+        case NRLogLevelVerbose:
+            NRLOG_VERBOSE(@"%@", message);
+            break;
+        case NRLogLevelAudit:
+            NRLOG_AUDIT(@"%@", message);
+            break;
+        case NRLogLevelDebug:
+            NRLOG_DEBUG(@"%@", message);
+            break;
+        default:
+            break;
+    }
+}
+
++ (void) logAll:(NSDictionary* __nonnull) dict {
+    NSString* message = [dict objectForKey:@"message"];
+    NSString* level = [dict objectForKey:@"logLevel"];
+
+    NRLogLevels levels = [NRLogger stringToLevel: level];
+
+    [self log:message level:levels];
+}
+
++ (void) logAttributes:(NSDictionary* __nonnull) dict {
+    NSString* message = [dict objectForKey:@"message"];
+    NSString* level = [dict objectForKey:@"logLevel"];
+
+    NRLogLevels levels = [NRLogger stringToLevel: level];
+
+    [self log:message level:levels];
+}
+
++ (void) logErrorObject:(NSError* __nonnull) error {
+    NSString * errorDesc = error.localizedDescription;
+
+    [self logError:[NSString stringWithFormat:@"Error encountered: %@", errorDesc]];
+}
+
 + (void) crashNow:(NSString*)message
 {
     // If Agent is shutdown we shouldn't respond.
@@ -337,6 +390,10 @@
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:headers];
 }
 
++ (NSArray<NSString*>* _Nonnull)httpHeadersAddedForTracking {
+    return [NRMAHTTPUtilities trackedHeaderFields];
+}
+
 
 #pragma mark - Interactions
 
@@ -523,7 +580,8 @@
     }
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:name
-                                                                                     value:value];
+                                                                                     value:value
+                                                                                    persistent:YES];
 }
 
 + (BOOL) incrementAttribute:(NSString*)name {
@@ -538,12 +596,15 @@
     }
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController incrementSessionAttribute:name
-                                                                                           value:value];
+                                                                                           value:value
+                                                                                      persistent:YES];
 }
 
 + (BOOL) setUserId:(NSString*)userId {
     return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:@"userId"
-                                                                                     value:userId];
+                                                                                     value:userId
+                                                                                persistent:YES];
+
 }
 
 + (BOOL) removeAttribute:(NSString*)name {
