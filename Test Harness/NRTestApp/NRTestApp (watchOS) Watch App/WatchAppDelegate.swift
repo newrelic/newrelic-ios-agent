@@ -34,7 +34,7 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
                            andCrashCollectorAddress: "localhost:8080")
         }
         else {
-            // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
+            // Generate your own api key to see data get sent to your app's New Relic web services.
             guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return}
 
             // Changing the collector and crash collector addresses is not necessary to use New Relic production servers.
