@@ -27,6 +27,10 @@ class UtilViewModel {
 
     let taskProcessor = TaskProcessor()
     let taskProcessor2 = TaskProcessorNoDidRcvResp()
+    
+    init() {
+        createUtilOptions()
+    }
 
     func createUtilOptions() {
         options.append(UtilOption(title: "Add Valid Breadcrumb", handler: { [self] in makeValidBreadcrumb()}))
@@ -190,7 +194,7 @@ class UtilViewModel {
     }
 
     @objc func make100SpecialCharacterLogs() {
-        for i in 0...100 {
+        for _ in 0...100 {
             NewRelic.logInfo("/")
             // Testing special character
             NewRelic.logInfo("\\")
@@ -208,7 +212,7 @@ class UtilViewModel {
     }
 
     @objc func make100Logs() {
-        for i in 0...100 {
+        for _ in 0...100 {
             NewRelic.logInfo("I")
             NewRelic.logInfo("L")
             NewRelic.logInfo("O")
