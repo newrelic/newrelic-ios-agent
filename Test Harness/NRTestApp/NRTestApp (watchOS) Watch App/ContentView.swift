@@ -18,7 +18,6 @@ struct ContentView: View {
                 option.handler()
             }
         }
-        .padding()
         .NRTrackView(name: "WatchOSContentView")
     }
 }
