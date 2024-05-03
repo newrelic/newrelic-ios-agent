@@ -15,4 +15,7 @@ Pod::Spec.new do |s|
   s.ios.frameworks         = "CoreTelephony"
   s.libraries              = "z","c++"
   s.requires_arc           = false
+  s.resource_bundle = {
+    "NewRelicAgent_Privacy" => 'PrivacyInfo.xcprivacy'
+  }
 end
