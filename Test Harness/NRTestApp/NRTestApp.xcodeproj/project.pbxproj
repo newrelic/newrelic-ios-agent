@@ -1103,7 +1103,7 @@
 				CODE_SIGN_ENTITLEMENTS = NRTestApp/NRTestApp.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"ENABLE_APP_SANDBOX[sdk=*]" = NO;
 				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
@@ -1146,7 +1146,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
