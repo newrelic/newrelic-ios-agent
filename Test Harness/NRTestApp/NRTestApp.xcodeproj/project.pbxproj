@@ -35,7 +35,6 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
-		F802EE912BE0218600AB956F /* NRTestApp (watchOS) Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
 		F802EE9A2BE0218700AB956F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F802EE992BE0218700AB956F /* Assets.xcassets */; };
@@ -112,13 +111,6 @@
 			remoteGlobalIDString = F8302AF4296F5EFA003EC291;
 			remoteInfo = NRTestApp;
 		};
-		F802EE922BE0218600AB956F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F802EE8F2BE0218600AB956F;
-			remoteInfo = "NRTestApp (watchOS) Watch App";
-		};
 		F802EEA92BE0218700AB956F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
@@ -189,17 +181,6 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F802EEA02BE0218700AB956F /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				F802EE912BE0218600AB956F /* NRTestApp (watchOS) Watch App.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		F802EED42BE0240A00AB956F /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -254,7 +235,6 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
-		F802EE8B2BE0218600AB956F /* NRTestApp (watchOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS) Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS_App.swift; sourceTree = "<group>"; };
 		F802EE972BE0218600AB956F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -443,7 +423,6 @@
 				F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */,
 				F848CDE12AA270E80082052F /* NRTestApp(tvOS)Tests.xctest */,
 				2BD05DD12ADF323A00C0C972 /* NRTestAppUITests.xctest */,
-				F802EE8B2BE0218600AB956F /* NRTestApp (watchOS).app */,
 				F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */,
 			);
 			name = Products;
@@ -611,23 +590,6 @@
 			productReference = 2BD05DD12ADF323A00C0C972 /* NRTestAppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
-		F802EE8A2BE0218600AB956F /* NRTestApp (watchOS) */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F802EEAC2BE0218700AB956F /* Build configuration list for PBXNativeTarget "NRTestApp (watchOS)" */;
-			buildPhases = (
-				F802EE892BE0218600AB956F /* Resources */,
-				F802EEA02BE0218700AB956F /* Embed Watch Content */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F802EE932BE0218600AB956F /* PBXTargetDependency */,
-			);
-			name = "NRTestApp (watchOS)";
-			productName = "NRTestApp (watchOS)";
-			productReference = F802EE8B2BE0218600AB956F /* NRTestApp (watchOS).app */;
-			productType = "com.apple.product-type.application.watchapp2-container";
-		};
 		F802EE8F2BE0218600AB956F /* NRTestApp (watchOS) Watch App */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F802EEAB2BE0218700AB956F /* Build configuration list for PBXNativeTarget "NRTestApp (watchOS) Watch App" */;
@@ -734,9 +696,6 @@
 						CreatedOnToolsVersion = 15.0;
 						TestTargetID = F8302AF4296F5EFA003EC291;
 					};
-					F802EE8A2BE0218600AB956F = {
-						CreatedOnToolsVersion = 15.3;
-					};
 					F802EE8F2BE0218600AB956F = {
 						CreatedOnToolsVersion = 15.3;
 					};
@@ -778,7 +737,6 @@
 			targets = (
 				F8302AF4296F5EFA003EC291 /* NRTestApp */,
 				F86428E92979CDAF002ABA01 /* NRTestApp (tvOS) */,
-				F802EE8A2BE0218600AB956F /* NRTestApp (watchOS) */,
 				F802EE8F2BE0218600AB956F /* NRTestApp (watchOS) Watch App */,
 				F8302B0A296F5EFB003EC291 /* NRTestAppTests */,
 				F848CDE02AA270E80082052F /* NRTestApp(tvOS)Tests */,
@@ -840,13 +798,6 @@
 				2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */,
 				2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */,
 				2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F802EE892BE0218600AB956F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1063,11 +1014,6 @@
 			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
 			targetProxy = 2BD05DD72ADF323A00C0C972 /* PBXContainerItemProxy */;
 		};
-		F802EE932BE0218600AB956F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F802EE8F2BE0218600AB956F /* NRTestApp (watchOS) Watch App */;
-			targetProxy = F802EE922BE0218600AB956F /* PBXContainerItemProxy */;
-		};
 		F8302B0D296F5EFB003EC291 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
@@ -1152,45 +1098,6 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = NRTestApp;
-			};
-			name = Release;
-		};
-		F802EE9E2BE0218700AB956F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				INFOPLIST_KEY_CFBundleDisplayName = "NRTestApp (watchOS)";
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "newrelic.NRTestApp--watchOS-";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		F802EE9F2BE0218700AB956F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				INFOPLIST_KEY_CFBundleDisplayName = "NRTestApp (watchOS)";
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "newrelic.NRTestApp--watchOS-";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -1638,15 +1545,6 @@
 			buildConfigurations = (
 				F802EEA12BE0218700AB956F /* Debug */,
 				F802EEA22BE0218700AB956F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		F802EEAC2BE0218700AB956F /* Build configuration list for PBXNativeTarget "NRTestApp (watchOS)" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F802EE9E2BE0218700AB956F /* Debug */,
-				F802EE9F2BE0218700AB956F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
