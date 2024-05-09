@@ -2,7 +2,10 @@
 <Workspace
    version = "1.0">
    <FileRef
-       location = "container:Agent.xcodeproj">
+      location = "group:Tests/Agent-watchOS.xctestplan">
+   </FileRef>
+   <FileRef
+      location = "container:Agent.xcodeproj">
    </FileRef>
    <FileRef
       location = "container:Test Harness/NRTestApp/NRTestApp.xcodeproj">
