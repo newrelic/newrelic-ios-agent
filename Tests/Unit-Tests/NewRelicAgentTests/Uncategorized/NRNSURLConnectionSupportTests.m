@@ -77,7 +77,7 @@
     [[[mock stub] andDo:^(NSInvocation *invo) {
       id block = (id)[[^(id _self, NSURLRequest* request, NSURLResponse** response, NSError** error) {
             blockOverrideSendSynchronousCalled = YES;
-      }copy]autorelease];
+      }copy] autorelease];
         [invo setReturnValue:(void*)&block];
 
     }] poseImplementationBlockForSelector:@selector(sendSynchronousRequest:returningResponse:error:)];
@@ -109,9 +109,9 @@
     XCTAssertTrue(initWithRequest_delegate_startImmediately ==  [NRMANSURLConnectionSupport getNRMA_InitWithRequest_Delegate_StartImmediately],@"initWithRequest:delegate:startImmediately stored IMP doesn't match  original IMP.");
 }
 
+#if !TARGET_OS_WATCH
 - (void) testSendSynchronousCalled
 {
-
     XCTAssertFalse(blockOverrideSendSynchronousCalled, @"Verify bool is not set");
 
 #pragma clang diagnostic push
@@ -120,6 +120,9 @@
 #pragma clang diagnostic pop
     XCTAssertTrue(blockOverrideSendSynchronousCalled, @"Verify our override-method block is called");
 }
+#endif
+
+#if !TARGET_OS_WATCH
 
 - (void) testSendAsyncCall
 {
@@ -130,8 +133,9 @@
 #pragma clang diagnostic pop
     XCTAssertTrue(blockOverrideSendAsyncCall, @"Verify our override-method block is called");
 }
+#endif
 
-
+#if !TARGET_OS_WATCH
 - (void) testInitWithRequest
 {
     //fetch ptr to original IMP (uiviewcontroller ....)
@@ -159,7 +163,7 @@
             XCTAssertTrue([((NRMANSURLConnectionDelegateBase*)delegate) timer].startTimeMillis == 0, @"assert the timer has not been started");
         }
 
-    }copy]autorelease]);
+    }copy] autorelease]);
 
     [NRMANSURLConnectionSupport set__NRMA__initWithRequest_delegate_startImmediately:override];
 
@@ -176,5 +180,6 @@
     assert(tmp == [NRMANSURLConnectionSupport getNRMA_InitWithRequest_Delegate_StartImmediately]);
 
 }
+#endif
 
 @end

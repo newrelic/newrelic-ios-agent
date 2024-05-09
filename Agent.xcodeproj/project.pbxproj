@@ -1030,6 +1030,7 @@
 		3431DD932BED4C9F00FF145F /* PersistentStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */; };
 		3431DD942BED4D1700FF145F /* NRMAUserActionBuilderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC5024E707AB00E45C90 /* NRMAUserActionBuilderTest.m */; };
 		3431DD972BED87BD00FF145F /* NRMAUDIDManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACAB24E7394400E45C90 /* NRMAUDIDManagerTest.m */; };
+		3431DD982BED8B3600FF145F /* NRNSURLConnectionSupportTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC7C24E7393000E45C90 /* NRNSURLConnectionSupportTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343D4AEF2BC75E3C0064F979 /* NRMAUDIDManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4A8324DC652C00115469 /* NRMAUDIDManager.h */; };
@@ -5734,6 +5735,7 @@
 				3431DD3A2BED384700FF145F /* NRMAUUIDStoreTests.m in Sources */,
 				3431DD682BED44E400FF145F /* NRThreadInfoTests.m in Sources */,
 				3431DD6A2BED44E400FF145F /* NRGCDOverrideTest.m in Sources */,
+				3431DD982BED8B3600FF145F /* NRNSURLConnectionSupportTests.m in Sources */,
 				3431DD6B2BED44E400FF145F /* NRMALastActivityTraceControllerTest.m in Sources */,
 				3431DD842BED4A9900FF145F /* NRMAFeatureFlagsTests.m in Sources */,
 				3431DD8D2BED4C8A00FF145F /* TestIntegratedEventManager.m in Sources */,
