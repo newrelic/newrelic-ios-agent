@@ -1031,6 +1031,8 @@
 		3431DD942BED4D1700FF145F /* NRMAUserActionBuilderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC5024E707AB00E45C90 /* NRMAUserActionBuilderTest.m */; };
 		3431DD972BED87BD00FF145F /* NRMAUDIDManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACAB24E7394400E45C90 /* NRMAUDIDManagerTest.m */; };
 		3431DD982BED8B3600FF145F /* NRNSURLConnectionSupportTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC7C24E7393000E45C90 /* NRNSURLConnectionSupportTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		3431DD9A2BED8E5B00FF145F /* APINetworkNoticeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC0624E7071400E45C90 /* APINetworkNoticeTest.m */; };
+		3431DD9B2BED956200FF145F /* NRTraceMachineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABE624E706F900E45C90 /* NRTraceMachineTests.m */; };
 		343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343D4AEF2BC75E3C0064F979 /* NRMAUDIDManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4A8324DC652C00115469 /* NRMAUDIDManager.h */; };
@@ -5728,6 +5730,7 @@
 				3431DD4F2BED38C900FF145F /* NRThreadTest.m in Sources */,
 				3431DD632BED398600FF145F /* NRAgentTestBase.m in Sources */,
 				3431DD552BED38F100FF145F /* NRMAFakeDataHelper.m in Sources */,
+				3431DD9A2BED8E5B00FF145F /* APINetworkNoticeTest.m in Sources */,
 				3431DD372BED383C00FF145F /* NRMAInternalTests.m in Sources */,
 				3431DD3E2BED385D00FF145F /* NRCPUVitalsTest.m in Sources */,
 				3431DD362BED381600FF145F /* TestW3CTraceState.mm in Sources */,
@@ -5779,6 +5782,7 @@
 				3431DD812BED4A5200FF145F /* NRHarvestableVitalsTest.m in Sources */,
 				3431DD822BED4A5200FF145F /* NRHarvesterStateTest.m in Sources */,
 				3431DD562BED38F400FF145F /* NRMAHTTPUtilitiesTests.m in Sources */,
+				3431DD9B2BED956200FF145F /* NRTraceMachineTests.m in Sources */,
 				3431DD442BED389800FF145F /* NRMACrashReportRecorderTests.m in Sources */,
 				3431DD412BED388E00FF145F /* NRMA_Swift_Trouble_Class.m in Sources */,
 				3431DD352BED381400FF145F /* TestW3CTraceParent.mm in Sources */,
