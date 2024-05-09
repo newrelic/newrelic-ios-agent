@@ -1029,6 +1029,7 @@
 		3431DD922BED4C9B00FF145F /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
 		3431DD932BED4C9F00FF145F /* PersistentStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */; };
 		3431DD942BED4D1700FF145F /* NRMAUserActionBuilderTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC5024E707AB00E45C90 /* NRMAUserActionBuilderTest.m */; };
+		3431DD972BED87BD00FF145F /* NRMAUDIDManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACAB24E7394400E45C90 /* NRMAUDIDManagerTest.m */; };
 		343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 343883552834405700B31C2E /* NRMAURLTransformerTests.m */; };
 		343D4AEF2BC75E3C0064F979 /* NRMAUDIDManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF4A8324DC652C00115469 /* NRMAUDIDManager.h */; };
@@ -2397,6 +2398,7 @@
 		342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlockAttributeValidator.h; sourceTree = "<group>"; };
 		342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlockAttributeValidator.m; sourceTree = "<group>"; };
 		3431DD172BED375E00FF145F /* Agent-watchos-Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Agent-watchos-Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3431DD952BED4F0700FF145F /* Agent-watchOS.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Agent-watchOS.xctestplan"; sourceTree = "<group>"; };
 		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
 		34544D122A3142F900B5A8D1 /* NRMAEventManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAEventManager.h; sourceTree = "<group>"; };
 		34544D132A3142F900B5A8D1 /* NRMAEventManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAEventManager.m; sourceTree = "<group>"; };
@@ -2975,6 +2977,7 @@
 		0256586424EB284600FE3125 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				3431DD952BED4F0700FF145F /* Agent-watchOS.xctestplan */,
 				025658D924EB333800FE3125 /* Shared */,
 				0256586524EB285600FE3125 /* Stress-Tests */,
 				0209ABA524E703F000E45C90 /* Unit-Tests */,
@@ -5706,6 +5709,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3431DD532BED38EB00FF145F /* NRMAStartTimerTests.m in Sources */,
+				3431DD972BED87BD00FF145F /* NRMAUDIDManagerTest.m in Sources */,
 				3431DD472BED38A200FF145F /* NRMAUpgradeMetricGeneratorTest.m in Sources */,
 				3431DD382BED384100FF145F /* NRMAInstallMetricGeneratorTest.m in Sources */,
 				3431DD3F2BED386100FF145F /* NRLoggerTests.m in Sources */,
