@@ -7,6 +7,8 @@ platform :ios do
 
     runTVOSTests
 
+    runWatchOSTests
+    
     deleteBuildArtifacts
   end
 
@@ -110,6 +112,22 @@ platform :ios do
       scheme: "NRTestApp (tvOS)",
       device: "Apple TV 4K (3rd generation) (at 1080p) (#{options[:os_version]})",
       output_style: 'raw'
+    )
+  end
+
+  # watchOS Tests
+  
+  desc "Run Agent tests for watchOS"
+  lane :runWatchOSTests do 
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: true,
+      scheme: "Agent-watchOS",
+      device: "Apple Watch SE (40mm) (2nd generation)",
+      xcargs: "-testPlan Agent-watchOS"
     )
   end
 
