@@ -6467,7 +6467,7 @@
 				);
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
-					"${SRCROOT}",
+					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -6518,7 +6518,7 @@
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
-					"${SRCROOT}",
+					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
