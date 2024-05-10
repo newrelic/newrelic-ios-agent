@@ -1412,6 +1412,9 @@
 		F8E202DE2B07BA61008E0B7B /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		F8E202DF2B07BA61008E0B7B /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		F8EF24542BC0797B00591F58 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
+		F8F5D84A2BEBCB9900CDC139 /* NRMAWKApplicationDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8492BEBCB9900CDC139 /* NRMAWKApplicationDelegate.m */; };
+		F8F5D8662BEBCC9E00CDC139 /* NRMAWKApplicationDelegateBase.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8652BEBCC9E00CDC139 /* NRMAWKApplicationDelegateBase.m */; };
+		F8F5D8A32BEC196800CDC139 /* NRMAWKApplicationInstrumentation.m in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8612BEBCC4E00CDC139 /* NRMAWKApplicationInstrumentation.m */; };
 		F8FBFA512A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
 		F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
 		F8FBFA552A71BA2900CDC8C5 /* NRMAPayload.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */; };
@@ -2367,6 +2370,13 @@
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
 		F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAOfflineStorage.m; sourceTree = "<group>"; };
 		F8E202F32B07BA6E008E0B7B /* NRMAOfflineStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAOfflineStorage.h; sourceTree = "<group>"; };
+		F8F5D8492BEBCB9900CDC139 /* NRMAWKApplicationDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKApplicationDelegate.m; sourceTree = "<group>"; };
+		F8F5D85F2BEBCC3300CDC139 /* NRMAWKApplicationDelegateBase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKApplicationDelegateBase.h; sourceTree = "<group>"; };
+		F8F5D8612BEBCC4E00CDC139 /* NRMAWKApplicationInstrumentation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKApplicationInstrumentation.m; sourceTree = "<group>"; };
+		F8F5D8632BEBCC5F00CDC139 /* NRMAWKApplicationInstrumentation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKApplicationInstrumentation.h; sourceTree = "<group>"; };
+		F8F5D8642BEBCC7C00CDC139 /* NRMAWKApplicationDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKApplicationDelegate.h; sourceTree = "<group>"; };
+		F8F5D8652BEBCC9E00CDC139 /* NRMAWKApplicationDelegateBase.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKApplicationDelegateBase.m; sourceTree = "<group>"; };
+		F8F5D89F2BEC08C500CDC139 /* NRMAWKApplicationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMAWKApplicationDelegate.swift; sourceTree = "<group>"; };
 		F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMARequestEvent.m; sourceTree = "<group>"; };
 		F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMARequestEvent.h; sourceTree = "<group>"; };
 		F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAPayload.m; sourceTree = "<group>"; };
@@ -2979,6 +2989,7 @@
 				02FF47DF24DB567600115469 /* NRTimer.h */,
 				02FF47E324DB567600115469 /* NRURLSessionTaskDelegateBase.h */,
 				02FF47E024DB567600115469 /* NRWKNavigationDelegateBase.h */,
+				F8F5D89F2BEC08C500CDC139 /* NRMAWKApplicationDelegate.swift */,
 			);
 			path = Public;
 			sourceTree = "<group>";
@@ -3093,6 +3104,7 @@
 		02FF486924DC618300115469 /* Instrumentation */ = {
 			isa = PBXGroup;
 			children = (
+				F8F5D85E2BEBCC0700CDC139 /* WKApplicationDelegate */,
 				02FF48AE24DC61EB00115469 /* MethodProfiling */,
 				02FF48A124DC61DC00115469 /* WKWebView */,
 				02FF489024DC61C500115469 /* NSURLSession */,
@@ -3742,6 +3754,19 @@
 				F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */,
 			);
 			path = "DistributedTesting-Tests";
+			sourceTree = "<group>";
+		};
+		F8F5D85E2BEBCC0700CDC139 /* WKApplicationDelegate */ = {
+			isa = PBXGroup;
+			children = (
+				F8F5D8632BEBCC5F00CDC139 /* NRMAWKApplicationInstrumentation.h */,
+				F8F5D8612BEBCC4E00CDC139 /* NRMAWKApplicationInstrumentation.m */,
+				F8F5D8642BEBCC7C00CDC139 /* NRMAWKApplicationDelegate.h */,
+				F8F5D8492BEBCB9900CDC139 /* NRMAWKApplicationDelegate.m */,
+				F8F5D85F2BEBCC3300CDC139 /* NRMAWKApplicationDelegateBase.h */,
+				F8F5D8652BEBCC9E00CDC139 /* NRMAWKApplicationDelegateBase.m */,
+			);
+			path = WKApplicationDelegate;
 			sourceTree = "<group>";
 		};
 		F8FBFA3C2A71A32400CDC8C5 /* Events */ = {
@@ -5607,6 +5632,7 @@
 				348233992BC5F31E0070FAC3 /* NRMAGestureRecognizerInstrumentation.m in Sources */,
 				348232B02BC5F1F00070FAC3 /* NRMAKeyAttributes.m in Sources */,
 				348232FF2BC5F2140070FAC3 /* HexUploadPublisher.mm in Sources */,
+				F8F5D8662BEBCC9E00CDC139 /* NRMAWKApplicationDelegateBase.m in Sources */,
 				3482333C2BC5F2490070FAC3 /* NRMAClassDataContainer.m in Sources */,
 				348233222BC5F2270070FAC3 /* NRMACrashReport_AppInfo.m in Sources */,
 				3482326B2BC5F1970070FAC3 /* NRMAUDIDManager.m in Sources */,
@@ -5648,8 +5674,10 @@
 				348232D72BC5F2050070FAC3 /* NRMAScopedMeasurements.m in Sources */,
 				348232D42BC5F2050070FAC3 /* NRMAConnectInformation.m in Sources */,
 				348233662BC5F3040070FAC3 /* Constants.m in Sources */,
+				F8F5D8A32BEC196800CDC139 /* NRMAWKApplicationInstrumentation.m in Sources */,
 				348232F82BC5F20B0070FAC3 /* NRMAAgentConfiguration.m in Sources */,
 				F89167442BCD8EA30085BCFC /* NRViewModifier.swift in Sources */,
+				F8F5D84A2BEBCB9900CDC139 /* NRMAWKApplicationDelegate.m in Sources */,
 				F86741072BD30F3F00DAA1A2 /* NRMAExceptionDataCollectionWrapper.m in Sources */,
 				348233542BC5F2780070FAC3 /* NRMAThreadTransition.m in Sources */,
 				348232692BC5F1810070FAC3 /* NRMAOfflineStorage.m in Sources */,

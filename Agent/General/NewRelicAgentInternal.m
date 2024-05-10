@@ -57,6 +57,7 @@
 
 #if TARGET_OS_WATCH
 #import <WatchKit/WatchKit.h>
+#import "NRMAWKApplicationInstrumentation.h"
 #endif
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
@@ -95,13 +96,14 @@ static NRMAURLTransformer* urlTransformer;
 @property(assign) BOOL appWillTerminate;
 
 - (void) applicationWillEnterForeground;
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+- (void) applicationWillEnterForeground:(WKApplication*)application;
+- (void) applicationDidEnterBackground:(WKApplication*)application;
+#else
 - (void) applicationWillEnterForeground:(UIApplication*)application;
-#endif
-- (void) applicationDidEnterBackground;
-#if !TARGET_OS_WATCH
 - (void) applicationDidEnterBackground:(UIApplication*)application;
 #endif
+- (void) applicationDidEnterBackground;
 - (BOOL) isDisabled;
 
 @end
@@ -198,7 +200,20 @@ static NewRelicAgentInternal* _sharedInstance;
         self->_isShutdown = false;
         self->_enabled = ![self isDisabled];
         if (self->_enabled) {
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(applicationDidEnterBackground:)
+                                                         name:WKApplicationWillResignActiveNotification
+                                                       object:[WKApplication sharedApplication]];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(applicationWillEnterForeground:)
+                                                         name:WKApplicationWillEnterForegroundNotification
+                                                       object:[WKApplication sharedApplication]];
+           /* [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(applicationWillTerminate:)
+                                                         name:UIApplicationWillTerminateNotification
+                                                       object:[WKApplication sharedApplication]];*/
+#else
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(applicationDidEnterBackground:)
                                                          name:UIApplicationDidEnterBackgroundNotification
@@ -366,6 +381,9 @@ static NewRelicAgentInternal* _sharedInstance;
         if (![NRMAFlags shouldEnableExperimentalNetworkingInstrumentation]) {
             [NRMANSURLConnectionSupport instrumentNSURLConnection];
         }
+#if TARGET_OS_WATCH
+        [NRMAWKApplicationInstrumentation instrument];
+#endif
     });
 }
 
@@ -628,7 +646,28 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     });
 }
 
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
++ (void) checkApplicationState:(WKApplicationState) state {
+    switch(state) {
+    case WKApplicationStateActive:
+            [[NewRelicAgentInternal sharedInstance] applicationWillEnterForeground];
+        break;
+    case WKApplicationStateInactive:
+            
+        break;
+    case WKApplicationStateBackground:
+            [[NewRelicAgentInternal sharedInstance] applicationDidEnterBackground];
+        break;
+    default:
+        break;
+    }
+}
+#endif
+#if TARGET_OS_WATCH
+- (void) applicationWillEnterForeground:(WKApplication*)application {
+    [self applicationWillEnterForeground];
+}
+#else
 - (void) applicationWillEnterForeground:(UIApplication*)application {
     [self applicationWillEnterForeground];
 }
@@ -860,7 +899,11 @@ static UIBackgroundTaskIdentifier background_task;
 #endif
 }
 
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+- (void) applicationDidEnterBackground:(WKApplication*)application {
+    [self applicationDidEnterBackground];
+}
+#else
 - (void) applicationDidEnterBackground:(UIApplication*)application {
     [self applicationDidEnterBackground];
 }
@@ -1002,7 +1045,17 @@ void applicationDidEnterBackgroundCF(void) {
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                         name:kNRMemoryUsageDidChangeNotification
                                                       object:nil];
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:WKApplicationDidEnterBackgroundNotification
+                                                   object:[WKApplication sharedApplication]];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:WKApplicationWillEnterForegroundNotification
+                                                   object:[WKApplication sharedApplication]];
+       /* [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                     name:UIApplicationWillTerminateNotification
+                                                   object:[UIApplication sharedApplication]];*/
+#else
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:UIApplicationDidEnterBackgroundNotification
                                                    object:[UIApplication sharedApplication]];

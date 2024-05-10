@@ -12,7 +12,9 @@
 #import "NRMAHandledExceptions.h"
 #import "NRMAUserActionFacade.h"
 #import "NRMAURLTransformer.h"
-
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
 #if !TARGET_OS_WATCH
 #import <BackgroundTasks/BackgroundTasks.h>
 #endif
@@ -75,6 +77,9 @@
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
 
+#if TARGET_OS_WATCH
++ (void) checkApplicationState:(WKApplicationState) state;
+#endif
 @end
 
 /*
