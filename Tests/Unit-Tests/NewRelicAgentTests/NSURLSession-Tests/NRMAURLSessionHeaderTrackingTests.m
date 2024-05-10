@@ -70,7 +70,7 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 - (NSMutableURLRequest*) createRequestWithGraphQLHeaders {
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.newrelic.com"]];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com"]];
     [request setValue:@"Test name" forHTTPHeaderField:@"X-APOLLO-OPERATION-NAME"];
     [request setValue:@"Test type" forHTTPHeaderField:@"X-APOLLO-OPERATION-TYPE"];
     [request setValue:@"Test id" forHTTPHeaderField:@"X-APOLLO-OPERATION-ID"];
@@ -100,7 +100,7 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertNotNil(decode[0][@"connectionType"]);
     XCTAssertNotNil(decode[0][@"contentType"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
-    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"www.newrelic.com"]);
+    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"www.google.com"]);
     XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
     XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
     XCTAssertFalse([decode[0][@"bytesReceived"] isEqual:@0]);
@@ -117,7 +117,7 @@ static NewRelicAgentInternal* _sharedInstance;
     
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
 
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.newrelic.com"]];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.gooogle.com"]];
     [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
@@ -138,7 +138,7 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertNotNil(decode[0][@"connectionType"]);
     XCTAssertNotNil(decode[0][@"contentType"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
-    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"www.newrelic.com"]);
+    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"www.gooogle.com"]);
     XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
     XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
     XCTAssertFalse([decode[0][@"bytesReceived"] isEqual:@0]);
@@ -153,7 +153,7 @@ static NewRelicAgentInternal* _sharedInstance;
 - (void) testDataTaskErrorWithRequestHeaderTracking {
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
 
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"www.newrelic.com"]];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"www.gooogle.com"]];
     [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
@@ -174,7 +174,7 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertNotNil(decode[0][@"connectionType"]);
     XCTAssertNotNil(decode[0][@"id"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
-    XCTAssertTrue([decode[0][@"requestUrl"] isEqualToString:@"www.newrelic.com"]);
+    XCTAssertTrue([decode[0][@"requestUrl"] isEqualToString:@"www.gooogle.com"]);
     XCTAssertTrue([decode[0][@"errorType"] isEqualToString:@"NetworkFailure"]);
     XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
     XCTAssertTrue([decode[0][@"networkErrorCode"] isEqual:@-1002]);
