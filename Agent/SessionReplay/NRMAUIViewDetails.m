@@ -14,7 +14,7 @@
 - (instancetype)initWithView:(UIView *)view {
     self = [super init];
     if(self) {
-        _frame = [view convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
+        _frame = [view.superview convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
         _backgroundColor = view.backgroundColor;
         _isHidden = view.isHidden;
         _viewName = NSStringFromClass([view class]);
