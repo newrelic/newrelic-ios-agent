@@ -96,8 +96,8 @@
         colorFormatString = [colorFormatString stringByAppendingString:@"%02lX"];
         colorString = [NSString stringWithFormat:colorFormatString,
                        lroundf(redColor * 255),
-                       lroundf(blueColor * 255),
                        lroundf(greenColor * 255),
+                       lroundf(blueColor * 255),
                        lroundf(alpha * 255)];
     } else {
         NSString *colorString = [NSString stringWithFormat:colorFormatString,
