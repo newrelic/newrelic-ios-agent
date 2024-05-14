@@ -198,7 +198,16 @@ static NewRelicAgentInternal* _sharedInstance;
         self->_isShutdown = false;
         self->_enabled = ![self isDisabled];
         if (self->_enabled) {
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(applicationDidEnterBackground)
+                                                         name:WKApplicationDidEnterBackgroundNotification
+                                                       object:nil];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(applicationWillEnterForeground)
+                                                         name:WKApplicationWillEnterForegroundNotification
+                                                       object:nil];
+#else
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(applicationDidEnterBackground:)
                                                          name:UIApplicationDidEnterBackgroundNotification
