@@ -774,7 +774,7 @@
     [mockConnection stopMocking];
 }
 
-// Add test for entity_guid: and log_reporting: { enabled: , level: }
+// TODO: LogReporting Add test for entity_guid: and log_reporting: { enabled: , level: }
 
 
 @end

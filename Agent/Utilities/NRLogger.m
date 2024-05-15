@@ -157,6 +157,7 @@ withMessage:(NSString *)message {
         self->uploadQueue = [NSMutableArray array];
         self->isUploading = NO;
         self->failureCount = 0;
+        self->debugLogs = NO;
 
         // This was including Error and warning previously but since warning is the highest we want to emit by default this will emit warning and error by default.
 
@@ -374,8 +375,9 @@ withMessage:(NSString *)message {
     @synchronized(self) {
         if (self->logFile) {
 
-//             NSLog(@"Logs enqueueLogUpload called..");
-
+            if (debugLogs) {
+                NSLog(@"Logs enqueueLogUpload called..");
+            }
             NSString *path = [NRLogger logFilePath];
             NSData* logData = [NSData dataWithContentsOfFile:path];
 
@@ -411,8 +413,10 @@ withMessage:(NSString *)message {
             }
 
             self->isUploading = YES;
-            // NSLog(@"Logs isUploading ==> TRUE");
 
+            if (self->debugLogs) {
+                 NSLog(@"Logs isUploading ==> TRUE");
+            }
             NSData *formattedData = [self->uploadQueue firstObject];
 
             NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
@@ -459,15 +463,17 @@ withMessage:(NSString *)message {
 
                 // isUploading is turned off upon successful or failed logs request.
                 self->isUploading = NO;
-//                NSLog(@"isUploading ==> FALSE");
-                 //Uncomment the following code for log upload queue debugging.
-//                if (self->uploadQueue.count > 0) {
-//                    NSLog(@"logs uploadQueue has contents, proceeding with additional uploads");
-//                }
-//                for (NSData *data in self->uploadQueue) {
-//                    NSLog(@"logs item: length=%lu",(unsigned long)data.length);
-//                }
-                // NSLog(@"Logs isUploading ==> FALSE");
+
+                if (self->debugLogs) {
+                    NSLog(@"isUploading ==> FALSE");
+                    if (self->uploadQueue.count > 0) {
+                        NSLog(@"logs uploadQueue has contents, proceeding with additional uploads");
+                    }
+                    for (NSData *data in self->uploadQueue) {
+                        NSLog(@"logs item: length=%lu",(unsigned long)data.length);
+                    }
+                    NSLog(@"Logs isUploading ==> FALSE");
+                }
 
                 [self processNextUploadTask];
             }];

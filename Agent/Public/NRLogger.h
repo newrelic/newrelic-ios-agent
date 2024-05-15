@@ -102,6 +102,7 @@ typedef enum _NRLogTargets {
     NSMutableArray *uploadQueue;
     BOOL isUploading;
     unsigned int failureCount;
+    BOOL debugLogs;
 
 }
 

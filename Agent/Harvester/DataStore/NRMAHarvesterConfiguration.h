@@ -64,6 +64,8 @@
 @property(nonatomic,strong) NSString* trusted_account_key;
 @property(nonatomic,strong) NSString* entity_guid;
 @property(nonatomic,assign) BOOL      log_reporting_enabled;
+@property(nonatomic,assign) double    sampling_rate;
+@property(nonatomic,assign) BOOL      has_log_reporting_config;
 
 // CAN BE
 // NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE

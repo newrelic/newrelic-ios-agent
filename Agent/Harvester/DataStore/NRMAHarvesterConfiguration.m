@@ -94,9 +94,16 @@
 
         // begin parsing log reporting section.
         if ([dict objectForKey:kNRMA_LOG_REPORTING_KEY]) {
+            self.has_log_reporting_config = YES;
+
             id innerDict = [dict objectForKey:kNRMA_LOG_REPORTING_KEY];
             self.log_reporting_enabled = innerDict[@"enabled"];
             self.log_reporting_level = innerDict[@"level"];
+            self.sampling_rate =  [innerDict[@"samplingRate"] doubleValue];
+
+        }
+        else {
+            self.has_log_reporting_config = NO;
         }
         // end parsing log reporting section.
 
@@ -126,6 +133,7 @@
     configuration.trusted_account_key = @"";
     configuration.entity_guid = @"";
     configuration.log_reporting_level = @"WARNING";
+    configuration.has_log_reporting_config = NO;
 
     configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
     return configuration;
@@ -173,8 +181,10 @@
         dictionary[kNRMA_ENTITY_GUID_KEY] = self.entity_guid;
     }
 
-    // TODO: Check the right way to handle this inner Dict.
-    //dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level};
+    // TODO: LogReporting Check the right way to handle this inner Dict.
+    if (self.has_log_reporting_config) {
+        dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level, @"samplingRate": @(self.sampling_rate)};
+    }
 
     return dictionary;
 }

@@ -538,8 +538,8 @@
     @try {
         NSError* error = nil;
         
-//        // TODO: Remove CannedConnect response
-////
+//        // TODO: LogReporting: Remove CannedConnect response
+//        // CANNED CONFIG
 //        // Obfuscated secrets values.
 //        NSString *cannedConnect = @"{\n"
 //            @" \"server_timestamp\":1701302638,"
@@ -562,17 +562,18 @@
 //            @" \"entity_guid\": \"MTA4MTY5OTR8TU9ASUxFfEFQUExDQ0FUSU9OfDM5MDI3NDMz\","
 //            @" \"log_reporting\": {"
 //             @"   \"enabled\": true,"
-//             @"   \"level\": \"NONE \""
+//             @"   \"level\": \"VERBOSE\","
+//             @"   \"samplingRate\": 0.5"
 //           @"}"
 //        @"}";
-//        // CANNED CONFIG
 //        NRLOG_VERBOSE(@"Harvest config canned: %@", cannedConnect);
 //        id jsonObject = [NRMAJSON JSONObjectWithData: [cannedConnect dataUsingEncoding:NSUTF8StringEncoding]
 //                                             options:0
 //                                               error:&error];
 
-        // REAL CONFIG
+        // TODO: LogReporting REAL CONFIG
         NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
+
         id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
                                              options:0
                                                error:&error];
@@ -785,27 +786,33 @@
 }
 
 - (void) handleLoggingConfigurationUpdate {
-    // TODO: Evaluating if this is the best spot?
-    
+    // TODO: LogReporting: Evaluating if this is the best spot?
+
     // Should it check if remote logs are already on?
     
     // Code for dynamically enabling or disabling remote logging at runtime based on the state of configuration.log_reporting_enabled and the existing state of NRFlags.NRFeatureFlag_LogReporting
-    if (configuration.log_reporting_enabled) {
-        // it is required to enable NRLogTargetFile when using LogReporting.
-        // Should this be done programmatically?
-        [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
-        // Parse NSString into NRLogLevel
-        NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
-        [NRLogger setLogLevels:level];
 
-        // TODO: LogReporting
-       // [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+    // This if/else chain should only be entered if log_reporting was found in the config
+    if (configuration.has_log_reporting_config) {
+        if (configuration.log_reporting_enabled) {
+            // it is required to enable NRLogTargetFile when using LogReporting.
+            // Should this be done programmatically?
+            [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
+            // Parse NSString into NRLogLevel
+            NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
+            [NRLogger setLogLevels:level];
+            // TODO: Double check this behavior for LogReporting.
+            [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+        }
+        //    //TODO: LogReporting config must exist in the response or this will disable
+        //    // OVERWRITE user selected value for LogReporting -- Should must be included once API returns log_reporting { enabled: false} reliably.
+        else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+        }
     }
-    //TODO:
-//    // OVERWRITE user selected value for LogReporting -- Should must be included once API returns log_reporting { enabled: false} reliably.
-//    else {
-//        [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
-//    }
+    else {
+        // No Log Reporting Config Detected, not automating feature flags or logging config.
+    }
 }
 
 @end
