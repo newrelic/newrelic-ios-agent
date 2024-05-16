@@ -52,6 +52,15 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 // Returns the connection type, wifi, ethernet, or cellular.
 + (NSString*) connectionType;
 
+// Determines if a url is reachable.
++ (NRMANetworkStatus)currentReachabilityStatusTo:(NSURL*)url;
+
+// Returns the url for the data endpoint.
++ (NSString*) collectorHostDataURL;
+
+// Returns the url for the hex endpoint.
++ (NSString*) collectorHostHexURL;
+
 // Returns the NRMANetworkStatus
 + (NRMANetworkStatus) networkStatus;
 

@@ -35,7 +35,11 @@ static NSString* const kAttributesKey = @"Attributes";
         if([NRMAFlags shouldEnableOfflineStorage]) {
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {
+#if TARGET_OS_WATCH
+                NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
+#else
                 NRMANetworkStatus status = [r currentReachabilityStatus];
+#endif
                 if (status == NotReachable) {
                     [self addAttribute:kNRMA_Attrib_offline value:@YES];
                 }

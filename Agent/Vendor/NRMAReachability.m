@@ -116,8 +116,10 @@
 
 - (NSString *)getCurrentWanNetworkType:(NRMANetworkStatus)networkStatus
 {
-#if TARGET_OS_TV || TARGET_OS_WATCH
+#if TARGET_OS_TV
     return NRMA_CARRIER_WIFI;
+#elif TARGET_OS_WATCH
+    return NRMA_CARRIER_OTHER;
 #else
     @synchronized (_wanNetworkType) {
         if (networkStatus != ReachableViaWWAN) {
@@ -243,15 +245,15 @@
 }
 #endif
 
+#if !TARGET_OS_WATCH
 - (NRMANetworkStatus)currentReachabilityStatus {
     NRMANetworkStatus retVal = NotReachable;
-#if !TARGET_OS_WATCH
     SCNetworkReachabilityFlags flags;
     if (SCNetworkReachabilityGetFlags(reachabilityRef, &flags)) {
         retVal = [self networkStatusForFlags:flags];
     }
-#endif
     return retVal;
 }
+#endif
 
 @end
