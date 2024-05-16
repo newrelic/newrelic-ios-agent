@@ -37,6 +37,8 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
     }
     
     NRLOG_INFO(@"HarvestTimer: starting with a period of %lld ms",self.period);
+
+    // Note: Old NRMAHarvester code was based upon NSTimer, this has been updated to use dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER...
 //    self.timer = [NSTimer timerWithTimeInterval:((double)self.period) / (double)1000.0
 //                                           target:self
 //                                         selector:@selector(harvest)
