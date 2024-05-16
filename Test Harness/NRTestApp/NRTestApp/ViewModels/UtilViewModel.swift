@@ -22,8 +22,6 @@ class UtilViewModel {
     var badAttribute = false
     var attributes = ""
     var events = 0
-    
-    var timer:Timer?
 
     var uniqueInteractionTraceIdentifier: String? =  nil
 
@@ -40,12 +38,18 @@ class UtilViewModel {
         options.append(UtilOption(title: "Record Handled Exception", handler: { triggerException.testing()}))
         options.append(UtilOption(title: "Set UserID", handler: { [self] in changeUserID()}))
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
-        options.append(UtilOption(title: "Make 100 events every 10 seconds", handler: { [self] in startCustomEventTimer()}))
-        options.append(UtilOption(title: "Stop 100 events every 10 seconds", handler: { [self] in stopCustomEventTimer()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
+
+        options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
+        options.append(UtilOption(title: "Test Log Error", handler: { [self] in testLogError()}))
+        options.append(UtilOption(title: "Test Log Attributes", handler: { [self] in testLogAttributes()}))
+
+        options.append(UtilOption(title: "Make 100 Logs", handler: { [self] in make100Logs()}))
+        options.append(UtilOption(title: "Make 100 Special Character Logs", handler: { [self] in make100SpecialCharacterLogs()}))
+
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
         options.append(UtilOption(title: "URLSession dataTask No Completion", handler: { [self] in doDataTaskNoCompletion()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
@@ -126,7 +130,7 @@ class UtilViewModel {
         }
     }
 
-    @objc func make100Events() {
+    func make100Events() {
         for _ in 0...100 {
             NewRelic.recordCustomEvent("ButtonPress")
         }
@@ -150,6 +154,30 @@ class UtilViewModel {
         NewRelic.noticeNetworkFailure(for: URL(string: "https://www.google.com"), httpMethod: "GET",
                                       with: NRTimer(), andFailureCode: NSURLErrorTimedOut)
     }
+
+    func testLogDict() {
+        NewRelic.logAll([
+            "logLevel": "WARN",
+            "message": "This is a test message for the New Relic logging system."
+        ])
+    }
+    func testLogError() {
+
+        do {
+            try errorMethod()
+        } catch {
+            NewRelic.logErrorObject(error)
+        }
+    }
+
+    // TODO: Wrap up attributes handling as a part of NR-227300
+    func testLogAttributes() {
+        NewRelic.logAttributes([
+            "logLevel": "WARN",
+            "message": "This is a test message for the New Relic logging system."
+        ])
+    }
+
 
     func noticeNWRequest() {
         NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
@@ -180,6 +208,42 @@ class UtilViewModel {
         let dataTask = urlSession.dataTask(with: request)
 
         dataTask.resume()
+    }
+
+    @objc func make100SpecialCharacterLogs() {
+        for i in 0...100 {
+            NewRelic.logInfo("/")
+            // Testing special character
+            NewRelic.logInfo("\\")
+
+            NewRelic.logInfo(";")
+            NewRelic.logInfo(":")
+            NewRelic.logInfo("!")
+            NewRelic.logInfo("#")
+            NewRelic.logInfo("&")
+            NewRelic.logInfo("-")
+            NewRelic.logInfo("?")
+            NewRelic.logInfo("'")
+            NewRelic.logInfo("$")
+        }
+    }
+
+    @objc func make100Logs() {
+        for i in 0...100 {
+            NewRelic.logInfo("I")
+            NewRelic.logInfo("L")
+            NewRelic.logInfo("O")
+            NewRelic.logInfo("V")
+            NewRelic.logInfo("E")
+            NewRelic.logInfo("N")
+            NewRelic.logInfo("E")
+            NewRelic.logInfo("W")
+            NewRelic.logInfo("R")
+            NewRelic.logInfo("E")
+            NewRelic.logInfo("L")
+            NewRelic.logInfo("I")
+            NewRelic.logInfo("C")
+        }
     }
 
     func shutDown() {
