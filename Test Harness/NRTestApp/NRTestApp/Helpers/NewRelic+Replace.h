@@ -9,4 +9,5 @@
 
 @interface NewRelic (Replace)
 + (void) replaceDeviceIdentifier:(NSString*)identifier;
++ (void) saltDeviceUUID:(BOOL)enabled;
 @end
