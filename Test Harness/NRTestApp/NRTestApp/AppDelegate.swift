@@ -41,7 +41,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Note: Disabled by default, it is required to enable NRLogTargetFile when using LogReporting.
         NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
 
-        NewRelic.replaceDeviceIdentifier("myDeviceId")
+        NewRelic.saltDeviceUUID(true)
+
+       // NewRelic.replaceDeviceIdentifier("myDeviceId")
         
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
