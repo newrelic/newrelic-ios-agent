@@ -28,6 +28,10 @@ class UtilViewModel {
     let taskProcessor = TaskProcessor()
     let taskProcessor2 = TaskProcessorNoDidRcvResp()
 
+    init() {
+        createUtilOptions()
+    }
+
     func createUtilOptions() {
         options.append(UtilOption(title: "Add Valid Breadcrumb", handler: { [self] in makeValidBreadcrumb()}))
         options.append(UtilOption(title: "Add Invalid Breadcrumb", handler: { [self] in makeInvalidBreadcrumb()}))
@@ -62,17 +66,6 @@ class UtilViewModel {
         let dataTask = urlSession.dataTask(with: url)
 
         dataTask.resume()
-    }
-    
-    func startCustomEventTimer(){
-        NewRelic.logInfo("Staring custom event timer")
-        timer = Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(make100Events), userInfo: nil, repeats: true)
-    }
-    
-    func stopCustomEventTimer(){
-        NewRelic.logInfo("Stopping custom event timer")
-        timer?.invalidate()
-        timer = nil
     }
 
     func crash() {
