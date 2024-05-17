@@ -250,7 +250,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     [_eventManager dealloc];
     [_sessionAttributeManager dealloc];
     [_attributeValidator release];
-    [_sessionStartTime release]
+    [_sessionStartTime release];
 
     [super dealloc];
 }
