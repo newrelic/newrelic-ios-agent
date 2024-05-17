@@ -239,6 +239,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } else {
             _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
         }
+        
+        [_sessionStartTime retain];
     }
     return self;
 }
@@ -248,6 +250,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     [_eventManager dealloc];
     [_sessionAttributeManager dealloc];
     [_attributeValidator release];
+    [_sessionStartTime release];
 
     [super dealloc];
 }
