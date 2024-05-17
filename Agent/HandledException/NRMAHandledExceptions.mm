@@ -21,6 +21,7 @@
 #include <Analytics/AnalyticsController.hpp>
 #import "NRMABool.h"
 #import "NRMASupportMetricHelper.h"
+#import "Constants.h"
 
 @interface NRMAAnalytics(Protected)
 // Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
@@ -76,11 +77,10 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         std::vector<std::shared_ptr<NewRelic::Hex::Report::Library>> libs;
         NSString* appToken = agentConfiguration.applicationToken.value;
         NSString* protocol = agentConfiguration.useSSL?@"https://":@"http://";
-        NSString* hexCollectorPath = @"/mobile/f";
         NSString* collectorHost = [NSString stringWithFormat:@"%@%@%@",
                                                              protocol,
                                                              agentConfiguration.collectorHost,
-                                                             hexCollectorPath];
+                                                             kNRMA_Collector_hex_url];
 
         NSString* version = [NRMAAgentConfiguration connectionInformation].applicationInformation.appVersion;
 
