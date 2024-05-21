@@ -563,7 +563,7 @@
 //            @" \"log_reporting\": {"
 //             @"   \"enabled\": true,"
 //             @"   \"level\": \"VERBOSE\","
-//             @"   \"samplingRate\": 0.5"
+//             @"   \"sampling_rate\": 0.5"
 //           @"}"
 //        @"}";
 //        NRLOG_VERBOSE(@"Harvest config canned: %@", cannedConnect);

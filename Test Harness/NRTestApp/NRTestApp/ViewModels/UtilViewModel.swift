@@ -149,11 +149,12 @@ class UtilViewModel {
         }
     }
 
-    // TODO: Wrap up attributes handling as a part of NR-227300
     func testLogAttributes() {
         NewRelic.logAttributes([
             "logLevel": "WARN",
-            "message": "This is a test message for the New Relic logging system."
+            "message": "This is a test message for the New Relic logging system.",
+            "additionalAttribute1": "attribute1",
+            "additionalAttribute2": "attribute2"
         ])
     }
 

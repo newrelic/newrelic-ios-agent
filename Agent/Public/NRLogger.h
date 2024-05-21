@@ -112,6 +112,12 @@ typedef enum _NRLogTargets {
    inMethod:(NSString *)method
 withMessage:(NSString *)message;
 
++ (void)log:(unsigned int)level
+     inFile:(NSString *)file
+     atLine:(unsigned int)line
+   inMethod:(NSString *)method
+withMessage:(NSString *)message
+withAttributes:(NSDictionary *)attributes;
 
 /*!
  Configure the amount of information the New Relic agent outputs about its internal operation.
@@ -183,12 +189,22 @@ Configure the New Relic logging API.
 #define NRLOG(level, format, ...) \
     [NRLogger log:level inFile:[[NSString stringWithUTF8String:__FILE__] lastPathComponent] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__]]
 
+#define NRLOG_ATTRS(level, format, attrs, ...) \
+    [NRLogger log:level inFile:[[NSString stringWithUTF8String:__FILE__] lastPathComponent] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__] withAttributes: attrs]
+
 #define NRLOG_ERROR(format, ...) NRLOG(NRLogLevelError, format, ##__VA_ARGS__)
 #define NRLOG_WARNING(format, ...) NRLOG(NRLogLevelWarning, format, ##__VA_ARGS__)
 #define NRLOG_INFO(format, ...) NRLOG(NRLogLevelInfo, format, ##__VA_ARGS__)
 #define NRLOG_VERBOSE(format, ...) NRLOG(NRLogLevelVerbose, format, ##__VA_ARGS__)
 #define NRLOG_AUDIT(format, ...) NRLOG(NRLogLevelAudit, format, ##__VA_ARGS__)
 #define NRLOG_DEBUG(format, ...) NRLOG(NRLogLevelDebug, format, ##__VA_ARGS__)
+
+#define NRLOG_ERROR_ATTRS(format, attrs, ...)   NRLOG_ATTRS(NRLogLevelError, format, attrs, ##__VA_ARGS__)
+#define NRLOG_WARNING_ATTRS(format, attrs, ...) NRLOG_ATTRS(NRLogLevelWarning, format, attrs, ##__VA_ARGS__)
+#define NRLOG_INFO_ATTRS(format, attrs, ...)    NRLOG_ATTRS(NRLogLevelInfo, format, attrs, ##__VA_ARGS__)
+#define NRLOG_VERBOSE_ATTRS(format, attrs, ...) NRLOG_ATTRS(NRLogLevelVerbose, format, attrs, ##__VA_ARGS__)
+#define NRLOG_AUDIT_ATTRS(format, attrs, ...)   NRLOG_ATTRS(NRLogLevelAudit, format, attrs, ##__VA_ARGS__)
+#define NRLOG_DEBUG_ATTRS(format, attrs, ...)   NRLOG_ATTRS(NRLogLevelDebug, format, attrs, ##__VA_ARGS__)
 
 #endif // _NEWRELIC_AGENT_LOGGING_
 

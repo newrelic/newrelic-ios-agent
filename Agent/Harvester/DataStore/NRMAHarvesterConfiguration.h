@@ -31,6 +31,7 @@
 #define kNRMA_TRUSTED_ACCOUNT_KEY @"trusted_account_key"
 #define kNRMA_ENTITY_GUID_KEY @"entity_guid"
 #define kNRMA_LOG_REPORTING_KEY @"log_reporting"
+#define kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY @"sampling_rate"
 
 #define NRMA_DEFAULT_COLLECT_NETWORK_ERRORS YES  // boolean
 #define NRMA_DEFAULT_REPORT_PERIOD 60            // seconds

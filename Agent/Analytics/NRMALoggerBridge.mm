@@ -20,7 +20,6 @@ namespace  NewRelic {
                                const char* format,
                                va_list args) {
 
-
         //check file non-null
         if (file == nullptr || strlen(file) == 0) {
             file = "?";
@@ -47,13 +46,9 @@ namespace  NewRelic {
 
         char buf[size+1];
 
-
-
         vsnprintf(buf, sizeof(buf), format, v2);
 
         va_end(v2);
-
-
 
         [NRLogger log:level
                inFile:[NSString stringWithUTF8String:file]

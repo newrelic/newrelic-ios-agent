@@ -85,6 +85,31 @@
     }
 }
 
++ (void) log:(NSString* __nonnull) message level:(NRLogLevels)level attributes:(NSDictionary*)attributes {
+    switch (level) {
+        case NRLogLevelError:
+            NRLOG_ERROR_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelWarning:
+            NRLOG_WARNING_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelInfo:
+            NRLOG_INFO_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelVerbose:
+            NRLOG_VERBOSE_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelAudit:
+            NRLOG_AUDIT_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelDebug:
+            NRLOG_DEBUG_ATTRS(@"%@", attributes, message);
+            break;
+        default:
+            break;
+    }
+}
+
 + (void) logAll:(NSDictionary* __nonnull) dict {
     NSString* message = [dict objectForKey:@"message"];
     NSString* level = [dict objectForKey:@"logLevel"];
@@ -99,8 +124,11 @@
     NSString* level = [dict objectForKey:@"logLevel"];
 
     NRLogLevels levels = [NRLogger stringToLevel: level];
+    NSMutableDictionary *mutableDict = [dict mutableCopy];
+    [mutableDict removeObjectForKey:@"message"];
+    [mutableDict removeObjectForKey:@"logLevel"];
 
-    [self log:message level:levels];
+    [self log:message level:levels attributes:[NSDictionary dictionaryWithDictionary: mutableDict]];
 }
 
 + (void) logErrorObject:(NSError* __nonnull) error {

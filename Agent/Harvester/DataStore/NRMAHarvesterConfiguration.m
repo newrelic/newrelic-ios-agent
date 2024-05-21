@@ -99,7 +99,7 @@
             id innerDict = [dict objectForKey:kNRMA_LOG_REPORTING_KEY];
             self.log_reporting_enabled = innerDict[@"enabled"];
             self.log_reporting_level = innerDict[@"level"];
-            self.sampling_rate =  [innerDict[@"samplingRate"] doubleValue];
+            self.sampling_rate =  [innerDict[kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY] doubleValue];
 
         }
         else {
@@ -183,7 +183,7 @@
 
     // TODO: LogReporting Check the right way to handle this inner Dict.
     if (self.has_log_reporting_config) {
-        dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level, @"samplingRate": @(self.sampling_rate)};
+        dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level, kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY: @(self.sampling_rate)};
     }
 
     return dictionary;
