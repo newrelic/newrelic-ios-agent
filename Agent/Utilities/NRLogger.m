@@ -248,36 +248,51 @@ withAttributes:(NSDictionary *)attributes {
 - (NSData*) jsonDictionary:(NSDictionary*)message {
     NSString* NRSessionId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
     NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
-    
+
     NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
     NSString* entityGuid = [NSString stringWithFormat:@"%@", configuration.entity_guid];
-    
+
     if (!configuration) {
         nrAppId = nil;
         entityGuid = nil;
     }
-    
+
     if ([entityGuid length] == 0) {
         if (logEntityGuid != nil) {
             entityGuid = logEntityGuid;
         }
     }
-    
+    if (!nrAppId) {
+        nrAppId = @"";
+    }
+    if (!NRSessionId) {
+        NRSessionId = @"";
+    }
+    if (!entityGuid) {
+        entityGuid = @"";
+    }
     // TODO: LogReporting logAttributes: Refactor to construct 9 required attributes and tack on the remaining API provided attributes.
+
+    NSDictionary *requiredAttributes = @{NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
+                                         NRLogMessageFileKey:       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
+                                         NRLogMessageLineNumberKey: [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
+                                         NRLogMessageMethodKey:     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
+                                         NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
+                                         NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
+                                         @"sessionId": NRSessionId,                                                                                                              // 7
+                                         @"appId": nrAppId,                                                                                                                      // 8
+                                         @"entity.guid": entityGuid};                                                                                                            // 9
+
+    NSMutableDictionary *providedAttributes = [message mutableCopy];
+    [providedAttributes removeObjectsForKeys:@[NRLogMessageLevelKey,NRLogMessageFileKey,NRLogMessageLineNumberKey,NRLogMessageMethodKey,NRLogMessageTimestampKey,NRLogMessageMessageKey]];
+    [providedAttributes addEntriesFromDictionary:requiredAttributes];
+    NSError* error = nil;
+
+    NSData *logJsonData = [NRMAJSON dataWithJSONObject:providedAttributes
+                                                 options:0
+                                                   error:&error];
     
-    //                                                    1                 2                    3                   4                  5                   6                     7                     8                      9
-    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\", \n  \"%@\" : \"%@\"\n}",
-                      NRLogMessageLevelKey,      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
-                      NRLogMessageFileKey,       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
-                      NRLogMessageLineNumberKey, [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
-                      NRLogMessageMethodKey,     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
-                      NRLogMessageTimestampKey,  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
-                      NRLogMessageMessageKey,    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
-                      @"sessionId", NRSessionId,                                                                                                              // 7
-                      @"appId", nrAppId,                                                                                                                      // 8
-                      @"entity.guid", entityGuid];                                                                                                            // 9
-    
-    return [json dataUsingEncoding:NSUTF8StringEncoding];
+    return logJsonData;
 }
 
 - (void)setLogLevels:(unsigned int)levels {

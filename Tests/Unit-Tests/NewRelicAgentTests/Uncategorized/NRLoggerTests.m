@@ -81,7 +81,13 @@
     [NewRelic logWarning:@"Warning Log..."];
     [NewRelic logAudit:  @"Audit Log..."];
     [NewRelic logDebug:  @"Debug Log..."];
-    
+    [NewRelic logAttributes:@{
+        @"logLevel": @"WARN",
+        @"message": @"This is a test message for the New Relic logging system.",
+        @"additionalAttribute1": @"attribute1",
+        @"additionalAttribute2": @"attribute2"
+    }];
+
     XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -112,6 +118,7 @@
         @{@"message": @"Warning Log..."},
         @{@"message": @"Audit Log..."},
         @{@"message": @"Debug Log..."},
+        @{@"message": @"This is a test message for the New Relic logging system."},
     ];
     // check for existence of 6 logs.
     int foundCount = 0;
@@ -125,10 +132,15 @@
                 foundCount += 1;
                 XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
             }
+            // Verify added attributes with logAttributes.
+            if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
+                XCTAssertTrue([[dict2 objectForKey:@"additionalAttribute1"] isEqualToString:@"attribute1"],@"additionalAttribute1 set incorrectly");
+                XCTAssertTrue([[dict2 objectForKey:@"additionalAttribute2"] isEqualToString:@"attribute2"],@"additionalAttribute2 set incorrectly");
+            }
         }
     }
 
-    XCTAssertEqual(foundCount, 6, @"Six messages should be found.");
+    XCTAssertEqual(foundCount, 7, @"Seven messages should be found.");
 }
 
 @end
