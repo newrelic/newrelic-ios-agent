@@ -527,7 +527,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMAReachability* r = [NewRelicInternalUtils reachability];
     NRMANetworkStatus status;
     @synchronized(r) {
+#if TARGET_OS_WATCH
+        status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+#else
         status = [r currentReachabilityStatus];
+#endif
     }
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController

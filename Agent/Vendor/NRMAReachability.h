@@ -66,7 +66,8 @@
 typedef enum {
 	NotReachable = 0,
 	ReachableViaWiFi,
-	ReachableViaWWAN
+	ReachableViaWWAN,
+    ReachableViaUnknown
 } NRMANetworkStatus;
 
 @interface NRMAReachability: NSObject
@@ -84,7 +85,9 @@ typedef enum {
 
 + (NRMAReachability*)reachability;
 
+#if !TARGET_OS_WATCH
 - (NRMANetworkStatus)currentReachabilityStatus;
+#endif
 - (BOOL) connectionRequired;
 
 @end

@@ -96,3 +96,7 @@ NSString * const kNRMA_Attrib_file_private    = @"privateAttributes.txt";
 NSString * const kNRMA_EventStoreFilename    = @"eventsStore.txt";
 
 NSString * const kNRMA_Offline_folder          = @"offlineStorage";
+
+NSString * const kNRMA_Collector_connect_url   = @"/mobile/v4/connect";
+NSString * const kNRMA_Collector_data_url      = @"/mobile/v3/data";
+NSString * const kNRMA_Collector_hex_url       = @"/mobile/f";
