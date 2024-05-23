@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
  
-@interface NRMAMobileEvent : NSObject <NRMAAnalyticEventProtocol, NSCoding>
+@interface NRMAMobileEvent : NSObject <NRMAAnalyticEventProtocol, NSSecureCoding>
 
 @property  NSTimeInterval timestamp;
 @property  NSTimeInterval sessionElapsedTimeSeconds;
