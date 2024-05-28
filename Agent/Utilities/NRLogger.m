@@ -288,7 +288,7 @@ withAttributes:(NSDictionary *)attributes {
     [providedAttributes addEntriesFromDictionary:requiredAttributes];
     NSError* error = nil;
 
-    NSData *logJsonData = [NRMAJSON dataWithJSONObject:providedAttributes
+    NSData *logJsonData = [NSJSONSerialization dataWithJSONObject:providedAttributes
                                                  options:0
                                                    error:&error];
     
