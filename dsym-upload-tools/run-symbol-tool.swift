@@ -49,9 +49,8 @@ var dsymEndpointPath   = "symbol"
 var symbolUploadDataPostKey = "upload"
 var dsymUploadDataPostKey   = "dsym"
 
-var versionNumber = "7.4.11"
-
-// TODO: Integrate other platform names.
+// Agent version number.
+var versionNumber = "7.4.12"
 var osName = "iOS"
 var platformName = "Native"
 var appVersionNumber = "1.2.3"
@@ -103,6 +102,8 @@ func start() {
 
     symbolUploadDataPostKey = environment["NEWRELIC_SYMBOL_POST_KEY"] ?? "upload"
     dsymUploadDataPostKey   = environment["NEWRELIC_DSYM_POST_KEY"] ?? "dsym"
+
+    appVersionNumber = environment["MARKETING_VERSION"] ?? "1.2.3"
 // End Configure Env Vars //
 
 

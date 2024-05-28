@@ -46,7 +46,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
 
 
-        NewRelic.replaceDeviceIdentifier("myDeviceId")
+        NewRelic.saltDeviceUUID(true)
+
+       // NewRelic.replaceDeviceIdentifier("myDeviceId")
         
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)

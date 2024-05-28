@@ -65,17 +65,22 @@ static __strong NSString* __UDID;
     if ([NRMAFlags shouldSaltDeviceUUID]) {
         // We use app ID as salt. This will prevent apps across bundle Ids sharing device Ids.
         NSString* clearStr = [[NRMAUDIDManager saltValue] stringByAppendingString:[NRMAUDIDManager deviceIdentifier]];
-        NSData* clearData = [clearStr dataUsingEncoding:NSUTF8StringEncoding];
-        uint8_t digest[CC_SHA1_DIGEST_LENGTH];
-        CC_SHA1([clearData bytes],(CC_LONG)clearData.length,digest);
-        NSMutableString* output = [NSMutableString stringWithCapacity:CC_SHA1_DIGEST_LENGTH * 2];
-        for (int i = 0; i < CC_SHA1_DIGEST_LENGTH; i++) {
-            [output appendFormat:@"%02x",digest[i]];
-        }
+        NSString *output = [NRMAUDIDManager sha256Hash:clearStr];
         return output;
     } else {
         return [NRMAUDIDManager deviceIdentifier];
     }
+}
+
++ (NSString*)sha256Hash:(NSString*)text {
+    const char* chars = [text UTF8String];
+    unsigned char result[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(chars, (CC_LONG)strlen(chars), result);
+    NSMutableString *ret = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH*2];
+    for(int i = 0; i<CC_SHA256_DIGEST_LENGTH; i++) {
+        [ret appendFormat:@"%02x",result[i]];
+    }
+    return ret;
 }
 
 + (NSString*) saltValue {
