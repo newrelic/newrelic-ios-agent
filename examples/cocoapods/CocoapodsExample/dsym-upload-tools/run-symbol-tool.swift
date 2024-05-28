@@ -50,7 +50,7 @@ var symbolUploadDataPostKey = "upload"
 var dsymUploadDataPostKey   = "dsym"
 
 // Agent version number.
-var versionNumber = "7.4.11"
+var versionNumber = "7.4.12"
 var osName = "iOS"
 var platformName = "Native"
 var appVersionNumber = "1.2.3"
