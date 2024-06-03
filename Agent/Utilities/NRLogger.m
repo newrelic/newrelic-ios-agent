@@ -288,7 +288,7 @@ withAttributes:(NSDictionary *)attributes {
     [providedAttributes addEntriesFromDictionary:requiredAttributes];
     NSError* error = nil;
 
-    NSData *logJsonData = [NSJSONSerialization dataWithJSONObject:providedAttributes
+    NSData *logJsonData = [NRMAJSON dataWithJSONObject:providedAttributes
                                                  options:0
                                                    error:&error];
     
@@ -465,6 +465,14 @@ withAttributes:(NSDictionary *)attributes {
         }
         NSData *formattedData = [self->uploadQueue firstObject];
         
+        if (self->debugLogs) {
+            //NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:formattedData encoding:NSUTF8StringEncoding]];
+            NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+                                                                   options:0
+                                                                     error:nil];
+            NSLog(@"Uploading log data:\n %@", decode);
+        }
+
         NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
         NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
         [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
