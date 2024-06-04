@@ -602,44 +602,34 @@
 }
 
 + (BOOL) setUserId:(NSString* _Nullable)userId {
-
-    /*
-     
-     1. When setUserID(value: string|null) is called:
-        a. If userID was previously null and new value is non-null:
-            i. continue the current session and set the new userID
-        b. If userID was previously not-null and new value is different (including null):
-            i. end the current session and perform harvest
-            ii. start a new session with the new userID
-     */
     NSString *previousUserId = [[NewRelicAgentInternal sharedInstance] getUserId];
     BOOL newSession = false;
     // If the client passes a new userId that is non NULL.
     if (userId != NULL) {
-        // If userId has not previously been set.
-        if (previousUserId == NULL) {
+
+        // A new userId has been set where the previously set one (during this app session (since app launch))was not NULL.
+
+        if (previousUserId != NULL) {
             // continue session and set the new userID
+            newSession = true;
         }
-        // A new userId has been set where the previous one was not NULL.
+        // If userId has not previously been set this session
         else {
             newSession = true;
         }
     }
     // If the client passes a new NULL userId.
     else {
-        if (previousUserId == NULL) {
-            // Do nothing if passed user id is null and saved userId is null.
-        }
-        else {
+        if (previousUserId != NULL) {
             // end session and harvest.
             newSession = true;
         }
+        // Do nothing if passed user id is null and saved userId (for this app session (since app launch))  is null.
     }
     
     BOOL success = [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:kNRMA_Attrib_userId
                                                                                              value:userId
                                                                                         persistent:YES];
-
     // If passed userId == NULL , remove UserId attribute.
     if (userId == NULL) {
         success = [[NewRelicAgentInternal sharedInstance].analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
