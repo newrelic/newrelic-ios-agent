@@ -633,7 +633,6 @@
         else {
             // end session and harvest.
             newSession = true;
-
         }
     }
     
@@ -646,14 +645,17 @@
         success = [[NewRelicAgentInternal sharedInstance].analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
     }
 
-    [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
-
-    [self harvestNow];
-
-    // Update in memory userId.
     [NewRelicAgentInternal sharedInstance].userId = userId;
 
-    [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+    if (newSession) {
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
+
+        [self harvestNow];
+
+        // Update in memory userId.
+
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+    }
 
     return success;
 
