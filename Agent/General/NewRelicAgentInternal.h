@@ -12,7 +12,9 @@
 #import "NRMAHandledExceptions.h"
 #import "NRMAUserActionFacade.h"
 #import "NRMAURLTransformer.h"
-
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
 #if !TARGET_OS_WATCH
 #import <BackgroundTasks/BackgroundTasks.h>
 #endif
@@ -47,7 +49,9 @@
 
 @property (nonatomic, assign) BOOL isShutdown;
 
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+@property (nonatomic, readonly, assign) WKApplicationState currentApplicationState;
+#else
 @property (nonatomic, readonly, assign) UIApplicationState currentApplicationState;
 #endif
 + (void)shutdown;
