@@ -606,17 +606,8 @@
     BOOL newSession = false;
     // If the client passes a new userId that is non NULL.
     if (userId != NULL) {
-
-        // A new userId has been set where the previously set one (during this app session (since app launch))was not NULL.
-
-        if (previousUserId != NULL) {
-            // continue session and set the new userID
-            newSession = true;
-        }
-        // If userId has not previously been set this session
-        else {
-            newSession = true;
-        }
+        // A new userId has been set where the previously set one (during this app session (since app launch)) was not NULL or the previous set one was NULL, we start a new session.
+        newSession = true;
     }
     // If the client passes a new NULL userId.
     else {
@@ -624,7 +615,7 @@
             // end session and harvest.
             newSession = true;
         }
-        // Do nothing if passed user id is null and saved userId (for this app session (since app launch))  is null.
+        // Do nothing if passed userId is null and saved userId (for this app session (since app launch)) is null.
     }
     
     BOOL success = [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:kNRMA_Attrib_userId
