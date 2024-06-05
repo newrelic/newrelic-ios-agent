@@ -59,14 +59,19 @@ extern "C" {
 #pragma mark - Logging
 
 + (void) logInfo:(NSString* __nonnull) message;
-
 + (void) logError:(NSString* __nonnull) message;
-
 + (void) logVerbose:(NSString* __nonnull) message;
 + (void) logWarning:(NSString* __nonnull) message;
-
 + (void) logAudit:(NSString* __nonnull) message;
++ (void) logDebug:(NSString* __nonnull) message;
+// Only one level can be passed, no passing bitsets (multiple log levels at once.)
++ (void) log:(NSString* __nonnull) message level:(NRLogLevels)level;
+// Dict should contain at minimum => String: "message" and String: "logLevel" where logLevel is one of NONE < ERROR < WARN < INFO < DEBUG < VERBOSE
++ (void) logAll:(NSDictionary* __nonnull) dict;
 
++ (void) logAttributes:(NSDictionary* __nonnull) dict;
+
++ (void) logErrorObject:(NSError* __nonnull) error;
 
 #pragma mark - Configuring the New Relic SDK
 
@@ -624,8 +629,14 @@ extern "C" {
 /*******************************************************************************
  * Add a NSArray of NSStrings of the header
  * fields you want added to network events
- *******************************************************************************/
+ *******************************************************************************/ 
 +  (void)addHTTPHeaderTrackingFor:(NSArray<NSString*>*_Nonnull)headers;
+
+/*******************************************************************************
+ * Returns the NSArray of NSStrings of the header
+ * fields that were added to network events
+ *******************************************************************************/
++ (NSArray<NSString*>* _Nonnull)httpHeadersAddedForTracking;
 
 #pragma mark - Recording custom events
 
@@ -696,12 +707,12 @@ extern "C" {
 /*!
  Change the maximum size in megabytes that the agent will store for offline storage.
  
- @param megaBytes the maximum size in mega bytes of offline storage that can be stored in the local file system
+ @param megabytes the maximum size in mega bytes of offline storage that can be stored in the local file system
  
  By default the SDK will store up to 100 MB worth of offline payloads in the local file system.
  */
 
-+ (void) setMaxOfflineStorageSize:(unsigned int)megaBytes;
++ (void) setMaxOfflineStorageSize:(unsigned int)megabytes;
 
 #pragma mark - Tracking global attributes
 

@@ -151,6 +151,16 @@ static NewRelicAgentInternal* _sharedInstance;
 
     self = [super init];
     if (self) {
+
+        // NOTE: BackgroundReporting is only enabled for iOS 13+.
+        if ([NRMAFlags shouldEnableBackgroundReporting]) {
+            if (@available(iOS 13.0, *)) {
+                [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:[[NSBundle mainBundle] bundleIdentifier] usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
+                    [self handleAppRefreshTask: task];
+                }];
+            }
+        }
+
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
         if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
@@ -188,6 +198,10 @@ static NewRelicAgentInternal* _sharedInstance;
                                                      selector:@selector(applicationWillTerminate)
                                                          name:UIApplicationWillTerminateNotification
                                                        object:[UIApplication sharedApplication]];
+
+            if ([NRMAFlags shouldEnableBackgroundReporting]) {
+                [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
+            }
 
             NRLOG_INFO(@"Agent enabled");
 
@@ -536,6 +550,8 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
         return;
     }
 
+    _currentApplicationState = UIApplicationStateActive;
+
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                              0),
                    ^{
@@ -625,6 +641,8 @@ static UIBackgroundTaskIdentifier background_task;
     }
     // We are leaving the background.
     didFireEnterForeground = NO;
+    
+    _currentApplicationState = UIApplicationStateBackground;
 
     [[NRMAHarvestController harvestController].harvestTimer stop];
 
@@ -656,7 +674,7 @@ static UIBackgroundTaskIdentifier background_task;
     if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)] &&
         [[UIDevice currentDevice] isMultitaskingSupported]) {
 
-
+        // Current One time background task is dispatched upon going to the background.
         UIApplication* application = [UIApplication sharedApplication];
 
         // Mark the start of our background task.
@@ -704,6 +722,8 @@ static UIBackgroundTaskIdentifier background_task;
                     if (self.appWillTerminate) {
                         return;
                     }
+
+                    // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -712,7 +732,13 @@ static UIBackgroundTaskIdentifier background_task;
                                                         class:NSStringFromClass([NRMAHarvester class])
                                                      selector:@"execute"];
                 } @finally {
-                    [self agentShutdown];
+
+                    if ([NRMAFlags shouldEnableBackgroundReporting]) {
+                        NRLOG_VERBOSE(@"used to agentShutdown. Continuing since BackgroundInstrumentation enabled.");
+                    }
+                    else {
+                         [self agentShutdown];
+                    }
                 }
 #endif
 
@@ -721,6 +747,11 @@ static UIBackgroundTaskIdentifier background_task;
                 [application endBackgroundTask:background_task];
                 // Invalidate the background_task.
                 background_task = UIBackgroundTaskInvalid;
+
+                if ([NRMAFlags shouldEnableBackgroundReporting]) {
+                    // Schedule the next background harvest.
+                    [self scheduleHeartbeatTask];
+                }
             }
         });
     } else {
@@ -752,6 +783,53 @@ static UIBackgroundTaskIdentifier background_task;
     }
 
     [NRMALastActivityTraceController clearLastActivityStamp];
+}
+
+// We only support background fetch in iOS 13+
+- (void) scheduleHeartbeatTask {
+    if (@available(iOS 13.0, *)) {
+        BGAppRefreshTaskRequest *request = [[BGAppRefreshTaskRequest alloc] initWithIdentifier:[[NSBundle mainBundle] bundleIdentifier]];
+        request.earliestBeginDate = nil;//[NSDate dateWithTimeIntervalSinceNow:5 * 60];
+
+        NSError *error = nil;
+
+            [[BGTaskScheduler sharedScheduler] submitTaskRequest:request error:&error];
+
+        if (error) {
+            NRLOG_ERROR(@"Error schedule heartbeat: %@", error);
+        }
+        else {
+            NRLOG_VERBOSE(@"Scheduled heartbeat");
+
+        }
+    }
+}
+
+- (void) handleAppRefreshTask:(BGAppRefreshTask *)task {
+    NRLOG_VERBOSE(@"handleAppRefreshTask BGAppRefreshTask");
+    if (@available(iOS 13.0, *)) {
+
+        // We always reschedule the heartbeat task.
+        [self scheduleHeartbeatTask];
+
+        __weak BGAppRefreshTask *weakTask = task;
+
+        [task setExpirationHandler:^{
+            __strong BGAppRefreshTask *strongTask = weakTask;
+            if (strongTask) {
+                [strongTask setTaskCompletedWithSuccess:false];
+            }
+        }];
+
+        [[[NRMAHarvestController harvestController] harvester] execute];
+
+        [task setTaskCompletedWithSuccess:true];
+    }
+    else {
+        NRLOG_VERBOSE(@"No background tasks pre iOS 13");
+
+    }
+
 }
 
 + (BOOL) harvestNow {

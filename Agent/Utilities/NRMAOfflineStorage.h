@@ -14,7 +14,9 @@
 - (NSArray<NSData *> *) getAllOfflineData:(BOOL) clear;
 + (BOOL) checkErrorToPersist:(NSError*) error;
 - (BOOL) clearAllOfflineFiles;
++ (BOOL) clearAllOfflineDirectories;
 - (void) setMaxOfflineStorageSize:(NSUInteger) size;
 - (NSString*) offlineDirectoryPath;
++ (NSString*) allOfflineDirectorysPath;
 
 @end

@@ -56,6 +56,7 @@ typedef enum _NRLogLevels {
     NRLogLevelInfo    = 1 << 2,
     NRLogLevelVerbose = 1 << 3,
     NRLogLevelAudit   = 1 << 4,
+    NRLogLevelDebug   = 1 << 5,
     NRLogLevelALL     = 0xffff
 } NRLogLevels;
 
@@ -93,8 +94,14 @@ typedef enum _NRLogTargets {
     NSString *logURL;
 
     NSString *logIngestKey;
+    NSString *logEntityGuid;
+
     dispatch_queue_t logQueue;
     unsigned long long lastFileSize;
+
+    NSMutableArray *uploadQueue;
+    BOOL isUploading;
+    unsigned int failureCount;
 
 }
 
@@ -126,12 +133,18 @@ withMessage:(NSString *)message;
 + (void)setLogTargets:(unsigned int)targets;
 
 /*
-Configure the New Relic headerless logging API URL.
+Configure the New Relic logging API.
 
 @param url A single NSString constant, the logging API URL.
 */
 + (void)setLogIngestKey:(NSString*) key;
 
+/*
+ Configure the New Relic logging API.
+
+@param url A single NSString constant, the logging API URL.
+*/
++ (void)setLogEntityGuid:(NSString*) key;
 
 + (void)setLogURL:(NSString*) url;
 
@@ -148,9 +161,15 @@ Configure the New Relic headerless logging API URL.
 + (void)clearLog;
 
 /*!
- Upload current log since last upload.
+ Enqueue current log since last upload.
  */
-+ (void)upload;
++ (void)enqueueLogUpload;
+
+
+/*
+ Convert NSString to NRLogLevel.
+ */
++ (NRLogLevels)stringToLevel:(NSString*)string;
 
 /*!
  return currently set logLevels
@@ -168,6 +187,7 @@ Configure the New Relic headerless logging API URL.
 #define NRLOG_INFO(format, ...) NRLOG(NRLogLevelInfo, format, ##__VA_ARGS__)
 #define NRLOG_VERBOSE(format, ...) NRLOG(NRLogLevelVerbose, format, ##__VA_ARGS__)
 #define NRLOG_AUDIT(format, ...) NRLOG(NRLogLevelAudit, format, ##__VA_ARGS__)
+#define NRLOG_DEBUG(format, ...) NRLOG(NRLogLevelDebug, format, ##__VA_ARGS__)
 
 #endif // _NEWRELIC_AGENT_LOGGING_
 

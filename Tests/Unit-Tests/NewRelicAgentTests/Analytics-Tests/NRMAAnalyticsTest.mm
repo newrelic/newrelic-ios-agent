@@ -15,6 +15,7 @@
 #import "NRMABool.h"
 #import "NRLogger.h"
 #import "NRMASupportMetricHelper.h"
+#import <OCMock/OCMock.h>
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -73,6 +74,22 @@
     //                                                        error:nil];
 }
 
+- (void) testCustomEventOffline {
+    BOOL retValue = YES;
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    id mockObject = [OCMockObject partialMockForObject:analytics];
+    [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+
+    bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
+                                withAttributes:nil];
+
+    XCTAssertTrue(accepted);
+
+    NSString* json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"offline"]);
+    [mockObject stopMocking];
+}
+
 - (void) testRequestEvents {
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NRTimer* timer = [NRTimer new];
@@ -114,7 +131,38 @@
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
+    XCTAssertFalse([json containsString:@"offline"]);
 
+    [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
+}
+
+- (void) testRequestEventOffline {
+    BOOL retValue = YES;
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    NRTimer* timer = [NRTimer new];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    id mockObject = [OCMockObject partialMockForObject:analytics];
+    [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+
+    NSString* urlString = @"https://api.newrelic.com/api/v1/mobile?request=parameter";
+    NSURL* url = [NSURL URLWithString:urlString];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:100];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
+                                                                                          bytesReceived:200
+                                                                                           responseTime:[timer timeElapsedInSeconds]];
+
+    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withPayload:nullptr]);
+
+    NSString* json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"offline"]);
+    [mockObject stopMocking];
     [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
 }
 
@@ -170,8 +218,45 @@
 
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertNil(decode[0][@"networkErrorCode"]);
+    XCTAssertFalse([json containsString:@"offline"]);
+
+}
+
+- (void) testRequestEventHTTPErrorOffline {
+    BOOL retValue = YES;
+    NRTimer* timer = [NRTimer new];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    id mockObject = [OCMockObject partialMockForObject:analytics];
+    [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+    NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
+    NSURL* url = [NSURL URLWithString:urlString];
+    [timer stopTimer];
 
 
+    NSString* responseBody = @"helloWorld";
+    NSString* responseBodyEncoded = @"aGVsbG9Xb3JsZA==";
+
+    NSString* appDataHeader = @"ToatsBase64EncodedStringSeeThereIsAnEqualSignAtTheEnd=";
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:nil
+                                                                                   bytesSent:200];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithHttpError:403
+                                                                                 bytesReceived:100
+                                                                                  responseTime:[timer timeElapsedInSeconds]
+                                                                           networkErrorMessage:@"unauthorized"
+                                                                           encodedResponseBody:responseBody
+                                                                                 appDataHeader:appDataHeader];
+
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withPayload:nullptr]);
+
+    NSString* json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"offline"]);
+    [mockObject stopMocking];
 }
 
 - (void) testSetLastInteraction {
@@ -228,6 +313,36 @@
     XCTAssertTrue([decode[0][@"networkError"] isEqualToString:@"network failure"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertNil(decode[0][@"statusCode"]);
+    XCTAssertFalse([json containsString:@"offline"]);
+}
+
+- (void) testRequestEventNetworkErrorOffline {
+    BOOL retValue = YES;
+    NRTimer* timer = [NRTimer new];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    id mockObject = [OCMockObject partialMockForObject:analytics];
+    [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+    NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
+    NSURL* url = [NSURL URLWithString:urlString];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:200];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithNetworkError:-1001
+                                                                                    bytesReceived:100
+                                                                                     responseTime:[timer timeElapsedInSeconds]
+                                                                              networkErrorMessage:@"network failure"];
+
+    [analytics addNetworkErrorEvent:requestData withResponse:responseData withPayload:nullptr];
+    
+    NSString* json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"offline"]);
+    [mockObject stopMocking];
 }
 
 - (void) testCustomEvent {
@@ -250,6 +365,7 @@
     XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"newEventBlah"]);
     XCTAssertTrue([decode[0][@"blah"] isEqualToString:@"blah"]);
     XCTAssertTrue([decode[0][@"Winner"] isEqual:@1]);
+    XCTAssertFalse([json containsString:@"offline"]);
 }
 
 - (void) testInteractionEvent {
@@ -268,6 +384,20 @@
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"newEventBlah"]);
     XCTAssertTrue([decode[0][@"category"] isEqualToString:@"Interaction"]);
     XCTAssertTrue([decode[0][@"interactionDuration"] isEqual:@(1.0)]);    
+    XCTAssertFalse([json containsString:@"offline"]);
+}
+
+- (void) testInteractionEventOffline {
+    BOOL retValue = YES;
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    id mockObject = [OCMockObject partialMockForObject:analytics];
+    [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+    
+    [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
+
+    NSString* json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"offline"]);
+    [mockObject stopMocking];
 }
 
 - (void ) testCustomEventUnicode {
@@ -313,7 +443,23 @@
     XCTAssertNotNil(decode[0][@"eventType"]);
     XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileBreadcrumb"]);
     XCTAssertTrue([decode[0][@"name"] isEqualToString:@"testBreadcrumbs"]);
+    XCTAssertFalse([json containsString:@"offline"]);
 }
+
+- (void) testBreadcrumbOffline {
+    BOOL retValue = YES;
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    id mockObject = [OCMockObject partialMockForObject:analytics];
+    [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+    
+    XCTAssertTrue([analytics addBreadcrumb:@"testBreadcrumbs"
+                            withAttributes:nil]);
+    
+    NSString* json = [analytics analyticsJSONString];
+    XCTAssertTrue([json containsString:@"offline"]);
+    [mockObject stopMocking];
+}
+
 
 - (void) testBooleanSessionAttribute {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
@@ -324,8 +470,44 @@
     NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
                                                                options:0
                                                                  error:nil];
-
     XCTAssertTrue([dictionary[@"aBoolValue"] boolValue]);
+
+    // Test Persistent
+    [analytics setSessionAttribute:@"aBoolValueP" value:[[NRMABool alloc] initWithBOOL:YES] persistent:YES];
+    NSString* json2 = [analytics analyticsJSONString];
+    json2 = [analytics sessionAttributeJSONString];
+
+    NSDictionary* dictionary2 = [NSJSONSerialization JSONObjectWithData:[json2 dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
+
+    XCTAssertTrue([dictionary2[@"aBoolValueP"] boolValue]);
+}
+
+- (void) testRawBoolSessionAttribute {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setSessionAttribute:@"aBoolValue2" value:@YES];
+
+    NSString* json = [analytics analyticsJSONString];
+    json = [analytics sessionAttributeJSONString];
+
+    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
+    XCTAssertTrue([dictionary[@"aBoolValue2"] boolValue]);
+
+    // Test Persistent.
+
+    [analytics setSessionAttribute:@"aBoolValue2P" value:@YES persistent:YES];
+
+    NSString* json2 = [analytics analyticsJSONString];
+    json2 = [analytics sessionAttributeJSONString];
+
+    NSDictionary* dictionary2 = [NSJSONSerialization JSONObjectWithData:[json2 dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
+
+    XCTAssertTrue([dictionary2[@"aBoolValue2P"] boolValue]);
 }
 
 - (void)testBooleanEventAttribute {

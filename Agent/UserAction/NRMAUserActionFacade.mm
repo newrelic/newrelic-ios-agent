@@ -39,7 +39,9 @@
                                                            userAction.interactionCoordinates.UTF8String,
                                                            userAction.actionType.UTF8String,
                                                            userAction.elementFrame.UTF8String,
-                                                           [NewRelicInternalUtils deviceOrientation].UTF8String);
+                                                           [NewRelicInternalUtils deviceOrientation].UTF8String,
+                                                           [analyticsController checkOfflineStatus],
+                                                           [analyticsController checkBackgroundStatus]);
         } catch (std::exception &error) {
             NRLOG_VERBOSE(@"Failed to add TrackedGesture: %s.", error.what());
         } catch (...) {

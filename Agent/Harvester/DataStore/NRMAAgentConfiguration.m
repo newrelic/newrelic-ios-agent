@@ -58,8 +58,8 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
     return __NRMA__maxEventBufferSize;
 }
 
-+ (void) setMaxOfflineStorageSize:(NSUInteger)megaBytes {
-    __NRMA__maxOfflineStorageSize = megaBytes;
++ (void) setMaxOfflineStorageSize:(NSUInteger)megabytes {
+    __NRMA__maxOfflineStorageSize = megabytes;
 }
 
 + (NSUInteger) getMaxOfflineStorageSize {
@@ -127,25 +127,30 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
 }
 
 - (void) setLoggingURL {
-    if (![NRMAFlags shouldEnableLogReporting]) { return; }
-
     if (self.applicationToken.regionCode.length) {
         _loggingURL = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_LOGGING_HOST,self.applicationToken.regionCode];
+    }
+    else if ([NRMAFlags shouldEnableFedRampSupport]) {
+        if ([self.collectorHost isEqualToString:@"staging-mobile-collector.newrelic.com"]) {
+            _loggingURL = kNRMA_STAGING_FEDRAMP_LOGGING_HOST;
+        }
+        else {
+            _loggingURL = kNRMA_FEDRAMP_LOGGING_HOST;
+        }
     }
     else if ([self.collectorHost isEqualToString:@"staging-mobile-collector.newrelic.com"]) {
         _loggingURL = kNRMA_STAGING_LOGGING_HOST;
     }
-    else if ([NRMAFlags shouldEnableFedRampSupport]) {
-        _loggingURL = kNRMA_FEDRAMP_LOGGING_HOST;
-    }
     else {
         _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
     }
-    _loggingURL = [_loggingURL stringByAppendingFormat:@"/log/v1"];
+    _loggingURL = [_loggingURL stringByAppendingFormat:@"/mobile/logs"];
 
     NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
-
+    
     [NRLogger setLogURL:logURL];
+
+    [NRLogger setLogIngestKey:self.applicationToken.value];
 }
 
 + (NRMAConnectInformation*) connectionInformation

@@ -79,7 +79,6 @@
 */
 
 
-
 typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_InteractionTracing                    = 1 << 1,
     NRFeatureFlag_SwiftInteractionTracing               = 1 << 2, // Disabled by default
@@ -99,8 +98,10 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_AppStartMetrics                       = 1 << 16,
     NRFeatureFlag_FedRampEnabled                        = 1 << 17, // Disabled by default
     NRFeatureFlag_SwiftAsyncURLSessionSupport           = 1 << 18, // Disabled by default
-
-    // NOTE: Temporarily removed NRFeatureFlag_LogReporting
+    // Note: LogReporting is not currently available. It will be available in a future release of the New Relic iOS agent.
+//    NRFeatureFlag_LogReporting                          = 1 << 19, // Disabled by default
     NRFeatureFlag_NewEventSystem                        = 1 << 20, // Disabled by default
-    NRFeatureFlag_OfflineStorage                        = 1 << 21,
+    NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
+    NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
+
 };

@@ -23,7 +23,7 @@
 @property (strong) NSString*  appId;
 @property (strong) NSString*  spanId;
 @property (strong) NSString*  transactionId;
-@property          int        sampled;
+//@property          int        sampled;
 @property (strong) NSString*  priority;
 @property          long long  timestamp;
 

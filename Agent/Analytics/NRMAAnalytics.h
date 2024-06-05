@@ -36,7 +36,11 @@
 - (void) sessionWillEnd;
 //value is either a NSString or NSNumber;
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value;
+- (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent;
+
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number;
+- (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number persistent:(BOOL)persistent;
+
 - (BOOL) setUserId:(NSString*)userId;
 - (BOOL) removeSessionAttributeNamed:(NSString*)name;
 - (BOOL) removeAllSessionAttributes;
@@ -53,7 +57,8 @@
 + (NSString*) getLastSessionsEvents;
 - (void) clearLastSessionsAnalytics;
 
-
+- (BOOL) checkOfflineStatus;
+- (BOOL) checkBackgroundStatus;
 //this utilizes setSessionAttribute:value: which validates the user input 'name'.
 - (BOOL) setLastInteraction:(NSString*)name;
 

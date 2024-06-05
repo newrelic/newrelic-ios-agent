@@ -6,10 +6,13 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
+#import <UIKit/UIKit.h>
+
 #import "NRMAMobileEvent.h"
 #import "Constants.h"
 #import "NRMAFlags.h"
 #import "NewRelicInternalUtils.h"
+#import "NewRelicAgentInternal.h"
 
 static NSString* const kTimestampKey = @"Timestamp";
 static NSString* const kSessionElapsedTimeKey = @"SessionElapsedTime";
@@ -36,6 +39,12 @@ static NSString* const kAttributesKey = @"Attributes";
                 if (status == NotReachable) {
                     [self addAttribute:kNRMA_Attrib_offline value:@YES];
                 }
+            }
+        }
+        // Handle Background attribute addition.
+        if([NRMAFlags shouldEnableBackgroundReporting]) {
+            if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
+                [self addAttribute:kNRMA_Attrib_background value:@YES];
             }
         }
     }
