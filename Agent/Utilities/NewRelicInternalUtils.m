@@ -324,9 +324,28 @@ static NSString* _osVersion;
 }
 
 + (NSString*) deviceOrientation {
-
-
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
+#if TARGET_OS_TV
+    return @"Landscape";
+#elif TARGET_OS_WATCH
+    NSMutableString *orientation = [NSMutableString string];
+    if([[WKInterfaceDevice currentDevice] wristLocation] == WKInterfaceDeviceWristLocationLeft) {
+        [orientation appendString:@"Left Wrist - "];
+    } else {
+        [orientation appendString:@"Right Wrist - "];
+    }
+    
+    if([[WKInterfaceDevice currentDevice] crownOrientation] == WKInterfaceDeviceCrownOrientationLeft) {
+        [orientation appendString:@"Crown Left"];
+    } else {
+        [orientation appendString:@"Crown Right"];
+    }
+    
+    if([WKExtension sharedExtension].autorotated ) {
+        [orientation appendString:@" - Autorotated"];
+    }
+    
+    return [NSString stringWithString:orientation];
+#else
     switch ([[UIDevice currentDevice] orientation]) {
         case UIDeviceOrientationLandscapeLeft:
         case UIDeviceOrientationLandscapeRight:
@@ -346,8 +365,6 @@ static NSString* _osVersion;
             return @"Unknown";
             break;
     }
-#else
-    return @"Landscape";
 #endif
 }
 

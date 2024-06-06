@@ -395,10 +395,11 @@ static NewRelicAgentInternal* _sharedInstance;
     if (![NRMACollectionViewInstrumentation instrument]) {
         NRLOG_VERBOSE(@"Failed to instrument UICollectionView.");
     }
-#endif
     if (![NRMAGestureRecognizerInstrumentation instrumentUIGestureRecognizer]) {
         NRLOG_VERBOSE(@"Failed to instrument gesture recognizer.");
     }
+#endif
+
 }
 
 // De-initialize agent instrumentation
