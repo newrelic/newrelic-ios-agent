@@ -617,7 +617,19 @@
         }
         // Do nothing if passed userId is null and saved userId (for this app session (since app launch)) is null.
     }
-    
+
+    // Update in memory userId.
+    [NewRelicAgentInternal sharedInstance].userId = userId;
+
+    if (newSession) {
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
+
+        // Perform harvest
+        [self harvestNow];
+
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+    }
+
     BOOL success = [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:kNRMA_Attrib_userId
                                                                                              value:userId
                                                                                         persistent:YES];
@@ -626,20 +638,7 @@
         success = [[NewRelicAgentInternal sharedInstance].analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
     }
 
-    [NewRelicAgentInternal sharedInstance].userId = userId;
-
-    if (newSession) {
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
-
-        [self harvestNow];
-
-        // Update in memory userId.
-
-        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
-    }
-
     return success;
-
 }
 
 + (BOOL) removeAttribute:(NSString*)name {
