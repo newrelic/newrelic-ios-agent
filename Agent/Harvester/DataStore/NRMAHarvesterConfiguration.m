@@ -22,8 +22,13 @@
         else {
             self.collect_network_errors = NRMA_DEFAULT_COLLECT_NETWORK_ERRORS;
         }
-        
-        self.cross_process_id = [dict valueForKey:kNRMA_CROSS_PROCESS_ID];
+
+        if ([dict valueForKey:kNRMA_CROSS_PROCESS_ID]) {
+            self.cross_process_id = [dict valueForKey:kNRMA_CROSS_PROCESS_ID];
+        }
+        else {
+            self.cross_process_id = @"";
+        }
 
         if ([dict objectForKey:kNRMA_DATA_REPORT_PERIOD]) {
             self.data_report_period = [[dict valueForKey:kNRMA_DATA_REPORT_PERIOD] intValue];
@@ -81,9 +86,17 @@
 
         self.at_capture = [[NRMATraceConfigurations alloc] initWithArray:[dict valueForKey:kNRMA_AT_CAPTURE]];
         self.activity_trace_min_utilization = [[dict valueForKey:KNRMA_AT_MIN_UTILIZATION] doubleValue];
-        self.encoding_key = [dict valueForKey:kNRMA_ENCODING_KEY];
+        if ([dict objectForKey:kNRMA_ENCODING_KEY]) {
+            self.encoding_key = [dict valueForKey:kNRMA_ENCODING_KEY];
+        }
+        else {
+            self.encoding_key = @"";
+        }
+
         self.account_id = [[dict valueForKey:kNRMA_ACCOUNT_ID] longLongValue];
-        self.application_id = [[dict valueForKey:kNMRA_APPLICATION_ID] longLongValue];
+
+        self.application_id = self.data_token.clusterAgentId;
+
         self.trusted_account_key = [dict valueForKey:kNRMA_TRUSTED_ACCOUNT_KEY];
 
         if ([dict objectForKey:kNRMA_ENTITY_GUID_KEY]) {
@@ -93,19 +106,35 @@
         }
 
         // begin parsing log reporting section.
-        if ([dict objectForKey:kNRMA_LOG_REPORTING_KEY]) {
+        if ([dict objectForKey:kNRMA_CONFIG_KEY]) {
             self.has_log_reporting_config = YES;
 
-            id innerDict = [dict objectForKey:kNRMA_LOG_REPORTING_KEY];
+            id innerDict = [[dict objectForKey:kNRMA_CONFIG_KEY] objectForKey:kNRMA_LOG_REPORTING_KEY];
             self.log_reporting_enabled = innerDict[@"enabled"];
             self.log_reporting_level = innerDict[@"level"];
-            self.sampling_rate =  [innerDict[kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY] doubleValue];
-
+            if ([innerDict objectForKey: kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY]) {
+                self.sampling_rate =  [innerDict[kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY] doubleValue];
+            }
+            else {
+                self.sampling_rate = 100.0;
+            }
         }
         else {
+            self.log_reporting_enabled = NO;
             self.has_log_reporting_config = NO;
+            self.log_reporting_level = @"WARN";
+            self.sampling_rate = 100.0;
         }
         // end parsing log reporting section.
+
+        // Begin parsing request headers map.
+        if ([dict objectForKey:KNRMA_REQUEST_HEADER_MAP_KEY]) {
+            self.request_header_map = [dict objectForKey:KNRMA_REQUEST_HEADER_MAP_KEY];
+        }
+        else {
+            self.request_header_map = [NSDictionary dictionary];
+        }
+        // End parsing request headers map.
 
         // The collector does not currently send down this key, but we still want a sane default
         if ([dict objectForKey:kNRMA_AT_MAX_SEND_ATTEMPTS]) {
@@ -134,7 +163,7 @@
     configuration.entity_guid = @"";
     configuration.log_reporting_level = @"WARNING";
     configuration.has_log_reporting_config = NO;
-
+    configuration.request_header_map = [NSDictionary dictionary];
     configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
     return configuration;
 }
@@ -160,7 +189,6 @@
     
     dictionary[kNRMA_ERROR_LIMIT] = @(self.error_limit);
     dictionary[kNRMA_REPORT_MAX_TRANSACTION_AGE] = @(self.report_max_transaction_age);
-     
     dictionary[kNRMA_REPORT_MAX_TRANSACTION_COUNT] = @(self.report_max_transaction_count);
     dictionary[kNRMA_RESPONSE_BODY_LIMIT] = @(self.response_body_limit);
     dictionary[kNRMA_SERVER_TIMESTAMP] = @(self.server_timestamp);
@@ -171,7 +199,10 @@
     dictionary[kNRMA_AT_CAPTURE] = @[[NSNumber numberWithInt:self.at_capture.maxTotalTraceCount], self.at_capture.activityTraceConfigurations?:@[]];
     dictionary[kNMRA_APPLICATION_ID] = @(self.application_id);
     dictionary[kNRMA_ACCOUNT_ID] = @(self.account_id);
-    dictionary[kNRMA_ENCODING_KEY] = self.encoding_key;
+
+    if ([self.encoding_key length]) {
+        dictionary[kNRMA_ENCODING_KEY] = self.encoding_key;
+    }
 
     if ([self.trusted_account_key length]) {
         dictionary[kNRMA_TRUSTED_ACCOUNT_KEY] = self.trusted_account_key;
@@ -181,9 +212,12 @@
         dictionary[kNRMA_ENTITY_GUID_KEY] = self.entity_guid;
     }
 
-    // TODO: LogReporting Check the right way to handle this inner Dict.
     if (self.has_log_reporting_config) {
-        dictionary[kNRMA_LOG_REPORTING_KEY] = @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level, kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY: @(self.sampling_rate)};
+        dictionary[kNRMA_CONFIG_KEY] = @{kNRMA_LOG_REPORTING_KEY: @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level, kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY: @(self.sampling_rate)}};
+    }
+
+    if ([self.request_header_map count]) {
+        dictionary[KNRMA_REQUEST_HEADER_MAP_KEY] = self.request_header_map;
     }
 
     return dictionary;

@@ -76,6 +76,14 @@
            forHTTPHeaderField:(NSString*)kCONNECT_TIME_HEADER];
     }
 
+//    // TODO: Attach request headers map headers to each outbound request.
+//    if ([self.requestHeadersMap count] > 0) {
+//        for (NSString *key in self.requestHeadersMap) {
+//            NSString* value = [self.requestHeadersMap objectForKey:key];
+//            [postRequest addValue:value forHTTPHeaderField:key];
+//        }
+//    }
+  
     NSData* messageData = [message dataUsingEncoding:NSUTF8StringEncoding];
     unsigned long size = [messageData length];
     [postRequest setValue:[NSString stringWithFormat:@"%lu", size] forHTTPHeaderField:kNRMAActualSizeHeader];

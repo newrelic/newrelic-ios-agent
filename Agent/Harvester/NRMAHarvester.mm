@@ -192,6 +192,7 @@
     self.harvestData.dataToken = harvestConfiguration.data_token;
     connection.serverTimestamp = harvestConfiguration.server_timestamp;
     connection.crossProcessID  = harvestConfiguration.cross_process_id;
+    connection.requestHeadersMap = harvestConfiguration.request_header_map;
 }
 
 - (NSString *) applicationIdentifierAsString
@@ -804,8 +805,7 @@
             // TODO: Double check this behavior for LogReporting.
             [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
         }
-        //    //TODO: LogReporting config must exist in the response or this will disable
-        //    // OVERWRITE user selected value for LogReporting -- Should must be included once API returns log_reporting { enabled: false} reliably.
+        // OVERWRITE user selected value for LogReporting.
         else {
             [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
         }

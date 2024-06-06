@@ -101,11 +101,15 @@
     config.server_timestamp = 1379548800;
     config.stack_trace_limit = 100;
     config.account_id = 190;
-    config.application_id = 39484;
+    config.application_id = 36920;
     config.trusted_account_key = @"123";
-    
+    config.request_header_map = [NSDictionary dictionary];
     config.encoding_key = @"encoding_key";
-    
+    config.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+    config.log_reporting_level = @"WARN";
+    config.sampling_rate = 100.0;
+    config.entity_guid = @"";
+
     return config;
 }
 
@@ -158,7 +162,11 @@
 {
     NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
     
-    XCTAssertTrue([config isEqual:config], @"isEqual is correct");
+    XCTAssertTrue([config isEqual:config], @"isEqual is correct"); // LOL
+    NSLog(@"config = @+%@", config);
+    NRMAHarvesterConfiguration *secondConfig = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]];
+    NSLog(@"secondConfig = @+%@", secondConfig);
+
     XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
 }
 
@@ -529,6 +537,7 @@
     NRMAHarvesterConfiguration* currentConfig = [aHarvester fetchHarvestConfiguration];
     currentConfig.account_id = 0;
     currentConfig.application_id = 0;
+    currentConfig.data_token.clusterAgentId = 0;
 
     // ensure we are connected via expected v3 configuration
     [aHarvester saveHarvesterConfiguration:currentConfig];
@@ -541,7 +550,7 @@
     XCTAssertEqual(aHarvester.currentState, NRMA_HARVEST_CONNECTED);
     XCTAssertTrue([[aHarvester fetchHarvestConfiguration] isValid]);
     XCTAssertEqual(190, [aHarvester fetchHarvestConfiguration].account_id);
-    XCTAssertEqual(39484, [aHarvester fetchHarvestConfiguration].application_id);
+    XCTAssertEqual(36920, [aHarvester fetchHarvestConfiguration].application_id);
 
     aHarvester = nil;
 }
