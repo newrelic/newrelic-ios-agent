@@ -84,13 +84,15 @@ static NRMAURLTransformer* urlTransformer;
 // The token sent from the RPM service on connect that is used when sending data.
 @property(nonatomic, readonly, strong) id dataToken;
 @property(atomic, strong) NSDate* appSessionStartDate;
+
+
 @property(nonatomic, readonly) BOOL collectNetworkErrors;
 @property(nonatomic, assign) BOOL captureNetworkStackTraces;
 @property(nonatomic, strong) NRMAAppInstallMetricGenerator* appInstallMetricGenerator;
 @property(nonatomic, strong) NRMAAppUpgradeMetricGenerator* appUpgradeMetricGenerator;
 @property(assign) BOOL appWillTerminate;
 
-- (void) applicationWillEnterForeground;
+//- (void) applicationWillEnterForeground;
 - (void) applicationWillEnterForeground:(UIApplication*)application;
 - (void) applicationDidEnterBackground;
 - (void) applicationDidEnterBackground:(UIApplication*)application;
@@ -114,6 +116,10 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (NSDate*) getAppSessionStartDate {
     return self.appSessionStartDate;
+}
+
+- (NSString* _Nullable) getUserId {
+    return self.userId;
 }
 
 + (NewRelicAgentInternal*) sharedInstance {
@@ -158,6 +164,9 @@ static NewRelicAgentInternal* _sharedInstance;
                 }];
             }
         }
+
+        // TODO: UserId tweaking
+        self.userId = NULL;
 
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
@@ -558,14 +567,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                     return;
                 }
                 didFireEnterForeground = YES;
-                self.appSessionStartDate = [NSDate date];
-                [NRMACPUVitals setAppStartCPUTime];
-
-                [NRMAMeasurements shutdown];
-                [NRMAHarvestController stop];
-
-                [NRMAHarvestController initialize:self->_agentConfiguration];
-
                 /*
                  * NRMAMeasurements must be started before the
                  * harvest controller Or else there is a chance the
@@ -593,9 +594,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                  * harvester start, but after harvester
                  * initialization.
                  */
-                [NRMAMeasurements initializeMeasurements];
-                [NRMAHarvestController start];
-                [self onSessionStart];
+                [self sessionStartInitialization];
             }
         }
     });
@@ -603,6 +602,21 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
 - (void) applicationWillEnterForeground:(UIApplication*)application {
     [self applicationWillEnterForeground];
+}
+
+- (void) sessionStartInitialization {
+    self.appSessionStartDate = [NSDate date];
+    [NRMACPUVitals setAppStartCPUTime];
+
+    [NRMAMeasurements shutdown];
+    [NRMAHarvestController stop];
+
+    [NRMAHarvestController initialize:self->_agentConfiguration];
+
+
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAHarvestController start];
+    [self onSessionStart];
 }
 
 // Queues a background task to send data to the New Relic service if anything is pending.
