@@ -281,7 +281,8 @@
 
 - (void) testSetUserID {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
-    XCTAssertEqual([analytics setSessionAttribute:@"userId" value:@"test"], [NewRelic setUserId:@"test"]);
+    XCTAssertFalse([analytics setSessionAttribute:@"userId" value:@"test"]);
+    XCTAssertTrue([NewRelic setUserId:@"test"]);
 }
 
 // TODO: Fix setUserId test
