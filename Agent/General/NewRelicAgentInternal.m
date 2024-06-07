@@ -55,10 +55,6 @@
 #import "NRMASupportMetricHelper.h"
 
 
-#if TARGET_OS_WATCH
-#import <WatchKit/WatchKit.h>
-#endif
-
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
 // Enabling this will bypass dispatch_once-style logic and expose more internal state.
 // Must be set before calling [NewRelic startWithApplicationToken:...]
@@ -586,7 +582,9 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
         return;
     }
 
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+    _currentApplicationState = WKApplicationStateActive;
+#else
     _currentApplicationState = UIApplicationStateActive;
 #endif
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
@@ -693,7 +691,9 @@ static UIBackgroundTaskIdentifier background_task;
     // We are leaving the background.
     didFireEnterForeground = NO;
     
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+    _currentApplicationState = WKApplicationStateBackground;
+#else
     _currentApplicationState = UIApplicationStateBackground;
 #endif
     [[NRMAHarvestController harvestController].harvestTimer stop];
@@ -736,9 +736,6 @@ static UIBackgroundTaskIdentifier background_task;
             [application endBackgroundTask:background_task];
             background_task = UIBackgroundTaskInvalid;
         }];
-#elif TARGET_OS_WATCH
-        WKExtension *application = [WKExtension sharedExtension];
-#endif
         NSProcessInfo *processInfo = [NSProcessInfo processInfo];
         // Mark the start of the background task
         [processInfo performExpiringActivityWithReason:@"harvestOnAppBackground"
@@ -795,8 +792,8 @@ static UIBackgroundTaskIdentifier background_task;
                 NRLOG_VERBOSE(@"Background Harvest Complete");
             }
         }];
-        
-#if !TARGET_OS_WATCH
+#endif
+
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                                  0),
                        ^{
@@ -819,8 +816,8 @@ static UIBackgroundTaskIdentifier background_task;
                         [NRMATaskQueue queue:[[NRMAMetric alloc]        initWithName:@"Session/Duration"
                                                                                value:[NSNumber numberWithDouble:sessionLength]
                                                                                scope:nil]];
-
-
+                        
+                        
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                     } @catch (NSException* exception) {
                         [NRMAExceptionHandler        logException:exception
@@ -835,7 +832,7 @@ static UIBackgroundTaskIdentifier background_task;
                     if (self.appWillTerminate) {
                         return;
                     }
-
+                    
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
@@ -845,17 +842,17 @@ static UIBackgroundTaskIdentifier background_task;
                                                         class:NSStringFromClass([NRMAHarvester class])
                                                      selector:@"execute"];
                 } @finally {
-
+                    
                     if ([NRMAFlags shouldEnableBackgroundReporting]) {
-                        NRLOG_VERBOSE(@"used to agentShutdown. Continuing since BackgroundInstrumentation enabled.");
-                    }
-                    else {
-                         [self agentShutdown];
+                        NRLOG_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
+                    } else {
+                        [self agentShutdown];
                     }
                 }
 #endif
-
+                
                 NRLOG_VERBOSE(@"Background harvest complete.");
+#if !TARGET_OS_WATCH
 
                 [application endBackgroundTask:background_task];
                 // Invalidate the background_task.
@@ -865,8 +862,10 @@ static UIBackgroundTaskIdentifier background_task;
                     // Schedule the next background harvest.
                     [self scheduleHeartbeatTask];
                 }
+#endif
             }
         });
+#if !TARGET_OS_WATCH
     } else {
         [NRMAHarvestController stop];
         NRLOG_ERROR(@"Multitasking is not supported.  Clearing data.");

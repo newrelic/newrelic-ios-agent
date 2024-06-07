@@ -366,15 +366,17 @@
 #endif
         NSString *name;
 #if TARGET_OS_WATCH
-        name = kNRSupportabilityPrefix@"/Collector/Harvest";
+        if ([NewRelicAgentInternal sharedInstance].currentApplicationState == WKApplicationStateBackground) {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
+        }
 #else
         if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
             name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
         }
+#endif
         else {
             name = kNRSupportabilityPrefix@"/Collector/Harvest";
         }
-#endif
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:name
                                                         value:[NSNumber numberWithDouble:harvestTimer.timeElapsedInSeconds]
                                                         scope:@""]];
