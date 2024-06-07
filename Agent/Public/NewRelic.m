@@ -27,6 +27,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAURLTransformer.h"
 #import "NRMAHTTPUtilities.h"
+#import "Constants.h"
 
 #define kNRMA_NAME @"name"
 
@@ -600,11 +601,44 @@
                                                                                       persistent:YES];
 }
 
-+ (BOOL) setUserId:(NSString*)userId {
-    return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:@"userId"
-                                                                                     value:userId
-                                                                                persistent:YES];
++ (BOOL) setUserId:(NSString* _Nullable)userId {
+    NSString *previousUserId = [[NewRelicAgentInternal sharedInstance] getUserId];
+    BOOL newSession = false;
+    // If the client passes a new userId that is non NULL.
+    if (userId != NULL) {
+        // A new userId has been set where the previously set one (during this app session (since app launch)) was not NULL or the previous set one was NULL, we start a new session.
+        newSession = true;
+    }
+    // If the client passes a new NULL userId.
+    else {
+        if (previousUserId != NULL) {
+            // end session and harvest.
+            newSession = true;
+        }
+        // Do nothing if passed userId is null and saved userId (for this app session (since app launch)) is null.
+    }
 
+    // Update in memory userId.
+    [NewRelicAgentInternal sharedInstance].userId = userId;
+
+    if (newSession) {
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
+
+        // Perform harvest
+        [self harvestNow];
+
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+    }
+
+    BOOL success = [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:kNRMA_Attrib_userId
+                                                                                             value:userId
+                                                                                        persistent:YES];
+    // If passed userId == NULL , remove UserId attribute.
+    if (userId == NULL) {
+        success = [[NewRelicAgentInternal sharedInstance].analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
+    }
+
+    return success;
 }
 
 + (BOOL) removeAttribute:(NSString*)name {

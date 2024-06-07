@@ -40,6 +40,8 @@ using namespace NewRelic;
 {
     std::shared_ptr<AnalyticsController> _analyticsController;
     BOOL _sessionWillEnd;
+    BOOL _newSession;
+
     NSRegularExpression* __eventTypeRegex;
     
     NRMAEventManager *_eventManager;
@@ -691,7 +693,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if([NRMAFlags shouldEnableNewEventSystem]){
         return [_sessionAttributeManager setUserId:userId];
     } else {
-        return [self setSessionAttribute:@"userId"
+        return [self setSessionAttribute:kNRMA_Attrib_userId
                                    value:userId
                               persistent:YES];
     }
@@ -1125,6 +1127,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [[NewRelicAgentInternal sharedInstance].gestureFacade recordUserAction:backgroundGesture];
     }
 
+    [self endSessionReusable];
+}
+
+- (void) newSession {
+    _newSession = YES;
+    [self endSessionReusable];
+}
+- (void) endSessionReusable {
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(![self addSessionEndAttribute]) { //has exception handling within
             NRLOG_ERROR(@"failed to add session end attribute.");
@@ -1143,18 +1153,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             NRLOG_ERROR(@"failed to add a session event");
         }
     }
-    
-}
 
+}
 - (void) onHarvestBefore {
     if([NRMAFlags shouldEnableNewEventSystem]){
-        if (_sessionWillEnd || [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]) {
+        if (_sessionWillEnd || _newSession || [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]) {
+            _newSession = NO;
             [self handleHarvest];
         }
-
     }
     else {
-        if (_sessionWillEnd || _analyticsController->didReachMaxEventBufferTime()) {
+        if (_sessionWillEnd || _newSession || _analyticsController->didReachMaxEventBufferTime()) {
+            _newSession = NO;
             [self handleHarvest];
         }
     }
