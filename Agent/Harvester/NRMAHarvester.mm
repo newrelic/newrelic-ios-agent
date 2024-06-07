@@ -795,18 +795,31 @@
 
     // This if/else chain should only be entered if log_reporting was found in the config
     if (configuration.has_log_reporting_config) {
+        // TODO: Remove or elevate to DEBUG
+
+        NSLog(@"config: Has log reporting config");
         if (configuration.log_reporting_enabled) {
+
+            // TODO: We need to somehow reboot the logger in this case 
             // it is required to enable NRLogTargetFile when using LogReporting.
             // Should this be done programmatically?
             [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
             // Parse NSString into NRLogLevel
             NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
             [NRLogger setLogLevels:level];
+
+            // TODO: Remove or elevate to DEBUG
+
+            NSLog(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
+
             // TODO: Double check this behavior for LogReporting.
             [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
         }
         // OVERWRITE user selected value for LogReporting.
         else {
+            // TODO: Remove or elevate to DEBUG
+            NSLog(@"config: Has log reporting DISABLED");
+
             [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
         }
     }

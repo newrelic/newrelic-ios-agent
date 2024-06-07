@@ -34,12 +34,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
 
-        // Log Reporting configuration.
-        // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
-        // NOTE: SERVER VALUE OF log_reporting { enabled: true/false } will be respected above all else.
-        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_LogReporting)
-        // Note: Disabled by default, it is required to enable NRLogTargetFile when using LogReporting.
-        NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
+//        // Log Reporting configuration.
+//        // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
+//        // NOTE: SERVER VALUE OF log_reporting { enabled: true/false } will be respected above all else.
+//        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_LogReporting)
+//        // Note: Disabled by default, it is required to enable NRLogTargetFile when using LogReporting.
+//        NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
 
         NewRelic.saltDeviceUUID(true)
 

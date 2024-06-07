@@ -219,6 +219,9 @@
     if ([self.request_header_map count]) {
         dictionary[KNRMA_REQUEST_HEADER_MAP_KEY] = self.request_header_map;
     }
+    else {
+        dictionary[KNRMA_REQUEST_HEADER_MAP_KEY] = [NSDictionary dictionary];
+    }
 
     return dictionary;
 }
@@ -243,6 +246,8 @@
     if (self.account_id != that.account_id) return NO;
     if (self.application_id != that.application_id) return NO;
     if (![self.encoding_key isEqualToString:that.encoding_key]) return NO;
+    
+    // TODO: LogReporting changes for isEqual.
 
     return [self.data_token isEqual:that.data_token];
 }
@@ -266,6 +271,8 @@
     result = 31 * result + (unsigned int)self.application_id;
     result = 31 * result + self.encoding_key.hash;
     result = 31 * result + self.trusted_account_key.hash;
+
+    // TODO: LogReporting changes for hash.
 
     return result;
 }

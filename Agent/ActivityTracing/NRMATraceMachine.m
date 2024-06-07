@@ -91,7 +91,8 @@ static NSString *healthyTimerLock = @"healthy timer lock";
                                                    userInfo:nil
                                                     repeats:NO];
         // TODO: Remove
-        NSLog(@"Healthy trace timer started with interval: %f",interval);
+       //  NSLog(@"Healthy trace timer started with interval: %f",interval);
+
         [[NSRunLoop mainRunLoop] addTimer:self->healthyTimer forMode:NSDefaultRunLoopMode];
     });
 }

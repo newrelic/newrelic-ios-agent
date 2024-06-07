@@ -22,7 +22,7 @@
 @property(strong) NSString*             collectorHost;
 @property(strong) NSString*             crossProcessID;
 @property(assign) long long             serverTimestamp;
-@property(nonatomic,assign) NSDictionary* requestHeadersMap;
+@property(strong) NSDictionary* requestHeadersMap;
 @property(strong) NRMAConnectInformation* connectionInformation;
 @property(strong) NSURLSession* harvestSession;
 @property(strong) NRMAOfflineStorage* offlineStorage;
