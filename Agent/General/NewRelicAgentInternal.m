@@ -120,6 +120,10 @@ static NewRelicAgentInternal* _sharedInstance;
     return self.appSessionStartDate;
 }
 
+- (NSString* _Nullable) getUserId {
+    return self.userId;
+}
+
 + (NewRelicAgentInternal*) sharedInstance {
     return _sharedInstance;
 }
@@ -164,6 +168,10 @@ static NewRelicAgentInternal* _sharedInstance;
             }
         }
 #endif
+
+        // TODO: UserId tweaking
+        self.userId = NULL;
+
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
 #if TARGET_OS_WATCH
@@ -597,13 +605,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                     return;
                 }
                 didFireEnterForeground = YES;
-                self.appSessionStartDate = [NSDate date];
-                [NRMACPUVitals setAppStartCPUTime];
-                
-                [NRMAMeasurements shutdown];
-                [NRMAHarvestController stop];
-                
-                [NRMAHarvestController initialize:self->_agentConfiguration];
                 
                 /*
                  * NRMAMeasurements must be started before the
@@ -632,9 +633,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                  * harvester start, but after harvester
                  * initialization.
                  */
-                [NRMAMeasurements initializeMeasurements];
-                [NRMAHarvestController start];
-                [self onSessionStart];
+                [self sessionStartInitialization];
             }
         }
     });
@@ -645,6 +644,21 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     [self applicationWillEnterForeground];
 }
 #endif
+
+- (void) sessionStartInitialization {
+    self.appSessionStartDate = [NSDate date];
+    [NRMACPUVitals setAppStartCPUTime];
+
+    [NRMAMeasurements shutdown];
+    [NRMAHarvestController stop];
+
+    [NRMAHarvestController initialize:self->_agentConfiguration];
+
+
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAHarvestController start];
+    [self onSessionStart];
+}
 
 #if !TARGET_OS_WATCH
 // Queues a background task to send data to the New Relic service if anything is pending.

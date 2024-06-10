@@ -759,8 +759,11 @@ extern "C" {
  
  @param userId the identifier for the user
  @return  YES if successfully set attribute value, NO if failed with error in log.
+
+ @note Set to NULL or change userId to start a new session.
+
  */
-+ (BOOL) setUserId:(NSString* _Nonnull)userId;
++ (BOOL) setUserId:(NSString* _Nullable)userId;
 
 /*!
  Removes the named attribute.

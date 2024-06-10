@@ -40,7 +40,11 @@ class UtilViewModel {
         options.append(UtilOption(title: "Crash Now!", handler: { [self] in crash()}))
         options.append(UtilOption(title: "Record Error", handler: { [self] in makeError()}))
         options.append(UtilOption(title: "Record Handled Exception", handler: { triggerException.testing()}))
-        options.append(UtilOption(title: "Set UserID", handler: { [self] in changeUserID()}))
+
+        options.append(UtilOption(title: "Set UserID to testID", handler: { [self] in changeUserID()}))
+        options.append(UtilOption(title: "Set UserID to Bob", handler: { [self] in changeUserID2()}))
+        options.append(UtilOption(title: "Set UserID to null", handler: { [self] in changeUserIDToNil()}))
+
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
@@ -89,7 +93,14 @@ class UtilViewModel {
     func changeUserID() {
         NewRelic.setUserId("testID")
     }
-    
+    func changeUserID2() {
+        NewRelic.setUserId("Bob")
+    }
+
+    func changeUserIDToNil() {
+        NewRelic.setUserId(nil)
+    }
+
     func makeValidBreadcrumb() {
         makeBreadcrumb(name: "test", attributes: ["button" : "Breadcrumb"])
     }

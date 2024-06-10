@@ -34,6 +34,8 @@
 - (NSString*) sessionAttributeJSONString;
 
 - (void) sessionWillEnd;
+- (void) newSession;
+
 //value is either a NSString or NSNumber;
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value;
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value persistent:(BOOL)isPersistent;
