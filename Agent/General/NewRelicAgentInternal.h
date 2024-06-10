@@ -38,6 +38,7 @@
 @property(atomic, strong) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
+@property(atomic, strong) NSString* userId;
 
 // Track the total number of successful network requests logged by the agent
 @property (nonatomic, readonly, assign) NSUInteger lifetimeRequestCount;
@@ -64,7 +65,10 @@
          andCrashCollectorAddress:(NSString*)crashCollectorUrl;
 
 - (NSDate*) getAppSessionStartDate;
+- (NSString* _Nullable) getUserId;
 
+- (void) applicationWillEnterForeground;
+- (void) sessionStartInitialization;
 + (NewRelicAgentInternal*) sharedInstance;
 
 - (NSString*) currentSessionId;
