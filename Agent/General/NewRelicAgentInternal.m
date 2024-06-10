@@ -84,6 +84,8 @@ static NRMAURLTransformer* urlTransformer;
 // The token sent from the RPM service on connect that is used when sending data.
 @property(nonatomic, readonly, strong) id dataToken;
 @property(atomic, strong) NSDate* appSessionStartDate;
+
+
 @property(nonatomic, readonly) BOOL collectNetworkErrors;
 @property(nonatomic, assign) BOOL captureNetworkStackTraces;
 @property(nonatomic, strong) NRMAAppInstallMetricGenerator* appInstallMetricGenerator;
@@ -168,6 +170,9 @@ static NewRelicAgentInternal* _sharedInstance;
             }
         }
 #endif
+
+        // TODO: UserId tweaking
+        self.userId = NULL;
 
         // TODO: UserId tweaking
         self.userId = NULL;
@@ -605,7 +610,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                     return;
                 }
                 didFireEnterForeground = YES;
-                
+
                 /*
                  * NRMAMeasurements must be started before the
                  * harvest controller Or else there is a chance the
@@ -654,6 +659,14 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAHarvestController initialize:self->_agentConfiguration];
 
+- (void) sessionStartInitialization {
+    self.appSessionStartDate = [NSDate date];
+    [NRMACPUVitals setAppStartCPUTime];
+
+    [NRMAMeasurements shutdown];
+    [NRMAHarvestController stop];
+
+    [NRMAHarvestController initialize:self->_agentConfiguration];
 
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
