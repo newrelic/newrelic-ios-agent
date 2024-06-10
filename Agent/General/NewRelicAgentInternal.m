@@ -659,15 +659,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAHarvestController initialize:self->_agentConfiguration];
 
-- (void) sessionStartInitialization {
-    self.appSessionStartDate = [NSDate date];
-    [NRMACPUVitals setAppStartCPUTime];
-
-    [NRMAMeasurements shutdown];
-    [NRMAHarvestController stop];
-
-    [NRMAHarvestController initialize:self->_agentConfiguration];
-
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
     [self onSessionStart];
