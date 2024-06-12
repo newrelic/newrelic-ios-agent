@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "A839F8D2-3C04-4CF3-A9FA-E1209EB8DD28",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Agent.xcodeproj",
+        "identifier" : "3431DD162BED375E00FF145F",
+        "name" : "Agent-watchos-Tests"
+      }
+    }
+  ],
+  "version" : 1
+}

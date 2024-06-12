@@ -11,6 +11,7 @@
 #import "NRMAMeasurements.h"
 #import <zlib.h>
 #import "NRMATaskQueue.h"
+#import "Constants.h"
 #import <time.h>
 #import "NRMAHarvesterConnection+GZip.h"
 #import "NRMASupportMetricHelper.h"
@@ -238,12 +239,12 @@
 }
 - (NSString*) collectorConnectURL
 {
-    return [self collectorHostURL:(NSString*)kCOLLECTOR_CONNECT_URI];
+    return [self collectorHostURL:(NSString*)kNRMA_Collector_connect_url];
 }
 
 - (NSString*) collectorHostDataURL
 {
-    return [self collectorHostURL:(NSString*)kCOLLECTOR_DATA_URL];
+    return [self collectorHostURL:(NSString*)kNRMA_Collector_data_url];
 }
 
 - (NSString*) collectorHostURL:(NSString*)resource

@@ -12,9 +12,12 @@
 #import "NRMAHandledExceptions.h"
 #import "NRMAUserActionFacade.h"
 #import "NRMAURLTransformer.h"
-
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
+#if !TARGET_OS_WATCH
 #import <BackgroundTasks/BackgroundTasks.h>
-
+#endif
 // Keys used for harvester data request.
 #define NEW_RELIC_APP_VERSION_HEADER_KEY        @"X-NewRelic-App-Version"
 #define NEW_RELIC_OS_NAME_HEADER_KEY            @"X-NewRelic-OS-Name"
@@ -47,8 +50,11 @@
 
 @property (nonatomic, assign) BOOL isShutdown;
 
+#if TARGET_OS_WATCH
+@property (nonatomic, readonly, assign) WKApplicationState currentApplicationState;
+#else
 @property (nonatomic, readonly, assign) UIApplicationState currentApplicationState;
-
+#endif
 + (void)shutdown;
 
 + (void)startWithApplicationToken:(NSString*)appToken
@@ -70,6 +76,8 @@
 // Returns whether or not we should be collecting HTTP errors. Exposed for ASI support.
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
+
+- (void)watchOSNotification:(NSString*)notification;
 
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;

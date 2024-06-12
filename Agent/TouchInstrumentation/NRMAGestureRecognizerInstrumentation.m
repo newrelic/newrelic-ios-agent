@@ -27,6 +27,7 @@ SEL instrument_target_message(id target, SEL msg) {
     void(^block)(id _self, id sender) = ^(id _self, id sender){ //this is why we can't have nice things
         // instrumentation for action msg on target
         if ([NRMAFlags shouldEnableGestureInstrumentation]) {
+#if !TARGET_OS_WATCH
             if ([sender isKindOfClass:[UIGestureRecognizer class]] && ((UIGestureRecognizer*)sender).state == UIGestureRecognizerStateEnded) {
                 NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder *builder) {
                     [builder withActionType:NSStringFromClass([sender class])];
@@ -38,6 +39,7 @@ SEL instrument_target_message(id target, SEL msg) {
                 }];
                 [[NewRelicAgentInternal sharedInstance].gestureFacade recordUserAction:uiGesture];
             }
+#endif
         }
         
         ((void(*)(id,SEL,id))[_self methodForSelector:msg])(_self,msg,sender);
@@ -83,6 +85,7 @@ void removeTarget_action(id self, SEL _cmd, id target, SEL msg) {
     return NRMA__removeTarget_action(self,_cmd,target,newMsg);
 }
 
+#if !TARGET_OS_WATCH
 + (BOOL) instrumentUIGestureRecognizer
 {
     id clazz = objc_getClass("UIGestureRecognizer");
@@ -160,8 +163,6 @@ void removeTarget_action(id self, SEL _cmd, id target, SEL msg) {
     }
     return NO;
 }
-
-
-
+#endif
 
 @end

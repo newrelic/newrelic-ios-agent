@@ -12,7 +12,7 @@
 
 #import "NewRelicInternalUtils.h"
 #import "NRMAMethodSwizzling.h"
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 #import <CoreTelephony/CTCarrier.h>
 #endif
 
@@ -22,7 +22,7 @@ NRMANetworkStatus ReachableViaWWANMethod(void) {
     return ReachableViaWWAN;
 }
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 CTCarrier* ReachableGetCarrierMethod(void) {
     return [[CTCarrier alloc] init];
 }
@@ -50,7 +50,7 @@ NRMANetworkStatus NotReachableMethod(void) {
     sleep(1);
 
     NSString* carrier = [NewRelicInternalUtils carrierName];
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     XCTAssertTrue([carrier isEqualToString:@"wifi"], @"Carrier :%@", carrier);
 #endif
 }
@@ -64,7 +64,7 @@ NRMANetworkStatus NotReachableMethod(void) {
     void* origMethod = NRMAReplaceInstanceMethod([NRMAReachability class], @selector(currentReachabilityStatus), (IMP)ReachableViaWWANMethod);
     @try {
         NSString* carrier = [NewRelicInternalUtils carrierName];
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
         XCTAssertTrue([carrier isEqualToString:@"unknown"], @"Carrier should be 'unknown', but is actually '%@'", carrier);
 #endif
     } @finally {
@@ -72,7 +72,7 @@ NRMANetworkStatus NotReachableMethod(void) {
     }
 }
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 -(void)testCarrierNameReachableViaWWANWithCarrierInfo
 {
     // the caching is managed with static function-local variables
@@ -102,7 +102,7 @@ NRMANetworkStatus NotReachableMethod(void) {
     void* origMethod = NRMAReplaceInstanceMethod([NRMAReachability class], @selector(currentReachabilityStatus), (IMP)ReachableViaWWANMethod);
     @try {
         carrier = [NewRelicInternalUtils carrierName];
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
         XCTAssertTrue([carrier isEqualToString:@"unknown"], @"Carrier should be 'unknown', but is actually '%@'", carrier);
 #endif
     } @finally {
@@ -111,13 +111,13 @@ NRMANetworkStatus NotReachableMethod(void) {
 
     // calling immediately should return 'other' as it's still cached
     carrier = [NewRelicInternalUtils carrierName];
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     XCTAssertTrue([carrier isEqualToString:@"unknown"], @"Carrier should still be 'unknown', but is actually '%@'", carrier);
 #endif
     // after a second our cache should have expired and we should get 'wifi' this time
     sleep(1);
     carrier = [NewRelicInternalUtils carrierName];
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     XCTAssertTrue([carrier isEqualToString:@"wifi"], @"Carrier should have reverted to 'wifi', but is actually '%@'", carrier);
 #endif
 }
