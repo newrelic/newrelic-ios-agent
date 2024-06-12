@@ -15,7 +15,6 @@
 #import "NRTimer.h"
 #import "NRMAURLSessionOverride.h"
 #import "NRMAJSON.h"
-#import "NRMANonARCMethods.h"
 #import "NRCustomMetrics+private.h"
 #import "NRMANSURLConnectionSupport.h"
 #import "NRMAHarvestController.h"
@@ -55,6 +54,7 @@
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
 
+
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
 // Enabling this will bypass dispatch_once-style logic and expose more internal state.
 // Must be set before calling [NewRelic startWithApplicationToken:...]
@@ -92,10 +92,14 @@ static NRMAURLTransformer* urlTransformer;
 @property(nonatomic, strong) NRMAAppUpgradeMetricGenerator* appUpgradeMetricGenerator;
 @property(assign) BOOL appWillTerminate;
 
-//- (void) applicationWillEnterForeground;
+- (void) applicationWillEnterForeground;
+#if !TARGET_OS_WATCH
 - (void) applicationWillEnterForeground:(UIApplication*)application;
+#endif
 - (void) applicationDidEnterBackground;
+#if !TARGET_OS_WATCH
 - (void) applicationDidEnterBackground:(UIApplication*)application;
+#endif
 - (BOOL) isDisabled;
 
 @end
@@ -157,6 +161,7 @@ static NewRelicAgentInternal* _sharedInstance;
     if (self) {
 
         // NOTE: BackgroundReporting is only enabled for iOS 13+.
+#if !TARGET_OS_WATCH
         if ([NRMAFlags shouldEnableBackgroundReporting]) {
             if (@available(iOS 13.0, *)) {
                 [[BGTaskScheduler sharedScheduler] registerForTaskWithIdentifier:[[NSBundle mainBundle] bundleIdentifier] usingQueue:nil launchHandler:^(__kindof BGTask * _Nonnull task) {
@@ -164,15 +169,25 @@ static NewRelicAgentInternal* _sharedInstance;
                 }];
             }
         }
+#endif
+
+        // TODO: UserId tweaking
+        self.userId = NULL;
 
         // TODO: UserId tweaking
         self.userId = NULL;
 
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
+#if TARGET_OS_WATCH
+        if([WKExtension sharedExtension].applicationState != WKApplicationStateBackground) {
+            didFireEnterForeground = YES;
+        }
+#else
         if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
             didFireEnterForeground = YES;
         }
+#endif
         self->_agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:token
                                                                     collectorAddress:collectorHost
                                                                         crashAddress:crashCollectorHost];
@@ -191,8 +206,17 @@ static NewRelicAgentInternal* _sharedInstance;
 
         self->_isShutdown = false;
         self->_enabled = ![self isDisabled];
-
         if (self->_enabled) {
+#if TARGET_OS_WATCH
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(applicationDidEnterBackground)
+                                                         name:WKApplicationDidEnterBackgroundNotification
+                                                       object:nil];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(applicationWillEnterForeground)
+                                                         name:WKApplicationWillEnterForegroundNotification
+                                                       object:nil];
+#else
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(applicationDidEnterBackground:)
                                                          name:UIApplicationDidEnterBackgroundNotification
@@ -205,11 +229,13 @@ static NewRelicAgentInternal* _sharedInstance;
                                                      selector:@selector(applicationWillTerminate)
                                                          name:UIApplicationWillTerminateNotification
                                                        object:[UIApplication sharedApplication]];
+#endif
 
+#if !TARGET_OS_WATCH
             if ([NRMAFlags shouldEnableBackgroundReporting]) {
                 [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
             }
-
+#endif
             NRLOG_INFO(@"Agent enabled");
 
             // Store Data For Crash Reporter
@@ -325,10 +351,15 @@ static NewRelicAgentInternal* _sharedInstance;
      * initialization.
      */
     [NRMAMeasurements initializeMeasurements];
-
+#if TARGET_OS_WATCH
+    if([WKExtension sharedExtension].applicationState != WKApplicationStateBackground) {
+        [NRMAHarvestController start];
+    }
+#else
     if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
         [NRMAHarvestController start];
     }
+#endif
 }
 
 // Initialize all of the categories which swizzle into existing classes.
@@ -357,7 +388,7 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 + (void) instrumentWebViews {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     if ([NRMAFlags shouldEnableWebViewInstrumentation]) {
         [NRMAWKWebViewInstrumentation instrument];
     }
@@ -369,6 +400,7 @@ static NewRelicAgentInternal* _sharedInstance;
         NRLOG_VERBOSE(@"Failed to instrument UIApplication -sendAction:...");
     }
 
+#if !TARGET_OS_WATCH
     if (![NRMATableViewIntrumentation instrument]) {
         NRLOG_VERBOSE(@"failed to instrument UITableView.");
     }
@@ -376,15 +408,16 @@ static NewRelicAgentInternal* _sharedInstance;
     if (![NRMACollectionViewInstrumentation instrument]) {
         NRLOG_VERBOSE(@"Failed to instrument UICollectionView.");
     }
-
     if (![NRMAGestureRecognizerInstrumentation instrumentUIGestureRecognizer]) {
         NRLOG_VERBOSE(@"Failed to instrument gesture recognizer.");
     }
+#endif
+
 }
 
 // De-initialize agent instrumentation
 - (void) deinitializeInstrumentation {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     [NRMAWKWebViewInstrumentation deinstrument];
 #endif
 }
@@ -433,8 +466,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [self.analyticsController setNRSessionAttribute:@"osName"
                                               value:[NewRelicInternalUtils osName]];
 
-
+#if TARGET_OS_WATCH
+    NSString* systemVersion = [[WKInterfaceDevice currentDevice] systemVersion];
+#else
     NSString* systemVersion = [[UIDevice currentDevice] systemVersion];
+#endif
     NSArray* versionComponents = [systemVersion componentsSeparatedByString:@"."];
     NSString* majorVersion = @"unknown";
     if (versionComponents.count > 0) {
@@ -501,7 +537,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMAReachability* r = [NewRelicInternalUtils reachability];
     NRMANetworkStatus status;
     @synchronized(r) {
+#if TARGET_OS_WATCH
+        status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+#else
         status = [r currentReachabilityStatus];
+#endif
     }
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController
@@ -555,18 +595,22 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
         return;
     }
 
+#if TARGET_OS_WATCH
+    _currentApplicationState = WKApplicationStateActive;
+#else
     _currentApplicationState = UIApplicationStateActive;
-
+#endif
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                              0),
                    ^{
         @synchronized(kNRMA_BGFG_MUTEX) {
             @synchronized(kNRMA_APPLICATION_WILL_TERMINATE) {
-
+                
                 if (didFireEnterForeground == YES || self.appWillTerminate == YES) {
                     return;
                 }
                 didFireEnterForeground = YES;
+
                 /*
                  * NRMAMeasurements must be started before the
                  * harvest controller Or else there is a chance the
@@ -600,9 +644,11 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     });
 }
 
+#if !TARGET_OS_WATCH
 - (void) applicationWillEnterForeground:(UIApplication*)application {
     [self applicationWillEnterForeground];
 }
+#endif
 
 - (void) sessionStartInitialization {
     self.appSessionStartDate = [NSDate date];
@@ -613,14 +659,15 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAHarvestController initialize:self->_agentConfiguration];
 
-
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
     [self onSessionStart];
 }
 
+#if !TARGET_OS_WATCH
 // Queues a background task to send data to the New Relic service if anything is pending.
 static UIBackgroundTaskIdentifier background_task;
+#endif
 
 - (void) applicationWillTerminate {
     dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
@@ -628,15 +675,25 @@ static UIBackgroundTaskIdentifier background_task;
             self.appWillTerminate = YES;
 
             [self agentShutdown];
-
+#if !TARGET_OS_WATCH
             if (background_task != UIBackgroundTaskInvalid) {
                 [[UIApplication sharedApplication] endBackgroundTask:background_task];
                 // Invalidate the background_task.
                 background_task = UIBackgroundTaskInvalid;
             }
+#endif
         }
     });
+}
 
+- (void) watchOSNotification:(NSString *)notification {
+    if([notification isEqualToString:@"applicationDidBecomeActive"]) {
+        [self applicationWillEnterForeground];
+    }
+
+    if([notification isEqualToString:@"applicationDidEnterBackground"]) {
+        [self applicationDidEnterBackground];
+    }
 }
 
 - (void) applicationDidEnterBackground {
@@ -652,8 +709,11 @@ static UIBackgroundTaskIdentifier background_task;
     // We are leaving the background.
     didFireEnterForeground = NO;
     
+#if TARGET_OS_WATCH
+    _currentApplicationState = WKApplicationStateBackground;
+#else
     _currentApplicationState = UIApplicationStateBackground;
-
+#endif
     [[NRMAHarvestController harvestController].harvestTimer stop];
 
     // Disable observers.
@@ -681,6 +741,7 @@ static UIBackgroundTaskIdentifier background_task;
     // Record the time at which the app goes to the background.
     self->_appLastBackgrounded = mach_absolute_time();
     // Check if the iOS version supports multitasking.
+#if !TARGET_OS_WATCH
     if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)] &&
         [[UIDevice currentDevice] isMultitaskingSupported]) {
 
@@ -693,6 +754,63 @@ static UIBackgroundTaskIdentifier background_task;
             [application endBackgroundTask:background_task];
             background_task = UIBackgroundTaskInvalid;
         }];
+        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+        // Mark the start of the background task
+        [processInfo performExpiringActivityWithReason:@"harvestOnAppBackground"
+                                            usingBlock:^(BOOL expired) {
+            if(expired) {
+                NRLOG_VERBOSE(@"Unable to send watchOS OnAppBackground harvest - activity expired");
+                return;
+            }
+
+            @synchronized (kNRMA_BGFG_MUTEX) {
+                if(didFireEnterForeground) {
+                    // Entered foreground before we could finish background harvest
+                    NRLOG_VERBOSE(@"Entered Foreground before background could complete. Bailing out of background logging");
+                    return;
+                }
+
+                @synchronized (kNRMA_APPLICATION_WILL_TERMINATE) {
+                    if(self.appWillTerminate) {
+                        return;
+                    }
+                    NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+                    @try {
+#endif
+                        self.gestureFacade = nil;
+                        [self.analyticsController sessionWillEnd];
+                        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:@"Session/Duration"
+                                                                        value:[NSNumber numberWithDouble:sessionLength] scope:nil]];
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+                    } @catch (NSException *exception) {
+                        [NRMAExceptionHandler logException:exception
+                                                     class:NSStringFromClass([self class])
+                                                  selector:NSStringFromSelector(_cmd)];
+                    }
+#endif
+                }
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+                @try {
+#endif
+                    if(self.appWillTerminate) {
+                        return;
+                    }
+                    NRLOG_VERBOSE(@"Harvesting data in background");
+                    [[[NRMAHarvestController harvestController] harvester] execute];
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+                } @catch (NSException *exception) {
+                    [NRMAExceptionHandler logException:exception
+                                                 class:NSStringFromClass([NRMAHarvester class])
+                                              selector:@"execute"];
+                } @finally {
+                    [self agentShutdown];
+                }
+#endif
+                NRLOG_VERBOSE(@"Background Harvest Complete");
+            }
+        }];
+#endif
 
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                                  0),
@@ -716,8 +834,8 @@ static UIBackgroundTaskIdentifier background_task;
                         [NRMATaskQueue queue:[[NRMAMetric alloc]        initWithName:@"Session/Duration"
                                                                                value:[NSNumber numberWithDouble:sessionLength]
                                                                                scope:nil]];
-
-
+                        
+                        
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                     } @catch (NSException* exception) {
                         [NRMAExceptionHandler        logException:exception
@@ -732,7 +850,7 @@ static UIBackgroundTaskIdentifier background_task;
                     if (self.appWillTerminate) {
                         return;
                     }
-
+                    
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
@@ -742,17 +860,17 @@ static UIBackgroundTaskIdentifier background_task;
                                                         class:NSStringFromClass([NRMAHarvester class])
                                                      selector:@"execute"];
                 } @finally {
-
+                    
                     if ([NRMAFlags shouldEnableBackgroundReporting]) {
-                        NRLOG_VERBOSE(@"used to agentShutdown. Continuing since BackgroundInstrumentation enabled.");
-                    }
-                    else {
-                         [self agentShutdown];
+                        NRLOG_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
+                    } else {
+                        [self agentShutdown];
                     }
                 }
 #endif
-
+                
                 NRLOG_VERBOSE(@"Background harvest complete.");
+#if !TARGET_OS_WATCH
 
                 [application endBackgroundTask:background_task];
                 // Invalidate the background_task.
@@ -762,17 +880,22 @@ static UIBackgroundTaskIdentifier background_task;
                     // Schedule the next background harvest.
                     [self scheduleHeartbeatTask];
                 }
+#endif
             }
         });
+#if !TARGET_OS_WATCH
     } else {
         [NRMAHarvestController stop];
         NRLOG_ERROR(@"Multitasking is not supported.  Clearing data.");
     }
+#endif
 }
 
+#if !TARGET_OS_WATCH
 - (void) applicationDidEnterBackground:(UIApplication*)application {
     [self applicationDidEnterBackground];
 }
+#endif
 
 - (void) agentShutdown {
     [NRMAMeasurements shutdown];
@@ -795,6 +918,13 @@ static UIBackgroundTaskIdentifier background_task;
     [NRMALastActivityTraceController clearLastActivityStamp];
 }
 
+
+void applicationDidEnterBackgroundCF(void) {
+    NRLOG_VERBOSE(@"applicationDidEnterBackground called before didEnterForeground called.");
+    return;
+}
+
+#if !TARGET_OS_WATCH
 // We only support background fetch in iOS 13+
 - (void) scheduleHeartbeatTask {
     if (@available(iOS 13.0, *)) {
@@ -841,7 +971,7 @@ static UIBackgroundTaskIdentifier background_task;
     }
 
 }
-
+#endif
 + (BOOL) harvestNow {
     return [NRMAHarvestController harvestNow];
 }
@@ -903,6 +1033,7 @@ static UIBackgroundTaskIdentifier background_task;
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                         name:kNRMemoryUsageDidChangeNotification
                                                       object:nil];
+#if !TARGET_OS_WATCH
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:UIApplicationDidEnterBackgroundNotification
                                                    object:[UIApplication sharedApplication]];
@@ -912,17 +1043,18 @@ static UIBackgroundTaskIdentifier background_task;
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                      name:UIApplicationWillTerminateNotification
                                                    object:[UIApplication sharedApplication]];
-
+#endif
         // # disable logging
         [NRLogger setLogLevels:NRLogLevelNone];
         [NRLogger clearLog];
-        
+
+#if !TARGET_OS_WATCH
         if (background_task != UIBackgroundTaskInvalid) {
             [[UIApplication sharedApplication] endBackgroundTask:background_task];
             // Invalidate the background_task.
             background_task = UIBackgroundTaskInvalid;
         }
-
+#endif
         // NOTE: We are leaving things swizzled in:
         // 1. NRMAURLSessionOverride
         // 2. NRMAMethodProfiler.
@@ -955,10 +1087,6 @@ static UIBackgroundTaskIdentifier background_task;
 + (void) startWithApplicationToken:(NSString*)appToken
                andCollectorAddress:(NSString*)url
           andCrashCollectorAddress:(NSString*)crashCollector {
-    if ([NRMANonARCMethods OSMajorVersion] < 5) {
-        NRLOG_WARNING(@"NewRelic: Cowardly avoiding initialization on pre-iOS 5 device");
-        return;
-    }
 
     static dispatch_once_t onceToken = 0;
     if (_NRMAAgentTestModeEnabled) {

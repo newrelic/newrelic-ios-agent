@@ -11,13 +11,23 @@
 #import "NRMAFlags.h"
 #import <CommonCrypto/CommonCrypto.h>
 
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
+
 static NSString* const kNRMASecureUDIDStore = @"com.newrelic.secureUDID";
 static NSString* const kNRMAVendorIDStore   = @"com.newrelic.vendorID";
 
 @implementation NRMAUDIDManager
 
 + (NSString*) deviceIdentifier {
-    return ![NRMAFlags shouldReplaceDeviceIdentifier] ? [UIDevice currentDevice].identifierForVendor.UUIDString : [NRMAFlags replacementDeviceIdentifier];
+//    return ![NRMAFlags shouldReplaceDeviceIdentifier] ? [UIDevice currentDevice].identifierForVendor.UUIDString : [NRMAFlags replacementDeviceIdentifier];
+#if !TARGET_OS_WATCH
+    NSString* vendorId = [UIDevice currentDevice].identifierForVendor.UUIDString;
+#elif TARGET_OS_WATCH
+    NSString* vendorId = [WKInterfaceDevice currentDevice].identifierForVendor.UUIDString;
+#endif
+    return ![NRMAFlags shouldReplaceDeviceIdentifier] ? vendorId : [NRMAFlags replacementDeviceIdentifier];
 }
 
 + (NSString*) UDID {

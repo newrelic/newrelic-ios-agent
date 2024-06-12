@@ -365,9 +365,15 @@
     @try {
 #endif
         NSString *name;
+#if TARGET_OS_WATCH
+        if ([NewRelicAgentInternal sharedInstance].currentApplicationState == WKApplicationStateBackground) {
+            name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
+        }
+#else
         if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
             name = kNRSupportabilityPrefix@"/Collector/Harvest/Background";
         }
+#endif
         else {
             name = kNRSupportabilityPrefix@"/Collector/Harvest";
         }

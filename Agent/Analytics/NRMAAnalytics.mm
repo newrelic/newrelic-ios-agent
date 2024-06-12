@@ -241,6 +241,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } else {
             _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
         }
+        
+        [_sessionStartTime retain];
     }
     return self;
 }
@@ -250,6 +252,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     [_eventManager dealloc];
     [_sessionAttributeManager dealloc];
     [_attributeValidator release];
+    [_sessionStartTime release];
 
     [super dealloc];
 }
@@ -911,7 +914,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if([NRMAFlags shouldEnableOfflineStorage]) {
         NRMAReachability* r = [NewRelicInternalUtils reachability];
         @synchronized(r) {
+#if TARGET_OS_WATCH
+            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
+#else
             NRMANetworkStatus status = [r currentReachabilityStatus];
+#endif
             return (status == NotReachable);
         }
     }
@@ -920,7 +927,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) checkBackgroundStatus {
     if([NRMAFlags shouldEnableBackgroundReporting]) {
+#if TARGET_OS_WATCH
+        return ([NewRelicAgentInternal sharedInstance].currentApplicationState == WKApplicationStateBackground);
+#else
         return ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground);
+#endif
     }
     return false;
 }

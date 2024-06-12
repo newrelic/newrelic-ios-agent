@@ -35,7 +35,11 @@ static NSString* const kAttributesKey = @"Attributes";
         if([NRMAFlags shouldEnableOfflineStorage]) {
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {
+#if TARGET_OS_WATCH
+                NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
+#else
                 NRMANetworkStatus status = [r currentReachabilityStatus];
+#endif
                 if (status == NotReachable) {
                     [self addAttribute:kNRMA_Attrib_offline value:@YES];
                 }
@@ -43,7 +47,11 @@ static NSString* const kAttributesKey = @"Attributes";
         }
         // Handle Background attribute addition.
         if([NRMAFlags shouldEnableBackgroundReporting]) {
+#if TARGET_OS_WATCH
+            if ([NewRelicAgentInternal sharedInstance].currentApplicationState == WKApplicationStateBackground) {
+#else
             if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
+#endif
                 [self addAttribute:kNRMA_Attrib_background value:@YES];
             }
         }
