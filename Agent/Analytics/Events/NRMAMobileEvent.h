@@ -13,8 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
  
 @interface NRMAMobileEvent : NSObject <NRMAAnalyticEventProtocol, NSSecureCoding>
 
-@property  NSTimeInterval timestamp;
-@property  NSTimeInterval sessionElapsedTimeSeconds;
+@property (nonatomic, retain) NSNumber *timestamp;
+@property (nonatomic, retain) NSNumber *sessionElapsedTimeSeconds;
 @property (nonatomic, strong) NSString *eventType;
 @property (strong) NSMutableDictionary<NSString *, id> *attributes;
 

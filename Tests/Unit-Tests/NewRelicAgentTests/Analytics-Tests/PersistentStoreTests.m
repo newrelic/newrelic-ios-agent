@@ -18,13 +18,18 @@
 #import "BlockAttributeValidator.h"
 #import "NRMAFlags.h"
 
-@interface TestEvent : NRMAMobileEvent <NSCoding>
+@interface TestEvent : NRMAMobileEvent <NSSecureCoding>
 - (instancetype) initWithTimestamp:(NSTimeInterval)timestamp
        sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
             withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator;
 @end
 
 @implementation TestEvent
+
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator {
@@ -39,8 +44,8 @@
 }
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder {
-    [coder encodeDouble:self.timestamp forKey:@"Timestamp"];
-    [coder encodeDouble:self.sessionElapsedTimeSeconds forKey:@"SessionElapsedTimeInSeconds"];
+    [coder encodeObject:self.timestamp forKey:@"Timestamp"];
+    [coder encodeObject:self.sessionElapsedTimeSeconds forKey:@"SessionElapsedTimeInSeconds"];
     [coder encodeObject:self.eventType forKey:@"EventType"];
     [coder encodeObject:self.attributes forKey:@"Attributes"];
 }
@@ -48,10 +53,10 @@
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super init];
     if(self) {
-        self.timestamp = [coder decodeDoubleForKey:@"Timestamp"];
-        self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:@"SessionElapsedTimeInSeconds"];
-        self.eventType = [coder decodeObjectForKey:@"EventType"];
-        self.attributes = [coder decodeObjectForKey:@"Attributes"];
+        self.timestamp =  [coder decodeObjectOfClass:[NSNumber class] forKey:@"Timestamp"];
+        self.sessionElapsedTimeSeconds = [coder decodeObjectOfClass:[NSNumber class] forKey:@"SessionElapsedTimeInSeconds"];
+        self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:@"EventType"];
+        self.attributes = [coder decodeObjectOfClass:[NSString class] forKey:@"Attributes"];
     }
     
     return self;

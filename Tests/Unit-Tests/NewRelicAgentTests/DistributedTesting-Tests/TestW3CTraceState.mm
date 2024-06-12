@@ -101,7 +101,7 @@
     payload.accountId = accountStr;
     payload.appId = appIdStd;
     payload.id = spanId;
-    payload.timestamp = timestamp;
+    payload.timestamp = [NSNumber numberWithDouble:timestamp];
     
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
     

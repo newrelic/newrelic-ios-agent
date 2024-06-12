@@ -13,8 +13,8 @@
 
 @protocol NRMAAnalyticEventProtocol <NSObject, NRMAJSONABLE>
 
-@property NSTimeInterval timestamp;
-@property NSTimeInterval sessionElapsedTimeSeconds;
+@property (nonatomic) NSNumber *timestamp;
+@property (nonatomic) NSNumber *sessionElapsedTimeSeconds;
 @property (nonatomic) NSString *eventType;
 
 
