@@ -564,7 +564,7 @@
 //            @" \"log_reporting\": {"
 //             @"   \"enabled\": true,"
 //             @"   \"level\": \"VERBOSE\","
-//             @"   \"sampling_rate\": 0.5"
+//             @"   \"sampling_rate\": 10.0"
 //           @"}"
 //        @"}";
 //        NRLOG_VERBOSE(@"Harvest config canned: %@", cannedConnect);
@@ -787,44 +787,35 @@
 }
 
 - (void) handleLoggingConfigurationUpdate {
-    // TODO: LogReporting: Evaluating if this is the best spot?
-
     // Should it check if remote logs are already on?
     
     // Code for dynamically enabling or disabling remote logging at runtime based on the state of configuration.log_reporting_enabled and the existing state of NRFlags.NRFeatureFlag_LogReporting
 
     // This if/else chain should only be entered if log_reporting was found in the config
     if (configuration.has_log_reporting_config) {
-        // TODO: Remove or elevate to DEBUG
-
-        NSLog(@"config: Has log reporting config");
         if (configuration.log_reporting_enabled) {
 
-            // TODO: We need to somehow reboot the logger in this case 
             // it is required to enable NRLogTargetFile when using LogReporting.
-            // Should this be done programmatically?
             [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
             // Parse NSString into NRLogLevel
             NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
             [NRLogger setLogLevels:level];
 
-            // TODO: Remove or elevate to DEBUG
+            NRLOG_DEBUG(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
 
-            NSLog(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
-
-            // TODO: Double check this behavior for LogReporting.
             [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
         }
         // OVERWRITE user selected value for LogReporting.
         else {
-            // TODO: Remove or elevate to DEBUG
-            NSLog(@"config: Has log reporting DISABLED");
+            NRLOG_DEBUG(@"config: Has log reporting DISABLED");
 
             [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
         }
     }
     else {
         // No Log Reporting Config Detected, not automating feature flags or logging config.
+        NRLOG_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
+
     }
 }
 

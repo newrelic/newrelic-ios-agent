@@ -81,7 +81,7 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
 + (void) shutdown
 {
     @synchronized(__NRMAInitializationMutex) {
-        NRLOG_INFO(@"Measurement Engine shutting down.");
+        NRLOG_VERBOSE(@"Measurement Engine shutting down.");
         [NRMATaskQueue stop];
         [NRMAHarvestController removeHarvestListener:__engine];
         @synchronized(__NRMAEngineAccessorMutex) {

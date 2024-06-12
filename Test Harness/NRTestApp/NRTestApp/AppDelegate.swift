@@ -34,13 +34,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
 
-//        // Log Reporting configuration.
-//        // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
-//        // NOTE: SERVER VALUE OF log_reporting { enabled: true/false } will be respected above all else.
-//        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_LogReporting)
-//        // Note: Disabled by default, it is required to enable NRLogTargetFile when using LogReporting.
-//        NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
-
         NewRelic.saltDeviceUUID(true)
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")
@@ -78,12 +71,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
-
-        // TODO: LogReporting: This is required to use a New Relic Mobile Logging.
-        // This will not be needed in the GA version. Removal of the LogEntityGuid func is going to be implemented in NR-268118
-        if let logEntityGuid = plistHelper.objectFor(key: "logEntityGuid", plist: "NRAPI-Info") as? String, !logEntityGuid.isEmpty {
-            NRLogger.setLogEntityGuid(logEntityGuid)
-        }
 
         NewRelic.logVerbose("NewRelic.start was called.")
         return true

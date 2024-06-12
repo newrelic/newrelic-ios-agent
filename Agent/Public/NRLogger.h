@@ -139,19 +139,11 @@ withAttributes:(NSDictionary *)attributes;
  */
 + (void)setLogTargets:(unsigned int)targets;
 
-/*
-Configure the New Relic logging API.
+// For internal use only. Do not use.
++ (void)setLogIngestKey:(NSString*)key;
 
-@param url A single NSString constant, the logging API URL.
-*/
-+ (void)setLogIngestKey:(NSString*) key;
-
-/*
- Configure the New Relic logging API.
-
-@param url A single NSString constant, the logging API URL.
-*/
-+ (void)setLogEntityGuid:(NSString*) key;
+// For internal use only. Do not use.
++ (void)setLogEntityGuid:(NSString*)key;
 
 + (void)setLogURL:(NSString*) url;
 

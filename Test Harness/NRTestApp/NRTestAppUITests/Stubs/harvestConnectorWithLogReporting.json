@@ -20,6 +20,6 @@
     "log_reporting": {
         "enabled": true,
         "level": "VERBOSE",
-        "sampling_rate": 0.5
+        "sampling_rate": 10.0
     }
 }

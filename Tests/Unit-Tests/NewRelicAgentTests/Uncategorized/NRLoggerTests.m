@@ -30,8 +30,8 @@
     [super setUp];
     [NRMAFlags enableFeatures: NRFeatureFlag_LogReporting];
     [NRLogger setLogTargets:NRLogTargetFile | NRLogTargetConsole];
-    [NRLogger setLogEntityGuid:@"Entity-Guid-XXXX"];
     [NRLogger setLogLevels:NRLogLevelDebug];
+    [NRLogger setLogEntityGuid:@"Entity-Guid-XXXX"];
 
     NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
                                                   collectorAddress:KNRMA_TEST_COLLECTOR_HOST
