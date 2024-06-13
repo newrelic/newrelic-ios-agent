@@ -70,6 +70,7 @@
 @property(nonatomic,assign) double    sampling_rate;
 @property(nonatomic,assign) BOOL      has_log_reporting_config;
 @property(nonatomic,assign) NSDictionary* request_header_map;
+@property(nonatomic,assign) double sampleSeed;
 
 // CAN BE
 // NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
@@ -81,4 +82,7 @@
 - (NSUInteger) hash;
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
+- (BOOL) isSampled;
+- (void) reseed;
+
 @end

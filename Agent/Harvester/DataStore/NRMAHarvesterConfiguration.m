@@ -142,6 +142,8 @@
         } else {
             self.activity_trace_max_send_attempts = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SEND_ATTEMPTS;
         }
+
+        [self reseed];
     }
     return self;
 }
@@ -163,6 +165,7 @@
     configuration.entity_guid = @"";
     configuration.log_reporting_level = @"WARNING";
     configuration.has_log_reporting_config = NO;
+    configuration.sampling_rate = 100.0;
     configuration.request_header_map = [NSDictionary dictionary];
     configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
     return configuration;
@@ -171,6 +174,18 @@
 - (BOOL) isValid
 {
     return self.data_token.isValid && self.account_id > 0 && self.application_id > 0;
+}
+
+- (BOOL) isSampled
+{
+    return self.has_log_reporting_config && self.sampleSeed <= self.sampling_rate;
+}
+
+- (void) reseed {
+    NSLog(@"config: RESEEDING");
+    // Get uniform random number between 1-100 inclusively.
+    _sampleSeed = arc4random_uniform(100) + 1;
+    NSLog(@"config: newSeed = %f", _sampleSeed);
 }
 
 - (NSDictionary*) asDictionary
