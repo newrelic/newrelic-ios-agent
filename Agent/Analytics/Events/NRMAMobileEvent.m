@@ -31,8 +31,8 @@ static NSString* const kAttributesKey = @"Attributes";
     self = [super init];
     if (self) {
         _eventType = kNRMA_RET_mobile;
-        _timestamp = [NSNumber numberWithDouble:timestamp];
-        _sessionElapsedTimeSeconds = [NSNumber numberWithDouble:sessionElapsedTimeSeconds];
+        _timestamp = timestamp;
+        _sessionElapsedTimeSeconds = sessionElapsedTimeSeconds;
         _attributeValidator = attributeValidator;
         _attributes = [[NSMutableDictionary alloc] init];
         
@@ -65,7 +65,7 @@ static NSString* const kAttributesKey = @"Attributes";
 }
 
 - (NSTimeInterval)getEventAge {
-    return [[[NSDate alloc] init] timeIntervalSince1970] - [self.timestamp doubleValue];
+    return [[[NSDate alloc] init] timeIntervalSince1970] - self.timestamp;
 }
 
 - (BOOL)addAttribute:(NSString *)name value:(id)value {
@@ -86,15 +86,15 @@ static NSString* const kAttributesKey = @"Attributes";
     // There was a way to do this using the Objective-C runtime
     // to iterate through the properties, but I do not remember it
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:_attributes];
-    dict[kNRMA_RA_timestamp] = self.timestamp;
-    dict[kNRMA_RA_sessionElapsedTime] = self.sessionElapsedTimeSeconds;
+    dict[kNRMA_RA_timestamp] = @(self.timestamp);
+    dict[kNRMA_RA_sessionElapsedTime] = @(self.sessionElapsedTimeSeconds);
     dict[kNRMA_RA_eventType] = self.eventType;
     return [NSDictionary dictionaryWithDictionary:dict];
 }
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder {
-    [coder encodeObject:_timestamp forKey:kTimestampKey];
-    [coder encodeObject:_sessionElapsedTimeSeconds forKey:kSessionElapsedTimeKey];
+    [coder encodeDouble:_timestamp forKey:kTimestampKey];
+    [coder encodeDouble:_sessionElapsedTimeSeconds forKey:kSessionElapsedTimeKey];
     [coder encodeObject:_eventType forKey:kEventTypeKey];
     [coder encodeObject:_attributes forKey:kAttributesKey];
 }
@@ -102,8 +102,8 @@ static NSString* const kAttributesKey = @"Attributes";
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super init];
     if(self) {
-        self.timestamp = [coder decodeObjectOfClass:[NSNumber class] forKey:kTimestampKey];
-        self.sessionElapsedTimeSeconds = [coder decodeObjectOfClass:[NSNumber class] forKey:kSessionElapsedTimeKey];
+        self.timestamp = [coder decodeDoubleForKey:kTimestampKey];
+        self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:kSessionElapsedTimeKey];
         self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:kEventTypeKey];
         self.attributes = [coder decodeObjectOfClass:[NSString class] forKey:kAttributesKey];
     }

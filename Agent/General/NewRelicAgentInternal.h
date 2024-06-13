@@ -30,6 +30,7 @@
 
 #define NEWRELIC_AGENT_DISABLED_VERSION_KEY @"NewRelicAgentDisabledVersion"
 
+NS_ASSUME_NONNULL_BEGIN
 
 // Defines the internal agent api.
 @interface NewRelicAgentInternal : NSObject
@@ -98,3 +99,4 @@
 
 
 @end
+NS_ASSUME_NONNULL_END

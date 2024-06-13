@@ -12,7 +12,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMAPayload : NSObject <NRMAJSONABLE, NSSecureCoding>
-@property (nonatomic, strong) NSNumber *timestamp;
+
+@property  NSTimeInterval timestamp;
 @property (nonatomic, strong) NSString *payloadType;
 @property (nonatomic, strong) NSString *accountId;
 @property (nonatomic, strong) NSString *appId;

@@ -33,7 +33,7 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
                                  trustedAccountKey:(NSString*)trustedAccountKey {
     self = [super init];
     if (self) {
-        _timestamp = [NSNumber numberWithDouble:timestamp];
+        _timestamp = timestamp;
         _payloadType = @"mobile";
         _accountId = accountId;
         _appId = appId;
@@ -60,7 +60,7 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
     static const NSString* trustKey     = @"tk";
     
     NSMutableDictionary *data = [[NSMutableDictionary alloc] init];
-    data[timeKey] = self.timestamp;
+    data[timeKey] = @(self.timestamp);
     data[accountKey] = self.accountId;
     data[idKey] = self.id;
     data[appKey] = self.appId;
@@ -76,7 +76,7 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
 }
 
 - (void)encodeWithCoder:(NSCoder *)coder {
-    [coder encodeObject:_timestamp forKey:kTimestampKey];
+    [coder encodeDouble:_timestamp forKey:kTimestampKey];
     [coder encodeObject:_accountId forKey:kAccountIdKey];
     [coder encodeObject:_appId forKey:kAppIdKey];
     [coder encodeObject:_id forKey:kIdKey];
@@ -88,7 +88,7 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
 - (nullable instancetype)initWithCoder:(NSCoder *)coder {
     self = [super init];
     if (self) {
-        _timestamp = [coder decodeObjectOfClass:[NSNumber class] forKey:kTimestampKey];
+        _timestamp = [coder decodeDoubleForKey:kTimestampKey];
         _payloadType = @"mobile";
         _accountId = [coder decodeObjectOfClass:[NSString class] forKey:kAccountIdKey];
         _appId = [coder decodeObjectOfClass:[NSString class] forKey:kAppIdKey];

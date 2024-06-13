@@ -96,7 +96,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             [_persistentStore setObject:event forKey:[self createKeyForEvent:event]];
             
             if(events.count == 1) {
-                oldestEventTimestamp = [event.timestamp doubleValue];
+                oldestEventTimestamp = event.timestamp;
             }
         } else {
             // we need to throw away an event. We try to balance
@@ -115,7 +115,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 }
 
 - (NSString *)createKeyForEvent:(id<NRMAAnalyticEventProtocol>)event {
-    return [NSString stringWithFormat:eventKeyFormat, [event.timestamp doubleValue], [event.sessionElapsedTimeSeconds doubleValue], event.eventType];
+    return [NSString stringWithFormat:eventKeyFormat, event.timestamp, event.sessionElapsedTimeSeconds, event.eventType];
 }
 
 - (void)empty {
@@ -138,7 +138,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             
             NSData *eventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
                                                          options:0
-                                                           error:&error];
+                                                           error:error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
             [self empty];

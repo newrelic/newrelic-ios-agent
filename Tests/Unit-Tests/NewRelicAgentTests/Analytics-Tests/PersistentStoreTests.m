@@ -44,8 +44,8 @@
 }
 
 - (void)encodeWithCoder:(nonnull NSCoder *)coder {
-    [coder encodeObject:self.timestamp forKey:@"Timestamp"];
-    [coder encodeObject:self.sessionElapsedTimeSeconds forKey:@"SessionElapsedTimeInSeconds"];
+    [coder encodeDouble:self.timestamp forKey:@"Timestamp"];
+    [coder encodeDouble:self.sessionElapsedTimeSeconds forKey:@"SessionElapsedTimeInSeconds"];
     [coder encodeObject:self.eventType forKey:@"EventType"];
     [coder encodeObject:self.attributes forKey:@"Attributes"];
 }
@@ -53,8 +53,8 @@
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super init];
     if(self) {
-        self.timestamp =  [coder decodeObjectOfClass:[NSNumber class] forKey:@"Timestamp"];
-        self.sessionElapsedTimeSeconds = [coder decodeObjectOfClass:[NSNumber class] forKey:@"SessionElapsedTimeInSeconds"];
+        self.timestamp = [coder decodeDoubleForKey:@"Timestamp"];
+        self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:@"SessionElapsedTimeInSeconds"];
         self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:@"EventType"];
         self.attributes = [coder decodeObjectOfClass:[NSString class] forKey:@"Attributes"];
     }
