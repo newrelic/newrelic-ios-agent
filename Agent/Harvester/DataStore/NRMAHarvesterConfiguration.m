@@ -7,6 +7,7 @@
 //
 
 #import "NRMAHarvesterConfiguration.h"
+#import "NRLogger.h"
 
 @implementation NRMAHarvesterConfiguration
 
@@ -110,8 +111,11 @@
             self.has_log_reporting_config = YES;
 
             id innerDict = [[dict objectForKey:kNRMA_CONFIG_KEY] objectForKey:kNRMA_LOG_REPORTING_KEY];
-            self.log_reporting_enabled = innerDict[@"enabled"];
-            self.log_reporting_level = innerDict[@"level"];
+
+            BOOL enabled = [innerDict[@"enabled"] boolValue];
+            NSString *level = (NSString*) innerDict[@"level"];
+            self.log_reporting_enabled = enabled;
+            self.log_reporting_level = level;
             if ([innerDict objectForKey: kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY]) {
                 self.sampling_rate =  [innerDict[kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY] doubleValue];
             }
@@ -162,12 +166,15 @@
     configuration.activity_trace_max_send_attempts = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SEND_ATTEMPTS;
     configuration.activity_trace_min_utilization = NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION;
     configuration.trusted_account_key = @"";
+    configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+
     configuration.entity_guid = @"";
     configuration.log_reporting_level = @"WARNING";
     configuration.has_log_reporting_config = NO;
+    configuration.log_reporting_enabled = NO;
     configuration.sampling_rate = 100.0;
     configuration.request_header_map = [NSDictionary dictionary];
-    configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+
     return configuration;
 }
 
@@ -176,16 +183,19 @@
     return self.data_token.isValid && self.account_id > 0 && self.application_id > 0;
 }
 
+// isSampled == YES means we perform LogReporting.
 - (BOOL) isSampled
 {
     return self.has_log_reporting_config && self.sampleSeed <= self.sampling_rate;
 }
 
 - (void) reseed {
-    NSLog(@"config: RESEEDING");
+    // TODO: Remove reseeding logs.
+
+    NRLOG_VERBOSE(@"config: RESEEDING");
     // Get uniform random number between 1-100 inclusively.
     _sampleSeed = arc4random_uniform(100) + 1;
-    NSLog(@"config: newSeed = %f", _sampleSeed);
+    NRLOG_VERBOSE(@"config: newSeed = %f", _sampleSeed);
 }
 
 - (NSDictionary*) asDictionary
@@ -262,7 +272,13 @@
     if (self.application_id != that.application_id) return NO;
     if (![self.encoding_key isEqualToString:that.encoding_key]) return NO;
     
-    // TODO: LogReporting changes for isEqual.
+    if (![self.entity_guid isEqualToString:that.entity_guid]) return NO;
+
+    if (self.sampling_rate != that.sampling_rate) return NO;
+    if (![self.log_reporting_level isEqualToString:that.log_reporting_level]) return NO;
+    if (self.log_reporting_enabled != that.log_reporting_enabled) return NO;
+    if (self.has_log_reporting_config != that.has_log_reporting_config) return NO;
+    if (self.request_header_map != that.request_header_map) return NO;
 
     return [self.data_token isEqual:that.data_token];
 }
@@ -287,7 +303,12 @@
     result = 31 * result + self.encoding_key.hash;
     result = 31 * result + self.trusted_account_key.hash;
 
-    // TODO: LogReporting changes for hash.
+    result = 31 * result + self.entity_guid.hash;
+    result = 31 * result + self.sampling_rate;
+    result = 31 * result + self.log_reporting_level.hash;
+    result = 31 * result + self.log_reporting_enabled;
+    result = 31 * result + self.has_log_reporting_config;
+    result = 31 * result + self.request_header_map.hash;
 
     return result;
 }

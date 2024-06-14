@@ -651,6 +651,10 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 #endif
 
 - (void) sessionStartInitialization {
+
+    // TODO: Recheck if this session should be sampled? Make decision here. since this happens on new session.
+    NRLOG_VERBOSE(@"config: sessionStartInitialization. Make sampling decision");
+
     self.appSessionStartDate = [NSDate date];
     [NRMACPUVitals setAppStartCPUTime];
 

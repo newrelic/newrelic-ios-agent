@@ -283,6 +283,8 @@
 - (void) connected
 {
     NRTimer* harvestTimer = [[NRTimer alloc] init];
+
+    // Harvest Config is fetched every time harvest is hit.
     NRMAHarvesterConfiguration* harvestConfig = [self fetchHarvestConfiguration];
     
     if (harvestConfig == nil) {
@@ -530,6 +532,9 @@
 
 - (void) transitionToConnected:(NRMAHarvesterConfiguration*)_configuration
 {
+    // TODO: Remove config logs.
+    NRLOG_VERBOSE(@"config: transitionToConnected");
+
     // Called from disconnected.
     [self configureHarvester:_configuration];
     
@@ -545,40 +550,6 @@
     @try {
         NSError* error = nil;
         
-//        // TODO: LogReporting: Remove CannedConnect response
-//        // CANNED CONFIG
-//        // Obfuscated secrets values.
-//        NSString *cannedConnect = @"{\n"
-//            @" \"server_timestamp\":1701302638,"
-//            @" \"collect_network_errors\":true,"
-//            @" \"activity_trace_max_size\":65535,"
-//            @" \"data_report_period\":60,"
-//            @" \"response_body_limit\":2048,"
-//            @" \"activity_trace_min_utilization\":0.3,"
-//            @" \"stack_trace_limit\":100,"
-//            @" \"report_max_transaction_age\":600,"
-//            @" \"report_max_transaction_count\":1000,"
-//            @" \"error_limit\":50,"
-//            @" \"at_capture\":[1,[]],"
-//            @" \"data_token\":[31111113,52222220],"
-//            @" \"cross_process_id\":\"VQYPSFAaAQcRV1hSBQYDLVc=\","
-//            @" \"encoding_key\":\"d67afd830dab717fd263bfcb1b8b88423e9a1a3c\",\n"
-//            @" \"account_id\":\"13313993\","
-//            @" \"application_id\":\"19225431\","
-//            @" \"trusted_account_key\":\"1\","
-//            @" \"entity_guid\": \"MTA4MTY5OTR8TU9ASUxFfEFQUExDQ0FUSU9OfDM5MDI3NDMz\","
-//            @" \"log_reporting\": {"
-//             @"   \"enabled\": true,"
-//             @"   \"level\": \"VERBOSE\","
-//             @"   \"sampling_rate\": 10.0"
-//           @"}"
-//        @"}";
-//        NRLOG_VERBOSE(@"Harvest config canned: %@", cannedConnect);
-//        id jsonObject = [NRMAJSON JSONObjectWithData: [cannedConnect dataUsingEncoding:NSUTF8StringEncoding]
-//                                             options:0
-//                                               error:&error];
-
-        // TODO: LogReporting REAL CONFIG
         NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
 
         id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
@@ -807,18 +778,23 @@
             NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
             [NRLogger setLogLevels:level];
 
+            // TODO: Remove config logs.
+
             NRLOG_DEBUG(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
 
             [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
         }
         // OVERWRITE user selected value for LogReporting.
         else {
+            // TODO: Remove config logs.
             NRLOG_DEBUG(@"config: Has log reporting DISABLED");
+            [NRLogger setLogTargets:NRLogTargetConsole];
 
             [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
         }
     }
     else {
+        // TODO: Remove config logs.
         // No Log Reporting Config Detected, not automating feature flags or logging config.
         NRLOG_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
 
