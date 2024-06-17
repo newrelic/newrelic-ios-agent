@@ -83,6 +83,6 @@
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
 - (BOOL) isSampled;
-- (void) reseed;
+//- (void) reseed;
 
 @end

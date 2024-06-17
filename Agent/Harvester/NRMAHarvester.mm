@@ -533,6 +533,7 @@
 - (void) transitionToConnected:(NRMAHarvesterConfiguration*)_configuration
 {
     // TODO: Remove config logs.
+    // TODO: Is this the place to make the sampling decision?
     NRLOG_VERBOSE(@"config: transitionToConnected");
 
     // Called from disconnected.

@@ -84,6 +84,7 @@ static NRMAURLTransformer* urlTransformer;
 // The token sent from the RPM service on connect that is used when sending data.
 @property(nonatomic, readonly, strong) id dataToken;
 @property(atomic, strong) NSDate* appSessionStartDate;
+@property(assign) double sampleSeed;
 
 
 @property(nonatomic, readonly) BOOL collectNetworkErrors;
@@ -654,6 +655,12 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     // TODO: Recheck if this session should be sampled? Make decision here. since this happens on new session.
     NRLOG_VERBOSE(@"config: sessionStartInitialization. Make sampling decision");
+
+        NRLOG_VERBOSE(@"config: RESEEDING");
+
+    self.sampleSeed = arc4random_uniform(100) + 1;
+
+        NRLOG_VERBOSE(@"config: newSeed = %f", _sampleSeed);
 
     self.appSessionStartDate = [NSDate date];
     [NRMACPUVitals setAppStartCPUTime];

@@ -147,7 +147,7 @@
             self.activity_trace_max_send_attempts = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SEND_ATTEMPTS;
         }
 
-        [self reseed];
+//        [self reseed];
     }
     return self;
 }
@@ -189,14 +189,14 @@
     return self.has_log_reporting_config && self.sampleSeed <= self.sampling_rate;
 }
 
-- (void) reseed {
-    // TODO: Remove reseeding logs.
-
-    NRLOG_VERBOSE(@"config: RESEEDING");
-    // Get uniform random number between 1-100 inclusively.
-    _sampleSeed = arc4random_uniform(100) + 1;
-    NRLOG_VERBOSE(@"config: newSeed = %f", _sampleSeed);
-}
+//- (void) reseed {
+//    // TODO: Remove reseeding logs.
+//
+//    NRLOG_VERBOSE(@"config: RESEEDING");
+//    // Get uniform random number between 1-100 inclusively.
+//    _sampleSeed = arc4random_uniform(100) + 1;
+//    NRLOG_VERBOSE(@"config: newSeed = %f", _sampleSeed);
+//}
 
 - (NSDictionary*) asDictionary
 {
