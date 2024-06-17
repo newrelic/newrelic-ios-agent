@@ -21,6 +21,10 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
     NSString *version;
 }
 
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                                  accountID:(NSString*)accountId
                                  appID:(NSString*)appId
@@ -86,12 +90,12 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
     if (self) {
         _timestamp = [coder decodeDoubleForKey:kTimestampKey];
         _payloadType = @"mobile";
-        _accountId = [coder decodeObjectForKey:kAccountIdKey];
-        _appId = [coder decodeObjectForKey:kAppIdKey];
-        _id = [coder decodeObjectForKey:kIdKey];
-        _traceId = [coder decodeObjectForKey:kTraceIdKey];
-        _parentId = [coder decodeObjectForKey:kParentIdKey];
-        _trustedAccountKey = [coder decodeObjectForKey:kTrustedAccountKey];
+        _accountId = [coder decodeObjectOfClass:[NSString class] forKey:kAccountIdKey];
+        _appId = [coder decodeObjectOfClass:[NSString class] forKey:kAppIdKey];
+        _id = [coder decodeObjectOfClass:[NSString class] forKey:kIdKey];
+        _traceId = [coder decodeObjectOfClass:[NSString class] forKey:kTraceIdKey];
+        _parentId = [coder decodeObjectOfClass:[NSString class] forKey:kParentIdKey];
+        _trustedAccountKey = [coder decodeObjectOfClass:[NSString class] forKey:kTrustedAccountKey];
         _dtEnabled = false;
         self->version = @"[0,2]";
     }

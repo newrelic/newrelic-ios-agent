@@ -145,9 +145,14 @@
     NSError *error = nil;
     NSData *saveData = nil;
     @synchronized (store) {
-        saveData = [NSKeyedArchiver archivedDataWithRootObject:store
-                                                 requiringSecureCoding:NO
-                                                                 error:&error];
+        if (@available(iOS 11.0, *)) {
+            saveData = [NSKeyedArchiver archivedDataWithRootObject:store
+                                             requiringSecureCoding:NO
+                                                             error:&error];
+        } else {
+            // Fallback on earlier versions
+            saveData = [NSKeyedArchiver archivedDataWithRootObject:store];
+        }
     }
 
     if (saveData) {
