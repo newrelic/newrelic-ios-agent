@@ -7,9 +7,9 @@
 @interface NRMANetworkResponseData : NSObject
 @property (nonatomic) NSInteger statusCode;
 @property (nonatomic) NSInteger bytesReceived;
-@property (nonatomic) NSString* errorMessage;
-@property (nonatomic) NSString* appDataHeader;
-@property (nonatomic) NSString* encodedResponseBody;
+@property (nonatomic, retain) NSString* errorMessage;
+@property (nonatomic, retain) NSString* appDataHeader;
+@property (nonatomic, retain) NSString* encodedResponseBody;
 @property (nonatomic) NSInteger networkErrorCode;
 
 @property double timeInSeconds;

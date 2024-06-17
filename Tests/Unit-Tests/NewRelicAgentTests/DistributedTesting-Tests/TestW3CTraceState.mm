@@ -102,7 +102,6 @@
     payload.appId = appIdStd;
     payload.id = spanId;
     payload.timestamp = timestamp;
-    
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
     
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];

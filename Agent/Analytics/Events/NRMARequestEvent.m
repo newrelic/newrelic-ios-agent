@@ -14,6 +14,10 @@ static NSString* const kPayloadKey = @"Payload";
 
 @implementation NRMARequestEvent
 
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                                    payload:(NRMAPayload *)payload
@@ -45,7 +49,7 @@ static NSString* const kPayloadKey = @"Payload";
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.payload = [coder decodeObjectForKey:kPayloadKey];
+        self.payload = [coder decodeObjectOfClass:[NSString class] forKey:kPayloadKey];
     }
     
     return self;

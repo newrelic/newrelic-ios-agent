@@ -138,7 +138,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             
             NSData *eventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
                                                          options:0
-                                                           error:&error];
+                                                           error:error];
             eventJsonString = [[NSString alloc] initWithData:eventJsonData
                                                     encoding:NSUTF8StringEncoding];
             [self empty];

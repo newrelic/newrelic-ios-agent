@@ -21,6 +21,10 @@ static NSString* const kAttributesKey = @"Attributes";
 
 @implementation NRMAMobileEvent
 
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator {
@@ -100,8 +104,8 @@ static NSString* const kAttributesKey = @"Attributes";
     if(self) {
         self.timestamp = [coder decodeDoubleForKey:kTimestampKey];
         self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:kSessionElapsedTimeKey];
-        self.eventType = [coder decodeObjectForKey:kEventTypeKey];
-        self.attributes = [coder decodeObjectForKey:kAttributesKey];
+        self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:kEventTypeKey];
+        self.attributes = [coder decodeObjectOfClass:[NSString class] forKey:kAttributesKey];
     }
     
     return self;
