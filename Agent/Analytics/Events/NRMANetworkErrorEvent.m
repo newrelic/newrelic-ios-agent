@@ -15,6 +15,10 @@ static NSString* const kAppDataHeaderKey = @"AppDataHeader";
 
 @implementation NRMANetworkErrorEvent
 
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                        encodedResponseBody:(NSString *) encodedResponseBody
@@ -52,8 +56,8 @@ static NSString* const kAppDataHeaderKey = @"AppDataHeader";
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.encodedResponseBody = [coder decodeObjectForKey:kEncodedResponseKey];
-        self.appDataHeader = [coder decodeObjectForKey:kAppDataHeaderKey];
+        self.encodedResponseBody = [coder decodeObjectOfClass:[NSString class] forKey:kEncodedResponseKey];
+        self.appDataHeader =  [coder decodeObjectOfClass:[NSString class] forKey:kAppDataHeaderKey];
     }
     
     return self;

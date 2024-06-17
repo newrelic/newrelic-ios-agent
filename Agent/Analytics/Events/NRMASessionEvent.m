@@ -14,6 +14,10 @@ static NSString* const kCategoryKey = @"Category";
 
 @implementation NRMASessionEvent
 
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                                   category:(NSString *) category
@@ -45,7 +49,7 @@ static NSString* const kCategoryKey = @"Category";
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.category = [coder decodeObjectForKey:kCategoryKey];
+        self.category = [coder decodeObjectOfClass:[NSString class] forKey:kCategoryKey];
     }
     
     return self;

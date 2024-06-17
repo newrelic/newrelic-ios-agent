@@ -14,6 +14,10 @@ static NSString* const kNameKey = @"Name";
 
 @implementation NRMAInteractionEvent
 
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                                       name:(NSString *) name
@@ -49,8 +53,8 @@ static NSString* const kNameKey = @"Name";
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.category = [coder decodeObjectForKey:kCategoryKey];
-        self.name = [coder decodeObjectForKey:kNameKey];
+        self.category = [coder decodeObjectOfClass:[NSString class] forKey:kCategoryKey];
+        self.name = [coder decodeObjectOfClass:[NSString class] forKey:kNameKey];
     }
     
     return self;

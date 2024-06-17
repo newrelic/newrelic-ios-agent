@@ -18,13 +18,18 @@
 #import "BlockAttributeValidator.h"
 #import "NRMAFlags.h"
 
-@interface TestEvent : NRMAMobileEvent <NSCoding>
+@interface TestEvent : NRMAMobileEvent <NSSecureCoding>
 - (instancetype) initWithTimestamp:(NSTimeInterval)timestamp
        sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
             withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator;
 @end
 
 @implementation TestEvent
+
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator {
@@ -50,8 +55,8 @@
     if(self) {
         self.timestamp = [coder decodeDoubleForKey:@"Timestamp"];
         self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:@"SessionElapsedTimeInSeconds"];
-        self.eventType = [coder decodeObjectForKey:@"EventType"];
-        self.attributes = [coder decodeObjectForKey:@"Attributes"];
+        self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:@"EventType"];
+        self.attributes = [coder decodeObjectOfClass:[NSString class] forKey:@"Attributes"];
     }
     
     return self;
