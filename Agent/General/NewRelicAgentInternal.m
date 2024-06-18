@@ -84,8 +84,6 @@ static NRMAURLTransformer* urlTransformer;
 // The token sent from the RPM service on connect that is used when sending data.
 @property(nonatomic, readonly, strong) id dataToken;
 @property(atomic, strong) NSDate* appSessionStartDate;
-@property(assign) double sampleSeed;
-
 
 @property(nonatomic, readonly) BOOL collectNetworkErrors;
 @property(nonatomic, assign) BOOL captureNetworkStackTraces;
@@ -304,7 +302,7 @@ static NewRelicAgentInternal* _sharedInstance;
 - (void) initialize {
     // Update old files (no more files in the docs folder)
     [NRMAFileCleanup updateDocFileLocations];
-    
+
     NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
 
     // Last session's analytics must be fetched (asynchronously) before instrumentation
@@ -446,7 +444,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) initializeAnalytics {
     @synchronized(kNRMAAnalyticsInitializationLock) {
-       // [NRMAAnalytics clearDuplicationStores];
+        // [NRMAAnalytics clearDuplicationStores];
         self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
     }
 
@@ -568,7 +566,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
             [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
         }
     }
-    
+
     if([NRMAFlags shouldEnableGestureInstrumentation])
     {
         self.gestureFacade = [[NRMAUserActionFacade alloc] initWithAnalyticsController:self.analyticsController];
@@ -606,7 +604,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                    ^{
         @synchronized(kNRMA_BGFG_MUTEX) {
             @synchronized(kNRMA_APPLICATION_WILL_TERMINATE) {
-                
+
                 if (didFireEnterForeground == YES || self.appWillTerminate == YES) {
                     return;
                 }
@@ -653,14 +651,13 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
 - (void) sessionStartInitialization {
 
-    // TODO: Recheck if this session should be sampled? Make decision here. since this happens on new session.
     NRLOG_VERBOSE(@"config: sessionStartInitialization. Make sampling decision");
 
-        NRLOG_VERBOSE(@"config: RESEEDING");
+    NRLOG_VERBOSE(@"config: RESEEDING");
 
     self.sampleSeed = arc4random_uniform(100) + 1;
 
-        NRLOG_VERBOSE(@"config: newSeed = %f", _sampleSeed);
+    NRLOG_VERBOSE(@"config: newSeed = %f", _sampleSeed);
 
     self.appSessionStartDate = [NSDate date];
     [NRMACPUVitals setAppStartCPUTime];
@@ -719,7 +716,7 @@ static UIBackgroundTaskIdentifier background_task;
     }
     // We are leaving the background.
     didFireEnterForeground = NO;
-    
+
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateBackground;
 #else
@@ -845,8 +842,8 @@ static UIBackgroundTaskIdentifier background_task;
                         [NRMATaskQueue queue:[[NRMAMetric alloc]        initWithName:@"Session/Duration"
                                                                                value:[NSNumber numberWithDouble:sessionLength]
                                                                                scope:nil]];
-                        
-                        
+
+
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                     } @catch (NSException* exception) {
                         [NRMAExceptionHandler        logException:exception
@@ -861,7 +858,7 @@ static UIBackgroundTaskIdentifier background_task;
                     if (self.appWillTerminate) {
                         return;
                     }
-                    
+
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
@@ -871,7 +868,7 @@ static UIBackgroundTaskIdentifier background_task;
                                                         class:NSStringFromClass([NRMAHarvester class])
                                                      selector:@"execute"];
                 } @finally {
-                    
+
                     if ([NRMAFlags shouldEnableBackgroundReporting]) {
                         NRLOG_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
                     } else {
@@ -879,7 +876,7 @@ static UIBackgroundTaskIdentifier background_task;
                     }
                 }
 #endif
-                
+
                 NRLOG_VERBOSE(@"Background harvest complete.");
 #if !TARGET_OS_WATCH
 
@@ -944,7 +941,7 @@ void applicationDidEnterBackgroundCF(void) {
 
         NSError *error = nil;
 
-            [[BGTaskScheduler sharedScheduler] submitTaskRequest:request error:&error];
+        [[BGTaskScheduler sharedScheduler] submitTaskRequest:request error:&error];
 
         if (error) {
             NRLOG_ERROR(@"Error schedule heartbeat: %@", error);
@@ -1002,7 +999,7 @@ void applicationDidEnterBackgroundCF(void) {
 
         // Clear harvestData
         [[[[NRMAHarvestController harvestController] harvester] harvestData] clear];
-        
+
         // Clear activity traces
         [NRMATraceController cleanup];
 
@@ -1046,14 +1043,14 @@ void applicationDidEnterBackgroundCF(void) {
                                                       object:nil];
 #if !TARGET_OS_WATCH
         [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:UIApplicationDidEnterBackgroundNotification
-                                                   object:[UIApplication sharedApplication]];
+                                                        name:UIApplicationDidEnterBackgroundNotification
+                                                      object:[UIApplication sharedApplication]];
         [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:UIApplicationWillEnterForegroundNotification
-                                                   object:[UIApplication sharedApplication]];
+                                                        name:UIApplicationWillEnterForegroundNotification
+                                                      object:[UIApplication sharedApplication]];
         [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:UIApplicationWillTerminateNotification
-                                                   object:[UIApplication sharedApplication]];
+                                                        name:UIApplicationWillTerminateNotification
+                                                      object:[UIApplication sharedApplication]];
 #endif
         // # disable logging
         [NRLogger setLogLevels:NRLogLevelNone];

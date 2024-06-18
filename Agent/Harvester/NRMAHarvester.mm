@@ -532,9 +532,7 @@
 
 - (void) transitionToConnected:(NRMAHarvesterConfiguration*)_configuration
 {
-    // TODO: Remove config logs.
-    // TODO: Is this the place to make the sampling decision?
-    NRLOG_VERBOSE(@"config: transitionToConnected");
+     NRLOG_VERBOSE(@"config: transitionToConnected");
 
     // Called from disconnected.
     [self configureHarvester:_configuration];
@@ -551,7 +549,7 @@
     @try {
         NSError* error = nil;
         
-        NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
+         NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
 
         id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
                                              options:0
@@ -668,7 +666,11 @@
 #endif
             }
         }
-        if ([NRMAFlags shouldEnableLogReporting]) {
+
+
+        BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sampleSeed] <= [configuration sampling_rate];
+        NRLOG_VERBOSE(@"config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
+        if (isSampled && [NRMAFlags shouldEnableLogReporting]) {
             // Do log upload
             [NRLogger enqueueLogUpload];
         }
@@ -765,8 +767,6 @@
 }
 
 - (void) handleLoggingConfigurationUpdate {
-    // Should it check if remote logs are already on?
-    
     // Code for dynamically enabling or disabling remote logging at runtime based on the state of configuration.log_reporting_enabled and the existing state of NRFlags.NRFeatureFlag_LogReporting
 
     // This if/else chain should only be entered if log_reporting was found in the config
@@ -779,26 +779,21 @@
             NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
             [NRLogger setLogLevels:level];
 
-            // TODO: Remove config logs.
-
-            NRLOG_DEBUG(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
+             NRLOG_DEBUG(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
 
             [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
         }
         // OVERWRITE user selected value for LogReporting.
         else {
-            // TODO: Remove config logs.
-            NRLOG_DEBUG(@"config: Has log reporting DISABLED");
+             NRLOG_DEBUG(@"config: Has log reporting DISABLED");
             [NRLogger setLogTargets:NRLogTargetConsole];
 
             [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
         }
     }
     else {
-        // TODO: Remove config logs.
         // No Log Reporting Config Detected, not automating feature flags or logging config.
-        NRLOG_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
-
+         NRLOG_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
     }
 }
 
