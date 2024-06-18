@@ -77,7 +77,6 @@
            forHTTPHeaderField:(NSString*)kCONNECT_TIME_HEADER];
     }
 
-//    // TODO: Attach request headers map headers to each outbound request.
     if (self.requestHeadersMap != nil && [self.requestHeadersMap count] > 0) {
         for (NSString *key in self.requestHeadersMap) {
             NSString* value = [self.requestHeadersMap objectForKey:key];

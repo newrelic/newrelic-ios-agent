@@ -785,5 +785,41 @@
 
 // TODO: LogReporting Add test for entity_guid: and log_reporting: { enabled: , level: }
 
+- (void) testConnectedv5Apps{
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    NRMAHarvesterConfiguration* v5config = [[NRMAHarvesterConfiguration alloc] init];
+    v5config.collect_network_errors = YES;
+    v5config.cross_process_id = @"cross_process_id";
+    v5config.data_report_period = 60;
+    v5config.data_token = [[NRMADataToken alloc] init];
+    v5config.data_token.clusterAgentId = 36920;
+    v5config.data_token.realAgentId = 36921;
+    v5config.error_limit = 50;
+    v5config.report_max_transaction_age = 600;
+    v5config.report_max_transaction_count =1000;
+    v5config.response_body_limit = 2048;
+    v5config.server_timestamp = 1379548800;
+    v5config.stack_trace_limit = 100;
+    v5config.account_id = 0;
+    v5config.application_id = 0;
+    v5config.encoding_key = @"encoding_key";
+    v5config.entity_guid = @"ENTITYGUID";
+    v5config.request_header_map = [NSDictionary dictionary];
+    v5config.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+    v5config.log_reporting_level = @"WARN";
+    v5config.sampling_rate = 100.0;
+
+    [[[mockHarvester stub] andReturn:v5config] fetchHarvestConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendData:OCMOCK_ANY];
+
+    XCTAssertNoThrow([mockHarvester connected],@"assert we don't crash if something goes wrong in connected");
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
 
 @end
