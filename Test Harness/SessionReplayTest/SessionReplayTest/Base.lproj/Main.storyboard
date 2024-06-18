@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22154" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Smm-Yu-v3u">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22130"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
+        <!--Navigation Controller-->
+        <scene sceneID="vRC-io-QZ2">
+            <objects>
+                <navigationController id="Smm-Yu-v3u" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="OKe-oN-SEA">
+                        <rect key="frame" x="0.0" y="59" width="393" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="Zus-4n-66J"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="JTW-6G-lu1" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-669" y="-44"/>
+        </scene>
         <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
@@ -63,6 +80,9 @@
                                             <fontDescription key="titleFontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
                                             <color key="baseBackgroundColor" systemColor="systemYellowColor"/>
                                         </buttonConfiguration>
+                                        <connections>
+                                            <segue destination="10b-ph-XuX" kind="show" id="DAn-y8-4pO"/>
+                                        </connections>
                                     </button>
                                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="mardi gras dog" translatesAutoresizingMaskIntoConstraints="NO" id="bJR-c1-Ica">
                                         <rect key="frame" x="214" y="8" width="99" height="112"/>
@@ -118,6 +138,9 @@
                                             <fontDescription key="titleFontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
                                             <color key="baseBackgroundColor" systemColor="systemYellowColor"/>
                                         </buttonConfiguration>
+                                        <connections>
+                                            <segue destination="10b-ph-XuX" kind="show" id="Bcm-2x-iN7"/>
+                                        </connections>
                                     </button>
                                 </subviews>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -168,12 +191,124 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                     </view>
+                    <navigationItem key="navigationItem" id="95B-QE-VrU"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="130.53435114503816" y="-27.464788732394368"/>
         </scene>
+        <!--View Controller-->
+        <scene sceneID="dee-md-M22">
+            <objects>
+                <viewController id="10b-ph-XuX" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="i5v-zz-Oei">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" translatesAutoresizingMaskIntoConstraints="NO" id="n9o-0Y-o98">
+                                <rect key="frame" x="0.0" y="103" width="393" height="715"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" text="Eeyore Style Dog" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="K0o-Ez-wox">
+                                        <rect key="frame" x="8" y="8" width="377" height="39.333333333333336"/>
+                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="34"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" spacingType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="oxq-Xo-24S">
+                                        <rect key="frame" x="8" y="109.66666666666666" width="377" height="90.333333333333343"/>
+                                        <subviews>
+                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="eeyore dog" translatesAutoresizingMaskIntoConstraints="NO" id="8S3-3q-3pQ">
+                                                <rect key="frame" x="0.0" y="0.0" width="120.33333333333333" height="90.333333333333329"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="width" secondItem="8S3-3q-3pQ" secondAttribute="height" multiplier="4:3" id="ag9-DO-B9D"/>
+                                                </constraints>
+                                            </imageView>
+                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="eeyore dog" translatesAutoresizingMaskIntoConstraints="NO" id="hm0-Vr-TEJ">
+                                                <rect key="frame" x="128.33333333333334" y="0.0" width="120.33333333333334" height="90.333333333333329"/>
+                                            </imageView>
+                                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="eeyore dog" translatesAutoresizingMaskIntoConstraints="NO" id="UhH-zO-GSh">
+                                                <rect key="frame" x="256.66666666666669" y="0.0" width="120.33333333333331" height="90.333333333333329"/>
+                                            </imageView>
+                                        </subviews>
+                                        <constraints>
+                                            <constraint firstItem="hm0-Vr-TEJ" firstAttribute="width" secondItem="8S3-3q-3pQ" secondAttribute="width" id="1QA-0g-KEq"/>
+                                            <constraint firstItem="UhH-zO-GSh" firstAttribute="width" secondItem="8S3-3q-3pQ" secondAttribute="width" id="44d-XG-Sl1"/>
+                                        </constraints>
+                                    </stackView>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="248" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yBf-VZ-Ap1">
+                                        <rect key="frame" x="8" y="262.66666666666669" width="377" height="78.333333333333314"/>
+                                        <string key="text">The Eeyore Style Dog will surprise you! Turns out, she is not only pretty, but she is smart and playful too. This Princess will keep you on your toes. </string>
+                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Features" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QC2-Kb-eEd">
+                                        <rect key="frame" x="8" y="403.33333333333331" width="377" height="27.666666666666686"/>
+                                        <fontDescription key="fontDescription" name="Helvetica-Bold" family="Helvetica" pointSize="24"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="R0o-Om-it6">
+                                        <rect key="frame" x="8" y="493.66666666666657" width="377" height="117.33333333333331"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="00P-eM-Vd6">
+                                                <rect key="frame" x="0.0" y="0.0" width="188.66666666666666" height="117.33333333333333"/>
+                                                <string key="text">Short hair, no mess!
+Eats over a pound of raw meat a day!
+Can tell time - she knows when it's her dinner time!</string>
+                                                <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9WY-VP-b3i">
+                                                <rect key="frame" x="188.66666666666663" y="0.0" width="188.33333333333337" height="117.33333333333333"/>
+                                                <string key="text">Gets along with other dogs!
+Loves to run zoomies!
+Will roll in whatever happens to be on the ground!</string>
+                                                <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                    </stackView>
+                                    <button opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="251" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9nZ-C0-gxB">
+                                        <rect key="frame" x="8" y="673.33333333333337" width="377" height="33.666666666666629"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="tinted" title="BUY NOW!">
+                                            <fontDescription key="titleFontDescription" name="Helvetica-Bold" family="Helvetica" pointSize="17"/>
+                                            <color key="baseBackgroundColor" systemColor="systemYellowColor"/>
+                                        </buttonConfiguration>
+                                    </button>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="K0o-Ez-wox" firstAttribute="leading" secondItem="n9o-0Y-o98" secondAttribute="leading" constant="8" id="MoL-Wk-TdX"/>
+                                    <constraint firstAttribute="trailing" secondItem="K0o-Ez-wox" secondAttribute="trailing" constant="8" id="kYn-lB-ByO"/>
+                                </constraints>
+                                <directionalEdgeInsets key="directionalLayoutMargins" top="8" leading="8" bottom="8" trailing="8"/>
+                            </stackView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="RQA-Ft-bp0"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="n9o-0Y-o98" firstAttribute="leading" secondItem="RQA-Ft-bp0" secondAttribute="leading" id="1Va-jz-49e"/>
+                            <constraint firstItem="RQA-Ft-bp0" firstAttribute="bottom" secondItem="n9o-0Y-o98" secondAttribute="bottom" id="3IH-Za-HsC"/>
+                            <constraint firstItem="n9o-0Y-o98" firstAttribute="trailing" secondItem="RQA-Ft-bp0" secondAttribute="trailing" id="Afv-Xj-oiy"/>
+                            <constraint firstItem="RQA-Ft-bp0" firstAttribute="bottom" secondItem="n9o-0Y-o98" secondAttribute="bottom" id="VhA-Ks-iLS"/>
+                            <constraint firstItem="n9o-0Y-o98" firstAttribute="top" secondItem="RQA-Ft-bp0" secondAttribute="top" id="Xjg-yx-tk4"/>
+                            <constraint firstItem="n9o-0Y-o98" firstAttribute="leading" secondItem="RQA-Ft-bp0" secondAttribute="leading" id="avL-9q-CDL"/>
+                            <constraint firstItem="RQA-Ft-bp0" firstAttribute="trailing" secondItem="n9o-0Y-o98" secondAttribute="trailing" id="x4f-6M-D0Q"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="JZc-Pl-USV"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gam-YN-sCf" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1067.9389312977098" y="-16.197183098591552"/>
+        </scene>
     </scenes>
+    <inferredMetricsTieBreakers>
+        <segue reference="DAn-y8-4pO"/>
+    </inferredMetricsTieBreakers>
     <resources>
         <image name="cart.fill" catalog="system" width="128" height="102"/>
         <image name="eeyore dog" width="2363" height="2609"/>
