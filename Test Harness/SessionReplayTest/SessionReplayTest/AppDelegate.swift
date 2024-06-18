@@ -20,7 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
 #if DEBUG
         // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
-        NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
+        NRLogger.setLogLevels(NRLogLevelAudit.rawValue)
 #endif
         
         NewRelic.start(withApplicationToken:"AA2c7533565ddeeb163b23d649c453b397b8a2fd4e-NRMA",
