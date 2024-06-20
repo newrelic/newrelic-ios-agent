@@ -439,7 +439,7 @@
     }
 
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return nil;
     }
 
@@ -469,7 +469,7 @@
     }
 
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return;
     }
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -511,14 +511,14 @@
     }
 
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return;
     }
 
     NSString* cleanSelectorString = [NewRelicInternalUtils cleanseStringForCollector:methodName];
 
     if (![NRMATraceController isTracingActive]) {
-        NRLOG_VERBOSE(@"%@ attempted to start tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"%@ attempted to start tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
         return;
     }
     [NRMACustomTrace startTracingMethod:NSSelectorFromString(cleanSelectorString)
@@ -539,12 +539,12 @@
 
     [timer stopTimer];
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         //need to remove the associated object or else this will leak!
         return;
     }
     if (![NRMATraceController isTracingActive]) {
-        NRLOG_VERBOSE(@"%@ attempted to end tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"%@ attempted to end tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
         //need to remove the associated object or else this will leak!
         if (timer) {
             objc_setAssociatedObject(timer, (__bridge const void *)(kNRTraceAssociatedKey), Nil, OBJC_ASSOCIATION_ASSIGN);

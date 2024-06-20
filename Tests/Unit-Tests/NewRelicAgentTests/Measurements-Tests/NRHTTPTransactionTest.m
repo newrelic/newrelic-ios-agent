@@ -47,7 +47,7 @@
 - (void)setUp
 {
     [super setUp];
-    NRLOG_VERBOSE(@"setting up");
+    NRLOG_AGENT_VERBOSE(@"setting up");
     [NRMANSURLConnectionSupport instrumentNSURLConnection];
     mockAgentInstance = [OCMockObject niceMockForClass:[NewRelicAgentInternal class]];
     mockHarvestConnection = [OCMockObject niceMockForClass:[NRMAHarvesterConnection class]];
@@ -95,7 +95,7 @@
 
 - (void) tearDown
 {
-    NRLOG_VERBOSE(@"tearing down");
+    NRLOG_AGENT_VERBOSE(@"tearing down");
     [NRMANSURLConnectionSupport deinstrumentNSURLConnection];
     [NRMATraceController completeActivityTrace];
     [NRMAHarvestController stop];
@@ -132,7 +132,7 @@
 
     [NRMATaskQueue synchronousDequeue];
 
-    NRLOG_VERBOSE(@"%@",helper.result);
+    NRLOG_AGENT_VERBOSE(@"%@",helper.result);
     
     XCTAssertTrue([helper.result isKindOfClass:[NRMAHTTPTransactionMeasurement class]], @"verify the result is a http transaction");
     XCTAssertTrue([((NRMAHTTPTransactionMeasurement*)helper.result).url isEqualToString:@"https://www.google.com"],@"match url to requested url");

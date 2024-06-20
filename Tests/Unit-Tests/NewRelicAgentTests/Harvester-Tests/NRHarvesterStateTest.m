@@ -23,7 +23,7 @@
 - (void) uninitialized
 {
     if (_agentConfiguration == nil) {
-        NRLOG_ERROR(@"Agent configuration unavailable.");
+        NRLOG_AGENT_ERROR(@"Agent configuration unavailable.");
         return;
     }
     

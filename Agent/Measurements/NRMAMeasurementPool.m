@@ -57,7 +57,7 @@
         
         
         if ([[self.producers objectForKey:typeKey] containsObject:producer]) {
-            NRLOG_VERBOSE(@"Attepted to add the same MeasurementProducer %@ multiple times.",producer);
+            NRLOG_AGENT_VERBOSE(@"Attepted to add the same MeasurementProducer %@ multiple times.",producer);
             return;
         }
         
@@ -76,7 +76,7 @@
     @synchronized(self.producers) {
         NSNumber* typeKey = [NSNumber numberWithInt:producer.measurementType];
         if (![[self.producers objectForKey:typeKey] containsObject:producer]) {
-            NRLOG_VERBOSE(@"Attempted to remove MeasurementProducer %@ which is not registered.",producer);
+            NRLOG_AGENT_VERBOSE(@"Attempted to remove MeasurementProducer %@ which is not registered.",producer);
             return;
         }
         
@@ -93,7 +93,7 @@
     @synchronized(self.consumers) {
         NSNumber* typeKey = [NSNumber numberWithInt:consumer.measurementType];
         if ([[self.consumers objectForKey:typeKey] containsObject:consumer]) {
-            NRLOG_VERBOSE(@"Attempted to add the same MeasurementConsumer %@ multiple times.",consumer);
+            NRLOG_AGENT_VERBOSE(@"Attempted to add the same MeasurementConsumer %@ multiple times.",consumer);
             return;
         }
         NSMutableArray* consumerList = [self.consumers objectForKey:typeKey];

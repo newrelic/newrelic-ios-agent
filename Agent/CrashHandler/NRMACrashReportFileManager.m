@@ -53,16 +53,16 @@ static NSString* __processLock = @"NRMAProcessLock";
 {
     NSError* error = nil;
     if (!_crashReporter) {
-        NRLOG_VERBOSE(@"Attempted to process crash reports with an uninitialized crash reporter.");
+        NRLOG_AGENT_VERBOSE(@"Attempted to process crash reports with an uninitialized crash reporter.");
         return;
     }
     @synchronized(__processLock) {
         // Try loading the crash report.
-        NRLOG_VERBOSE(@"Processing crash reports.");
+        NRLOG_AGENT_VERBOSE(@"Processing crash reports.");
         NSData *crashData = [[NSData alloc] initWithData:[_crashReporter loadPendingCrashReportDataAndReturnError:&error]];
 
         if (crashData == nil) {
-            NRLOG_ERROR(@"Could not load pending crash report: %@",[error localizedDescription]);
+            NRLOG_AGENT_ERROR(@"Could not load pending crash report: %@",[error localizedDescription]);
             return;
         }
 
@@ -73,14 +73,14 @@ static NSString* __processLock = @"NRMAProcessLock";
 #endif
 
         if (report == nil) {
-            NRLOG_VERBOSE(@"could not parse crash report: %@",error);
+            NRLOG_AGENT_VERBOSE(@"could not parse crash report: %@",error);
             return;
         }
 
         NSDictionary* metadict = [self getMetaData];
 
         if (metadict.count == 0) {
-            NRLOG_ERROR(@"Unable to write crash report: missing meta-data.");
+            NRLOG_AGENT_ERROR(@"Unable to write crash report: missing meta-data.");
         } else {
             [NRMACrashDataWriter writeCrashReport:report
                                      withMetaData:metadict

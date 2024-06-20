@@ -100,7 +100,7 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
         @synchronized(controller) {
             [controller createHarvester];
             [[controller harvester] setAgentConfiguration:configuration];
-            NRLOG_VERBOSE(@"config: defaultHarvesterConfiguration set.");
+            NRLOG_AGENT_VERBOSE(@"config: defaultHarvesterConfiguration set.");
             [[controller harvester] configureHarvester:[NRMAHarvesterConfiguration defaultHarvesterConfiguration]];
         }
     }
@@ -162,7 +162,7 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 + (void) stop
 {
     @synchronized(NRMAHarvestControllerInitializationLock) {
-        NRLOG_VERBOSE(@"Harvester timer stopped");
+        NRLOG_AGENT_VERBOSE(@"Harvester timer stopped");
         [NRMAHarvestController deinitialize];
     }
 }

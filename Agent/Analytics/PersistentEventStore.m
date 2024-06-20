@@ -77,14 +77,14 @@
     @synchronized (store) {
         [store removeObjectForKey:key];
         _dirty = YES;
-       // NRLOG_VERBOSE(@"Marked dirty for removing");
+       // NRLOG_AGENT_VERBOSE(@"Marked dirty for removing");
     }
     
     dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-       // NRLOG_VERBOSE(@"Entered Remove Block");
+       // NRLOG_AGENT_VERBOSE(@"Entered Remove Block");
         @synchronized (self) {
             if(!self->_dirty) {
-                NRLOG_VERBOSE(@"Not writing removed item file because it's not dirty");
+                NRLOG_AGENT_VERBOSE(@"Not writing removed item file because it's not dirty");
                 return;
             }
         }
@@ -101,14 +101,14 @@
     @synchronized (store) {
         [store removeAllObjects];
         _dirty = YES;
-       // NRLOG_VERBOSE(@"Marked dirty for clearing");
+       // NRLOG_AGENT_VERBOSE(@"Marked dirty for clearing");
     }
     
     dispatch_after(DISPATCH_TIME_NOW, self.writeQueue, ^{
-       // NRLOG_VERBOSE(@"Entered Clear Block");
+       // NRLOG_AGENT_VERBOSE(@"Entered Clear Block");
         @synchronized (self) {
             if(!self->_dirty) {
-              //  NRLOG_VERBOSE(@"Not writing cleared file because it's not dirty");
+              //  NRLOG_AGENT_VERBOSE(@"Not writing cleared file because it's not dirty");
                 return;
             }
         }
@@ -160,7 +160,7 @@
                                      options:NSDataWritingAtomic
                                        error:&error];
         if(!success) {
-            NRLOG_ERROR(@"Error saving data: %@", error.description);
+            NRLOG_AGENT_ERROR(@"Error saving data: %@", error.description);
         } else {
            // NRLOG_AUDIT(@"Wrote file");
             _lastSave = [NSDate new];

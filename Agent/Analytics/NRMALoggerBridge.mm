@@ -54,6 +54,7 @@ namespace  NewRelic {
                inFile:[NSString stringWithUTF8String:file]
                atLine:line
              inMethod:[NSString stringWithUTF8String:method]
-          withMessage:[NSString stringWithUTF8String:buf]];
+          withMessage:[NSString stringWithUTF8String:buf]
+        withAgentLogsOn:YES];
     }
 }

@@ -56,10 +56,10 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds {
     if(seconds < kMinBufferTimeSeconds) {
-        NRLOG_ERROR(@"Buffer Time cannot be less than %lu Seconds", (unsigned long)kMinBufferTimeSeconds);
+        NRLOG_AGENT_ERROR(@"Buffer Time cannot be less than %lu Seconds", (unsigned long)kMinBufferTimeSeconds);
         maxBufferTimeSeconds = kMinBufferTimeSeconds;
     } else if (seconds > kDefaultBufferTimeSeconds){
-        NRLOG_WARNING(@"Buffer Time should not be longer than %lu seconds", (unsigned long)kDefaultBufferTimeSeconds);
+        NRLOG_AGENT_WARNING(@"Buffer Time should not be longer than %lu seconds", (unsigned long)kDefaultBufferTimeSeconds);
         maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
     }
     
@@ -143,7 +143,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
                                                     encoding:NSUTF8StringEncoding];
             [self empty];
         } @catch (NSException *e) {
-            NRLOG_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
+            NRLOG_AGENT_ERROR(@"FAILED TO CREATE EVENT JSON: %@", e.reason);
         }
     }
     if (clearEvents){
@@ -169,7 +169,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             }
         }
         @catch (NSException *e) {
-            NRLOG_ERROR(@"FAILED TO CREATE LAST SESSION EVENT JSON: %@", e.reason);
+            NRLOG_AGENT_ERROR(@"FAILED TO CREATE LAST SESSION EVENT JSON: %@", e.reason);
         }
     }
     

@@ -89,6 +89,36 @@ withAttributes:(NSDictionary *)attributes {
     }
 }
 
++ (void)log:(unsigned int)level
+     inFile:(NSString *)file
+     atLine:(unsigned int)line
+   inMethod:(NSString *)method
+withMessage:(NSString *)message
+withAgentLogsOn:(BOOL)agentLogsOn {
+
+    NRLogger *logger = [NRLogger logger];
+    BOOL shouldLog = NO;
+
+    // Filter passed logs by log level.
+    shouldLog = (logger->logLevels & level) != 0;
+    
+    // If this is an agentLog, only print it if we are currently at the debug level.
+    if (agentLogsOn) {
+        shouldLog = (logger->logLevels & NRLogLevelDebug) != 0;
+    }
+
+    if (shouldLog) {
+        [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
+                               [self levelToString:level], NRLogMessageLevelKey,
+                               file, NRLogMessageFileKey,
+                               [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
+                               method, NRLogMessageMethodKey,
+                               [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
+                               message, NRLogMessageMessageKey,
+                               nil]];
+    }
+}
+
 + (NRLogLevels) logLevels {
     return [[NRLogger logger] logLevels];
 }
@@ -373,7 +403,7 @@ withAttributes:(NSDictionary *)attributes {
     
     if (fileOpenError) {
         if (self->logTargets && self->logLevels) {
-            NRLOG_ERROR(@"%@", fileOpenError);
+            NRLOG_AGENT_ERROR(@"%@", fileOpenError);
         }
         else {
             NSLog(@"NewRelic: error opening log file %@", fileOpenError);
@@ -454,7 +484,7 @@ withAttributes:(NSDictionary *)attributes {
         
         // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
         if (!self->logIngestKey || !self->logURL) {
-            NRLOG_ERROR(@"Attempted to upload logs without log ingest key or logURL set. Failing.");
+            NRLOG_AGENT_ERROR(@"Attempted to upload logs without log ingest key or logURL set. Failing.");
             return;
         }
         
@@ -489,7 +519,7 @@ withAttributes:(NSDictionary *)attributes {
                 errorCodeInt = ((NSHTTPURLResponse*)response).statusCode;
             }
             if (!error && !errorCode) {
-                NRLOG_VERBOSE(@"Logs uploaded successfully.");
+                NRLOG_AGENT_VERBOSE(@"Logs uploaded successfully.");
                 // Remove the first element from the upload queue.
                 [self->uploadQueue removeObjectAtIndex:0];
                 self->failureCount = 0;
@@ -497,13 +527,13 @@ withAttributes:(NSDictionary *)attributes {
                 [NRMASupportMetricHelper enqueueLogSuccessMetric: [formattedData length]];
             }
             else if (errorCode) {
-                NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
+                NRLOG_AGENT_ERROR(@"Logs failed to upload. response: %@", response);
                 self->failureCount = self->failureCount + 1;
                 
                 [NRMASupportMetricHelper enqueueLogFailedMetric];
             }
             else {
-                NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
+                NRLOG_AGENT_ERROR(@"Logs failed to upload. error: %@", error);
                 self->failureCount = self->failureCount + 1;
                 
                 // send log payload failed support metric

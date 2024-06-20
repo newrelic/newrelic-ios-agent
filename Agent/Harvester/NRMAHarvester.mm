@@ -74,7 +74,7 @@
 - (void) uninitialized
 {
     if (_agentConfiguration == nil) {
-        NRLOG_ERROR(@"Agent configuration unavailable.");
+        NRLOG_AGENT_ERROR(@"Agent configuration unavailable.");
         return;
     }
 
@@ -86,13 +86,13 @@
             // Something changed, let's reconnect by clearing the harvest configs.
             if (![oldConnectionInfo.applicationInformation.appVersion isEqualToString:currentConnectionInfo.applicationInformation.appVersion]) {
                 if ([oldConnectionInfo.deviceInformation.model isEqualToString:currentConnectionInfo.deviceInformation.model]) {
-                    NRLOG_VERBOSE(@"Detected new application version: %@ -> %@", oldConnectionInfo.applicationInformation.appVersion, currentConnectionInfo.applicationInformation.appVersion);
+                    NRLOG_AGENT_VERBOSE(@"Detected new application version: %@ -> %@", oldConnectionInfo.applicationInformation.appVersion, currentConnectionInfo.applicationInformation.appVersion);
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADidChangeAppVersionNotification
                                                                         object:nil
                                                                       userInfo:@{kNRMACurrentVersionKey:currentConnectionInfo.applicationInformation.appVersion,
                                                                                  kNRMALastVersionKey:oldConnectionInfo.applicationInformation.appVersion}];
                 } else {
-                    NRLOG_VERBOSE(@"detected upgrade, but device model was different.");
+                    NRLOG_AGENT_VERBOSE(@"detected upgrade, but device model was different.");
                     [[NSNotificationCenter defaultCenter] postNotificationName:kNRMADeviceDidChangeNotification
                                                                         object:nil];
                 }
@@ -121,7 +121,7 @@
 {
     // Only allow one transition per cycle.
     if (stateDidChange) {
-        NRLOG_VERBOSE(@"Ignoring multiple transition: %d",state);
+        NRLOG_AGENT_VERBOSE(@"Ignoring multiple transition: %d",state);
         return;
     }
     
@@ -168,7 +168,7 @@
 - (void) addHarvestAwareObject:(id<NRMAHarvestAware>)harvestAware
 {
     if (![harvestAware conformsToProtocol:@protocol(NRMAHarvestAware)]) {
-        NRLOG_ERROR(@"Attempted to add non-corforming harvest aware object");
+        NRLOG_AGENT_ERROR(@"Attempted to add non-corforming harvest aware object");
         return;
     }
     @synchronized(self.harvestAwareObjects) {
@@ -288,7 +288,7 @@
     NRMAHarvesterConfiguration* harvestConfig = [self fetchHarvestConfiguration];
     
     if (harvestConfig == nil) {
-        NRLOG_VERBOSE(@"No configuration.");
+        NRLOG_AGENT_VERBOSE(@"No configuration.");
     }
     else if(![harvestConfig isValid] || ![harvestConfig.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
         [self clearStoredHarvesterConfiguration];
@@ -299,7 +299,7 @@
         return;
     }
     
-    NRLOG_VERBOSE(@"Harvester: connected");
+    NRLOG_AGENT_VERBOSE(@"Harvester: connected");
     NRMAHarvestResponse* response = nil;
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
@@ -308,7 +308,7 @@
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
         if ([exception.name isEqualToString:NSInvalidArgumentException]) {
-            NRLOG_ERROR(@"harvest failed: harvestData == nil. This could just mean there was nothing to harvest.");
+            NRLOG_AGENT_ERROR(@"harvest failed: harvestData == nil. This could just mean there was nothing to harvest.");
             [NRMAExceptionHandler logException:exception
                                          class:NSStringFromClass([connection class])
                                       selector:@"sendData:"];
@@ -401,7 +401,7 @@
         NSError* error = nil;
         NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.harvestData options:0 error:&error];
         if (error) {
-            NRLOG_ERROR(@"Failed to generate JSON");
+            NRLOG_AGENT_ERROR(@"Failed to generate JSON");
             return false;
         }
         [connection.offlineStorage persistDataToDisk:jsonData];
@@ -444,7 +444,7 @@
         response = [connection sendConnect];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
-        NRLOG_ERROR(@"harvest failed: connection failed while disconnecting");
+        NRLOG_AGENT_ERROR(@"harvest failed: connection failed while disconnecting");
         [NRMAExceptionHandler logException:exception
                                      class:NSStringFromClass([connection class])
                                   selector:@"sendConnect:"];
@@ -452,14 +452,14 @@
 #endif
     
     if (response == nil) {
-        NRLOG_ERROR(@"Unable to connect to the collector.");
+        NRLOG_AGENT_ERROR(@"Unable to connect to the collector.");
         return;
     }
     
     if ([response isOK]) {
         configuration = [self configureFromCollector:response];
         if (configuration == nil) {
-            NRLOG_ERROR(@"Unable to configure Harvester using Collector Configuration");
+            NRLOG_AGENT_ERROR(@"Unable to configure Harvester using Collector Configuration");
             return;
         }
         // Configuration saved here.
@@ -492,7 +492,7 @@
     }
     [connectionTimer stopTimer];
     
-    NRLOG_VERBOSE(@"Harvest connect response: %d",response.statusCode);
+    NRLOG_AGENT_VERBOSE(@"Harvest connect response: %d",response.statusCode);
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif
@@ -512,18 +512,18 @@
             break;
         case FORBIDDEN:
             if ([response isDisableCommand]) {
-                NRLOG_ERROR(@"Collector has commanded Agent to disable.");
+                NRLOG_AGENT_ERROR(@"Collector has commanded Agent to disable.");
                 [self transition:NRMA_HARVEST_DISABLED];
                 return;
             }
-            NRLOG_VERBOSE(@"Unexpected Collector response: FORBIDDEN");
+            NRLOG_AGENT_VERBOSE(@"Unexpected Collector response: FORBIDDEN");
             break;
         case UNSUPPORTED_MEDIA_TYPE:
         case ENTITY_TOO_LARGE:
-            NRLOG_VERBOSE(@"Invalid ConnectionInformation was sent to the Collector.");
+            NRLOG_AGENT_VERBOSE(@"Invalid ConnectionInformation was sent to the Collector.");
             break;
         default:
-            NRLOG_VERBOSE(@"An unknown error occurred when connecting to the Collector.");
+            NRLOG_AGENT_VERBOSE(@"An unknown error occurred when connecting to the Collector.");
             break;
     }
     
@@ -532,7 +532,7 @@
 
 - (void) transitionToConnected:(NRMAHarvesterConfiguration*)_configuration
 {
-     NRLOG_VERBOSE(@"config: transitionToConnected");
+     NRLOG_AGENT_VERBOSE(@"config: transitionToConnected");
 
     // Called from disconnected.
     [self configureHarvester:_configuration];
@@ -549,7 +549,7 @@
     @try {
         NSError* error = nil;
         
-         NRLOG_VERBOSE(@"Harvest config: %@", response.responseBody);
+         NRLOG_AGENT_VERBOSE(@"Harvest config: %@", response.responseBody);
 
         id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
                                              options:0
@@ -559,14 +559,14 @@
         }
     }
     @catch (NSException *exception) {
-        NRLOG_ERROR(@"Unable to parse collector configuration: %@",[exception reason]);
+        NRLOG_AGENT_ERROR(@"Unable to parse collector configuration: %@",[exception reason]);
     }
     return config;
 }
 
 - (void) changeState:(NRMAHarvesterState)state
 {
-    NRLOG_VERBOSE(@"Harvester changing state: %d -> %d",self.currentState, state);
+    NRLOG_AGENT_VERBOSE(@"Harvester changing state: %d -> %d",self.currentState, state);
     currentState = state;
     stateDidChange = YES;
 }
@@ -598,7 +598,7 @@
     // This sync will only be triggered when the agent attempts to
     // harvest on a background while the harvest is already running. Otherwise it will be business as usual.
     @synchronized(self) {
-        NRLOG_VERBOSE(@"Harvester State: %d",self.currentState);
+        NRLOG_AGENT_VERBOSE(@"Harvester State: %d",self.currentState);
         stateDidChange = NO;
         switch (self.currentState) {
             case NRMA_HARVEST_UNINITIALIZED:
@@ -669,7 +669,7 @@
 
 
         BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sampleSeed] <= [configuration sampling_rate];
-        NRLOG_VERBOSE(@"config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
+        NRLOG_AGENT_VERBOSE(@"config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
         if (isSampled && [NRMAFlags shouldEnableLogReporting]) {
             // Do log upload
             [NRLogger enqueueLogUpload];
@@ -779,13 +779,13 @@
             NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
             [NRLogger setLogLevels:level];
 
-             NRLOG_DEBUG(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
+             NRLOG_AGENT_DEBUG(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
 
             [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
         }
         // OVERWRITE user selected value for LogReporting.
         else {
-             NRLOG_DEBUG(@"config: Has log reporting DISABLED");
+             NRLOG_AGENT_DEBUG(@"config: Has log reporting DISABLED");
             [NRLogger setLogTargets:NRLogTargetConsole];
 
             [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
@@ -793,7 +793,7 @@
     }
     else {
         // No Log Reporting Config Detected, not automating feature flags or logging config.
-         NRLOG_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
+         NRLOG_AGENT_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
     }
 }
 

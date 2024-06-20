@@ -54,7 +54,7 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
 
 + (void) initializeMeasurements
 {
-    NRLOG_INFO(@"Measurement Engine Initialized.");
+    NRLOG_AGENT_INFO(@"Measurement Engine Initialized.");
     @synchronized(__NRMAInitializationMutex) {
         if (__engine) {
             return;
@@ -81,7 +81,7 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
 + (void) shutdown
 {
     @synchronized(__NRMAInitializationMutex) {
-        NRLOG_VERBOSE(@"Measurement Engine shutting down.");
+        NRLOG_AGENT_VERBOSE(@"Measurement Engine shutting down.");
         [NRMATaskQueue stop];
         [NRMAHarvestController removeHarvestListener:__engine];
         @synchronized(__NRMAEngineAccessorMutex) {
@@ -206,7 +206,7 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
 
 + (void) recordSessionStartMetric
 {
-    NRLOG_VERBOSE(@"Recording Session Start Metric.");
+    NRLOG_AGENT_VERBOSE(@"Recording Session Start Metric.");
     [NRMAMeasurements recordMetric:[[NRMAMetric alloc] initWithName:kNRMASessionStartMetric
                                                               value:@1
                                                               scope:nil]];
@@ -217,7 +217,7 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
 + (void) recordActivityTrace:(NRMAActivityTrace*)activityTrace
 {
     if ([[[NewRelicAgentInternal sharedInstance] getAppSessionStartDate] timeIntervalSince1970] > (activityTrace.startTime / 1000)) {
-        NRLOG_VERBOSE(@"Ignoring activity trace which started before current session start.");
+        NRLOG_AGENT_VERBOSE(@"Ignoring activity trace which started before current session start.");
         return;
     }
     
@@ -225,7 +225,7 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/ActivityTracesDropped"
                                                         value:@1
                                                         scope:@""]];
-        NRLOG_VERBOSE(@"Maximum number of Activity Traces collected. Skipping");
+        NRLOG_AGENT_VERBOSE(@"Maximum number of Activity Traces collected. Skipping");
         return;
     }
 
