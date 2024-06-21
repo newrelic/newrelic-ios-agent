@@ -206,9 +206,13 @@ static NSString* _osVersion;
 }
 
 + (BOOL) checkReachablityTo:(NSURL*)url {
+#if TARGET_OS_WATCH
+    return true;
+#else
     struct hostent *remoteHostEnt = gethostbyname([[url host] UTF8String]);
     if(remoteHostEnt == NULL) return false;
     return [[url host] isEqualToString:[NSString stringWithUTF8String:*remoteHostEnt->h_aliases]];
+#endif
 }
 
 + (NSString*) collectorHostDataURL
