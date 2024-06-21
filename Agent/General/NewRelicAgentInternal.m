@@ -62,6 +62,7 @@ BOOL _NRMAAgentTestModeEnabled = NO;
 
 // Use this to verify that we don't execute critical code in the "onbackground" process after we've come back to the foreground.
 static BOOL didFireEnterForeground;
+static BOOL didFireEnterBackground;
 
 static NRMAURLTransformer* urlTransformer;
 
@@ -182,10 +183,12 @@ static NewRelicAgentInternal* _sharedInstance;
 #if TARGET_OS_WATCH
         if([WKExtension sharedExtension].applicationState != WKApplicationStateBackground) {
             didFireEnterForeground = YES;
+            didFireEnterBackground = NO;
         }
 #else
         if ([UIApplication sharedApplication].applicationState != UIApplicationStateBackground) {
             didFireEnterForeground = YES;
+            didFireEnterBackground = NO;
         }
 #endif
         self->_agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:token
@@ -610,6 +613,12 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                     return;
                 }
                 didFireEnterForeground = YES;
+                
+                if([NRMAFlags shouldEnableBackgroundReporting] && didFireEnterBackground) {
+                    [self.analyticsController addCustomEvent:@"Return Harvest" withAttributes:nil];
+                    [NewRelicAgentInternal harvestNow];
+                }
+                didFireEnterBackground = NO;
 
                 /*
                  * NRMAMeasurements must be started before the
@@ -708,6 +717,7 @@ static UIBackgroundTaskIdentifier background_task;
     }
     // We are leaving the background.
     didFireEnterForeground = NO;
+    didFireEnterBackground = YES;
     
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateBackground;
@@ -804,7 +814,11 @@ static UIBackgroundTaskIdentifier background_task;
                                                  class:NSStringFromClass([NRMAHarvester class])
                                               selector:@"execute"];
                 } @finally {
-                    [self agentShutdown];
+                    if ([NRMAFlags shouldEnableBackgroundReporting]) {
+                        NRLOG_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
+                    } else {
+                        [self agentShutdown];
+                    }
                 }
 #endif
                 NRLOG_VERBOSE(@"Background Harvest Complete");
