@@ -24,7 +24,7 @@ final class NRTestAppUITests: XCTestCase {
 // expectation: TEST HARVEST /connect
         let expectation = XCTestExpectation(description: "Expected connect endpoint to be hit.")
 
-        dynamicStubs.setupStub(url: "/mobile/v4/connect", filename: "harvestConnector", method: .POST, matchRequestBody: harvestConnector, hitClosure: { actualRequestBody in
+        dynamicStubs.setupStub(url: "/mobile/v5/connect", filename: "harvestConnector", method: .POST, matchRequestBody: harvestConnector, hitClosure: { actualRequestBody in
             if actualRequestBody == harvestConnector {
                 expectation.fulfill() }
         })

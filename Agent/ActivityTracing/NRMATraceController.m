@@ -152,7 +152,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
             return;
         }
 
-        NRLOG_VERBOSE(@"\"%@\" Activity started", name);
+        NRLOG_AGENT_VERBOSE(@"\"%@\" Activity started", name);
         [NRMATraceController startTracing:NO];
         [[[NewRelicAgentInternal sharedInstance] analyticsController] setLastInteraction:name];
         NRMATraceMachine* traceMach = [self traceMachine];
@@ -190,7 +190,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         rootTrace.name = @"UI_Thread";
         rootTrace.entryTimestamp = NRMAMillisecondTimestamp();
         
-        NRLOG_VERBOSE(@"Started activity with root trace : %@", rootTrace);
+        NRLOG_AGENT_VERBOSE(@"Started activity with root trace : %@", rootTrace);
         
         [NRMATraceController startTracingWithRootTrace:rootTrace];
         
@@ -254,7 +254,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         }
 
         if(![NRMATraceController isTracingActive]) {
-            NRLOG_VERBOSE(@"completeTrace called while no trace was running.");
+            NRLOG_AGENT_VERBOSE(@"completeTrace called while no trace was running.");
             return NO;
         }
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -265,7 +265,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
             [traceMach invalidateTimers]; //invalidate any timers that might be running.
 
             NRMAActivityTrace *activityTrace = traceMach.activityTrace;
-            NRLOG_VERBOSE(@"\"%@\" Activity Completed.", activityTrace.name);
+            NRLOG_AGENT_VERBOSE(@"\"%@\" Activity Completed.", activityTrace.name);
 
 
             [traceMach.tracePool removeMeasurementConsumer:activityTrace.rootTrace];
@@ -305,7 +305,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
            parentTrace:(NRMATrace*)parentTrace
 {
     if (newTrace == nil || parentTrace == nil) {
-        NRLOG_VERBOSE(@"<Activity : \"%@\"> : newTraceSetup called with a nil parent or child trace: p=%@, c=%@",
+        NRLOG_AGENT_VERBOSE(@"<Activity : \"%@\"> : newTraceSetup called with a nil parent or child trace: p=%@, c=%@",
                       [NRMATraceController getCurrentActivityName],parentTrace, newTrace);
         return NO;
     }
@@ -437,7 +437,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     @synchronized(localTraceMachine) {
         if (localTraceMachine == nil) {
 
-            NRLOG_VERBOSE(@"tried to register a new trace but tracing is inactive");
+            NRLOG_AGENT_VERBOSE(@"tried to register a new trace but tracing is inactive");
             return nil;
         }
         
@@ -445,7 +445,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
                                                traceMachine:localTraceMachine];
         
         if( localTraceMachine.activityTrace.nodes >= NRMA_MAX_NODE_LIMIT){
-            NRLOG_VERBOSE(@"<Activity: \"%@\"> : NR_MAX_NODE_LIMIT(%d) reached dropping node",[NRMATraceController getCurrentActivityName],NRMA_MAX_NODE_LIMIT);
+            NRLOG_AGENT_VERBOSE(@"<Activity: \"%@\"> : NR_MAX_NODE_LIMIT(%d) reached dropping node",[NRMATraceController getCurrentActivityName],NRMA_MAX_NODE_LIMIT);
             childTrace.ignoreNode = YES;
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
             @try {
@@ -621,7 +621,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     // todo: use fine grained AT capture rules later.
     int currentCount = harvestData.activityTraces.count;
     int maxCount = configuration.at_capture.maxTotalTraceCount;
-    NRLOG_VERBOSE(@"Should collect traces: %d/%d", currentCount, maxCount);
+    NRLOG_AGENT_VERBOSE(@"Should collect traces: %d/%d", currentCount, maxCount);
     return harvestData.activityTraces.count < configuration.at_capture.maxTotalTraceCount;
 }
 

@@ -165,7 +165,7 @@
                         retrievedPayload.dtEnabled = true;
                     }
                     else {
-                        NRLOG_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                        NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
                     }
                 }
                 
@@ -190,7 +190,7 @@
                         retrievedPayload->setDistributedTracing(true);
                     }
                     else {
-                        NRLOG_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                        NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
                     }
                 }
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
@@ -314,22 +314,22 @@
     bool canInstrument = true;
 
     if (!url) {
-        NRLOG_WARNING(@"Ignoring %@ with a nil URL.", loggingKey);
+        NRLOG_AGENT_WARNING(@"Ignoring %@ with a nil URL.", loggingKey);
         canInstrument = false;
     }
     if (url.absoluteString.length < 10) {
-        NRLOG_WARNING(@"Ignoring %@ with an invalid URL: %@", loggingKey, url.absoluteString);
+        NRLOG_AGENT_WARNING(@"Ignoring %@ with an invalid URL: %@", loggingKey, url.absoluteString);
         canInstrument = false;
     }
     if (startTime <= 0) {
-        NRLOG_WARNING(@"Ignoring %@ with invalid start time (%lf): %@",
+        NRLOG_AGENT_WARNING(@"Ignoring %@ with invalid start time (%lf): %@",
                       loggingKey,
                       startTime,
                       url.absoluteString);
         canInstrument = false;
     }
     if (duration < 0) {
-        NRLOG_WARNING(@"Ignoring %@ with negative duration (%lf): %@",
+        NRLOG_AGENT_WARNING(@"Ignoring %@ with negative duration (%lf): %@",
                       loggingKey,
                       duration,
                       url.absoluteString);

@@ -42,14 +42,14 @@
     if(offlineData.count == 0){
         return;
     }
-    NRLOG_VERBOSE(@"Number of offline data posts: %lu", (unsigned long)offlineData.count);
+    NRLOG_AGENT_VERBOSE(@"Number of offline data posts: %lu", (unsigned long)offlineData.count);
     __block NSUInteger totalSize = 0;
     [offlineData enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         NSData *jsonData = (NSData *)obj;
         
         NSURLRequest* post = [self createDataPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
         if (post == nil) {
-            NRLOG_ERROR(@"Failed to create data POST");
+            NRLOG_AGENT_ERROR(@"Failed to create data POST");
             return;
         }
 
@@ -77,6 +77,13 @@
            forHTTPHeaderField:(NSString*)kCONNECT_TIME_HEADER];
     }
 
+    if (self.requestHeadersMap != nil && [self.requestHeadersMap count] > 0) {
+        for (NSString *key in self.requestHeadersMap) {
+            NSString* value = [self.requestHeadersMap objectForKey:key];
+            [postRequest addValue:value forHTTPHeaderField:key];
+        }
+    }
+  
     NSData* messageData = [message dataUsingEncoding:NSUTF8StringEncoding];
     unsigned long size = [messageData length];
     [postRequest setValue:[NSString stringWithFormat:@"%lu", size] forHTTPHeaderField:kNRMAActualSizeHeader];
@@ -102,14 +109,14 @@
     long size = wasCompressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
     if (size > kNRMAMaxPayloadSizeLimit) {
         NSString* subDest = [[post URL] lastPathComponent];
-        NRLOG_ERROR(@"Unable to send %@ harvest because payload is larger than 1 MB.", subDest);
+        NRLOG_AGENT_ERROR(@"Unable to send %@ harvest because payload is larger than 1 MB.", subDest);
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:subDest];
         harvestResponse.statusCode = ENTITY_TOO_LARGE;
         return harvestResponse;
     }
     
-    NRLOG_VERBOSE(@"NEWRELIC - REQUEST: %@", post);
-    NRLOG_VERBOSE(@"NEWRELIC - REQUEST BODY: %@", post.HTTPBody);
+    NRLOG_AGENT_VERBOSE(@"NEWRELIC - REQUEST: %@", post);
+    NRLOG_AGENT_VERBOSE(@"NEWRELIC - REQUEST BODY: %@", post.HTTPBody);
 
     NSData *initialReqBody = [post.HTTPBody copy];
     NSMutableURLRequest *modifiedRequest = [post mutableCopy];
@@ -124,7 +131,7 @@
             response = (NSHTTPURLResponse*)bresponse;
             dispatch_semaphore_signal(harvestRequestSemaphore);
             
-            NRLOG_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
+            NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
             
             // Enqueue Data Usage Supportability Metric for /data or /connect if the harvest request was successful.
             if (!error) {
@@ -140,7 +147,7 @@
     dispatch_semaphore_wait(harvestRequestSemaphore, dispatch_time(DISPATCH_TIME_NOW,  (uint64_t)(post.timeoutInterval*(double)(NSEC_PER_SEC))));
     
     if (error) {
-        NRLOG_ERROR(@"NEWRELIC CONNECT - Failed to retrieve collector response: %@",error);
+        NRLOG_AGENT_ERROR(@"NEWRELIC CONNECT - Failed to retrieve collector response: %@",error);
 
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {
@@ -160,7 +167,7 @@
 
     harvestResponse.statusCode = (int)response.statusCode;
     harvestResponse.responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    NRLOG_VERBOSE(@"NEWRELIC CONNECT - RESPONSE DATA: %@", harvestResponse.responseBody);
+    NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE DATA: %@", harvestResponse.responseBody);
     return harvestResponse;
 }
 
@@ -172,16 +179,16 @@
     NSError* error=nil;
     NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:self.connectionInformation options:0 error:&error];
     if (error) {
-        NRLOG_ERROR(@"Failed to generate JSON");
+        NRLOG_AGENT_ERROR(@"Failed to generate JSON");
         return  nil;
     }
     NSURLRequest* post = [self createConnectPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
     if (post == nil) {
-        NRLOG_ERROR(@"Failed to create connect POST");
+        NRLOG_AGENT_ERROR(@"Failed to create connect POST");
         return nil;
     }
     
-    NRLOG_VERBOSE(@"NEWRELIC - CONNECTION BODY: %@", self.connectionInformation.JSONObject);
+    NRLOG_AGENT_VERBOSE(@"NEWRELIC - CONNECTION BODY: %@", self.connectionInformation.JSONObject);
     
     return [self send:post];
 }
@@ -205,17 +212,17 @@
     NSError* error = nil;
     NSData* jsonData = [NRMAJSON dataWithJSONABLEObject:harvestable options:0 error:&error];
     if (error) {
-        NRLOG_ERROR(@"Failed to generate JSON");
+        NRLOG_AGENT_ERROR(@"Failed to generate JSON");
         return nil;
     }
         
     NSURLRequest* post = [self createDataPost:[[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding]];
     if (post == nil) {
-        NRLOG_ERROR(@"Failed to create data POST");
+        NRLOG_AGENT_ERROR(@"Failed to create data POST");
         return nil;
     }
     
-    NRLOG_VERBOSE(@"NEWRELIC - HARVEST DATA: %@", harvestable.JSONObject);
+    NRLOG_AGENT_VERBOSE(@"NEWRELIC - HARVEST DATA: %@", harvestable.JSONObject);
     
     return [self send:post];
 }

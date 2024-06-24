@@ -984,7 +984,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
             //if method is nil, this means we've instrumented a method, but the selector we are getting passed doesn't match the selector when when instrumented this method.
             //this means that we have encounted a 3rd party sdk swizzle conflict and now the app will hang in the while loop below. to prevent this from happening
             //let's throw an exeption instead, so we can immediately identify the issue.
-            NRLOG_ERROR(@"Unable to find instrumented method. It's possible another framework has renamed the selector. Throwing Exception...");
+            NRLOG_AGENT_ERROR(@"Unable to find instrumented method. It's possible another framework has renamed the selector. Throwing Exception...");
             @throw [NSException exceptionWithName:@"NRInvalidArgumentException"
                                            reason:[NSString stringWithFormat:@"New Relic detected an unrecognized selector, '%@', sent to '%@'. It's possible _cmd was renamed by an unsafe method_exchangeImplementations().",cleanSelector,NSStringFromClass(actingClass)]
                                          userInfo:nil];

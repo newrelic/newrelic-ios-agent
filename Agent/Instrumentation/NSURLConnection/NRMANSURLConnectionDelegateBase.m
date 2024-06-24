@@ -98,7 +98,7 @@
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    NRLOG_VERBOSE(@"connection:didFailWithError: for %@", connection.currentRequest.URL.absoluteString);
+    NRLOG_AGENT_VERBOSE(@"connection:didFailWithError: for %@", connection.currentRequest.URL.absoluteString);
 
     [_timer stopTimer];
 
@@ -115,7 +115,7 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-    NRLOG_VERBOSE(@"connectionDidFinishLoading: for %@", connection.currentRequest.URL.absoluteString);
+    NRLOG_AGENT_VERBOSE(@"connectionDidFinishLoading: for %@", connection.currentRequest.URL.absoluteString);
     [_timer stopTimer];
 
     [NRMANSURLConnectionSupport noticeResponse:_response
@@ -134,7 +134,7 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
-    NRLOG_VERBOSE(@"connection:didReceiveData: received %lu bytes for %@", (unsigned long)data.length, connection.currentRequest.URL.absoluteString);
+    NRLOG_AGENT_VERBOSE(@"connection:didReceiveData: received %lu bytes for %@", (unsigned long)data.length, connection.currentRequest.URL.absoluteString);
 
     _bytesReceived += data.length;
 
@@ -160,7 +160,7 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
-    NRLOG_VERBOSE(@"connection:didReceiveResponse: for %@", connection.currentRequest.URL.absoluteString);
+    NRLOG_AGENT_VERBOSE(@"connection:didReceiveResponse: for %@", connection.currentRequest.URL.absoluteString);
     _response = [response retain];
 
     if ([_realDelegate respondsToSelector:@selector(connection:didReceiveResponse:)]) {
@@ -173,7 +173,7 @@
  totalBytesWritten:(NSInteger)totalBytesWritten
 totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
 {
-    NRLOG_VERBOSE(@"connection:didSendBodyData: bytesWritten: %ld totalBytesWritten: %ld totalBytesExpectedToWrite:%ld for %@", (long)bytesWritten,
+    NRLOG_AGENT_VERBOSE(@"connection:didSendBodyData: bytesWritten: %ld totalBytesWritten: %ld totalBytesExpectedToWrite:%ld for %@", (long)bytesWritten,
                   (long)totalBytesWritten,
                   (long)totalBytesExpectedToWrite,
                   connection.currentRequest.URL.absoluteString);
@@ -197,10 +197,10 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
         if ([redirectResponse respondsToSelector:@selector(statusCode)]) {
             statusCode = ((NSHTTPURLResponse *)redirectResponse).statusCode;
         }
-        NRLOG_VERBOSE(@"REDIRECT %@ [%lu] ==> %@", redirectResponse.URL.absoluteString, (unsigned long)statusCode, request.URL.absoluteString);
+        NRLOG_AGENT_VERBOSE(@"REDIRECT %@ [%lu] ==> %@", redirectResponse.URL.absoluteString, (unsigned long)statusCode, request.URL.absoluteString);
     }
     else {
-        NRLOG_VERBOSE(@"REQUEST %@", request.URL.absoluteString);
+        NRLOG_AGENT_VERBOSE(@"REQUEST %@", request.URL.absoluteString);
         if (!_timer) {
             [self startDownloadTimer];
         }

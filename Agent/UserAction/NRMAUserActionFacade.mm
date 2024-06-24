@@ -43,9 +43,9 @@
                                                            [analyticsController checkOfflineStatus],
                                                            [analyticsController checkBackgroundStatus]);
         } catch (std::exception &error) {
-            NRLOG_VERBOSE(@"Failed to add TrackedGesture: %s.", error.what());
+            NRLOG_AGENT_VERBOSE(@"Failed to add TrackedGesture: %s.", error.what());
         } catch (...) {
-            NRLOG_VERBOSE(@"Failed to add TrackedGesture: unknown error.");
+            NRLOG_AGENT_VERBOSE(@"Failed to add TrackedGesture: unknown error.");
         }
     }
 }
