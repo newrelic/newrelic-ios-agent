@@ -115,11 +115,15 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                                         collectorHost.UTF8String);
 
         NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
+        NSError* error = nil;
 
         [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
                                   withIntermediateDirectories:YES
                                                    attributes:nil
-                                                        error:nil];
+                                                        error:&error];
+        if (error) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC SETUP - Failed to create handled exceptions directory: %@",error);
+        }
 
         _store = std::make_shared<NewRelic::Hex::HexStore>(backupStorePath.UTF8String);
 

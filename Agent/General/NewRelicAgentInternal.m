@@ -534,6 +534,17 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMA_setSessionStartTime([NSString stringWithFormat:@"%lld",
                               (long long)NRMAMillisecondTimestamp()].UTF8String);
 
+    NSString* backupStorePath = [NSString stringWithFormat:@"%@",[NewRelicInternalUtils getStorePath]];
+    NSError* error = nil;
+
+    [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
+                              withIntermediateDirectories:YES
+                                               attributes:nil
+                                                    error:&error];
+    if (error) {
+        NRLOG_AGENT_ERROR(@"NEWRELIC SETUP - Failed to create store directory: %@",error);
+    }
+
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
     [self initializeAnalytics];
     NRMAReachability* r = [NewRelicInternalUtils reachability];
@@ -545,13 +556,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         status = [r currentReachabilityStatus];
 #endif
     }
-
-    NSString* backupStorePath = [NSString stringWithFormat:@"%@",[NewRelicInternalUtils getStorePath]];
-
-    [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
-                              withIntermediateDirectories:YES
-                                               attributes:nil
-                                                    error:nil];
 
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController
