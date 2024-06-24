@@ -105,7 +105,7 @@ static NSString* const kAttributesKey = @"Attributes";
         self.timestamp = [coder decodeDoubleForKey:kTimestampKey];
         self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:kSessionElapsedTimeKey];
         self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:kEventTypeKey];
-        self.attributes = [coder decodeObjectOfClass:[NSString class] forKey:kAttributesKey];
+        self.attributes = [coder decodeObjectOfClasses:[NSSet setWithArray:@[[NSDictionary class],[NSMutableDictionary class],[NSString class]]] forKey:kAttributesKey];
     }
     
     return self;

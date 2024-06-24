@@ -26,7 +26,7 @@
                               withIntermediateDirectories:YES
                                                attributes:nil
                                                          error:&error]) {
-        NRLOG_VERBOSE(@"Failed to create crash report directory:  %@",error.description);
+        NRLOG_AGENT_VERBOSE(@"Failed to create crash report directory:  %@",error.description);
     }
 
 
@@ -35,7 +35,7 @@
                                           attributes:nil];
 
     if (!isWriteSuccessful) {
-        NRLOG_VERBOSE(@"failed to write crash report data to file.");
+        NRLOG_AGENT_VERBOSE(@"failed to write crash report data to file.");
     }
     return isWriteSuccessful;
 }

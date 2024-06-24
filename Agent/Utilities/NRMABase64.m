@@ -31,7 +31,7 @@ static const char* base64Key = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv
         uint8_t byteArray[3] = {0,0,0};
         NSInteger bytesRead = [dataStream read:byteArray maxLength:3];
         if (bytesRead < 0) {
-            NRLOG_VERBOSE(@"Base64 encoding failed.");
+            NRLOG_AGENT_VERBOSE(@"Base64 encoding failed.");
             return nil;
         } else if (bytesRead > 0) {
             // calculate the 1 base64 character

@@ -79,38 +79,38 @@ NRMAMetricSet* __metrics;
     }
     
     if (name == nil || category == nil) {
-        NRLOG_ERROR(@"+recordMetricWithName:Category:[...] must supply a name and category.");
+        NRLOG_AGENT_ERROR(@"+recordMetricWithName:Category:[...] must supply a name and category.");
         return;
     }
     
     if (![NRCustomMetrics isValidMetricInput:name]) {
-        NRLOG_ERROR(@"%@ Invalid name: %@ (failed match %@)",customMetricRecordFailureLog,
+        NRLOG_AGENT_ERROR(@"%@ Invalid name: %@ (failed match %@)",customMetricRecordFailureLog,
                     name,
                     kCustomMetricRegexPattern);
         return;
     }
     
     if (value <= 0) {
-        NRLOG_ERROR(@"%@ Value must be a non-zero postive number.",customMetricRecordFailureLog);
+        NRLOG_AGENT_ERROR(@"%@ Value must be a non-zero postive number.",customMetricRecordFailureLog);
         return;
     }
     
     if (![NRCustomMetrics isValidMetricInput:category]) {
-        NRLOG_ERROR(@"%@ Invalid category: %@ (failed match %@)",customMetricRecordFailureLog,
+        NRLOG_AGENT_ERROR(@"%@ Invalid category: %@ (failed match %@)",customMetricRecordFailureLog,
                     name,
                     kCustomMetricRegexPattern);
         return;
     }
     
     if ([valueUnits length] && ![NRCustomMetrics isValidMetricUnit:valueUnits]) {
-        NRLOG_ERROR(@"%@ Invalid valueUnits: %@ (failed match %@)",customMetricRecordFailureLog,
+        NRLOG_AGENT_ERROR(@"%@ Invalid valueUnits: %@ (failed match %@)",customMetricRecordFailureLog,
                     valueUnits,
                     kCustomUnitsRegexPattern);
         return;
     }
     
     if ([countUnits length] && ![NRCustomMetrics isValidMetricUnit:countUnits]) {
-        NRLOG_ERROR(@"%@ Invalid countUnits: %@ (failed match %@)",customMetricRecordFailureLog,
+        NRLOG_AGENT_ERROR(@"%@ Invalid countUnits: %@ (failed match %@)",customMetricRecordFailureLog,
                     countUnits,
                     kCustomUnitsRegexPattern);
         return;
@@ -125,7 +125,7 @@ NRMAMetricSet* __metrics;
     @try {
         #endif
         [NRCustomMetrics addMetric:metric value:value];
-        NRLOG_VERBOSE(@"Added metric name: %@ with value: %@",metric,value);
+        NRLOG_AGENT_VERBOSE(@"Added metric name: %@ with value: %@",metric,value);
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
         [NRMAExceptionHandler logException:exception
@@ -204,7 +204,7 @@ NRMAMetricSet* __metrics;
                                                                options:NSRegularExpressionCaseInsensitive
                                                                  error:&error];
         if (error) {
-            NRLOG_ERROR(@"Metric naming validator failed with error: %@",error);
+            NRLOG_AGENT_ERROR(@"Metric naming validator failed with error: %@",error);
         }
     });
     
@@ -225,7 +225,7 @@ NRMAMetricSet* __metrics;
                                                              options:NSRegularExpressionCaseInsensitive
                                                                error:&error];
         if (error) {
-            NRLOG_ERROR(@"Metric unit validator failed with error: %@",error);
+            NRLOG_AGENT_ERROR(@"Metric unit validator failed with error: %@",error);
         }
     });
     return [NewRelicInternalUtils validateString:input usingRegularExpression:__validUnitRX];

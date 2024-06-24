@@ -206,9 +206,13 @@ static NSString* _osVersion;
 }
 
 + (BOOL) checkReachablityTo:(NSURL*)url {
+#if TARGET_OS_WATCH
+    return true;
+#else
     struct hostent *remoteHostEnt = gethostbyname([[url host] UTF8String]);
     if(remoteHostEnt == NULL) return false;
     return [[url host] isEqualToString:[NSString stringWithUTF8String:*remoteHostEnt->h_aliases]];
+#endif
 }
 
 + (NSString*) collectorHostDataURL
@@ -267,7 +271,7 @@ static NSString* _osVersion;
 #if !TARGET_OS_WATCH
                     CTCarrier* carrier = [r getCarrierInfo];
 
-                    NRLOG_VERBOSE(@"Carrier Name: %@", carrier.carrierName);
+                    NRLOG_AGENT_VERBOSE(@"Carrier Name: %@", carrier.carrierName);
 
                     // Set a default carrier if the value returned is nil, blank, or 'carrier'.
                     if (carrier.carrierName == nil ||
@@ -316,7 +320,7 @@ static NSString* _osVersion;
 
 #ifdef NRMA_REACHABILITY_DEBUG
     if (debugLog.total % 1000 == 0){
-        NRLOG_INFO(@"DEBUG UPDATE: %@",debugLog);
+        NRLOG_AGENT_INFO(@"DEBUG UPDATE: %@",debugLog);
     }
 #endif
     return cachedCarrierName;
@@ -422,7 +426,7 @@ static NSString* _osVersion;
 #endif
 #ifdef NRMA_REACHABILITY_DEBUG
     if (debugLog.total % 1000 == 0){
-    NRLOG_INFO(@"DEBUG UPDATE: %@",debugLog);
+    NRLOG_AGENT_INFO(@"DEBUG UPDATE: %@",debugLog);
     }
 #endif
 #endif
@@ -485,7 +489,7 @@ static NSString* _osVersion;
 
 #ifdef NRMA_REACHABILITY_DEBUG
     if (debugLog.total % 1000 == 0){
-        NRLOG_INFO(@"%@",debugLog);
+        NRLOG_AGENT_INFO(@"%@",debugLog);
     }
 #endif
     if (!wanType.length) {
@@ -667,7 +671,7 @@ static NSString* __mach_model;
         name[3] = getpid();
 
         if (sysctl(name, 4, &info, &info_size, NULL, 0) == -1) {
-            NRLOG_VERBOSE(@"Checking for a running debugger via sysctl() failed: %s", strerror(errno));
+            NRLOG_AGENT_VERBOSE(@"Checking for a running debugger via sysctl() failed: %s", strerror(errno));
             debuggerIsAttached = false;
         }
 

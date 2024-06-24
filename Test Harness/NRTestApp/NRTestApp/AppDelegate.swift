@@ -34,18 +34,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
 
-
-        // Note: Disabled by default. Enable or disable (default) flag to enable log forwarding of logs passed to NewRelic.log* functions.
-
-        // TODO: LogReporting
-        // NOTE: SERVER VALUE OF log_reporting { enabled: true/false } will be respected above all else.
-        //NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_LogReporting)
-
-        // TODO: LogReporting
-        // Note: Disabled by default, it is required to enable NRLogTargetFile when using LogReporting.
-        //NRLogger.setLogTargets(NRLogTargetConsole.rawValue | NRLogTargetFile.rawValue)
-
-
         NewRelic.saltDeviceUUID(true)
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")
@@ -83,16 +71,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
-
-        // TODO: LogReporting
-        // REMOTE LOGGING: This is required to use a New Relic Mobile Logging.
-//
-//        if let logEntityGuid = plistHelper.objectFor(key: "logEntityGuid", plist: "NRAPI-Info") as? String, !logEntityGuid.isEmpty {
-//            NRLogger.setLogEntityGuid(logEntityGuid)
-//        }
-//        else {
-//            NewRelic.logInfo("NRLogger API uploading disabled. No Entity Guid given.")
-//        }
 
         NewRelic.logVerbose("NewRelic.start was called.")
         return true

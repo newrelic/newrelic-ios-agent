@@ -295,7 +295,7 @@
                                                           inMethod:OCMOCK_ANY
                                                         withMessage:[OCMArg checkWithBlock:^BOOL(NSString* obj) {
         return [obj containsString:@"Invalid exception."];
-    }]];
+    }] withAgentLogsOn: YES];
 
     
     XCTAssertNoThrow([hexController recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"

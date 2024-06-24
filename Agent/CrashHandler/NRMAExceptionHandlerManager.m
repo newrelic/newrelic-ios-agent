@@ -180,7 +180,7 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
         if ([crashFrameworkList count]) {
             errorMessage = [errorMessage stringByAppendingString:[NSString stringWithFormat:@"\n\tWe've detected the following framework(s) that may be responsible for replacing the uncaught exception handler:\n\t\t%@",[crashFrameworkList componentsJoinedByString:@"\n\t\t"]]];
         }
-        NRLOG_ERROR(@"%@",errorMessage);
+        NRLOG_AGENT_ERROR(@"%@",errorMessage);
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRMAExceptionHandlerHijackedMetric 
                                                         value:@1
                                                         scope:nil]];
