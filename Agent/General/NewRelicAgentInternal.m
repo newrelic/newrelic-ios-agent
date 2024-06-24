@@ -546,7 +546,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
     }
 
-    NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
+    NSString* backupStorePath = [NSString stringWithFormat:@"%@",[NewRelicInternalUtils getStorePath]];
 
     [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
                               withIntermediateDirectories:YES

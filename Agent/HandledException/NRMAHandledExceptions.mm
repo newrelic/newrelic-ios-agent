@@ -116,6 +116,11 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
         NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
 
+        [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:nil];
+
         _store = std::make_shared<NewRelic::Hex::HexStore>(backupStorePath.UTF8String);
 
         _persistenceManager = std::make_shared<NewRelic::Hex::HexPersistenceManager>(_store,_publisher);
