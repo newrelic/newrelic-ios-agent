@@ -560,6 +560,14 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
 
     }
+    else {
+        NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
+
+        [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:nil];
+    }
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
 

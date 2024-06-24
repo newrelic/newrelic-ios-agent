@@ -128,7 +128,7 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
-    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class], [NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
@@ -177,7 +177,7 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
-    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class], [NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
