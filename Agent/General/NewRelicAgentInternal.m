@@ -545,13 +545,20 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         status = [r currentReachabilityStatus];
 #endif
     }
+
+    NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
+
+    [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
+                              withIntermediateDirectories:YES
+                                               attributes:nil
+                                                    error:nil];
+
     if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
         self.handledExceptionsController = [[NRMAHandledExceptions alloc] initWithAnalyticsController:self.analyticsController
                                                                                      sessionStartTime:self.appSessionStartDate
                                                                                    agentConfiguration:self.agentConfiguration
                                                                                              platform:[NewRelicInternalUtils osName]
                                                                                             sessionId:[self currentSessionId]];
-
 
         if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
             [self.handledExceptionsController processAndPublishPersistedReports];
@@ -560,14 +567,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
 
     }
-    else {
-        NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
 
-        [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:nil];
-    }
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
 
