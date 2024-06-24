@@ -60,7 +60,7 @@
                     [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/BigActivityTracesDropped"
                                            value:[NSNumber numberWithInt:(int)jsonData.length]
                                        scope:@""]];
-                    NRLOG_VERBOSE(@"Activity Trace JSON size limit exceeded. Skipping");
+                    NRLOG_AGENT_VERBOSE(@"Activity Trace JSON size limit exceeded. Skipping");
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                      [NRMAExceptionHandler logException:exception

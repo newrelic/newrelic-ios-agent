@@ -68,7 +68,7 @@
 + (void) addThreadName:(NSString*)threadName forKey:(id)key
 {
     if (! threadName) {
-        NRLOG_ERROR(@"nil thread name passed to addThreadName:forKey:");
+        NRLOG_AGENT_ERROR(@"nil thread name passed to addThreadName:forKey:");
         return;
     }
    

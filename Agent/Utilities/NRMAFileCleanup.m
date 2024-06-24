@@ -37,7 +37,7 @@
                                                     toPath:[[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:filename]
                                                      error:&error];
             if (error) {
-                NRLOG_VERBOSE(@"failed to move old file %@ to new storage dir: %@",filename, error.description);
+                NRLOG_AGENT_VERBOSE(@"failed to move old file %@ to new storage dir: %@",filename, error.description);
             }
         }
     }

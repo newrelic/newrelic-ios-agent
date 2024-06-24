@@ -69,7 +69,7 @@ static void uncaught_exception_handler(NSException *exception) {
     __block BOOL startSuccessful = NO;
     // Validate we aren't already running
     if ([self isActive]) {
-        NRLOG_ERROR(@"Attempted to set exception handler when it was already set.");
+        NRLOG_AGENT_ERROR(@"Attempted to set exception handler when it was already set.");
         return NO;
     }
 
@@ -83,7 +83,7 @@ static void uncaught_exception_handler(NSException *exception) {
         if (![self isAppStoreEnvironment]) {
             if ([NewRelicInternalUtils isDebuggerAttached]) {
                 isDebugging = YES;
-                NRLOG_ERROR(@"New Relic Crash Reporting is DISABLED because it has detected the debugger is enabled.");
+                NRLOG_AGENT_ERROR(@"New Relic Crash Reporting is DISABLED because it has detected the debugger is enabled.");
             }
         }
 
@@ -97,7 +97,7 @@ static void uncaught_exception_handler(NSException *exception) {
 #else
             
             if (![_crashReporter enableCrashReporterAndReturnError:&error]) {
-                NRLOG_ERROR(@"Could not start crash reporter: %@",[error localizedDescription]);
+                NRLOG_AGENT_ERROR(@"Could not start crash reporter: %@",[error localizedDescription]);
                 startSuccessful =  NO;
                 return;
             }
@@ -109,10 +109,10 @@ static void uncaught_exception_handler(NSException *exception) {
             if (newHandler && newHandler != originalHandler) {
                 _exceptionHandler = newHandler;
                 self.isStarted = YES;
-                NRLOG_INFO(@"Exception handler initialized.");
+                NRLOG_AGENT_INFO(@"Exception handler initialized.");
                 startSuccessful = YES;
             } else {
-                NRLOG_ERROR(@"Set exception handler failed. Verify no other exception handlers have been set!");
+                NRLOG_AGENT_ERROR(@"Set exception handler failed. Verify no other exception handlers have been set!");
                 startSuccessful = NO;
             }
         }

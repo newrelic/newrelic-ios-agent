@@ -20,22 +20,22 @@
              selector:(NSString*)sel
 {
     if (exception == nil || cls == nil || sel == nil) {
-        NRLOG_ERROR(@"%@ called with invalid parameters", NSStringFromClass([self class]));
+        NRLOG_AGENT_ERROR(@"%@ called with invalid parameters", NSStringFromClass([self class]));
         return;
     }
 
     if (![exception isKindOfClass:[NSException class]]) {
-        NRLOG_ERROR(@"%@ called with invalid parameter %@",NSStringFromClass([self class]),exception);
+        NRLOG_AGENT_ERROR(@"%@ called with invalid parameter %@",NSStringFromClass([self class]),exception);
         return;
     }
 
     if (![cls isKindOfClass:[NSString class]]) {
-        NRLOG_ERROR(@"%@ called with invalid parameter as NSString",NSStringFromClass([self class]));
+        NRLOG_AGENT_ERROR(@"%@ called with invalid parameter as NSString",NSStringFromClass([self class]));
         return;
     }
 
     if (![sel isKindOfClass:[NSString class]]) {
-        NRLOG_ERROR(@"%@ called with invalid parameter as NSString",NSStringFromClass([self class]));
+        NRLOG_AGENT_ERROR(@"%@ called with invalid parameter as NSString",NSStringFromClass([self class]));
         return;
     }
 
