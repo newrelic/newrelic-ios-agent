@@ -21,7 +21,7 @@
 }
 
 - (void) consumeMeasurement:(NRMAMeasurement *)measurement {
-    NRLOG_VERBOSE(@"Measurement: %@",measurement);
+    NRLOG_AGENT_VERBOSE(@"Measurement: %@",measurement);
     self.result = measurement;
     [self.consumedMeasurements addObject:measurement];
 }

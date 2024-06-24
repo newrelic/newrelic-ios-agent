@@ -88,11 +88,11 @@ double NRMA_timeInMillis(double time) {
 
 - (double) timeElapsedInSeconds {
     if (self->_startTimeMillis <= 0) {
-        NRLOG_WARNING(@"NRMATimer does not have a valid start time: %lf", self->_startTimeMillis);
+        NRLOG_AGENT_WARNING(@"NRMATimer does not have a valid start time: %lf", self->_startTimeMillis);
         return 0;
     }
     if (self->_endTimeMillis < self->_startTimeMillis) {
-        NRLOG_VERBOSE(@"NRMATimer has a negative duration: %lf => %lf", self->_startTimeMillis, self->_endTimeMillis);
+        NRLOG_AGENT_VERBOSE(@"NRMATimer has a negative duration: %lf => %lf", self->_startTimeMillis, self->_endTimeMillis);
         return 0;
     }
     return NRMA_timeElapsedInSeconds(self->_startTimeMillis, self->_endTimeMillis);
@@ -100,11 +100,11 @@ double NRMA_timeInMillis(double time) {
 
 - (double) timeElapsedInMilliSeconds {
     if (self->_startTimeMillis <= 0) {
-        NRLOG_WARNING(@"NRMATimer does not have a valid start time: %lf", self->_startTimeMillis);
+        NRLOG_AGENT_WARNING(@"NRMATimer does not have a valid start time: %lf", self->_startTimeMillis);
         return 0;
     }
     if (self->_endTimeMillis < self->_startTimeMillis) {
-        NRLOG_VERBOSE(@"NRMATimer has a negative duration: %lf => %lf", self->_startTimeMillis, self->_endTimeMillis);
+        NRLOG_AGENT_VERBOSE(@"NRMATimer has a negative duration: %lf => %lf", self->_startTimeMillis, self->_endTimeMillis);
         return 0;
     }
     return NRMA_timeElapsedInMilliSeconds(self->_startTimeMillis, self->_endTimeMillis);
@@ -112,7 +112,7 @@ double NRMA_timeInMillis(double time) {
 
 - (double) startTimeInMillis {
     if (self->_startTimeMillis <= 0) {
-        NRLOG_WARNING(@"NRMATimer does not have a valid start time: %lf", self->_startTimeMillis);
+        NRLOG_AGENT_WARNING(@"NRMATimer does not have a valid start time: %lf", self->_startTimeMillis);
         return 0;
     }
     return NRMA_timeInMillis(self->_startTimeMillis);
@@ -120,7 +120,7 @@ double NRMA_timeInMillis(double time) {
 
 - (double) endTimeInMillis {
     if (self->_endTimeMillis <= 0) {
-        NRLOG_WARNING(@"NRMATimer does not have a valid end time: %lf", self->_endTimeMillis);
+        NRLOG_AGENT_WARNING(@"NRMATimer does not have a valid end time: %lf", self->_endTimeMillis);
         return 0;
     }
     return NRMA_timeInMillis(self->_endTimeMillis);

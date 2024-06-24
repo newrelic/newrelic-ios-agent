@@ -42,7 +42,7 @@ static NSMutableDictionary* __threadDictionaries;
 + (void)setThreadRootTrace:(NRMATrace *)root
 {
     if (root == nil) {
-        NRLOG_VERBOSE(@"Attempted to load a nil trace.");
+        NRLOG_AGENT_VERBOSE(@"Attempted to load a nil trace.");
         return;
     }
 
@@ -55,7 +55,7 @@ static NSMutableDictionary* __threadDictionaries;
         [stack addObject:root];
     }
 
-    NRLOG_VERBOSE(@"Trace %@ is now active", root);
+    NRLOG_AGENT_VERBOSE(@"Trace %@ is now active", root);
 }
 
 /** delete thread-local data on all threads */
@@ -77,7 +77,7 @@ static NSMutableDictionary* __threadDictionaries;
 + (BOOL) pushChild:(NRMATrace *)childTrace forParent:(NRMATrace *)parentTrace
 {
     if (childTrace == nil || parentTrace == nil) {
-        NRLOG_VERBOSE(@"<Activity: \"%@\">  Trace enterMethod has nil child or parent trace segment. p=%@, c=%@",[NRMATraceController getCurrentActivityName], parentTrace, childTrace);
+        NRLOG_AGENT_VERBOSE(@"<Activity: \"%@\">  Trace enterMethod has nil child or parent trace segment. p=%@, c=%@",[NRMATraceController getCurrentActivityName], parentTrace, childTrace);
         return NO;
     }
     BOOL parentIsOnSameThread = [self isThreadMatchForChild:childTrace parent:parentTrace];
@@ -101,7 +101,7 @@ static NSMutableDictionary* __threadDictionaries;
 {
     int error = 0;
     if (stack.count > 0) {
-        NRLOG_VERBOSE(@"<Activity: \"%@\"> thread local stack is not empty! Entering thread %ud from %ud, p=%@, c=%@, stack=%@",
+        NRLOG_AGENT_VERBOSE(@"<Activity: \"%@\"> thread local stack is not empty! Entering thread %ud from %ud, p=%@, c=%@, stack=%@",
                       [NRMATraceController getCurrentActivityName],
                       child.threadInfo.identity,
                       parent.threadInfo.identity,
@@ -125,7 +125,7 @@ static NSMutableDictionary* __threadDictionaries;
 
             if ([NRMAThreadLocalStore threadLocalTrace] != parent) {
                 if (![self validateIsSerialParent:parent child:child]) {
-                    NRLOG_ERROR(@"<Activity: \"%@\"> threadLocalTrace is not parentTrace! On thread %ud, p=%@, c=%@, f=%@, stack=%@",
+                    NRLOG_AGENT_ERROR(@"<Activity: \"%@\"> threadLocalTrace is not parentTrace! On thread %ud, p=%@, c=%@, f=%@, stack=%@",
                                 [NRMATraceController getCurrentActivityName],
                                 child.threadInfo.identity,
                                 parent, child, [NRMAThreadLocalStore threadLocalTrace], stack);
@@ -138,7 +138,7 @@ static NSMutableDictionary* __threadDictionaries;
             } else if ([stack lastObject] != parent) {
                 if (![self validateIsSerialParent:parent child:child]) {
                     
-                    NRLOG_ERROR(@"<Activity: \"%@\"> parentTrace is not at bottom of threadLocalStack! On thread %ud, p=%@, c=%@, f=%@, stack=%@",
+                    NRLOG_AGENT_ERROR(@"<Activity: \"%@\"> parentTrace is not at bottom of threadLocalStack! On thread %ud, p=%@, c=%@, f=%@, stack=%@",
                                 [NRMATraceController getCurrentActivityName],
                                 child.threadInfo.identity,
                                 parent, child, [NRMAThreadLocalStore threadLocalTrace], stack);
@@ -184,12 +184,12 @@ static NSMutableDictionary* __threadDictionaries;
         if (trace.threadInfo.identity != pthread_mach_thread_np(pthread_self()))
         {
             // whoops, trace is on the wrong thread
-            NRLOG_VERBOSE(@"<Activity: \"%@\"> popCurrentTrace: exited trace is not on the current thread! et=%@, tlc=%@",[NRMATraceController getCurrentActivityName], trace, currentTrace);
+            NRLOG_AGENT_VERBOSE(@"<Activity: \"%@\"> popCurrentTrace: exited trace is not on the current thread! et=%@, tlc=%@",[NRMATraceController getCurrentActivityName], trace, currentTrace);
             return NO;
         }
 
         if (trace != currentTrace) {
-            NRLOG_VERBOSE(@"<Activity: \"%@\"> popCurrentTrace: exited trace is not the current threadLocalTrace. et=%@, tlc=%@",[NRMATraceController getCurrentActivityName], trace, currentTrace);
+            NRLOG_AGENT_VERBOSE(@"<Activity: \"%@\"> popCurrentTrace: exited trace is not the current threadLocalTrace. et=%@, tlc=%@",[NRMATraceController getCurrentActivityName], trace, currentTrace);
         }
 
         if ([stack lastObject] != trace) {
@@ -205,7 +205,7 @@ static NSMutableDictionary* __threadDictionaries;
         }
         else
         {
-            NRLOG_VERBOSE(@"<Activity: \"%@\"> popCurrentTrace: exited trace is not on the current stack! et=%@, tlc=%@",[NRMATraceController getCurrentActivityName], trace, stack);
+            NRLOG_AGENT_VERBOSE(@"<Activity: \"%@\"> popCurrentTrace: exited trace is not on the current stack! et=%@, tlc=%@",[NRMATraceController getCurrentActivityName], trace, stack);
         }
 
         *parent = [stack lastObject];
@@ -262,7 +262,7 @@ static NSMutableDictionary* __threadDictionaries;
 + (void) setThreadLocalTrace:(NRMATrace*)trace
 {
     if (trace == nil) {
-        NRLOG_ERROR(@"Attempted to set a nil trace to the thread  local dictionary");
+        NRLOG_AGENT_ERROR(@"Attempted to set a nil trace to the thread  local dictionary");
         return;
     }
 

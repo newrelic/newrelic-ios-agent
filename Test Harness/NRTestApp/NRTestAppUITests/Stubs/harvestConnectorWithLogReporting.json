@@ -19,6 +19,7 @@
     "entity_guid": "MTA4MTY5OTR8TU9ASUxFfEFQUExDQ0FUSU9OfDM5MDI3NDMz",
     "log_reporting": {
         "enabled": true,
-        "level": "VERBOSE"
+        "level": "VERBOSE",
+        "sampling_rate": 10.0
     }
 }

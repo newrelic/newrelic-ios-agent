@@ -95,7 +95,7 @@
     if ([measurement isKindOfClass:[NRMAHTTPTransactionMeasurement class]]) {
         NSDate* sessionStartDate = [[NewRelicAgentInternal sharedInstance] getAppSessionStartDate];
         if(((NRMAHTTPTransactionMeasurement*)measurement).startTime < [sessionStartDate timeIntervalSince1970]*1000) {
-            NRLOG_WARNING(@"Trace machine ignoring network transaction older than session. Session started at %@, where network transaction began %f milliseconds prior.",sessionStartDate, [sessionStartDate timeIntervalSince1970]*1000 - ((NRMAHTTPTransactionMeasurement*)measurement).startTime);
+            NRLOG_AGENT_WARNING(@"Trace machine ignoring network transaction older than session. Session started at %@, where network transaction began %f milliseconds prior.",sessionStartDate, [sessionStartDate timeIntervalSince1970]*1000 - ((NRMAHTTPTransactionMeasurement*)measurement).startTime);
             return;
         }
         _networkTimeMillis += ((NRMAHTTPTransactionMeasurement*)measurement).totalTime;

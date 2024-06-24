@@ -15,7 +15,7 @@
 
 + (NSData*) dataWithJSONABLEObject:(id<NRMAJSONABLE>)obj options:(NSJSONWritingOptions)opt error:(NSError *__autoreleasing *)error {
     if (![obj conformsToProtocol:@protocol(NRMAJSONABLE)]) {
-        NRLOG_ERROR(@"object passed to NRMAJSON not jsonable.");
+        NRLOG_AGENT_ERROR(@"object passed to NRMAJSON not jsonable.");
         (*error) = [NSError errorWithDomain:@"InvalidFirstParameter" code:-1 userInfo:nil];
         return nil;
     }
@@ -26,7 +26,7 @@
         jsonObj = [obj JSONObject];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
-        NRLOG_ERROR(@"object passed to NRJSON failed to convert to json.");
+        NRLOG_AGENT_ERROR(@"object passed to NRJSON failed to convert to json.");
         [NRMAExceptionHandler logException:exception
                                    class:NSStringFromClass([obj class])
                                 selector:@"JSONObject"];

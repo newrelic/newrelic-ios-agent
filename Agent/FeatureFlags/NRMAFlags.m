@@ -167,9 +167,7 @@ static NSString* __deviceIdentifierReplacement = NULL;
 }
 
 + (BOOL) shouldEnableLogReporting {
-    // TODO: LogReporting
-    return NO;
-//    return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_LogReporting) != 0;
 }
 + (BOOL) shouldEnableNewEventSystem {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_NewEventSystem) != 0;
@@ -232,10 +230,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_OfflineStorage) == NRFeatureFlag_OfflineStorage) {
         [retArray addObject:@"OfflineStorage"];
     }
-// TODO: LogReporting
-//    if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
-//        [retArray addObject:@"LogReporting"];
-//    }
+    if ((flags & NRFeatureFlag_LogReporting) == NRFeatureFlag_LogReporting) {
+        [retArray addObject:@"LogReporting"];
+    }
     if ((flags & NRFeatureFlag_NewEventSystem) == NRFeatureFlag_NewEventSystem) {
         [retArray addObject:@"NewEventSystem"];
     }

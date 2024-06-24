@@ -22,7 +22,7 @@
         } 
 
         if(error != nil) {
-            NRLOG_ERROR(@"Failed to convert analytic attributes string to havestable object: %@",error.localizedDescription);
+            NRLOG_AGENT_ERROR(@"Failed to convert analytic attributes string to havestable object: %@",error.localizedDescription);
             return nil;
         }
 
@@ -34,7 +34,7 @@
         }
 
         if  (error != nil) {
-            NRLOG_ERROR(@"Failed to convert analytic events string to havestable object: %@",error.localizedDescription);
+            NRLOG_AGENT_ERROR(@"Failed to convert analytic events string to havestable object: %@",error.localizedDescription);
             return nil;
         }
     }

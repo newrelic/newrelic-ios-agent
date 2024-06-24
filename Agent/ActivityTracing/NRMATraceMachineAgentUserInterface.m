@@ -26,14 +26,14 @@ static NSString * const kNRMAActivityIdentifierKey = @"com.newrelic.customapi.tr
 {
 
     if (![name length]) {
-        NRLOG_ERROR(@"Attempted to call startCustomActivity with empty \"name\" value. Aborting custom activity.");
+        NRLOG_AGENT_ERROR(@"Attempted to call startCustomActivity with empty \"name\" value. Aborting custom activity.");
         return nil;
     }
 
     NSString* cleansedName = [NewRelicInternalUtils cleanseStringForCollector:name];
 
     if (![cleansedName length]) {
-        NRLOG_ERROR(@"name = \"%@\" passed to \"start interaction\" contains no legal characters. Please constrain characters to only alpha-numeric values. Aborting custom activity.",name);
+        NRLOG_AGENT_ERROR(@"name = \"%@\" passed to \"start interaction\" contains no legal characters. Please constrain characters to only alpha-numeric values. Aborting custom activity.",name);
         return nil;
     }
 

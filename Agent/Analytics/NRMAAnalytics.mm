@@ -118,27 +118,27 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
             _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
                 if ([name length] == 0) {
-                    NRLOG_ERROR(@"invalid attribute: name length = 0");
+                    NRLOG_AGENT_ERROR(@"invalid attribute: name length = 0");
                     return false;
                 }
                 if ([name hasPrefix:@" "]) {
-                    NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
+                    NRLOG_AGENT_ERROR(@"invalid attribute: name prefix = \" \"");
                     return false;
                 }
                 // check if attribute name is reserved or attribute name matches reserved prefix.
                 for (NSString* key in [NRMAAnalytics reservedKeywords]) {
                     if ([key isEqualToString:name]) {
-                        NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                        NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
                         return false;
                     }
                     if ([name hasPrefix:key])  {
-                        NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                        NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
                         return false;
                     }
                 }
                 // check if attribute name exceeds max length.
                 if ([name length] > kNRMA_Attrib_Max_Name_Length) {
-                    NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
+                    NRLOG_AGENT_ERROR(@"invalid attribute: name length exceeds limit");
                     return false;
                 }
                 return true;
@@ -146,16 +146,16 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             } valueValidator:^BOOL(id value) {
                 if ([value isKindOfClass:[NSString class]]) {
                     if ([(NSString*)value length] == 0) {
-                        NRLOG_ERROR(@"invalid attribute: value length = 0");
+                        NRLOG_AGENT_ERROR(@"invalid attribute: value length = 0");
                         return false;
                     }
                     else if ([(NSString*)value length] >= kNRMA_Attrib_Max_Value_Size_Bytes) {
-                        NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
+                        NRLOG_AGENT_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
                         return false;
                     }
                 }
                 if (value == nil || [value isKindOfClass:[NSNull class]]) {
-                    NRLOG_ERROR(@"invalid attribute: value cannot be nil");
+                    NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be nil");
                     return false;
                 }
                 
@@ -195,7 +195,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         // Use old Event system
         else {
             if(!__has_feature(cxx_exceptions)) {
-                NRLOG_ERROR(@"C++ exception handling is disabled. This will cause incorrect behavior in the New Relic Agent.");
+                NRLOG_AGENT_ERROR(@"C++ exception handling is disabled. This will cause incorrect behavior in the New Relic Agent.");
                 @throw [NSException exceptionWithName:@"Invalid Configuration" reason:@"c++ exception handling is disabled" userInfo:nil];
             }
 
@@ -314,7 +314,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSNumber* statusCode = @(responseData.statusCode);
         
         if (requestUrl.length == 0) {
-            NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
+            NRLOG_AGENT_WARNING(@"Unable to add NetworkEvent with empty URL.");
             return false;
         }
         
@@ -368,7 +368,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
         return [_eventManager addEvent:[event autorelease]];
     } @catch (NSException *exception) {
-        NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
+        NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);
     }
 }
 
@@ -429,7 +429,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSNumber* statusCode = @(responseData.statusCode);
         
         if (requestUrl.length == 0) {
-            NRLOG_WARNING(@"Unable to add NetworkEvent with empty URL.");
+            NRLOG_AGENT_WARNING(@"Unable to add NetworkEvent with empty URL.");
             return nil;
         }
         
@@ -499,7 +499,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
         return event;
     } @catch (NSException *exception) {
-        NRLOG_ERROR(@"Failed to add Network Event.: %@", exception.reason);
+        NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);
     }
 }
 
@@ -594,14 +594,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
             } else {
-                NRLOG_VERBOSE(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                NRLOG_AGENT_VERBOSE(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
                 return NO;
             }
         } catch (std::exception& error) {
-            NRLOG_VERBOSE(@"failed to add NR session attribute, \'%@\' : %s",name, error.what());
+            NRLOG_AGENT_VERBOSE(@"failed to add NR session attribute, \'%@\' : %s",name, error.what());
             return NO;
         } catch (...) {
-            NRLOG_VERBOSE(@"failed to add NR session attribute.");
+            NRLOG_AGENT_VERBOSE(@"failed to add NR session attribute.");
             return NO;
             
         }
@@ -637,14 +637,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
             } else {
-                NRLOG_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                NRLOG_AGENT_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
                 return NO;
             }
         } catch (std::exception& error) {
-            NRLOG_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
+            NRLOG_AGENT_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
             return NO;
         } catch (...) {
-            NRLOG_ERROR(@"failed to add session attribute.");
+            NRLOG_AGENT_ERROR(@"failed to add session attribute.");
             return NO;
             
         }
@@ -678,14 +678,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
             } else {
-                NRLOG_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                NRLOG_AGENT_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
                 return NO;
             }
         } catch (std::exception& error) {
-            NRLOG_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
+            NRLOG_AGENT_ERROR(@"failed to add session attribute: \'%@\': %s",name ,error.what());
             return NO;
         } catch (...) {
-            NRLOG_ERROR(@"failed to add session attribute.");
+            NRLOG_AGENT_ERROR(@"failed to add session attribute.");
             return NO;
             
         }
@@ -709,10 +709,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         try {
             return _analyticsController->removeSessionAttribute(name.UTF8String);
         } catch (std::exception& e) {
-            NRLOG_ERROR(@"Failed to remove attribute: %s",e.what());
+            NRLOG_AGENT_ERROR(@"Failed to remove attribute: %s",e.what());
             return NO;
         } catch (...) {
-            NRLOG_ERROR(@"Failed to remove attribute.");
+            NRLOG_AGENT_ERROR(@"Failed to remove attribute.");
             return NO;
         }
     }
@@ -724,10 +724,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         try {
             return _analyticsController->clearSessionAttributes();
         } catch (std::exception& e) {
-            NRLOG_ERROR(@"Failed to remove all attributes: %s",e.what());
+            NRLOG_AGENT_ERROR(@"Failed to remove all attributes: %s",e.what());
             return NO;
         } catch (...) {
-            NRLOG_ERROR(@"Failed to remove all attributes.");
+            NRLOG_AGENT_ERROR(@"Failed to remove all attributes.");
             return NO;
             
         }
@@ -750,7 +750,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         try {
             auto event = _analyticsController->newEvent(name.UTF8String);
             if (event == nullptr) {
-                NRLOG_ERROR(@"Unable to create event with name: \"%@\"",name);
+                NRLOG_AGENT_ERROR(@"Unable to create event with name: \"%@\"",name);
                 return NO;
             }
             
@@ -761,10 +761,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
-            NRLOG_ERROR(@"Failed to add event: %s",e.what());
+            NRLOG_AGENT_ERROR(@"Failed to add event: %s",e.what());
             return NO;
         } catch (...) {
-            NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
+            NRLOG_AGENT_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
             return NO;
         }
         return NO;
@@ -775,7 +775,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         withAttributes:(NSDictionary*)attributes {
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(!name.length) {
-            NRLOG_ERROR(@"Breadcrumb must be named.");
+            NRLOG_AGENT_ERROR(@"Breadcrumb must be named.");
             return NO;
         }
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
@@ -783,7 +783,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                      withAttributeValidator:_attributeValidator];
         if (event == nil) {
-            NRLOG_ERROR(@"Unable to create breadcrumb event");
+            NRLOG_AGENT_ERROR(@"Unable to create breadcrumb event");
             return NO;
         }
         
@@ -798,13 +798,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         try {
             
             if(!name.length) {
-                NRLOG_ERROR(@"Breadcrumb must be named.");
+                NRLOG_AGENT_ERROR(@"Breadcrumb must be named.");
                 return NO;
             }
             
             auto event = _analyticsController->newBreadcrumbEvent();
             if (event == nullptr) {
-                NRLOG_ERROR(@"Unable to create breadcrumb event");
+                NRLOG_AGENT_ERROR(@"Unable to create breadcrumb event");
                 return NO;
             }
             
@@ -816,10 +816,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
-            NRLOG_ERROR(@"Failed to add event: %s",e.what());
+            NRLOG_AGENT_ERROR(@"Failed to add event: %s",e.what());
             return NO;
         } catch (...) {
-            NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
+            NRLOG_AGENT_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",name);
             return NO;
         }
         return NO;
@@ -836,7 +836,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                      options:NSRegularExpressionUseUnicodeWordBoundaries
                                                                        error:&error];
             if (error != nil) {
-                NRLOG_ERROR(@"addCustomEvent failed with error: %@",error);
+                NRLOG_AGENT_ERROR(@"addCustomEvent failed with error: %@",error);
                 return false;
             }
         }
@@ -846,7 +846,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                    range:NSMakeRange(0, eventType.length)];
 
         if (!(textCheckingResults.count > 0 && ((NSTextCheckingResult*)textCheckingResults[0]).range.length == eventType.length)) {
-            NRLOG_ERROR(@"Failed to add event type: %@. EventType is may only contain word characters, numbers, spaces, colons, underscores, and periods.",eventType);
+            NRLOG_AGENT_ERROR(@"Failed to add event type: %@. EventType is may only contain word characters, numbers, spaces, colons, underscores, and periods.",eventType);
             return NO;
         }
 
@@ -864,7 +864,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
             
             if (event == nullptr) {
-                NRLOG_ERROR(@"Unable to create event with name: \"%@\"",eventType);
+                NRLOG_AGENT_ERROR(@"Unable to create event with name: \"%@\"",eventType);
                 return NO;
             }
                         
@@ -876,10 +876,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
         }
     } catch (std::exception& e){
-        NRLOG_ERROR(@"Failed to add event: %s",e.what());
+        NRLOG_AGENT_ERROR(@"Failed to add event: %s",e.what());
         return NO;
     } catch (...) {
-        NRLOG_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",eventType);
+        NRLOG_AGENT_ERROR(@"Failed to add event named: %@.\nPossible due to reserved word conflict.",eventType);
         return NO;
     }
     return NO;
@@ -899,12 +899,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             } else if ([NewRelicInternalUtils isBool:number]) {
                 event->addAttribute(key.UTF8String,number.boolValue);
             } else {
-                NRLOG_ERROR(@"Failed to add attribute \"%@\" value is invalid NSNumber with objCType: %s",key,[number objCType]);
+                NRLOG_AGENT_ERROR(@"Failed to add attribute \"%@\" value is invalid NSNumber with objCType: %s",key,[number objCType]);
             }
         } else if([value isKindOfClass:[NRMABool class]]) {
             event->addAttribute(key.UTF8String, (bool)((NRMABool*)value).value);
         } else {
-            NRLOG_ERROR(@"Failed to add attribute values must be type NSNumber* or NSString*.");
+            NRLOG_AGENT_ERROR(@"Failed to add attribute values must be type NSNumber* or NSString*.");
         }
     }
     return YES;
@@ -1019,9 +1019,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             stream <<std::setprecision(13)<< *events;
             return [NSString stringWithUTF8String:stream.str().c_str()];
         } catch (std::exception& e) {
-            NRLOG_VERBOSE(@"Failed to generate event json: %s",e.what());
+            NRLOG_AGENT_VERBOSE(@"Failed to generate event json: %s",e.what());
         } catch (...) {
-            NRLOG_VERBOSE(@"Failed to generate event json");
+            NRLOG_AGENT_VERBOSE(@"Failed to generate event json");
         }
         return nil;
     }
@@ -1037,9 +1037,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             stream <<std::setprecision(13)<<*attributes;
             return [NSString stringWithUTF8String:stream.str().c_str()];
         } catch (std::exception& e) {
-            NRLOG_VERBOSE(@"Failed to generate attributes json: %s",e.what());
+            NRLOG_AGENT_VERBOSE(@"Failed to generate attributes json: %s",e.what());
         } catch (...) {
-            NRLOG_VERBOSE(@ "Failed to generate attributes json.");
+            NRLOG_AGENT_VERBOSE(@ "Failed to generate attributes json.");
         }
         return nil;
     }
@@ -1060,9 +1060,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
             return jsonString;
         } catch (std::exception& e) {
-            NRLOG_VERBOSE(@"failed to generate session attribute json: %s", e.what());
+            NRLOG_AGENT_VERBOSE(@"failed to generate session attribute json: %s", e.what());
         } catch (...) {
-            NRLOG_VERBOSE(@"failed to generate session attribute json.");
+            NRLOG_AGENT_VERBOSE(@"failed to generate session attribute json.");
         }
         return nil;
     }
@@ -1086,10 +1086,10 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             
             return jsonString;
         } catch (std::exception& e) {
-            NRLOG_VERBOSE(@"Failed to fetch event dup store: %s",e.what());
+            NRLOG_AGENT_VERBOSE(@"Failed to fetch event dup store: %s",e.what());
             
         } catch (...) {
-            NRLOG_VERBOSE(@"Failed to fetch event dup store.");
+            NRLOG_AGENT_VERBOSE(@"Failed to fetch event dup store.");
         }
     }
     
@@ -1102,9 +1102,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [self attributeDupStore].clear();
         [self eventDupStore].clear();
     } catch (std::exception& e) {
-        NRLOG_VERBOSE(@"Failed to clear dup stores: %s",e.what());
+        NRLOG_AGENT_VERBOSE(@"Failed to clear dup stores: %s",e.what());
     } catch(...) {
-        NRLOG_VERBOSE(@"Failed to clear dup stores.");
+        NRLOG_AGENT_VERBOSE(@"Failed to clear dup stores.");
     }
 }
 
@@ -1118,9 +1118,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             _analyticsController->clearAttributesDuplicationStore();
             _analyticsController->clearEventsDuplicationStore();
         } catch (std::exception& e) {
-            NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs, %s",e.what());
+            NRLOG_AGENT_VERBOSE(@"Failed to clear last sessions' analytcs, %s",e.what());
         } catch (...) {
-            NRLOG_VERBOSE(@"Failed to clear last sessions' analytcs.");
+            NRLOG_AGENT_VERBOSE(@"Failed to clear last sessions' analytcs.");
         }
     }
 }
@@ -1148,20 +1148,20 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (void) endSessionReusable {
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(![self addSessionEndAttribute]) { //has exception handling within
-            NRLOG_ERROR(@"failed to add session end attribute.");
+            NRLOG_AGENT_ERROR(@"failed to add session end attribute.");
         }
 
         if(![self addSessionEvent]) { //has exception handling within
-            NRLOG_ERROR(@"failed to add a session event");
+            NRLOG_AGENT_ERROR(@"failed to add a session event");
         }
     }
     else {
         if(!_analyticsController->addSessionEndAttribute()) { //has exception handling within
-            NRLOG_ERROR(@"failed to add session end attribute.");
+            NRLOG_AGENT_ERROR(@"failed to add session end attribute.");
         }
 
         if(!_analyticsController->addSessionEvent()) { //has exception handling within
-            NRLOG_ERROR(@"failed to add a session event");
+            NRLOG_AGENT_ERROR(@"failed to add a session event");
         }
     }
 
@@ -1194,7 +1194,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
 
     if (![_sessionAttributeManager setNRSessionAttribute:kNRMA_RA_sessionDuration value:@(elapsed)]) {
-        NRLOG_ERROR(@"failed to add session end attribute.");
+        NRLOG_AGENT_ERROR(@"failed to add session end attribute.");
         return NO;
     }
 

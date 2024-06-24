@@ -90,14 +90,15 @@ static NSString *healthyTimerLock = @"healthy timer lock";
                                                    selector:@selector(healthyTimeout)
                                                    userInfo:nil
                                                     repeats:NO];
-        NRLOG_VERBOSE(@"Healthy trace timer started with interval: %f",interval);
+       //  NSLog(@"Healthy trace timer started with interval: %f",interval);
+
         [[NSRunLoop mainRunLoop] addTimer:self->healthyTimer forMode:NSDefaultRunLoopMode];
     });
 }
 
 - (void) healthyTimeout
 {
-    NRLOG_VERBOSE(@"Healthy trace timer fired");
+    //NRLOG_AGENT_VERBOSE(@"Healthy trace timer fired");
     double currentTime = NRMAMillisecondTimestamp();
     double lastUpdated = self.activityTrace.lastUpdated;
 
@@ -136,7 +137,7 @@ static NSString *healthyTimerLock = @"healthy timer lock";
 
 - (void) unhealthyTimeout
 {
-    NRLOG_VERBOSE(@"Unhealthy trace timer fired");
+    //NRLOG_AGENT_VERBOSE(@"Unhealthy trace timer fired");
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif

@@ -86,7 +86,6 @@ static NRMAURLTransformer* urlTransformer;
 @property(nonatomic, readonly, strong) id dataToken;
 @property(atomic, strong) NSDate* appSessionStartDate;
 
-
 @property(nonatomic, readonly) BOOL collectNetworkErrors;
 @property(nonatomic, assign) BOOL captureNetworkStackTraces;
 @property(nonatomic, strong) NRMAAppInstallMetricGenerator* appInstallMetricGenerator;
@@ -239,17 +238,17 @@ static NewRelicAgentInternal* _sharedInstance;
                 [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
             }
 #endif
-            NRLOG_INFO(@"Agent enabled");
+            NRLOG_AGENT_INFO(@"Agent enabled");
 
             // Store Data For Crash Reporter
             if ([NRMAFlags shouldEnableCrashReporting]) {
 #if __PTRAUTH_INTRINSICS__
                 {
-                    NRLOG_VERBOSE(@"__PTRAUTH_INTRINSICS__ is enabled. ARM64e crashes will be properly symbolicated.");
+                    NRLOG_AGENT_VERBOSE(@"__PTRAUTH_INTRINSICS__ is enabled. ARM64e crashes will be properly symbolicated.");
                 }
 #elif __arm64e__
                 {
-                    NRLOG_VERBOSE(@"__arm64e__ detected, but __PTRAUTH_INTRINSICS__ was not enabled. arm64e crashes will not be properly symbolicated.");
+                    NRLOG_AGENT_VERBOSE(@"__arm64e__ detected, but __PTRAUTH_INTRINSICS__ was not enabled. arm64e crashes will not be properly symbolicated.");
                 }
 #endif
                 [NRMAExceptionDataCollectionWrapper startCrashMetaDataMonitors];
@@ -273,7 +272,7 @@ static NewRelicAgentInternal* _sharedInstance;
                 [NRMAHarvestController addHarvestListener:crashReportRecorder];
             }
         } else {
-            NRLOG_INFO(@"Agent disabled");
+            NRLOG_AGENT_INFO(@"Agent disabled");
         }
     }
     return self;
@@ -306,7 +305,7 @@ static NewRelicAgentInternal* _sharedInstance;
 - (void) initialize {
     // Update old files (no more files in the docs folder)
     [NRMAFileCleanup updateDocFileLocations];
-    
+
     NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
 
     // Last session's analytics must be fetched (asynchronously) before instrumentation
@@ -400,19 +399,19 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (void) initializeGestureInstrumentation {
     if (![NRMAApplicationInstrumentation instrumentUIApplication]) {
-        NRLOG_VERBOSE(@"Failed to instrument UIApplication -sendAction:...");
+        NRLOG_AGENT_VERBOSE(@"Failed to instrument UIApplication -sendAction:...");
     }
 
 #if !TARGET_OS_WATCH
     if (![NRMATableViewIntrumentation instrument]) {
-        NRLOG_VERBOSE(@"failed to instrument UITableView.");
+        NRLOG_AGENT_VERBOSE(@"failed to instrument UITableView.");
     }
 
     if (![NRMACollectionViewInstrumentation instrument]) {
-        NRLOG_VERBOSE(@"Failed to instrument UICollectionView.");
+        NRLOG_AGENT_VERBOSE(@"Failed to instrument UICollectionView.");
     }
     if (![NRMAGestureRecognizerInstrumentation instrumentUIGestureRecognizer]) {
-        NRLOG_VERBOSE(@"Failed to instrument gesture recognizer.");
+        NRLOG_AGENT_VERBOSE(@"Failed to instrument gesture recognizer.");
     }
 #endif
 
@@ -448,7 +447,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) initializeAnalytics {
     @synchronized(kNRMAAnalyticsInitializationLock) {
-       // [NRMAAnalytics clearDuplicationStores];
+        // [NRMAAnalytics clearDuplicationStores];
         self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
     }
 
@@ -570,7 +569,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
             [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
         }
     }
-    
+
     if([NRMAFlags shouldEnableGestureInstrumentation])
     {
         self.gestureFacade = [[NRMAUserActionFacade alloc] initWithAnalyticsController:self.analyticsController];
@@ -608,7 +607,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                    ^{
         @synchronized(kNRMA_BGFG_MUTEX) {
             @synchronized(kNRMA_APPLICATION_WILL_TERMINATE) {
-                
+
                 if (didFireEnterForeground == YES || self.appWillTerminate == YES) {
                     return;
                 }
@@ -660,6 +659,15 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 #endif
 
 - (void) sessionStartInitialization {
+
+    NRLOG_AGENT_VERBOSE(@"config: sessionStartInitialization. Make sampling decision");
+
+    NRLOG_AGENT_VERBOSE(@"config: RESEEDING");
+
+    self.sampleSeed = arc4random_uniform(100) + 1;
+
+    NRLOG_AGENT_VERBOSE(@"config: newSeed = %f", _sampleSeed);
+
     self.appSessionStartDate = [NSDate date];
     [NRMACPUVitals setAppStartCPUTime];
 
@@ -712,13 +720,13 @@ static UIBackgroundTaskIdentifier background_task;
     }
 
     if (didFireEnterForeground != YES) {
-        NRLOG_VERBOSE(@"applicationDidEnterBackground called before didEnterForeground called.");
+        NRLOG_AGENT_VERBOSE(@"applicationDidEnterBackground called before didEnterForeground called.");
         return;
     }
     // We are leaving the background.
     didFireEnterForeground = NO;
     didFireEnterBackground = YES;
-    
+
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateBackground;
 #else
@@ -735,7 +743,7 @@ static UIBackgroundTaskIdentifier background_task;
                                                     name:kNRMemoryUsageDidChangeNotification
                                                   object:nil];
 
-    NRLOG_INFO(@"applicationDidEnterBackground");
+    NRLOG_AGENT_INFO(@"applicationDidEnterBackground");
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
     @try {
 #endif
@@ -769,14 +777,14 @@ static UIBackgroundTaskIdentifier background_task;
         [processInfo performExpiringActivityWithReason:@"harvestOnAppBackground"
                                             usingBlock:^(BOOL expired) {
             if(expired) {
-                NRLOG_VERBOSE(@"Unable to send watchOS OnAppBackground harvest - activity expired");
+                NRLOG_AGENT_VERBOSE(@"Unable to send watchOS OnAppBackground harvest - activity expired");
                 return;
             }
 
             @synchronized (kNRMA_BGFG_MUTEX) {
                 if(didFireEnterForeground) {
                     // Entered foreground before we could finish background harvest
-                    NRLOG_VERBOSE(@"Entered Foreground before background could complete. Bailing out of background logging");
+                    NRLOG_AGENT_VERBOSE(@"Entered Foreground before background could complete. Bailing out of background logging");
                     return;
                 }
 
@@ -806,7 +814,7 @@ static UIBackgroundTaskIdentifier background_task;
                     if(self.appWillTerminate) {
                         return;
                     }
-                    NRLOG_VERBOSE(@"Harvesting data in background");
+                    NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
 #ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException *exception) {
@@ -821,7 +829,7 @@ static UIBackgroundTaskIdentifier background_task;
                     }
                 }
 #endif
-                NRLOG_VERBOSE(@"Background Harvest Complete");
+                NRLOG_AGENT_VERBOSE(@"Background Harvest Complete");
             }
         }];
 #endif
@@ -832,7 +840,7 @@ static UIBackgroundTaskIdentifier background_task;
             @synchronized(kNRMA_BGFG_MUTEX) {
                 if (didFireEnterForeground == YES) {
                     // We set this to NO when we entered the background, if this is YES, then we have entered the foreground before this stuff could fire, so let's cancel doing this.
-                    NRLOG_VERBOSE(@"entered foreground before background could complete, bailing out of background logging.");
+                    NRLOG_AGENT_VERBOSE(@"entered foreground before background could complete, bailing out of background logging.");
                     return;
                 }
                 @synchronized(kNRMA_APPLICATION_WILL_TERMINATE) {
@@ -848,8 +856,8 @@ static UIBackgroundTaskIdentifier background_task;
                         [NRMATaskQueue queue:[[NRMAMetric alloc]        initWithName:@"Session/Duration"
                                                                                value:[NSNumber numberWithDouble:sessionLength]
                                                                                scope:nil]];
-                        
-                        
+
+
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                     } @catch (NSException* exception) {
                         [NRMAExceptionHandler        logException:exception
@@ -864,9 +872,9 @@ static UIBackgroundTaskIdentifier background_task;
                     if (self.appWillTerminate) {
                         return;
                     }
-                    
+
                     // Currently this is where the actual harvest occurs when we go to background
-                    NRLOG_VERBOSE(@"Harvesting data in background");
+                    NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
@@ -874,16 +882,16 @@ static UIBackgroundTaskIdentifier background_task;
                                                         class:NSStringFromClass([NRMAHarvester class])
                                                      selector:@"execute"];
                 } @finally {
-                    
+
                     if ([NRMAFlags shouldEnableBackgroundReporting]) {
-                        NRLOG_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
+                        NRLOG_AGENT_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
                     } else {
                         [self agentShutdown];
                     }
                 }
 #endif
-                
-                NRLOG_VERBOSE(@"Background harvest complete.");
+
+                NRLOG_AGENT_VERBOSE(@"Background harvest complete.");
 #if !TARGET_OS_WATCH
 
                 [application endBackgroundTask:background_task];
@@ -900,7 +908,7 @@ static UIBackgroundTaskIdentifier background_task;
 #if !TARGET_OS_WATCH
     } else {
         [NRMAHarvestController stop];
-        NRLOG_ERROR(@"Multitasking is not supported.  Clearing data.");
+        NRLOG_AGENT_ERROR(@"Multitasking is not supported.  Clearing data.");
     }
 #endif
 }
@@ -934,7 +942,7 @@ static UIBackgroundTaskIdentifier background_task;
 
 
 void applicationDidEnterBackgroundCF(void) {
-    NRLOG_VERBOSE(@"applicationDidEnterBackground called before didEnterForeground called.");
+    NRLOG_AGENT_VERBOSE(@"applicationDidEnterBackground called before didEnterForeground called.");
     return;
 }
 
@@ -947,20 +955,20 @@ void applicationDidEnterBackgroundCF(void) {
 
         NSError *error = nil;
 
-            [[BGTaskScheduler sharedScheduler] submitTaskRequest:request error:&error];
+        [[BGTaskScheduler sharedScheduler] submitTaskRequest:request error:&error];
 
         if (error) {
-            NRLOG_ERROR(@"Error schedule heartbeat: %@", error);
+            NRLOG_AGENT_ERROR(@"Error schedule heartbeat: %@", error);
         }
         else {
-            NRLOG_VERBOSE(@"Scheduled heartbeat");
+            NRLOG_AGENT_VERBOSE(@"Scheduled heartbeat");
 
         }
     }
 }
 
 - (void) handleAppRefreshTask:(BGAppRefreshTask *)task {
-    NRLOG_VERBOSE(@"handleAppRefreshTask BGAppRefreshTask");
+    NRLOG_AGENT_VERBOSE(@"handleAppRefreshTask BGAppRefreshTask");
     if (@available(iOS 13.0, *)) {
 
         // We always reschedule the heartbeat task.
@@ -980,7 +988,7 @@ void applicationDidEnterBackgroundCF(void) {
         [task setTaskCompletedWithSuccess:true];
     }
     else {
-        NRLOG_VERBOSE(@"No background tasks pre iOS 13");
+        NRLOG_AGENT_VERBOSE(@"No background tasks pre iOS 13");
 
     }
 
@@ -995,17 +1003,17 @@ void applicationDidEnterBackgroundCF(void) {
 
         // If shutdown is called when we are already shutdown, do nothing.
         if (_sharedInstance.isShutdown) {
-            NRLOG_INFO(@"Agent is shutdown.");
+            NRLOG_AGENT_INFO(@"Agent is shutdown.");
             return;
         }
 
-        NRLOG_INFO(@"Shutting down agent for duration of application lifetime.");
+        NRLOG_AGENT_INFO(@"Shutting down agent for duration of application lifetime.");
 
         // * CLEAR EXISTING HARVESTABLE DATA *//
 
         // Clear harvestData
         [[[[NRMAHarvestController harvestController] harvester] harvestData] clear];
-        
+
         // Clear activity traces
         [NRMATraceController cleanup];
 
@@ -1049,14 +1057,14 @@ void applicationDidEnterBackgroundCF(void) {
                                                       object:nil];
 #if !TARGET_OS_WATCH
         [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:UIApplicationDidEnterBackgroundNotification
-                                                   object:[UIApplication sharedApplication]];
+                                                        name:UIApplicationDidEnterBackgroundNotification
+                                                      object:[UIApplication sharedApplication]];
         [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:UIApplicationWillEnterForegroundNotification
-                                                   object:[UIApplication sharedApplication]];
+                                                        name:UIApplicationWillEnterForegroundNotification
+                                                      object:[UIApplication sharedApplication]];
         [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                     name:UIApplicationWillTerminateNotification
-                                                   object:[UIApplication sharedApplication]];
+                                                        name:UIApplicationWillTerminateNotification
+                                                      object:[UIApplication sharedApplication]];
 #endif
         // # disable logging
         [NRLogger setLogLevels:NRLogLevelNone];
@@ -1081,7 +1089,7 @@ void applicationDidEnterBackgroundCF(void) {
         // * END SHUT DOWN *//
     }
     else {
-        NRLOG_INFO(@"Failed to shut down agent, its not enabled yet.");
+        NRLOG_AGENT_INFO(@"Failed to shut down agent, its not enabled yet.");
     }
 }
 
@@ -1089,7 +1097,7 @@ void applicationDidEnterBackgroundCF(void) {
                andCollectorAddress:(NSString*)url {
 
     if ([NewRelicAgentInternal sharedInstance].isShutdown) {
-        NRLOG_INFO(@"Agent is shut down for duration of applications lifetime. (This is because shutdown() was called.) Please restart the application and call NewRelic.startWithApplicationToken() to reenable.");
+        NRLOG_AGENT_INFO(@"Agent is shut down for duration of applications lifetime. (This is because shutdown() was called.) Please restart the application and call NewRelic.startWithApplicationToken() to reenable.");
         return;
     }
 
@@ -1108,7 +1116,7 @@ void applicationDidEnterBackgroundCF(void) {
     }
 
     if (!appToken.length) {
-        NRLOG_ERROR(@"appToken must not be nil. Agent start aborted.");
+        NRLOG_AGENT_ERROR(@"appToken must not be nil. Agent start aborted.");
         return;
     }
 
@@ -1120,9 +1128,9 @@ void applicationDidEnterBackgroundCF(void) {
                                                               andApplicationToken:[[NRMAAppToken alloc] initWithApplicationToken:appToken]];
 
         if (_sharedInstance.enabled) {
-            NRLOG_INFO(@"The New Relic Agent started");
+            NRLOG_AGENT_INFO(@"The New Relic Agent started");
         } else {
-            NRLOG_INFO(@"The New Relic Agent is disabled");
+            NRLOG_AGENT_INFO(@"The New Relic Agent is disabled");
         }
     });
 }
