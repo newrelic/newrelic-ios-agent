@@ -141,7 +141,7 @@ didCompleteWithError:(nullable NSError*)error {
 - (void) handledErroredRequest:(NSURLRequest*)request {
     if ([self.taskStore shouldRetryTask:request]) {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
-        NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
+        NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:[request HTTPBody]];
         @synchronized(self.retryQueue) {
             [self.retryQueue addObject:uploadTask];
         }
