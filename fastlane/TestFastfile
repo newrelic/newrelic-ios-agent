@@ -131,6 +131,36 @@ platform :ios do
     )
   end
 
+  desc "Run Agent tests for watchOS beta"
+  lane :runWatchOSBetaTests do |options|
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: false,
+      scheme: "Agent-watchOS",
+      device: "Apple Watch SE (40mm) (2nd generation) (#{options[:os_version]})",
+      xcargs: "-testPlan Agent-watchOS",
+      output_style: 'raw'
+    )
+  end
+
+  desc "Run Agent tests for watchOS beta"
+  lane :runWatchOSAppBetaTests do |options|
+    
+    deleteBuildArtifacts
+
+    run_tests(
+      workspace: "Agent.xcworkspace",
+      code_coverage: false,
+      scheme: "NRTestApp (watchOS) Watch App",
+      device: "Apple Watch SE (40mm) (2nd generation) (#{options[:os_version]})",
+      xcargs: "-testPlan Agent-watchOS",
+      output_style: 'raw'
+    )
+  end
+
   lane :coverage do 
     Dir.chdir("..") do
       begin
