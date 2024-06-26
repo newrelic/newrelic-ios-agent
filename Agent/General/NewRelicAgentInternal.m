@@ -715,16 +715,6 @@ static UIBackgroundTaskIdentifier background_task;
     });
 }
 
-- (void) watchOSNotification:(NSString *)notification {
-    if([notification isEqualToString:@"applicationDidBecomeActive"]) {
-        [self applicationWillEnterForeground];
-    }
-
-    if([notification isEqualToString:@"applicationDidEnterBackground"]) {
-        [self applicationDidEnterBackground];
-    }
-}
-
 - (void) applicationDidEnterBackground {
 
     if (_isShutdown) {

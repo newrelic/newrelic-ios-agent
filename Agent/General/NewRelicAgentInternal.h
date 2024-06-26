@@ -79,8 +79,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
 
-- (void)watchOSNotification:(NSString*)notification;
-
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
