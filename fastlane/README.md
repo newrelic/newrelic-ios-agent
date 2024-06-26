@@ -95,6 +95,22 @@ Run Agent tests for tvOS beta
 
 Run Agent tests for watchOS
 
+### ios runWatchOSBetaTests
+
+```sh
+[bundle exec] fastlane ios runWatchOSBetaTests
+```
+
+Run Agent tests for watchOS beta
+
+### ios runWatchOSAppBetaTests
+
+```sh
+[bundle exec] fastlane ios runWatchOSAppBetaTests
+```
+
+Run Agent tests for watchOS beta
+
 ### ios coverage
 
 ```sh
