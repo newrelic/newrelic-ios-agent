@@ -56,11 +56,11 @@ NSString * const kNRTraceAssociatedKey = @"_nr_traceTimerAssociatedKey";
     NRMATrace* associatedTrace = objc_getAssociatedObject(timer, (__bridge const void *)(kNRTraceAssociatedKey));
 
     if (!associatedTrace) {
-        NRLOG_ERROR(@"Custom endTracingMethodWithTimer: called w/out paired startTracingMethod:...");
+        NRLOG_AGENT_ERROR(@"Custom endTracingMethodWithTimer: called w/out paired startTracingMethod:...");
         return;
     }
     if (associatedTrace != currentThreadTrace) {
-        NRLOG_ERROR(@"Custom endTracingMethodWithTimer: timer does not match current startTracingMethod:... context (expected context: %@, timer context: %@)",
+        NRLOG_AGENT_ERROR(@"Custom endTracingMethodWithTimer: timer does not match current startTracingMethod:... context (expected context: %@, timer context: %@)",
                     currentThreadTrace.name, associatedTrace.name);
         return;
     }

@@ -27,6 +27,7 @@ platform :ios do
 
     buildIOS
     buildTVOS
+    buildWatchOS
     buildMacOS
 
     internalOutputXCFramework

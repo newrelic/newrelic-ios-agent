@@ -13,6 +13,9 @@
 #import "NRMAFlags.h"
 #import <OCMock/OCMock.h>
 
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
 
 @interface NRMAUDIDManager ()
 + (NRMAUUIDStore*) secureUDIDStore;
@@ -76,7 +79,11 @@
 
 - (void) subSetup {
     self.mockVendorStore = [OCMockObject partialMockForObject:[NRMAUDIDManager identifierForVendorStore]];
+#if TARGET_OS_WATCH
+    self.mockUIDevice = [OCMockObject niceMockForClass:[WKInterfaceDevice class]];
+#else
     self.mockUIDevice = [OCMockObject niceMockForClass:[UIDevice class]];
+#endif
     self.mockNSUUID = [OCMockObject partialMockForObject:[NSUUID new]];
 
 

@@ -32,27 +32,27 @@
 - (NRMASAM*) samTest {
     return [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
         if ([name length] == 0) {
-            NRLOG_ERROR(@"invalid attribute: name length = 0");
+            NRLOG_AGENT_ERROR(@"invalid attribute: name length = 0");
             return NO;
         }
         if ([name hasPrefix:@" "]) {
-            NRLOG_ERROR(@"invalid attribute: name prefix = \" \"");
+            NRLOG_AGENT_ERROR(@"invalid attribute: name prefix = \" \"");
             return NO;
         }
         // check if attribute name is reserved or attribute name matches reserved prefix.
         for (NSString* key in [NRMAAnalytics reservedKeywords]) {
             if ([key isEqualToString:name]) {
-                NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
                 return NO;
             }
             if ([key hasPrefix:name])  {
-                NRLOG_ERROR(@"invalid attribute: name prefix disallowed");
+                NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
                 return NO;
             }
         }
         // check if attribute name exceeds max length.
         if ([name length] > kNRMA_Attrib_Max_Name_Length) {
-            NRLOG_ERROR(@"invalid attribute: name length exceeds limit");
+            NRLOG_AGENT_ERROR(@"invalid attribute: name length exceeds limit");
             return NO;
         }
         return YES;
@@ -61,16 +61,16 @@
         if ([value isKindOfClass:[NSString class]]) {
             unsigned long length = [(NSString*)value length];
             if (length == 0) {
-                NRLOG_ERROR(@"invalid attribute: value length = 0");
+                NRLOG_AGENT_ERROR(@"invalid attribute: value length = 0");
                 return NO;
             }
             else if (length >= kNRMA_Attrib_Max_Value_Size_Bytes) {
-                NRLOG_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
+                NRLOG_AGENT_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
                 return NO;
             }
         }
         if (value == nil) {
-            NRLOG_ERROR(@"invalid attribute: value cannot be nil");
+            NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be nil");
             return NO;
         }
 

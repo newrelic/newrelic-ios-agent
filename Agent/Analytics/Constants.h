@@ -90,6 +90,11 @@ extern NSString *const kNRMA_Attrib_file_private;
 extern NSString *const  kNRMA_EventStoreFilename;
 
 extern NSString *const kNRMA_Offline_folder;
+
+extern NSString *const kNRMA_Collector_connect_url;
+extern NSString *const kNRMA_Collector_data_url;
+extern NSString *const kNRMA_Collector_hex_url;
+
 // Integer Analytics Constants
 static int kNRMA_Attrib_Max_Name_Length = 256;
 static int kNRMA_Attrib_Max_Value_Size_Bytes = 4096;

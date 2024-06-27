@@ -6,12 +6,11 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 //
 
-
-
 #import "NRMAGestureProcessor.h"
 #import <UIKit/UIKit.h>
 @implementation NRMAGestureProcessor
-
+// TODO: Add file for adding gesture support for WatchOS specific gestures
+#if !TARGET_OS_WATCH
 + (NSString*) getLabel:(id)control
 {
     // button
@@ -77,4 +76,5 @@
 
     return [readableTouch componentsJoinedByString:@","];
 }
+#endif
 @end

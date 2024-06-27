@@ -7,11 +7,16 @@
 //
 
 #import <Foundation/Foundation.h>
+#if !TARGET_OS_WATCH
 #import "PLCrashNamespace.h"
 #import "PLCrashReporter.h"
+#endif
 @interface NRMAUncaughtExceptionHandler : NSObject
+#if !TARGET_OS_WATCH
 - (instancetype) initWithCrashReporter:(PLCrashReporter*)crashReporter;
-
+#elif TARGET_OS_WATCH
+- (instancetype) init;
+#endif
 - (BOOL) start;
 - (BOOL) stop;
 

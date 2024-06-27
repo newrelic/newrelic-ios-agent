@@ -20,6 +20,7 @@ static NSString const *kNRMA_selector_viewWillAppear = @"viewWillAppear:";
     NSString* name = nil;
     NSString* class = [self translationNameFromClass:NSStringFromClass(cls)];
     NSString* sel = NSStringFromSelector(selector);
+#if !TARGET_OS_WATCH
     if ([cls isSubclassOfClass:[UIViewController class]]) {
         if ([kNRMA_selector_viewDidLoad isEqualToString:sel] ||
             [kNRMA_selector_viewWillAppear isEqualToString:sel]) {
@@ -28,6 +29,9 @@ static NSString const *kNRMA_selector_viewWillAppear = @"viewWillAppear:";
     } else {
         name = class; 
     }
+#else
+    name = class;
+#endif
 
     return name;
 }

@@ -96,11 +96,11 @@
 - (void)addValue:(NSNumber *)value forMetric:(NSString *)metricName
 {
     if (!value) {
-        NRLOG_WARNING(@"Attempting to add nil metric value.");
+        NRLOG_AGENT_WARNING(@"Attempting to add nil metric value.");
         return;
     }
     if (!metricName) {
-        NRLOG_WARNING(@"Attempting to add nil metric name.");
+        NRLOG_AGENT_WARNING(@"Attempting to add nil metric name.");
         return;
     }
     [self addValue:value forMetric:metricName withScope:@"" additionalValue:nil];

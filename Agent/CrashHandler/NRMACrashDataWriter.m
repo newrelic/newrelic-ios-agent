@@ -25,7 +25,7 @@
 #define kNRMASYSOS_tvSim            @"tvOS Simulator"
 
 @implementation NRMACrashDataWriter
-
+#if !TARGET_OS_WATCH
 + (BOOL) writeCrashReport:(PLCrashReport* _Nonnull)report
              withMetaData:(NSDictionary* _Nonnull)metaDictionary
         sessionAttributes:(NSDictionary* _Nonnull)attributes
@@ -160,7 +160,7 @@
     NRMATimestampContainer* crashTime = [[NRMATimestampContainer alloc] initWithTimestamp:((NSNumber*)[metaDictionary objectForKey:@kNRMAMetaKey_CrashTime]).doubleValue];
     if ([crashTime toSeconds] <= 0) {
         // Use the current time if something goes wrong.
-        NRLOG_WARNING(@"failed to retreive crash time. relying on \"current time\"");
+        NRLOG_AGENT_WARNING(@"failed to retreive crash time. relying on \"current time\"");
         crashTime = [[NRMATimestampContainer alloc] initWithTimestamp:NRMAMillisecondTimestamp()];
     }
     double rawSessionStartTime = ((NSString*)metaDictionary[[NSString stringWithUTF8String:kNRMAMetaKey_SessionStartTime]]).doubleValue;
@@ -193,7 +193,7 @@
     NSData* crashData = [NRMAJSON dataWithJSONABLEObject:nrmaReport options:0 error:&error];
 
     if (error) {
-        NRLOG_VERBOSE(@"Failed to JSONify crash report data: %@.",error.description);
+        NRLOG_AGENT_VERBOSE(@"Failed to JSONify crash report data: %@.",error.description);
         return NO;
     }
 
@@ -201,7 +201,7 @@
                               withIntermediateDirectories:YES
                                                attributes:nil
                                                          error:&error]) {
-        NRLOG_VERBOSE(@"Failed to create crash report directory:  %@",error.description);
+        NRLOG_AGENT_VERBOSE(@"Failed to create crash report directory:  %@",error.description);
     }
 
 
@@ -210,12 +210,12 @@
                                           attributes:nil];
 
     if (!isWriteSuccessful) {
-        NRLOG_VERBOSE(@"failed to write crash report data to file.");
+        NRLOG_AGENT_VERBOSE(@"failed to write crash report data to file.");
     }
 
     return isWriteSuccessful;
 }
-
+#endif
 + (NSString*) getOperatingDevice:(PLCrashReportOperatingSystem)osEnum
 {
     switch (osEnum) {
