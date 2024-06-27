@@ -60,7 +60,7 @@
 #import "NRConstants.h"
 
 @interface NRMAReachability ()
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 @property(strong, atomic) CTTelephonyNetworkInfo *networkInfo;
 #endif
 @end
@@ -71,7 +71,7 @@
 - (instancetype)init {
     self = [super init];
     if (self) {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
         self.networkInfo = [CTTelephonyNetworkInfo new];
         if(@available(iOS 12.0, *)) {
             if([self.networkInfo respondsToSelector:@selector(serviceCurrentRadioAccessTechnology)]
@@ -91,7 +91,7 @@
 }
 
 - (void)radioAccessDidChange:(NSNotification *)notif {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     if(@available(iOS 12.0, *)) {
         if([self.networkInfo respondsToSelector:@selector(serviceCurrentRadioAccessTechnology)]
            && [self.networkInfo.serviceCurrentRadioAccessTechnology count]) {
@@ -103,7 +103,7 @@
 #endif
 }
 
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
 - (CTCarrier*) getCarrierInfo {
     return self.networkInfo.subscriberCellularProvider;
 }
@@ -118,6 +118,8 @@
 {
 #if TARGET_OS_TV
     return NRMA_CARRIER_WIFI;
+#elif TARGET_OS_WATCH
+    return NRMA_CARRIER_OTHER;
 #else
     @synchronized (_wanNetworkType) {
         if (networkStatus != ReachableViaWWAN) {
@@ -160,15 +162,18 @@
 
 
 - (void)dealloc {
+#if !TARGET_OS_WATCH
     if (reachabilityRef != NULL) {
         CFRelease(reachabilityRef);
     }
+#endif
 }
 
 
 + (NRMAReachability*)reachability
 {
     NRMAReachability* retVal = NULL;
+#if !TARGET_OS_WATCH
 
     struct sockaddr_in zeroAddress;
     bzero(&zeroAddress, sizeof(zeroAddress));
@@ -188,22 +193,25 @@
             retVal->reachabilityRef = reachability;
         }
     }
-
+#endif
     return retVal;
 }
 
 - (BOOL) connectionRequired
 {
+#if !TARGET_OS_WATCH
     SCNetworkReachabilityFlags flags;
     if (SCNetworkReachabilityGetFlags(reachabilityRef, &flags))
     {
         return (flags & kSCNetworkReachabilityFlagsConnectionRequired);
     }
+#endif
     return NO;
 }
 
 #pragma mark Network Flag Handling
 
+#if !TARGET_OS_WATCH
 - (NRMANetworkStatus)networkStatusForFlags:(SCNetworkReachabilityFlags)flags {
     if ((flags & kSCNetworkReachabilityFlagsReachable) == 0) {
         // If target host is not reachable?
@@ -235,7 +243,9 @@
     
     return retVal;
 }
+#endif
 
+#if !TARGET_OS_WATCH
 - (NRMANetworkStatus)currentReachabilityStatus {
     NRMANetworkStatus retVal = NotReachable;
     SCNetworkReachabilityFlags flags;
@@ -244,5 +254,6 @@
     }
     return retVal;
 }
+#endif
 
 @end

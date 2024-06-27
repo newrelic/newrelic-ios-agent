@@ -263,23 +263,22 @@ static NRMAFeatureFlags __originalFlags;
     XCTAssertFalse([NRMAFlags shouldEnableBackgroundReporting], @"BackgroundInstrumentation should be disabled");
 }
 
-// TODO: LogReporting
-//- (void) testShouldEnableLogReporting
-//{
-//    XCTAssertFalse([NRMAFlags shouldEnableLogReporting], @"since no flags have been set this should be false!");
-//
-//    [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
-//
-//    XCTAssertFalse([NRMAFlags shouldEnableLogReporting], @"this should now be disabled");
-//
-//    [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
-//
-//    XCTAssertTrue([NRMAFlags shouldEnableLogReporting], @"this again be true!");
-//
-//    [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
-//
-//    XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
-//}
+- (void) testShouldEnableLogReporting
+{
+    XCTAssertFalse([NRMAFlags shouldEnableLogReporting], @"since no flags have been set this should be false!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+
+    XCTAssertFalse([NRMAFlags shouldEnableLogReporting], @"this should now be disabled");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_LogReporting];
+
+    XCTAssertTrue([NRMAFlags shouldEnableLogReporting], @"this again be true!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
+
+    XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
+}
 
 
 @end

@@ -27,6 +27,10 @@ class UtilViewModel {
 
     let taskProcessor = TaskProcessor()
     let taskProcessor2 = TaskProcessorNoDidRcvResp()
+    
+    init() {
+        createUtilOptions()
+    }
 
     func createUtilOptions() {
         options.append(UtilOption(title: "Add Valid Breadcrumb", handler: { [self] in makeValidBreadcrumb()}))
@@ -36,7 +40,11 @@ class UtilViewModel {
         options.append(UtilOption(title: "Crash Now!", handler: { [self] in crash()}))
         options.append(UtilOption(title: "Record Error", handler: { [self] in makeError()}))
         options.append(UtilOption(title: "Record Handled Exception", handler: { triggerException.testing()}))
-        options.append(UtilOption(title: "Set UserID", handler: { [self] in changeUserID()}))
+
+        options.append(UtilOption(title: "Set UserID to testID", handler: { [self] in changeUserID()}))
+        options.append(UtilOption(title: "Set UserID to Bob", handler: { [self] in changeUserID2()}))
+        options.append(UtilOption(title: "Set UserID to null", handler: { [self] in changeUserIDToNil()}))
+
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
@@ -85,7 +93,14 @@ class UtilViewModel {
     func changeUserID() {
         NewRelic.setUserId("testID")
     }
-    
+    func changeUserID2() {
+        NewRelic.setUserId("Bob")
+    }
+
+    func changeUserIDToNil() {
+        NewRelic.setUserId(nil)
+    }
+
     func makeValidBreadcrumb() {
         makeBreadcrumb(name: "test", attributes: ["button" : "Breadcrumb"])
     }
@@ -149,11 +164,12 @@ class UtilViewModel {
         }
     }
 
-    // TODO: Wrap up attributes handling as a part of NR-227300
     func testLogAttributes() {
         NewRelic.logAttributes([
             "logLevel": "WARN",
-            "message": "This is a test message for the New Relic logging system."
+            "message": "This is a test message for the New Relic logging system.",
+            "additionalAttribute1": "attribute1",
+            "additionalAttribute2": "attribute2"
         ])
     }
 
@@ -190,7 +206,7 @@ class UtilViewModel {
     }
 
     @objc func make100SpecialCharacterLogs() {
-        for i in 0...100 {
+        for _ in 0...100 {
             NewRelic.logInfo("/")
             // Testing special character
             NewRelic.logInfo("\\")
@@ -208,7 +224,7 @@ class UtilViewModel {
     }
 
     @objc func make100Logs() {
-        for i in 0...100 {
+        for _ in 0...100 {
             NewRelic.logInfo("I")
             NewRelic.logInfo("L")
             NewRelic.logInfo("O")

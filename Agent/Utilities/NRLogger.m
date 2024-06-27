@@ -40,14 +40,72 @@ NRLogger *_nr_logger = nil;
      atLine:(unsigned int)line
    inMethod:(NSString *)method
 withMessage:(NSString *)message {
+    
+    NRLogger *logger = [NRLogger logger];
+    BOOL shouldLog = NO;
+    
+    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
+    // @synchronized(logger) {
+    shouldLog = (logger->logLevels & level) != 0;
+    // }
+    
+    if (shouldLog) {
+        [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
+                               [self levelToString:level], NRLogMessageLevelKey,
+                               file, NRLogMessageFileKey,
+                               [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
+                               method, NRLogMessageMethodKey,
+                               [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
+                               message, NRLogMessageMessageKey,
+                               nil]];
+    }
+}
+
++ (void)log:(unsigned int)level
+     inFile:(NSString *)file
+     atLine:(unsigned int)line
+   inMethod:(NSString *)method
+withMessage:(NSString *)message
+withAttributes:(NSDictionary *)attributes {
+    
+    NRLogger *logger = [NRLogger logger];
+    BOOL shouldLog = NO;
+    
+    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
+    // @synchronized(logger) {
+    shouldLog = (logger->logLevels & level) != 0;
+    // }
+    
+    if (shouldLog) {
+        NSMutableDictionary *mutableDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                            [self levelToString:level], NRLogMessageLevelKey,
+                                            file, NRLogMessageFileKey,
+                                            [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
+                                            method, NRLogMessageMethodKey,
+                                            [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
+                                            message, NRLogMessageMessageKey,nil];
+        [mutableDict addEntriesFromDictionary:attributes];
+        [logger addLogMessage:mutableDict];
+    }
+}
+
++ (void)log:(unsigned int)level
+     inFile:(NSString *)file
+     atLine:(unsigned int)line
+   inMethod:(NSString *)method
+withMessage:(NSString *)message
+withAgentLogsOn:(BOOL)agentLogsOn {
 
     NRLogger *logger = [NRLogger logger];
     BOOL shouldLog = NO;
 
-    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
-   // @synchronized(logger) {
-        shouldLog = (logger->logLevels & level) != 0;
-   // }
+    // Filter passed logs by log level.
+    shouldLog = (logger->logLevels & level) != 0;
+    
+    // If this is an agentLog, only print it if we are currently at the debug level.
+    if (agentLogsOn) {
+        shouldLog = (logger->logLevels & NRLogLevelDebug) != 0;
+    }
 
     if (shouldLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
@@ -126,7 +184,7 @@ withMessage:(NSString *)message {
 }
 
 + (NSString*)levelToString:(NRLogLevels)level {
-
+    
     if (level ==  NRLogLevelError) {
         return @"ERROR";
     }
@@ -153,13 +211,14 @@ withMessage:(NSString *)message {
 - (id)init {
     self = [super init];
     if (self) {
-
+        
         self->uploadQueue = [NSMutableArray array];
         self->isUploading = NO;
         self->failureCount = 0;
-
+        self->debugLogs = NO;
+        
         // This was including Error and warning previously but since warning is the highest we want to emit by default this will emit warning and error by default.
-
+        
         self->logLevels = NRLogLevelWarning;
         self->logTargets = NRLogTargetConsole;
         self->logFile = nil;
@@ -188,7 +247,7 @@ withMessage:(NSString *)message {
                   [message objectForKey:NRLogMessageLineNumberKey],
                   [message objectForKey:NRLogMessageMethodKey],
                   [message objectForKey:NRLogMessageMessageKey]);
-
+            
         }
         if (self->logTargets & NRLogTargetFile) {
             @synchronized(self) {
@@ -203,10 +262,10 @@ withMessage:(NSString *)message {
                     NSFileHandle *handleForReadingAtPath = [NSFileHandle fileHandleForReadingAtPath:[NRLogger logFilePath]];
                     self->lastFileSize = [handleForReadingAtPath seekToEndOfFile];
                     // NSLog(@"logs fileSize = %llu", self->lastFileSize);
-
+                    
                     if (self->lastFileSize > (kNRMAMaxLogPayloadSizeLimit)) {
-                       // NSLog(@"logs fileSize exceeds kNRMAMaxLogPayloadSizeLimit , split logs and enqueue upload task");
-
+                        // NSLog(@"logs fileSize exceeds kNRMAMaxLogPayloadSizeLimit , split logs and enqueue upload task");
+                        
                         [self enqueueLogUpload];
                     }
                     [handleForReadingAtPath closeFile];
@@ -233,19 +292,37 @@ withMessage:(NSString *)message {
             entityGuid = logEntityGuid;
         }
     }
-    //                                                    1                 2                    3                   4                  5                   6                     7                     8                      9
-    NSString* json = [NSString stringWithFormat:@"{ \n  \"%@\":\"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\",\n  \"%@\" : \"%@\", \n  \"%@\" : \"%@\"\n}",
-                      NRLogMessageLevelKey,      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
-                      NRLogMessageFileKey,       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
-                      NRLogMessageLineNumberKey, [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
-                      NRLogMessageMethodKey,     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
-                      NRLogMessageTimestampKey,  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
-                      NRLogMessageMessageKey,    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
-                      @"sessionId", NRSessionId,                                                                                                              // 7
-                      @"appId", nrAppId,                                                                                                                      // 8
-                      @"entity.guid", entityGuid];                                                                                                            // 9
+    if (!nrAppId) {
+        nrAppId = @"";
+    }
+    if (!NRSessionId) {
+        NRSessionId = @"";
+    }
+    if (!entityGuid) {
+        entityGuid = @"";
+    }
+    // TODO: LogReporting logAttributes: Refactor to construct 9 required attributes and tack on the remaining API provided attributes.
 
-    return [json dataUsingEncoding:NSUTF8StringEncoding];
+    NSDictionary *requiredAttributes = @{NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
+                                         NRLogMessageFileKey:       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
+                                         NRLogMessageLineNumberKey: [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
+                                         NRLogMessageMethodKey:     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
+                                         NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
+                                         NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
+                                         @"sessionId": NRSessionId,                                                                                                              // 7
+                                         @"appId": nrAppId,                                                                                                                      // 8
+                                         @"entity.guid": entityGuid};                                                                                                            // 9
+
+    NSMutableDictionary *providedAttributes = [message mutableCopy];
+    [providedAttributes removeObjectsForKeys:@[NRLogMessageLevelKey,NRLogMessageFileKey,NRLogMessageLineNumberKey,NRLogMessageMethodKey,NRLogMessageTimestampKey,NRLogMessageMessageKey]];
+    [providedAttributes addEntriesFromDictionary:requiredAttributes];
+    NSError* error = nil;
+
+    NSData *logJsonData = [NRMAJSON dataWithJSONObject:providedAttributes
+                                                 options:0
+                                                   error:&error];
+    
+    return logJsonData;
 }
 
 - (void)setLogLevels:(unsigned int)levels {
@@ -277,7 +354,7 @@ withMessage:(NSString *)message {
 
 - (void)setLogTargets:(unsigned int)targets {
     NSString *fileOpenError = nil;
-
+    
     @synchronized(self) {
         self->logTargets = targets;
         if (targets & NRLogTargetFile) {
@@ -310,7 +387,7 @@ withMessage:(NSString *)message {
                         }
                     }
                 }
-
+                
                 if (! success) {
                     self->logTargets &= ~NRLogTargetFile;
                 }
@@ -323,10 +400,10 @@ withMessage:(NSString *)message {
             }
         }
     }
-
+    
     if (fileOpenError) {
         if (self->logTargets && self->logLevels) {
-            NRLOG_ERROR(@"%@", fileOpenError);
+            NRLOG_AGENT_ERROR(@"%@", fileOpenError);
         }
         else {
             NSLog(@"NewRelic: error opening log file %@", fileOpenError);
@@ -339,17 +416,17 @@ withMessage:(NSString *)message {
         if (self->logFile) {
             // Close the log file if it's open.
             self->lastFileSize = 0;
-
+            
             [self->logFile closeFile];
             self->logFile = nil;
-
+            
             // Truncate the log file on disk.
             NSString *path = [NRLogger logFilePath];
             NSError *err = nil;
             if (! [[NSFileManager defaultManager] removeItemAtPath:path error:&err]) {
                 NSLog(@"NewRelic: Unable to truncate log file at '%@'", path);
             }
-
+            
             // Calling setLogTargets: will re-open the file safely.
             // Note: @synchronized is re-entrant, so we don't need to worry about lock contention.
             [self setLogTargets:self->logTargets];
@@ -373,21 +450,22 @@ withMessage:(NSString *)message {
 - (void)enqueueLogUpload {
     @synchronized(self) {
         if (self->logFile) {
-
-//             NSLog(@"Logs enqueueLogUpload called..");
-
+            
+            if (debugLogs) {
+                NSLog(@"Logs enqueueLogUpload called..");
+            }
             NSString *path = [NRLogger logFilePath];
             NSData* logData = [NSData dataWithContentsOfFile:path];
-
+            
             NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
             NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-
+            
             // We clear the log when we save the existing logs to uploadQueue.
             [self clearLog];
-
+            
             // Save formatted Data as an upload at the end of the upload queue.
             [self->uploadQueue addObject:formattedData];
-
+            
             [self processNextUploadTask];
         }
         else {
@@ -398,82 +476,94 @@ withMessage:(NSString *)message {
 
 // Perform upload task for specific logData, saved into uploadQueue previously.
 - (void) processNextUploadTask {
-        dispatch_async(logQueue, ^{
-            // If we are already uploading, or we've reached the end of the upload queue, do nothing.
-            if (self->isUploading || self->uploadQueue.count == 0) {
-                return;
+    dispatch_async(logQueue, ^{
+        // If we are already uploading, or we've reached the end of the upload queue, do nothing.
+        if (self->isUploading || self->uploadQueue.count == 0) {
+            return;
+        }
+        
+        // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
+        if (!self->logIngestKey || !self->logURL) {
+            NRLOG_AGENT_ERROR(@"Attempted to upload logs without log ingest key or logURL set. Failing.");
+            return;
+        }
+        
+        self->isUploading = YES;
+        
+        if (self->debugLogs) {
+            NSLog(@"Logs isUploading ==> TRUE");
+        }
+        NSData *formattedData = [self->uploadQueue firstObject];
+        
+        if (self->debugLogs) {
+            //NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:formattedData encoding:NSUTF8StringEncoding]];
+            NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+                                                                   options:0
+                                                                     error:nil];
+            NSLog(@"Uploading log data:\n %@", decode);
+        }
+
+        NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
+        NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
+        [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
+        
+        req.HTTPMethod = @"POST";
+        
+        NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+            
+            BOOL errorCode = false;
+            NSInteger errorCodeInt = 0;
+            
+            if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+                errorCode = ((NSHTTPURLResponse*)response).statusCode >= 300;
+                errorCodeInt = ((NSHTTPURLResponse*)response).statusCode;
             }
-
-            // Logs cannot be uploaded if we don't have ingest key and logURL set, exit if thats the case.
-            if (!self->logIngestKey || !self->logURL) {
-                NRLOG_ERROR(@"Attempted to upload logs without log ingest key or logURL set. Failing.");
-                return;
+            if (!error && !errorCode) {
+                NRLOG_AGENT_VERBOSE(@"Logs uploaded successfully.");
+                // Remove the first element from the upload queue.
+                [self->uploadQueue removeObjectAtIndex:0];
+                self->failureCount = 0;
+                
+                [NRMASupportMetricHelper enqueueLogSuccessMetric: [formattedData length]];
             }
-
-            self->isUploading = YES;
-            // NSLog(@"Logs isUploading ==> TRUE");
-
-            NSData *formattedData = [self->uploadQueue firstObject];
-
-            NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-            NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
-            [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
-
-            req.HTTPMethod = @"POST";
-
-            NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-
-                BOOL errorCode = false;
-                NSInteger errorCodeInt = 0;
-
-                if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                    errorCode = ((NSHTTPURLResponse*)response).statusCode >= 300;
-                    errorCodeInt = ((NSHTTPURLResponse*)response).statusCode;
+            else if (errorCode) {
+                NRLOG_AGENT_ERROR(@"Logs failed to upload. response: %@", response);
+                self->failureCount = self->failureCount + 1;
+                
+                [NRMASupportMetricHelper enqueueLogFailedMetric];
+            }
+            else {
+                NRLOG_AGENT_ERROR(@"Logs failed to upload. error: %@", error);
+                self->failureCount = self->failureCount + 1;
+                
+                // send log payload failed support metric
+                [NRMASupportMetricHelper enqueueLogFailedMetric];
+            }
+            
+            if (self->failureCount > kNRMAMaxLogUploadRetry) {
+                [self->uploadQueue removeObjectAtIndex:0];
+                self->failureCount = 0;
+            }
+            
+            // isUploading is turned off upon successful or failed logs request.
+            self->isUploading = NO;
+            
+            if (self->debugLogs) {
+                NSLog(@"isUploading ==> FALSE");
+                if (self->uploadQueue.count > 0) {
+                    NSLog(@"logs uploadQueue has contents, proceeding with additional uploads");
                 }
-                if (!error && !errorCode) {
-                    NRLOG_VERBOSE(@"Logs uploaded successfully.");
-                    // Remove the first element from the upload queue.
-                    [self->uploadQueue removeObjectAtIndex:0];
-                    self->failureCount = 0;
-
-                    [NRMASupportMetricHelper enqueueLogSuccessMetric: [formattedData length]];
+                for (NSData *data in self->uploadQueue) {
+                    NSLog(@"logs item: length=%lu",(unsigned long)data.length);
                 }
-                else if (errorCode) {
-                    NRLOG_ERROR(@"Logs failed to upload. response: %@", response);
-                    self->failureCount = self->failureCount + 1;
-
-                    [NRMASupportMetricHelper enqueueLogFailedMetric];
-                }
-                else {
-                    NRLOG_ERROR(@"Logs failed to upload. error: %@", error);
-                    self->failureCount = self->failureCount + 1;
-
-                    // send log payload failed support metric
-                    [NRMASupportMetricHelper enqueueLogFailedMetric];
-                }
-
-                if (self->failureCount > kNRMAMaxLogUploadRetry) {
-                    [self->uploadQueue removeObjectAtIndex:0];
-                    self->failureCount = 0;
-                }
-
-                // isUploading is turned off upon successful or failed logs request.
-                self->isUploading = NO;
-//                NSLog(@"isUploading ==> FALSE");
-                 //Uncomment the following code for log upload queue debugging.
-//                if (self->uploadQueue.count > 0) {
-//                    NSLog(@"logs uploadQueue has contents, proceeding with additional uploads");
-//                }
-//                for (NSData *data in self->uploadQueue) {
-//                    NSLog(@"logs item: length=%lu",(unsigned long)data.length);
-//                }
-                // NSLog(@"Logs isUploading ==> FALSE");
-
-                [self processNextUploadTask];
-            }];
-
-            [uploadTask resume];
-        });
+                NSLog(@"Logs isUploading ==> FALSE");
+            }
+            
+            [self processNextUploadTask];
+        }];
+        
+        [uploadTask resume];
+    });
 }
 
 @end

@@ -21,6 +21,7 @@
 #include <Analytics/AnalyticsController.hpp>
 #import "NRMABool.h"
 #import "NRMASupportMetricHelper.h"
+#import "Constants.h"
 
 @interface NRMAAnalytics(Protected)
 // Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
@@ -64,7 +65,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         if (sessionId == nil) [missingParams addObject:@"sessionId"];
         if (analytics == nil) [missingParams addObject:@"AnalyticsController"];
         if (sessionStartDate == nil) [missingParams addObject:@"SessionStartDate"];
-        NRLOG_ERROR(@"Failed to create handled exception object. Key parameter(s) are nil: %@. This will prevent handle exception reporting.",  [missingParams componentsJoinedByString:@", "]);
+        NRLOG_AGENT_ERROR(@"Failed to create handled exception object. Key parameter(s) are nil: %@. This will prevent handle exception reporting.",  [missingParams componentsJoinedByString:@", "]);
         return nil;
     }
     self = [super init];
@@ -76,31 +77,30 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         std::vector<std::shared_ptr<NewRelic::Hex::Report::Library>> libs;
         NSString* appToken = agentConfiguration.applicationToken.value;
         NSString* protocol = agentConfiguration.useSSL?@"https://":@"http://";
-        NSString* hexCollectorPath = @"/mobile/f";
         NSString* collectorHost = [NSString stringWithFormat:@"%@%@%@",
                                                              protocol,
                                                              agentConfiguration.collectorHost,
-                                                             hexCollectorPath];
+                                                             kNRMA_Collector_hex_url];
 
         NSString* version = [NRMAAgentConfiguration connectionInformation].applicationInformation.appVersion;
 
         if (appToken == nil || appToken.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: missing application token.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: missing application token.");
             return nil;
         }
 
         if (version == nil || version.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: no version number.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: no version number.");
             return nil;
         }
 
         if (collectorHost == nil || collectorHost.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: no host specified.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: no host specified.");
             return nil;
         }
 
         if (sessionId == nil || sessionId.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: session id not specified.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: session id not specified.");
             return nil;
         }
 
@@ -114,13 +114,16 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                                         version.UTF8String,
                                                                         collectorHost.UTF8String);
 
-
         NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
+        NSError* error = nil;
 
         [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
                                   withIntermediateDirectories:YES
                                                    attributes:nil
-                                                        error:nil];
+                                                        error:&error];
+        if (error) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC SETUP - Failed to create handled exceptions directory: %@",error);
+        }
 
         _store = std::make_shared<NewRelic::Hex::HexStore>(backupStorePath.UTF8String);
 
@@ -135,7 +138,11 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     if([NRMAFlags shouldEnableOfflineStorage]) {
         NRMAReachability* r = [NewRelicInternalUtils reachability];
         @synchronized(r) {
+#if TARGET_OS_WATCH
+            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+#else
             NRMANetworkStatus status = [r currentReachabilityStatus];
+#endif
             if (status != NotReachable) {
                 [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
                 _controller->resetKeyContext();
@@ -161,7 +168,11 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     if([NRMAFlags shouldEnableOfflineStorage]) {
         NRMAReachability* r = [NewRelicInternalUtils reachability];
         @synchronized(r) {
+#if TARGET_OS_WATCH
+            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+#else
             NRMANetworkStatus status = [r currentReachabilityStatus];
+#endif
             if (status == NotReachable) {
                 report->setAttributeNoValidation(__kNRMA_Attrib_offline, true);
             }
@@ -223,7 +234,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 - (void) recordHandledException:(NSException*)exception
                      attributes:(NSDictionary*)attributes {
     if (exception == nil) {
-        NRLOG_ERROR(@"Ignoring nil exception.");
+        NRLOG_AGENT_ERROR(@"Ignoring nil exception.");
         return;
     }
 
@@ -234,7 +245,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
 
     if (!exception.callStackReturnAddresses.count) {
-        NRLOG_ERROR(@"Invalid exception. \"%@\" was recorded without being thrown. +[NewRelic %@] is reserved for thrown exceptions only.", eName, NSStringFromSelector(_cmd));
+        NRLOG_AGENT_ERROR(@"Invalid exception. \"%@\" was recorded without being thrown. +[NewRelic %@] is reserved for thrown exceptions only.", eName, NSStringFromSelector(_cmd));
         return;
     }
 

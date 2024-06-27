@@ -48,7 +48,7 @@ static NSString* _name;
         NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:kNRMAOfflineStorageCurrentSizeKey];
         currentOfflineStorageSize += data.length;
         if(currentOfflineStorageSize > maxOfflineStorageSize){
-            NRLOG_WARNING(@"Not saving to offline storage because max storage size has been reached.");
+            NRLOG_AGENT_WARNING(@"Not saving to offline storage because max storage size has been reached.");
             return NO;
         }
         
@@ -56,11 +56,11 @@ static NSString* _name;
         if (data) {
             if ([data writeToFile:[self newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
                 [[NSUserDefaults standardUserDefaults] setInteger:currentOfflineStorageSize forKey:kNRMAOfflineStorageCurrentSizeKey]; // If we successfully save the data save the new current total size
-                NRLOG_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %lu", (unsigned long)currentOfflineStorageSize);
+                NRLOG_AGENT_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %lu", (unsigned long)currentOfflineStorageSize);
                 return YES;
             }
         }
-        NRLOG_ERROR(@"Failed to persist data to disk %@", error.description);
+        NRLOG_AGENT_ERROR(@"Failed to persist data to disk %@", error.description);
         
         return NO;
     }
@@ -75,7 +75,7 @@ static NSString* _name;
         [dirs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             NSString *filename = (NSString *)obj;
             NSData * data = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@",[self offlineDirectoryPath],filename]];
-            NRLOG_VERBOSE(@"Offline storage to be uploaded from %@", filename);
+            NRLOG_AGENT_VERBOSE(@"Offline storage to be uploaded from %@", filename);
             
             [combinedPosts addObject:data];
         }];
@@ -98,7 +98,7 @@ static NSString* _name;
         [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSizeKey];
         return true;
     }
-    NRLOG_ERROR(@"Failed to clear offline storage: %@", error);
+    NRLOG_AGENT_ERROR(@"Failed to clear offline storage: %@", error);
     return false;
 }
 
@@ -112,7 +112,7 @@ static NSString* _name;
         [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:kNRMAOfflineStorageCurrentSizeKey];
         return true;
     }
-    NRLOG_ERROR(@"Failed to clear offline storage: %@", error);
+    NRLOG_AGENT_ERROR(@"Failed to clear offline storage: %@", error);
     return false;
 }
 

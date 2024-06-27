@@ -12,9 +12,12 @@
 #import "NRMAHandledExceptions.h"
 #import "NRMAUserActionFacade.h"
 #import "NRMAURLTransformer.h"
-
+#if TARGET_OS_WATCH
+#import <WatchKit/WatchKit.h>
+#endif
+#if !TARGET_OS_WATCH
 #import <BackgroundTasks/BackgroundTasks.h>
-
+#endif
 // Keys used for harvester data request.
 #define NEW_RELIC_APP_VERSION_HEADER_KEY        @"X-NewRelic-App-Version"
 #define NEW_RELIC_OS_NAME_HEADER_KEY            @"X-NewRelic-OS-Name"
@@ -27,6 +30,7 @@
 
 #define NEWRELIC_AGENT_DISABLED_VERSION_KEY @"NewRelicAgentDisabledVersion"
 
+NS_ASSUME_NONNULL_BEGIN
 
 // Defines the internal agent api.
 @interface NewRelicAgentInternal : NSObject
@@ -35,6 +39,8 @@
 @property(atomic, strong) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
+@property(atomic, strong) NSString* userId;
+@property(assign) double sampleSeed;
 
 // Track the total number of successful network requests logged by the agent
 @property (nonatomic, readonly, assign) NSUInteger lifetimeRequestCount;
@@ -46,8 +52,11 @@
 
 @property (nonatomic, assign) BOOL isShutdown;
 
+#if TARGET_OS_WATCH
+@property (nonatomic, readonly, assign) WKApplicationState currentApplicationState;
+#else
 @property (nonatomic, readonly, assign) UIApplicationState currentApplicationState;
-
+#endif
 + (void)shutdown;
 
 + (void)startWithApplicationToken:(NSString*)appToken
@@ -58,7 +67,10 @@
          andCrashCollectorAddress:(NSString*)crashCollectorUrl;
 
 - (NSDate*) getAppSessionStartDate;
+- (NSString* _Nullable) getUserId;
 
+- (void) applicationWillEnterForeground;
+- (void) sessionStartInitialization;
 + (NewRelicAgentInternal*) sharedInstance;
 
 - (NSString*) currentSessionId;
@@ -86,3 +98,4 @@
 
 
 @end
+NS_ASSUME_NONNULL_END

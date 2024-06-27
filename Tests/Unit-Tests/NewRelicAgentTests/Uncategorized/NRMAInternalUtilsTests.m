@@ -97,4 +97,18 @@ static BOOL __didExecuteWebThread;
     [mockNewRelicUtils stopMocking];
 }
 
+- (void) testCurrentReachabilityStatusToData
+{
+    NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
+
+    XCTAssertEqual(status, ReachableViaUnknown);
+}
+
+- (void) testCurrentReachabilityStatusToHex
+{
+    NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+
+    XCTAssertEqual(status, ReachableViaUnknown);
+}
+
 @end

@@ -91,11 +91,11 @@
     BOOL validValue = [attributeValidator valueValidator:value];
 
     if (!(validAttribute && validValue)) {
-        NRLOG_VERBOSE(@"Failed to create attribute named %@", name);
+        NRLOG_AGENT_VERBOSE(@"Failed to create attribute named %@", name);
         return NO;
     }
     if (attributeDict.count >= kNRMA_Attrib_Max_Number_Attributes) {
-        NRLOG_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
+        NRLOG_AGENT_VERBOSE(@"Unable to add attribute %@, the max attribute limit (128) is reached", name);
         return NO;
     }
 
@@ -125,7 +125,7 @@
             return YES;
         }
         else {
-            NRLOG_VERBOSE(@"Failed to remove Session Attribute - it does not exist.");
+            NRLOG_AGENT_VERBOSE(@"Failed to remove Session Attribute - it does not exist.");
 
             return NO;
         }
@@ -200,7 +200,7 @@
     NSError *error;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:output options:0 error:&error];
     if (!jsonData) {
-        NRLOG_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
+        NRLOG_AGENT_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
     }
     else {
         NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
@@ -227,7 +227,7 @@
                                                                  encoding:NSUTF8StringEncoding];
      }
      @catch (NSException *e) {
-         NRLOG_ERROR(@"FAILED TO CREATE LAST SESSION ATTRIBUTE JSON: %@", e.reason);
+         NRLOG_AGENT_ERROR(@"FAILED TO CREATE LAST SESSION ATTRIBUTE JSON: %@", e.reason);
      }
     return lastSessionAttributesJsonString;
 }

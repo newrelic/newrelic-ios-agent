@@ -43,7 +43,7 @@ static NRMAExceptionDataCollectionWrapper* __wrapper;
 #pragma mark - orientation observation
 - (void) beginMonitoringOrientation
 {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(deviceDidChange:)
                                                  name:UIDeviceOrientationDidChangeNotification
@@ -53,7 +53,7 @@ static NRMAExceptionDataCollectionWrapper* __wrapper;
 
 + (void) endMonitoringOrientation
 {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     [[NSNotificationCenter defaultCenter] removeObserver:self
                                                     name:UIDeviceOrientationDidChangeNotification
                                                   object:nil];
@@ -62,7 +62,7 @@ static NRMAExceptionDataCollectionWrapper* __wrapper;
 
 - (void) deviceDidChange:(NSNotification*) notification
 {
-#if !TARGET_OS_TV
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     if( UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation)){
         NRMA_setOrientation("2");
     } else if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation)) {

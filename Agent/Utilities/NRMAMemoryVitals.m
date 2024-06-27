@@ -38,7 +38,7 @@ static double __lastCachedMemoryUsage;
 
             return __lastCachedMemoryUsage;
         } else {
-            NRLOG_ERROR(@"Error with task_info(): %s", mach_error_string(kernelReturn));
+            NRLOG_AGENT_ERROR(@"Error with task_info(): %s", mach_error_string(kernelReturn));
             return 0;
         }
     }

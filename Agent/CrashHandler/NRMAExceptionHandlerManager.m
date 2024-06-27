@@ -13,8 +13,10 @@
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAUncaughtExceptionHandler.h"
 #import "NRMACrashReportFileManager.h"
+#if !TARGET_OS_WATCH
 #import "PLCrashNamespace.h"
 #import "PLCrashReporter.h"
+#endif
 #import "NRMACrashDataUploader.h"
 #import "NRLogger.h"
 #import "NRConstants.h"
@@ -25,7 +27,9 @@
 #import "NRMACrashReporterRecorder.h"
 
 @interface NRMAExceptionHandlerManager  ()
+#if !TARGET_OS_WATCH
 @property(strong) PLCrashReporter* crashReporter;
+#endif
 @property(strong) NRMACrashReportFileManager* reportManager;
 @property(strong) NRMAUncaughtExceptionHandler* handler;
 @end
@@ -83,11 +87,11 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
         // PLCrashReporterSignalHandlerTypeBSD tried and true vs MACH handler...
         // it's recommended to use BSD in production, while MACH can be used in dev if you really want to.
         // first iteration will default to BSD, with no option to change this.
+#if !TARGET_OS_WATCH
         PLCrashReporterSignalHandlerType signalHandlerType = PLCrashReporterSignalHandlerTypeBSD;
 
         // We don't want to attempt to symbolicate at runtime due to the possibility of stack corruption
         // as well as it being inaccurate. Let's save it for the server where we have the dsym files!
-
         PLCrashReporterConfig *config = [[PLCrashReporterConfig alloc] initWithSignalHandlerType:signalHandlerType
                                                                            symbolicationStrategy:PLCrashReporterSymbolicationStrategyNone];
         _crashReporter = [[PLCrashReporter alloc] initWithConfiguration:config];
@@ -115,18 +119,21 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
                 }
             }
         }
-
         self.handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:_crashReporter];
+#endif
     }
     return self;
 }
 
 - (void) registerObservers
 {
+    // TODO: Add support for NSExtensionHostDidBecomeActiveNotification
+#if !TARGET_OS_WATCH
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(fireDelayedProcessing)
                                                  name:UIApplicationDidBecomeActiveNotification
                                                object:nil];
+#endif
 }
 
 
@@ -173,7 +180,7 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
         if ([crashFrameworkList count]) {
             errorMessage = [errorMessage stringByAppendingString:[NSString stringWithFormat:@"\n\tWe've detected the following framework(s) that may be responsible for replacing the uncaught exception handler:\n\t\t%@",[crashFrameworkList componentsJoinedByString:@"\n\t\t"]]];
         }
-        NRLOG_ERROR(@"%@",errorMessage);
+        NRLOG_AGENT_ERROR(@"%@",errorMessage);
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRMAExceptionHandlerHijackedMetric 
                                                         value:@1
                                                         scope:nil]];

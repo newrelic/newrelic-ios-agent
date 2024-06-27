@@ -31,7 +31,7 @@
 
 - (void) testSetUserId {
         NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    //- (BOOL) setUserId:(NSString*)userId
+    
         XCTAssert([analytics setUserId:@"AUniqueId1"], @"Good input produced incorrect result");
         
         XCTAssertFalse([analytics setUserId:nil], @"bad input produced a incorrect result");

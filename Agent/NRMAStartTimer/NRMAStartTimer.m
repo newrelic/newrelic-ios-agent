@@ -59,18 +59,19 @@ static NRMAStartTimer *_sharedInstance;
 
     // Skip app start timing if running on simulator or debugger attached.
     if ([NewRelicInternalUtils isSimulator]) {
-        NRLOG_INFO(@"New Relic: Skipping App Start and Resume Time calculation on simulator.");
+        NRLOG_AGENT_INFO(@"New Relic: Skipping App Start and Resume Time calculation on simulator.");
 
         return;
     }
     if ([NewRelicInternalUtils isDebuggerAttached]) {
-        NRLOG_INFO(@"New Relic: Skipping App Start and Resume Time because debugger is connected.");
+        NRLOG_AGENT_INFO(@"New Relic: Skipping App Start and Resume Time because debugger is connected.");
 
         return;
     }
 
     // This is used as "first draw" timestamp in the "time to first draw" calculation.
     // UIWindow Notifications
+#if !TARGET_OS_WATCH
     [NSNotificationCenter.defaultCenter addObserver:self
                                            selector:@selector(didBecomeVisible)
                                                name:UIWindowDidBecomeVisibleNotification
@@ -90,6 +91,7 @@ static NRMAStartTimer *_sharedInstance;
                                            selector:@selector(didEnterBackground)
                                                name:UIApplicationDidEnterBackgroundNotification
                                              object:nil];
+#endif
 }
 
 - (void)createDurationMetric {
@@ -101,7 +103,7 @@ static NRMAStartTimer *_sharedInstance;
         NSTimeInterval timeSincePreviousBoot = [previousBootTime timeIntervalSinceDate:bootTime];
         if (timeSincePreviousBoot == 0) {
             self.isWarmLaunch = true;
-            NRLOG_INFO(@"New Relic: Skipping app start time metric calculation because this is warm start (current system boot time matches previous system boot time.");
+            NRLOG_AGENT_INFO(@"New Relic: Skipping app start time metric calculation because this is warm start (current system boot time matches previous system boot time.");
         }
     }
     // Save this system boot time to disk.
@@ -110,12 +112,12 @@ static NRMAStartTimer *_sharedInstance;
     // For now we'll skip recording active prewarm launches since in iOS 15+ we can't be sure it wasn't warmed long before user started app.
     // Since in iOS 15 the OS may launch apps before the user selects them. (This would create app launch times of minutes or even days.)
     if ([self isPrewarmAvailable] && isPrewarmLaunch) {
-        NRLOG_INFO(@"New Relic: Skipping App Start Time because iOS prewarmed this launch.");
+        NRLOG_AGENT_INFO(@"New Relic: Skipping App Start Time because iOS prewarmed this launch.");
 
         return;
     }
     if (self.isWarmLaunch) {
-        NRLOG_INFO(@"New Relic: Skipping App Start Time because matching boot times.");
+        NRLOG_AGENT_INFO(@"New Relic: Skipping App Start Time because matching boot times.");
         return;
     }
 
@@ -129,7 +131,7 @@ static NRMAStartTimer *_sharedInstance;
 
     // Skip recording obviously wrong extra long app launch durations.
     if (calculatedAppLaunchDuration >= maxAppLaunchDuration) {
-        NRLOG_INFO(@"New Relic: Skipping app start time metric since %f > allowed.", calculatedAppLaunchDuration);
+        NRLOG_AGENT_INFO(@"New Relic: Skipping app start time metric since %f > allowed.", calculatedAppLaunchDuration);
         return;
     }
 
@@ -162,7 +164,7 @@ static NRMAStartTimer *_sharedInstance;
         NSTimeInterval calculatedAppResumeDuration = [[NSDate date] timeIntervalSinceDate:self.willEnterForegroundTimestamp];
 
         if (calculatedAppResumeDuration >= maxAppResumeDuration) {
-            NRLOG_INFO(@"New Relic: Skipping app start resume (Hot launch) metric since %f > allowed.", calculatedAppResumeDuration);
+            NRLOG_AGENT_INFO(@"New Relic: Skipping app start resume (Hot launch) metric since %f > allowed.", calculatedAppResumeDuration);
             return;
         }
 

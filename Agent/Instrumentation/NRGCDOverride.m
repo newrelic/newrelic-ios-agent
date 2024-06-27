@@ -21,7 +21,7 @@ static void _enter_dispatch_method(NRMATrace* parentTrace, NSString* methodName,
         return;
     }
 
-    NRLOG_VERBOSE(@"executing %@ block", methodName);
+    NRLOG_AGENT_VERBOSE(@"executing %@ block", methodName);
     if (parentTrace) {
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         @try {
@@ -82,14 +82,14 @@ static void _exit_dispatch_method(NRMATrace* parentTrace) {
 
 extern void NR__dispatch_async(dispatch_queue_t queue, dispatch_block_t block)
 {
-    NRLOG_VERBOSE(@"Enter dispatch_async");
+    NRLOG_AGENT_VERBOSE(@"Enter dispatch_async");
     __block NRMATrace* parentTrace = [NRMATraceController currentTrace];
     dispatch_async(queue, ^{
         _enter_dispatch_method(parentTrace, @"dispatch_async", queue);
         block();
         _exit_dispatch_method(parentTrace);
     });
-    NRLOG_VERBOSE(@"Leaving dispatch_async");
+    NRLOG_AGENT_VERBOSE(@"Leaving dispatch_async");
 }
 
 extern void NR__dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)

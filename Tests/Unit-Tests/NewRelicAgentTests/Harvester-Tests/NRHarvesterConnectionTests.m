@@ -55,7 +55,7 @@
 - (void) testCreateConnectPost
 {
     connection.collectorHost = @"mobile-collector.newrelic.com";
-    NSString* url = @"http://mobile-collector.newrelic.com/mobile/v4/connect";
+    NSString* url = @"http://mobile-collector.newrelic.com/mobile/v5/connect";
     NSURLRequest* request = [connection createConnectPost:@"hello world"];
     XCTAssertNotNil(request, @"");
     XCTAssertTrue([request.HTTPMethod isEqualToString:@"POST"], @"");

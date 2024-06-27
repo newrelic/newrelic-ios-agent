@@ -42,7 +42,7 @@
                                      encoding:NSUTF8StringEncoding
                                         error:&error];
     if (error != nil) {
-        NRLOG_ERROR(@"failed to load file (%@): %@",[[self storePath] stringByAppendingFormat:@"/%@",self.filename],error.description);
+        NRLOG_AGENT_ERROR(@"failed to load file (%@): %@",[[self storePath] stringByAppendingFormat:@"/%@",self.filename],error.description);
     }
     return fileContents;
 }
@@ -75,7 +75,7 @@
         [[NSFileManager defaultManager] removeItemAtPath:[[self storePath] stringByAppendingFormat:@"/%@",fileName]
                                                    error:&error];
         if ( error != nil) {
-            NRLOG_ERROR(@"failed to remove file (%@): %@",[[self storePath] stringByAppendingFormat:@"/%@",fileName],error.description);
+            NRLOG_AGENT_ERROR(@"failed to remove file (%@): %@",[[self storePath] stringByAppendingFormat:@"/%@",fileName],error.description);
             return NO;
         }
     } else {
@@ -84,7 +84,7 @@
                                                    attributes:nil
                                                         error:&error];
         if ( error != nil) {
-            NRLOG_ERROR(@"failed to create directory (%@): %@",[self storePath],error.description);
+            NRLOG_AGENT_ERROR(@"failed to create directory (%@): %@",[self storePath],error.description);
             return NO;
         }
     }
@@ -99,7 +99,7 @@
     [[NSFileManager defaultManager] removeItemAtPath:[[self storePath] stringByAppendingFormat:@"/%@",self.filename]
                                                error:nil];
     if ( error != nil) {
-        NRLOG_ERROR(@"failed to remove file (%@): %@",[[self storePath] stringByAppendingFormat:@"/%@",self.filename],error.description);
+        NRLOG_AGENT_ERROR(@"failed to remove file (%@): %@",[[self storePath] stringByAppendingFormat:@"/%@",self.filename],error.description);
     }
 }
 
