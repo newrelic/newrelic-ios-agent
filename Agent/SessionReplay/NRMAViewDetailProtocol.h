@@ -11,6 +11,8 @@
 
 @protocol NRMAViewDetailProtocol <NSObject>
 
+@property (nonatomic, strong) NSMutableArray* childViews;
+
 - (NSDictionary *)jsonDescription;
 
 @end

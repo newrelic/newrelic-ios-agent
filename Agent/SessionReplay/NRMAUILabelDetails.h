@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString* fontFamily; 
 @property (nonatomic, strong) UIColor* textColor;
 
+@property (nonatomic, strong) NSMutableArray* childViews;
+
 - (instancetype)initWithView:(UIView *)view;
 - (NSDictionary *)jsonDescription;
 

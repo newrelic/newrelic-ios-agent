@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIColor* backgroundColor;
 @property (nonatomic, assign) BOOL isHidden;
 @property (nonatomic, strong) NSString* viewName;
+@property (nonatomic, strong) NSMutableArray* childViews;
 
 - (instancetype)initWithView:(UIView *)view;
 - (NSDictionary *)jsonDescription;
