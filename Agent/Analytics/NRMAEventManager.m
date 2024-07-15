@@ -17,6 +17,7 @@
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 600; // 10 Minutes
 static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
+static const NSUInteger kBufferTimeSecondsLeeway = 60; // 60 seconds
 
 // Event Key Format String: TimeStamp|SessionElapsedTime|EventType
 static NSString* const eventKeyFormat = @"%f|%f|%@";
@@ -76,7 +77,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     }
     
     NSTimeInterval oldestEventAge = currentTimeMilliseconds - oldestEventTimestamp;
-    return (oldestEventAge / 1000) >= maxBufferTimeSeconds;
+    return (oldestEventAge / 1000) + kBufferTimeSecondsLeeway >= maxBufferTimeSeconds;
 }
 
 - (NSUInteger)getEvictionIndex {
