@@ -86,6 +86,13 @@
 //    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
 //    jsonDictionary[@"textColor"] = textColor;
     
+    NSMutableArray *subviews = [[NSMutableArray alloc] init];
+    for(id<NRMAViewDetailProtocol> subview in _childViews) {
+        [subviews addObject:subview.jsonDescription];
+    }
+    
+    jsonDictionary[@"subviews"] = subviews;
+    
     NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
 
 //    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx", self.frame.origin.y,

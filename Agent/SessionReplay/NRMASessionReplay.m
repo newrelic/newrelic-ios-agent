@@ -17,13 +17,15 @@
 
 @implementation NRMASessionReplay {
     UIWindow* _window;
-    NSMutableArray<id<NRMAViewDetailProtocol>>* _views;
+//    NSMutableArray<id<NRMAViewDetailProtocol>>* _views;
+    id<NRMAViewDetailProtocol> _rootView;
 }
 
 - (instancetype)init {
     self = [super init];
     if(self) {
-        _views = [[NSMutableArray alloc] init];
+//        _views = [[NSMutableArray alloc] init];
+        _rootView = nil;
         [NSNotificationCenter.defaultCenter addObserver:self
                                                selector:@selector(didBecomeVisible)
                                                    name:UIWindowDidBecomeVisibleNotification
@@ -67,12 +69,14 @@
 - (void)didBecomeActive {
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did become active");
     _window = [[UIApplication sharedApplication] keyWindow];
-    [self recursiveRecord:_window];
-    NSMutableArray<NSDictionary *> *viewDetailJSON = [[NSMutableArray alloc] init];
-    for(id<NRMAViewDetailProtocol> detail in _views) {
-        NRLOG_AUDIT(@"[SESSION REPLAY] - %@", detail.debugDescription);
-        [viewDetailJSON addObject:[detail jsonDescription]];
-    }
+    [self recursiveRecord:_window forViewDetails:_rootView];
+//    NSMutableArray<NSDictionary *> *viewDetailJSON = [[NSMutableArray alloc] init];
+//    for(id<NRMAViewDetailProtocol> detail in _views) {
+//        NRLOG_AUDIT(@"[SESSION REPLAY] - %@", detail.debugDescription);
+//        [viewDetailJSON addObject:[detail jsonDescription]];
+//    }
+    
+    NSDictionary *viewDetailJSON = _rootView.jsonDescription;
     
     NSData *viewJSONData = [NSJSONSerialization dataWithJSONObject:viewDetailJSON
                                                            options:0
@@ -91,17 +95,50 @@
 
 }
 
-- (void)recursiveRecord:(UIView *)view {
+- (void)recursiveRecord:(UIView *)view forViewDetails:(id<NRMAViewDetailProtocol>)viewDetails {
+    BOOL shouldRecord = [self shouldRecordView:view];
+
     id<NRMAViewDetailProtocol> viewToRecord;
     if([view isKindOfClass:[UILabel class]]) {
         viewToRecord = [[NRMAUILabelDetails alloc] initWithView:view];
     } else {
         viewToRecord = [[NRMAUIViewDetails alloc] initWithView:view];
     }
-    [_views addObject:viewToRecord];
-    for(UIView* subview in view.subviews) {
-        [self recursiveRecord:subview];
+//    [_views addObject:viewToRecord];
+    
+    
+    if(_rootView == nil) {
+        _rootView = viewToRecord;
+    } else {
+        if(shouldRecord) {
+            [viewDetails.childViews addObject:viewToRecord];
+        }
     }
+    
+    for(UIView* subview in view.subviews) {
+        if(shouldRecord) {
+            [self recursiveRecord:subview forViewDetails:viewToRecord];
+        } else {
+            [self recursiveRecord:subview forViewDetails:viewDetails];
+        }
+    }
+}
+
+- (BOOL)shouldRecordView:(UIView *)view {
+    UIView* superview = view.superview;
+    
+    if(superview == nil) {
+        return YES;
+    }
+    
+    BOOL areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame);
+    BOOL isClear = (view.alpha == 0 || view.alpha == 1);
+    
+    if(areFramesTheSame && isClear) {
+        return NO;
+    }
+    
+    return YES;
 }
 
 @end

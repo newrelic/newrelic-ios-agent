@@ -19,6 +19,7 @@
         _isHidden = view.isHidden;
         _viewName = NSStringFromClass([view class]);
         _viewId = [NRMAIdGenerator generateID];
+        _childViews = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -50,6 +51,13 @@
     jsonDictionary[@"type"] = @(2);
     jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
     jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+    
+    NSMutableArray *subviews = [[NSMutableArray alloc] init];
+    for(id<NRMAViewDetailProtocol> subview in _childViews) {
+        [subviews addObject:subview.jsonDescription];
+    }
+    
+    jsonDictionary[@"subviews"] = subviews;
     
 //    NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
 //
