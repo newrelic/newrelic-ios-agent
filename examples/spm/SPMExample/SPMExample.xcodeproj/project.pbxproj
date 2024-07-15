@@ -316,6 +316,7 @@
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -355,6 +356,7 @@
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -411,7 +413,7 @@
 			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 7.4.6;
+				minimumVersion = 7.4.12;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

@@ -20,7 +20,7 @@ static NSString const * kNRMALastExecutedActivityLock = @"lock";
                                duration:(NSNumber*)durationMillis
 {
     if (name == nil || timestampMillis == nil || durationMillis == nil) {
-        NRLOG_VERBOSE(@"Attempted to store last activity with incomplete data.");
+        NRLOG_AGENT_VERBOSE(@"Attempted to store last activity with incomplete data.");
         return;
     }
     @synchronized(kNRMALastExecutedActivityLock) {

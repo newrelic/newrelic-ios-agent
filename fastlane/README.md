@@ -87,6 +87,30 @@ Run Agent tests for tvOS beta
 
 Run Agent tests for tvOS beta
 
+### ios runWatchOSTests
+
+```sh
+[bundle exec] fastlane ios runWatchOSTests
+```
+
+Run Agent tests for watchOS
+
+### ios runWatchOSBetaTests
+
+```sh
+[bundle exec] fastlane ios runWatchOSBetaTests
+```
+
+Run Agent tests for watchOS beta
+
+### ios runWatchOSAppBetaTests
+
+```sh
+[bundle exec] fastlane ios runWatchOSAppBetaTests
+```
+
+Run Agent tests for watchOS beta
+
 ### ios coverage
 
 ```sh
@@ -174,6 +198,14 @@ Build iOS.xcarchive / iOS Sim framework
 ```
 
 Build tvOS.xcarchive / tvOS Sim framework
+
+### ios buildWatchOS
+
+```sh
+[bundle exec] fastlane ios buildWatchOS
+```
+
+Build watchOS.xcarchive / watchOS Sim framework
 
 ### ios buildMacOS
 

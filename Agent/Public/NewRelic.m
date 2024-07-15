@@ -27,6 +27,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAURLTransformer.h"
 #import "NRMAHTTPUtilities.h"
+#import "Constants.h"
 
 #define kNRMA_NAME @"name"
 
@@ -85,6 +86,31 @@
     }
 }
 
++ (void) log:(NSString* __nonnull) message level:(NRLogLevels)level attributes:(NSDictionary*)attributes {
+    switch (level) {
+        case NRLogLevelError:
+            NRLOG_ERROR_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelWarning:
+            NRLOG_WARNING_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelInfo:
+            NRLOG_INFO_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelVerbose:
+            NRLOG_VERBOSE_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelAudit:
+            NRLOG_AUDIT_ATTRS(@"%@", attributes, message);
+            break;
+        case NRLogLevelDebug:
+            NRLOG_DEBUG_ATTRS(@"%@", attributes, message);
+            break;
+        default:
+            break;
+    }
+}
+
 + (void) logAll:(NSDictionary* __nonnull) dict {
     NSString* message = [dict objectForKey:@"message"];
     NSString* level = [dict objectForKey:@"logLevel"];
@@ -99,8 +125,11 @@
     NSString* level = [dict objectForKey:@"logLevel"];
 
     NRLogLevels levels = [NRLogger stringToLevel: level];
+    NSMutableDictionary *mutableDict = [dict mutableCopy];
+    [mutableDict removeObjectForKey:@"message"];
+    [mutableDict removeObjectForKey:@"logLevel"];
 
-    [self log:message level:levels];
+    [self log:message level:levels attributes:[NSDictionary dictionaryWithDictionary: mutableDict]];
 }
 
 + (void) logErrorObject:(NSError* __nonnull) error {
@@ -406,7 +435,7 @@
     }
 
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return nil;
     }
 
@@ -436,7 +465,7 @@
     }
 
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return;
     }
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -478,14 +507,14 @@
     }
 
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         return;
     }
 
     NSString* cleanSelectorString = [NewRelicInternalUtils cleanseStringForCollector:methodName];
 
     if (![NRMATraceController isTracingActive]) {
-        NRLOG_VERBOSE(@"%@ attempted to start tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"%@ attempted to start tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
         return;
     }
     [NRMACustomTrace startTracingMethod:NSSelectorFromString(cleanSelectorString)
@@ -506,12 +535,12 @@
 
     [timer stopTimer];
     if (![NRMAFlags shouldEnableInteractionTracing]){
-        NRLOG_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"\"%@\" not executing; Interaction tracing is disabled.",NSStringFromSelector(_cmd));
         //need to remove the associated object or else this will leak!
         return;
     }
     if (![NRMATraceController isTracingActive]) {
-        NRLOG_VERBOSE(@"%@ attempted to end tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
+        NRLOG_AGENT_VERBOSE(@"%@ attempted to end tracing method without active Interaction Trace",NSStringFromSelector(_cmd));
         //need to remove the associated object or else this will leak!
         if (timer) {
             objc_setAssociatedObject(timer, (__bridge const void *)(kNRTraceAssociatedKey), Nil, OBJC_ASSOCIATION_ASSIGN);
@@ -600,11 +629,44 @@
                                                                                       persistent:YES];
 }
 
-+ (BOOL) setUserId:(NSString*)userId {
-    return [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:@"userId"
-                                                                                     value:userId
-                                                                                persistent:YES];
++ (BOOL) setUserId:(NSString* _Nullable)userId {
+    NSString *previousUserId = [[NewRelicAgentInternal sharedInstance] getUserId];
+    BOOL newSession = false;
+    // If the client passes a new userId that is non NULL.
+    if (userId != NULL) {
+        // A new userId has been set where the previously set one (during this app session (since app launch)) was not NULL or the previous set one was NULL, we start a new session.
+        newSession = true;
+    }
+    // If the client passes a new NULL userId.
+    else {
+        if (previousUserId != NULL) {
+            // end session and harvest.
+            newSession = true;
+        }
+        // Do nothing if passed userId is null and saved userId (for this app session (since app launch)) is null.
+    }
 
+    // Update in memory userId.
+    [NewRelicAgentInternal sharedInstance].userId = userId;
+
+    if (newSession) {
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
+
+        // Perform harvest
+        [self harvestNow];
+
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+    }
+
+    BOOL success = [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:kNRMA_Attrib_userId
+                                                                                             value:userId
+                                                                                        persistent:YES];
+    // If passed userId == NULL , remove UserId attribute.
+    if (userId == NULL) {
+        success = [[NewRelicAgentInternal sharedInstance].analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
+    }
+
+    return success;
 }
 
 + (BOOL) removeAttribute:(NSString*)name {

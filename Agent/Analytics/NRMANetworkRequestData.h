@@ -6,14 +6,14 @@
 
 @interface NRMANetworkRequestData : NSObject
 
-@property (nonatomic) NSString *requestUrl;
-@property (nonatomic) NSString *requestDomain;
-@property (nonatomic) NSString *requestPath;
-@property (nonatomic) NSString *requestMethod;
-@property (nonatomic) NSString *connectionType;
-@property (nonatomic) NSString *contentType;
+@property (nonatomic, retain) NSString *requestUrl;
+@property (nonatomic, retain) NSString *requestDomain;
+@property (nonatomic, retain) NSString *requestPath;
+@property (nonatomic, retain) NSString *requestMethod;
+@property (nonatomic, retain) NSString *connectionType;
+@property (nonatomic, retain) NSString *contentType;
 @property (nonatomic) NSInteger bytesSent;
-@property (nonatomic) NSDictionary *trackedHeaders;
+@property (nonatomic, retain) NSDictionary *trackedHeaders;
 
 -(id) initWithRequestUrl:(NSURL*)requestUrl
               httpMethod:(NSString*)requestMethod

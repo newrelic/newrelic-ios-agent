@@ -12,9 +12,7 @@ class UtilitiesViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        viewModel.createUtilOptions()
-        
+                
         self.title = "Utilities"
         
         let tableView = UITableView()

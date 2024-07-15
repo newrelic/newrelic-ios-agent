@@ -24,19 +24,19 @@
     
     if (connectionInfo.applicationInformation.appName == nil ) {
         appName = @"";
-        NRLOG_ERROR(@"application name attribute of connection information is nil.");
+        NRLOG_AGENT_ERROR(@"application name attribute of connection information is nil.");
     } else {
         appName = connectionInfo.applicationInformation.appName;
     }
     if (connectionInfo.applicationInformation.appVersion == nil ) {
         appVersion = @"";
-        NRLOG_ERROR(@"application version attribute of connection information is nil.");
+        NRLOG_AGENT_ERROR(@"application version attribute of connection information is nil.");
     } else {
         appVersion = connectionInfo.applicationInformation.appVersion;
     }
     if (connectionInfo.deviceInformation.deviceId == nil) {
         uuid = @"";
-        NRLOG_ERROR(@"device ID attribute of connection information is nil.");
+        NRLOG_AGENT_ERROR(@"device ID attribute of connection information is nil.");
     } else {
         uuid = connectionInfo.deviceInformation.deviceId;
     }

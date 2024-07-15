@@ -64,7 +64,7 @@
     if([_gestureBeingBuilt.actionType length] == 0
        || [_gestureBeingBuilt.associatedMethod length] == 0
        || [_gestureBeingBuilt.associatedClass length] == 0) {
-        NRLOG_VERBOSE(@"Failed to create gesture.");
+        NRLOG_AGENT_VERBOSE(@"Failed to create gesture.");
         return nil;
     }
     

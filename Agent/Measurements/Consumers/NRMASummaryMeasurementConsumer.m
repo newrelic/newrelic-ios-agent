@@ -82,7 +82,7 @@
     }
     
     if (totalExclusiveTime == 0) {
-        NRLOG_VERBOSE(@"normalization error: totalExclusiveTime == 0. Not a big deal.");
+        NRLOG_AGENT_VERBOSE(@"normalization error: totalExclusiveTime == 0. Not a big deal.");
         return;
     }
     
@@ -92,7 +92,7 @@
         
         NSString* metricName = [NSString stringWithFormat:@"%@/%@",NRMAMeasurementMetricName,category];
         
-        NRLOG_VERBOSE(@"recording %@ to scope %@",metricName,scope);
+        NRLOG_AGENT_VERBOSE(@"recording %@ to scope %@",metricName,scope);
 
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {

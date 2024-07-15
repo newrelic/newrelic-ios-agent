@@ -29,7 +29,7 @@
                                                                                     error:&regexError];
 
     if (regexError) {
-        NRLOG_VERBOSE(@"failed to initialize REGEX: %@", regexError.localizedDescription);
+        NRLOG_AGENT_VERBOSE(@"failed to initialize REGEX: %@", regexError.localizedDescription);
         return @"";
     }
 

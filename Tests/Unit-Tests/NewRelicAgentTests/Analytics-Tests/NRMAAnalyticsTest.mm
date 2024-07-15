@@ -1114,10 +1114,13 @@
     XCTAssertTrue([decode[0][@"controlRect"] isEqualToString:@"{{1, 1}, {1, 1}}"]);
     XCTAssertTrue([decode[0][@"touchCoordinates"] isEqualToString:@"{1, 1}"]);
     
-#if !TARGET_OS_TV
-    XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Unknown"]);
-#else
+#if TARGET_OS_TV
     XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Landscape"]);
+
+#elif TARGET_OS_WATCH
+    XCTAssertTrue(decode[0][@"orientation"] != nil);
+#else
+    XCTAssertTrue([decode[0][@"orientation"] isEqualToString:@"Unknown"]);
 #endif
 }
 

@@ -21,6 +21,10 @@ static NSString* const kAttributesKey = @"Attributes";
 
 @implementation NRMAMobileEvent
 
++ (BOOL) supportsSecureCoding {
+    return YES;
+}
+
 - (nonnull instancetype) initWithTimestamp:(NSTimeInterval)timestamp
                sessionElapsedTimeInSeconds:(NSTimeInterval)sessionElapsedTimeSeconds
                     withAttributeValidator:(__nullable id<AttributeValidatorProtocol>) attributeValidator {
@@ -35,7 +39,11 @@ static NSString* const kAttributesKey = @"Attributes";
         if([NRMAFlags shouldEnableOfflineStorage]) {
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {
+#if TARGET_OS_WATCH
+                NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
+#else
                 NRMANetworkStatus status = [r currentReachabilityStatus];
+#endif
                 if (status == NotReachable) {
                     [self addAttribute:kNRMA_Attrib_offline value:@YES];
                 }
@@ -43,7 +51,11 @@ static NSString* const kAttributesKey = @"Attributes";
         }
         // Handle Background attribute addition.
         if([NRMAFlags shouldEnableBackgroundReporting]) {
+#if TARGET_OS_WATCH
+            if ([NewRelicAgentInternal sharedInstance].currentApplicationState == WKApplicationStateBackground) {
+#else
             if ([NewRelicAgentInternal sharedInstance].currentApplicationState == UIApplicationStateBackground) {
+#endif
                 [self addAttribute:kNRMA_Attrib_background value:@YES];
             }
         }
@@ -92,8 +104,8 @@ static NSString* const kAttributesKey = @"Attributes";
     if(self) {
         self.timestamp = [coder decodeDoubleForKey:kTimestampKey];
         self.sessionElapsedTimeSeconds = [coder decodeDoubleForKey:kSessionElapsedTimeKey];
-        self.eventType = [coder decodeObjectForKey:kEventTypeKey];
-        self.attributes = [coder decodeObjectForKey:kAttributesKey];
+        self.eventType = [coder decodeObjectOfClass:[NSString class] forKey:kEventTypeKey];
+        self.attributes = [coder decodeObjectOfClasses:[NSSet setWithArray:@[[NSDictionary class],[NSMutableDictionary class],[NSString class],[NSNumber class]]] forKey:kAttributesKey];
     }
     
     return self;

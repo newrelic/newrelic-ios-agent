@@ -101,11 +101,15 @@
     config.server_timestamp = 1379548800;
     config.stack_trace_limit = 100;
     config.account_id = 190;
-    config.application_id = 39484;
+    config.application_id = 36920;
     config.trusted_account_key = @"123";
-    
+    config.request_header_map = [NSDictionary dictionary];
     config.encoding_key = @"encoding_key";
-    
+    config.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+    config.log_reporting_level = @"WARN";
+    config.sampling_rate = 100.0;
+    config.entity_guid = @"";
+
     return config;
 }
 
@@ -158,7 +162,11 @@
 {
     NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
     
-    XCTAssertTrue([config isEqual:config], @"isEqual is correct");
+    XCTAssertTrue([config isEqual:config], @"isEqual is correct"); // LOL
+    NSLog(@"config = @+%@", config);
+    NRMAHarvesterConfiguration *secondConfig = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]];
+    NSLog(@"secondConfig = @+%@", secondConfig);
+
     XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
 }
 
@@ -529,6 +537,7 @@
     NRMAHarvesterConfiguration* currentConfig = [aHarvester fetchHarvestConfiguration];
     currentConfig.account_id = 0;
     currentConfig.application_id = 0;
+    currentConfig.data_token.clusterAgentId = 0;
 
     // ensure we are connected via expected v3 configuration
     [aHarvester saveHarvesterConfiguration:currentConfig];
@@ -541,7 +550,7 @@
     XCTAssertEqual(aHarvester.currentState, NRMA_HARVEST_CONNECTED);
     XCTAssertTrue([[aHarvester fetchHarvestConfiguration] isValid]);
     XCTAssertEqual(190, [aHarvester fetchHarvestConfiguration].account_id);
-    XCTAssertEqual(39484, [aHarvester fetchHarvestConfiguration].application_id);
+    XCTAssertEqual(36920, [aHarvester fetchHarvestConfiguration].application_id);
 
     aHarvester = nil;
 }
@@ -774,7 +783,43 @@
     [mockConnection stopMocking];
 }
 
-// Add test for entity_guid: and log_reporting: { enabled: , level: }
+// TODO: LogReporting Add test for entity_guid: and log_reporting: { enabled: , level: }
 
+- (void) testConnectedv5Apps{
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    NRMAHarvesterConfiguration* v5config = [[NRMAHarvesterConfiguration alloc] init];
+    v5config.collect_network_errors = YES;
+    v5config.cross_process_id = @"cross_process_id";
+    v5config.data_report_period = 60;
+    v5config.data_token = [[NRMADataToken alloc] init];
+    v5config.data_token.clusterAgentId = 36920;
+    v5config.data_token.realAgentId = 36921;
+    v5config.error_limit = 50;
+    v5config.report_max_transaction_age = 600;
+    v5config.report_max_transaction_count =1000;
+    v5config.response_body_limit = 2048;
+    v5config.server_timestamp = 1379548800;
+    v5config.stack_trace_limit = 100;
+    v5config.account_id = 0;
+    v5config.application_id = 0;
+    v5config.encoding_key = @"encoding_key";
+    v5config.entity_guid = @"ENTITYGUID";
+    v5config.request_header_map = [NSDictionary dictionary];
+    v5config.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+    v5config.log_reporting_level = @"WARN";
+    v5config.sampling_rate = 100.0;
+
+    [[[mockHarvester stub] andReturn:v5config] fetchHarvestConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendData:OCMOCK_ANY];
+
+    XCTAssertNoThrow([mockHarvester connected],@"assert we don't crash if something goes wrong in connected");
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
 
 @end

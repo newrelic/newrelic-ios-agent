@@ -125,8 +125,8 @@
     double endTime = 10000;
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"google.com"]];
 
-    NSError* error = [NSError errorWithDomain:(NSString*)kCFErrorDomainCFNetwork
-                                         code:kCFURLErrorDNSLookupFailed
+    NSError* error = [NSError errorWithDomain:(NSString*)NSURLErrorDomain
+                                         code:NSURLErrorDNSLookupFailed
                                      userInfo:nil];
 
     [NRMANetworkFacade noticeNetworkFailure:request

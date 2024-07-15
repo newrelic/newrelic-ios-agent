@@ -112,7 +112,7 @@ static SEL swizzleSelectors[];
     // Swizzle the class methods we want to intercept (instance methods of the metaClasses):
     Class clazz = objc_getMetaClass("NSURLConnection");
     if (clazz) {
-        NRLOG_INFO(@"NSURLConnection is present; setting up instrumentation");
+        NRLOG_AGENT_INFO(@"NSURLConnection is present; setting up instrumentation");
 
         [NRMANSURLConnectionSupport overrideURLConnInitMethods];
 
@@ -122,7 +122,7 @@ static SEL swizzleSelectors[];
         origImps = (IMP*)malloc(swizzleCount * sizeof(IMP));
 
         if (origImps == NULL) {
-            NRLOG_ERROR(@"Failed to instrument NSURLSession. Malloc error: %s",strerror(errno));
+            NRLOG_AGENT_ERROR(@"Failed to instrument NSURLSession. Malloc error: %s",strerror(errno));
             [NRMANSURLConnectionSupport deinstrumentURLConnInitMethods];
             return NO;
         }
@@ -138,7 +138,7 @@ static SEL swizzleSelectors[];
         return YES;
     }
     else {
-        NRLOG_VERBOSE(@"NSURLConnection is not present; skipping instrumentation");
+        NRLOG_AGENT_VERBOSE(@"NSURLConnection is not present; skipping instrumentation");
         [NRMANSURLConnectionSupport deinstrumentURLConnInitMethods];
         return NO;
     }
@@ -148,7 +148,7 @@ static SEL swizzleSelectors[];
 {
     Class clazz = objc_getClass("NSURLConnection");
     if (clazz) {
-        NRLOG_INFO(@"NSURLConnection is present; removing instrumentation");
+        NRLOG_AGENT_INFO(@"NSURLConnection is present; removing instrumentation");
 
         [NRMANSURLConnectionSupport deinstrumentURLConnInitMethods];
         
@@ -176,7 +176,7 @@ static SEL swizzleSelectors[];
         return YES;
     }
     else {
-        NRLOG_VERBOSE(@"NSURLConnection is not present; skipping deinstrumentation");
+        NRLOG_AGENT_VERBOSE(@"NSURLConnection is not present; skipping deinstrumentation");
 
         return NO;
     }
@@ -301,7 +301,7 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
 
     // http://developer.apple.com/library/ios/#documentation/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Constants/Reference/reference.html#//apple_ref/doc/uid/TP40003793-CH3g-SW40
 
-    NRLOG_VERBOSE(@"%@\n\tDelay:   %.5lf\n\tError:   %lu\n\t%@",
+    NRLOG_AGENT_VERBOSE(@"%@\n\tDelay:   %.5lf\n\tError:   %lu\n\t%@",
                   request.URL.description,
                   timer.timeElapsedInSeconds,
                   (unsigned long)error.code,
@@ -373,7 +373,7 @@ static id initWithRequest_delegate_startImmediately(id self, SEL _cmd, NSURLRequ
                                                                                                request:mutableRequest
                                                                                       startImmediately:startImmediately];
 
-    NRLOG_VERBOSE(@"%p (proxy %p) initWithRequest:%@", self, proxyDelegate, request.URL.absoluteString);
+    NRLOG_AGENT_VERBOSE(@"%p (proxy %p) initWithRequest:%@", self, proxyDelegate, request.URL.absoluteString);
 
     return NRMA__NSURLConn_initWithRequest_delegate_startImmediately(self,_cmd, mutableRequest,proxyDelegate,startImmediately);
 }
