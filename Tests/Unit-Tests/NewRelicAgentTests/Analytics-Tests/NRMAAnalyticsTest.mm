@@ -16,6 +16,9 @@
 #import "NRLogger.h"
 #import "NRMASupportMetricHelper.h"
 #import <OCMock/OCMock.h>
+#import "NRMAHarvestController.h"
+#import "NRMAAppToken.h"
+#import "NRTestConstants.h"
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -651,6 +654,43 @@
     //    XCTAssertTrue([dict[@"123"] isEqualToString:@"123"], @"dup store doesn't contain expected value");
     //
     //    XCTAssertTrue(array.count == 0, @"dup events should have been cleared out on harvest before.");
+}
+
+- (void) testMaxEventBufferTime {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics setMaxEventBufferTime:60];
+
+    [analytics addEventNamed:@"pewpew" withAttributes:@{@"1":@"hello",@"2":@2}];
+
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                          crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfig];
+    sleep(1);
+    [analytics onHarvestBefore];
+
+    NRMAHarvestData* data = [NRMAHarvestController harvestData];
+    XCTAssertTrue(data.analyticsEvents.events.count > 0);
+}
+
+- (void) testMaxEventBufferTimeNotReached {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics setMaxEventBufferTime:120];
+
+    [analytics addEventNamed:@"pewpew" withAttributes:@{@"1":@"hello",@"2":@2,@"timestamp":@([NRMAAnalytics currentTimeMillis])}];
+
+    [analytics setSessionAttribute:@"12345" value:@5];
+    [analytics setSessionAttribute:@"123" value:@"123"];
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                          crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfig];
+    [analytics onHarvestBefore];
+
+    NRMAHarvestData* data = [NRMAHarvestController harvestData];
+    XCTAssertTrue(data.analyticsEvents.events.count == 0);
 }
 
 - (void) testBadInput {
@@ -1318,6 +1358,43 @@
     analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     XCTAssertEqual([analytics getMaxEventBufferTime], 2000);
 }
+
+- (void) testMaxEventBufferTime {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics setMaxEventBufferTime:60];
+
+    [analytics addEventNamed:@"pewpew" withAttributes:@{@"1":@"hello",@"2":@2,@"timestamp":@([NRMAAnalytics currentTimeMillis]+1)}];
+
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                          crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfig];
+    [analytics onHarvestBefore];
+
+    NRMAHarvestData* data = [NRMAHarvestController harvestData];
+    XCTAssertTrue(data.analyticsEvents.events.count > 0);
+}
+
+- (void) testMaxEventBufferTimeNotReached {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    [analytics setMaxEventBufferTime:120];
+
+    [analytics addEventNamed:@"pewpew" withAttributes:@{@"1":@"hello",@"2":@2,@"timestamp":@([NRMAAnalytics currentTimeMillis])}];
+
+    [analytics setSessionAttribute:@"12345" value:@5];
+    [analytics setSessionAttribute:@"123" value:@"123"];
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                          crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfig];
+    [analytics onHarvestBefore];
+
+    NRMAHarvestData* data = [NRMAHarvestController harvestData];
+    XCTAssertTrue(data.analyticsEvents.events.count == 0);
+}
+
 
 - (void) testBadInput {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
