@@ -62,6 +62,7 @@ BOOL _NRMAAgentTestModeEnabled = NO;
 
 // Use this to verify that we don't execute critical code in the "onbackground" process after we've come back to the foreground.
 static BOOL didFireEnterForeground;
+static BOOL didFireEnterBackground;
 
 static NRMAURLTransformer* urlTransformer;
 
