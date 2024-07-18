@@ -102,6 +102,7 @@ typedef enum _NRLogTargets {
     NSMutableArray *uploadQueue;
     BOOL isUploading;
     unsigned int failureCount;
+    BOOL debugLogs;
 
 }
 
@@ -111,6 +112,20 @@ typedef enum _NRLogTargets {
    inMethod:(NSString *)method
 withMessage:(NSString *)message;
 
++ (void)log:(unsigned int)level
+     inFile:(NSString *)file
+     atLine:(unsigned int)line
+   inMethod:(NSString *)method
+withMessage:(NSString *)message
+withAttributes:(NSDictionary *)attributes;
+
+
++ (void)log:(unsigned int)level
+     inFile:(NSString *)file
+     atLine:(unsigned int)line
+   inMethod:(NSString *)method
+withMessage:(NSString *)message
+withAgentLogsOn:(BOOL)agentLogsOn;
 
 /*!
  Configure the amount of information the New Relic agent outputs about its internal operation.
@@ -132,19 +147,11 @@ withMessage:(NSString *)message;
  */
 + (void)setLogTargets:(unsigned int)targets;
 
-/*
-Configure the New Relic logging API.
+// For internal use only. Do not use.
++ (void)setLogIngestKey:(NSString*)key;
 
-@param url A single NSString constant, the logging API URL.
-*/
-+ (void)setLogIngestKey:(NSString*) key;
-
-/*
- Configure the New Relic logging API.
-
-@param url A single NSString constant, the logging API URL.
-*/
-+ (void)setLogEntityGuid:(NSString*) key;
+// For internal use only. Do not use.
++ (void)setLogEntityGuid:(NSString*)key;
 
 + (void)setLogURL:(NSString*) url;
 
@@ -179,15 +186,32 @@ Configure the New Relic logging API.
 @end
 
 
-#define NRLOG(level, format, ...) \
-    [NRLogger log:level inFile:[[NSString stringWithUTF8String:__FILE__] lastPathComponent] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__]]
+#define NRLOG(level, agentLogs, format, ...) \
+    [NRLogger log:level inFile:[[NSString stringWithUTF8String:__FILE__] lastPathComponent] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__] withAgentLogsOn:agentLogs]
 
-#define NRLOG_ERROR(format, ...) NRLOG(NRLogLevelError, format, ##__VA_ARGS__)
-#define NRLOG_WARNING(format, ...) NRLOG(NRLogLevelWarning, format, ##__VA_ARGS__)
-#define NRLOG_INFO(format, ...) NRLOG(NRLogLevelInfo, format, ##__VA_ARGS__)
-#define NRLOG_VERBOSE(format, ...) NRLOG(NRLogLevelVerbose, format, ##__VA_ARGS__)
-#define NRLOG_AUDIT(format, ...) NRLOG(NRLogLevelAudit, format, ##__VA_ARGS__)
-#define NRLOG_DEBUG(format, ...) NRLOG(NRLogLevelDebug, format, ##__VA_ARGS__)
+#define NRLOG_ATTRS(level, format, attrs, ...) \
+    [NRLogger log:level inFile:[[NSString stringWithUTF8String:__FILE__] lastPathComponent] atLine:__LINE__ inMethod:[NSString stringWithUTF8String:__func__] withMessage:[NSString stringWithFormat:format, ##__VA_ARGS__] withAttributes: attrs]
+
+#define NRLOG_ERROR(format, ...) NRLOG(NRLogLevelError, false, format, ##__VA_ARGS__)
+#define NRLOG_WARNING(format, ...) NRLOG(NRLogLevelWarning, false, format, ##__VA_ARGS__)
+#define NRLOG_INFO(format, ...) NRLOG(NRLogLevelInfo, false, format, ##__VA_ARGS__)
+#define NRLOG_VERBOSE(format, ...) NRLOG(NRLogLevelVerbose, false, format, ##__VA_ARGS__)
+#define NRLOG_AUDIT(format, ...) NRLOG(NRLogLevelAudit, false, format, ##__VA_ARGS__)
+#define NRLOG_DEBUG(format, ...) NRLOG(NRLogLevelDebug, false, format, ##__VA_ARGS__)
+
+#define NRLOG_AGENT_ERROR(format, ...) NRLOG(NRLogLevelError, true, format, ##__VA_ARGS__)
+#define NRLOG_AGENT_WARNING(format, ...) NRLOG(NRLogLevelWarning, true, format, ##__VA_ARGS__)
+#define NRLOG_AGENT_INFO(format, ...) NRLOG(NRLogLevelInfo, true, format, ##__VA_ARGS__)
+#define NRLOG_AGENT_VERBOSE(format, ...) NRLOG(NRLogLevelVerbose, true, format, ##__VA_ARGS__)
+#define NRLOG_AGENT_AUDIT(format, ...) NRLOG(NRLogLevelAudit, true, format, ##__VA_ARGS__)
+#define NRLOG_AGENT_DEBUG(format, ...) NRLOG(NRLogLevelDebug, true, format, ##__VA_ARGS__)
+
+#define NRLOG_ERROR_ATTRS(format, attrs, ...)   NRLOG_ATTRS(NRLogLevelError, format, attrs, ##__VA_ARGS__)
+#define NRLOG_WARNING_ATTRS(format, attrs, ...) NRLOG_ATTRS(NRLogLevelWarning, format, attrs, ##__VA_ARGS__)
+#define NRLOG_INFO_ATTRS(format, attrs, ...)    NRLOG_ATTRS(NRLogLevelInfo, format, attrs, ##__VA_ARGS__)
+#define NRLOG_VERBOSE_ATTRS(format, attrs, ...) NRLOG_ATTRS(NRLogLevelVerbose, format, attrs, ##__VA_ARGS__)
+#define NRLOG_AUDIT_ATTRS(format, attrs, ...)   NRLOG_ATTRS(NRLogLevelAudit, format, attrs, ##__VA_ARGS__)
+#define NRLOG_DEBUG_ATTRS(format, attrs, ...)   NRLOG_ATTRS(NRLogLevelDebug, format, attrs, ##__VA_ARGS__)
 
 #endif // _NEWRELIC_AGENT_LOGGING_
 

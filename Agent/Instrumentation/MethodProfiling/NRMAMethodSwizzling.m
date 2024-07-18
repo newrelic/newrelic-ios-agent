@@ -76,7 +76,7 @@ BOOL NRMASwizzleOrAddMethod(id self, SEL selector, SEL selectorAlias, IMP theImp
                 //
                 // `self` responds to `selector`, but the associated IMP is NULL. Probably a bug.
                 //
-                NRLOG_VERBOSE(@"Unable to find implementation for %@", NSStringFromSelector(selector));
+                NRLOG_AGENT_VERBOSE(@"Unable to find implementation for %@", NSStringFromSelector(selector));
                 return false;
             }
         } else {

@@ -54,7 +54,7 @@
         name[3] = getpid();
 
         if (sysctl(name, 4, &info, &info_size, NULL, 0) == -1) {
-            NRLOG_VERBOSE(@"Checking for a running debugger via sysctl() failed: %s", strerror(errno));
+            NRLOG_AGENT_VERBOSE(@"Checking for a running debugger via sysctl() failed: %s", strerror(errno));
             debuggerIsAttached = false;
         }
 

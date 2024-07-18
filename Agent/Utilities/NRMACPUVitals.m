@@ -60,7 +60,7 @@ static BOOL __appStartCPUTimeIsValid;
 
             // Failed to retrieve thread list: we can't proceed any further.
             if (kern_retval != KERN_SUCCESS) {
-                NRLOG_ERROR(@"task_threads: %s", mach_error_string(kern_retval));
+                NRLOG_AGENT_ERROR(@"task_threads: %s", mach_error_string(kern_retval));
                 return -1;
             }
 
@@ -76,13 +76,13 @@ static BOOL __appStartCPUTimeIsValid;
                     for (; i < table_size; ++i) {
                         kern_retval = mach_port_deallocate(mach_task_self(), thread_table[i]);
                         if(kern_retval != KERN_SUCCESS) {
-                            NRLOG_ERROR(@"mach_port_deallocate thread_table: %s", mach_error_string(kern_retval));
+                            NRLOG_AGENT_ERROR(@"mach_port_deallocate thread_table: %s", mach_error_string(kern_retval));
                         }
                     }
 
                     kern_retval = vm_deallocate(mach_task_self(), (vm_offset_t)thread_table, table_size * sizeof(thread_array_t));
                     if(kern_retval != KERN_SUCCESS) {
-                        NRLOG_ERROR(@"vm_deallocate thread_table: %s", mach_error_string(kern_retval));
+                        NRLOG_AGENT_ERROR(@"vm_deallocate thread_table: %s", mach_error_string(kern_retval));
                     }
                     return -1;
                 }
@@ -95,7 +95,7 @@ static BOOL __appStartCPUTimeIsValid;
 
                 kern_retval = mach_port_deallocate(mach_task_self(), thread_table[i]);
                 if(kern_retval != KERN_SUCCESS) {
-                    NRLOG_ERROR(@"mach_port_deallocate thread_table: %s", mach_error_string(kern_retval));
+                    NRLOG_AGENT_ERROR(@"mach_port_deallocate thread_table: %s", mach_error_string(kern_retval));
                     error = YES;
                 }
             }
@@ -103,7 +103,7 @@ static BOOL __appStartCPUTimeIsValid;
             // Deallocate the thread table.
             kern_retval = vm_deallocate(mach_task_self(), (vm_offset_t)thread_table, table_size * sizeof(thread_array_t));
             if(kern_retval != KERN_SUCCESS) {
-                NRLOG_ERROR(@"vm_deallocate thread_table: %s", mach_error_string(kern_retval));
+                NRLOG_AGENT_ERROR(@"vm_deallocate thread_table: %s", mach_error_string(kern_retval));
                 error = YES;
             }
         }

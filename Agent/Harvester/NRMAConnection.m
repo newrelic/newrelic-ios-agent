@@ -21,7 +21,7 @@
     [postRequest addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
 
     if (![self.applicationToken length]) {
-        NRLOG_ERROR(@"cannot create post request without Application Token.");
+        NRLOG_AGENT_ERROR(@"cannot create post request without Application Token.");
         return nil;
     }
 

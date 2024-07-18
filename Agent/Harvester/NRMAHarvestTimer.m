@@ -18,7 +18,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 {
     self = [super init];
     if (self) {
-        NRLOG_VERBOSE(@"HarvestTime: %@ initialized", self);
+        NRLOG_AGENT_VERBOSE(@"HarvestTime: %@ initialized", self);
         self.harvester = harvester;
         self.period = NR_DEFAULT_HARVEST_PERIOD;
     }
@@ -28,15 +28,15 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 - (void) start
 {
     if ([self isRunning]) {
-        NRLOG_VERBOSE(@"HarvestTimer: Attempting to start while already running.");
+        NRLOG_AGENT_VERBOSE(@"HarvestTimer: Attempting to start while already running.");
         return;
     }
     if (self.period <= 0) {
-        NRLOG_ERROR(@"HarvestTimer: Refusing to start with a period of 0 ms");
+        NRLOG_AGENT_ERROR(@"HarvestTimer: Refusing to start with a period of 0 ms");
         return;
     }
     
-    NRLOG_INFO(@"HarvestTimer: starting with a period of %lld ms",self.period);
+    NRLOG_AGENT_INFO(@"HarvestTimer: starting with a period of %lld ms",self.period);
     self.timer = [NSTimer timerWithTimeInterval:((double)self.period) / (double)1000.0
                                            target:self
                                          selector:@selector(harvest)
@@ -51,7 +51,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         long long lastTickDelta = [self timeSinceLastTick];
         if  (lastTickDelta < self.period && lastTickDelta != NR_NEVER_TICKED){
-            NRLOG_VERBOSE(@"HarvestTimer: Tick is too soon. Skipping.");
+            NRLOG_AGENT_VERBOSE(@"HarvestTimer: Tick is too soon. Skipping.");
             return;
         }
         
@@ -62,7 +62,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
             [self tick];
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         } @catch (NSException *exception) {
-            NRLOG_ERROR(@"Harvest tick threw an exception");
+            NRLOG_AGENT_ERROR(@"Harvest tick threw an exception");
             [NRMAExceptionHandler logException:exception class:NSStringFromClass([self class]) selector:@"tick"];
         }
         #endif
@@ -72,12 +72,12 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 
 - (void) tick
 {
-    NRLOG_VERBOSE(@"Harvest: Tick");
+    NRLOG_AGENT_VERBOSE(@"Harvest: Tick");
     long long tick = (long long)NRMAMillisecondTimestamp();
     [self.harvester execute];
-    NRLOG_VERBOSE(@"Harvest: executed");
+    NRLOG_AGENT_VERBOSE(@"Harvest: executed");
     long long delta = (long long)(NRMAMillisecondTimestamp() - tick);
-    NRLOG_VERBOSE(@"HarvestTimer tick took %lld ms",delta);
+    NRLOG_AGENT_VERBOSE(@"HarvestTimer tick took %lld ms",delta);
     [self updateTimer];
 }
 
@@ -87,7 +87,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
         
         [self stop];
         self.period = [NRMAHarvestController configuration].data_report_period*1000;
-        NRLOG_VERBOSE(@"Updating harvest period to %lldms",self.period);
+        NRLOG_AGENT_VERBOSE(@"Updating harvest period to %lldms",self.period);
         [self start];
     }
 }
@@ -95,7 +95,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 - (void) stop
 {
     if (![self isRunning]) {
-        NRLOG_VERBOSE(@"HarvestTimer: attempting to stop when not running.");
+        NRLOG_AGENT_VERBOSE(@"HarvestTimer: attempting to stop when not running.");
         return;
     }
     
@@ -115,7 +115,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 
 - (void) dealloc
 {
-    NRLOG_VERBOSE(@"HarvestTime: %@ deallocated", self);
+    NRLOG_AGENT_VERBOSE(@"HarvestTime: %@ deallocated", self);
     self.harvester = nil;
     _timer = nil;
 }

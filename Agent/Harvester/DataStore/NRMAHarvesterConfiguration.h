@@ -30,7 +30,10 @@
 #define kNMRA_APPLICATION_ID @"application_id"
 #define kNRMA_TRUSTED_ACCOUNT_KEY @"trusted_account_key"
 #define kNRMA_ENTITY_GUID_KEY @"entity_guid"
-#define kNRMA_LOG_REPORTING_KEY @"log_reporting"
+#define kNRMA_CONFIG_KEY @"configuration"
+#define kNRMA_LOG_REPORTING_KEY @"logs"
+#define kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY @"sampling_rate"
+#define KNRMA_REQUEST_HEADER_MAP_KEY @"request_headers_map"
 
 #define NRMA_DEFAULT_COLLECT_NETWORK_ERRORS YES  // boolean
 #define NRMA_DEFAULT_REPORT_PERIOD 60            // seconds
@@ -64,6 +67,10 @@
 @property(nonatomic,strong) NSString* trusted_account_key;
 @property(nonatomic,strong) NSString* entity_guid;
 @property(nonatomic,assign) BOOL      log_reporting_enabled;
+@property(nonatomic,assign) double    sampling_rate;
+@property(nonatomic,assign) BOOL      has_log_reporting_config;
+@property(nonatomic,assign) NSDictionary* request_header_map;
+@property(nonatomic,assign) double sampleSeed;
 
 // CAN BE
 // NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
@@ -75,4 +82,6 @@
 - (NSUInteger) hash;
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
+- (BOOL) isSampled;
+
 @end

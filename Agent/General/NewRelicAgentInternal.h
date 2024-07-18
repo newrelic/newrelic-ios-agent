@@ -40,6 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong) NSString* userId;
+@property(assign) double sampleSeed;
 
 // Track the total number of successful network requests logged by the agent
 @property (nonatomic, readonly, assign) NSUInteger lifetimeRequestCount;
@@ -77,8 +78,6 @@ NS_ASSUME_NONNULL_BEGIN
 // Returns whether or not we should be collecting HTTP errors. Exposed for ASI support.
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
-
-- (void)watchOSNotification:(NSString*)notification;
 
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;

@@ -65,7 +65,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         if (sessionId == nil) [missingParams addObject:@"sessionId"];
         if (analytics == nil) [missingParams addObject:@"AnalyticsController"];
         if (sessionStartDate == nil) [missingParams addObject:@"SessionStartDate"];
-        NRLOG_ERROR(@"Failed to create handled exception object. Key parameter(s) are nil: %@. This will prevent handle exception reporting.",  [missingParams componentsJoinedByString:@", "]);
+        NRLOG_AGENT_ERROR(@"Failed to create handled exception object. Key parameter(s) are nil: %@. This will prevent handle exception reporting.",  [missingParams componentsJoinedByString:@", "]);
         return nil;
     }
     self = [super init];
@@ -85,22 +85,22 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         NSString* version = [NRMAAgentConfiguration connectionInformation].applicationInformation.appVersion;
 
         if (appToken == nil || appToken.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: missing application token.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: missing application token.");
             return nil;
         }
 
         if (version == nil || version.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: no version number.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: no version number.");
             return nil;
         }
 
         if (collectorHost == nil || collectorHost.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: no host specified.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: no host specified.");
             return nil;
         }
 
         if (sessionId == nil || sessionId.length == 0) {
-            NRLOG_ERROR(@"Failed to create Handled Exception Manager: session id not specified.");
+            NRLOG_AGENT_ERROR(@"Failed to create Handled Exception Manager: session id not specified.");
             return nil;
         }
 
@@ -114,13 +114,16 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                                         version.UTF8String,
                                                                         collectorHost.UTF8String);
 
-
         NSString* backupStorePath = [NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kHexBackupStoreFolder];
+        NSError* error = nil;
 
         [[NSFileManager defaultManager] createDirectoryAtPath:backupStorePath
                                   withIntermediateDirectories:YES
                                                    attributes:nil
-                                                        error:nil];
+                                                        error:&error];
+        if (error) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC SETUP - Failed to create handled exceptions directory: %@",error);
+        }
 
         _store = std::make_shared<NewRelic::Hex::HexStore>(backupStorePath.UTF8String);
 
@@ -231,7 +234,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 - (void) recordHandledException:(NSException*)exception
                      attributes:(NSDictionary*)attributes {
     if (exception == nil) {
-        NRLOG_ERROR(@"Ignoring nil exception.");
+        NRLOG_AGENT_ERROR(@"Ignoring nil exception.");
         return;
     }
 
@@ -242,7 +245,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
 
     if (!exception.callStackReturnAddresses.count) {
-        NRLOG_ERROR(@"Invalid exception. \"%@\" was recorded without being thrown. +[NewRelic %@] is reserved for thrown exceptions only.", eName, NSStringFromSelector(_cmd));
+        NRLOG_AGENT_ERROR(@"Invalid exception. \"%@\" was recorded without being thrown. +[NewRelic %@] is reserved for thrown exceptions only.", eName, NSStringFromSelector(_cmd));
         return;
     }
 

@@ -78,9 +78,9 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
     NSArray* reportURLs = [self crashReportURLs:&error];
     if ([reportURLs count] <= 0) {
         if (error) {
-            NRLOG_VERBOSE(@"failed to fetch crash reports: %@",error.description);
+            NRLOG_AGENT_VERBOSE(@"failed to fetch crash reports: %@",error.description);
         } else {
-            NRLOG_VERBOSE(@"Currently no crash files to upload.");
+            NRLOG_AGENT_VERBOSE(@"Currently no crash files to upload.");
         }
         return;
     }
@@ -95,14 +95,14 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 - (void) uploadFileAtPath:(NSURL*)path
 {
     if (!_crashCollectorHost.length) {
-        NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash collector address was not set. Unable to upload crash.");
+        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash collector address was not set. Unable to upload crash.");
         __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
 
         return;
     }
 
     if (path == nil) {
-        NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - CrashData path was not set. Unable to upload crash.");
+        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - CrashData path was not set. Unable to upload crash.");
         __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
 
         return;
@@ -110,7 +110,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 
     // Start tracking file upload attempts.
     if (![self shouldUploadFileWithUniqueIdentifier:path.absoluteString]) {
-        NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Reached upload retry limit for a crash report. Removing crash report: %@",path.absoluteString);
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Reached upload retry limit for a crash report. Removing crash report: %@",path.absoluteString);
         // Enqueue supportability metric "Supportability/AgentHealth/Crash/RemovedStale".
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Crash/RemoveStale"
                                                         value:@1
@@ -126,7 +126,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
     NSURLRequest* request = [self buildPost];
 
     if ([reqData length] > kNRMAMaxPayloadSizeLimit) {
-        NRLOG_ERROR(@"Unable to upload crash log because payload is larger than 1 MB, discarding crash report");
+        NRLOG_AGENT_ERROR(@"Unable to upload crash log because payload is larger than 1 MB, discarding crash report");
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"mobile_crash"];
         // Remove the crash log even though we couldn't upload so we don't try every time.
         [self removeCrashLogAtpath:path];
@@ -135,14 +135,14 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
         return;
     }
 
-    NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Perform crash upload");
+    NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Perform crash upload");
 
     [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
         __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
 
-        NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
         if(responseError) {
-            NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
+            NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
         }
 
         if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
@@ -159,7 +159,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 
                 [self removeCrashLogAtpath:path];
             } else {
-                NRLOG_VERBOSE(@"NEWRELIC CRASH UPLOADER - failed to upload crash log: %@, to try again later.",path.path);
+                NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - failed to upload crash log: %@, to try again later.",path.path);
             }
         }
     }] resume];
@@ -172,9 +172,9 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
     BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
 
     if (error) {
-        NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file :%@, %@",path.path, error.description);
+        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file :%@, %@",path.path, error.description);
     } else if (!didRemoveFile) {
-        NRLOG_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file. Error unknown.");
+        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file. Error unknown.");
     }
 }
 
