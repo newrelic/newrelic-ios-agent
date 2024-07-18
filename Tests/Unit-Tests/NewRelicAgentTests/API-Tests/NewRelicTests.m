@@ -25,13 +25,66 @@
 #import "NewRelicAgentTests.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHTTPUtilities.h"
+#import <OCMock/OCMock.h>
+#import <objc/runtime.h>
+
+IMP originalMyBoolPropertyGetterIMP = NULL;
+
+BOOL myBoolPropertyMockedGetter(id self, SEL _cmd) {
+    return YES; // Return the mocked value
+}
+
+// Function to mock the myBoolProperty getter
+void mockMyBoolProperty(void) {
+    SEL getterSel = @selector(enabled);
+    Method originalMethod = class_getInstanceMethod([NewRelicAgentInternal class], getterSel);
+    originalMyBoolPropertyGetterIMP = method_getImplementation(originalMethod);
+    method_setImplementation(originalMethod, (IMP)myBoolPropertyMockedGetter);
+}
+
+// Function to reset the myBoolProperty getter to its original implementation
+void resetMyBoolPropertyMock(void) {
+    if (originalMyBoolPropertyGetterIMP) {
+        SEL getterSel = @selector(enabled);
+        Method originalMethod = class_getInstanceMethod([NewRelicAgentInternal class], getterSel);
+        method_setImplementation(originalMethod, originalMyBoolPropertyGetterIMP);
+    }
+}
+
+static NewRelicAgentInternal* _sharedInstance;
 
 @interface NewRelicTests : XCTestCase {
 }
+
+@property id mockNewRelicInternals;
+
 @end
 
 @implementation NewRelicTests
 
+- (void)setUp {
+    [super setUp];
+    NSArray* paths = [[NSFileManager defaultManager] URLsForDirectory:NSLibraryDirectory
+                                                            inDomains:NSUserDomainMask];
+    NSURL* documentDirURL = paths[0];
+    NSString *fileName = [documentDirURL.path stringByAppendingPathComponent:@"newrelic"];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:fileName]) {
+        [fileManager removeItemAtPath:fileName error:nil];
+    }
+    
+    self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    _sharedInstance = [[NewRelicAgentInternal alloc] init];
+    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
+    [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
+}
+
+- (void)tearDown {
+    [self.mockNewRelicInternals stopMocking];
+    _sharedInstance = nil;
+    
+    [super tearDown];
+}
 
 - (void) testBadSelectorMethodTrace
 {
@@ -281,22 +334,30 @@
 
 - (void) testSetUserID {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
-    XCTAssertFalse([analytics setSessionAttribute:@"userId" value:@"test"]);
+    XCTAssertTrue([analytics setSessionAttribute:@"userId" value:@"test"]);
     XCTAssertTrue([NewRelic setUserId:@"test"]);
 }
 
-// TODO: Fix setUserId test
-//- (void) testSetUserIdSessionBehavior {
-//    // set userId to testId
-//    BOOL success = [NewRelic setUserId:@"testId"];
-//    XCTAssertTrue(success);
-//    // set userId to Bob
-//    success = [NewRelic setUserId:@"Bob"];
-//    XCTAssertTrue(success);
-//    // set userId to NULL
-//    success = [NewRelic setUserId:NULL];
-//    XCTAssertTrue(success);
-//}
+- (void) testSetUserIdSessionBehavior {
+    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
+
+    // set userId to testId
+    BOOL success = [NewRelic setUserId:@"testId"];
+    XCTAssertTrue(success);
+    // set userId to Bob
+    success = [NewRelic setUserId:@"Bob"];
+    XCTAssertTrue(success);
+    NSString* attributes = [[NewRelicAgentInternal sharedInstance].analyticsController sessionAttributeJSONString];
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertTrue([decode[@"userId"] isEqualToString:@"Bob"]);
+    // set userId to NULL
+    success = [NewRelic setUserId:NULL];
+    // When a new session happens the session attributes are removed
+    XCTAssertFalse(success);
+    [self.mockNewRelicInternals stopMocking];
+}
 
 - (void) testRemoveAttribute {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
@@ -326,6 +387,8 @@
 }
 
 -(void) testSetApplicationBuildAndVersionBeforeSessionStart {
+    [self.mockNewRelicInternals stopMocking];
+    
     if ([NewRelicAgentInternal sharedInstance] != Nil) {
         [[NewRelicAgentInternal sharedInstance] destroyAgent];
     }
@@ -335,7 +398,9 @@
     
 }
 
--(void) testInvalidStartApplicationWithoutToken{
+-(void) testInvalidStartApplicationWithoutToken {
+    [self.mockNewRelicInternals stopMocking];
+    
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
     [NewRelic startWithApplicationToken:Nil];
     XCTAssertNil([NewRelicAgentInternal sharedInstance], @"Should not start agent without application token");
@@ -383,12 +448,14 @@
 
 // XCode will run tests in alphabetical order, so the sharedInstance will not exist for testA*.
 -(void) testAShutdownBeforeEnable {
+    [self.mockNewRelicInternals stopMocking];
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
 
     [NewRelic shutdown];
 }
 
 -(void) testAddHTTPHeaderTrackingDefault {
+    [self.mockNewRelicInternals stopMocking];
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
 //    [NewRelic httpHeadersAddedForTracking]
     XCTAssertNotNil([NewRelic httpHeadersAddedForTracking]);
@@ -398,6 +465,7 @@
 }
 
 -(void) testAddHTTPHeaderTracking {
+    [self.mockNewRelicInternals stopMocking];
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
     
     // Add a new header value to track
@@ -414,60 +482,69 @@
 }
 
 -(void) testSetShutdown {
-
-    XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
-
-    [NewRelic shutdown];
-    // Test double shutdown call
-    [NewRelic shutdown];
-    // Test log when agent is shutdown.
-    [NewRelic startWithApplicationToken:@"TOKEN"];
-
-    // Can't assert
-    [NewRelic startTracingMethod:NSSelectorFromString(@"methodName")
-                          object:self
-                           timer:[[NRTimer alloc] init]
-                        category:NRTraceTypeDatabase];
-
-    // NR shouldn't crash if agent is shutdown.
-    [NewRelic crashNow];
-
-    // Can't assert.
-    [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]];
-    NSDictionary* dict = @{@"string":@"string",
-                           @"num":@1};
-    // Can't assert
-    [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"
-                                                             reason:@"the tea is too hot"
-                                                           userInfo:nil]
-                      withAttributes:dict];
-    // Can't assert
-    [NewRelic recordHandledExceptionWithStackTrace:dict];
-    // Can't assert
-    [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}]];
-    // Can't assert
-    [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}] attributes:dict];
-
-    XCTAssertFalse([NewRelic startInteractionWithName:@"InteractionName"]);
-
-    // Can't assert
-    [NewRelic stopCurrentInteraction:@"InteractionName"];
-
-    // Can't assert
-    [NewRelic endTracingMethodWithTimer:[[NRTimer alloc] init]];
-
-    XCTAssertFalse([NewRelic setAttribute:@"attr" value:@5]);
-    XCTAssertFalse([NewRelic incrementAttribute: @"attr"]);
-
-    XCTAssertFalse([NewRelic removeAttribute: @"attr"]);
-    XCTAssertFalse([NewRelic removeAllAttributes]);
-    XCTAssertFalse([NewRelic recordCustomEvent:@"asdf"
-                                          name:@"blah"
-                                    attributes:@{@"name":@"unblah"}]);
-    XCTAssertFalse([NewRelic recordBreadcrumb:@"test" attributes:dict]);
-
-    // Can't assert
-    [NewRelic recordCustomEvent:@"EventName" attributes:dict];
+    @try{
+        mockMyBoolProperty();
+        
+        XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
+        
+        [NewRelic shutdown];
+        // Test double shutdown call
+        [NewRelic shutdown];
+        // Test log when agent is shutdown.
+        XCTAssertNoThrow([NewRelic logInfo:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelic logError:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+        
+        // Can't assert
+        [NewRelic startTracingMethod:NSSelectorFromString(@"methodName")
+                              object:self
+                               timer:[[NRTimer alloc] init]
+                            category:NRTraceTypeDatabase];
+        
+        // NR shouldn't crash if agent is shutdown.
+        XCTAssertNoThrow([NewRelic crashNow]);
+        
+        // Can't assert.
+        [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]];
+        NSDictionary* dict = @{@"string":@"string",
+                               @"num":@1};
+        // Can't assert
+        [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"
+                                                                 reason:@"the tea is too hot"
+                                                               userInfo:nil]
+                          withAttributes:dict];
+        // Can't assert
+        [NewRelic recordHandledExceptionWithStackTrace:dict];
+        // Can't assert
+        [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}]];
+        // Can't assert
+        [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}] attributes:dict];
+        
+        XCTAssertFalse([NewRelic startInteractionWithName:@"InteractionName"]);
+        
+        // Can't assert
+        [NewRelic stopCurrentInteraction:@"InteractionName"];
+        
+        // Can't assert
+        [NewRelic endTracingMethodWithTimer:[[NRTimer alloc] init]];
+        
+        XCTAssertFalse([NewRelic setAttribute:@"attr" value:@5]);
+        XCTAssertFalse([NewRelic incrementAttribute: @"attr"]);
+        
+        XCTAssertFalse([NewRelic removeAttribute: @"attr"]);
+        XCTAssertFalse([NewRelic removeAllAttributes]);
+        XCTAssertFalse([NewRelic recordCustomEvent:@"asdf"
+                                              name:@"blah"
+                                        attributes:@{@"name":@"unblah"}]);
+        XCTAssertFalse([NewRelic recordBreadcrumb:@"test" attributes:dict]);
+        
+        // Can't assert
+        [NewRelic recordCustomEvent:@"EventName" attributes:dict];
+    } @finally{
+        resetMyBoolPropertyMock();
+    }
 }
 
 - (void) testLogging {
@@ -509,4 +586,3 @@
 }
 
 @end
-

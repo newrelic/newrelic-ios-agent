@@ -113,7 +113,7 @@
 + (void) crashNow:(NSString*)message
 {
     // If Agent is shutdown we shouldn't respond.
-    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+    if([[NewRelicAgentInternal sharedInstance] isShutdown]) {
         return;
     }
 
