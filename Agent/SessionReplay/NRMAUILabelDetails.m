@@ -15,8 +15,9 @@
 - (instancetype)initWithView:(UIView *)view {
     self = [super init];
     if(self) {
-        _frame = [view.superview convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
+//        _frame = [view.superview convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
 //        _frame = [view convertRect:view.frame toCoordinateSpace:nil];
+        _frame = view.frame;
 //        API_AVAILABLE(ios(5.0)) UIWindow *extractedExpr = ((UIWindowScene *)[[UIApplication sharedApplication] connectedScenes].anyObject).windows.firstObject;
 //        _frame = [view convertRect:view.frame toCoordinateSpace:extractedExpr.screen.fixedCoordinateSpace];
 //        _frame = [view convertRect:view.frame toView:extractedExpr];
