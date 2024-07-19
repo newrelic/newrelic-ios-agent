@@ -11,6 +11,8 @@
 #include "Analytics/EventDeserializer.hpp"
 #include "Analytics/EventBufferConfig.hpp"
 
+static const int kBufferTimeSecondsLeeway = 60; // 60 seconds
+
 namespace NewRelic {
 
 EventManager::EventManager(PersistentStore<std::string, AnalyticEvent>& store) :
@@ -25,7 +27,7 @@ EventManager::~EventManager() {
 bool EventManager::didReachMaxQueueTime(unsigned long long currentTimestamp_ms) {
     if (_oldest_event_timestamp_ms == 0) return false; //default value of _oldest_event_timestamp_ms
     unsigned long long oldest_event_age_ms = currentTimestamp_ms - _oldest_event_timestamp_ms;
-    return oldest_event_age_ms / 1000 >= EventBufferConfig::getInstance().get_max_buffer_time_sec();
+    return (oldest_event_age_ms / 1000) + kBufferTimeSecondsLeeway >= EventBufferConfig::getInstance().get_max_buffer_time_sec();
 }
 
 void EventManager::setMaxBufferSize(unsigned int size) {
