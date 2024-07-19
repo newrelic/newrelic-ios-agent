@@ -76,6 +76,7 @@ static NewRelicAgentInternal* _sharedInstance;
     self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
     _sharedInstance = [[NewRelicAgentInternal alloc] init];
     _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
+    [_sharedInstance.analyticsController removeAllSessionAttributes];
     [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
 }
 
@@ -193,6 +194,7 @@ static NewRelicAgentInternal* _sharedInstance;
     flags = [NRMAFlags featureFlags];
     XCTAssertTrue(flags & NRFeatureFlag_NewEventSystem, @"flags should have New Event System enabled");
     XCTAssertFalse(flags & ~NRFeatureFlag_NewEventSystem , @"flags shouldn't have any other bit enabled.");
+    [NewRelic disableFeatures:NRFeatureFlag_NewEventSystem];
 }
 
 - (void) testEnableOfflineStorage {
@@ -339,8 +341,6 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 - (void) testSetUserIdSessionBehavior {
-    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
-
     // set userId to testId
     BOOL success = [NewRelic setUserId:@"testId"];
     XCTAssertTrue(success);
@@ -354,15 +354,18 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertTrue([decode[@"userId"] isEqualToString:@"Bob"]);
     // set userId to NULL
     success = [NewRelic setUserId:NULL];
-    // When a new session happens the session attributes are removed
-    XCTAssertFalse(success);
+    XCTAssertTrue(success);
     [self.mockNewRelicInternals stopMocking];
 }
 
 - (void) testRemoveAttribute {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
-    XCTAssertEqual([analytics removeSessionAttributeNamed:@"a"], [NewRelic removeAttribute:@"a"]);
+    XCTAssertTrue([analytics setSessionAttribute:@"a" value:@"test"]);
+    XCTAssertTrue([analytics removeSessionAttributeNamed:@"a"]);
+    XCTAssertTrue([analytics setSessionAttribute:@"a" value:@"test"]);
+    XCTAssertTrue([NewRelic removeAttribute:@"a"]);
 }
+
 - (void) testRemoveAllAttributes {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
     XCTAssertEqual([analytics removeAllSessionAttributes], [NewRelic removeAllAttributes]);
