@@ -263,9 +263,6 @@ static NewRelicAgentInternal* _sharedInstance;
             }
             [self initialize];
             [self onSessionStart];
-            
-            // Remove last runs userId at new launch of app.
-            [self.analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
 
             if ([NRMAFlags shouldEnableCrashReporting]) {
                 NRMACrashReporterRecorder* crashReportRecorder = [[NRMACrashReporterRecorder alloc] init];
