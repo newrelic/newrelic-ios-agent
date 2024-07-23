@@ -27,15 +27,17 @@ enum Platform {
   Platform_Android = 0,
   Platform_iOS = 1,
   Platform_tvOS = 2,
+  Platform_watchOS = 3,
   Platform_MIN = Platform_Android,
-  Platform_MAX = Platform_tvOS
+  Platform_MAX = Platform_watchOS
 };
 
-inline Platform (&EnumValuesPlatform())[3] {
+inline Platform (&EnumValuesPlatform())[4] {
   static Platform values[] = {
     Platform_Android,
     Platform_iOS,
-    Platform_tvOS
+    Platform_tvOS,
+    Platform_watchOS
   };
   return values;
 }
@@ -45,6 +47,7 @@ inline const char **EnumNamesPlatform() {
     "Android",
     "iOS",
     "tvOS",
+    "watchOS",
     nullptr
   };
   return names;
