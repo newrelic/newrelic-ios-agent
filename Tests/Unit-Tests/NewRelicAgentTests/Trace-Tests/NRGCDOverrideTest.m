@@ -11,6 +11,7 @@
 //
 
 #import "NRGCDOverrideTest.h"
+#import "NRGCDOverride.h"
 #import "NRMATraceController.h"
 #import "NRMAMeasurements.h"
 #import "NRMAActivityTraceMeasurement.h"
