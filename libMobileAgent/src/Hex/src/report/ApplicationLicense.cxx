@@ -7,6 +7,7 @@
 #include "hex_generated.h"
 #include "session-attributes_generated.h"
 #include "ApplicationLicense.hpp"
+#include "jserror_generated.h"
 
 using namespace com::newrelic::mobile;
 using namespace flatbuffers;
