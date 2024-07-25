@@ -174,9 +174,6 @@ static NewRelicAgentInternal* _sharedInstance;
         // TODO: UserId tweaking
         self.userId = NULL;
 
-        // TODO: UserId tweaking
-        self.userId = NULL;
-
         self.appWillTerminate = NO;
         [NRMACPUVitals setAppStartCPUTime];
 #if TARGET_OS_WATCH
@@ -1001,10 +998,10 @@ void applicationDidEnterBackgroundCF(void) {
 }
 
 + (void) shutdown {
-    if (_sharedInstance.enabled) {
+    if ([[NewRelicAgentInternal sharedInstance] enabled]) {
 
         // If shutdown is called when we are already shutdown, do nothing.
-        if (_sharedInstance.isShutdown) {
+        if ([[NewRelicAgentInternal sharedInstance] isShutdown]) {
             NRLOG_AGENT_INFO(@"Agent is shutdown.");
             return;
         }
@@ -1021,7 +1018,7 @@ void applicationDidEnterBackgroundCF(void) {
 
         // Clear stored Events and stored attributes.
         [NRMAAnalytics clearDuplicationStores];
-        [_sharedInstance.analyticsController clearLastSessionsAnalytics];
+        [[NewRelicAgentInternal sharedInstance].analyticsController clearLastSessionsAnalytics];
 
         // Clear measurementEngine
         [NRMAMeasurements drain];
@@ -1046,7 +1043,7 @@ void applicationDidEnterBackgroundCF(void) {
         [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];
         [[[NRMAHarvestController harvestController] harvester] clearStoredApplicationIdentifier];
 
-        [_sharedInstance agentShutdown];
+        [[NewRelicAgentInternal sharedInstance] agentShutdown];
 
         [[NRMAHarvestController harvestController].harvestTimer stop];
 
@@ -1086,7 +1083,7 @@ void applicationDidEnterBackgroundCF(void) {
         // It may be unsafe to attempt de-swizzling everything during runtime.
 
         // Set permanent shutdown flag.
-        _sharedInstance.isShutdown = true;
+        [NewRelicAgentInternal sharedInstance].isShutdown = true;
 
         // * END SHUT DOWN *//
     }
@@ -1129,7 +1126,7 @@ void applicationDidEnterBackgroundCF(void) {
                                                             crashCollectorAddress:crashCollector
                                                               andApplicationToken:[[NRMAAppToken alloc] initWithApplicationToken:appToken]];
 
-        if (_sharedInstance.enabled) {
+        if ([NewRelicAgentInternal sharedInstance].enabled) {
             NRLOG_AGENT_INFO(@"The New Relic Agent started");
         } else {
             NRLOG_AGENT_INFO(@"The New Relic Agent is disabled");
