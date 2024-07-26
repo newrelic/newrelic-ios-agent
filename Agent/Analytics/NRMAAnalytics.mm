@@ -167,7 +167,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 
             NSString* attributes = [self sessionAttributeJSONString];
-            if (attributes != nil) {
+            if (attributes != nil && [attributes length] > 0) {
                 NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
                                                                            options:0
                                                                              error:nil];
@@ -207,7 +207,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             //They can be removed now and it shouldn't interfere with the generation
             //of these attributes if it should occur.
             NSString* attributes = [self sessionAttributeJSONString];
-            if (attributes != nil) {
+            if (attributes != nil && [attributes length] > 0) {
                 NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
                                                                            options:0
                                                                              error:nil];
