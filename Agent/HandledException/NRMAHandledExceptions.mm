@@ -396,13 +396,17 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (std::map<std::string, std::shared_ptr<NewRelic::AttributeBase> >) getSessionAttributesResultMap {
-    NSString *sessionAttributes = [analyticsParent sessionAttributeJSONString];
-    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                               options:0
-                                                                 error:nil];
 
     // Convert NSDictionary => std::map<std::string, std::shared_ptr<NewRelic::AttributeBase> >
     std::map<std::string, std::shared_ptr<NewRelic::AttributeBase> > resultMap;
+
+    NSString *sessionAttributes = [analyticsParent sessionAttributeJSONString];
+    if (sessionAttributes == nil || [sessionAttributes length] == 0) {
+        return resultMap;
+    }
+    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                               options:0
+                                                                 error:nil];
 
     for (NSString *key in dictionary) {
         id value = [dictionary objectForKey:key];
