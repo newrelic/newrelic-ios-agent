@@ -21,7 +21,7 @@ class UtilViewModel {
     var goodAttribute = false
     var badAttribute = false
     var attributes = ""
-    var events = 0
+    var events = 0 
 
     var uniqueInteractionTraceIdentifier: String? =  nil
 

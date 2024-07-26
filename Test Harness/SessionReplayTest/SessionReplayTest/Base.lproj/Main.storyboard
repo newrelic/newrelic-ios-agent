@@ -3,6 +3,7 @@
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22684"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -23,179 +24,211 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="JTW-6G-lu1" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-669" y="-44"/>
+            <point key="canvasLocation" x="-680" y="-27"/>
         </scene>
-        <!--View Controller-->
+        <!--Home View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="SessionReplayTest" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="HomeViewController" customModule="SessionReplayTest" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Pups 'R' Us" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1h0-we-3wa">
-                                <rect key="frame" x="46" y="80" width="176" height="40"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="34"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Your top spot on the web for the best pups" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eTi-Nd-JBL">
-                                <rect key="frame" x="46" y="129" width="319" height="20"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xqX-6Q-oO8" customClass="DogView" customModule="SessionReplayTest" customModuleProvider="target">
-                                <rect key="frame" x="46" y="158" width="321" height="128"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" spacingType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="pT5-zI-eb9">
+                                <rect key="frame" x="8" y="103" width="385" height="715"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Mardi Gras Dog" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YED-rK-9tL">
-                                        <rect key="frame" x="8" y="8" width="156" height="26"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="22"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="750" text="Pups 'R' Us" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1h0-we-3wa">
+                                        <rect key="frame" x="0.0" y="0.0" width="175.66666666666666" height="37.333333333333336"/>
+                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="34"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="This dog is always up for a party" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="h5S-7t-bmD">
-                                        <rect key="frame" x="8" y="37" width="159" height="49"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="750" text="Your top spot on the web for the best pups" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eTi-Nd-JBL">
+                                        <rect key="frame" x="0.0" y="45.333333333333343" width="319" height="19.666666666666671"/>
                                         <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="$1 million dollars" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rJ0-yi-lTc">
-                                        <rect key="frame" x="8" y="113" width="90" height="14"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NpO-RG-hsZ">
-                                        <rect key="frame" x="121" y="101" width="85" height="28"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="tinted" title="Add to Cart">
-                                            <fontDescription key="titleFontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
-                                            <color key="baseBackgroundColor" systemColor="systemYellowColor"/>
-                                        </buttonConfiguration>
+                                    <containerView opaque="NO" contentMode="scaleToFill" verticalCompressionResistancePriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="2NP-lV-6dT">
+                                        <rect key="frame" x="0.0" y="73" width="385" height="528"/>
+                                        <color key="backgroundColor" systemColor="systemGreenColor"/>
                                         <connections>
-                                            <segue destination="10b-ph-XuX" kind="show" id="DAn-y8-4pO"/>
+                                            <segue destination="qhG-hM-xw1" kind="embed" id="aTv-Df-ukX"/>
                                         </connections>
-                                    </button>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="mardi gras dog" translatesAutoresizingMaskIntoConstraints="NO" id="bJR-c1-Ica">
-                                        <rect key="frame" x="214" y="8" width="99" height="112"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    </imageView>
-                                </subviews>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="borderWidth">
-                                        <real key="value" value="2"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="borderColor">
-                                        <color key="value" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
-                                        <real key="value" value="10"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                            </view>
-                            <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xyv-ct-vFw" customClass="DogView" customModule="SessionReplayTest" customModuleProvider="target">
-                                <rect key="frame" x="46" y="294" width="321" height="128"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Eeyore Style Dog" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rbq-UE-C6m">
-                                        <rect key="frame" x="8" y="8" width="172" height="26"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="22"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="eeyore dog" translatesAutoresizingMaskIntoConstraints="NO" id="8j8-2N-51t">
-                                        <rect key="frame" x="220" y="0.0" width="93" height="128"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    </imageView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="This dog will always give you puppy dog eyes" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xUC-Ta-UTS">
-                                        <rect key="frame" x="8" y="43" width="204" height="49"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Free to a good home" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="lH5-EJ-Gzq">
-                                        <rect key="frame" x="8" y="107" width="112" height="14"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
-                                        <nil key="textColor"/>
-                                        <nil key="highlightedColor"/>
-                                    </label>
-                                    <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Fah-oq-UqI">
-                                        <rect key="frame" x="127" y="95" width="85" height="28"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        <state key="normal" title="Button"/>
-                                        <buttonConfiguration key="configuration" style="tinted" title="Add to Cart">
-                                            <fontDescription key="titleFontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
-                                            <color key="baseBackgroundColor" systemColor="systemYellowColor"/>
-                                        </buttonConfiguration>
-                                        <connections>
-                                            <segue destination="10b-ph-XuX" kind="show" id="Bcm-2x-iN7"/>
-                                        </connections>
-                                    </button>
-                                </subviews>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
-                                        <real key="value" value="10"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="borderWidth">
-                                        <real key="value" value="2"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="color" keyPath="borderColor">
-                                        <color key="value" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    </userDefinedRuntimeAttribute>
-                                </userDefinedRuntimeAttributes>
-                            </view>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="K4b-9a-wsj">
-                                <rect key="frame" x="46" y="430" width="321" height="92"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <string key="text">Pups 'R' Us is the best because:
+                                    </containerView>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="K4b-9a-wsj">
+                                        <rect key="frame" x="0.0" y="609" width="263.66666666666669" height="78.333333333333371"/>
+                                        <string key="text">Pups 'R' Us is the best because:
 • We have the best dogs
 • All dogs are great
 • Tango looks more fun than Rosey</string>
-                                <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ap0-rl-eGr">
-                                <rect key="frame" x="46" y="797" width="165" height="20"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <attributedString key="attributedText">
-                                    <fragment content="Terms and Conditions">
-                                        <attributes>
-                                            <color key="NSColor" name="AccentColor"/>
-                                            <font key="NSFont" size="17" name="Helvetica"/>
-                                            <integer key="NSUnderline" value="1"/>
-                                        </attributes>
-                                    </fragment>
-                                </attributedString>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Rk8-ox-6Au">
-                                <rect key="frame" x="313" y="784" width="54" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" image="cart.fill" catalog="system"/>
-                            </button>
+                                        <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <view contentMode="scaleToFill" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="f07-bp-LWa">
+                                        <rect key="frame" x="0.0" y="695.33333333333337" width="385" height="19.666666666666629"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ap0-rl-eGr">
+                                                <rect key="frame" x="20" y="0.0" width="164.66666666666666" height="19.666666666666668"/>
+                                                <attributedString key="attributedText">
+                                                    <fragment content="Terms and Conditions">
+                                                        <attributes>
+                                                            <color key="NSColor" name="AccentColor"/>
+                                                            <font key="NSFont" size="17" name="Helvetica"/>
+                                                            <integer key="NSUnderline" value="1"/>
+                                                        </attributes>
+                                                    </fragment>
+                                                </attributedString>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Rk8-ox-6Au">
+                                                <rect key="frame" x="311.33333333333331" y="-7.6666666666667425" width="53.666666666666686" height="34.333333333333336"/>
+                                                <state key="normal" title="Button"/>
+                                                <buttonConfiguration key="configuration" style="plain" image="cart.fill" catalog="system"/>
+                                            </button>
+                                        </subviews>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <constraints>
+                                            <constraint firstAttribute="trailing" secondItem="Rk8-ox-6Au" secondAttribute="trailing" constant="20" symbolic="YES" id="9S9-7C-Hbj"/>
+                                            <constraint firstItem="Rk8-ox-6Au" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Ap0-rl-eGr" secondAttribute="trailing" constant="8" id="N8e-5L-NMY"/>
+                                            <constraint firstItem="Rk8-ox-6Au" firstAttribute="firstBaseline" secondItem="Ap0-rl-eGr" secondAttribute="firstBaseline" id="aIr-qn-7P9"/>
+                                            <constraint firstItem="Ap0-rl-eGr" firstAttribute="top" secondItem="f07-bp-LWa" secondAttribute="top" id="e19-bU-uIo"/>
+                                            <constraint firstAttribute="bottom" secondItem="Ap0-rl-eGr" secondAttribute="bottom" id="obK-Aw-OJx"/>
+                                            <constraint firstItem="Ap0-rl-eGr" firstAttribute="leading" secondItem="f07-bp-LWa" secondAttribute="leading" constant="20" symbolic="YES" id="qJG-OI-fyV"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="2NP-lV-6dT" secondAttribute="trailing" id="3yt-TY-VmT"/>
+                                    <constraint firstItem="1h0-we-3wa" firstAttribute="top" secondItem="pT5-zI-eb9" secondAttribute="top" id="Ibl-a8-baT"/>
+                                    <constraint firstItem="f07-bp-LWa" firstAttribute="leading" secondItem="pT5-zI-eb9" secondAttribute="leading" id="JCn-Wq-uvf"/>
+                                    <constraint firstAttribute="bottom" secondItem="f07-bp-LWa" secondAttribute="bottom" id="KzP-4B-GUz"/>
+                                    <constraint firstItem="f07-bp-LWa" firstAttribute="top" relation="greaterThanOrEqual" secondItem="K4b-9a-wsj" secondAttribute="bottom" constant="8" symbolic="YES" id="U3T-og-wZr"/>
+                                    <constraint firstItem="2NP-lV-6dT" firstAttribute="leading" secondItem="pT5-zI-eb9" secondAttribute="leading" id="efz-QN-StO"/>
+                                    <constraint firstAttribute="trailing" secondItem="f07-bp-LWa" secondAttribute="trailing" id="tKm-kN-m1p"/>
+                                </constraints>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="pT5-zI-eb9" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="8" id="4BL-m3-FRJ"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="pT5-zI-eb9" secondAttribute="trailing" id="7Wx-oj-mt4"/>
+                            <constraint firstItem="pT5-zI-eb9" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="duX-xf-OSL"/>
+                            <constraint firstItem="pT5-zI-eb9" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="ld0-1k-KZu"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="95B-QE-VrU"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="130.53435114503816" y="-27.464788732394368"/>
+        </scene>
+        <!--Dog List View Controller-->
+        <scene sceneID="Zng-6d-5cV">
+            <objects>
+                <tableViewController id="qhG-hM-xw1" customClass="DogListViewController" customModule="SessionReplayTest" customModuleProvider="target" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" contentInsetAdjustmentBehavior="never" dataMode="prototypes" style="plain" separatorStyle="none" separatorInsetReference="fromAutomaticInsets" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" contentViewInsetsToSafeArea="NO" id="eP3-oa-hsi">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="528"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <inset key="separatorInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                        <prototypes>
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="DogInfoCell" rowHeight="200" id="1Ug-aq-LKj" customClass="DogInfoCellTableViewCell" customModule="SessionReplayTest" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="50" width="393" height="200"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="1Ug-aq-LKj" id="a1y-Tq-dwc">
+                                    <rect key="frame" x="0.0" y="0.0" width="393" height="200"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <subviews>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Qot-zF-w54">
+                                            <rect key="frame" x="20" y="20" width="353" height="169"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Dog Name" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MCb-tD-gaZ">
+                                                    <rect key="frame" x="8" y="20" width="105.33333333333334" height="26"/>
+                                                    <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="22"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="750" verticalCompressionResistancePriority="250" text="Short Description of Dog. This can go multiple lines if needed" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qlz-OX-XW6">
+                                                    <rect key="frame" x="8" y="54" width="201" height="58.666666666666657"/>
+                                                    <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="752" text="Price of Dog" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1Jo-bm-uHi">
+                                                    <rect key="frame" x="8" y="135" width="67" height="14"/>
+                                                    <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <button opaque="NO" contentMode="scaleToFill" verticalCompressionResistancePriority="748" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ogw-KJ-lvP">
+                                                    <rect key="frame" x="124" y="121" width="85" height="28"/>
+                                                    <color key="backgroundColor" systemColor="systemYellowColor"/>
+                                                    <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
+                                                    <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                                    <state key="normal" title="Add to Cart">
+                                                        <color key="titleColor" name="AccentColor"/>
+                                                    </state>
+                                                    <buttonConfiguration key="configuration" style="tinted" title="Add to Cart">
+                                                        <fontDescription key="titleFontDescription" name="Helvetica" family="Helvetica" pointSize="12"/>
+                                                        <color key="baseForegroundColor" name="AccentColor"/>
+                                                    </buttonConfiguration>
+                                                </button>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="pFu-LI-6R0">
+                                                    <rect key="frame" x="217" y="20" width="128" height="129"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" secondItem="pFu-LI-6R0" secondAttribute="height" multiplier="1:1" id="ZT2-m6-N3A"/>
+                                                        <constraint firstAttribute="width" constant="128" id="oVg-57-SAj"/>
+                                                    </constraints>
+                                                </imageView>
+                                            </subviews>
+                                            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                            <constraints>
+                                                <constraint firstItem="1Jo-bm-uHi" firstAttribute="top" relation="greaterThanOrEqual" secondItem="qlz-OX-XW6" secondAttribute="bottom" constant="8" id="5Wi-j3-RXt"/>
+                                                <constraint firstItem="Ogw-KJ-lvP" firstAttribute="top" relation="greaterThanOrEqual" secondItem="qlz-OX-XW6" secondAttribute="bottom" constant="8" id="9mG-su-Mdc"/>
+                                                <constraint firstItem="MCb-tD-gaZ" firstAttribute="leading" secondItem="Qot-zF-w54" secondAttribute="leading" constant="8" id="I6Y-PV-aJp"/>
+                                                <constraint firstAttribute="trailing" secondItem="pFu-LI-6R0" secondAttribute="trailing" constant="8" id="P1I-kG-1nw"/>
+                                                <constraint firstItem="MCb-tD-gaZ" firstAttribute="top" secondItem="Qot-zF-w54" secondAttribute="top" constant="20" symbolic="YES" id="Qet-3g-tEr"/>
+                                                <constraint firstAttribute="bottom" secondItem="1Jo-bm-uHi" secondAttribute="bottom" constant="20" symbolic="YES" id="XN9-FG-srg"/>
+                                                <constraint firstItem="pFu-LI-6R0" firstAttribute="top" secondItem="MCb-tD-gaZ" secondAttribute="top" id="aGE-IT-Onc"/>
+                                                <constraint firstItem="qlz-OX-XW6" firstAttribute="top" secondItem="MCb-tD-gaZ" secondAttribute="bottom" constant="8" symbolic="YES" id="cYV-R0-Lta"/>
+                                                <constraint firstItem="pFu-LI-6R0" firstAttribute="leading" secondItem="qlz-OX-XW6" secondAttribute="trailing" constant="8" symbolic="YES" id="ekk-VN-Xdg"/>
+                                                <constraint firstItem="Ogw-KJ-lvP" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="1Jo-bm-uHi" secondAttribute="trailing" constant="8" symbolic="YES" id="fy2-gv-BgO"/>
+                                                <constraint firstItem="qlz-OX-XW6" firstAttribute="leading" secondItem="MCb-tD-gaZ" secondAttribute="leading" id="hLu-lT-Qga"/>
+                                                <constraint firstItem="1Jo-bm-uHi" firstAttribute="leading" secondItem="MCb-tD-gaZ" secondAttribute="leading" id="i0X-4c-L1c"/>
+                                                <constraint firstAttribute="bottom" secondItem="pFu-LI-6R0" secondAttribute="bottom" constant="20" symbolic="YES" id="iZb-Dm-K75"/>
+                                                <constraint firstItem="pFu-LI-6R0" firstAttribute="leading" secondItem="Ogw-KJ-lvP" secondAttribute="trailing" constant="8" symbolic="YES" id="wvy-rO-NNT"/>
+                                                <constraint firstItem="Ogw-KJ-lvP" firstAttribute="bottom" secondItem="1Jo-bm-uHi" secondAttribute="bottom" id="xwG-sf-NE9"/>
+                                            </constraints>
+                                        </view>
+                                    </subviews>
+                                    <constraints>
+                                        <constraint firstItem="Qot-zF-w54" firstAttribute="leading" secondItem="a1y-Tq-dwc" secondAttribute="leadingMargin" id="3aq-JH-Ike"/>
+                                        <constraint firstItem="Qot-zF-w54" firstAttribute="bottom" secondItem="a1y-Tq-dwc" secondAttribute="bottomMargin" id="GMd-1g-snf"/>
+                                        <constraint firstItem="Qot-zF-w54" firstAttribute="top" secondItem="a1y-Tq-dwc" secondAttribute="topMargin" id="UcK-bn-IYH"/>
+                                        <constraint firstAttribute="trailingMargin" secondItem="Qot-zF-w54" secondAttribute="trailing" id="yiV-em-Qau"/>
+                                    </constraints>
+                                </tableViewCellContentView>
+                                <connections>
+                                    <outlet property="borderView" destination="Qot-zF-w54" id="txd-J7-ReK"/>
+                                    <outlet property="dogImage" destination="pFu-LI-6R0" id="zTT-oT-A45"/>
+                                    <outlet property="nameLabel" destination="MCb-tD-gaZ" id="a67-LP-fqf"/>
+                                    <outlet property="priceLabel" destination="1Jo-bm-uHi" id="bRq-9O-Q6O"/>
+                                    <outlet property="shortDescLabel" destination="qlz-OX-XW6" id="nxf-0U-US9"/>
+                                </connections>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="qhG-hM-xw1" id="B4X-Kr-jfq"/>
+                            <outlet property="delegate" destination="qhG-hM-xw1" id="lxq-yb-iVT"/>
+                        </connections>
+                    </tableView>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="PHX-AM-ETe" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-680.15267175572512" y="666.90140845070425"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="dee-md-M22">
@@ -206,7 +239,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="equalSpacing" translatesAutoresizingMaskIntoConstraints="NO" id="n9o-0Y-o98">
-                                <rect key="frame" x="0.0" y="103" width="393" height="715"/>
+                                <rect key="frame" x="0.0" y="59" width="393" height="759"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" text="Eeyore Style Dog" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="K0o-Ez-wox">
                                         <rect key="frame" x="8" y="8" width="377" height="39.333333333333336"/>
@@ -215,7 +248,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" spacingType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="oxq-Xo-24S">
-                                        <rect key="frame" x="8" y="109.66666666666666" width="377" height="90.333333333333343"/>
+                                        <rect key="frame" x="8" y="118.66666666666666" width="377" height="90.333333333333343"/>
                                         <subviews>
                                             <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="eeyore dog" translatesAutoresizingMaskIntoConstraints="NO" id="8S3-3q-3pQ">
                                                 <rect key="frame" x="0.0" y="0.0" width="120.33333333333333" height="90.333333333333329"/>
@@ -236,20 +269,20 @@
                                         </constraints>
                                     </stackView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="248" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yBf-VZ-Ap1">
-                                        <rect key="frame" x="8" y="262.66666666666669" width="377" height="78.333333333333314"/>
+                                        <rect key="frame" x="8" y="280" width="377" height="78.333333333333314"/>
                                         <string key="text">The Eeyore Style Dog will surprise you! Turns out, she is not only pretty, but she is smart and playful too. This Princess will keep you on your toes. </string>
                                         <fontDescription key="fontDescription" name="Helvetica" family="Helvetica" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Features" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QC2-Kb-eEd">
-                                        <rect key="frame" x="8" y="403.33333333333331" width="377" height="27.666666666666686"/>
+                                        <rect key="frame" x="8" y="429.66666666666669" width="377" height="27.666666666666686"/>
                                         <fontDescription key="fontDescription" name="Helvetica-Bold" family="Helvetica" pointSize="24"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" translatesAutoresizingMaskIntoConstraints="NO" id="R0o-Om-it6">
-                                        <rect key="frame" x="8" y="493.66666666666657" width="377" height="117.33333333333331"/>
+                                        <rect key="frame" x="8" y="528.66666666666663" width="377" height="117.33333333333337"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="00P-eM-Vd6">
                                                 <rect key="frame" x="0.0" y="0.0" width="188.66666666666666" height="117.33333333333333"/>
@@ -272,7 +305,7 @@ Will roll in whatever happens to be on the ground!</string>
                                         </subviews>
                                     </stackView>
                                     <button opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="251" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9nZ-C0-gxB">
-                                        <rect key="frame" x="8" y="673.33333333333337" width="377" height="33.666666666666629"/>
+                                        <rect key="frame" x="8" y="717.33333333333337" width="377" height="33.666666666666629"/>
                                         <state key="normal" title="Button"/>
                                         <buttonConfiguration key="configuration" style="tinted" title="BUY NOW!">
                                             <fontDescription key="titleFontDescription" name="Helvetica-Bold" family="Helvetica" pointSize="17"/>
@@ -303,21 +336,20 @@ Will roll in whatever happens to be on the ground!</string>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gam-YN-sCf" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1067.9389312977098" y="-16.197183098591552"/>
+            <point key="canvasLocation" x="1073" y="-27"/>
         </scene>
     </scenes>
-    <inferredMetricsTieBreakers>
-        <segue reference="DAn-y8-4pO"/>
-    </inferredMetricsTieBreakers>
     <resources>
         <image name="cart.fill" catalog="system" width="128" height="102"/>
         <image name="eeyore dog" width="2363" height="2609"/>
-        <image name="mardi gras dog" width="1536" height="2048"/>
         <namedColor name="AccentColor">
             <color red="0.0" green="0.46000000000000002" blue="0.89000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemGreenColor">
+            <color red="0.20392156859999999" green="0.78039215689999997" blue="0.34901960780000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </systemColor>
         <systemColor name="systemYellowColor">
             <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
