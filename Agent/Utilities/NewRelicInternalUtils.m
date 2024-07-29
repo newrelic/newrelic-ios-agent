@@ -200,19 +200,44 @@ static NSString* _osVersion;
     }
 }
 
-+ (NRMANetworkStatus)currentReachabilityStatusTo:(NSURL*)url {
-    if([self checkReachablityTo:url]) return ReachableViaUnknown;
-    return NotReachable;
-}
++ (NRMANetworkStatus) currentReachabilityStatusTo:(NSURL *)url {
+    __block NRMANetworkStatus isReachable = NotReachable;
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    [request setValue:@"" forHTTPHeaderField:kAPPLICATION_TOKEN_HEADER];
+    
+    NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
+    configuration.timeoutIntervalForRequest = 1;
+    configuration.timeoutIntervalForResource = 1;
 
-+ (BOOL) checkReachablityTo:(NSURL*)url {
-#if TARGET_OS_WATCH
-    return true;
-#else
-    struct hostent *remoteHostEnt = gethostbyname([[url host] UTF8String]);
-    if(remoteHostEnt == NULL) return false;
-    return [[url host] isEqualToString:[NSString stringWithUTF8String:*remoteHostEnt->h_aliases]];
-#endif
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:configuration];
+    __block dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    
+    NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request
+                                                completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error) {
+            // Check for specific network errors indicating offline status
+            if ([error.domain isEqualToString:NSURLErrorDomain]) {
+                switch (error.code) {
+                    case NSURLErrorNotConnectedToInternet:
+                    case NSURLErrorTimedOut:
+                    case NSURLErrorCannotFindHost:
+                    case NSURLErrorCannotConnectToHost:
+                        isReachable = NotReachable; // Offline
+                        return;
+                }
+            }
+            isReachable = ReachableViaUnknown; // Online, but another error occurred
+        } else {
+            isReachable = ReachableViaUnknown; // Online
+        }
+
+        dispatch_semaphore_signal(semaphore);
+    }];
+    
+    [dataTask resume];
+    dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW,  (uint64_t)(request.timeoutInterval*(double)(NSEC_PER_SEC))));
+
+    return isReachable;
 }
 
 + (NSString*) collectorHostDataURL
