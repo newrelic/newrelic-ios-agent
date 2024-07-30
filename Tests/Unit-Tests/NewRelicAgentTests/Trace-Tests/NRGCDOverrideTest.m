@@ -11,7 +11,7 @@
 //
 
 #import "NRGCDOverrideTest.h"
-#import "Public/NRGCDOverride.h"
+#import "NRGCDOverride.h"
 #import "NRMATraceController.h"
 #import "NRMAMeasurements.h"
 #import "NRMAActivityTraceMeasurement.h"
@@ -19,6 +19,7 @@
 #import "NRMATraceMachine.h"
 #import "OCMock/OCMock.h"
 #import "NRMATaskQueue.h"
+
 @interface NRMATraceController ()
 + (void) setHealthyTraceTimeout:(NSUInteger) healthyTraceTimeout;
 @end

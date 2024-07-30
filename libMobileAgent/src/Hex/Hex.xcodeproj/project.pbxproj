@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B4969762C52C37400A0459E /* interaction-trace-bundle_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B4969722C52C37300A0459E /* interaction-trace-bundle_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2B4969772C52C37400A0459E /* hex-agent-data_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B4969732C52C37300A0459E /* hex-agent-data_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2B4969782C52C37400A0459E /* hex-agent-data-bundle_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B4969742C52C37300A0459E /* hex-agent-data-bundle_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2B4969792C52C37400A0459E /* jserror_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B4969752C52C37400A0459E /* jserror_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		34666ABB2922FEFF005A7010 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34666ABA2922FEFF005A7010 /* Connectivity.framework */; };
 		34666ABE2922FF05005A7010 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34666ABD2922FF05005A7010 /* JSON.framework */; };
 		34BF4F512911BF5800E4D170 /* session-attributes_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1C2911BF5800E4D170 /* session-attributes_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		34BF4F522911BF5800E4D170 /* agent-data_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1D2911BF5800E4D170 /* agent-data_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		34BF4F532911BF5800E4D170 /* agent-data-bundle_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1E2911BF5800E4D170 /* agent-data-bundle_generated.h */; };
 		34BF4F542911BF5800E4D170 /* hex_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F1F2911BF5800E4D170 /* hex_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4F552911BF5800E4D170 /* ios_generated.h in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F202911BF5800E4D170 /* ios_generated.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4F562911BF5800E4D170 /* HexContext.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F212911BF5800E4D170 /* HexContext.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -34,7 +36,7 @@
 		34BF4F672911BF5800E4D170 /* Frame.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F352911BF5800E4D170 /* Frame.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4F682911BF5800E4D170 /* HexReport.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F362911BF5800E4D170 /* HexReport.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4F692911BF5800E4D170 /* LibraryController.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F372911BF5800E4D170 /* LibraryController.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
-		34BF4F6A2911BF5800E4D170 /* HexAuditor.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F382911BF5800E4D170 /* HexAuditor.hpp */; };
+		34BF4F6A2911BF5800E4D170 /* HexAuditor.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4F382911BF5800E4D170 /* HexAuditor.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4F6B2911BF5800E4D170 /* HexReportContext.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3A2911BF5800E4D170 /* HexReportContext.cxx */; };
 		34BF4F6C2911BF5800E4D170 /* HexContext.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3B2911BF5800E4D170 /* HexContext.cxx */; };
 		34BF4F6D2911BF5800E4D170 /* HexPublisher.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 34BF4F3C2911BF5800E4D170 /* HexPublisher.cxx */; };
@@ -60,6 +62,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2B4969722C52C37300A0459E /* interaction-trace-bundle_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "interaction-trace-bundle_generated.h"; sourceTree = "<group>"; };
+		2B4969732C52C37300A0459E /* hex-agent-data_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "hex-agent-data_generated.h"; sourceTree = "<group>"; };
+		2B4969742C52C37300A0459E /* hex-agent-data-bundle_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "hex-agent-data-bundle_generated.h"; sourceTree = "<group>"; };
+		2B4969752C52C37400A0459E /* jserror_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jserror_generated.h; sourceTree = "<group>"; };
 		34666ABA2922FEFF005A7010 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34666ABD2922FF05005A7010 /* JSON.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = JSON.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34666B0029244735005A7010 /* Analytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Analytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -68,8 +74,6 @@
 		34666B0629244735005A7010 /* Utilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Utilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34BF4F0F2911BF0A00E4D170 /* Hex.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Hex.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34BF4F1C2911BF5800E4D170 /* session-attributes_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "session-attributes_generated.h"; sourceTree = "<group>"; };
-		34BF4F1D2911BF5800E4D170 /* agent-data_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "agent-data_generated.h"; sourceTree = "<group>"; };
-		34BF4F1E2911BF5800E4D170 /* agent-data-bundle_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "agent-data-bundle_generated.h"; sourceTree = "<group>"; };
 		34BF4F1F2911BF5800E4D170 /* hex_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hex_generated.h; sourceTree = "<group>"; };
 		34BF4F202911BF5800E4D170 /* ios_generated.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ios_generated.h; sourceTree = "<group>"; };
 		34BF4F212911BF5800E4D170 /* HexContext.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = HexContext.hpp; sourceTree = "<group>"; };
@@ -178,9 +182,11 @@
 		34BF4F1B2911BF5800E4D170 /* generated */ = {
 			isa = PBXGroup;
 			children = (
+				2B4969732C52C37300A0459E /* hex-agent-data_generated.h */,
+				2B4969742C52C37300A0459E /* hex-agent-data-bundle_generated.h */,
+				2B4969722C52C37300A0459E /* interaction-trace-bundle_generated.h */,
+				2B4969752C52C37400A0459E /* jserror_generated.h */,
 				34BF4F1C2911BF5800E4D170 /* session-attributes_generated.h */,
-				34BF4F1D2911BF5800E4D170 /* agent-data_generated.h */,
-				34BF4F1E2911BF5800E4D170 /* agent-data-bundle_generated.h */,
 				34BF4F1F2911BF5800E4D170 /* hex_generated.h */,
 				34BF4F202911BF5800E4D170 /* ios_generated.h */,
 			);
@@ -296,7 +302,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				34BF4F522911BF5800E4D170 /* agent-data_generated.h in Headers */,
 				34BF4F622911BF5800E4D170 /* AgentData.hpp in Headers */,
 				34BF4F632911BF5800E4D170 /* AppInfo.hpp in Headers */,
 				34BF4F5C2911BF5800E4D170 /* ApplicationLicense.hpp in Headers */,
@@ -317,11 +322,14 @@
 				34BF4F642911BF5800E4D170 /* Library.hpp in Headers */,
 				34BF4F692911BF5800E4D170 /* LibraryController.hpp in Headers */,
 				34BF4F5F2911BF5800E4D170 /* LongAttributes.hpp in Headers */,
+				2B4969762C52C37400A0459E /* interaction-trace-bundle_generated.h in Headers */,
+				2B4969772C52C37400A0459E /* hex-agent-data_generated.h in Headers */,
+				2B4969782C52C37400A0459E /* hex-agent-data-bundle_generated.h in Headers */,
+				2B4969792C52C37400A0459E /* jserror_generated.h in Headers */,
+				34BF4F6A2911BF5800E4D170 /* HexAuditor.hpp in Headers */,
 				34BF4F512911BF5800E4D170 /* session-attributes_generated.h in Headers */,
 				34BF4F612911BF5800E4D170 /* StringAttributes.hpp in Headers */,
 				34BF4F652911BF5800E4D170 /* Thread.hpp in Headers */,
-				34BF4F6A2911BF5800E4D170 /* HexAuditor.hpp in Headers */,
-				34BF4F532911BF5800E4D170 /* agent-data-bundle_generated.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

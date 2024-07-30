@@ -160,6 +160,9 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     if ([platform isEqualToString:NRMA_OSNAME_TVOS]) {
         return fbs::Platform_tvOS;
     }
+    else if ([platform isEqualToString:NRMA_OSNAME_WATCHOS]) {
+        return fbs::Platform_watchOS;
+    }
     return fbs::Platform_iOS;
 }
 

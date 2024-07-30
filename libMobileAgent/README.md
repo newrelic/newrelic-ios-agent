@@ -38,13 +38,16 @@ To do a full build of JSON++ (it will generate files: `json.tab.cc`, `json.tab.h
 A flatbuffers full build will regenerate all flatebuffer files defined by the schema in `ext/mobile_flatbuffer_schemas`.
 
 Files are (in `src/Hex/include/Hex/generated`):
- - `agent-data-bundle_generated.h`
- - `agent-data_generated.h`
+ - `hex-agent-data-bundle_generated.h`
+ - `hex-agent-data_generated.h`
  - `hex_generated.h`
  - `ios_generated.h`
  - `session-attributes_generated.h`
 
+## Building iOS generated code locally
+To build the generated folder for use with `newrelic-ios-agent` locally, you will need to generate the flatbuffer classes. Use the script from the `mobile_flatbuffers_schema` repository located on GHE: `generateFlatbuffersiOS` script to generate the `generated` folder. Copy this folder into the newrelic-ios-agent repo into the `libMobileAgent/src/Hex/include/Hex/generated` folder.
 
+### Legacy instructions
 To rebuild files:
 - remove existing files
 - execute cmake with flag -DBUILD_FLATBUFFER_SCHEMA=TRUE

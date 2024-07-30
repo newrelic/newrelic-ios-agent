@@ -13,9 +13,10 @@
 #include <Hex/LongAttributes.hpp>
 #include <Hex/ios_generated.h>
 #include <Hex/hex_generated.h>
-#include <Hex/agent-data_generated.h>
+#include <Hex/hex-agent-data_generated.h>
 #include <Hex/AppInfo.hpp>
 #include <Hex/HandledException.hpp>
+#include <Hex/jserror_generated.h>
 
 
 namespace NewRelic {
@@ -30,7 +31,7 @@ namespace NewRelic {
                           const std::shared_ptr<AppInfo>& applicationInfo,
                           std::shared_ptr<HandledException> handledException);
 
-                Offset<fbs::AgentData> serialize(flatbuffers::FlatBufferBuilder& builder) const;
+                Offset<fbs::HexAgentData> serialize(flatbuffers::FlatBufferBuilder& builder) const;
 
             private:
                 const std::shared_ptr<StringAttributes>& _stringAttributes;
