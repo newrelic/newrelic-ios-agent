@@ -207,10 +207,8 @@ BOOL requestThrottle;
      // Perform a GET request with a URL and a completion handler
      [self checkReachablityTo:url completion:^(BOOL success) {
          if (success) {
-             NSLog(@"Request was successful.");
              completionHandler(ReachableViaUnknown);
          } else {
-             NSLog(@"Request failed.");
              completionHandler(NotReachable);
          }
      }];
