@@ -139,15 +139,22 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         NRMAReachability* r = [NewRelicInternalUtils reachability];
         @synchronized(r) {
 #if TARGET_OS_WATCH
-            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+            [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]] completion:^(NRMANetworkStatus status){
+                if (status != NotReachable) {
+                    [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
+                    _controller->resetKeyContext();
+                    _publisher->retry();
+                }
+            }];
 #else
             NRMANetworkStatus status = [r currentReachabilityStatus];
-#endif
+
             if (status != NotReachable) {
                 [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
                 _controller->resetKeyContext();
                 _publisher->retry();
             }
+#endif
         }
     } else {
         _controller->publish();
@@ -169,13 +176,17 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         NRMAReachability* r = [NewRelicInternalUtils reachability];
         @synchronized(r) {
 #if TARGET_OS_WATCH
-            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+            [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]] completion:^(NRMANetworkStatus status){
+                if (status == NotReachable) {
+                    report->setAttributeNoValidation(__kNRMA_Attrib_offline, true);
+                }
+            }];
 #else
             NRMANetworkStatus status = [r currentReachabilityStatus];
-#endif
             if (status == NotReachable) {
                 report->setAttributeNoValidation(__kNRMA_Attrib_offline, true);
             }
+#endif
         }
     }
 }

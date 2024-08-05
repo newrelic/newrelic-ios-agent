@@ -188,7 +188,7 @@ namespace NewRelic {
         }
     }
 
-    bool AnalyticsController::addUserActionEvent(const char *functionName,
+std::shared_ptr<AnalyticEvent> AnalyticsController::addUserActionEvent(const char *functionName,
                                              const char *targetObject,
                                              const char *label,
                                              const char *accessibility,
@@ -196,7 +196,6 @@ namespace NewRelic {
                                              const char *actionType,
                                              const char *controlFrame,
                                              const char *orientation,
-                                             bool isOffline,
                                              bool isBackground) {
         try {
             unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms();//throws std::logic_error
@@ -236,33 +235,30 @@ namespace NewRelic {
                 event->addAttribute(__kNRMA_RA_orientation, orientation);
             }
             
-            if(isOffline){
-                event->addAttribute(__kNRMA_Attrib_offline, true);
-            }
             if(isBackground) {
                 event->addAttribute(__kNRMA_Attrib_background, true);
             }
 
-            return addEvent(event);
+            return event;
 
         } catch (std::logic_error &e) {
             LLOG_VERBOSE("Failed to add tracked gesture: %s", e.what());
-            return false;
+            return nullptr;
         } catch (std::exception &e) {
             LLOG_VERBOSE("Failed to add tracked gesture: %s", e.what());
-            return false;
+            return nullptr;
         } catch (...) {
             LLOG_VERBOSE("Failed to add tracked gesture: unknown error.");
-            return false;
+            return nullptr;
         }
     }
 
-    bool AnalyticsController::addInteractionEvent(const char *name, double duration_sec, bool isOffline, bool isBackground) {
+std::shared_ptr<AnalyticEvent> AnalyticsController::addInteractionEvent(const char *name, double duration_sec, bool isBackground) {
         try {
             if ((strlens(name) == 0)) {
                 //adding log under verbose as this is an internal agent method, and wont be called by customers.
                 LLOG_VERBOSE("Cannot add interaction event with an empty name.");
-                return false;
+                return nullptr;
             }
             unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms(); //throws std::logic_error
 
@@ -271,23 +267,20 @@ namespace NewRelic {
                                                                    current_time_ms,
                                                                    getCurrentSessionDuration_sec(current_time_ms),
                                                                    _attributeValidator);
-            if(isOffline){
-                event->addAttribute(__kNRMA_Attrib_offline, true);
-            }
             if(isBackground) {
                 event->addAttribute(__kNRMA_Attrib_background, true);
             }
             if (!event->addAttribute(InteractionAnalyticEvent::kInteractionTraceDurationKey, duration_sec))
-                return false;
-            return addEvent(event);
+                return nullptr;
+            return event;
 
         } catch (std::logic_error &e) {
             //adding log under verbose as this is an internal agent method, and wont be called by customers.
             LLOG_VERBOSE(e.what());
-            return false;
+            return nullptr;
         } catch (...) {
             LLOG_VERBOSE("Unknown exception occurred.");
-            return false;
+            return nullptr;
         }
     }
 
@@ -321,10 +314,9 @@ namespace NewRelic {
         }
     }
 
-    bool AnalyticsController::addRequestEvent(const NewRelic::NetworkRequestData& requestData,
+std::shared_ptr<AnalyticEvent> AnalyticsController::addRequestEvent(const NewRelic::NetworkRequestData& requestData,
                                               const NewRelic::NetworkResponseData& responseData,
                                               std::unique_ptr<const Connectivity::Payload> payload,
-                                              bool isOffline,
                                               bool isBackground) {
 
         try {
@@ -360,7 +352,7 @@ namespace NewRelic {
 
             if ((strlens(requestUrl) == 0)) {
                 LLOG_INFO("unable to add NetworkErrorEvent with empty URL.");
-                return false;
+                return nullptr;
             }
 
             if (event != nullptr) {
@@ -408,41 +400,34 @@ namespace NewRelic {
                 if(trackedHeaders.size() != 0) {
                     addTrackedHeaders(trackedHeaders, event);
                 }
-                
-                if(isOffline){
-                    event->addAttribute(__kNRMA_Attrib_offline, true);
-                }
+
                 if(isBackground) {
                     event->addAttribute(__kNRMA_Attrib_background, true);
                 }
 
-                return _eventManager.addEvent(event);
+                return event;
             }
         } catch (const std::exception &ex) {
             LLOG_INFO("failed to add network Event: %s", ex.what());
         } catch (...) {
             LLOG_INFO("failed to add Network Error Event.");
         }
-        return false;
+        return nullptr;
     }
 
-    bool AnalyticsController::addHTTPErrorEvent(const NewRelic::NetworkRequestData& requestData,
+std::shared_ptr<AnalyticEvent> AnalyticsController::addHTTPErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                                 const NewRelic::NetworkResponseData& responseData,
                                                 std::unique_ptr<const Connectivity::Payload> payload,
-                                                bool isOffline,
                                                 bool isBackground) {
         try {
             auto event = createRequestErrorEvent(requestData, responseData, std::move(payload));
 
             if (event != nullptr) {
-                if(isOffline){
-                    event->addAttribute(__kNRMA_Attrib_offline, true);
-                }
                 if(isBackground) {
                     event->addAttribute(__kNRMA_Attrib_background, true);
                 }
                 event->addAttribute(__kNRMA_Attrib_errorType, __kNRMA_Val_errorType_HTTP);
-                return _eventManager.addEvent(event);
+                return event;
             }
         } catch (const std::exception &ex) {
             LLOG_INFO("failed to add network Event: %s", ex.what());
@@ -450,26 +435,22 @@ namespace NewRelic {
             LLOG_INFO("failed to add Network Error Event.");
         }
 
-        return false;
+        return nullptr;
     }
 
-    bool AnalyticsController::addNetworkErrorEvent(const NewRelic::NetworkRequestData& requestData,
+std::shared_ptr<AnalyticEvent> AnalyticsController::addNetworkErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                                    const NewRelic::NetworkResponseData& responseData,
                                                    std::unique_ptr<const Connectivity::Payload> payload,
-                                                   bool isOffline,
                                                    bool isBackground) {
         try {
             auto event = createRequestErrorEvent(requestData, responseData, std::move(payload));
 
             if (event != nullptr) {
-                if(isOffline){
-                    event->addAttribute(__kNRMA_Attrib_offline, true);
-                }
                 if(isBackground) {
                     event->addAttribute(__kNRMA_Attrib_background, true);
                 }
                 event->addAttribute(__kNRMA_Attrib_errorType, __kNRMA_Val_errorType_Network);
-                return _eventManager.addEvent(event);
+                return event;
             }
 
         } catch (const std::exception &ex) {
@@ -478,7 +459,7 @@ namespace NewRelic {
             LLOG_INFO("failed to add Network Error Event.");
         }
 
-        return false;
+        return nullptr;
     }
 
 

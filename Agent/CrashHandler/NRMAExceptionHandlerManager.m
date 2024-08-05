@@ -202,6 +202,24 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH,
                                              0),
                    ^{
+#if TARGET_OS_WATCH
+        [NewRelicInternalUtils networkStatus:^(NRMANetworkStatus status){
+            switch(status){
+                case NotReachable:
+                    NRMA_setNetworkConnectivity("Not Reachable");
+                    break;
+                case  ReachableViaWiFi:
+                    NRMA_setNetworkConnectivity("WiFi");
+                    break;
+                case ReachableViaWWAN:
+                    NRMA_setNetworkConnectivity("Cell");
+                    break;
+                default:
+                    NRMA_setNetworkConnectivity("Unknown");
+                    break;
+            }
+        }];
+#else
                        switch([NewRelicInternalUtils networkStatus]){
                            case NotReachable:
                                NRMA_setNetworkConnectivity("Not Reachable");
@@ -216,7 +234,9 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
                                NRMA_setNetworkConnectivity("Unknown");
                                break;
                        }
+#endif
                    });
+        
 }
 
 static const NSString* __memoryUsageLock = @"Lock";

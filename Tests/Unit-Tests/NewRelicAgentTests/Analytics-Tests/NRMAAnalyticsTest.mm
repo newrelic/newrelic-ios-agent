@@ -19,6 +19,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
 #import "NRTestConstants.h"
+#import "NewRelicInternalUtils.h"
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -78,14 +79,23 @@
 }
 
 - (void) testCustomEventOffline {
-    BOOL retValue = YES;
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     id mockObject = [OCMockObject partialMockForObject:analytics];
+#if TARGET_OS_WATCH
+    [[[mockObject expect] andDo:^(NSInvocation *invocation) {
+        // Extract the completion handler from the invocation
+        void (^completionHandler)(BOOL);
+        [invocation getArgument:&completionHandler atIndex:2];
+        // Call the completion handler with offline true
+        completionHandler(YES);
+    }] checkOfflineStatus:[OCMArg any]];
+#else
+    BOOL retValue = YES;
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
-
+#endif
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
                                 withAttributes:nil];
-
+    sleep(1);
     XCTAssertTrue(accepted);
 
     NSString* json = [analytics analyticsJSONString];
@@ -140,13 +150,22 @@
 }
 
 - (void) testRequestEventOffline {
-    BOOL retValue = YES;
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NRTimer* timer = [NRTimer new];
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     id mockObject = [OCMockObject partialMockForObject:analytics];
+#if TARGET_OS_WATCH
+    [[[mockObject expect] andDo:^(NSInvocation *invocation) {
+        // Extract the completion handler from the invocation
+        void (^completionHandler)(BOOL);
+        [invocation getArgument:&completionHandler atIndex:2];
+        // Call the completion handler with offline true
+        completionHandler(YES);
+    }] checkOfflineStatus:[OCMArg any]];
+#else
+    BOOL retValue = YES;
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
-
+#endif
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile?request=parameter";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -226,12 +245,22 @@
 }
 
 - (void) testRequestEventHTTPErrorOffline {
-    BOOL retValue = YES;
     NRTimer* timer = [NRTimer new];
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     id mockObject = [OCMockObject partialMockForObject:analytics];
+#if TARGET_OS_WATCH
+    [[[mockObject expect] andDo:^(NSInvocation *invocation) {
+        // Extract the completion handler from the invocation
+        void (^completionHandler)(BOOL);
+        [invocation getArgument:&completionHandler atIndex:2];
+        // Call the completion handler with offline true
+        completionHandler(YES);
+    }] checkOfflineStatus:[OCMArg any]];
+#else
+    BOOL retValue = YES;
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+#endif
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -320,12 +349,22 @@
 }
 
 - (void) testRequestEventNetworkErrorOffline {
-    BOOL retValue = YES;
     NRTimer* timer = [NRTimer new];
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     id mockObject = [OCMockObject partialMockForObject:analytics];
+#if TARGET_OS_WATCH
+    [[[mockObject expect] andDo:^(NSInvocation *invocation) {
+        // Extract the completion handler from the invocation
+        void (^completionHandler)(BOOL);
+        [invocation getArgument:&completionHandler atIndex:2];
+        // Call the completion handler with offline true
+        completionHandler(YES);
+    }] checkOfflineStatus:[OCMArg any]];
+#else
+    BOOL retValue = YES;
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
+#endif
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -391,11 +430,20 @@
 }
 
 - (void) testInteractionEventOffline {
-    BOOL retValue = YES;
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     id mockObject = [OCMockObject partialMockForObject:analytics];
+#if TARGET_OS_WATCH
+    [[[mockObject expect] andDo:^(NSInvocation *invocation) {
+        // Extract the completion handler from the invocation
+        void (^completionHandler)(BOOL);
+        [invocation getArgument:&completionHandler atIndex:2];
+        // Call the completion handler with offline true
+        completionHandler(YES);
+    }] checkOfflineStatus:[OCMArg any]];
+#else
+    BOOL retValue = YES;
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
-    
+#endif
     [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
 
     NSString* json = [analytics analyticsJSONString];
@@ -450,11 +498,20 @@
 }
 
 - (void) testBreadcrumbOffline {
-    BOOL retValue = YES;
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     id mockObject = [OCMockObject partialMockForObject:analytics];
+#if TARGET_OS_WATCH
+    [[[mockObject expect] andDo:^(NSInvocation *invocation) {
+        // Extract the completion handler from the invocation
+        void (^completionHandler)(BOOL);
+        [invocation getArgument:&completionHandler atIndex:2];
+        // Call the completion handler with offline true
+        completionHandler(YES);
+    }] checkOfflineStatus:[OCMArg any]];
+#else
+    BOOL retValue = YES;
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
-    
+#endif
     XCTAssertTrue([analytics addBreadcrumb:@"testBreadcrumbs"
                             withAttributes:nil]);
     

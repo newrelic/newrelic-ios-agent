@@ -124,25 +124,22 @@ namespace NewRelic {
 
         bool addEvent(std::shared_ptr <AnalyticEvent> event);
 
-        bool addRequestEvent(const NewRelic::NetworkRequestData& requestData,
+        std::shared_ptr<AnalyticEvent> addRequestEvent(const NewRelic::NetworkRequestData& requestData,
                              const NewRelic::NetworkResponseData& responseData,
                              std::unique_ptr<const Connectivity::Payload> payload,
-                             bool isOffline,
                              bool isBackground);
 
-        bool addHTTPErrorEvent(const NewRelic::NetworkRequestData& requestData,
+        std::shared_ptr<AnalyticEvent> addHTTPErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                const NewRelic::NetworkResponseData& responseData,
                                std::unique_ptr<const Connectivity::Payload> payload,
-                               bool isOffline,
                                bool isBackground);
 
-        bool addNetworkErrorEvent(const NewRelic::NetworkRequestData& requestData,
+        std::shared_ptr<AnalyticEvent> addNetworkErrorEvent(const NewRelic::NetworkRequestData& requestData,
                                   const NewRelic::NetworkResponseData& responseData,
                                   std::unique_ptr<const Connectivity::Payload> payload,
-                                  bool isOffline,
                                   bool isBackground);
 
-        bool addUserActionEvent(const char *functionName,
+        std::shared_ptr<AnalyticEvent> addUserActionEvent(const char *functionName,
                                 const char *targetObject,
                                 const char *label,
                                 const char *accessibility,
@@ -150,10 +147,9 @@ namespace NewRelic {
                                 const char *actionType,
                                 const char *controlFrame,
                                 const char *orientation,
-                                bool isOffline,
                                 bool isBackground);
 
-        bool addInteractionEvent(const char *name, double duration_sec, bool isOffline, bool isBackground);
+        std::shared_ptr<AnalyticEvent> addInteractionEvent(const char *name, double duration_sec, bool isBackground);
 
         std::shared_ptr <NRJSON::JsonArray> getEventsJSON(bool clearEvents);
 

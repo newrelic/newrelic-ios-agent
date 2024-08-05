@@ -89,6 +89,22 @@
     return wrappedNetworkResponseData;
 }
 
+-(id) copyWithZone:(NSZone *)zone {
+    NRMANetworkResponseData *copy = [[[self class] allocWithZone:zone] init];
+    if (copy) {
+        copy->_statusCode = self.statusCode;
+        copy->_bytesReceived = self.bytesReceived;
+        copy->_timeInSeconds = self.timeInSeconds;
+        copy->_errorMessage = [self.errorMessage copyWithZone:zone];
+        copy->_networkErrorCode = self.networkErrorCode;
+        copy->_encodedResponseBody = [self.encodedResponseBody copyWithZone:zone];
+        copy->_appDataHeader = [self.appDataHeader copyWithZone:zone];
+        
+        copy->wrappedNetworkResponseData = new NewRelic::NetworkResponseData(*wrappedNetworkResponseData);
+    }
+    return copy;
+}
+
 -(void) dealloc {
     delete wrappedNetworkResponseData;
     [super dealloc];

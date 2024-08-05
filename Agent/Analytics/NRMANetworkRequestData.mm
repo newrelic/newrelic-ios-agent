@@ -64,6 +64,18 @@
     return wrappedNetworkRequestData;
 }
 
+// Copy function
+-(id) copyWithZone:(NSZone *)zone {
+    NRMANetworkRequestData *copy = [[[self class] allocWithZone:zone] initWithRequestUrl:[NSURL URLWithString:self.requestUrl]
+                                                                              httpMethod:self.requestMethod
+                                                                          connectionType:self.connectionType
+                                                                             contentType:self.contentType
+                                                                               bytesSent:self.bytesSent];
+    
+    return copy;
+}
+
+
 -(void) dealloc {
     delete wrappedNetworkRequestData;
 }

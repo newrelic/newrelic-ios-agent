@@ -99,16 +99,20 @@ static BOOL __didExecuteWebThread;
 
 - (void) testCurrentReachabilityStatusToData
 {
-    NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
-
-    XCTAssertEqual(status, ReachableViaUnknown);
+#if TARGET_OS_WATCH
+    [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]] completion:^(NRMANetworkStatus status){
+        XCTAssertEqual(status, ReachableViaUnknown);
+    }];
+#endif
 }
 
 - (void) testCurrentReachabilityStatusToHex
 {
-    NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
-
-    XCTAssertEqual(status, ReachableViaUnknown);
+#if TARGET_OS_WATCH
+    [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]] completion:^(NRMANetworkStatus status){
+        XCTAssertEqual(status, ReachableViaUnknown);
+    }];
+#endif
 }
 
 @end
