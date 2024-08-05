@@ -221,6 +221,7 @@ BOOL requestThrottle;
     }
     if (requestThrottle) {
         completion(isReachable);
+        return;
     }
     
     isRequestInProgress = YES;
