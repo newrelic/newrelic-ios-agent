@@ -37,6 +37,12 @@
     [NRLogger setLogLevels:NRLogLevelNone];
     [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
 
+    NSString *fileName = [NewRelicInternalUtils getStorePath];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:fileName]) {
+        [fileManager removeItemAtPath:fileName error:nil];
+    }
+
     /*  FIXME: don't use PersistentEventsStore/PersistentAttributeStore atm
      const char* dupAttributeStoreName = NewRelic::AnalyticsController::getAttributeDupStoreName();
      const char* dupEventStoreName = NewRelic::AnalyticsController::getEventDupStoreName();
