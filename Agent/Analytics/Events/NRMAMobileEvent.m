@@ -37,17 +37,22 @@ static NSString* const kAttributesKey = @"Attributes";
         _attributes = [[NSMutableDictionary alloc] init];
         
         if([NRMAFlags shouldEnableOfflineStorage]) {
+#if TARGET_OS_WATCH
+                __block __weak NRMAMobileEvent *weakSelf = self;
+                [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]] completion:^(NRMANetworkStatus status){
+                    if (status == NotReachable) {
+                        [weakSelf addAttribute:kNRMA_Attrib_offline value:@YES];
+                    }
+                }];
+#else
             NRMAReachability* r = [NewRelicInternalUtils reachability];
             @synchronized(r) {
-#if TARGET_OS_WATCH
-                NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
-#else
                 NRMANetworkStatus status = [r currentReachabilityStatus];
-#endif
                 if (status == NotReachable) {
                     [self addAttribute:kNRMA_Attrib_offline value:@YES];
                 }
             }
+#endif
         }
         // Handle Background attribute addition.
         if([NRMAFlags shouldEnableBackgroundReporting]) {

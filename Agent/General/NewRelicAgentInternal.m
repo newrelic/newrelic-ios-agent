@@ -547,9 +547,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRMAReachability* r = [NewRelicInternalUtils reachability];
     NRMANetworkStatus status;
     @synchronized(r) {
-#if TARGET_OS_WATCH
-        status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
-#else
+#if !TARGET_OS_WATCH
         status = [r currentReachabilityStatus];
 #endif
     }
@@ -560,10 +558,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                    agentConfiguration:self.agentConfiguration
                                                                                              platform:[NewRelicInternalUtils osName]
                                                                                             sessionId:[self currentSessionId]];
-
+#if !TARGET_OS_WATCH
         if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
             [self.handledExceptionsController processAndPublishPersistedReports];
         }
+#endif
 
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
 
@@ -572,12 +571,30 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
 
+#if !TARGET_OS_WATCH
     // Attempt to upload crash report files (if any exist)
     if ([NRMAFlags shouldEnableCrashReporting]) {
         if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
             [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
         }
     }
+#endif
+    
+#if TARGET_OS_WATCH
+    [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]] completion:^(NRMANetworkStatus status){
+        if ([NRMAFlags shouldEnableHandledExceptionEvents]) {
+            if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
+                [self.handledExceptionsController processAndPublishPersistedReports];
+            }
+        }
+        // Attempt to upload crash report files (if any exist)
+        if ([NRMAFlags shouldEnableCrashReporting]) {
+            if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
+                [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
+            }
+        }
+    }];
+#endif
 
     if([NRMAFlags shouldEnableGestureInstrumentation])
     {

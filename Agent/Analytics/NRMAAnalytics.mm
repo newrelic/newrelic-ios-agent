@@ -268,7 +268,24 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
         return [_eventManager addEvent:[event autorelease]];
     } else {
-        return _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkOfflineStatus], [self checkBackgroundStatus]);
+#if !TARGET_OS_WATCH
+        auto event = _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkBackgroundStatus]);
+        if([self checkOfflineStatus]){
+            event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+        }
+        
+        return _analyticsController->addEvent(event);
+
+#else
+        __block auto event = _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkBackgroundStatus]);
+        
+        [self checkOfflineStatus:^(BOOL isOffline) {
+            if(isOffline){
+                event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+            }
+        }];
+        return _analyticsController->addEvent(event);
+#endif
     }
 }
 
@@ -509,7 +526,23 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableNetworkRequestEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
-        return _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
+#if !TARGET_OS_WATCH
+        auto event = _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkBackgroundStatus]);
+        if([self checkOfflineStatus]){
+            event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+        }
+        return _analyticsController->addEvent(event);
+
+#else
+        __block auto event = _analyticsController->addRequestEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkBackgroundStatus]);
+        [self checkOfflineStatus:^(BOOL isOffline) {
+            if(isOffline){
+                event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+            }
+        }];
+            
+        return _analyticsController->addEvent(event);
+#endif
     }
     return NO;
 }
@@ -520,10 +553,24 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
+#if !TARGET_OS_WATCH
+        auto event = _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkBackgroundStatus]);
 
-        return _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData,std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
+        if([self checkOfflineStatus]){
+            event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+        }
+        return _analyticsController->addEvent(event);
+#else
+        __block auto event = _analyticsController->addNetworkErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkBackgroundStatus]);
+
+        [self checkOfflineStatus:^(BOOL isOffline) {
+            if(isOffline){
+                event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+            }
+        }];
+        return _analyticsController->addEvent(event);
+#endif
     }
-
     return NO;
 }
 
@@ -533,8 +580,22 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if ([NRMAFlags shouldEnableRequestErrorEvents]) {
         NewRelic::NetworkRequestData* networkRequestData = [requestData getNetworkRequestData];
         NewRelic::NetworkResponseData* networkResponseData = [responseData getNetworkResponseData];
-
-        return _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkOfflineStatus], [self checkBackgroundStatus]);
+#if !TARGET_OS_WATCH
+        auto event = _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkBackgroundStatus]);
+    
+        if([self checkOfflineStatus]){
+            event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+        }
+        return _analyticsController->addEvent(event);
+#else
+        __block auto event = _analyticsController->addHTTPErrorEvent(*networkRequestData, *networkResponseData, std::move(payload), [self checkBackgroundStatus]);
+        [self checkOfflineStatus:^(BOOL isOffline) {
+            if(isOffline){
+                event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+            }
+        }];
+        return _analyticsController->addEvent(event);
+#endif
     }
     return NO;
 }
@@ -755,9 +816,17 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
             
             if ([self event:event withAttributes:attributes]) {
+#if TARGET_OS_WATCH
+                [self checkOfflineStatus:^(BOOL isOffline){
+                    if(isOffline){
+                        event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                    }
+                }];
+#else
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
                 }
+#endif
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
@@ -810,9 +879,17 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             
             if ([self event:event withAttributes:attributes]) {
                 event->addAttribute("name",name.UTF8String);
+#if TARGET_OS_WATCH
+                [self checkOfflineStatus:^(BOOL isOffline){
+                    if(isOffline){
+                        event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                    }
+                }];
+#else
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
                 }
+#endif
                 return _analyticsController->addEvent(event);
             }
         } catch (std::exception& e){
@@ -869,9 +946,17 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
                         
             if([self event:event withAttributes:attributes]) {
+#if TARGET_OS_WATCH
+                [self checkOfflineStatus:^(BOOL isOffline){
+                    if(isOffline){
+                        event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                    }
+                }];
+#else
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
                 }
+#endif
                 return _analyticsController->addEvent(event);
             }
         }
@@ -910,21 +995,30 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return YES;
 }
 
+#if TARGET_OS_WATCH
+- (void) checkOfflineStatus:(void (^)(BOOL isOffline))completionHandler  {
+    if([NRMAFlags shouldEnableOfflineStorage]) {
+        [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]] completion:^(NRMANetworkStatus status){
+            completionHandler(status == NotReachable);
+        }];
+    } else {
+        completionHandler(NO);
+    }
+}
+
+#else
 - (BOOL) checkOfflineStatus {
     if([NRMAFlags shouldEnableOfflineStorage]) {
         NRMAReachability* r = [NewRelicInternalUtils reachability];
         @synchronized(r) {
-#if TARGET_OS_WATCH
-            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
-#else
             NRMANetworkStatus status = [r currentReachabilityStatus];
-#endif
             return (status == NotReachable);
         }
     }
     return false;
 }
-
+#endif
+    
 - (BOOL) checkBackgroundStatus {
     if([NRMAFlags shouldEnableBackgroundReporting]) {
 #if TARGET_OS_WATCH

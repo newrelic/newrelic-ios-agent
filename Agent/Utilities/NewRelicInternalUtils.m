@@ -49,6 +49,9 @@ NSTimeInterval NRMAMillisecondTimestamp(void) {
 static NSString* _agentVersion;
 static NSString* _deviceId;
 static NSString* _osVersion;
+BOOL isReachable;
+BOOL isRequestInProgress;
+BOOL requestThrottle;
 
 + (BOOL) isFloat:(NSNumber*)number {
     if (!number) return NO;
@@ -200,19 +203,66 @@ static NSString* _osVersion;
     }
 }
 
-+ (NRMANetworkStatus)currentReachabilityStatusTo:(NSURL*)url {
-    if([self checkReachablityTo:url]) return ReachableViaUnknown;
-    return NotReachable;
++ (void)currentReachabilityStatusTo:(NSURL*)url completion:(void (^)(NRMANetworkStatus success))completionHandler {
+     // Perform a GET request with a URL and a completion handler
+     [self checkReachablityTo:url completion:^(BOOL success) {
+         if (success) {
+             completionHandler(ReachableViaUnknown);
+         } else {
+             completionHandler(NotReachable);
+         }
+     }];
 }
 
-+ (BOOL) checkReachablityTo:(NSURL*)url {
-#if TARGET_OS_WATCH
-    return true;
-#else
-    struct hostent *remoteHostEnt = gethostbyname([[url host] UTF8String]);
-    if(remoteHostEnt == NULL) return false;
-    return [[url host] isEqualToString:[NSString stringWithUTF8String:*remoteHostEnt->h_aliases]];
-#endif
++ (void) checkReachablityTo:(NSURL *)url completion:(void (^)(BOOL success))completion  {
+    if (isRequestInProgress) {
+        [[NewRelicInternalUtils completionHandlers] addObject:completion];
+        return;
+    }
+    if (requestThrottle) {
+        completion(isReachable);
+        return;
+    }
+    
+    isRequestInProgress = YES;
+    requestThrottle = YES;
+    
+    [[NewRelicInternalUtils completionHandlers] addObject:completion];
+    
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+    [request setValue:@"" forHTTPHeaderField:kAPPLICATION_TOKEN_HEADER];
+
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if (error) {
+            // Check for specific network errors indicating offline status
+            if ([error.domain isEqualToString:NSURLErrorDomain]) {
+                switch (error.code) {
+                    case NSURLErrorNotConnectedToInternet:
+                    case NSURLErrorTimedOut:
+                    case NSURLErrorCannotFindHost:
+                    case NSURLErrorCannotConnectToHost:
+                        isReachable = NO; // Offline
+                }
+            } else {
+                isReachable = YES; // Online, but another error occurred
+            }
+        } else {
+            isReachable = YES; // Online
+        }
+        // Reset the flag when the request completes
+        isRequestInProgress = NO;
+        
+        // Call all stored completion handlers with the reachability status
+        for (void (^handler)(BOOL) in [NewRelicInternalUtils completionHandlers]) {
+            handler(isReachable);
+        }
+        
+        // Clear the completion handlers array
+        [[NewRelicInternalUtils completionHandlers] removeAllObjects];
+        NSTimer *timer = [NSTimer timerWithTimeInterval:1 target:self selector:@selector(requestTimer) userInfo:nil repeats:NO];
+        [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+    }];
+    [task resume];
 }
 
 + (NSString*) collectorHostDataURL
@@ -237,6 +287,8 @@ static NSString* _osVersion;
 + (NSString*) carrierName {
 #if TARGET_OS_TV
     return [self connectionType];
+#elif TARGET_OS_WATCH
+    return NRMA_CARRIER_WIFI;
 #else
 #ifdef NRMA_REACHABILITY_DEBUG
     static NRMADEBUG_Reachability* debugLog;
@@ -372,10 +424,19 @@ static NSString* _osVersion;
 #endif
 }
 
-+ (NRMANetworkStatus) networkStatus {
 #if TARGET_OS_WATCH
-    NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]]];
++ (void) networkStatus:(void (^)(NRMANetworkStatus success))completionHandler {
+    [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostDataURL]] completion:^(NRMANetworkStatus success) {
+        if (success) {
+            completionHandler(ReachableViaUnknown);
+        } else {
+            completionHandler(NotReachable);
+        }
+    }];
+}
+
 #else
++ (NRMANetworkStatus) networkStatus {
 #ifdef NRMA_REACHABILITY_DEBUG
     static NRMADEBUG_Reachability* debugLog;
     static dispatch_once_t onceToken;
@@ -429,12 +490,14 @@ static NSString* _osVersion;
     NRLOG_AGENT_INFO(@"DEBUG UPDATE: %@",debugLog);
     }
 #endif
-#endif
     return status;
 }
-
+#endif
 
 + (NSString*) getCurrentWanType {
+#if TARGET_OS_WATCH
+    return NRMA_CARRIER_WIFI;
+#else
 #ifdef NRMA_REACHABILITY_DEBUG
     static NRMADEBUG_Reachability* debugLog;
     static dispatch_once_t reachOnceToken;
@@ -503,7 +566,7 @@ static NSString* _osVersion;
         }
     }
     return wanType;
-
+#endif
 }
 
 + (NRMAReachability*) reachability {
@@ -524,6 +587,22 @@ static NSString* _osVersion;
         }
     });
     return nm;
+}
+
++ (NSMutableArray<void (^)(BOOL)>*) completionHandlers {
+    static NSMutableArray<void (^)(BOOL)>* completionHandlers = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (@available(iOS 12.0, tvOS 12.0, *)) {
+            completionHandlers = [[NSMutableArray alloc] init];
+        }
+    });
+    return completionHandlers;
+}
+
++ (void) requestTimer
+{
+    requestThrottle = NO;
 }
 
 // Returns the device model.  Ex.  iPhone4,1

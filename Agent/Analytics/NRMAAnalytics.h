@@ -59,7 +59,11 @@
 + (NSString*) getLastSessionsEvents;
 - (void) clearLastSessionsAnalytics;
 
+#if TARGET_OS_WATCH
+- (void) checkOfflineStatus:(void (^)(BOOL isOffline))completionHandler;
+#else
 - (BOOL) checkOfflineStatus;
+#endif
 - (BOOL) checkBackgroundStatus;
 //this utilizes setSessionAttribute:value: which validates the user input 'name'.
 - (BOOL) setLastInteraction:(NSString*)name;

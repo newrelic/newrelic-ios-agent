@@ -296,6 +296,7 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
 {
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
+        NRLOG_AGENT_VERBOSE(@"Request is an internal service request, ending instrumentation.");
         return;
     }
 
@@ -325,6 +326,7 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
 {
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
+        NRLOG_AGENT_VERBOSE(@"Request is an internal service request, ending instrumentation.");
         return;
     }
 

@@ -23,7 +23,7 @@ namespace NewRelic {
         const char* getContentType() const;
         unsigned int getBytesSent() const;
         
-        std::map<std::string, std::string> getTrackedHeaders() const;
+        const std::map<std::string, std::string> getTrackedHeaders() const;
 
         void setTrackedHeaders(std::map<std::string, std::string> trackedHeaders);
 

@@ -4,21 +4,23 @@
 
 namespace NewRelic {
 
-    NetworkRequestData::NetworkRequestData(const char *url,
-                                           const char *domain,
-                                           const char *path,
-                                           const char *method,
-                                           const char *connectionType,
-                                           const char *contentType,
-                                           unsigned int bytesSent) {
-        _requestUrl = url;
-        _requestDomain = domain;
-        _requestPath = path;
-        _requestMethod = method;
-        _connectionType = connectionType;
-        _contentType = contentType;
-        _bytesSent = bytesSent;
-    }
+NetworkRequestData::NetworkRequestData(const char *url,
+                                       const char *domain,
+                                       const char *path,
+                                       const char *method,
+                                       const char *connectionType,
+                                       const char *contentType,
+                                       unsigned int bytesSent)
+    : _requestUrl(url),
+      _requestDomain(domain),
+      _requestPath(path),
+      _requestMethod(method),
+      _connectionType(connectionType),
+      _contentType(contentType),
+      _bytesSent(bytesSent),
+      _trackedHeaders()
+{
+}
 
     const char* NetworkRequestData::getRequestUrl() const {
         return _requestUrl;
@@ -48,7 +50,7 @@ namespace NewRelic {
         return _bytesSent;
     }
 
-    std::map<std::string, std::string> NetworkRequestData::getTrackedHeaders() const {
+    const std::map<std::string, std::string> NetworkRequestData::getTrackedHeaders() const {
         return _trackedHeaders;
     }
 

@@ -53,7 +53,7 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 + (NSString*) connectionType;
 
 // Determines if a url is reachable.
-+ (NRMANetworkStatus)currentReachabilityStatusTo:(NSURL*)url;
++ (void)currentReachabilityStatusTo:(NSURL*)url completion:(void (^)(NRMANetworkStatus success))completionHandler;
 
 // Returns the url for the data endpoint.
 + (NSString*) collectorHostDataURL;
@@ -61,9 +61,12 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 // Returns the url for the hex endpoint.
 + (NSString*) collectorHostHexURL;
 
+#if TARGET_OS_WATCH
++ (void) networkStatus:(void (^)(NRMANetworkStatus success))completionHandler;
+#else
 // Returns the NRMANetworkStatus
 + (NRMANetworkStatus) networkStatus;
-
+#endif
 // Returns the current connection type. (Wifi, WAN, or precise radio technology)
 + (NSString*) getCurrentWanType;
 
