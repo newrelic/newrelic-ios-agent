@@ -9,6 +9,7 @@
 
 #include <Hex/Attributes.hpp>
 #include <Hex/session-attributes_generated.h>
+#include <Hex/jserror_generated.h>
 
 using namespace com::newrelic::mobile::fbs;
 using namespace flatbuffers;

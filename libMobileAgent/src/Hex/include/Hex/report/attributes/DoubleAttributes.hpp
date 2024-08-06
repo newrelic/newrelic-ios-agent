@@ -8,6 +8,7 @@
 
 
 #include <Hex/session-attributes_generated.h>
+#include <Hex/jserror_generated.h>
 #include <Hex/Attributes.hpp>
 #include <Hex/BooleanAttributes.hpp>
 
