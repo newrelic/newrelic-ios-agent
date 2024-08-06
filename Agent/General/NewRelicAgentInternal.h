@@ -60,11 +60,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)shutdown;
 
 + (void)startWithApplicationToken:(NSString*)appToken
-              andCollectorAddress:(NSString*)CollectorUrl;
+              andCollectorAddress:( NSString* _Nullable )CollectorUrl;
 
 + (void)startWithApplicationToken:(NSString*)appToken
-              andCollectorAddress:(NSString*)CollectorUrl
-         andCrashCollectorAddress:(NSString*)crashCollectorUrl;
+              andCollectorAddress:(NSString* _Nullable )CollectorUrl
+         andCrashCollectorAddress:(NSString* _Nullable )crashCollectorUrl;
 
 - (NSDate*) getAppSessionStartDate;
 - (NSString* _Nullable) getUserId;

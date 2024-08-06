@@ -62,7 +62,8 @@
 - (void) testNRLogger {
 
     [NRLogger clearLog];
-
+    [NRLogger setRemoteLogLevel:NRLogLevelDebug];
+    
     XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{

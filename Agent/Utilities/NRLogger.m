@@ -21,6 +21,8 @@ NRLogger *_nr_logger = nil;
 @interface NRLogger()
 - (void)addLogMessage:(NSDictionary *)message;
 - (void)setLogLevels:(unsigned int)levels;
+- (void)setRemoteLogLevel:(unsigned int)level;
+
 - (void)setLogTargets:(unsigned int)targets;
 - (void)clearLog;
 @end
@@ -57,7 +59,7 @@ withMessage:(NSString *)message {
                                method, NRLogMessageMethodKey,
                                [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
                                message, NRLogMessageMessageKey,
-                               nil]];
+                               nil]: NO];
     }
 }
 
@@ -85,7 +87,7 @@ withAttributes:(NSDictionary *)attributes {
                                             [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
                                             message, NRLogMessageMessageKey,nil];
         [mutableDict addEntriesFromDictionary:attributes];
-        [logger addLogMessage:mutableDict];
+        [logger addLogMessage:mutableDict:NO];
     }
 }
 
@@ -101,11 +103,12 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 
     // Filter passed logs by log level.
     shouldLog = (logger->logLevels & level) != 0;
-    
-    // If this is an agentLog, only print it if we are currently at the debug level.
-    if (agentLogsOn) {
-        shouldLog = (logger->logLevels & NRLogLevelDebug) != 0;
-    }
+  
+// Filtering of Console logs is performed based on logLevel.
+//    // If this is an agentLog, only print it if we are currently including the debug level.
+//    if (agentLogsOn) {
+//        shouldLog = (logger->logLevels & NRLogLevelDebug) != 0;
+//    }
 
     if (shouldLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
@@ -115,7 +118,7 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                                method, NRLogMessageMethodKey,
                                [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
                                message, NRLogMessageMessageKey,
-                               nil]];
+                               nil]:agentLogsOn];
     }
 }
 
@@ -125,6 +128,10 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 
 + (void)setLogLevels:(unsigned int)levels {
     [[NRLogger logger] setLogLevels:levels];
+}
+
++ (void)setRemoteLogLevel:(unsigned int)level {
+    [[NRLogger logger] setRemoteLogLevel:level];
 }
 
 + (void)setLogTargets:(unsigned int)targets {
@@ -216,10 +223,10 @@ withAgentLogsOn:(BOOL)agentLogsOn {
         self->isUploading = NO;
         self->failureCount = 0;
         self->debugLogs = NO;
-        
+        self->remoteLogLevel = NRLogLevelError | NRLogLevelWarning;
         // This was including Error and warning previously but since warning is the highest we want to emit by default this will emit warning and error by default.
         
-        self->logLevels = NRLogLevelWarning;
+        self->logLevels = NRLogLevelError | NRLogLevelWarning;
         self->logTargets = NRLogTargetConsole;
         self->logFile = nil;
         self->logQueue = dispatch_queue_create("com.newrelicagent.loggingfilequeue", DISPATCH_QUEUE_SERIAL);
@@ -236,7 +243,7 @@ withAgentLogsOn:(BOOL)agentLogsOn {
     }
 }
 
-- (void)addLogMessage:(NSDictionary *)message {
+- (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
         if (self->logTargets & NRLogTargetConsole) {
@@ -249,7 +256,18 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                   [message objectForKey:NRLogMessageMessageKey]);
             
         }
-        if (self->logTargets & NRLogTargetFile) {
+        // Only enter this block if remote logging is including this messages level.
+        NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
+        NRLogLevels level = [NRLogger stringToLevel:levelString];
+
+        BOOL shouldRemoteLog = (self->remoteLogLevel & level) != 0;
+
+        if (agentLogsOn) {
+            shouldRemoteLog = (self->remoteLogLevel & NRLogLevelDebug) != 0;
+        }
+
+        if ((self->logTargets & NRLogTargetFile) &&
+            shouldRemoteLog) {
             @synchronized(self) {
                 
                 NSData *json = [self jsonDictionary:message];
@@ -345,6 +363,30 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                 l = levels; break;
         }
         self->logLevels = l;
+    }
+}
+
+- (void)setRemoteLogLevel:(unsigned int)level {
+    @synchronized(self) {
+        unsigned int l = 0;
+        switch (level) {
+            case NRLogLevelError:
+                l = NRLogLevelError; break;
+            case NRLogLevelWarning:
+                l = NRLogLevelError | NRLogLevelWarning; break;
+            case NRLogLevelInfo:
+                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo; break;
+            case NRLogLevelVerbose:
+                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose; break;
+            case NRLogLevelAudit:
+                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit ; break;
+            case NRLogLevelDebug:
+                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit | NRLogLevelDebug ; break;
+            default:
+                l = level; break;
+        }
+
+        self->remoteLogLevel = l;
     }
 }
 
@@ -457,6 +499,13 @@ withAgentLogsOn:(BOOL)agentLogsOn {
             NSString *path = [NRLogger logFilePath];
             NSData* logData = [NSData dataWithContentsOfFile:path];
             
+            if (logData == nil) {
+                return;
+            }
+            if ([logData length] == 0) {
+                return;
+            }
+
             NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
             NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
             
@@ -506,7 +555,8 @@ withAgentLogsOn:(BOOL)agentLogsOn {
         NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
         NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
         [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
-        
+        [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+
         req.HTTPMethod = @"POST";
         
         NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {

@@ -40,7 +40,9 @@ class ApodViewModel {
             let nasaUrl = ApodURL(date: Date.randomBetween(start: "2015-10-31", end: Date().dateString()))
             guard let url = URL(string: nasaUrl.url) else { return }
             
-            let request = URLRequest(url: url)
+            var request = URLRequest(url: url)
+            request.addValue("Sucsess", forHTTPHeaderField: "Test")
+
             let (data, _) = try await URLSession.shared.data(for: request)
             
             let decoded = try JSONDecoder().decode(ApodResult.self, from: data)

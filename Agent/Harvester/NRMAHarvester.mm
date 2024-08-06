@@ -777,7 +777,7 @@
             [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
             // Parse NSString into NRLogLevel
             NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
-            [NRLogger setLogLevels:level];
+            [NRLogger setRemoteLogLevel:level];
 
              NRLOG_AGENT_DEBUG(@"config: Has log reporting ENABLED w/ level = %@",configuration.log_reporting_level);
 

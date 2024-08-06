@@ -18,5 +18,3 @@ typedef enum {
     NRMAMT_NamedEvent,
     NRMAMT_Any
 } NRMAMeasurementType;
-
-extern NSString* NSStringFromNRMAMeasurementType(NRMAMeasurementType type);
