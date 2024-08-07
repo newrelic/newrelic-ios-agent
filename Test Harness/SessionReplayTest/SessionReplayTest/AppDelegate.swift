@@ -18,10 +18,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
-#if DEBUG
+//#if DEBUG
         // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
         NRLogger.setLogLevels(NRLogLevelAudit.rawValue)
-#endif
+//#endif
+        NewRelic.enableFeatures(.NRFeatureFlag_NewEventSystem)
 //        NewRelic.start(withApplicationToken:"AA49a8e151d4e77acbeb11b04f1d5e0fd57d805a77-NRMA")
         NewRelic.start(withApplicationToken:"AA49a8e151d4e77acbeb11b04f1d5e0fd57d805a77-NRMA",
                        andCollectorAddress: "staging-mobile-collector.newrelic.com",

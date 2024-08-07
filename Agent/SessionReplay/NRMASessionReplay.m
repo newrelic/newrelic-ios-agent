@@ -19,6 +19,10 @@
     UIWindow* _window;
 //    NSMutableArray<id<NRMAViewDetailProtocol>>* _views;
     id<NRMAViewDetailProtocol> _rootView;
+    
+    NSMutableArray<NSDictionary *>* _frames;
+    int frameCount;
+    NSTimer* _frameTimer;
 }
 
 - (instancetype)init {
@@ -26,6 +30,8 @@
     if(self) {
 //        _views = [[NSMutableArray alloc] init];
         _rootView = nil;
+        _frames = [[NSMutableArray alloc] init];
+        frameCount = 0;
         [NSNotificationCenter.defaultCenter addObserver:self
                                                selector:@selector(didBecomeVisible)
                                                    name:UIWindowDidBecomeVisibleNotification
@@ -68,7 +74,6 @@
 
 - (void)didBecomeActive {
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did become active");
-    _window = [[UIApplication sharedApplication] keyWindow];
     [self recursiveRecord:_window forViewDetails:_rootView];
 //    NSMutableArray<NSDictionary *> *viewDetailJSON = [[NSMutableArray alloc] init];
 //    for(id<NRMAViewDetailProtocol> detail in _views) {
@@ -76,14 +81,18 @@
 //        [viewDetailJSON addObject:[detail jsonDescription]];
 //    }
     
-    NSDictionary *viewDetailJSON = _rootView.jsonDescription;
+//    NSDictionary *viewDetailJSON = _rootView.jsonDescription;
+//    
+//    NSData *viewJSONData = [NSJSONSerialization dataWithJSONObject:viewDetailJSON
+//                                                           options:0
+//                                                             error:nil];
+//    
+//    NSString *json = [[NSString alloc] initWithData:viewJSONData encoding:NSUTF8StringEncoding];
+//    NSLog(json);
     
-    NSData *viewJSONData = [NSJSONSerialization dataWithJSONObject:viewDetailJSON
-                                                           options:0
-                                                             error:nil];
-    
-    NSString *json = [[NSString alloc] initWithData:viewJSONData encoding:NSUTF8StringEncoding];
-    NSLog(json);
+    _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
+        [self takeFrame];
+    }];
 }
 
 - (void)willEnterForeground {
@@ -92,7 +101,36 @@
 
 - (void)didBecomeKey {
     NRLOG_AUDIT(@"[SESSION REPLAY] - Window Did Become Key");
+}
 
+- (void)takeFrame {
+    _window = [[UIApplication sharedApplication] keyWindow];
+    [self recursiveRecord:_window forViewDetails:_rootView];
+    
+    NSDictionary *viewDetailJSON = _rootView.jsonDescription;
+    
+//    NSData *viewJSONData = [NSJSONSerialization dataWithJSONObject:viewDetailJSON
+//                                                           options:0
+//                                                             error:nil];
+//    
+//    NSString *json = [[NSString alloc] initWithData:viewJSONData encoding:NSUTF8StringEncoding];
+    
+    [_frames addObject:viewDetailJSON];
+    frameCount++;
+    
+    if(frameCount == 5) {
+        [_frameTimer invalidate];
+        NSString* frameJSON = [self consolidateFrames];
+        NSLog(frameJSON);
+    }
+}
+
+- (NSString *)consolidateFrames {
+    NSData *viewFramesJSONData = [NSJSONSerialization dataWithJSONObject:_frames
+                                                                 options:0
+                                                                   error:nil];
+    NSString *frameJSON = [[NSString alloc] initWithData:viewFramesJSONData encoding:NSUTF8StringEncoding];
+    return frameJSON;
 }
 
 - (void)recursiveRecord:(UIView *)view forViewDetails:(id<NRMAViewDetailProtocol>)viewDetails {
