@@ -96,6 +96,7 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
 - (void) setCollectorHost:(NSString*)host {
     if (host) {
         _collectorHost = host;
+        _loggingHost = host;
     } else {
         if ([NRMAFlags shouldEnableFedRampSupport]) {
             _collectorHost = kNRMA_FEDRAMP_COLLECTOR_HOST;
@@ -127,7 +128,10 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
 }
 
 - (void) setLoggingURL {
-    if (self.applicationToken.regionCode.length) {
+    if (_loggingHost) {
+        _loggingURL = _loggingHost;
+    }
+    else if (self.applicationToken.regionCode.length) {
         _loggingURL = [NSString stringWithFormat:kNRMA_REGION_SPECIFIC_LOGGING_HOST,self.applicationToken.regionCode];
     }
     else if ([NRMAFlags shouldEnableFedRampSupport]) {
