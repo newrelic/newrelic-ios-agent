@@ -47,7 +47,6 @@ using namespace NewRelic;
     NRMAEventManager *_eventManager;
     NRMASAM *_sessionAttributeManager;
     NSDate *_sessionStartTime;
-    id<AttributeValidatorProtocol> _attributeValidator;
 }
 
 static PersistentStore<std::string,BaseValue>* __attributeStore;
@@ -75,6 +74,62 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     });
     return (*__eventStore);
 }   
+
+static id<AttributeValidatorProtocol> __attributeValidator;
++ (id<AttributeValidatorProtocol> &) attributeValidator
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
+            if ([name length] == 0) {
+                NRLOG_AGENT_ERROR(@"invalid attribute: name length = 0");
+                return false;
+            }
+            if ([name hasPrefix:@" "]) {
+                NRLOG_AGENT_ERROR(@"invalid attribute: name prefix = \" \"");
+                return false;
+            }
+            // check if attribute name is reserved or attribute name matches reserved prefix.
+            for (NSString* key in [NRMAAnalytics reservedKeywords]) {
+                if ([key isEqualToString:name]) {
+                    NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
+                    return false;
+                }
+                if ([name hasPrefix:key])  {
+                    NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
+                    return false;
+                }
+            }
+            // check if attribute name exceeds max length.
+            if ([name length] > kNRMA_Attrib_Max_Name_Length) {
+                NRLOG_AGENT_ERROR(@"invalid attribute: name length exceeds limit");
+                return false;
+            }
+            return true;
+            
+        } valueValidator:^BOOL(id value) {
+            if ([value isKindOfClass:[NSString class]]) {
+                if ([(NSString*)value length] == 0) {
+                    NRLOG_AGENT_ERROR(@"invalid attribute: value length = 0");
+                    return false;
+                }
+                else if ([(NSString*)value length] >= kNRMA_Attrib_Max_Value_Size_Bytes) {
+                    NRLOG_AGENT_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
+                    return false;
+                }
+            }
+            if (value == nil || [value isKindOfClass:[NSNull class]]) {
+                NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be nil");
+                return false;
+            }
+            
+            return true;
+        } andEventTypeValidator:^BOOL(NSString *eventType) {
+            return YES;
+        }];
+    });
+    return __attributeValidator;
+}
 
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController {
     return _analyticsController;
@@ -116,54 +171,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
             
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
-            _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
-                if ([name length] == 0) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: name length = 0");
-                    return false;
-                }
-                if ([name hasPrefix:@" "]) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: name prefix = \" \"");
-                    return false;
-                }
-                // check if attribute name is reserved or attribute name matches reserved prefix.
-                for (NSString* key in [NRMAAnalytics reservedKeywords]) {
-                    if ([key isEqualToString:name]) {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
-                        return false;
-                    }
-                    if ([name hasPrefix:key])  {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
-                        return false;
-                    }
-                }
-                // check if attribute name exceeds max length.
-                if ([name length] > kNRMA_Attrib_Max_Name_Length) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: name length exceeds limit");
-                    return false;
-                }
-                return true;
-                
-            } valueValidator:^BOOL(id value) {
-                if ([value isKindOfClass:[NSString class]]) {
-                    if ([(NSString*)value length] == 0) {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: value length = 0");
-                        return false;
-                    }
-                    else if ([(NSString*)value length] >= kNRMA_Attrib_Max_Value_Size_Bytes) {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
-                        return false;
-                    }
-                }
-                if (value == nil || [value isKindOfClass:[NSNull class]]) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be nil");
-                    return false;
-                }
-                
-                return true;
-            } andEventTypeValidator:^BOOL(NSString *eventType) {
-                return YES;
-            }];
-            _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
+            
+            _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:[NRMAAnalytics attributeValidator]];
 
 
             NSString* attributes = [self sessionAttributeJSONString];
@@ -251,7 +260,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     [__eventTypeRegex release];
     [_eventManager dealloc];
     [_sessionAttributeManager dealloc];
-    [_attributeValidator release];
     [_sessionStartTime release];
 
     [super dealloc];
@@ -263,7 +271,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if(name == nil || name.length == 0){return NO;}
         NRMAInteractionEvent *event = [[NRMAInteractionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] name:name category:@"Interaction"
-                                                     withAttributeValidator:_attributeValidator];
+                                                     withAttributeValidator:[NRMAAnalytics attributeValidator]];
         [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
         
         return [_eventManager addEvent:[event autorelease]];
@@ -297,7 +305,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         
         NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
         
-        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:_attributeValidator];
+        NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:[NRMAAnalytics attributeValidator]];
         if (event == nil) {
             return false;
         }
@@ -433,7 +441,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             return nil;
         }
         
-        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:_attributeValidator];
+        NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:[NRMAAnalytics attributeValidator]];
         if (event == nil) {
             return nil;
         }
@@ -740,7 +748,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:name
                                                                   timestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                     withAttributeValidator:_attributeValidator];
+                                                     withAttributeValidator:[NRMAAnalytics attributeValidator]];
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];
         }];
@@ -781,7 +789,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileBreadcrumb
                                                                   timestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                     withAttributeValidator:_attributeValidator];
+                                                     withAttributeValidator:[NRMAAnalytics attributeValidator]];
         if (event == nil) {
             NRLOG_AGENT_ERROR(@"Unable to create breadcrumb event");
             return NO;
@@ -853,7 +861,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if([NRMAFlags shouldEnableNewEventSystem]){
             NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:eventType
                                                                       timestamp:[NRMAAnalytics currentTimeMillis]
-                                                    sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
+                                                    sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:[NRMAAnalytics attributeValidator]];
             [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
                 [event addAttribute:key value:obj];
             }];
@@ -941,7 +949,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     
     NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileUserAction
                                                               timestamp:[NRMAAnalytics currentTimeMillis]
-                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
+                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:[NRMAAnalytics attributeValidator]];
 
     if (userAction.associatedMethod.length > 0) {
         [event addAttribute:kNRMA_RA_methodExecuted value:userAction.associatedMethod];
@@ -1204,13 +1212,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (BOOL) addSessionEvent {
     NRMASessionEvent *event = [[NRMASessionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
                                               sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
-                                                                 category:@"Session" withAttributeValidator:_attributeValidator];
+                                                                 category:@"Session" withAttributeValidator:[NRMAAnalytics attributeValidator]];
 
     return [_eventManager addEvent:[event autorelease]];
 }
 
 - (id<AttributeValidatorProtocol>) getAttributeValidator {
-    return _attributeValidator;
+    return [NRMAAnalytics attributeValidator];
 }
 
 #pragma mark Static helpers.
