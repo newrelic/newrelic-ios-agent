@@ -322,10 +322,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
         
         if (addDistributedTracing) {
-            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
-            [event addAttribute:kNRMA_Attrib_traceId value:traceId];
+            if (distributedTracingId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+                [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            }
+            if (traceId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+                [event addAttribute:kNRMA_Attrib_traceId value:traceId];
+            }
         }
         
         if (requestDomain.length > 0) {
@@ -442,9 +446,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
         
         if (addDistributedTracing) {
-            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+            if (distributedTracingId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+                [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            }
+            if (traceId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+            }
         }
         
         if (requestDomain.length > 0) {
