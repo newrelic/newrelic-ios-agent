@@ -20,8 +20,9 @@
 // Helper functionality to glue FlatBuffers and GRPC.
 
 #include "flatbuffers/flatbuffers.h"
-#include "grpc++/support/byte_buffer.h"
 #include "grpc/byte_buffer_reader.h"
+#include "grpcpp/support/byte_buffer.h"
+#include "grpcpp/support/slice.h"
 
 namespace flatbuffers {
 namespace grpc {
@@ -30,36 +31,25 @@ namespace grpc {
 // `grpc_slice` and also provides flatbuffers-specific helpers such as `Verify`
 // and `GetRoot`. Since it is backed by a `grpc_slice`, the underlying buffer
 // is refcounted and ownership is be managed automatically.
-template <class T>
-class Message {
+template<class T> class Message {
  public:
-  Message() : slice_(grpc_empty_slice()) {}
+  Message() {}
 
-  Message(grpc_slice slice, bool add_ref)
-    : slice_(add_ref ? grpc_slice_ref(slice) : slice) {}
+  Message(::grpc::Slice slice) : slice_(slice) {}
 
   Message &operator=(const Message &other) = delete;
 
-  Message(Message &&other) : slice_(other.slice_) {
-    other.slice_ = grpc_empty_slice();
-  }
+  Message(Message &&other) = default;
 
   Message(const Message &other) = delete;
 
-  Message &operator=(Message &&other) {
-    grpc_slice_unref(slice_);
-    slice_ = other.slice_;
-    other.slice_ = grpc_empty_slice();
-    return *this;
-  }
+  Message &operator=(Message &&other) = default;
 
-  ~Message() { grpc_slice_unref(slice_); }
+  const uint8_t *mutable_data() const { return slice_.begin(); }
 
-  const uint8_t *mutable_data() const { return GRPC_SLICE_START_PTR(slice_); }
+  const uint8_t *data() const { return slice_.begin(); }
 
-  const uint8_t *data() const { return GRPC_SLICE_START_PTR(slice_); }
-
-  size_t size() const { return GRPC_SLICE_LENGTH(slice_); }
+  size_t size() const { return slice_.size(); }
 
   bool Verify() const {
     Verifier verifier(data(), size());
@@ -71,10 +61,10 @@ class Message {
   const T *GetRoot() const { return flatbuffers::GetRoot<T>(data()); }
 
   // This is only intended for serializer use, or if you know what you're doing
-  const grpc_slice &BorrowSlice() const { return slice_; }
+  const ::grpc::Slice &BorrowSlice() const { return slice_; }
 
  private:
-  grpc_slice slice_;
+  ::grpc::Slice slice_;
 };
 
 class MessageBuilder;
@@ -84,48 +74,65 @@ class MessageBuilder;
 // efficient to transfer buffers to gRPC.
 class SliceAllocator : public Allocator {
  public:
-  SliceAllocator() : slice_(grpc_empty_slice()) {}
+  SliceAllocator() {}
 
   SliceAllocator(const SliceAllocator &other) = delete;
   SliceAllocator &operator=(const SliceAllocator &other) = delete;
 
-  virtual ~SliceAllocator() { grpc_slice_unref(slice_); }
+  SliceAllocator(SliceAllocator &&other) {
+    // default-construct and swap idiom
+    swap(other);
+  }
+
+  SliceAllocator &operator=(SliceAllocator &&other) {
+    // move-construct and swap idiom
+    SliceAllocator temp(std::move(other));
+    swap(temp);
+    return *this;
+  }
+
+  void swap(SliceAllocator &other) {
+    using std::swap;
+    swap(slice_, other.slice_);
+  }
+
+  virtual ~SliceAllocator() {}
 
   virtual uint8_t *allocate(size_t size) override {
-    assert(GRPC_SLICE_IS_EMPTY(slice_));
-    slice_ = grpc_slice_malloc(size);
-    return GRPC_SLICE_START_PTR(slice_);
+    FLATBUFFERS_ASSERT(slice_.size() == 0);
+    slice_ = ::grpc::Slice(size);
+    return const_cast<uint8_t *>(slice_.begin());
   }
 
   virtual void deallocate(uint8_t *p, size_t size) override {
-    assert(p == GRPC_SLICE_START_PTR(slice_));
-    assert(size == GRPC_SLICE_LENGTH(slice_));
-    grpc_slice_unref(slice_);
-    slice_ = grpc_empty_slice();
+    FLATBUFFERS_ASSERT(p == slice_.begin());
+    FLATBUFFERS_ASSERT(size == slice_.size());
+    slice_ = ::grpc::Slice();
   }
 
   virtual uint8_t *reallocate_downward(uint8_t *old_p, size_t old_size,
-                                       size_t new_size) override {
-    assert(old_p == GRPC_SLICE_START_PTR(slice_));
-    assert(old_size == GRPC_SLICE_LENGTH(slice_));
-    assert(new_size > old_size);
-    grpc_slice old_slice = slice_;
-    grpc_slice new_slice = grpc_slice_malloc(new_size);
-    uint8_t *new_p = GRPC_SLICE_START_PTR(new_slice);
-    memcpy(new_p + (new_size - old_size), old_p, old_size);
+                                       size_t new_size, size_t in_use_back,
+                                       size_t in_use_front) override {
+    FLATBUFFERS_ASSERT(old_p == slice_.begin());
+    FLATBUFFERS_ASSERT(old_size == slice_.size());
+    FLATBUFFERS_ASSERT(new_size > old_size);
+    ::grpc::Slice old_slice = slice_;
+    ::grpc::Slice new_slice = ::grpc::Slice(new_size);
+    uint8_t *new_p = const_cast<uint8_t *>(new_slice.begin());
+    memcpy_downward(old_p, old_size, new_p, new_size, in_use_back,
+                    in_use_front);
     slice_ = new_slice;
-    grpc_slice_unref(old_slice);
     return new_p;
   }
 
  private:
-  grpc_slice &get_slice(uint8_t *p, size_t size) {
-    assert(p == GRPC_SLICE_START_PTR(slice_));
-    assert(size == GRPC_SLICE_LENGTH(slice_));
+  ::grpc::Slice &get_slice(uint8_t *p, size_t size) {
+    FLATBUFFERS_ASSERT(p == slice_.begin());
+    FLATBUFFERS_ASSERT(size == slice_.size());
     return slice_;
   }
 
-  grpc_slice slice_;
+  ::grpc::Slice slice_;
 
   friend class MessageBuilder;
 };
@@ -137,7 +144,7 @@ namespace detail {
 struct SliceAllocatorMember {
   SliceAllocator slice_allocator_;
 };
-}
+}  // namespace detail
 
 // MessageBuilder is a gRPC-specific FlatBufferBuilder that uses SliceAllocator
 // to allocate gRPC buffers.
@@ -145,41 +152,99 @@ class MessageBuilder : private detail::SliceAllocatorMember,
                        public FlatBufferBuilder {
  public:
   explicit MessageBuilder(uoffset_t initial_size = 1024)
-    : FlatBufferBuilder(initial_size, &slice_allocator_, false) {}
+      : FlatBufferBuilder(initial_size, &slice_allocator_, false) {}
 
   MessageBuilder(const MessageBuilder &other) = delete;
   MessageBuilder &operator=(const MessageBuilder &other) = delete;
+
+  MessageBuilder(MessageBuilder &&other)
+      : FlatBufferBuilder(1024, &slice_allocator_, false) {
+    // Default construct and swap idiom.
+    Swap(other);
+  }
+
+  /// Create a MessageBuilder from a FlatBufferBuilder.
+  explicit MessageBuilder(FlatBufferBuilder &&src,
+                          void (*dealloc)(void *,
+                                          size_t) = &DefaultAllocator::dealloc)
+      : FlatBufferBuilder(1024, &slice_allocator_, false) {
+    src.Swap(*this);
+    src.SwapBufAllocator(*this);
+    if (buf_.capacity()) {
+      uint8_t *buf = buf_.scratch_data();  // pointer to memory
+      size_t capacity = buf_.capacity();   // size of memory
+      slice_allocator_.slice_ = ::grpc::Slice(buf, capacity, dealloc);
+    } else {
+      slice_allocator_.slice_ = ::grpc::Slice();
+    }
+  }
+
+  /// Move-assign a FlatBufferBuilder to a MessageBuilder.
+  /// Only FlatBufferBuilder with default allocator (basically, nullptr) is
+  /// supported.
+  MessageBuilder &operator=(FlatBufferBuilder &&src) {
+    // Move construct a temporary and swap
+    MessageBuilder temp(std::move(src));
+    Swap(temp);
+    return *this;
+  }
+
+  MessageBuilder &operator=(MessageBuilder &&other) {
+    // Move construct a temporary and swap
+    MessageBuilder temp(std::move(other));
+    Swap(temp);
+    return *this;
+  }
+
+  void Swap(MessageBuilder &other) {
+    slice_allocator_.swap(other.slice_allocator_);
+    FlatBufferBuilder::Swap(other);
+    // After swapping the FlatBufferBuilder, we swap back the allocator, which
+    // restores the original allocator back in place. This is necessary because
+    // MessageBuilder's allocator is its own member (SliceAllocatorMember). The
+    // allocator passed to FlatBufferBuilder::vector_downward must point to this
+    // member.
+    buf_.swap_allocator(other.buf_);
+  }
+
+  // Releases the ownership of the buffer pointer.
+  // Returns the size, offset, and the original grpc_slice that
+  // allocated the buffer. Also see grpc_slice_unref().
+  uint8_t *ReleaseRaw(size_t &size, size_t &offset, ::grpc::Slice &slice) {
+    uint8_t *buf = FlatBufferBuilder::ReleaseRaw(size, offset);
+    slice = slice_allocator_.slice_;
+    slice_allocator_.slice_ = ::grpc::Slice();
+    return buf;
+  }
 
   ~MessageBuilder() {}
 
   // GetMessage extracts the subslice of the buffer corresponding to the
   // flatbuffers-encoded region and wraps it in a `Message<T>` to handle buffer
   // ownership.
-  template <class T>
-  Message<T> GetMessage() {
-    auto buf_data = buf_.buf();       // pointer to memory
-    auto buf_size = buf_.capacity();  // size of memory
-    auto msg_data = buf_.data();      // pointer to msg
-    auto msg_size = buf_.size();      // size of msg
+  template<class T> Message<T> GetMessage() {
+    auto buf_data = buf_.scratch_data();  // pointer to memory
+    auto buf_size = buf_.capacity();      // size of memory
+    auto msg_data = buf_.data();          // pointer to msg
+    auto msg_size = buf_.size();          // size of msg
     // Do some sanity checks on data/size
-    assert(msg_data);
-    assert(msg_size);
-    assert(msg_data >= buf_data);
-    assert(msg_data + msg_size <= buf_data + buf_size);
+    FLATBUFFERS_ASSERT(msg_data);
+    FLATBUFFERS_ASSERT(msg_size);
+    FLATBUFFERS_ASSERT(msg_data >= buf_data);
+    FLATBUFFERS_ASSERT(msg_data + msg_size <= buf_data + buf_size);
     // Calculate offsets from the buffer start
     auto begin = msg_data - buf_data;
     auto end = begin + msg_size;
     // Get the slice we are working with (no refcount change)
-    grpc_slice slice = slice_allocator_.get_slice(buf_data, buf_size);
+    ::grpc::Slice slice = slice_allocator_.get_slice(buf_data, buf_size);
     // Extract a subslice of the existing slice (increment refcount)
-    grpc_slice subslice = grpc_slice_sub(slice, begin, end);
+    ::grpc::Slice subslice = slice.sub(begin, end);
     // Wrap the subslice in a `Message<T>`, but don't increment refcount
-    Message<T> msg(subslice, false);
+    Message<T> msg(subslice);
     return msg;
   }
 
-  template <class T>
-  Message<T> ReleaseMessage() {
+  template<class T> Message<T> ReleaseMessage() {
     Message<T> msg = GetMessage<T>();
     Reset();
     return msg;
@@ -194,62 +259,42 @@ class MessageBuilder : private detail::SliceAllocatorMember,
 
 namespace grpc {
 
-template <class T>
-class SerializationTraits<flatbuffers::grpc::Message<T>> {
+template<class T> class SerializationTraits<flatbuffers::grpc::Message<T>> {
  public:
   static grpc::Status Serialize(const flatbuffers::grpc::Message<T> &msg,
-                                grpc_byte_buffer **buffer, bool *own_buffer) {
-    // We are passed in a `Message<T>`, which is a wrapper around a
-    // `grpc_slice`. We extract it here using `BorrowSlice()`. The const cast
-    // is necesary because the `grpc_raw_byte_buffer_create` func expects
-    // non-const slices in order to increment their refcounts.
-    grpc_slice *slice = const_cast<grpc_slice *>(&msg.BorrowSlice());
-    // Now use `grpc_raw_byte_buffer_create` to package the single slice into a
-    // `grpc_byte_buffer`, incrementing the refcount in the process.
-    *buffer = grpc_raw_byte_buffer_create(slice, 1);
+                                ByteBuffer *buffer, bool *own_buffer) {
+    // Package the single slice into a `ByteBuffer`,
+    // incrementing the refcount in the process.
+    *buffer = ByteBuffer(&msg.BorrowSlice(), 1);
     *own_buffer = true;
     return grpc::Status::OK;
   }
 
   // Deserialize by pulling the
-  static grpc::Status Deserialize(grpc_byte_buffer *buffer,
+  static grpc::Status Deserialize(ByteBuffer *buf,
                                   flatbuffers::grpc::Message<T> *msg) {
-    if (!buffer) {
-      return ::grpc::Status(::grpc::StatusCode::INTERNAL, "No payload");
+    Slice slice;
+    if (!buf->TrySingleSlice(&slice).ok()) {
+      if (!buf->DumpToSingleSlice(&slice).ok()) {
+        buf->Clear();
+        return ::grpc::Status(::grpc::StatusCode::INTERNAL, "No payload");
+      }
     }
-    // Check if this is a single uncompressed slice.
-    if ((buffer->type == GRPC_BB_RAW) &&
-        (buffer->data.raw.compression == GRPC_COMPRESS_NONE) &&
-        (buffer->data.raw.slice_buffer.count == 1)) {
-      // If it is, then we can reference the `grpc_slice` directly.
-      grpc_slice slice = buffer->data.raw.slice_buffer.slices[0];
-      // We wrap a `Message<T>` around the slice, incrementing the refcount.
-      *msg = flatbuffers::grpc::Message<T>(slice, true);
-    } else {
-      // Otherwise, we need to use `grpc_byte_buffer_reader_readall` to read
-      // `buffer` into a single contiguous `grpc_slice`. The gRPC reader gives
-      // us back a new slice with the refcount already incremented.
-      grpc_byte_buffer_reader reader;
-      grpc_byte_buffer_reader_init(&reader, buffer);
-      grpc_slice slice = grpc_byte_buffer_reader_readall(&reader);
-      grpc_byte_buffer_reader_destroy(&reader);
-      // We wrap a `Message<T>` around the slice, but dont increment refcount
-      *msg = flatbuffers::grpc::Message<T>(slice, false);
-    }
-    grpc_byte_buffer_destroy(buffer);
-    #if FLATBUFFERS_GRPC_DISABLE_AUTO_VERIFICATION
+    *msg = flatbuffers::grpc::Message<T>(slice);
+    buf->Clear();
+#if FLATBUFFERS_GRPC_DISABLE_AUTO_VERIFICATION
     return ::grpc::Status::OK;
-    #else
+#else
     if (msg->Verify()) {
       return ::grpc::Status::OK;
     } else {
       return ::grpc::Status(::grpc::StatusCode::INTERNAL,
                             "Message verification failed");
     }
-    #endif
+#endif
   }
 };
 
-}  // namespace grpc;
+}  // namespace grpc
 
 #endif  // FLATBUFFERS_GRPC_H_

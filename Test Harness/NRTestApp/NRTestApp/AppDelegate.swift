@@ -15,8 +15,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 #if DEBUG
-        // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
-        NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
+        // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
+        NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
 #endif
 
         // To enable or disable feature flags in New Relic iOS Agent.
@@ -32,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
-        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
+        // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
 
         NewRelic.saltDeviceUUID(true)
 

@@ -9,7 +9,8 @@
 #include <Hex/ios_generated.h>
 #include <Hex/hex_generated.h>
 #include <Hex/session-attributes_generated.h>
-#include <Hex/agent-data_generated.h>
+#include <Hex/jserror_generated.h>
+#include <Hex/hex-agent-data_generated.h>
 
 using namespace com::newrelic::mobile;
 using namespace flatbuffers;

@@ -8,7 +8,6 @@
 
 #import <XCTest/XCTest.h>
 #import "OCMock/OCMock.h"
-#import "Public/NRLogger.h"
 #import "NRTestConstants.h"
 #import "NRAgentTestBase.h"
 #import "NRMAMethodSwizzling.h"
