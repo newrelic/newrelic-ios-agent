@@ -12,10 +12,8 @@
 #import "NRMACrashDataWriter.h"
 
  #import "NRMAExceptionDataCollectionWrapper.h"
- #import "PLCrashTestThread.h"
  #import "PLCrashReport.h"
  #import "PLCrashReporter.h"
- #import "PLCrashFrameWalker.h"
 
  #import "NRMAUncaughtExceptionHandler.h"
  #import "NRMAExceptionHandlerManager.h"

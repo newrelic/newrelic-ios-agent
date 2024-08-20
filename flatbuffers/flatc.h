@@ -14,17 +14,62 @@
  * limitations under the License.
  */
 
+#ifndef FLATBUFFERS_FLATC_H_
+#define FLATBUFFERS_FLATC_H_
+
+#include <functional>
+#include <limits>
+#include <list>
+#include <memory>
+#include <string>
+
+#include "flatbuffers/bfbs_generator.h"
+#include "flatbuffers/code_generator.h"
 #include "flatbuffers/flatbuffers.h"
 #include "flatbuffers/idl.h"
 #include "flatbuffers/util.h"
-#include <functional>
-#include <limits>
-#include <string>
-
-#ifndef FLATC_H_
-#define FLATC_H_
 
 namespace flatbuffers {
+
+// TODO(derekbailey): It would be better to define these as normal includes and
+// not as extern functions. But this can be done at a later time.
+extern std::unique_ptr<flatbuffers::CodeGenerator> NewCppCodeGenerator();
+
+extern void LogCompilerWarn(const std::string &warn);
+extern void LogCompilerError(const std::string &err);
+
+struct FlatCOptions {
+  IDLOptions opts;
+
+  std::string program_name;
+
+  std::string output_path;
+
+  std::vector<std::string> filenames;
+
+  std::list<std::string> include_directories_storage;
+  std::vector<const char *> include_directories;
+  std::vector<const char *> conform_include_directories;
+  std::vector<bool> generator_enabled;
+  size_t binary_files_from = std::numeric_limits<size_t>::max();
+  std::string conform_to_schema;
+  std::string annotate_schema;
+  bool any_generator = false;
+  bool print_make_rules = false;
+  bool raw_binary = false;
+  bool schema_binary = false;
+  bool grpc_enabled = false;
+  bool requires_bfbs = false;
+
+  std::vector<std::shared_ptr<CodeGenerator>> generators;
+};
+
+struct FlatCOption {
+  std::string short_opt;
+  std::string long_opt;
+  std::string parameter;
+  std::string description;
+};
 
 class FlatCompiler {
  public:
@@ -37,24 +82,24 @@ class FlatCompiler {
     typedef std::string (*MakeRuleFn)(const flatbuffers::Parser &parser,
                                       const std::string &path,
                                       const std::string &file_name);
+    typedef bool (*ParsingCompletedFn)(const flatbuffers::Parser &parser,
+                                       const std::string &output_path);
 
     GenerateFn generate;
-    const char *generator_opt_short;
-    const char *generator_opt_long;
     const char *lang_name;
     bool schema_only;
     GenerateFn generateGRPC;
     flatbuffers::IDLOptions::Language lang;
-    const char *generator_help;
+    FlatCOption option;
     MakeRuleFn make_rule;
+    BfbsGenerator *bfbs_generator;
+    ParsingCompletedFn parsing_completed;
   };
 
-  typedef void (*WarnFn)(const FlatCompiler *flatc,
-                         const std::string &warn,
+  typedef void (*WarnFn)(const FlatCompiler *flatc, const std::string &warn,
                          bool show_exe_name);
 
-  typedef void (*ErrorFn)(const FlatCompiler *flatc,
-                          const std::string &err,
+  typedef void (*ErrorFn)(const FlatCompiler *flatc, const std::string &err,
                           bool usage, bool show_exe_name);
 
   // Parameters required to initialize the FlatCompiler.
@@ -65,33 +110,55 @@ class FlatCompiler {
           warn_fn(nullptr),
           error_fn(nullptr) {}
 
-    const Generator* generators;
+    const Generator *generators;
     size_t num_generators;
     WarnFn warn_fn;
     ErrorFn error_fn;
   };
 
-  explicit FlatCompiler(const InitParams& params) : params_(params) {}
+  explicit FlatCompiler(const InitParams &params) : params_(params) {}
 
-  int Compile(int argc, const char** argv);
+  bool RegisterCodeGenerator(const std::string& flag,
+                             std::shared_ptr<CodeGenerator> code_generator);
 
-  std::string GetUsageString(const char* program_name) const;
+  int Compile(const FlatCOptions &options);
+
+  std::string GetShortUsageString(const std::string &program_name) const;
+  std::string GetUsageString(const std::string &program_name) const;
+
+  // Parse the FlatC options from command line arguments.
+  FlatCOptions ParseFromCommandLineArguments(int argc, const char **argv);
 
  private:
-  void ParseFile(flatbuffers::Parser &parser,
-                 const std::string &filename,
+  void ParseFile(flatbuffers::Parser &parser, const std::string &filename,
                  const std::string &contents,
-                 std::vector<const char *> &include_directories) const;
+                 const std::vector<const char *> &include_directories) const;
+
+  void LoadBinarySchema(Parser &parser, const std::string &filename,
+                        const std::string &contents);
 
   void Warn(const std::string &warn, bool show_exe_name = true) const;
 
   void Error(const std::string &err, bool usage = true,
              bool show_exe_name = true) const;
 
+  void AnnotateBinaries(const uint8_t *binary_schema,
+                        uint64_t binary_schema_size,
+                        const std::string &schema_filename,
+                        const std::vector<std::string> &binary_files);
+
+  void ValidateOptions(const FlatCOptions &options);
+
+  Parser GetConformParser(const FlatCOptions &options);
+
+  std::unique_ptr<Parser> GenerateCode(const FlatCOptions &options,
+                                       Parser &conform_parser);
+
+  std::map<std::string, std::shared_ptr<CodeGenerator>> code_generators_;
+
   InitParams params_;
 };
 
-
 }  // namespace flatbuffers
 
-#endif  // FLATC_H_
+#endif  // FLATBUFFERS_FLATC_H_

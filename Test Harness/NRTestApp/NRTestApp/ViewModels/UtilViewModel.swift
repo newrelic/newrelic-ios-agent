@@ -155,8 +155,8 @@ class UtilViewModel {
             "message": "This is a test message for the New Relic logging system."
         ])
     }
+    
     func testLogError() {
-
         do {
             try errorMethod()
         } catch {

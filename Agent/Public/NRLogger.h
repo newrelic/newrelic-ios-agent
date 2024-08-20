@@ -104,6 +104,8 @@ typedef enum _NRLogTargets {
     unsigned int failureCount;
     BOOL debugLogs;
 
+    NRLogLevels remoteLogLevel;
+
 }
 
 + (void)log:(unsigned int)level
@@ -133,9 +135,19 @@ withAgentLogsOn:(BOOL)agentLogsOn;
  @param levels A single NRLogLevels constant, or a bitwise ORed combination of NRLogLevels
  
  Note: If you provide a single constant, e.g. NRLogLevelInfo, all higher priority info will also be output.
- If you provide a combination, e.g. NRLogLevelError | NRLogLevelInfo, only the levels explicitly requested will be output.
  */
 + (void)setLogLevels:(unsigned int)levels;
+
+/*!
+ Configure the verbosity level of information the New Relic agent outputs over the network via the New Relic Logs API.
+
+ @param level A single NRLogLevels constant,
+
+ Note:  a single constant, e.g. NRLogLevelInfo, all higher priority info will also be output.
+
+ */
++ (void)setRemoteLogLevel:(unsigned int)level;
+
 
 /*!
  Configure the output channels to which the New Relic agent logs internal operation data.
