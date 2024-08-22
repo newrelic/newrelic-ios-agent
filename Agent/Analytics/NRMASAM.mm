@@ -193,18 +193,27 @@
 
 // Includes Public and Private Attributes
 - (NSString*) sessionAttributeJSONString {
+    @synchronized (attributeDict) {
+        @synchronized (privateAttributeDict) {
+            
+            NSMutableDictionary *output = [attributeDict mutableCopy];
+            [output addEntriesFromDictionary:privateAttributeDict];
+            
+            NSError *error;
 
-    NSMutableDictionary *output = [attributeDict mutableCopy];
-    [output addEntriesFromDictionary:privateAttributeDict];
+            if (![NSJSONSerialization isValidJSONObject:output]) {
+                return nil;
+            }
 
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:output options:0 error:&error];
-    if (!jsonData) {
-        NRLOG_AGENT_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
-    }
-    else {
-        NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-        return jsonString;
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:output options:0 error:&error];
+            if (!jsonData) {
+                NRLOG_AGENT_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
+            }
+            else {
+                NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+                return jsonString;
+            }
+        }
     }
     return nil;
 }
