@@ -112,10 +112,18 @@
 
             id innerDict = [[dict objectForKey:kNRMA_CONFIG_KEY] objectForKey:kNRMA_LOG_REPORTING_KEY];
 
-            BOOL enabled = [innerDict[@"enabled"] boolValue];
-            NSString *level = (NSString*) innerDict[@"level"];
-            self.log_reporting_enabled = enabled;
-            self.log_reporting_level = level;
+            BOOL enabled = [innerDict[kNRMA_LOG_REPORTING_ENABLED_KEY] boolValue];
+            if (enabled) {
+                NSString *level = (NSString*) innerDict[kNRMA_LOG_REPORTING_LEVEL_KEY];
+                self.log_reporting_enabled = enabled;
+                self.log_reporting_level = level;
+            }
+            else {
+                self.log_reporting_enabled = NO;
+                self.log_reporting_level = kNRMA_LOG_REPORTING_LEVEL_DEFAULT;
+                self.sampling_rate = 100.0;
+
+            }
             if ([innerDict objectForKey: kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY]) {
                 self.sampling_rate =  [innerDict[kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY] doubleValue];
             }
@@ -126,7 +134,7 @@
         else {
             self.log_reporting_enabled = NO;
             self.has_log_reporting_config = NO;
-            self.log_reporting_level = @"WARN";
+            self.log_reporting_level = kNRMA_LOG_REPORTING_LEVEL_DEFAULT;
             self.sampling_rate = 100.0;
         }
         // end parsing log reporting section.
@@ -167,7 +175,7 @@
     configuration.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
 
     configuration.entity_guid = @"";
-    configuration.log_reporting_level = @"WARNING";
+    configuration.log_reporting_level = kNRMA_LOG_REPORTING_LEVEL_DEFAULT;
     configuration.has_log_reporting_config = NO;
     configuration.log_reporting_enabled = NO;
     configuration.sampling_rate = 100.0;
@@ -186,7 +194,6 @@
 {
     return self.has_log_reporting_config && self.sampleSeed <= self.sampling_rate;
 }
-
 
 - (NSDictionary*) asDictionary
 {
@@ -228,7 +235,7 @@
     }
 
     if (self.has_log_reporting_config) {
-        dictionary[kNRMA_CONFIG_KEY] = @{kNRMA_LOG_REPORTING_KEY: @{@"enabled": @(self.log_reporting_enabled), @"level": self.log_reporting_level, kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY: @(self.sampling_rate)}};
+        dictionary[kNRMA_CONFIG_KEY] = @{kNRMA_LOG_REPORTING_KEY: @{kNRMA_LOG_REPORTING_ENABLED_KEY: @(self.log_reporting_enabled), kNRMA_LOG_REPORTING_LEVEL_KEY: self.log_reporting_level, kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY: @(self.sampling_rate)}};
     }
 
     if ([self.request_header_map count]) {
