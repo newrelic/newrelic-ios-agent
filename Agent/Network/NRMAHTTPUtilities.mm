@@ -132,8 +132,11 @@ NSString* currentParentId;
 }
 
 + (NRMAPayload *) generateNRMAPayload {
-
-    return [NRMAHTTPUtilities startTrip];
+    NRMAPayload *payload = [NRMAHTTPUtilities startTrip];
+    if(payload == nil) { return nil; }
+    payload.dtEnabled = true;
+    
+    return payload;
 }
 
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request {
@@ -201,10 +204,11 @@ NSString* currentParentId;
         currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
         currentParentId = @"";
         
-        NRMAPayload * payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId traceID:currentTraceId parentID:currentParentId trustedAccountKey:trustedAccountKey];
-        payload.dtEnabled = [NRMAFlags shouldEnableDistributedTracing];
-        currentParentId = [payload id];
-
+        NRMAPayload * payload;
+        if(currentTraceId != nil && currentParentId != nil){
+            payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId traceID:[NSString stringWithString:currentTraceId] parentID:[NSString stringWithString:currentParentId] trustedAccountKey:trustedAccountKey];
+            currentParentId = [payload id];
+        }
         return payload;
     }
 }
