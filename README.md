@@ -3,7 +3,7 @@
 # New Relic iOS Agent
 New Relic's mobile monitoring capabilities help you gain deeper visibility into how to analyze your iOS application performance and troubleshoot crashes. You can also examine HTTP and other network performance for unexpected lag, which will in turn help you collaborate more efficiently with your backend teams.
 
-**New Relic iOS Agent supports iOS 📱, tvOS 📺, and macOS (Catalyst) 💻.**
+**New Relic iOS Agent supports iOS 📱, tvOS 📺, watchOS ⌚️, and macOS (Catalyst) 💻.**
 
 This repository consists of an Xcode workspace containing the New Relic iOS Agent source code. The Agent is packaged as an XCFramework.  The framework is available via **Swift Package Manager (preferred installation method)**, Cocoapods, and as a zip file download.
 
