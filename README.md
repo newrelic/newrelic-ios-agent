@@ -43,6 +43,7 @@ An example app which demonstrates usage of the New Relic iOS Agent is included i
 
 - From Xcode change to the NRTestApp scheme to run the example app.
 - Add your New Relic application token to `NRAPIInfo.plist` as a String under the key `NRAPIKey`.
+- For more information see the [README.md](https://github.com/newrelic/newrelic-ios-agent/blob/main/Test%20Harness/NRTestApp/NRAPI-Info.plist) in the NRTestApp directory.
 
 ## dSYM Upload Tools
 
