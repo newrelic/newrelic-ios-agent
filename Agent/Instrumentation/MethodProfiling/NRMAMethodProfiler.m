@@ -8,6 +8,8 @@
 
 #import <objc/runtime.h>
 #import <objc/message.h>
+#import <dlfcn.h>
+
 #import <UIKit/UIKit.h>
 #import "NRTimer.h"
 #import "NRMAMethodProfiler.h"
@@ -430,8 +432,19 @@ NSMutableDictionary* NRMA__generateClassTrees(NSSet* parents)
     unsigned int classNameCount = 0;
     const char **classNames = objc_copyClassNamesForImage(mainImageName, &classNameCount);
     for (NSUInteger i = 0; i < classNameCount; i++) {
-        Class cls = objc_getClass(classNames[i]);
-        NRMA__processClass(cls, results, parents);
+        NSString *className = [NSString stringWithUTF8String:classNames[i]];
+        // NSLog(@"Processing Class name: %@", className);
+
+        Dl_info info;
+        if (dladdr(classNames[i], &info) && info.dli_sname) {
+            Class cls = objc_getClass(classNames[i]);
+            // NSLog(@"NRMA__processClass Class name: %@", className);
+
+            NRMA__processClass(cls, results, parents);
+        } else {
+            // NSLog(@"Class %s symbol not found.", classNames[i]);
+        }
+
     }
     free(classNames);
 
