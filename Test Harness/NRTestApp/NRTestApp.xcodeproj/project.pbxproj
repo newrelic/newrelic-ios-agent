@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
+		2B53FC032C7E761B000D7938 /* SomeObservable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B53FC022C7E761B000D7938 /* SomeObservable.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -248,6 +249,7 @@
 /* Begin PBXFileReference section */
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
+		2B53FC022C7E761B000D7938 /* SomeObservable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SomeObservable.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
@@ -486,6 +488,7 @@
 				2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */,
 				F86428492971DF80002ABA01 /* Helpers */,
 				F8302AF8296F5EFA003EC291 /* AppDelegate.swift */,
+				2B53FC022C7E761B000D7938 /* SomeObservable.swift */,
 				2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */,
 				F8302B872970769E003EC291 /* Navigation */,
 				F8302B8C29707828003EC291 /* ViewControllers */,
@@ -1071,6 +1074,7 @@
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
+				2B53FC032C7E761B000D7938 /* SomeObservable.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
