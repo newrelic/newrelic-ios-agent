@@ -100,6 +100,8 @@ namespace NewRelic {
         const AttributeValidator &getAttributeValidator() const;
 
         bool addSessionEndAttribute();
+        
+        void newSessionWithStartTime(unsigned long long sessionStartTime_ms);
 
         AnalyticsController(unsigned long long sessionStartTime_ms, const char *sharedPath,
                             PersistentStore<std::string, AnalyticEvent> &eventDupStore,
