@@ -1446,6 +1446,14 @@
 		348233BC2BC5F39D0070FAC3 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
 		348233BF2BC749730070FAC3 /* NRConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47E624DB567600115469 /* NRConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		348233C02BC750C90070FAC3 /* NRLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47DD24DB567600115469 /* NRLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		348713E92B8D39E7005A264C /* NRMASessionReplay.h in Headers */ = {isa = PBXBuildFile; fileRef = 348713E72B8D39E7005A264C /* NRMASessionReplay.h */; };
+		348713EA2B8D39E7005A264C /* NRMASessionReplay.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713E82B8D39E7005A264C /* NRMASessionReplay.m */; };
+		348713ED2B8D56CB005A264C /* NRMAUIViewDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = 348713EB2B8D56CB005A264C /* NRMAUIViewDetails.h */; };
+		348713EE2B8D56CB005A264C /* NRMAUIViewDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */; };
+		348713F12B910A9B005A264C /* NRMAUILabelDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = 348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */; };
+		348713F22B910A9B005A264C /* NRMAUILabelDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713F02B910A9B005A264C /* NRMAUILabelDetails.m */; };
+		348714242B979517005A264C /* NRMAIdGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 348714222B979517005A264C /* NRMAIdGenerator.h */; };
+		348714252B979517005A264C /* NRMAIdGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 348714232B979517005A264C /* NRMAIdGenerator.m */; };
 		34C1854F292464E500F10825 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929222912D726001449B6 /* Analytics.framework */; };
 		34C18550292464E500F10825 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929282912D72A001449B6 /* Connectivity.framework */; };
 		34C18551292464E500F10825 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
@@ -2446,6 +2454,15 @@
 		348714222B979517005A264C /* NRMAIdGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAIdGenerator.h; sourceTree = "<group>"; };
 		348714232B979517005A264C /* NRMAIdGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAIdGenerator.m; sourceTree = "<group>"; };
 		348232222BC5EEE60070FAC3 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		348713E72B8D39E7005A264C /* NRMASessionReplay.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASessionReplay.h; sourceTree = "<group>"; };
+		348713E82B8D39E7005A264C /* NRMASessionReplay.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplay.m; sourceTree = "<group>"; };
+		348713EB2B8D56CB005A264C /* NRMAUIViewDetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUIViewDetails.h; sourceTree = "<group>"; };
+		348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUIViewDetails.m; sourceTree = "<group>"; };
+		348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUILabelDetails.h; sourceTree = "<group>"; };
+		348713F02B910A9B005A264C /* NRMAUILabelDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUILabelDetails.m; sourceTree = "<group>"; };
+		348713F32B910DFC005A264C /* NRMAViewDetailProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAViewDetailProtocol.h; sourceTree = "<group>"; };
+		348714222B979517005A264C /* NRMAIdGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAIdGenerator.h; sourceTree = "<group>"; };
+		348714232B979517005A264C /* NRMAIdGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAIdGenerator.m; sourceTree = "<group>"; };
 		34A929072912D502001449B6 /* Hex.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Hex.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9290A2912D605001449B6 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9290E2912D65B001449B6 /* Analytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Analytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -5477,6 +5494,7 @@
 				025657FD24EB19BF00FE3125 /* TestHexUploadPublisher.mm in Sources */,
 				2BCA57B52B7E85AD00991C5E /* NRLoggerTests.m in Sources */,
 				025657FE24EB19BF00FE3125 /* NRMetricTests.m in Sources */,
+				025657FF24EB19BF00FE3125 /* TestSessionIdentifierManger.m in Sources */,
 				343883572834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0256580124EB19BF00FE3125 /* NRMAActingClassUtilsTest.m in Sources */,
 				0256580224EB19BF00FE3125 /* NRMeasurementProducerTest.m in Sources */,
