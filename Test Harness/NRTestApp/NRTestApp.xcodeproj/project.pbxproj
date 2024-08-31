@@ -130,6 +130,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2B94FC912C3F47B1006B9869 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 3431DD172BED375E00FF145F;
+			remoteInfo = "Agent-watchos-Tests";
+		};
 		2BD05DD72ADF323A00C0C972 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
@@ -278,6 +285,7 @@
 		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
 		F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageFullScreen.swift; sourceTree = "<group>"; };
 		F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRAPI-Info.plist"; sourceTree = SOURCE_ROOT; };
+		F825C6632C790F4F006062A5 /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = readme.md; path = ../readme.md; sourceTree = "<group>"; };
 		F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRTestAppFakeNavigationAction.swift; sourceTree = "<group>"; };
 		F8302AF5296F5EFA003EC291 /* NRTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NRTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8302AF8296F5EFA003EC291 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -487,6 +495,7 @@
 				F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */,
 				F8302B06296F5EFB003EC291 /* Info.plist */,
 				F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */,
+				F825C6632C790F4F006062A5 /* readme.md */,
 			);
 			path = NRTestApp;
 			sourceTree = "<group>";
@@ -509,6 +518,7 @@
 				F802EEAA2BE0218700AB956F /* NewRelic.framework */,
 				F8302B6629705766003EC291 /* Agent_Tests.xctest */,
 				F8302B6829705766003EC291 /* Agent_tvos_Tests.xctest */,
+				2B94FC922C3F47B1006B9869 /* Agent-watchos-Tests.xctest */,
 				F8302B6A29705766003EC291 /* Stress Tests.xctest */,
 			);
 			name = Products;
@@ -651,6 +661,7 @@
 				F802EE8C2BE0218600AB956F /* Sources */,
 				F802EE8D2BE0218600AB956F /* Frameworks */,
 				F802EE8E2BE0218600AB956F /* Resources */,
+				2BC833E52C46CF3900B73F01 /* Run New Relic dSYM upload run-symbol-tool */,
 				F802EED42BE0240A00AB956F /* Embed Frameworks */,
 			);
 			buildRules = (
@@ -823,6 +834,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		2B94FC922C3F47B1006B9869 /* Agent-watchos-Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Agent-watchos-Tests.xctest";
+			remoteRef = 2B94FC912C3F47B1006B9869 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		F802EEAA2BE0218700AB956F /* NewRelic.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
@@ -935,6 +953,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		2BC833E52C46CF3900B73F01 /* Run New Relic dSYM upload run-symbol-tool */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run New Relic dSYM upload run-symbol-tool";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SCRIPT=`/usr/bin/find \"${SRCROOT}/../..\" -name run-symbol-tool | head -n 1`\n/bin/sh \"${SCRIPT}\" \"APP_TOKEN\" --debug\n";
+		};
 		F8302B7A297057F9003EC291 /* Run New Relic dSYM Upload Tool */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -1231,10 +1268,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"NRTestApp (watchOS) Watch App/Preview Content\"";
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NRTestApp (watchOS)";
@@ -1270,7 +1308,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"NRTestApp (watchOS) Watch App/Preview Content\"";
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NRTestApp (watchOS)";
@@ -1330,6 +1368,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1391,6 +1430,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1423,6 +1463,7 @@
 				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"ENABLE_APP_SANDBOX[sdk=*]" = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestApp/Info.plist;
@@ -1470,6 +1511,7 @@
 				ENABLE_APP_SANDBOX = YES;
 				"ENABLE_APP_SANDBOX[sdk=*]" = NO;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestApp/Info.plist;

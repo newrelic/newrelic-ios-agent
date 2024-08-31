@@ -15,6 +15,14 @@
 #import "NRMAUIViewDetails.h"
 #import "NRMAUILabelDetails.h"
 
+@interface NRMASessionReplayContext : NSObject
+
+@property (nonatomic, strong) NSString* sessionID;
+@property (nonatomic, strong) NSString* viewID;
+
+@end
+
+
 @implementation NRMASessionReplay {
     UIWindow* _window;
 //    NSMutableArray<id<NRMAViewDetailProtocol>>* _views;
@@ -23,6 +31,7 @@
     NSMutableArray<NSDictionary *>* _frames;
     int frameCount;
     NSTimer* _frameTimer;
+    NSTimer* _screenChangeTimer;
 }
 
 - (instancetype)init {
@@ -93,6 +102,19 @@
     _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self takeFrame];
     }];
+    
+    _screenChangeTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 repeats:YES block:^(NSTimer * _Nonnull timer) {
+        self->_window = [[UIApplication sharedApplication] keyWindow];
+        UIViewController* contentViewController = self->_window.rootViewController;
+        
+        if([contentViewController isKindOfClass:[UINavigationController class]]) {
+            contentViewController = ((UINavigationController*)contentViewController).visibleViewController;
+        } else if ([contentViewController isKindOfClass:[UITabBarController class]]) {
+            contentViewController = ((UITabBarController*)contentViewController).selectedViewController;
+        }
+        
+        NRLOG_AUDIT(@"Current View Controller: %@", contentViewController.description);
+    }];
 }
 
 - (void)willEnterForeground {
@@ -106,6 +128,9 @@
 - (void)takeFrame {
     _window = [[UIApplication sharedApplication] keyWindow];
     [self recursiveRecord:_window forViewDetails:_rootView];
+    
+    // finding main content view
+    
     
     NSDictionary *viewDetailJSON = _rootView.jsonDescription;
     

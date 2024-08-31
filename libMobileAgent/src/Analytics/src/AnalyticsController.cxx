@@ -188,6 +188,10 @@ namespace NewRelic {
         }
     }
 
+    void AnalyticsController::newSessionWithStartTime(unsigned long long sessionStartTime_ms) {
+        _session_start_time_ms = sessionStartTime_ms;
+    }
+
     bool AnalyticsController::addUserActionEvent(const char *functionName,
                                              const char *targetObject,
                                              const char *label,

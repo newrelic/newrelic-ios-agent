@@ -40,11 +40,6 @@ jobs:
     - name: Run tests on iOS (using fastlane)
       run: bundle exec fastlane runIOSTests
 
-    - uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: coverage.xml
-
   testTVOS:
     name : TestTVOS
     # runs-on: will be set to macos-latest when running on actual GHA. 

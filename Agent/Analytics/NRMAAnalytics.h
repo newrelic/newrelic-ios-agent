@@ -35,6 +35,7 @@
 
 - (void) sessionWillEnd;
 - (void) newSession;
+- (void) newSessionWithStartTime:(long long) sessionStartTime;
 
 //value is either a NSString or NSNumber;
 - (BOOL) setSessionAttribute:(NSString*)name value:(id)value;

@@ -30,6 +30,7 @@
 
 @property(readonly,strong) NSString* collectorHost;
 @property(readonly,strong) NSString* crashCollectorHost;
+@property(readonly,strong) NSString* loggingHost;
 @property(readonly,strong) NSString* loggingURL;
 @property(readonly,strong) NRMAAppToken* applicationToken;
 @property(atomic,strong) NSString* sessionIdentifier;

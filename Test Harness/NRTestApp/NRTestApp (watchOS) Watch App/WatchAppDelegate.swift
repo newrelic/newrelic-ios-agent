@@ -12,13 +12,17 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
     
     func applicationDidFinishLaunching() {
 #if DEBUG
-        // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
-        NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
+        // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
+        NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
 #endif
 
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
+
+
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
+                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
 
         NewRelic.replaceDeviceIdentifier("myDeviceId")
 

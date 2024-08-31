@@ -10,7 +10,8 @@
 #include "Hex/HexStore.hpp"
 #include <Utilities/libLogger.hpp>
 #include <cstddef>
-#include "agent-data_generated.h"
+#include "hex-agent-data_generated.h"
+#include "jserror_generated.h"
 
 namespace NewRelic {
     namespace Hex {

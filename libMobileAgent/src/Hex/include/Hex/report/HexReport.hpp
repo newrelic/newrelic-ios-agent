@@ -5,7 +5,7 @@
 #include <Hex/ios_generated.h>
 #include <Hex/hex_generated.h>
 #include <Hex/session-attributes_generated.h>
-#include <Hex/agent-data_generated.h>
+#include <Hex/hex-agent-data_generated.h>
 #include <Analytics/AttributeValidator.hpp>
 #include <Analytics/AttributeBase.hpp>
 #include <Hex/HandledException.hpp>
@@ -14,6 +14,7 @@
 #include <Hex/StringAttributes.hpp>
 #include <Hex/LongAttributes.hpp>
 #include <Hex/DoubleAttributes.hpp>
+#include <Hex/jserror_generated.h>
 
 #ifndef LIBMOBILEAGENT_HEXREPORT_HPP
 #define LIBMOBILEAGENT_HEXREPORT_HPP
@@ -25,7 +26,7 @@ namespace NewRelic {
         namespace Report {
             class HexReport {
             public:
-                flatbuffers::Offset<fbs::AgentData> finalize(FlatBufferBuilder& builder) const; //throws
+                flatbuffers::Offset<fbs::HexAgentData> finalize(FlatBufferBuilder& builder) const; //throws
 
                 HexReport(std::shared_ptr<Report::HandledException> exception,
                           const std::shared_ptr<AppInfo>& applicationInfo,
