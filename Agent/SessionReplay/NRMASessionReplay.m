@@ -118,7 +118,7 @@
     [_frames addObject:viewDetailJSON];
     frameCount++;
     
-    if(frameCount == 5) {
+    if(frameCount == 1) {
         [_frameTimer invalidate];
         NSString* frameJSON = [self consolidateFrames];
         NSLog(frameJSON);

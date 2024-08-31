@@ -43,22 +43,48 @@
 }
 
 - (NSDictionary *)jsonDescription {
+    NSString *propertyFormatString = @"$(%@}";
+    
+    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx;", self.frame.origin.y,
+                             self.frame.origin.x,
+                             self.frame.size.width,
+                             self.frame.size.height];
+
+    if(self.backgroundColor != nil) {
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+        frameString = [frameString stringByAppendingFormat:@"background-color:%@;", colorString];
+    }
     
     NSMutableDictionary *jsonDictionary = [[NSMutableDictionary alloc] init];
-    jsonDictionary[@"frame"] = NSStringFromCGRect(self.frame);
-    jsonDictionary[@"isHidden"] = @(self.isHidden);
-    jsonDictionary[@"name"] = self.viewName;
-    jsonDictionary[@"id"] = @(self.viewId);
     jsonDictionary[@"type"] = @(2);
-    jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
-    jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+    jsonDictionary[@"tagName"] = @"div";
+    jsonDictionary[@"attributes"] = @{
+        @"backgroundColor": [NSString stringWithFormat:propertyFormatString, [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES]],
+        @"style": frameString,
+    };
     
     NSMutableArray *subviews = [[NSMutableArray alloc] init];
     for(id<NRMAViewDetailProtocol> subview in _childViews) {
         [subviews addObject:subview.jsonDescription];
     }
+
+    jsonDictionary[@"childNodes"] = subviews;
+    jsonDictionary[@"id"] = @(self.viewId);
     
-    jsonDictionary[@"subviews"] = subviews;
+//    jsonDictionary[@"frame"] = NSStringFromCGRect(self.frame);
+//    jsonDictionary[@"isHidden"] = @(self.isHidden);
+//    jsonDictionary[@"name"] = self.viewName;
+//    jsonDictionary[@"id"] = @(self.viewId);
+//    jsonDictionary[@"type"] = @(2);
+//    jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
+//    jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+//    
+//    NSMutableArray *subviews = [[NSMutableArray alloc] init];
+//    for(id<NRMAViewDetailProtocol> subview in _childViews) {
+//        [subviews addObject:subview.jsonDescription];
+//    }
+//    
+//    jsonDictionary[@"subviews"] = subviews;
     
 //    NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
 //

@@ -71,30 +71,64 @@
 }
 
 - (NSDictionary *)jsonDescription {
-    NSMutableDictionary *jsonDictionary = [[NSMutableDictionary alloc] init];
-    jsonDictionary[@"frame"] = NSStringFromCGRect(self.frame);
-    jsonDictionary[@"isHidden"] = @(self.isHidden);
-    jsonDictionary[@"name"] = self.viewName;
-    jsonDictionary[@"textContent"] = self.labelText;
-    jsonDictionary[@"id"] = @(self.viewId);
-    jsonDictionary[@"type"] = @(3);
-    jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
-    jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-    jsonDictionary[@"textColor"] = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
-    jsonDictionary[@"fontSize"] = @(self.fontSize);
-    jsonDictionary[@"fontFamily"] = self.fontFamily;
+    NSString *propertyFormatString = @"$(%@}";
+    NSString *otherPropertyFormatString = @"%@:%@";
     
-//    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
-//    jsonDictionary[@"textColor"] = textColor;
+    NSString *frameString = [NSString stringWithFormat:@"position:relative;top:%fpx;left:%fpx;width:%fpx;height:%fpx;", self.frame.origin.y,
+                             self.frame.origin.x,
+                             self.frame.size.width,
+                             self.frame.size.height];
+    frameString = [frameString stringByAppendingFormat:@"color:%@;", [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES]];
+    
+    if(self.backgroundColor != nil) {
+        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+        frameString = [frameString stringByAppendingFormat:@"background-color:%@;", colorString];
+    }
+
+    NSMutableDictionary *jsonDictionary = [[NSMutableDictionary alloc] init];
+    jsonDictionary[@"type"] = @(2);
+    jsonDictionary[@"tagName"] = @"div";
+    jsonDictionary[@"attributes"] = @{
+        @"backgroundColor": [NSString stringWithFormat:propertyFormatString, [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES]],
+        @"style": frameString,
+    };
     
     NSMutableArray *subviews = [[NSMutableArray alloc] init];
+    NSDictionary *textNode = @{
+        @"type": @(3),
+        @"textContent": self.labelText
+    };
+    [subviews addObject:textNode];
+    
     for(id<NRMAViewDetailProtocol> subview in _childViews) {
         [subviews addObject:subview.jsonDescription];
     }
-    
-    jsonDictionary[@"subviews"] = subviews;
-    
-    NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
+
+    jsonDictionary[@"childNodes"] = subviews;
+    jsonDictionary[@"id"] = @(self.viewId);
+    //    jsonDictionary[@"frame"] = NSStringFromCGRect(self.frame);
+//    jsonDictionary[@"isHidden"] = @(self.isHidden);
+//    jsonDictionary[@"name"] = self.viewName;
+//    jsonDictionary[@"textContent"] = self.labelText;
+//    jsonDictionary[@"id"] = @(self.viewId);
+//    jsonDictionary[@"type"] = @(3);
+//    jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
+//    jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+//    jsonDictionary[@"textColor"] = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
+//    jsonDictionary[@"fontSize"] = @(self.fontSize);
+//    jsonDictionary[@"fontFamily"] = self.fontFamily;
+//    
+////    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
+////    jsonDictionary[@"textColor"] = textColor;
+//    
+//    NSMutableArray *subviews = [[NSMutableArray alloc] init];
+//    for(id<NRMAViewDetailProtocol> subview in _childViews) {
+//        [subviews addObject:subview.jsonDescription];
+//    }
+//    
+//    jsonDictionary[@"subviews"] = subviews;
+//    
+//    NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
 
 //    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx", self.frame.origin.y,
 //                             self.frame.origin.x,
