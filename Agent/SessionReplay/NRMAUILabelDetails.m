@@ -71,26 +71,11 @@
 }
 
 - (NSDictionary *)jsonDescription {
-    NSString *propertyFormatString = @"$(%@}";
-    NSString *otherPropertyFormatString = @"%@:%@";
-    
-    NSString *frameString = [NSString stringWithFormat:@"position:relative;top:%fpx;left:%fpx;width:%fpx;height:%fpx;", self.frame.origin.y,
-                             self.frame.origin.x,
-                             self.frame.size.width,
-                             self.frame.size.height];
-    frameString = [frameString stringByAppendingFormat:@"color:%@;", [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES]];
-    
-    if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-        frameString = [frameString stringByAppendingFormat:@"background-color:%@;", colorString];
-    }
-
     NSMutableDictionary *jsonDictionary = [[NSMutableDictionary alloc] init];
     jsonDictionary[@"type"] = @(2);
     jsonDictionary[@"tagName"] = @"div";
     jsonDictionary[@"attributes"] = @{
-        @"backgroundColor": [NSString stringWithFormat:propertyFormatString, [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES]],
-        @"style": frameString,
+        @"id": [self generateViewCSSSelector]
     };
     
     NSMutableArray *subviews = [[NSMutableArray alloc] init];
@@ -100,56 +85,40 @@
     };
     [subviews addObject:textNode];
     
-    for(id<NRMAViewDetailProtocol> subview in _childViews) {
-        [subviews addObject:subview.jsonDescription];
-    }
-
-    jsonDictionary[@"childNodes"] = subviews;
-    jsonDictionary[@"id"] = @(self.viewId);
-    //    jsonDictionary[@"frame"] = NSStringFromCGRect(self.frame);
-//    jsonDictionary[@"isHidden"] = @(self.isHidden);
-//    jsonDictionary[@"name"] = self.viewName;
-//    jsonDictionary[@"textContent"] = self.labelText;
-//    jsonDictionary[@"id"] = @(self.viewId);
-//    jsonDictionary[@"type"] = @(3);
-//    jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
-//    jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-//    jsonDictionary[@"textColor"] = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
-//    jsonDictionary[@"fontSize"] = @(self.fontSize);
-//    jsonDictionary[@"fontFamily"] = self.fontFamily;
-//    
-////    NSString *textColor = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
-////    jsonDictionary[@"textColor"] = textColor;
-//    
-//    NSMutableArray *subviews = [[NSMutableArray alloc] init];
 //    for(id<NRMAViewDetailProtocol> subview in _childViews) {
 //        [subviews addObject:subview.jsonDescription];
 //    }
-//    
-//    jsonDictionary[@"subviews"] = subviews;
-//    
-//    NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
 
-//    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx", self.frame.origin.y,
-//                             self.frame.origin.x,
-//                             self.frame.size.width,
-//                             self.frame.size.height];
-//    
-//    frameString = [frameString stringByAppendingFormat:@";color:%@", textColor];
-    
-    // using pixels for font size temporarily as it's closer, though it's actually in points; might need to do some calculations instead
-//    frameString = [frameString stringByAppendingFormat:@";font: %fpx %@", self.fontSize, self.fontFamily];
-//    
-//    if(self.backgroundColor != nil) {
-//        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-//        jsonDictionary[@"backgroundColor"] = colorString;
-//        frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
-//    }
-//    
-//    attributesDictionary[@"style"] = frameString;
-//    jsonDictionary[@"attributes"] = attributesDictionary;
+    jsonDictionary[@"childNodes"] = subviews;
+    jsonDictionary[@"id"] = @(self.viewId);
     
     return jsonDictionary;
+}
+
+- (NSString *)cssDescription {
+    NSString *cssSelector = [self generateViewCSSSelector];
+    NSString *backgroundColorString = self.backgroundColor ? [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES] : @"#00000000";
+    
+    return [NSString stringWithFormat:@"#%@ { background-color: %@;\
+position: relative;\
+left: %fpx;\
+top: %fpx;\
+width: %fpx;\
+height: %fpx;\
+color: %@;\
+font: %fem $(%@);",
+            cssSelector,
+            backgroundColorString,
+            self.frame.origin.x,
+            self.frame.origin.y,
+            self.frame.size.width,
+            self.frame.size.height,
+            self.textColor,
+            self.fontSize, self.fontFamily];
+}
+
+- (NSString *)generateViewCSSSelector {
+    return [NSString stringWithFormat:@"UILabel-%@", [@(self.viewId) stringValue]];
 }
 
 @end

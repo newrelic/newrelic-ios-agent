@@ -14,6 +14,7 @@
 #import "NRMAViewDetailProtocol.h"
 #import "NRMAUIViewDetails.h"
 #import "NRMAUILabelDetails.h"
+#import "NRMAIdGenerator.h"
 
 @interface NRMASessionReplayContext : NSObject
 
@@ -28,7 +29,10 @@
 //    NSMutableArray<id<NRMAViewDetailProtocol>>* _views;
     id<NRMAViewDetailProtocol> _rootView;
     
-    NSMutableArray<NSDictionary *>* _frames;
+//    NSMutableArray<NSDictionary *>* _frames;
+    NSMutableArray<id<NRMAViewDetailProtocol>>* _rawFrames;
+    NSMutableArray<NSDictionary *>* _processedFrames;
+    NSMutableArray<NSString *>* _styles;
     int frameCount;
     NSTimer* _frameTimer;
     NSTimer* _screenChangeTimer;
@@ -39,7 +43,9 @@
     if(self) {
 //        _views = [[NSMutableArray alloc] init];
         _rootView = nil;
-        _frames = [[NSMutableArray alloc] init];
+        _rawFrames = [[NSMutableArray alloc] init];
+        _styles = [NSMutableArray new];
+        _processedFrames = [NSMutableArray new];
         frameCount = 0;
         [NSNotificationCenter.defaultCenter addObserver:self
                                                selector:@selector(didBecomeVisible)
@@ -83,6 +89,7 @@
 
 - (void)didBecomeActive {
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did become active");
+    self->_window = [[UIApplication sharedApplication] keyWindow];
     [self recursiveRecord:_window forViewDetails:_rootView];
 //    NSMutableArray<NSDictionary *> *viewDetailJSON = [[NSMutableArray alloc] init];
 //    for(id<NRMAViewDetailProtocol> detail in _views) {
@@ -98,7 +105,7 @@
 //    
 //    NSString *json = [[NSString alloc] initWithData:viewJSONData encoding:NSUTF8StringEncoding];
 //    NSLog(json);
-    
+    [_processedFrames addObject:[self generateInitialNode]];
     _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self takeFrame];
     }];
@@ -117,6 +124,17 @@
     }];
 }
 
+-(NSDictionary *)generateInitialNode {
+    return @{@"type" : @(4), @"timestamp": @([[NSDate date] timeIntervalSince1970]), @"data": @{@"href": @"http://newrelic.com", @"width": @(_window.windowScene.screen.bounds.size.width), @"height" : @(_window.windowScene.screen.bounds.size.height)}};
+}
+
+- (NSDictionary *)generateStyleNode {
+    NSString *styleTextString = [_styles componentsJoinedByString:@"\n"];
+    
+    NSDictionary *styleNode = @{@"type": @(2), @"tagName": @"style", @"attributes": @{}, @"id": @([NRMAIdGenerator generateID]), @"childNodes" : @[@{@"type": @"Text", @"textContent": styleTextString}]};
+    return styleNode;
+}
+
 - (void)willEnterForeground {
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did enter foreground");
 }
@@ -126,6 +144,10 @@
 }
 
 - (void)takeFrame {
+    if(_rootView) {
+        [_rawFrames addObject:_rootView];
+    }
+    
     _window = [[UIApplication sharedApplication] keyWindow];
     [self recursiveRecord:_window forViewDetails:_rootView];
     
@@ -133,6 +155,7 @@
     
     
     NSDictionary *viewDetailJSON = _rootView.jsonDescription;
+    NSString *viewDetailCSS = _rootView.cssDescription;
     
 //    NSData *viewJSONData = [NSJSONSerialization dataWithJSONObject:viewDetailJSON
 //                                                           options:0
@@ -140,18 +163,39 @@
 //    
 //    NSString *json = [[NSString alloc] initWithData:viewJSONData encoding:NSUTF8StringEncoding];
     
-    [_frames addObject:viewDetailJSON];
+//    [_frames addObject:viewDetailJSON];
     frameCount++;
     
-    if(frameCount == 1) {
+    if(frameCount == 5) {
         [_frameTimer invalidate];
+        for(id<NRMAViewDetailProtocol> rawFrame in _rawFrames) {
+            NSMutableDictionary* frameData = [self doThingWithFrame:rawFrame];
+            frameData[@"timestamp"] = @([[NSDate now] timeIntervalSince1970]);
+            [_processedFrames addObject:frameData];
+        }
         NSString* frameJSON = [self consolidateFrames];
         NSLog(frameJSON);
     }
 }
 
+- (NSString *)generateOutput {
+    return [self consolidateFrames];
+}
+
+- (NSDictionary *)doThingWithFrame:(id<NRMAViewDetailProtocol>)frame {
+    [_styles addObject:frame.cssDescription];
+    
+    NSMutableDictionary *frameJSONData = frame.jsonDescription;
+    for (id<NRMAViewDetailProtocol> childView in frame.childViews) {
+        [(NSMutableArray*)frameJSONData[@"childNodes"] addObject:[self doThingWithFrame:childView]];
+    }
+    
+    return frameJSONData;
+}
+
 - (NSString *)consolidateFrames {
-    NSData *viewFramesJSONData = [NSJSONSerialization dataWithJSONObject:_frames
+    [_processedFrames insertObject:[self generateStyleNode] atIndex:1];
+    NSData *viewFramesJSONData = [NSJSONSerialization dataWithJSONObject:_processedFrames
                                                                  options:0
                                                                    error:nil];
     NSString *frameJSON = [[NSString alloc] initWithData:viewFramesJSONData encoding:NSUTF8StringEncoding];

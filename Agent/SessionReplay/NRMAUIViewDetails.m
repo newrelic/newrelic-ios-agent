@@ -14,7 +14,7 @@
 - (instancetype)initWithView:(UIView *)view {
     self = [super init];
     if(self) {
-//        _frame = [view.superview convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
+        //        _frame = [view.superview convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
         _frame = view.frame;
         _backgroundColor = view.backgroundColor;
         _isHidden = view.isHidden;
@@ -31,7 +31,7 @@
     NSString *frameString = [NSString stringWithFormat:@"View Frame: {%f, %f}, {%f, %f}",
                              self.frame.origin.x, self.frame.origin.y,
                              self.frame.size.width, self.frame.size.height];
-//    [descriptionString stringByAppendingFormat:@"\t%@\n", frameString];
+    //    [descriptionString stringByAppendingFormat:@"\t%@\n", frameString];
     [descriptionString appendFormat:@"\t%@\n", frameString];
     
     if(self.backgroundColor != nil) {
@@ -43,66 +43,56 @@
 }
 
 - (NSDictionary *)jsonDescription {
-    NSString *propertyFormatString = @"$(%@}";
-    
-    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx;", self.frame.origin.y,
-                             self.frame.origin.x,
-                             self.frame.size.width,
-                             self.frame.size.height];
-
-    if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-        frameString = [frameString stringByAppendingFormat:@"background-color:%@;", colorString];
-    }
+    //    NSString *propertyFormatString = @"$(%@}";
+    //
+    //    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx;", self.frame.origin.y,
+    //                             self.frame.origin.x,
+    //                             self.frame.size.width,
+    //                             self.frame.size.height];
+    //
+    //    if(self.backgroundColor != nil) {
+    //        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+    //        frameString = [frameString stringByAppendingFormat:@"background-color:%@;", colorString];
+    //    }
     
     NSMutableDictionary *jsonDictionary = [[NSMutableDictionary alloc] init];
     jsonDictionary[@"type"] = @(2);
     jsonDictionary[@"tagName"] = @"div";
     jsonDictionary[@"attributes"] = @{
-        @"backgroundColor": [NSString stringWithFormat:propertyFormatString, [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES]],
-        @"style": frameString,
+        @"id": [self generateViewCSSSelector]
     };
     
     NSMutableArray *subviews = [[NSMutableArray alloc] init];
-    for(id<NRMAViewDetailProtocol> subview in _childViews) {
-        [subviews addObject:subview.jsonDescription];
-    }
-
+    //    for(id<NRMAViewDetailProtocol> subview in _childViews) {
+    //        [subviews addObject:subview.jsonDescription];
+    //    }
+    
     jsonDictionary[@"childNodes"] = subviews;
     jsonDictionary[@"id"] = @(self.viewId);
     
-//    jsonDictionary[@"frame"] = NSStringFromCGRect(self.frame);
-//    jsonDictionary[@"isHidden"] = @(self.isHidden);
-//    jsonDictionary[@"name"] = self.viewName;
-//    jsonDictionary[@"id"] = @(self.viewId);
-//    jsonDictionary[@"type"] = @(2);
-//    jsonDictionary[@"frame"] = CFBridgingRelease(CGRectCreateDictionaryRepresentation(self.frame));
-//    jsonDictionary[@"backgroundColor"] = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-//    
-//    NSMutableArray *subviews = [[NSMutableArray alloc] init];
-//    for(id<NRMAViewDetailProtocol> subview in _childViews) {
-//        [subviews addObject:subview.jsonDescription];
-//    }
-//    
-//    jsonDictionary[@"subviews"] = subviews;
-    
-//    NSMutableDictionary *attributesDictionary = [[NSMutableDictionary alloc] init];
-//
-//    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx", self.frame.origin.y,
-//                             self.frame.origin.x,
-//                             self.frame.size.width,
-//                             self.frame.size.height];
-//    
-//    if(self.backgroundColor != nil) {
-//        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-//        jsonDictionary[@"backgroundColor"] = colorString;
-//        frameString = [frameString stringByAppendingFormat:@";background-color:%@", colorString];
-//    }
-//    
-//    attributesDictionary[@"style"] = frameString;
-//    jsonDictionary[@"attributes"] = attributesDictionary;
-    
     return jsonDictionary;
+}
+
+- (NSString *)cssDescription {
+    NSString *cssSelector = [self generateViewCSSSelector];
+    NSString *backgroundColorString = self.backgroundColor ? [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES] : @"#00000000";
+    return [NSString stringWithFormat:@"#%@ { \background-color: %@; \
+position: relative;\
+left: %fpx; \
+top: %fpx; \
+width: %fpx; \
+height: %fpx; \
+}",
+            cssSelector,
+            backgroundColorString,
+            self.frame.origin.x,
+            self.frame.origin.y,
+            self.frame.size.width,
+            self.frame.size.height];
+}
+
+- (NSString *)generateViewCSSSelector {
+    return [NSString stringWithFormat:@"UIView-%@", [@(self.viewId) stringValue]];
 }
 
 + (NSString *)colorToString:(UIColor *)color includingAlpha:(BOOL)includingAlpha {
@@ -124,9 +114,9 @@
     NSString *colorFormatString = @"#%02lX%02lX%02lX";
     NSString *colorString = @"";
     
-//    CGFloat *colorComponents = CGColorGetComponents(color);
-//    NSString *colorFormatString = @"#%02lX%02lX%02lX";
-//    NSString *colorString = @"";
+    //    CGFloat *colorComponents = CGColorGetComponents(color);
+    //    NSString *colorFormatString = @"#%02lX%02lX%02lX";
+    //    NSString *colorString = @"";
     if(includingAlpha) {
         colorFormatString = [colorFormatString stringByAppendingString:@"%02lX"];
         colorString = [NSString stringWithFormat:colorFormatString,

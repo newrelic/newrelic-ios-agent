@@ -14,6 +14,7 @@
 @property (nonatomic, strong) NSMutableArray* childViews;
 
 - (NSDictionary *)jsonDescription;
+- (NSString *)cssDescription;
 
 @end
 
