@@ -160,10 +160,10 @@ withAgentLogsOn:(BOOL)agentLogsOn {
     return nil;
 }
 
-+ (NSData *)logFileData {
++ (NSData *)logFileData:(NSError **)errorPtr {
     @synchronized(self) {
         NSString *path = [NRLogger logFilePath];
-        return [NSData dataWithContentsOfFile:path];
+        return [NSData dataWithContentsOfFile:path options:NSDataReadingMappedIfSafe error:errorPtr];
     }
 }
 

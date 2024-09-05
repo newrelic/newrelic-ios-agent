@@ -191,7 +191,8 @@
         }
     }];
 
-    NSData* logData = [NRLogger logFileData];
+    NSError* error;
+    NSData* logData = [NRLogger logFileData:&error];
     NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData

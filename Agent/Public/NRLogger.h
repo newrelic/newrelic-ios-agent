@@ -179,7 +179,7 @@ withAgentLogsOn:(BOOL)agentLogsOn;
 
  The data contains comma-separated JSON blobs, each blob encapsulating one log message.
  */
-+ (NSData *)logFileData;
++ (NSData *)logFileData:(NSError **) errorPtr;
 
 /*!
  Truncate the log file used by the New Relic agent for data logging.
