@@ -174,6 +174,8 @@ withAgentLogsOn:(BOOL)agentLogsOn;
  */
 + (NSString *)logFilePath;
 
++ (NSData *)logFileData;
+
 /*!
  Truncate the log file used by the New Relic agent for data logging.
  */

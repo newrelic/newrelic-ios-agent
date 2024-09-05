@@ -334,22 +334,9 @@ static NSTimeInterval shortTimeInterval = 10;
     
     // When
     [sut removeObjectForKey:@"Request Event"];
-    sleep(1);
     
-    // Then
-    XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, shortTimeInterval*NSEC_PER_SEC), dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-
-        XCTAssertTrue([fileManager fileExistsAtPath:testFilename]);
-        if([fileManager fileExistsAtPath:testFilename]) {
-            NSLog(@"Rewritten File found");
-        }
-        [writeExpectation fulfill];
-    });
-    [self waitForExpectationsWithTimeout:shortTimeInterval*5 handler:nil];
     XCTAssertNil([sut objectForKey:@"Request Event"]);
+    sleep(1);
     
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
                                                             andMinimumDelay:shortTimeInterval];

@@ -160,6 +160,13 @@ withAgentLogsOn:(BOOL)agentLogsOn {
     return nil;
 }
 
++ (NSData *)logFileData {
+    @synchronized(self) {
+        NSString *path = [NRLogger logFilePath];
+        return [NSData dataWithContentsOfFile:path];
+    }
+}
+
 + (void)clearLog {
     [[NRLogger logger] clearLog];
 }
