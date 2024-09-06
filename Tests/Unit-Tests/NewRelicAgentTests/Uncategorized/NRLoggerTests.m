@@ -16,7 +16,6 @@
 #import "NRMANamedValueMeasurement.h"
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
-#import "NRLogger.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
 #import "NRMAFakeDataHelper.h"
@@ -192,12 +191,13 @@
         }
     }];
 
-    NSString *path = [NRLogger logFilePath];
-    NSData* logData = [NSData dataWithContentsOfFile:path];
-
+    NSError* error;
+    NSData* logData = [NRLogger logFileData:&error];
+    if(error){
+        NSLog(@"%@", error.localizedDescription);
+    }
     NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                            options:0
                                                              error:nil];

@@ -175,6 +175,13 @@ withAgentLogsOn:(BOOL)agentLogsOn;
 + (NSString *)logFilePath;
 
 /*!
+ @result the data of the file which the New Relic agent is logging.
+
+ The data contains comma-separated JSON blobs, each blob encapsulating one log message.
+ */
++ (NSData *)logFileData:(NSError **) errorPtr;
+
+/*!
  Truncate the log file used by the New Relic agent for data logging.
  */
 + (void)clearLog;
