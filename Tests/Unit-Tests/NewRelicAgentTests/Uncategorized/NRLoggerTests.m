@@ -193,6 +193,9 @@
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
+    if(error){
+        NSLog(@"%@", error.localizedDescription);
+    }
     NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
