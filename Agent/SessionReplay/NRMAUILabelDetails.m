@@ -107,7 +107,7 @@ top: %02fpx;\
 width: %02fpx;\
 height: %02fpx;\
 color: %@;\
-font: %fem $(%@);\
+font: %fem %@;\
 }",
             cssSelector,
             backgroundColorString,
