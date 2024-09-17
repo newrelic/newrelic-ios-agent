@@ -106,7 +106,8 @@ top: %fpx;\
 width: %fpx;\
 height: %fpx;\
 color: %@;\
-font: %fem $(%@);",
+font: %fem $(%@);\
+}",
             cssSelector,
             backgroundColorString,
             self.frame.origin.x,
