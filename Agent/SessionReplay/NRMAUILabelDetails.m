@@ -97,7 +97,7 @@
 
 - (NSString *)cssDescription {
     NSString *cssSelector = [self generateViewCSSSelector];
-    NSString *backgroundColorString = self.backgroundColor ? [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES] : @"#00000000";
+    NSString *backgroundColorString = self.backgroundColor ? [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES] : @"#000000";
     
     return [NSString stringWithFormat:@"#%@ { background-color: %@;\
 position: relative;\
