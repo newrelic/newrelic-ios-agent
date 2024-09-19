@@ -358,6 +358,8 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 
     }
     else {
+        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
+
         return nil;
     }
 }
