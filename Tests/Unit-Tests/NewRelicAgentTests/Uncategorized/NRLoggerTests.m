@@ -36,13 +36,13 @@
     [NRLogger setLogEntityGuid:@"Entity-Guid-XXXX"];
 
     NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
-                                                  collectorAddress:KNRMA_TEST_COLLECTOR_HOST
-                                                      crashAddress:nil];
+                                                                     collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                         crashAddress:nil];
     [NRMAHarvestController initialize:config];
 
     category = @"hello";
     name = @"world";
-    
+
     helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
 
     [NRMAMeasurements initializeMeasurements];
@@ -110,8 +110,8 @@
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
 
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
-                                                           options:0
-                                                             error:nil];
+                                                      options:0
+                                                        error:nil];
     NSLog(@"decode=%@", decode);
 
     NSArray * expectedValues = @[
@@ -134,6 +134,18 @@
             if ([[dict2 objectForKey:@"message"] isEqualToString: currentMessage]) {
                 foundCount += 1;
                 XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
+                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationProviderKey] isEqualToString:NRLogMessageMobileValue],@"instrumentation provider set incorrectly");
+                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationVersionKey] isEqualToString:@"DEV"],@"instrumentation name set incorrectly");
+
+#if TARGET_OS_WATCH
+                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"watchOSAgent"],@"instrumentation name set incorrectly");
+#else
+                if ([[[UIDevice currentDevice] systemName] isEqualToString:@"tvOS"]) {
+                    XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"tvOSAgent"],@"instrumentation name set incorrectly");
+
+                }
+                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"iOSAgent"],@"instrumentation name set incorrectly");
+#endif
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
@@ -148,7 +160,7 @@
 
 
 - (void) testRemoteLogLevels {
-    
+
     // Set the remote log level to warning.
     [NRLogger setRemoteLogLevel:NRLogLevelWarning];
 
@@ -163,7 +175,7 @@
             XCTFail(@"Timeout error");
         }
     }];
-    
+
     // Three messages should reach the remote log file for upload.
 
     [NewRelic logInfo:   @"Info Log..."];
@@ -199,8 +211,8 @@
     NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
-                                                           options:0
-                                                             error:nil];
+                                                      options:0
+                                                        error:nil];
     NSLog(@"decode=%@", decode);
 
     NSArray * expectedValues = @[

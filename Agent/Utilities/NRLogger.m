@@ -303,6 +303,9 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 - (NSData*) jsonDictionary:(NSDictionary*)message {
     NSString* NRSessionId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
     NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
+    NSString* nativePlatform = [NewRelicInternalUtils agentName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    NSString* name = [NRMAAgentConfiguration connectionInformation].deviceInformation.platform == NRMAPlatform_Native ? nativePlatform : platform;
 
     NSString* nrAppId = [NSString stringWithFormat:@"%lld", configuration.application_id];
     NSString* entityGuid = [NSString stringWithFormat:@"%@", configuration.entity_guid];
@@ -326,7 +329,6 @@ withAgentLogsOn:(BOOL)agentLogsOn {
     if (!entityGuid) {
         entityGuid = @"";
     }
-    // TODO: LogReporting logAttributes: Refactor to construct 9 required attributes and tack on the remaining API provided attributes.
 
     NSDictionary *requiredAttributes = @{NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
                                          NRLogMessageFileKey:       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
@@ -334,9 +336,14 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                                          NRLogMessageMethodKey:     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
                                          NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
                                          NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
-                                         @"sessionId": NRSessionId,                                                                                                              // 7
-                                         @"appId": nrAppId,                                                                                                                      // 8
-                                         @"entity.guid": entityGuid};                                                                                                            // 9
+                                         NRLogMessageSessionIdKey: NRSessionId,                                                                                                  // 7
+                                         NRLogMessageAppIdKey: nrAppId,                                                                                                          // 8
+                                         NRLogMessageEntityGuidKey: entityGuid,                                                                                                  // 9
+                                         NRLogMessageInstrumentationProviderKey: NRLogMessageMobileValue,                                                                        // 10
+                                         NRLogMessageInstrumentationNameKey: name,                                                                                               // 11
+                                         NRLogMessageInstrumentationVersionKey: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion,                   // 12
+                                         NRLogMessageInstrumentationCollectorKey: name};                                                                                         // 13
+
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];
     [providedAttributes removeObjectsForKeys:@[NRLogMessageLevelKey,NRLogMessageFileKey,NRLogMessageLineNumberKey,NRLogMessageMethodKey,NRLogMessageTimestampKey,NRLogMessageMessageKey]];
@@ -346,8 +353,13 @@ withAgentLogsOn:(BOOL)agentLogsOn {
     NSData *logJsonData = [NRMAJSON dataWithJSONObject:providedAttributes
                                                  options:0
                                                    error:&error];
-    
-    return logJsonData;
+    if (!error) {
+        return logJsonData;
+
+    }
+    else {
+        return nil;
+    }
 }
 
 - (void)setLogLevels:(unsigned int)levels {

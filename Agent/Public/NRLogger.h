@@ -72,6 +72,15 @@ typedef enum _NRLogTargets {
 #define NRLogMessageMethodKey       @"method"
 #define NRLogMessageTimestampKey    @"timestamp"
 #define NRLogMessageMessageKey      @"message"
+#define NRLogMessageSessionIdKey    @"sessionId"
+#define NRLogMessageAppIdKey        @"appId"
+
+#define NRLogMessageEntityGuidKey   @"entity.guid"
+#define NRLogMessageInstrumentationProviderKey   @"instrumentation.provider"
+#define NRLogMessageMobileValue     @"mobile"
+#define NRLogMessageInstrumentationNameKey       @"instrumentation.name"
+#define NRLogMessageInstrumentationVersionKey    @"instrumentation.version"
+#define NRLogMessageInstrumentationCollectorKey  @"collector.name"
 
 /*******************************************************************************
  * Log targets used in the agent's internal logger
