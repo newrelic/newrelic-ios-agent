@@ -102,9 +102,13 @@
             XCTFail(@"Timeout error");
         }
     }];
-
+    
+    NSError* error;
     NSString *path = [NRLogger logFilePath];
-    NSData* logData = [NSData dataWithContentsOfFile:path];
+    NSData* logData = [NRLogger logFileData:&error];
+    if(error){
+        NSLog(@"%@", error.localizedDescription);
+    }
 
     NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
