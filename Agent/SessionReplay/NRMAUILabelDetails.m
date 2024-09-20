@@ -102,10 +102,10 @@
     
     return [NSString stringWithFormat:@"#%@ { background-color: %@;\
 position: relative;\
-left: %02fpx;\
-top: %02fpx;\
-width: %02fpx;\
-height: %02fpx;\
+left: %.2fpx;\
+top: %.2fpx;\
+width: %.2fpx;\
+height: %.2fpx;\
 color: %@;\
 font: %fem %@;\
 }",
