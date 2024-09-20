@@ -81,7 +81,8 @@
     NSMutableArray *subviews = [[NSMutableArray alloc] init];
     NSDictionary *textNode = @{
         @"type": @(3),
-        @"textContent": self.labelText
+        @"textContent": self.labelText,
+        @"id": @([NRMAIdGenerator generateID])
     };
     [subviews addObject:textNode];
     
