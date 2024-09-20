@@ -15,6 +15,7 @@
 #import "NRMAUIViewDetails.h"
 #import "NRMAUILabelDetails.h"
 #import "NRMAIdGenerator.h"
+#import "NRMASessionReplayFrame.h"
 
 @interface NRMASessionReplayContext : NSObject
 
@@ -128,12 +129,12 @@
     return @{@"type" : @(4), @"timestamp": @([[NSDate date] timeIntervalSince1970]), @"data": @{@"href": @"http://newrelic.com", @"width": @(_window.windowScene.screen.bounds.size.width), @"height" : @(_window.windowScene.screen.bounds.size.height)}};
 }
 
-- (NSDictionary *)generateStyleNode {
-    NSString *styleTextString = [_styles componentsJoinedByString:@"\n"];
-    
-    NSDictionary *styleNode = @{@"type": @(2), @"tagName": @"style", @"attributes": @{}, @"id": @([NRMAIdGenerator generateID]), @"childNodes" : @[@{@"type": @"Text", @"textContent": styleTextString}]};
-    return styleNode;
-}
+//- (NSDictionary *)generateStyleNode {
+//    NSString *styleTextString = [_styles componentsJoinedByString:@"\n"];
+//
+//    NSDictionary *styleNode = @{@"type": @(2), @"tagName": @"style", @"attributes": @{}, @"id": @([NRMAIdGenerator generateID]), @"childNodes" : @[@{@"type": @"Text", @"textContent": styleTextString}]};
+//    return styleNode;
+//}
 
 - (void)willEnterForeground {
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did enter foreground");
@@ -142,6 +143,66 @@
 - (void)didBecomeKey {
     NRLOG_AUDIT(@"[SESSION REPLAY] - Window Did Become Key");
 }
+/*
+{
+    "type": 0,
+    "childNodes": [
+        {
+            "type": 2,
+            "tagName": "html",
+            "attributes": {},
+            "childNodes": [
+                {
+                    "type": 2,
+                    "tagName": "head",
+                    "attributes": {},
+                    "childNodes": [
+                        {
+                            "type": 2,
+                            "tagName": "style",
+                            "attributes": {},
+                            "childNodes": [
+                                {
+                                    "type": 3,
+                                    "textContent": "#we-add-style-rules-here {background-color: red;}",
+                                    "isStyle": true,
+                                    "id": 5
+                                }
+                            ],
+                            "id": 4
+                        }
+                    ],
+                    "id": 3
+                },
+                {
+                    "type": 2,
+                    "tagName": "body",
+                    "attributes": {},
+                    "childNodes": [
+                        {
+                            "type": 2,
+                            "tagName": "p",
+                            "attributes": {},
+                            "childNodes": [
+                                {
+                                    "type": 3,
+                                    "textContent": "the p element is where our element nodes go in the dom tree",
+                                    "id": 8
+                                }
+                            ],
+                            "id": 7
+                        }
+                    ],
+                    "id": 6
+                }
+            ],
+            "id": 2
+        }
+    ],
+    "compatMode": "BackCompat",
+    "id": 1
+}
+*/
 
 - (void)takeFrame {
     if(_rootView) {
@@ -169,9 +230,14 @@
     if(frameCount == 5) {
         [_frameTimer invalidate];
         for(id<NRMAViewDetailProtocol> rawFrame in _rawFrames) {
+            NRMASessionReplayFrame *replayFrame = [NRMASessionReplayFrame new];
             NSMutableDictionary* frameData = [self doThingWithFrame:rawFrame];
-            frameData[@"timestamp"] = @([[NSDate now] timeIntervalSince1970]);
-            [_processedFrames addObject:frameData];
+//            frameData[@"timestamp"] = @([[NSDate now] timeIntervalSince1970]);
+            [replayFrame addBodyNodes:frameData];
+            [replayFrame addStyleNodes:[_styles componentsJoinedByString:@"\n"]];
+            
+            [_processedFrames addObject:[replayFrame getFrame]];
+            [_styles removeAllObjects];
         }
         NSString* frameJSON = [self consolidateFrames];
         NSLog(frameJSON);
@@ -194,7 +260,7 @@
 }
 
 - (NSString *)consolidateFrames {
-    [_processedFrames insertObject:[self generateStyleNode] atIndex:1];
+//    [_processedFrames insertObject:[self generateStyleNode] atIndex:1];
     NSData *viewFramesJSONData = [NSJSONSerialization dataWithJSONObject:_processedFrames
                                                                  options:0
                                                                    error:nil];
