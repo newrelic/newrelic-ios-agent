@@ -285,6 +285,7 @@
 		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
 		F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageFullScreen.swift; sourceTree = "<group>"; };
 		F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRAPI-Info.plist"; sourceTree = SOURCE_ROOT; };
+		F825C6632C790F4F006062A5 /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = readme.md; path = ../readme.md; sourceTree = "<group>"; };
 		F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRTestAppFakeNavigationAction.swift; sourceTree = "<group>"; };
 		F8302AF5296F5EFA003EC291 /* NRTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NRTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8302AF8296F5EFA003EC291 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -494,6 +495,7 @@
 				F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */,
 				F8302B06296F5EFB003EC291 /* Info.plist */,
 				F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */,
+				F825C6632C790F4F006062A5 /* readme.md */,
 			);
 			path = NRTestApp;
 			sourceTree = "<group>";

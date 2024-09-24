@@ -236,15 +236,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         // Tests will pass it in as 0, hence the check.
         // When libMobileAgent finally goes away, this can simply be initialized with the NSDate
         // the NewRelicAgentInternal initializes with.
-        if(sessionStartTime == 0) {
-            _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:sessionStartTime];
-        } else {
-            _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
-        }
-        
+        [self setSessionStartTime:sessionStartTime];
         [_sessionStartTime retain];
     }
     return self;
+}
+
+- (void)setSessionStartTime:(long long)sessionStartTime {
+    if(sessionStartTime == 0) {
+        _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:sessionStartTime];
+    } else {
+        _sessionStartTime = [NSDate dateWithTimeIntervalSince1970:(sessionStartTime/1000)];
+    }
 }
 
 - (void) dealloc {
@@ -322,10 +325,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
         
         if (addDistributedTracing) {
-            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
-            [event addAttribute:kNRMA_Attrib_traceId value:traceId];
+            if (distributedTracingId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+                [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            }
+            if (traceId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+                [event addAttribute:kNRMA_Attrib_traceId value:traceId];
+            }
         }
         
         if (requestDomain.length > 0) {
@@ -442,9 +449,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
         
         if (addDistributedTracing) {
-            [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
-            [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+            if (distributedTracingId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
+                [event addAttribute:kNRMA_Attrib_dtId value:distributedTracingId];
+            }
+            if (traceId.length > 0) {
+                [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+            }
         }
         
         if (requestDomain.length > 0) {
@@ -1145,6 +1156,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     _newSession = YES;
     [self endSessionReusable];
 }
+
+- (void) newSessionWithStartTime:(long long)sessionStartTime {
+    [self setSessionStartTime:sessionStartTime];
+    if(!([NRMAFlags shouldEnableNewEventSystem])) {
+        _analyticsController->newSessionWithStartTime(sessionStartTime);
+    }
+    [self newSession];
+}
+
 - (void) endSessionReusable {
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(![self addSessionEndAttribute]) { //has exception handling within
@@ -1164,8 +1184,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             NRLOG_AGENT_ERROR(@"failed to add a session event");
         }
     }
-
 }
+
 - (void) onHarvestBefore {
     if([NRMAFlags shouldEnableNewEventSystem]){
         if (_sessionWillEnd || _newSession || [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]) {

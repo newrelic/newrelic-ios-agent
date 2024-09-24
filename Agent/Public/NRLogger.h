@@ -72,6 +72,15 @@ typedef enum _NRLogTargets {
 #define NRLogMessageMethodKey       @"method"
 #define NRLogMessageTimestampKey    @"timestamp"
 #define NRLogMessageMessageKey      @"message"
+#define NRLogMessageSessionIdKey    @"sessionId"
+#define NRLogMessageAppIdKey        @"appId"
+
+#define NRLogMessageEntityGuidKey   @"entity.guid"
+#define NRLogMessageInstrumentationProviderKey   @"instrumentation.provider"
+#define NRLogMessageMobileValue     @"mobile"
+#define NRLogMessageInstrumentationNameKey       @"instrumentation.name"
+#define NRLogMessageInstrumentationVersionKey    @"instrumentation.version"
+#define NRLogMessageInstrumentationCollectorKey  @"collector.name"
 
 /*******************************************************************************
  * Log targets used in the agent's internal logger
@@ -173,6 +182,13 @@ withAgentLogsOn:(BOOL)agentLogsOn;
  The file contains comma-separated JSON blobs, each blob encapsulating one log message.
  */
 + (NSString *)logFilePath;
+
+/*!
+ @result the data of the file which the New Relic agent is logging.
+
+ The data contains comma-separated JSON blobs, each blob encapsulating one log message.
+ */
++ (NSData *)logFileData:(NSError **) errorPtr;
 
 /*!
  Truncate the log file used by the New Relic agent for data logging.
