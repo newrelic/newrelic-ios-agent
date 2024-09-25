@@ -98,30 +98,32 @@
 
 - (NSString *)cssDescription {
     NSString *cssSelector = [self generateViewCSSSelector];
-    NSString *backgroundColorString = self.backgroundColor ? [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES] : @"#000000";
-    NSString *textColorString = self.textColor ? [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES] : @"#000000";
+//    NSString *backgroundColorString = self.backgroundColor ? [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:NO] : @"#FFFFFF";
+//    NSString *textColorString = self.textColor ? [NRMAUIViewDetails colorToString:self.textColor includingAlpha:NO] : @"#FFFFFF";
     
-    return [NSString stringWithFormat:@"#%@ { background-color: %@;\
-position: relative;\
-left: %.2fpx;\
-top: %.2fpx;\
-width: %.2fpx;\
-height: %.2fpx;\
-color: %@;\
-font: %fem %@;\
-}",
-            cssSelector,
-            backgroundColorString,
-            self.frame.origin.x,
-            self.frame.origin.y,
-            self.frame.size.width,
-            self.frame.size.height,
-            textColorString,
-            self.fontSize, self.fontFamily];
+    NSString *cssStyle = [NSString stringWithFormat:@"position: absolute;left: %.2fpx;top: %.2fpx;width: %.2fpx;height: %.2fpx;font: %.2fpx %@;",
+                          self.frame.origin.x,
+                          self.frame.origin.y,
+                          self.frame.size.width,
+                          self.frame.size.height,
+                          self.fontSize, self.fontFamily];
+    
+    if(self.backgroundColor) {
+        NSString *backgroundColorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:NO];
+        cssStyle = [cssStyle stringByAppendingFormat:@"background-color: %@;", backgroundColorString];
+    }
+    
+    if(self.textColor) {
+        NSString *textColorString = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:NO];
+        cssStyle = [cssStyle stringByAppendingFormat:@"color: %@;", textColorString];
+    }
+    
+    return [NSString stringWithFormat:@"#%@ { %@ }",
+            cssSelector, cssStyle];
 }
 
 - (NSString *)generateViewCSSSelector {
-    return [NSString stringWithFormat:@"UILabel-%@", [@(self.viewId) stringValue]];
+    return [NSString stringWithFormat:@"%@-%@", self.viewName, [@(self.viewId) stringValue]];
 }
 
 @end

@@ -14,7 +14,7 @@
 - (instancetype)initWithView:(UIView *)view {
     self = [super init];
     if(self) {
-        //        _frame = [view.superview convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
+//        _frame = [view.superview convertRect:view.frame toCoordinateSpace:view.window.screen.fixedCoordinateSpace];
         _frame = view.frame;
         _backgroundColor = view.backgroundColor;
         _isHidden = view.isHidden;
@@ -75,24 +75,25 @@
 
 - (NSString *)cssDescription {
     NSString *cssSelector = [self generateViewCSSSelector];
-    NSString *backgroundColorString = self.backgroundColor ? [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES] : @"#000000";
-    return [NSString stringWithFormat:@"#%@ { \background-color: %@; \
-position: relative;\
-left: %.2fpx; \
-top: %.2fpx; \
-width: %.2fpx; \
-height: %.2fpx; \
-}",
-            cssSelector,
-            backgroundColorString,
-            self.frame.origin.x,
-            self.frame.origin.y,
-            self.frame.size.width,
-            self.frame.size.height];
+    
+    NSString *cssStyle = [NSString stringWithFormat:@"position: absolute;left: %.2fpx;top: %.2fpx;width: %.2fpx;height: %.2fpx;",
+                          self.frame.origin.x,
+                          self.frame.origin.y,
+                          self.frame.size.width,
+                          self.frame.size.height];
+    
+    if(self.backgroundColor) {
+        NSString *backgroundColorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:NO];
+        cssStyle = [cssStyle stringByAppendingFormat:@"background-color: %@;", backgroundColorString];
+    }
+
+    
+    return [NSString stringWithFormat:@"#%@ { %@ }",
+            cssSelector, cssStyle];
 }
 
 - (NSString *)generateViewCSSSelector {
-    return [NSString stringWithFormat:@"UIView-%@", [@(self.viewId) stringValue]];
+    return [NSString stringWithFormat:@"%@-%@", self.viewName, [@(self.viewId) stringValue]];
 }
 
 + (NSString *)colorToString:(UIColor *)color includingAlpha:(BOOL)includingAlpha {
@@ -125,7 +126,7 @@ height: %.2fpx; \
                        lroundf(blueColor * 255),
                        lroundf(alpha * 255)];
     } else {
-        NSString *colorString = [NSString stringWithFormat:colorFormatString,
+        colorString = [NSString stringWithFormat:colorFormatString,
                                  lroundf(redColor * 255),
                                  lroundf(greenColor * 255),
                                  lroundf(blueColor * 255)];
