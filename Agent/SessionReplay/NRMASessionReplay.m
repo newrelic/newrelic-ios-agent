@@ -126,7 +126,7 @@
 }
 
 -(NSDictionary *)generateInitialNode {
-    return @{@"type" : @(4), @"timestamp": @([[NSDate date] timeIntervalSince1970]), @"data": @{@"href": @"http://newrelic.com", @"width": @(_window.windowScene.screen.bounds.size.width), @"height" : @(_window.windowScene.screen.bounds.size.height)}};
+    return @{@"type" : @(4), @"timestamp": @([[NSDate date] timeIntervalSince1970]), @"data": @{@"href": @"http://newrelic.com", @"width": @(_window.windowScene.screen.bounds.size.width /** _window.windowScene.screen.scale*/), @"height" : @(_window.windowScene.screen.bounds.size.height /** _window.windowScene.screen.scale*/)}};
 }
 
 //- (NSDictionary *)generateStyleNode {
@@ -143,66 +143,6 @@
 - (void)didBecomeKey {
     NRLOG_AUDIT(@"[SESSION REPLAY] - Window Did Become Key");
 }
-/*
-{
-    "type": 0,
-    "childNodes": [
-        {
-            "type": 2,
-            "tagName": "html",
-            "attributes": {},
-            "childNodes": [
-                {
-                    "type": 2,
-                    "tagName": "head",
-                    "attributes": {},
-                    "childNodes": [
-                        {
-                            "type": 2,
-                            "tagName": "style",
-                            "attributes": {},
-                            "childNodes": [
-                                {
-                                    "type": 3,
-                                    "textContent": "#we-add-style-rules-here {background-color: red;}",
-                                    "isStyle": true,
-                                    "id": 5
-                                }
-                            ],
-                            "id": 4
-                        }
-                    ],
-                    "id": 3
-                },
-                {
-                    "type": 2,
-                    "tagName": "body",
-                    "attributes": {},
-                    "childNodes": [
-                        {
-                            "type": 2,
-                            "tagName": "p",
-                            "attributes": {},
-                            "childNodes": [
-                                {
-                                    "type": 3,
-                                    "textContent": "the p element is where our element nodes go in the dom tree",
-                                    "id": 8
-                                }
-                            ],
-                            "id": 7
-                        }
-                    ],
-                    "id": 6
-                }
-            ],
-            "id": 2
-        }
-    ],
-    "compatMode": "BackCompat",
-    "id": 1
-}
-*/
 
 - (void)takeFrame {
     if(_rootView) {
@@ -227,14 +167,14 @@
 //    [_frames addObject:viewDetailJSON];
     frameCount++;
     
-    if(frameCount == 5) {
+    if(frameCount == 2) {
         [_frameTimer invalidate];
         for(id<NRMAViewDetailProtocol> rawFrame in _rawFrames) {
             NRMASessionReplayFrame *replayFrame = [NRMASessionReplayFrame new];
             NSMutableDictionary* frameData = [self doThingWithFrame:rawFrame];
 //            frameData[@"timestamp"] = @([[NSDate now] timeIntervalSince1970]);
             [replayFrame addBodyNodes:frameData];
-            [replayFrame addStyleNodes:[_styles componentsJoinedByString:@"\n"]];
+            [replayFrame addStyleNodes:[_styles componentsJoinedByString:@" "]];
             
             [_processedFrames addObject:[replayFrame getFrame]];
             [_styles removeAllObjects];
@@ -252,6 +192,51 @@
     [_styles addObject:frame.cssDescription];
     
     NSMutableDictionary *frameJSONData = frame.jsonDescription;
+    
+    
+//    // order subviews by Y coordinate, then by X
+//    if( ((id<NRMAViewDetailProtocol>) viewDetails).childViews.count > 1) {
+//        [viewDetails.childViews sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+//            CGRect rect1 = [[obj1 valueForKey:@"frame"] CGRectValue];
+//            CGRect rect2 = [[obj2 valueForKey:@"frame"] CGRectValue];
+//
+//            if(rect1.origin.y < rect2.origin.y) {
+//                return NSOrderedAscending;
+//            } else if (rect1.origin.y > rect2.origin.y) {
+//                return NSOrderedDescending;
+//            } else {
+//                if(rect1.origin.x < rect2.origin.x) {
+//                    return NSOrderedAscending;
+//                } else if(rect1.origin.x > rect2.origin.x) {
+//                    return NSOrderedDescending;
+//                } else {
+//                    return NSOrderedSame;
+//                }
+//            }
+//        }];
+//    }
+    
+//    if(frame.childViews.count > 1) {
+//        [frame.childViews sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
+//            CGRect rect1 = [[obj1 valueForKey:@"frame"] CGRectValue];
+//            CGRect rect2 = [[obj2 valueForKey:@"frame"] CGRectValue];
+//
+//            if(rect1.origin.y < rect2.origin.y) {
+//                return NSOrderedAscending;
+//            } else if (rect1.origin.y > rect2.origin.y) {
+//                return NSOrderedDescending;
+//            } else {
+//                if(rect1.origin.x < rect2.origin.x) {
+//                    return NSOrderedAscending;
+//                } else if(rect1.origin.x > rect2.origin.x) {
+//                    return NSOrderedDescending;
+//                } else {
+//                    return NSOrderedSame;
+//                }
+//            }
+//        }];
+//    }
+    
     for (id<NRMAViewDetailProtocol> childView in frame.childViews) {
         [(NSMutableArray*)frameJSONData[@"childNodes"] addObject:[self doThingWithFrame:childView]];
     }
@@ -260,7 +245,6 @@
 }
 
 - (NSString *)consolidateFrames {
-//    [_processedFrames insertObject:[self generateStyleNode] atIndex:1];
     NSData *viewFramesJSONData = [NSJSONSerialization dataWithJSONObject:_processedFrames
                                                                  options:0
                                                                    error:nil];
