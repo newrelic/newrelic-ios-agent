@@ -16,6 +16,7 @@
 #import "NRMAUILabelDetails.h"
 #import "NRMAIdGenerator.h"
 #import "NRMASessionReplayFrame.h"
+#import "NRMASessionReplayCapture.h"
 
 @interface NRMASessionReplayContext : NSObject
 
@@ -37,6 +38,8 @@
     int frameCount;
     NSTimer* _frameTimer;
     NSTimer* _screenChangeTimer;
+    
+    NRMASessionReplayCapture* _sessionReplayCapture;
 }
 
 - (instancetype)init {
@@ -48,6 +51,9 @@
         _styles = [NSMutableArray new];
         _processedFrames = [NSMutableArray new];
         frameCount = 0;
+        
+        _sessionReplayCapture = [[NRMASessionReplayCapture alloc] init];
+        
         [NSNotificationCenter.defaultCenter addObserver:self
                                                selector:@selector(didBecomeVisible)
                                                    name:UIWindowDidBecomeVisibleNotification
@@ -91,21 +97,7 @@
 - (void)didBecomeActive {
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did become active");
     self->_window = [[UIApplication sharedApplication] keyWindow];
-    [self recursiveRecord:_window forViewDetails:_rootView];
-//    NSMutableArray<NSDictionary *> *viewDetailJSON = [[NSMutableArray alloc] init];
-//    for(id<NRMAViewDetailProtocol> detail in _views) {
-//        NRLOG_AUDIT(@"[SESSION REPLAY] - %@", detail.debugDescription);
-//        [viewDetailJSON addObject:[detail jsonDescription]];
-//    }
-    
-//    NSDictionary *viewDetailJSON = _rootView.jsonDescription;
-//    
-//    NSData *viewJSONData = [NSJSONSerialization dataWithJSONObject:viewDetailJSON
-//                                                           options:0
-//                                                             error:nil];
-//    
-//    NSString *json = [[NSString alloc] initWithData:viewJSONData encoding:NSUTF8StringEncoding];
-//    NSLog(json);
+
     [_processedFrames addObject:[self generateInitialNode]];
     _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self takeFrame];
@@ -147,11 +139,12 @@
 - (void)takeFrame {
     if(_rootView) {
         [_rawFrames addObject:_rootView];
+        _rootView = nil;
     }
     
     _window = [[UIApplication sharedApplication] keyWindow];
     [self recursiveRecord:_window forViewDetails:_rootView];
-    
+//    NSArray<id<NRMAViewDetailProtocol>>* frameData = [_sessionReplayCapture recordFromRootView:_window];
     // finding main content view
     
     
@@ -193,50 +186,6 @@
     
     NSMutableDictionary *frameJSONData = frame.jsonDescription;
     
-    
-//    // order subviews by Y coordinate, then by X
-//    if( ((id<NRMAViewDetailProtocol>) viewDetails).childViews.count > 1) {
-//        [viewDetails.childViews sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-//            CGRect rect1 = [[obj1 valueForKey:@"frame"] CGRectValue];
-//            CGRect rect2 = [[obj2 valueForKey:@"frame"] CGRectValue];
-//
-//            if(rect1.origin.y < rect2.origin.y) {
-//                return NSOrderedAscending;
-//            } else if (rect1.origin.y > rect2.origin.y) {
-//                return NSOrderedDescending;
-//            } else {
-//                if(rect1.origin.x < rect2.origin.x) {
-//                    return NSOrderedAscending;
-//                } else if(rect1.origin.x > rect2.origin.x) {
-//                    return NSOrderedDescending;
-//                } else {
-//                    return NSOrderedSame;
-//                }
-//            }
-//        }];
-//    }
-    
-//    if(frame.childViews.count > 1) {
-//        [frame.childViews sortUsingComparator:^NSComparisonResult(id  _Nonnull obj1, id  _Nonnull obj2) {
-//            CGRect rect1 = [[obj1 valueForKey:@"frame"] CGRectValue];
-//            CGRect rect2 = [[obj2 valueForKey:@"frame"] CGRectValue];
-//
-//            if(rect1.origin.y < rect2.origin.y) {
-//                return NSOrderedAscending;
-//            } else if (rect1.origin.y > rect2.origin.y) {
-//                return NSOrderedDescending;
-//            } else {
-//                if(rect1.origin.x < rect2.origin.x) {
-//                    return NSOrderedAscending;
-//                } else if(rect1.origin.x > rect2.origin.x) {
-//                    return NSOrderedDescending;
-//                } else {
-//                    return NSOrderedSame;
-//                }
-//            }
-//        }];
-//    }
-    
     for (id<NRMAViewDetailProtocol> childView in frame.childViews) {
         [(NSMutableArray*)frameJSONData[@"childNodes"] addObject:[self doThingWithFrame:childView]];
     }
@@ -261,7 +210,6 @@
     } else {
         viewToRecord = [[NRMAUIViewDetails alloc] initWithView:view];
     }
-//    [_views addObject:viewToRecord];
     
     
     if(_rootView == nil) {

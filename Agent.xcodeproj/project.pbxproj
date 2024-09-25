@@ -1471,6 +1471,8 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
+		34EE243C2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EE243B2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m */; };
+		34EE243D2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h in Headers */ = {isa = PBXBuildFile; fileRef = 34EE243A2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h */; };
 		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
 		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
@@ -2465,6 +2467,8 @@
 		34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMACustomEvent.h; sourceTree = "<group>"; };
 		34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMACustomEvent.m; sourceTree = "<group>"; };
 		34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestCustomEvents.m; sourceTree = "<group>"; };
+		34EE243A2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASessionReplayCapture.h; sourceTree = "<group>"; };
+		34EE243B2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayCapture.m; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
@@ -3801,6 +3805,8 @@
 				348714232B979517005A264C /* NRMAIdGenerator.m */,
 				34099ED12C9E1731007EC50D /* NRMASessionReplayFrame.h */,
 				34099ED22C9E1731007EC50D /* NRMASessionReplayFrame.m */,
+				34EE243A2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h */,
+				34EE243B2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -4004,6 +4010,7 @@
 				02FF486524DC615A00115469 /* NRMAAnalytics.h in Headers */,
 				02FF488C24DC61B900115469 /* NRMAWebRequestUtil.h in Headers */,
 				02FF48EB24DC622700115469 /* NRMACrashDataUploader.h in Headers */,
+				34EE243D2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h in Headers */,
 				02FF480E24DB573E00115469 /* NRMAUserActionBuilder.h in Headers */,
 				F6E79C7D25A65347006277FB /* W3CTraceParent.h in Headers */,
 				02FF49C924DC62B800115469 /* NRMAScopedHTTPTransactionMeasurement.h in Headers */,
@@ -5429,6 +5436,7 @@
 				02FF491D24DC624400115469 /* NRMACrashReport_Thread.m in Sources */,
 				02FF49B024DC62B800115469 /* NRMAActivityTraces.m in Sources */,
 				02FF49C824DC62B800115469 /* NRMAHarvestableAnalytics.m in Sources */,
+				34EE243C2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m in Sources */,
 				02FF493324DC625A00115469 /* NRMAHexUploader.m in Sources */,
 				2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */,
 				02FF49B224DC62B800115469 /* NRMADeviceInformation.m in Sources */,
