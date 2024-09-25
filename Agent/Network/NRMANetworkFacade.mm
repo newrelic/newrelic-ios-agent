@@ -104,7 +104,10 @@
         return;
     }
 
-
+    __block NRMAPayload* retrievedPayload;
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        retrievedPayload = [NRMAHTTPUtilities retrieveNRMAPayload:request];
+    }
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
 
@@ -140,7 +143,7 @@
             if([NRMAFlags shouldEnableNewEventSystem]){
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
                                                                                    withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
-                                                                                withNRMAPayload:[NRMAHTTPUtilities retrieveNRMAPayload:request]];
+                                                                                withNRMAPayload:retrievedPayload];
             } else {
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
                                                                                    withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
@@ -148,7 +151,6 @@
             }
         } else {
             if([NRMAFlags shouldEnableNewEventSystem]){
-                NRMAPayload* retrievedPayload = [NRMAHTTPUtilities retrieveNRMAPayload:request];
                 
                 if(traceHeaders) {
                     if(retrievedPayload == nil) {

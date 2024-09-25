@@ -34,6 +34,9 @@
 #define kNRMA_LOG_REPORTING_KEY @"logs"
 #define kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY @"sampling_rate"
 #define KNRMA_REQUEST_HEADER_MAP_KEY @"request_headers_map"
+#define kNRMA_LOG_REPORTING_ENABLED_KEY @"enabled"
+#define kNRMA_LOG_REPORTING_LEVEL_KEY @"level"
+#define kNRMA_LOG_REPORTING_LEVEL_DEFAULT @"WARN"
 
 #define NRMA_DEFAULT_COLLECT_NETWORK_ERRORS YES  // boolean
 #define NRMA_DEFAULT_REPORT_PERIOD 60            // seconds
