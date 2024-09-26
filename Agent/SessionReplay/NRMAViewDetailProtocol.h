@@ -18,4 +18,6 @@
 
 @end
 
+typedef id<NRMAViewDetailProtocol> Node;
+
 #endif /* NRMAViewDetailProtocol_h */

@@ -10,7 +10,6 @@
 #import "NRMAUIViewDetails.h"
 #import "NRMAUILabelDetails.h"
 
-typedef id<NRMAViewDetailProtocol> Node;
 
 @implementation NRMASessionReplayCapture
 
