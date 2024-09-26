@@ -8,13 +8,16 @@
 
 #import <Foundation/Foundation.h>
 
+#import "NRMAViewDetailProtocol.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface NRMASessionReplayFrame : NSObject
 
--(void)addStyleNodes:(NSString *)styleNodes;
--(void)addBodyNodes:(NSDictionary *)bodyNodes;
--(NSDictionary *)getFrame;
+@property (readonly, atomic) NSDate* timestamp;
+@property (readonly, atomic) NSArray<Node>* nodes;
+
+- (instancetype)initWithTimestamp:(NSDate *)date andNodes:(NSArray<Node>*)nodes;
 
 @end
 
