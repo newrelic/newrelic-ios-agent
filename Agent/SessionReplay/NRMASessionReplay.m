@@ -17,6 +17,7 @@
 #import "NRMAIdGenerator.h"
 #import "NRMASessionReplayFrame.h"
 #import "NRMASessionReplayCapture.h"
+#import "NRMASessionReplayFrameProcessor.h"
 
 @interface NRMASessionReplayContext : NSObject
 
@@ -40,6 +41,7 @@
     NSTimer* _screenChangeTimer;
     
     NRMASessionReplayCapture* _sessionReplayCapture;
+    NRMASessionReplayFrameProcessor* _sessionReplayFrameProcessor;
 }
 
 - (instancetype)init {
@@ -53,6 +55,7 @@
         frameCount = 0;
         
         _sessionReplayCapture = [[NRMASessionReplayCapture alloc] init];
+        _sessionReplayFrameProcessor = [[NRMASessionReplayFrameProcessor alloc] init];
         
         [NSNotificationCenter.defaultCenter addObserver:self
                                                selector:@selector(didBecomeVisible)
@@ -103,18 +106,18 @@
         [self takeFrame];
     }];
     
-    _screenChangeTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 repeats:YES block:^(NSTimer * _Nonnull timer) {
-        self->_window = [[UIApplication sharedApplication] keyWindow];
-        UIViewController* contentViewController = self->_window.rootViewController;
-        
-        if([contentViewController isKindOfClass:[UINavigationController class]]) {
-            contentViewController = ((UINavigationController*)contentViewController).visibleViewController;
-        } else if ([contentViewController isKindOfClass:[UITabBarController class]]) {
-            contentViewController = ((UITabBarController*)contentViewController).selectedViewController;
-        }
-        
-        NRLOG_AUDIT(@"Current View Controller: %@", contentViewController.description);
-    }];
+//    _screenChangeTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 repeats:YES block:^(NSTimer * _Nonnull timer) {
+//        self->_window = [[UIApplication sharedApplication] keyWindow];
+//        UIViewController* contentViewController = self->_window.rootViewController;
+//        
+//        if([contentViewController isKindOfClass:[UINavigationController class]]) {
+//            contentViewController = ((UINavigationController*)contentViewController).visibleViewController;
+//        } else if ([contentViewController isKindOfClass:[UITabBarController class]]) {
+//            contentViewController = ((UITabBarController*)contentViewController).selectedViewController;
+//        }
+//        
+//        NRLOG_AUDIT(@"Current View Controller: %@", contentViewController.description);
+//    }];
 }
 
 -(NSDictionary *)generateInitialNode {
@@ -143,54 +146,18 @@
     }
     
     _window = [[UIApplication sharedApplication] keyWindow];
-    [self recursiveRecord:_window forViewDetails:_rootView];
-//    NSArray<id<NRMAViewDetailProtocol>>* frameData = [_sessionReplayCapture recordFromRootView:_window];
-    // finding main content view
-    
-    
-    NSDictionary *viewDetailJSON = _rootView.jsonDescription;
-    NSString *viewDetailCSS = _rootView.cssDescription;
-    
-//    NSData *viewJSONData = [NSJSONSerialization dataWithJSONObject:viewDetailJSON
-//                                                           options:0
-//                                                             error:nil];
-//    
-//    NSString *json = [[NSString alloc] initWithData:viewJSONData encoding:NSUTF8StringEncoding];
-    
-//    [_frames addObject:viewDetailJSON];
+    NSArray<Node>* frameData = [_sessionReplayCapture recordFromRootView:_window];
+    NRMASessionReplayFrame* frame = [[NRMASessionReplayFrame alloc] initWithTimestamp:[NSDate now] andNodes:frameData];
+    [_processedFrames addObject:[_sessionReplayFrameProcessor process:frame]];
+
     frameCount++;
     
     if(frameCount == 2) {
         [_frameTimer invalidate];
-        for(id<NRMAViewDetailProtocol> rawFrame in _rawFrames) {
-            NRMASessionReplayFrame *replayFrame = [NRMASessionReplayFrame new];
-            NSMutableDictionary* frameData = [self doThingWithFrame:rawFrame];
-//            frameData[@"timestamp"] = @([[NSDate now] timeIntervalSince1970]);
-            [replayFrame addBodyNodes:frameData];
-            [replayFrame addStyleNodes:[_styles componentsJoinedByString:@" "]];
-            
-            [_processedFrames addObject:[replayFrame getFrame]];
-            [_styles removeAllObjects];
-        }
+
         NSString* frameJSON = [self consolidateFrames];
         NSLog(frameJSON);
     }
-}
-
-- (NSString *)generateOutput {
-    return [self consolidateFrames];
-}
-
-- (NSDictionary *)doThingWithFrame:(id<NRMAViewDetailProtocol>)frame {
-    [_styles addObject:frame.cssDescription];
-    
-    NSMutableDictionary *frameJSONData = frame.jsonDescription;
-    
-    for (id<NRMAViewDetailProtocol> childView in frame.childViews) {
-        [(NSMutableArray*)frameJSONData[@"childNodes"] addObject:[self doThingWithFrame:childView]];
-    }
-    
-    return frameJSONData;
 }
 
 - (NSString *)consolidateFrames {
@@ -199,34 +166,6 @@
                                                                    error:nil];
     NSString *frameJSON = [[NSString alloc] initWithData:viewFramesJSONData encoding:NSUTF8StringEncoding];
     return frameJSON;
-}
-
-- (void)recursiveRecord:(UIView *)view forViewDetails:(id<NRMAViewDetailProtocol>)viewDetails {
-    BOOL shouldRecord = [self shouldRecordView:view];
-
-    id<NRMAViewDetailProtocol> viewToRecord;
-    if([view isKindOfClass:[UILabel class]]) {
-        viewToRecord = [[NRMAUILabelDetails alloc] initWithView:view];
-    } else {
-        viewToRecord = [[NRMAUIViewDetails alloc] initWithView:view];
-    }
-    
-    
-    if(_rootView == nil) {
-        _rootView = viewToRecord;
-    } else {
-        if(shouldRecord) {
-            [viewDetails.childViews addObject:viewToRecord];
-        }
-    }
-    
-    for(UIView* subview in view.subviews) {
-        if(shouldRecord) {
-            [self recursiveRecord:subview forViewDetails:viewToRecord];
-        } else {
-            [self recursiveRecord:subview forViewDetails:viewDetails];
-        }
-    }
 }
 
 - (BOOL)shouldRecordView:(UIView *)view {

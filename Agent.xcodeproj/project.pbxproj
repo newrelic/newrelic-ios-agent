@@ -1473,6 +1473,8 @@
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
 		34EE243C2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EE243B2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m */; };
 		34EE243D2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h in Headers */ = {isa = PBXBuildFile; fileRef = 34EE243A2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h */; };
+		34EE24532CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EE24522CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.m */; };
+		34EE24542CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.h in Headers */ = {isa = PBXBuildFile; fileRef = 34EE24512CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.h */; };
 		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
 		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
@@ -2469,6 +2471,8 @@
 		34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestCustomEvents.m; sourceTree = "<group>"; };
 		34EE243A2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASessionReplayCapture.h; sourceTree = "<group>"; };
 		34EE243B2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayCapture.m; sourceTree = "<group>"; };
+		34EE24512CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASessionReplayFrameProcessor.h; sourceTree = "<group>"; };
+		34EE24522CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayFrameProcessor.m; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
@@ -3807,6 +3811,8 @@
 				34099ED22C9E1731007EC50D /* NRMASessionReplayFrame.m */,
 				34EE243A2CA4C9C800FCDD98 /* NRMASessionReplayCapture.h */,
 				34EE243B2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m */,
+				34EE24512CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.h */,
+				34EE24522CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.m */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -4040,6 +4046,7 @@
 				02FF4A1E24DC648600115469 /* NRMAMeasurementConsumer.h in Headers */,
 				02FF493624DC625A00115469 /* NRMAHandledExceptions.h in Headers */,
 				02FF47E924DB567600115469 /* NewRelicFeatureFlags.h in Headers */,
+				34EE24542CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.h in Headers */,
 				02FF48DE24DC622700115469 /* NRMACrashReportFileManager.h in Headers */,
 				02FF487024DC618F00115469 /* NRMAThreadTransition.h in Headers */,
 				02FF4ABC24DC654D00115469 /* NRMAReachability.h in Headers */,
@@ -5424,6 +5431,7 @@
 				02FF495524DC626E00115469 /* NRMAHarvestTimer.m in Sources */,
 				02FF481B24DB5B8100115469 /* NRMAGestureRecognizerInstrumentation.m in Sources */,
 				02FF4ABB24DC654D00115469 /* NRMAReachability.m in Sources */,
+				34EE24532CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.m in Sources */,
 				02FF4A0124DC647200115469 /* NRMAMeasurementEngine.m in Sources */,
 				02FF4AC724DC656900115469 /* NRMAAssociate.m in Sources */,
 				02FF4AD224DC657B00115469 /* NRMANetworkFacade.mm in Sources */,
