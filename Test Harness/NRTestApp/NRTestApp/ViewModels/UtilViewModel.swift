@@ -46,6 +46,13 @@ class UtilViewModel {
         options.append(UtilOption(title: "Set UserID to null", handler: { [self] in changeUserIDToNil()}))
 
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
+
+        options.append(UtilOption(title: "Make Dictionary Attribute", handler: { [self] in makeDictionaryAttribute()}))
+        options.append(UtilOption(title: "Make Array Attribute", handler: { [self] in makeArrayAttribute()}))
+
+        options.append(UtilOption(title: "Make Custom Event w Dict Attribute", handler: { [self] in makeCustomEventWithDictionaryAttribute()}))
+        options.append(UtilOption(title: "Make Custom Event w Array Attribute", handler: { [self] in makeCustomEventWithArrayAttribute()}))
+
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
@@ -239,6 +246,24 @@ class UtilViewModel {
             NewRelic.logInfo("I")
             NewRelic.logInfo("C")
         }
+    }
+
+    @objc func makeDictionaryAttribute() {
+
+        NewRelic.setAttribute("dictionary", value: ["blah":"blurg"])
+    }
+
+
+    @objc func makeArrayAttribute() {
+
+        NewRelic.setAttribute("array", value: ["blah","blurg"])
+    }
+
+    func makeCustomEventWithDictionaryAttribute() {
+        NewRelic.recordCustomEvent("CustomEventDictAttrib", attributes: ["CustomEventDictAttribKey":["blah":"blurg"]])
+    }
+    func makeCustomEventWithArrayAttribute() {
+        NewRelic.recordCustomEvent("CustomEventArrayAttrib", attributes: ["CustomEventArrayAttribKey":["blah","blurg"]])
     }
 
     func shutDown() {
