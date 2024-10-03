@@ -63,7 +63,7 @@
     data[@"node"] = node;
     data[@"initialOffset"] = initialOffset;
     rootNode[@"data"] = data;
-    rootNode[@"timestamp"] = @([timestamp timeIntervalSince1970]);
+    rootNode[@"timestamp"] = @([timestamp timeIntervalSince1970] * 1000);
     return rootNode;
 }
 

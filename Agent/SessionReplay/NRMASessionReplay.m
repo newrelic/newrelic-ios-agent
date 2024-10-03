@@ -121,7 +121,7 @@
 }
 
 -(NSDictionary *)generateInitialNode {
-    return @{@"type" : @(4), @"timestamp": @([[NSDate date] timeIntervalSince1970]), @"data": @{@"href": @"http://newrelic.com", @"width": @(_window.windowScene.screen.bounds.size.width /** _window.windowScene.screen.scale*/), @"height" : @(_window.windowScene.screen.bounds.size.height /** _window.windowScene.screen.scale*/)}};
+    return @{@"type" : @(4), @"timestamp": @([[NSDate date] timeIntervalSince1970] * 1000), @"data": @{@"href": @"http://newrelic.com", @"width": @(_window.windowScene.screen.bounds.size.width /** _window.windowScene.screen.scale*/), @"height" : @(_window.windowScene.screen.bounds.size.height /** _window.windowScene.screen.scale*/)}};
 }
 
 //- (NSDictionary *)generateStyleNode {
@@ -151,8 +151,9 @@
     [_processedFrames addObject:[_sessionReplayFrameProcessor process:frame]];
 
     frameCount++;
+    NSLog(@"Captured frame %d", frameCount);
     
-    if(frameCount == 2) {
+    if(frameCount == 20) {
         [_frameTimer invalidate];
 
         NSString* frameJSON = [self consolidateFrames];
