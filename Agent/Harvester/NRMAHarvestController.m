@@ -258,12 +258,8 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 
 + (BOOL) harvestNow
 {
-    // The following statement may block.
-    if ([[NRMAHarvestController harvestController] harvester].currentState == NRMA_HARVEST_CONNECTED) {
-        [[[NRMAHarvestController harvestController] harvester] execute];
+        [NRMAHarvestController start];
         return YES;
-    }
-    return NO;
 }
 
 #pragma  mark - Harvest Data Interface
