@@ -72,11 +72,7 @@
 #import "NRMAIdGenerator.h"
 
 @implementation NRMASessionReplayFrame {
-    NSMutableDictionary* rootNode;
-    NSMutableDictionary* styleNode;
-    NSMutableDictionary* bodyNode;
-    
-    NSArray<Node>* _nodes;
+    NSArray<NRMAUIViewDetails *>* _nodes;
 }
 
 - (instancetype)initWithTimestamp:(NSDate *)date andNodes:(NSArray<id> *)nodes {

@@ -2451,7 +2451,6 @@
 		348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUIViewDetails.m; sourceTree = "<group>"; };
 		348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUILabelDetails.h; sourceTree = "<group>"; };
 		348713F02B910A9B005A264C /* NRMAUILabelDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUILabelDetails.m; sourceTree = "<group>"; };
-		348713F32B910DFC005A264C /* NRMAViewDetailProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAViewDetailProtocol.h; sourceTree = "<group>"; };
 		348714222B979517005A264C /* NRMAIdGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAIdGenerator.h; sourceTree = "<group>"; };
 		348714232B979517005A264C /* NRMAIdGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAIdGenerator.m; sourceTree = "<group>"; };
 		34A929072912D502001449B6 /* Hex.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Hex.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3804,7 +3803,6 @@
 				348713EC2B8D56CB005A264C /* NRMAUIViewDetails.m */,
 				348713EF2B910A9B005A264C /* NRMAUILabelDetails.h */,
 				348713F02B910A9B005A264C /* NRMAUILabelDetails.m */,
-				348713F32B910DFC005A264C /* NRMAViewDetailProtocol.h */,
 				348714222B979517005A264C /* NRMAIdGenerator.h */,
 				348714232B979517005A264C /* NRMAIdGenerator.m */,
 				34099ED12C9E1731007EC50D /* NRMASessionReplayFrame.h */,

@@ -11,7 +11,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "NRMAViewDetailProtocol.h"
 #import "NRMAUIViewDetails.h"
 #import "NRMAUILabelDetails.h"
 #import "NRMAIdGenerator.h"
@@ -30,10 +29,10 @@
 @implementation NRMASessionReplay {
     UIWindow* _window;
 //    NSMutableArray<id<NRMAViewDetailProtocol>>* _views;
-    id<NRMAViewDetailProtocol> _rootView;
+    NRMAUIViewDetails * _rootView;
     
 //    NSMutableArray<NSDictionary *>* _frames;
-    NSMutableArray<id<NRMAViewDetailProtocol>>* _rawFrames;
+    NSMutableArray<NRMAUIViewDetails *>* _rawFrames;
     NSMutableArray<NSDictionary *>* _processedFrames;
     NSMutableArray<NSString *>* _styles;
     int frameCount;
@@ -146,14 +145,14 @@
     }
     
     _window = [[UIApplication sharedApplication] keyWindow];
-    NSArray<Node>* frameData = [_sessionReplayCapture recordFromRootView:_window];
+    NSArray<NRMAUIViewDetails *>* frameData = [_sessionReplayCapture recordFromRootView:_window];
     NRMASessionReplayFrame* frame = [[NRMASessionReplayFrame alloc] initWithTimestamp:[NSDate now] andNodes:frameData];
     [_processedFrames addObject:[_sessionReplayFrameProcessor process:frame]];
 
     frameCount++;
     NSLog(@"Captured frame %d", frameCount);
     
-    if(frameCount == 20) {
+    if(frameCount == 10) {
         [_frameTimer invalidate];
 
         NSString* frameJSON = [self consolidateFrames];
@@ -167,23 +166,6 @@
                                                                    error:nil];
     NSString *frameJSON = [[NSString alloc] initWithData:viewFramesJSONData encoding:NSUTF8StringEncoding];
     return frameJSON;
-}
-
-- (BOOL)shouldRecordView:(UIView *)view {
-    UIView* superview = view.superview;
-    
-    if(superview == nil) {
-        return YES;
-    }
-    
-    BOOL areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame);
-    BOOL isClear = (view.alpha == 0 || view.alpha == 1);
-    
-    if(areFramesTheSame && isClear) {
-        return NO;
-    }
-    
-    return YES;
 }
 
 @end

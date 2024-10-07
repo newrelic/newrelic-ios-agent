@@ -9,21 +9,21 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "NRMAViewDetailProtocol.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMAUIViewDetails : NSObject<NRMAViewDetailProtocol>
+@interface NRMAUIViewDetails : NSObject
 
 @property (nonatomic, assign) NSInteger viewId;
 @property (nonatomic, assign) CGRect frame;
 @property (nonatomic, strong) UIColor* backgroundColor;
 @property (nonatomic, assign) BOOL isHidden;
 @property (nonatomic, strong) NSString* viewName;
-@property (nonatomic, strong) NSMutableArray* childViews;
+@property (nonatomic, strong) NSMutableArray<NRMAUIViewDetails *>* childViews;
 
 - (instancetype)initWithView:(UIView *)view;
 - (NSDictionary *)jsonDescription;
+- (NSString *)cssDescription;
+- (NSString *)generateBaseCSSStyle;
 
 + (NSString *)colorToString:(UIColor *)color includingAlpha:(BOOL)includingAlpha;
 @end

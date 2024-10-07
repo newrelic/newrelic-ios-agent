@@ -20,10 +20,13 @@
     
     NSMutableString *css = [NSMutableString new];
     
-    for(Node node in frame.nodes) {
-        [css appendString:node.cssDescription];
-        [bodyNode[@"childNodes"] addObject:node.jsonDescription];
-    }
+//    for(Node node in frame.nodes) {
+//        [css appendString:node.cssDescription];
+//        [bodyNode[@"childNodes"] addObject:node.jsonDescription];
+//    }
+
+    NSMutableDictionary *newDictionary = [NSMutableDictionary new];
+    [bodyNode[@"childNodes"] addObject:[self recursivelyGetChildNodesForNode:frame.nodes.firstObject andCSSString:css]];
     
     NSDictionary *textStyleNode = @{@"type": @(3),
                                     @"isStyle": @(YES),
@@ -106,6 +109,17 @@
     body[@"id"] = @([NRMAIdGenerator generateID]);
     body[@"childNodes"] = [NSMutableArray new];
     return body;
+}
+
+- (NSDictionary *)recursivelyGetChildNodesForNode:(NRMAUIViewDetails *)node andCSSString:(NSMutableString *)cssString {
+    NSMutableDictionary *nodeDescription = node.jsonDescription;
+    [cssString appendString:node.cssDescription];
+    
+    for(NRMAUIViewDetails * childNode in node.childViews) {
+        [((NSMutableArray *)nodeDescription[@"childNodes"]) addObject:[self recursivelyGetChildNodesForNode:childNode andCSSString:cssString]];
+    }
+    
+    return nodeDescription;
 }
 
 @end

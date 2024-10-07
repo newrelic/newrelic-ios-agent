@@ -25,36 +25,7 @@
     return self;
 }
 
-- (NSString *)description {
-    //    NSString *descriptionString = [NSString stringWithFormat:@"View: %@\n\tFrame: %@\n\tBackground Color: %@", self.viewName, frameString, colorString];"
-    NSMutableString *descriptionString = [NSMutableString stringWithFormat:@"View: %@\n, id: %ld", self.viewName, (long)self.viewId];
-    NSString *frameString = [NSString stringWithFormat:@"View Frame: {%f, %f}, {%f, %f}",
-                             self.frame.origin.x, self.frame.origin.y,
-                             self.frame.size.width, self.frame.size.height];
-    //    [descriptionString stringByAppendingFormat:@"\t%@\n", frameString];
-    [descriptionString appendFormat:@"\t%@\n", frameString];
-    
-    if(self.backgroundColor != nil) {
-        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-        [descriptionString appendFormat:@"\t%@", colorString];
-    }
-    
-    return descriptionString;
-}
-
 - (NSDictionary *)jsonDescription {
-    //    NSString *propertyFormatString = @"$(%@}";
-    //
-    //    NSString *frameString = [NSString stringWithFormat:@"position:absolute;top:%fpx;left:%fpx;width:%fpx;height:%fpx;", self.frame.origin.y,
-    //                             self.frame.origin.x,
-    //                             self.frame.size.width,
-    //                             self.frame.size.height];
-    //
-    //    if(self.backgroundColor != nil) {
-    //        NSString *colorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-    //        frameString = [frameString stringByAppendingFormat:@"background-color:%@;", colorString];
-    //    }
-    
     NSMutableDictionary *jsonDictionary = [[NSMutableDictionary alloc] init];
     jsonDictionary[@"type"] = @(2);
     jsonDictionary[@"tagName"] = @"div";
@@ -63,9 +34,6 @@
     };
     
     NSMutableArray *subviews = [[NSMutableArray alloc] init];
-    //    for(id<NRMAViewDetailProtocol> subview in _childViews) {
-    //        [subviews addObject:subview.jsonDescription];
-    //    }
     
     jsonDictionary[@"childNodes"] = subviews;
     jsonDictionary[@"id"] = @(self.viewId);
@@ -73,19 +41,24 @@
     return jsonDictionary;
 }
 
-- (NSString *)cssDescription {
-    NSString *cssSelector = [self generateViewCSSSelector];
-    
-    NSString *cssStyle = [NSString stringWithFormat:@"position: absolute;left: %.2fpx;top: %.2fpx;width: %.2fpx;height: %.2fpx;",
+- (NSString *)generateBaseCSSStyle {
+    NSString *cssStyle = [NSString stringWithFormat:@"position: fixed;left: %.2fpx;top: %.2fpx;width: %.2fpx;height: %.2fpx;",
                           self.frame.origin.x,
                           self.frame.origin.y,
                           self.frame.size.width,
                           self.frame.size.height];
     
     if(self.backgroundColor) {
-        NSString *backgroundColorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:NO];
+        NSString *backgroundColorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
         cssStyle = [cssStyle stringByAppendingFormat:@"background-color: %@;", backgroundColorString];
     }
+    return cssStyle;
+}
+
+- (NSString *)cssDescription {
+    NSString *cssSelector = [self generateViewCSSSelector];
+    
+    NSString * cssStyle = [self generateBaseCSSStyle];
 
     
     return [NSString stringWithFormat:@"#%@ { %@ }",
@@ -114,10 +87,7 @@
     
     NSString *colorFormatString = @"#%02lX%02lX%02lX";
     NSString *colorString = @"";
-    
-    //    CGFloat *colorComponents = CGColorGetComponents(color);
-    //    NSString *colorFormatString = @"#%02lX%02lX%02lX";
-    //    NSString *colorString = @"";
+
     if(includingAlpha) {
         colorFormatString = [colorFormatString stringByAppendingString:@"%02lX"];
         colorString = [NSString stringWithFormat:colorFormatString,
