@@ -1051,7 +1051,6 @@ void applicationDidEnterBackgroundCF(void) {
 #endif
         [NRMATraceController completeActivityTrace];
 
-        // REWRITE
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
