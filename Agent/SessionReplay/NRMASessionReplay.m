@@ -104,31 +104,11 @@
     _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self takeFrame];
     }];
-    
-//    _screenChangeTimer = [NSTimer scheduledTimerWithTimeInterval:0.2 repeats:YES block:^(NSTimer * _Nonnull timer) {
-//        self->_window = [[UIApplication sharedApplication] keyWindow];
-//        UIViewController* contentViewController = self->_window.rootViewController;
-//        
-//        if([contentViewController isKindOfClass:[UINavigationController class]]) {
-//            contentViewController = ((UINavigationController*)contentViewController).visibleViewController;
-//        } else if ([contentViewController isKindOfClass:[UITabBarController class]]) {
-//            contentViewController = ((UITabBarController*)contentViewController).selectedViewController;
-//        }
-//        
-//        NRLOG_AUDIT(@"Current View Controller: %@", contentViewController.description);
-//    }];
 }
 
 -(NSDictionary *)generateInitialNode {
     return @{@"type" : @(4), @"timestamp": @([[NSDate date] timeIntervalSince1970] * 1000), @"data": @{@"href": @"http://newrelic.com", @"width": @(_window.windowScene.screen.bounds.size.width /** _window.windowScene.screen.scale*/), @"height" : @(_window.windowScene.screen.bounds.size.height /** _window.windowScene.screen.scale*/)}};
 }
-
-//- (NSDictionary *)generateStyleNode {
-//    NSString *styleTextString = [_styles componentsJoinedByString:@"\n"];
-//
-//    NSDictionary *styleNode = @{@"type": @(2), @"tagName": @"style", @"attributes": @{}, @"id": @([NRMAIdGenerator generateID]), @"childNodes" : @[@{@"type": @"Text", @"textContent": styleTextString}]};
-//    return styleNode;
-//}
 
 - (void)willEnterForeground {
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did enter foreground");

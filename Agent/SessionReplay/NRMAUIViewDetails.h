@@ -17,6 +17,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGRect frame;
 @property (nonatomic, strong) UIColor* backgroundColor;
 @property (nonatomic, assign) BOOL isHidden;
+@property (nonatomic, assign) CGFloat cornerRadius;
+@property (nonatomic, assign) CGFloat borderWidth;
+@property (nonatomic, strong) UIColor* borderColor;
 @property (nonatomic, strong) NSString* viewName;
 @property (nonatomic, strong) NSMutableArray<NRMAUIViewDetails *>* childViews;
 

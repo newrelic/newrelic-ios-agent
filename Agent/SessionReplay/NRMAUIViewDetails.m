@@ -18,6 +18,9 @@
 //        _frame = view.frame;
         _backgroundColor = view.backgroundColor;
         _isHidden = view.isHidden;
+        _cornerRadius = view.layer.cornerRadius;
+        _borderWidth = view.layer.borderWidth;
+        _borderColor = [UIColor colorWithCGColor:view.layer.borderColor];
         _viewName = NSStringFromClass([view class]);
         _viewId = [NRMAIdGenerator generateID];
         _childViews = [[NSMutableArray alloc] init];
@@ -42,7 +45,7 @@
 }
 
 - (NSString *)generateBaseCSSStyle {
-    NSString *cssStyle = [NSString stringWithFormat:@"position: fixed;left: %.2fpx;top: %.2fpx;width: %.2fpx;height: %.2fpx;",
+    NSMutableString *cssStyle = [NSMutableString stringWithFormat:@"position: fixed;left: %.2fpx;top: %.2fpx;width: %.2fpx;height: %.2fpx;",
                           self.frame.origin.x,
                           self.frame.origin.y,
                           self.frame.size.width,
@@ -50,8 +53,16 @@
     
     if(self.backgroundColor) {
         NSString *backgroundColorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
-        cssStyle = [cssStyle stringByAppendingFormat:@"background-color: %@;", backgroundColorString];
+        [cssStyle appendFormat:@"background-color: %@;", backgroundColorString];
     }
+
+    if(self.borderWidth > 0) {
+        //border: 4mm ridge rgba(211, 220, 50, .6);
+        [cssStyle appendFormat:@"border-radius: %.2fpx;", self.cornerRadius];
+        NSString *borderColorString = [NRMAUIViewDetails colorToString:[UIColor colorWithWhite:0.0 alpha:0.5] includingAlpha:YES];
+        [cssStyle appendFormat:@"border: %.2fpx solid %@", self.borderWidth, borderColorString];
+    }
+    
     return cssStyle;
 }
 
@@ -75,16 +86,29 @@
     CGFloat greenColor = 0.0f;
     CGFloat alpha = 0.0f;
     
-    BOOL success = NO;
-    success = [color getRed:&redColor
-                      green:&greenColor
-                       blue:&blueColor
-                      alpha:&alpha];
+    CGColorRef colorRef = color.CGColor;
     
-    if(!success) {
-        NSLog(@"ERROR: UNABLE TO GET COLOR INFO");
+    // We're dealing with a grayscale color. Either White, Black,
+    // or some grey in between
+    if(CGColorGetNumberOfComponents(colorRef) == 2) {
+        CGFloat *colorComponents = CGColorGetComponents(colorRef);
+        
+        redColor = colorComponents[0];
+        blueColor = colorComponents[0];
+        greenColor = colorComponents[0];
+        alpha = colorComponents[1];
+    } else { // regular 4 component color;
+        BOOL success = NO;
+        success = [color getRed:&redColor
+                          green:&greenColor
+                           blue:&blueColor
+                          alpha:&alpha];
+        
+        if(!success) {
+            NSLog(@"ERROR: UNABLE TO GET COLOR INFO");
+        }
     }
-    
+
     NSString *colorFormatString = @"#%02lX%02lX%02lX";
     NSString *colorString = @"";
 
