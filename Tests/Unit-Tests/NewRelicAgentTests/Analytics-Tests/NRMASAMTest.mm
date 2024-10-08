@@ -42,12 +42,14 @@
         // check if attribute name is reserved or attribute name matches reserved prefix.
         for (NSString* key in [NRMAAnalytics reservedKeywords]) {
             if ([key isEqualToString:name]) {
-                NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
+                NRLOG_AGENT_ERROR(@"invalid attribute: name disallowed");
                 return NO;
             }
-            if ([key hasPrefix:name])  {
+        }
+        for (NSString* key in [NRMAAnalytics reservedPrefixes]) {
+            if ([name hasPrefix:key])  {
                 NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
-                return NO;
+                return false;
             }
         }
         // check if attribute name exceeds max length.
@@ -89,6 +91,19 @@
                                                            options:0
                                                              error:nil];
     XCTAssertTrue([decode[@"blarg"] isEqualToString:@"blurg"]);
+}
+
+- (void) testSetSessionAttributeFail {
+    XCTAssertFalse([manager setSessionAttribute:@"platform" value:@"blurg"], @"Failed to successfully find reserved key for session attribute");
+
+    XCTAssertFalse([manager setSessionAttribute:@"nr.test" value:@"blurg"], @"Failed to successfully find reserved prefix key for session attribute");
+
+    NSString* attributes = [manager sessionAttributeJSONString];
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertNil(decode[@"platform"]);
 }
 
 - (void) testSetNRSessionAttribute {
@@ -280,8 +295,8 @@
     XCTAssertFalse([manager setSessionAttribute:@"  x" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
     XCTAssertFalse([manager setSessionAttribute:@"  " value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
 
-    XCTAssertFalse([manager setSessionAttribute:@"even" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
-    XCTAssertFalse([manager setSessionAttribute:@"event" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
+    XCTAssertFalse([manager setSessionAttribute:@"newRelictest" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
+    XCTAssertFalse([manager setSessionAttribute:@"nr.test" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
 
     // Test Max Attribute Length
     NSString *validAttributeName =  [@"" stringByPaddingToLength:kNRMA_Attrib_Max_Name_Length withString:@"x" startingAtIndex:0];
