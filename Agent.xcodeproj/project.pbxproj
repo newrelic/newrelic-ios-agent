@@ -955,6 +955,8 @@
 		340D64162AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */; };
 		340D64172AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */; };
 		340D642E2AA9301900E63CC1 /* PersistentStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */; };
+		3426DABE2CB48C5700C0DDDB /* NRMAUIImageViewDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetails.m */; };
+		3426DABF2CB48C5700C0DDDB /* NRMAUIImageViewDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = 3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetails.h */; };
 		342C4B412A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */; };
 		342C4B422A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */; };
 		342C4B582A3BD15A00116992 /* BlockAttributeValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */; };
@@ -2425,6 +2427,8 @@
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
 		340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentStoreTests.m; sourceTree = "<group>"; };
+		3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetails.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUIImageViewDetails.h; sourceTree = "<group>"; };
+		3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUIImageViewDetails.m; sourceTree = "<group>"; };
 		342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AttributeValidatorProtocol.h; sourceTree = "<group>"; };
 		342C4B562A3BD15A00116992 /* BlockAttributeValidator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BlockAttributeValidator.h; sourceTree = "<group>"; };
 		342C4B572A3BD15A00116992 /* BlockAttributeValidator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlockAttributeValidator.m; sourceTree = "<group>"; };
@@ -3811,6 +3815,8 @@
 				34EE243B2CA4C9C800FCDD98 /* NRMASessionReplayCapture.m */,
 				34EE24512CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.h */,
 				34EE24522CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.m */,
+				3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetails.h */,
+				3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetails.m */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -4121,6 +4127,7 @@
 				02FF4A6D24DC64E600115469 /* NRMAActivityTraceMeasurementProducer.h in Headers */,
 				02FF49F024DC645B00115469 /* NRMAAppUpgradeMetricGenerator.h in Headers */,
 				02FF484124DC614200115469 /* NRMATraceMachineAgentUserInterface.h in Headers */,
+				3426DABF2CB48C5700C0DDDB /* NRMAUIImageViewDetails.h in Headers */,
 				2B496B1C2C530A7800A0459E /* reflection_generated.h in Headers */,
 				2B496B1D2C530A7800A0459E /* util.h in Headers */,
 				2B496B1E2C530A7800A0459E /* flatbuffers.h in Headers */,
@@ -5350,6 +5357,7 @@
 				02FF4A0324DC647200115469 /* NRMAMeasurements.m in Sources */,
 				02FF48DD24DC622700115469 /* NRMAUncaughtExceptionHandler.m in Sources */,
 				02FF48EC24DC622700115469 /* NRMAExceptionHandlerJSONKeys.m in Sources */,
+				3426DABE2CB48C5700C0DDDB /* NRMAUIImageViewDetails.m in Sources */,
 				02FF487E24DC61A100115469 /* NRMANSURLConnectionSupport.m in Sources */,
 				02FF4A1824DC648600115469 /* NRMAHarvestableHTTPTransactionGeneration.m in Sources */,
 				2BF42C6C28B8106F006E9C27 /* NRMAStartTimer.m in Sources */,

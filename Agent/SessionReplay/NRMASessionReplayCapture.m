@@ -9,6 +9,7 @@
 #import "NRMASessionReplayCapture.h"
 #import "NRMAUIViewDetails.h"
 #import "NRMAUILabelDetails.h"
+#import "NRMAUIImageViewDetails.h"
 
 
 @implementation NRMASessionReplayCapture
@@ -25,6 +26,8 @@
     NRMAUIViewDetails * viewToRecord;
     if([view isKindOfClass:[UILabel class]]) {
         viewToRecord = [[NRMAUILabelDetails alloc] initWithView:view];
+    } else if ([view isKindOfClass:[UIImageView class]]){
+        viewToRecord = [[NRMAUIImageViewDetails alloc] initWithView:view];
     } else {
         viewToRecord = [[NRMAUIViewDetails alloc] initWithView:view];
     }
