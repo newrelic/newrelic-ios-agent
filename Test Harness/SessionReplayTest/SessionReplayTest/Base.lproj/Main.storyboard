@@ -70,10 +70,11 @@
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" usesAttributedText="YES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ap0-rl-eGr">
                                                 <rect key="frame" x="20" y="0.0" width="164.66666666666666" height="19.666666666666668"/>
+                                                <color key="tintColor" systemColor="linkColor"/>
                                                 <attributedString key="attributedText">
                                                     <fragment content="Terms and Conditions">
                                                         <attributes>
-                                                            <color key="NSColor" name="AccentColor"/>
+                                                            <color key="NSColor" red="0.016804177310000001" green="0.19835099580000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             <font key="NSFont" size="17" name="Helvetica"/>
                                                             <integer key="NSUnderline" value="1"/>
                                                         </attributes>
@@ -347,6 +348,9 @@ Will roll in whatever happens to be on the ground!</string>
         <namedColor name="AccentColor">
             <color red="0.0" green="0.46000000000000002" blue="0.89000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
+        <systemColor name="linkColor">
+            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
