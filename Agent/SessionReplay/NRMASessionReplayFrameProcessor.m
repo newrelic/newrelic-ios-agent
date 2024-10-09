@@ -20,13 +20,13 @@
     
     NSMutableString *css = [NSMutableString new];
     
-//    for(Node node in frame.nodes) {
-//        [css appendString:node.cssDescription];
-//        [bodyNode[@"childNodes"] addObject:node.jsonDescription];
-//    }
+    for(NRMAUIViewDetails* node in frame.nodes) {
+        [css appendString:node.cssDescription];
+        [bodyNode[@"childNodes"] addObject:node.jsonDescription];
+    }
 
-    NSMutableDictionary *newDictionary = [NSMutableDictionary new];
-    [bodyNode[@"childNodes"] addObject:[self recursivelyGetChildNodesForNode:frame.nodes.firstObject andCSSString:css]];
+//    NSMutableDictionary *newDictionary = [NSMutableDictionary new];
+//    [bodyNode[@"childNodes"] addObject:[self recursivelyGetChildNodesForNode:frame.nodes.firstObject andCSSString:css]];
     
     NSDictionary *textStyleNode = @{@"type": @(3),
                                     @"isStyle": @(YES),
