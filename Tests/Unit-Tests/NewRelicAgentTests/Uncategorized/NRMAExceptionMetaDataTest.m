@@ -12,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/stat.h>
+#import "NRMAInteractionHistory.h"
 
 @interface NRMAExceptionMetaDataTest : XCTestCase
 
@@ -31,6 +32,7 @@
     [super tearDown];
 }
 
+// test 
 - (void)test_NRMA_writeNRMeta
 {
 
@@ -68,7 +70,17 @@
     NRMA_setDiskFree(123456);
     NRMA_setAccountId(2);
     NRMA_setAgentId(1);
-    
+
+
+    // Add interactions.
+
+    long long interactionTime = 1000;
+    NSString* interactionName = @"TestTrace";
+    NRMA__AddInteraction(interactionName.UTF8String, interactionTime);
+    long long interactionTime2 = 2000;
+    NSString* interactionName2 = @"TestTrace2";
+    NRMA__AddInteraction(interactionName2.UTF8String, interactionTime2);
+
     NRMA_writeNRMeta(NULL, NULL, NULL);
 
 

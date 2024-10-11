@@ -281,17 +281,7 @@ void NRMA_setBuild(const char* buildNumber)
     }
     
     void NRMA_freeInteractionHistoryList(void) {
-        NRMAInteractionHistoryNode* root = NRMA__getInteractionHistoryList();
-        while (root != NULL) {
-            if (root->name != NULL) {
-                free((void *)root->name);
-                root->name = NULL;
-            }
-            
-            NRMAInteractionHistoryNode* temp = root;
-            root = root->next;
-            free((void *)temp);
-        }
+        NRMA__deallocInteractionHistoryList();
     }
     
     void NRMA_freeExceptionData(void) {
