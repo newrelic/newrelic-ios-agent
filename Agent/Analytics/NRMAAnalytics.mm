@@ -131,11 +131,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                         NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
                         return false;
                     }
+                }
+                for (NSString* key in [NRMAAnalytics reservedPrefixes]) {
                     if ([name hasPrefix:key])  {
                         NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
                         return false;
                     }
                 }
+
                 // check if attribute name exceeds max length.
                 if ([name length] > kNRMA_Attrib_Max_Name_Length) {
                     NRLOG_AGENT_ERROR(@"invalid attribute: name length exceeds limit");
@@ -1267,6 +1270,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             kNRMA_RA_platformVersion,
             kNRMA_RA_lastInteraction
         ,nil];
+}
+
++ (NSArray<NSString*>*) reservedPrefixes {
+    return [NSArray arrayWithObjects:
+            kNRMA_RP_newRelic,
+            kNRMA_RP_nr,
+            nil];
 }
 
 @end
