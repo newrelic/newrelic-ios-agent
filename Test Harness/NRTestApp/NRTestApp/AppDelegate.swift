@@ -33,7 +33,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
-
+        
+        // Note: Disabled by default. Enable or disable (default) flag to enable auto collect of stdout.
+        // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_RedirectStdOut])
         NewRelic.saltDeviceUUID(true)
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")

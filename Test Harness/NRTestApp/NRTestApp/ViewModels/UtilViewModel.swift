@@ -7,6 +7,7 @@
 
 import Foundation
 import NewRelic
+import OSLog
 
 struct UtilOption {
     let title:String
@@ -51,6 +52,7 @@ class UtilViewModel {
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
 
+        options.append(UtilOption(title: "Test System Logs", handler: { [self] in testSystemLogs()}))
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
         options.append(UtilOption(title: "Test Log Error", handler: { [self] in testLogError()}))
         options.append(UtilOption(title: "Test Log Attributes", handler: { [self] in testLogAttributes()}))
@@ -156,6 +158,12 @@ class UtilViewModel {
         ])
     }
     
+    func testSystemLogs() {
+        triggerException.testNSLog()
+        print("TEST swift!!!!!")
+        os_log("TEST OSLog!!!!!!!")
+    }
+    
     func testLogError() {
         do {
             try errorMethod()
@@ -181,6 +189,13 @@ class UtilViewModel {
 
     func setBuild() {
         NewRelic.setApplicationBuild("42")
+    }
+    
+    func testHttpRequestError() {
+        let reqUrl = URL(string: "https://5fp8uw121j.execute-api.ap-northeast-1.amazonaws.com/api/500/0")!
+        let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: taskProcessor, delegateQueue: nil)
+        let task = urlSession.dataTask(with: reqUrl)
+        task.resume()
     }
 
     func doDataTask() {

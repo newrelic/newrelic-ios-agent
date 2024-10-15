@@ -13,13 +13,15 @@
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConfiguration.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
+#import "NRAutoLogCollector.h"
 
 NRLogger *_nr_logger = nil;
 
 #define kNRMAMaxLogUploadRetry 3
 
 @interface NRLogger()
-- (void)addLogMessage:(NSDictionary *)message;
+- (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogs;
 - (void)setLogLevels:(unsigned int)levels;
 - (void)setRemoteLogLevel:(unsigned int)level;
 
@@ -120,6 +122,18 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                                message, NRLogMessageMessageKey,
                                nil]:agentLogsOn];
     }
+}
+
++ (void) logMessage:(NSString *) message withTimestamp:(NSNumber *) timestamp {
+    NRLogger *logger = [NRLogger logger];
+
+    if((timestamp <= 0) ||  (timestamp == nil)){
+        timestamp = [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)];
+    }
+    [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
+                                      timestamp, NRLogMessageTimestampKey,
+                                        message, NRLogMessageMessageKey,
+                                        nil] :TRUE];
 }
 
 + (NRLogLevels) logLevels {
@@ -253,7 +267,7 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
-        if (self->logTargets & NRLogTargetConsole) {
+        if ((self->logTargets & NRLogTargetConsole) && (![NRMAFlags shouldEnableRedirectStdOut])) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
                   [NSThread currentThread],
@@ -330,10 +344,7 @@ withAgentLogsOn:(BOOL)agentLogsOn {
         entityGuid = @"";
     }
 
-    NSDictionary *requiredAttributes = @{NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
-                                         NRLogMessageFileKey:       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
-                                         NRLogMessageLineNumberKey: [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
-                                         NRLogMessageMethodKey:     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
+    NSDictionary *requiredAttributes = @{
                                          NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
                                          NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
                                          NRLogMessageSessionIdKey: NRSessionId,                                                                                                  // 7
@@ -346,7 +357,6 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];
-    [providedAttributes removeObjectsForKeys:@[NRLogMessageLevelKey,NRLogMessageFileKey,NRLogMessageLineNumberKey,NRLogMessageMethodKey,NRLogMessageTimestampKey,NRLogMessageMessageKey]];
     [providedAttributes addEntriesFromDictionary:requiredAttributes];
     NSError* error = nil;
 
@@ -511,6 +521,7 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 
 //  Enqueue an upload task for this specific logData , represented by the "formattedData" below.
 - (void)enqueueLogUpload {
+    [NRAutoLogCollector readAndParseLogFile];
     @synchronized(self) {
         if (self->logFile) {
             

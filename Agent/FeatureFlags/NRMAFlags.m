@@ -177,6 +177,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_BackgroundReporting) != 0;
 }
 
++ (BOOL) shouldEnableRedirectStdOut {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_RedirectStdOut) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -238,6 +242,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
     }
     if ((flags & NRFeatureFlag_BackgroundReporting) == NRFeatureFlag_BackgroundReporting) {
         [retArray addObject:@"BackgroundReporting"];
+    }
+    if ((flags & NRFeatureFlag_RedirectStdOut) == NRFeatureFlag_RedirectStdOut) {
+        [retArray addObject:@"RedirectStdOut"];
     }
     
     return retArray;
