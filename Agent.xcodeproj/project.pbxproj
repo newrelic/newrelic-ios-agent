@@ -1503,6 +1503,9 @@
 		F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F89167372BC9D1270085BCFC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F89167442BCD8EA30085BCFC /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
+		F891A6BE2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */ = {isa = PBXBuildFile; fileRef = F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */; };
+		F891A6BF2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */ = {isa = PBXBuildFile; fileRef = F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */; };
+		F891A6C02CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */ = {isa = PBXBuildFile; fileRef = F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */; };
 		F8A455482AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A455472AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m */; };
 		F8A455492AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A455472AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
@@ -2469,6 +2472,8 @@
 		F8728E562ACC9F840056F641 /* NRMANetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkMonitor.h; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F89167382BC9D1540085BCFC /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/WatchOS.platform/Developer/SDKs/WatchOS10.2.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRAutoLogCollector.m; sourceTree = "<group>"; };
+		F891A6D42CB6F5D8007675F4 /* NRAutoLogCollector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRAutoLogCollector.h; sourceTree = "<group>"; };
 		F8A455472AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTestsOldEventSystem.m; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
@@ -3641,6 +3646,8 @@
 				02FF4A8924DC652D00115469 /* NewRelicInternalUtils.h */,
 				02FF4A9024DC652D00115469 /* NewRelicInternalUtils.m */,
 				02FF4A7E24DC652B00115469 /* NRLogger.m */,
+				F891A6D42CB6F5D8007675F4 /* NRAutoLogCollector.h */,
+				F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */,
 				02FF4A8224DC652C00115469 /* NRMAAppToken.h */,
 				02FF4A8E24DC652D00115469 /* NRMAAppToken.m */,
 				02FF4A8724DC652C00115469 /* NRMABase64.h */,
@@ -5388,6 +5395,7 @@
 				02FF48F424DC623400115469 /* NRMAExceptionMetaDataStore.m in Sources */,
 				02FF4A2124DC648600115469 /* NRMASummaryMeasurementConsumer.m in Sources */,
 				02FF482924DB5BA500115469 /* NRMAFlags.m in Sources */,
+				F891A6BE2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */,
 				02FF48D924DC622700115469 /* NRMACrashDataWriter.m in Sources */,
 				02FF487224DC618F00115469 /* NRGCDOverride.m in Sources */,
 				02FF494D24DC626E00115469 /* NRMAHarvesterConnection.m in Sources */,
@@ -5558,6 +5566,7 @@
 				02FF4BF424E3201400115469 /* NRMAScopedHTTPTransactionMeasurement.m in Sources */,
 				02FF4BF524E3201400115469 /* NRMAMethodSwizzling.m in Sources */,
 				02FF4BF624E3201400115469 /* NRMACrashReporterRecorder.m in Sources */,
+				F891A6BF2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */,
 				02FF4BF724E3201400115469 /* NRMACrashReport_CodeType.m in Sources */,
 				02FF4BF824E3201400115469 /* NRMAHarvestableHTTPTransaction.m in Sources */,
 				02FF4BF924E3201400115469 /* NRMAHarvestableActivity.m in Sources */,
@@ -5917,6 +5926,7 @@
 				3482325C2BC5F16E0070FAC3 /* NRMACPUVitals.m in Sources */,
 				348232502BC5F14D0070FAC3 /* NRMADEBUG_Reachability.m in Sources */,
 				348233532BC5F2780070FAC3 /* NRMAThread.m in Sources */,
+				F891A6C02CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */,
 				3482325D2BC5F16E0070FAC3 /* NRMABool.m in Sources */,
 				348233212BC5F2270070FAC3 /* NRMACrashReport_CodeType.m in Sources */,
 				3482328B2BC5F1B30070FAC3 /* NRMAMetric.m in Sources */,

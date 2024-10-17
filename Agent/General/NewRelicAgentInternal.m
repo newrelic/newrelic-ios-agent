@@ -53,6 +53,7 @@
 #import "NRMAStartTimer.h"
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRAutoLogCollector.h"
 
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
@@ -159,6 +160,10 @@ static NewRelicAgentInternal* _sharedInstance;
 
     self = [super init];
     if (self) {
+        
+        if ([NRMAFlags shouldEnableRedirectStdOut]) {
+            [NRAutoLogCollector redirectStandardOutputAndError];
+        }
 
         // NOTE: BackgroundReporting is only enabled for iOS 13+.
 #if !TARGET_OS_WATCH
