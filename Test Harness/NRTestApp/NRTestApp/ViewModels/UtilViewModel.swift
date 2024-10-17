@@ -159,9 +159,15 @@ class UtilViewModel {
     }
     
     func testSystemLogs() {
-        triggerException.testNSLog()
-        print("TEST swift!!!!!")
-        os_log("TEST OSLog!!!!!!!")
+        for i in 0...100 {
+            triggerException.testNSLog()
+            print("TEST swift!!!!! \(i)")
+            if #available(iOS 14.0, *) {
+                os_log("TEST OSLog!!!!!!! \(i)")
+                let logger = Logger()
+                logger.warning("TEST Logger!!!!! \(i)")
+            }
+        }
     }
     
     func testLogError() {
@@ -189,13 +195,6 @@ class UtilViewModel {
 
     func setBuild() {
         NewRelic.setApplicationBuild("42")
-    }
-    
-    func testHttpRequestError() {
-        let reqUrl = URL(string: "https://5fp8uw121j.execute-api.ap-northeast-1.amazonaws.com/api/500/0")!
-        let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: taskProcessor, delegateQueue: nil)
-        let task = urlSession.dataTask(with: reqUrl)
-        task.resume()
     }
 
     func doDataTask() {
