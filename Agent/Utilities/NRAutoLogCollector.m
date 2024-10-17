@@ -79,7 +79,7 @@ int saved_stderr;
     // Process each log entry
     for (NSString *logEntry in newLogEntries) {
         if ([logEntry length] > 0) {
-            [NRLogger logMessage:logEntry withTimestamp:[NRAutoLogCollector extractTimestamp:logEntry]];
+            [NRLogger log:[NRAutoLogCollector extractType:logEntry] withMessage:logEntry withTimestamp:[NRAutoLogCollector extractTimestamp:logEntry]];
         }
     }
 }
@@ -107,11 +107,39 @@ int saved_stderr;
         if ([NRAutoLogCollector isValidTimestamp:(timestampString)]) {
             NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
             formatter.numberStyle = NSNumberFormatterDecimalStyle;
-            return [formatter numberFromString:timestampString];
+            NSNumber* originalTimestamp = [formatter numberFromString:timestampString];
+            double timestampInSeconds = [originalTimestamp doubleValue];
+            long long timestampInMilliseconds = (long long)(timestampInSeconds * 1000);
+            return  [NSNumber numberWithLongLong:timestampInMilliseconds];
         }
     }
     
     return nil;
 }
+
++ (unsigned int) extractType:(NSString *) inputString {
+        // Define the regular expression pattern to match the type: value
+        NSString *pattern = @"type:\"([^\"]+)\"";
+        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:nil];
+        
+        // Find matches in the input string
+        NSTextCheckingResult *match = [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, [inputString length])];
+        
+        if (match) {
+            // Extract the matched type value
+            NSRange typeRange = [match rangeAtIndex:1];
+            NSString *typeString = [inputString substringWithRange:typeRange];
+            if([typeString compare:@"Info"] == NSOrderedSame || [typeString compare:@"Default"] == NSOrderedSame){
+                return NRLogLevelInfo;
+            } else if([typeString compare:@"Debug"] == NSOrderedSame){
+                return NRLogLevelDebug;
+            } else if([typeString compare:@"Error"] == NSOrderedSame || [typeString compare:@"Fault"] == NSOrderedSame){
+                return NRLogLevelError;
+            }
+        }
+        
+    return NRLogLevelNone;
+}
+    
 
 @end
