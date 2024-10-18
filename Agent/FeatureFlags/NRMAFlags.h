@@ -55,6 +55,8 @@
 
 + (BOOL) shouldEnableBackgroundReporting;
 
++ (BOOL) shouldEnableRedirectStdOut;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

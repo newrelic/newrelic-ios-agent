@@ -20,4 +20,8 @@
     }
 }
 
++ (void) testNSLog {
+    NSLog(@"TEST Objective C!!!!!");
+}
+
 @end

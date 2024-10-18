@@ -138,6 +138,10 @@ withAttributes:(NSDictionary *)attributes;
 withMessage:(NSString *)message
 withAgentLogsOn:(BOOL)agentLogsOn;
 
++ (void) log:(unsigned int)level
+     withMessage:(NSString *)message
+withTimestamp:(NSNumber *)timestamp;
+
 /*!
  Configure the amount of information the New Relic agent outputs about its internal operation.
  
