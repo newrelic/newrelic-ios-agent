@@ -49,7 +49,6 @@ int saved_stderr;
     dup2(saved_stderr, fileno(stderr));
     close(saved_stdout);
     close(saved_stderr);
-
 }
 
 + (void) readAndParseLogFile {
@@ -65,16 +64,16 @@ int saved_stderr;
     NSString *fileContents = [NSString stringWithContentsOfFile:[NRAutoLogCollector logFileURL].path
                                                        encoding:NSUTF8StringEncoding
                                                           error:&error];
+    [NRAutoLogCollector clearLogFile];
+
     if (error) {
         return;
     } else if (fileContents.length == 0){
         return;
     }
     
-    [NRAutoLogCollector clearLogFile];
-
     // Split the file contents into individual log entries
-    NSArray<NSString *> *newLogEntries = [fileContents componentsSeparatedByString:@"\n"];
+    NSArray<NSString *> *newLogEntries = [fileContents componentsSeparatedByString:@"\n\n"];
         
     // Process each log entry
     for (NSString *logEntry in newLogEntries) {
@@ -129,11 +128,13 @@ int saved_stderr;
             // Extract the matched type value
             NSRange typeRange = [match rangeAtIndex:1];
             NSString *typeString = [inputString substringWithRange:typeRange];
-            if([typeString compare:@"Info"] == NSOrderedSame || [typeString compare:@"Default"] == NSOrderedSame){
+            if([typeString caseInsensitiveCompare:@"Info"] == NSOrderedSame || [typeString caseInsensitiveCompare:@"Default"] == NSOrderedSame){
                 return NRLogLevelInfo;
-            } else if([typeString compare:@"Debug"] == NSOrderedSame){
+            } else if([typeString caseInsensitiveCompare:@"Debug"] == NSOrderedSame){
                 return NRLogLevelDebug;
-            } else if([typeString compare:@"Error"] == NSOrderedSame || [typeString compare:@"Fault"] == NSOrderedSame){
+            } else if([typeString caseInsensitiveCompare:@"Warning"] == NSOrderedSame){
+                return NRLogLevelWarning;
+            } else if([typeString caseInsensitiveCompare:@"Error"] == NSOrderedSame || [typeString caseInsensitiveCompare:@"Fault"] == NSOrderedSame){
                 return NRLogLevelError;
             }
         }

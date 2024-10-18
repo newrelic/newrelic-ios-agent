@@ -35,7 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
         
         // Note: Disabled by default. Enable or disable (default) flag to enable auto collect of stdout.
-        // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_RedirectStdOut])
+        //NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_RedirectStdOutStdErr])
         NewRelic.saltDeviceUUID(true)
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")
