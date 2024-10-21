@@ -11,6 +11,7 @@
 
 int saved_stdout;
 int saved_stderr;
+FILE* fileDescriptor;
 
 @interface NRAutoLogCollector()
 
@@ -38,7 +39,9 @@ int saved_stderr;
 
     // Redirect stdout to the file
     freopen([[NRAutoLogCollector logFileURL].path cStringUsingEncoding:NSUTF8StringEncoding], "a+", stdout);
-    freopen([[NRAutoLogCollector logFileURL].path cStringUsingEncoding:NSUTF8StringEncoding], "a+", stderr);
+    fileDescriptor = freopen([[NRAutoLogCollector logFileURL].path cStringUsingEncoding:NSUTF8StringEncoding], "a+", stderr);
+    
+    [NRAutoLogCollector monitorFile:[NRAutoLogCollector logFileURL].path];
 }
 
 + (void) restoreStandardOutputAndError {
@@ -91,10 +94,9 @@ int saved_stderr;
 
 + (NSNumber *) extractTimestamp:(NSString *) inputString {
     // Define the regular expression pattern to match the t: value
-    NSString *pattern = @"t:(\\d+\\.\\d+)";
+    NSString *pattern = @"t:(\\d+(\\.\\d+)?)";
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:pattern options:0 error:nil];
     
-    // Find matches in the input string
     NSTextCheckingResult *match = [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, [inputString length])];
     
     if (match) {
@@ -107,9 +109,14 @@ int saved_stderr;
             NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
             formatter.numberStyle = NSNumberFormatterDecimalStyle;
             NSNumber* originalTimestamp = [formatter numberFromString:timestampString];
-            double timestampInSeconds = [originalTimestamp doubleValue];
-            long long timestampInMilliseconds = (long long)(timestampInSeconds * 1000);
-            return  [NSNumber numberWithLongLong:timestampInMilliseconds];
+            // If the timestamp has a decimal it is in second format, convert it to milliseconds.
+            if([timestampString containsString:@"."]){
+                double timestampInSeconds = [originalTimestamp doubleValue];
+                long long timestampInMilliseconds = (long long)(timestampInSeconds * 1000);
+                return [NSNumber numberWithLongLong:timestampInMilliseconds];
+            } else {
+                return originalTimestamp;
+            }
         }
     }
     
@@ -142,5 +149,28 @@ int saved_stderr;
     return NRLogLevelNone;
 }
     
++ (void) monitorFile:(NSString *) filePath {
+    // Create a dispatch queue for handling log file events
+    dispatch_queue_t queue = dispatch_queue_create("newrelic.log.monitor.queue", NULL);
+
+    // Create a dispatch source to monitor the file descriptor for writes
+    dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, fileno(fileDescriptor), DISPATCH_VNODE_WRITE, queue);
+
+    // Set the event handler block
+    dispatch_source_set_event_handler(source, ^{
+        unsigned long flags = dispatch_source_get_data(source);
+        if (flags & DISPATCH_VNODE_WRITE) {
+            [NRAutoLogCollector readAndParseLogFile];
+        }
+    });
+
+    // Set the cancel handler block
+    dispatch_source_set_cancel_handler(source, ^{
+        close(fileno(fileDescriptor));
+    });
+
+    // Start monitoring
+    dispatch_resume(source);
+}
 
 @end

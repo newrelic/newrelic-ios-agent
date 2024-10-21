@@ -531,7 +531,6 @@ withTimestamp:(NSNumber *) timestamp {
 
 //  Enqueue an upload task for this specific logData , represented by the "formattedData" below.
 - (void)enqueueLogUpload {
-    [NRAutoLogCollector readAndParseLogFile];
     @synchronized(self) {
         if (self->logFile) {
             
