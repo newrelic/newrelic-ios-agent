@@ -15,6 +15,5 @@
 
 + (void) redirectStandardOutputAndError;
 + (void) restoreStandardOutputAndError;
-+ (void) readAndParseLogFile;
 
 @end

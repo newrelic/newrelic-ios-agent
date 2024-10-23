@@ -22,6 +22,8 @@
 #import "NRMAAppToken.h"
 #import "NRMAHarvestController.h"
 #import "NRTestConstants.h"
+#import "NRAutoLogCollector.h"
+#import <os/log.h>
 
 @implementation NRLoggerTests
 - (void) setUp
@@ -251,6 +253,91 @@
     }
 
     XCTAssertEqual(foundCount, 3, @"Three remote messages should be found.");
+}
+
+- (void) testAutoCollectedLogs {
+    [NRMAFlags enableFeatures: NRFeatureFlag_RedirectStdOutStdErr];
+    // Set the remote log level to Info.
+    [NRLogger setRemoteLogLevel:NRLogLevelDebug];
+    [NRAutoLogCollector redirectStandardOutputAndError];
+
+    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation1 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
+
+    // Three messages should reach the remote log file for upload.
+    NSLog(@"NSLog Test");
+    os_log_t customLog = os_log_create("com.agent.tests", "logTest");
+    // Log messages at different levels
+    os_log(customLog, "This is a default os_log message.");
+    os_log_info(customLog, "This is an info os_log message.");
+    os_log_debug(customLog, "This is a debug os_log message.");
+    os_log_error(customLog, "This is an error os_log message.");
+    os_log_fault(customLog, "This is a fault os_log message.");
+    
+    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation2 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
+
+    NSError* error;
+    NSData* logData = [NRLogger logFileData:&error];
+    if(error){
+        NSLog(@"%@", error.localizedDescription);
+    }
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+    NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+                                                      options:0
+                                                        error:nil];
+    NSLog(@"decode=%@", decode);
+
+    NSArray * expectedValues = @[
+        @{@"message": @"NSLog Test"},
+        @{@"message": @"This is a default os_log message."},
+        @{@"message": @"This is an info os_log message."},
+        @{@"message": @"This is a debug os_log message."},
+        @{@"message": @"This is an error os_log message."},
+        @{@"message": @"This is a fault os_log message."},
+    ];
+    // check for existence of 6 logs.
+    int foundCount = 0;
+    // For each expected message.
+    for (NSDictionary *dict in expectedValues) {
+        // Iterate through the collected message logs.
+        for (NSDictionary *dict2 in decode) {
+            //
+            NSString* currentMessage = [dict objectForKey:@"message"];
+            if ([[dict2 objectForKey:@"message"] containsString: currentMessage]) {
+                foundCount += 1;
+                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
+            }
+            // Verify added attributes with logAttributes.
+            if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
+                XCTAssertTrue([[dict2 objectForKey:@"additionalAttribute1"] isEqualToString:@"attribute1"],@"additionalAttribute1 set incorrectly");
+                XCTAssertTrue([[dict2 objectForKey:@"additionalAttribute2"] isEqualToString:@"attribute2"],@"additionalAttribute2 set incorrectly");
+            }
+        }
+    }
+
+    XCTAssertEqual(foundCount, 6, @"Three remote messages should be found.");
+    [NRAutoLogCollector restoreStandardOutputAndError];
+    [NRMAFlags disableFeatures: NRFeatureFlag_RedirectStdOutStdErr];
 }
 
 @end

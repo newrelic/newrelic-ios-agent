@@ -11,7 +11,8 @@
 
 int saved_stdout;
 int saved_stderr;
-FILE* fileDescriptor;
+int stdoutPipe[2];
+int stderrPipe[2];
 
 @interface NRAutoLogCollector()
 
@@ -19,71 +20,73 @@ FILE* fileDescriptor;
 
 @implementation NRAutoLogCollector
 
-+ (NSURL *) logFileURL {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray<NSURL *> *urls = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
-    NSURL *logsDirectory = [urls firstObject];
-    return [logsDirectory URLByAppendingPathComponent:@"agent.log"];
-}
-
-+ (void) clearLogFile {
-    [[NSFileManager defaultManager] removeItemAtURL:[NRAutoLogCollector logFileURL] error:nil];
-    
-    [NRAutoLogCollector redirectStandardOutputAndError];
-}
-
 + (void) redirectStandardOutputAndError {
-    // Save the original stdout file descriptor
+    // Create pipes for stdout and stderr
+    if (pipe(stdoutPipe) == -1 || pipe(stderrPipe) == -1) {
+        return;
+    }
+
+    // Save the original stdout and stderr file descriptors
     saved_stdout = dup(fileno(stdout));
     saved_stderr = dup(fileno(stderr));
+    if (saved_stdout == -1 || saved_stderr == -1) {
+        close(stdoutPipe[0]);
+        close(stdoutPipe[1]);
+        close(stderrPipe[0]);
+        close(stderrPipe[1]);
+        return;
+    }
 
-    // Redirect stdout to the file
-    freopen([[NRAutoLogCollector logFileURL].path cStringUsingEncoding:NSUTF8StringEncoding], "a+", stdout);
-    fileDescriptor = freopen([[NRAutoLogCollector logFileURL].path cStringUsingEncoding:NSUTF8StringEncoding], "a+", stderr);
-    
-    [NRAutoLogCollector monitorFile:[NRAutoLogCollector logFileURL].path];
+    // Redirect stdout and stderr to the write ends of the pipes
+    if (dup2(stdoutPipe[1], fileno(stdout)) == -1 || dup2(stderrPipe[1], fileno(stderr)) == -1) {
+        close(stdoutPipe[0]);
+        close(stdoutPipe[1]);
+        close(stderrPipe[0]);
+        close(stderrPipe[1]);
+        close(saved_stdout);
+        close(saved_stderr);
+        return;
+    }
+    close(stdoutPipe[1]); // Close the original write end of the stdout pipe
+    close(stderrPipe[1]); // Close the original write end of the stderr pipe
+
+    // Read from the pipes in background threads
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        [NRAutoLogCollector readAndLog:stdoutPipe[0]];
+    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        [NRAutoLogCollector readAndLog:stderrPipe[0]];
+    });
+
+    // Restore the original stdout and stderr when done
+    atexit_b(^{
+        [NRAutoLogCollector restoreStandardOutputAndError];
+    });
+}
+
++ (void) readAndLog:(int) fd {
+    char buffer[2048];
+    ssize_t count;
+    while ((count = read(fd, buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[count] = '\0'; // Null-terminate the string
+        NSString *output = [NSString stringWithUTF8String:buffer];
+        NSArray<NSString *> *newLogEntries = [output componentsSeparatedByString:@"\n\n"];
+            
+        // Process each log entry
+        for (NSString *logEntry in newLogEntries) {
+            if ([logEntry length] > 0) {
+                [NRLogger log:[NRAutoLogCollector extractType:logEntry] withMessage:logEntry withTimestamp:[NRAutoLogCollector extractTimestamp:logEntry]];
+            }
+        }
+    }
+    close(fd);
 }
 
 + (void) restoreStandardOutputAndError {
-    [NRAutoLogCollector readAndParseLogFile];
-    
-    // Restore the original stdout
     dup2(saved_stdout, fileno(stdout));
     dup2(saved_stderr, fileno(stderr));
     close(saved_stdout);
     close(saved_stderr);
-}
-
-+ (void) readAndParseLogFile {
-    fflush(stdout);
-    fflush(stderr);
-    // Check if the file exists
-    if (![[NSFileManager defaultManager] fileExistsAtPath:[NRAutoLogCollector logFileURL].path]) {
-        return;
-    }
-
-    // Read the file content into an NSString
-    NSError *error = nil;
-    NSString *fileContents = [NSString stringWithContentsOfFile:[NRAutoLogCollector logFileURL].path
-                                                       encoding:NSUTF8StringEncoding
-                                                          error:&error];
-    [NRAutoLogCollector clearLogFile];
-
-    if (error) {
-        return;
-    } else if (fileContents.length == 0){
-        return;
-    }
-    
-    // Split the file contents into individual log entries
-    NSArray<NSString *> *newLogEntries = [fileContents componentsSeparatedByString:@"\n\n"];
-        
-    // Process each log entry
-    for (NSString *logEntry in newLogEntries) {
-        if ([logEntry length] > 0) {
-            [NRLogger log:[NRAutoLogCollector extractType:logEntry] withMessage:logEntry withTimestamp:[NRAutoLogCollector extractTimestamp:logEntry]];
-        }
-    }
 }
 
 + (BOOL) isValidTimestamp:(NSString *) timestampString {
@@ -147,30 +150,6 @@ FILE* fileDescriptor;
         }
         
     return NRLogLevelNone;
-}
-    
-+ (void) monitorFile:(NSString *) filePath {
-    // Create a dispatch queue for handling log file events
-    dispatch_queue_t queue = dispatch_queue_create("newrelic.log.monitor.queue", NULL);
-
-    // Create a dispatch source to monitor the file descriptor for writes
-    dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, fileno(fileDescriptor), DISPATCH_VNODE_WRITE, queue);
-
-    // Set the event handler block
-    dispatch_source_set_event_handler(source, ^{
-        unsigned long flags = dispatch_source_get_data(source);
-        if (flags & DISPATCH_VNODE_WRITE) {
-            [NRAutoLogCollector readAndParseLogFile];
-        }
-    });
-
-    // Set the cancel handler block
-    dispatch_source_set_cancel_handler(source, ^{
-        close(fileno(fileDescriptor));
-    });
-
-    // Start monitoring
-    dispatch_resume(source);
 }
 
 @end
