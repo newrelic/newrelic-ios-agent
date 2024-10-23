@@ -294,6 +294,7 @@
             XCTFail(@"Timeout error");
         }
     }];
+    [NRAutoLogCollector restoreStandardOutputAndError];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -336,7 +337,6 @@
     }
 
     XCTAssertEqual(foundCount, 6, @"Three remote messages should be found.");
-    [NRAutoLogCollector restoreStandardOutputAndError];
     [NRMAFlags disableFeatures: NRFeatureFlag_RedirectStdOutStdErr];
 }
 
