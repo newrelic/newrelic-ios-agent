@@ -340,9 +340,9 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                                          NRLogMessageAppIdKey: nrAppId,                                                                                                          // 8
                                          NRLogMessageEntityGuidKey: entityGuid,                                                                                                  // 9
                                          NRLogMessageInstrumentationProviderKey: NRLogMessageMobileValue,                                                                        // 10
-                                         NRLogMessageInstrumentationNameKey: nativePlatform,                                                                                               // 11
+                                         NRLogMessageInstrumentationNameKey: name,                                                                                               // 11
                                          NRLogMessageInstrumentationVersionKey: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion,                   // 12
-                                         NRLogMessageInstrumentationCollectorKey: name};                                                                                         // 13
+                                         NRLogMessageInstrumentationCollectorKey: nativePlatform};                                                                                         // 13
 
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];
