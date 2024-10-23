@@ -274,7 +274,7 @@
     }];
 
     // Three messages should reach the remote log file for upload.
-    NSLog(@"NSLog Test");
+    NSLog(@"NSLog Test \n");
     os_log_t customLog = os_log_create("com.agent.tests", "logTest");
     // Log messages at different levels
     os_log(customLog, "This is a default os_log message.");
