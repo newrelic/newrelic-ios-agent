@@ -274,14 +274,14 @@
     }];
 
     // Three messages should reach the remote log file for upload.
-    NSLog(@"NSLog Test \n");
+    NSLog(@"NSLog Test \n\n");
     os_log_t customLog = os_log_create("com.agent.tests", "logTest");
     // Log messages at different levels
-    os_log(customLog, "This is a default os_log message.");
-    os_log_info(customLog, "This is an info os_log message.");
-    os_log_debug(customLog, "This is a debug os_log message.");
-    os_log_error(customLog, "This is an error os_log message.");
-    os_log_fault(customLog, "This is a fault os_log message.");
+    os_log(customLog, "This is a default os_log message.\n");
+    os_log_info(customLog, "This is an info os_log message.\n");
+    os_log_debug(customLog, "This is a debug os_log message.\n");
+    os_log_error(customLog, "This is an error os_log message.\n");
+    os_log_fault(customLog, "This is a fault os_log message.\n");
     
     XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
 
