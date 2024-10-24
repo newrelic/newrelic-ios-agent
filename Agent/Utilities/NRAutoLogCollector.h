@@ -13,7 +13,7 @@
 
 }
 
-+ (void) redirectStandardOutputAndError;
++ (BOOL) redirectStandardOutputAndError;
 + (void) restoreStandardOutputAndError;
 
 @end

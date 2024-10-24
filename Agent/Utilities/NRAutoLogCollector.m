@@ -20,10 +20,10 @@ int stderrPipe[2];
 
 @implementation NRAutoLogCollector
 
-+ (void) redirectStandardOutputAndError {
++ (BOOL) redirectStandardOutputAndError {
     // Create pipes for stdout and stderr
     if (pipe(stdoutPipe) == -1 || pipe(stderrPipe) == -1) {
-        return;
+        return false;
     }
 
     // Save the original stdout and stderr file descriptors
@@ -34,7 +34,7 @@ int stderrPipe[2];
         close(stdoutPipe[1]);
         close(stderrPipe[0]);
         close(stderrPipe[1]);
-        return;
+        return false;
     }
 
     // Redirect stdout and stderr to the write ends of the pipes
@@ -45,7 +45,7 @@ int stderrPipe[2];
         close(stderrPipe[1]);
         close(saved_stdout);
         close(saved_stderr);
-        return;
+        return false;
     }
     close(stdoutPipe[1]); // Close the original write end of the stdout pipe
     close(stderrPipe[1]); // Close the original write end of the stderr pipe
@@ -62,6 +62,8 @@ int stderrPipe[2];
     atexit_b(^{
         [NRAutoLogCollector restoreStandardOutputAndError];
     });
+    
+    return true;
 }
 
 + (void) readAndLog:(int) fd {
