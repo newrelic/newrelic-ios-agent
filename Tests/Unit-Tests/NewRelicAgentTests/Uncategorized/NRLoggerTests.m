@@ -262,7 +262,7 @@
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
 
-    sleep(1);
+    sleep(5);
 
     // Three messages should reach the remote log file for upload.
     NSLog(@"NSLog Test \n\n");
@@ -273,7 +273,7 @@
     os_log_error(customLog, "This is an error os_log message.\n");
     os_log_fault(customLog, "This is a fault os_log message.\n");
     
-    sleep(1);
+    sleep(5);
     [NRAutoLogCollector restoreStandardOutputAndError];
 
     NSError* error;
