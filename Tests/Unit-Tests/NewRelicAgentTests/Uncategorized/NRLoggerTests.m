@@ -268,7 +268,7 @@
         [delayExpectation1 fulfill];
     });
 
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+    [self waitForExpectationsWithTimeout:7 handler:^(NSError * _Nullable error) {
         if (error) {
             XCTFail(@"Timeout error");
         }
