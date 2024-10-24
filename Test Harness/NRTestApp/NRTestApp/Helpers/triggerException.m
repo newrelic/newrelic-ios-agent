@@ -19,5 +19,8 @@
         [NewRelic recordHandledException:e];
     }
 }
++ (void)invalidPerformSelector {
+    [self performSelector:@selector(die_die)];
+}
 
 @end

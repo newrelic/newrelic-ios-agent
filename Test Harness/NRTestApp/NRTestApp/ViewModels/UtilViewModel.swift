@@ -8,7 +8,11 @@
 import Foundation
 import NewRelic
 
-struct UtilOption {
+struct UtilOption: Equatable {
+    static func == (lhs: UtilOption, rhs: UtilOption) -> Bool {
+        lhs.title == rhs.title
+    }
+
     let title:String
     let handler:(() -> Void)
 }
@@ -38,6 +42,13 @@ class UtilViewModel {
         options.append(UtilOption(title: "Set Attributes", handler: { [self] in setAttributes()}))
         options.append(UtilOption(title: "Remove Attributes", handler: { [self] in removeAttributes()}))
         options.append(UtilOption(title: "Crash Now!", handler: { [self] in crash()}))
+
+        // crash types
+        options.append(UtilOption(title: "Unhandled Exception Now!", handler: { [self] in generateUncaughtException()}))
+        options.append(UtilOption(title: "Stack Overflow Now!", handler: { [self] in generateStackOverflow()}))
+        options.append(UtilOption(title: "Fatal App Hang Now!", handler: { [self] in generateFatalAppHang()}))
+        options.append(UtilOption(title: "Raise NSException Now!", handler: { [self] in throwNSException()}))
+
         options.append(UtilOption(title: "Record Error", handler: { [self] in makeError()}))
         options.append(UtilOption(title: "Record Handled Exception", handler: { triggerException.testing()}))
 
@@ -62,11 +73,41 @@ class UtilViewModel {
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
 
+    // Crash Types
     func crash() {
         // This will cause a crash to test the crash uploader, crash files may not get recorded if the debugger is running.
         NewRelic.crashNow("New Relic intentionally crashed to test Utils")
     }
-    
+
+    func generateUncaughtException() {
+        let someJson : Dictionary = ["foo":self]
+        do {
+            let data = try JSONSerialization.data(withJSONObject: someJson, options: .prettyPrinted)
+            print("Received data: %@", data)
+        } catch {
+
+        }
+    }
+
+    func generateStackOverflow() {
+        let items = ["Hello world"]
+        // Use if statement to remove warning about calling self through any path
+        if (items[0] == "Hello world") {
+            generateStackOverflow()
+        }
+        print("items: %@", items)
+    }
+
+    func generateFatalAppHang() {
+        Thread.sleep(forTimeInterval: 3)
+        _exit(1)
+    }
+
+    func throwNSException() {
+        NSException(name: .internalInconsistencyException, reason: "example internalInconsistencyException", userInfo: nil).raise()
+    }
+    // End test crashes.
+
     func removeAttributes() {
         if(NewRelic.removeAllAttributes()){
             attributes = ""

@@ -10,4 +10,5 @@
 @interface triggerException : NSObject
 
 + (void) testing;
++ (void)invalidPerformSelector;
 @end
