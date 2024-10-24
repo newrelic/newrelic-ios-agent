@@ -361,7 +361,7 @@ withTimestamp:(NSNumber *) timestamp {
                                          NRLogMessageAppIdKey: nrAppId,                                                                                                          // 8
                                          NRLogMessageEntityGuidKey: entityGuid,                                                                                                  // 9
                                          NRLogMessageInstrumentationProviderKey: NRLogMessageMobileValue,                                                                        // 10
-                                         NRLogMessageInstrumentationNameKey: name,                                                                                               // 11
+                                         NRLogMessageInstrumentationNameKey: nativePlatform,                                                                                               // 11
                                          NRLogMessageInstrumentationVersionKey: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion,                   // 12
                                          NRLogMessageInstrumentationCollectorKey: name};                                                                                         // 13
 
