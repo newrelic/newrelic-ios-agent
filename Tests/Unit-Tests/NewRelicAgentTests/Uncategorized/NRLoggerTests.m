@@ -262,6 +262,18 @@
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     [NRAutoLogCollector redirectStandardOutputAndError];
 
+    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation1 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
+
     // Three messages should reach the remote log file for upload.
     NSLog(@"NSLog Test \n\n");
     os_log_t customLog = os_log_create("com.agent.tests", "logTest");
