@@ -51,10 +51,10 @@ int stderrPipe[2];
     close(stderrPipe[1]); // Close the original write end of the stderr pipe
 
     // Read from the pipes in background threads
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [NRAutoLogCollector readAndLog:stdoutPipe[0]];
     });
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [NRAutoLogCollector readAndLog:stderrPipe[0]];
     });
 
