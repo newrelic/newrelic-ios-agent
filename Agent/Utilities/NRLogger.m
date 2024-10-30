@@ -52,8 +52,11 @@ withMessage:(NSString *)message {
     // @synchronized(logger) {
     shouldLog = (logger->logLevels & level) != 0;
     // }
-    
-    if (shouldLog) {
+
+    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
+
+
+    if (shouldLog || shouldRemoteLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
                                [self levelToString:level], NRLogMessageLevelKey,
                                file, NRLogMessageFileKey,
@@ -80,7 +83,10 @@ withAttributes:(NSDictionary *)attributes {
     shouldLog = (logger->logLevels & level) != 0;
     // }
     
-    if (shouldLog) {
+    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
+
+
+    if (shouldLog || shouldRemoteLog) {
         NSMutableDictionary *mutableDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                             [self levelToString:level], NRLogMessageLevelKey,
                                             file, NRLogMessageFileKey,
@@ -106,13 +112,15 @@ withAgentLogsOn:(BOOL)agentLogsOn {
     // Filter passed logs by log level.
     shouldLog = (logger->logLevels & level) != 0;
   
+    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
+
 // Filtering of Console logs is performed based on logLevel.
 //    // If this is an agentLog, only print it if we are currently including the debug level.
 //    if (agentLogsOn) {
 //        shouldLog = (logger->logLevels & NRLogLevelDebug) != 0;
 //    }
 
-    if (shouldLog) {
+    if (shouldLog || shouldRemoteLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
                                [self levelToString:level], NRLogMessageLevelKey,
                                file, NRLogMessageFileKey,
@@ -277,7 +285,12 @@ withTimestamp:(NSNumber *) timestamp {
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
-        if ((self->logTargets & NRLogTargetConsole) && (![NRMAFlags shouldEnableRedirectStdOut])) {
+
+        // Only enter this first block if local logging enabled.
+        NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
+        NRLogLevels level = [NRLogger stringToLevel:levelString];
+        BOOL shouldLog = (self->logLevels & level) != 0;
+        if ((self->logTargets & NRLogTargetConsole) && shouldLog && (![NRMAFlags shouldEnableRedirectStdOut])) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
                   [NSThread currentThread],
@@ -287,12 +300,10 @@ withTimestamp:(NSNumber *) timestamp {
                   [message objectForKey:NRLogMessageMessageKey]);
             
         }
-        // Only enter this block if remote logging is including this messages level.
-        NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
-        NRLogLevels level = [NRLogger stringToLevel:levelString];
+
+        // Only enter the second block if remote logging is including this messages level.
 
         BOOL shouldRemoteLog = (self->remoteLogLevel & level) != 0;
-
         if (agentLogsOn) {
             shouldRemoteLog = (self->remoteLogLevel & NRLogLevelDebug) != 0;
         }
