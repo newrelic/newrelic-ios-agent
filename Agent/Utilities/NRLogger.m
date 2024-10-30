@@ -41,29 +41,6 @@ NRLogger *_nr_logger = nil;
      inFile:(NSString *)file
      atLine:(unsigned int)line
    inMethod:(NSString *)method
-withMessage:(NSString *)message {
-    
-    NRLogger *logger = [NRLogger logger];
-
-    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
-    BOOL shouldLog = (logger->logLevels & level) != 0;
-
-    if (shouldLog || shouldRemoteLog) {
-        [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
-                               [self levelToString:level], NRLogMessageLevelKey,
-                               file, NRLogMessageFileKey,
-                               [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
-                               method, NRLogMessageMethodKey,
-                               [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
-                               message, NRLogMessageMessageKey,
-                               nil]: NO];
-    }
-}
-
-+ (void)log:(unsigned int)level
-     inFile:(NSString *)file
-     atLine:(unsigned int)line
-   inMethod:(NSString *)method
 withMessage:(NSString *)message
 withAttributes:(NSDictionary *)attributes {
     
