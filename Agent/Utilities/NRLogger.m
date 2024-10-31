@@ -367,6 +367,7 @@ withTimestamp:(NSNumber *) timestamp {
 
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];
+    [providedAttributes removeObjectsForKeys:@[NRLogMessageLevelKey,NRLogMessageFileKey,NRLogMessageLineNumberKey,NRLogMessageMethodKey,NRLogMessageTimestampKey,NRLogMessageMessageKey]];
     [providedAttributes addEntriesFromDictionary:requiredAttributes];
     NSError* error = nil;
 

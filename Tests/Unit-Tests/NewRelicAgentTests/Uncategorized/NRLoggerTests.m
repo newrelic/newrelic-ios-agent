@@ -256,7 +256,7 @@
 }
 
 - (void) testAutoCollectedLogs {
-    [NRMAFlags enableFeatures: NRFeatureFlag_RedirectStdOutStdErr];
+    [NRMAFlags enableFeatures: NRFeatureFlag_AutoCollectLogs];
     // Set the remote log level to debug.
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
@@ -315,6 +315,6 @@
     }
 
     XCTAssertEqual(foundCount, 5, @"Five remote messages should be found.");
-    [NRMAFlags disableFeatures: NRFeatureFlag_RedirectStdOutStdErr];
+    [NRMAFlags disableFeatures: NRFeatureFlag_AutoCollectLogs];
 }
 @end
