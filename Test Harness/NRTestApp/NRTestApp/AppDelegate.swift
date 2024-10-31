@@ -17,6 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #if DEBUG
         // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
         NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
+        NewRelic.disableFeatures([NRMAFeatureFlags.NRFeatureFlag_AutoCollectLogs])
 #endif
 
         // To enable or disable feature flags in New Relic iOS Agent.
@@ -34,8 +35,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
         
-        // Note: Disabled by default. Enable or disable (default) flag to enable auto collect of stdout.
-        //NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_RedirectStdOutStdErr])
         NewRelic.saltDeviceUUID(true)
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")

@@ -22,6 +22,7 @@
 #import "NRMAFlags.h"
 #import "Constants.h"
 #import "NewRelicAgentInternal.h"
+#import "NRAutoLogCollector.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
 
@@ -772,9 +773,14 @@
     // This if/else chain should only be entered if log_reporting was found in the config
     if (configuration.has_log_reporting_config) {
         if (configuration.log_reporting_enabled) {
-
-            // it is required to enable NRLogTargetFile when using LogReporting.
-            [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
+            if ([NRMAFlags shouldEnableAutoCollectLogs]) {
+                [NRAutoLogCollector redirectStandardOutputAndError];
+                // it is required to enable NRLogTargetFile when using LogReporting.
+                [NRLogger setLogTargets:NRLogTargetFile];
+            } else {
+                [NRLogger setLogTargets:NRLogTargetConsole | NRLogTargetFile];
+            }
+            
             // Parse NSString into NRLogLevel
             NRLogLevels level = [NRLogger stringToLevel: configuration.log_reporting_level];
             [NRLogger setRemoteLogLevel:level];
@@ -786,6 +792,9 @@
         // OVERWRITE user selected value for LogReporting.
         else {
              NRLOG_AGENT_DEBUG(@"config: Has log reporting DISABLED");
+            if ([NRMAFlags shouldEnableAutoCollectLogs]) {
+                [NRAutoLogCollector restoreStandardOutputAndError];
+            }
             [NRLogger setLogTargets:NRLogTargetConsole];
 
             [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];

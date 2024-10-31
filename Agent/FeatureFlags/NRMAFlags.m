@@ -47,7 +47,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_NetworkRequestEvents | 
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
-                              NRFeatureFlag_AppStartMetrics;
+                              NRFeatureFlag_AppStartMetrics |
+                              NRFeatureFlag_AutoCollectLogs;
                   });
     return __flags;
 }
@@ -177,8 +178,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_BackgroundReporting) != 0;
 }
 
-+ (BOOL) shouldEnableRedirectStdOut {
-    return ([NRMAFlags featureFlags] & NRFeatureFlag_RedirectStdOutStdErr) != 0;
++ (BOOL) shouldEnableAutoCollectLogs {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_AutoCollectLogs) != 0;
 }
 
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
@@ -243,8 +244,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_BackgroundReporting) == NRFeatureFlag_BackgroundReporting) {
         [retArray addObject:@"BackgroundReporting"];
     }
-    if ((flags & NRFeatureFlag_RedirectStdOutStdErr) == NRFeatureFlag_RedirectStdOutStdErr) {
-        [retArray addObject:@"RedirectStdOut"];
+    if ((flags & NRFeatureFlag_AutoCollectLogs) == NRFeatureFlag_AutoCollectLogs) {
+        [retArray addObject:@"AutoCollectLogs"];
     }
     
     return retArray;

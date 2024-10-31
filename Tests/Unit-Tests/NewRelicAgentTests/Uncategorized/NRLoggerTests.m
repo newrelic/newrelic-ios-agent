@@ -255,7 +255,6 @@
     XCTAssertEqual(foundCount, 3, @"Three remote messages should be found.");
 }
 
-#if !TARGET_OS_WATCH
 - (void) testAutoCollectedLogs {
     [NRMAFlags enableFeatures: NRFeatureFlag_RedirectStdOutStdErr];
     // Set the remote log level to debug.
@@ -318,5 +317,4 @@
     XCTAssertEqual(foundCount, 5, @"Five remote messages should be found.");
     [NRMAFlags disableFeatures: NRFeatureFlag_RedirectStdOutStdErr];
 }
-#endif
 @end

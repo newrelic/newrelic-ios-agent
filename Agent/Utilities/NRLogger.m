@@ -277,7 +277,7 @@ withTimestamp:(NSNumber *) timestamp {
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
-        if ((self->logTargets & NRLogTargetConsole) && (![NRMAFlags shouldEnableRedirectStdOut])) {
+        if ((self->logTargets & NRLogTargetConsole) && (![NRMAFlags shouldEnableAutoCollectLogs])) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
                   [NSThread currentThread],

@@ -13,6 +13,7 @@ int saved_stdout;
 int saved_stderr;
 int stdoutPipe[2];
 int stderrPipe[2];
+static BOOL hasRedirectedStdOut = false;
 
 @interface NRAutoLogCollector()
 
@@ -21,6 +22,9 @@ int stderrPipe[2];
 @implementation NRAutoLogCollector
 
 + (BOOL) redirectStandardOutputAndError {
+    if (hasRedirectedStdOut){
+        return true;
+    }
     // Create pipes for stdout and stderr
     if (pipe(stdoutPipe) == -1 || pipe(stderrPipe) == -1) {
         return false;
@@ -63,6 +67,8 @@ int stderrPipe[2];
         [NRAutoLogCollector restoreStandardOutputAndError];
     });
     
+    hasRedirectedStdOut = true;
+    
     return true;
 }
 
@@ -85,10 +91,15 @@ int stderrPipe[2];
 }
 
 + (void) restoreStandardOutputAndError {
+    if (!hasRedirectedStdOut){
+        return;
+    }
     dup2(saved_stdout, fileno(stdout));
     dup2(saved_stderr, fileno(stderr));
     close(saved_stdout);
     close(saved_stderr);
+    
+    hasRedirectedStdOut = false;
 }
 
 + (BOOL) isValidTimestamp:(NSString *) timestampString {

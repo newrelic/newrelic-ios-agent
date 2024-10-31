@@ -160,10 +160,6 @@ static NewRelicAgentInternal* _sharedInstance;
 
     self = [super init];
     if (self) {
-        
-        if ([NRMAFlags shouldEnableRedirectStdOut]) {
-            [NRAutoLogCollector redirectStandardOutputAndError];
-        }
 
         // NOTE: BackgroundReporting is only enabled for iOS 13+.
 #if !TARGET_OS_WATCH

@@ -55,7 +55,7 @@
 
 + (BOOL) shouldEnableBackgroundReporting;
 
-+ (BOOL) shouldEnableRedirectStdOut;
++ (BOOL) shouldEnableAutoCollectLogs;
 
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
