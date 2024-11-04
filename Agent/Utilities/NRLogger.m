@@ -19,7 +19,7 @@ NRLogger *_nr_logger = nil;
 #define kNRMAMaxLogUploadRetry 3
 
 @interface NRLogger()
-- (void)addLogMessage:(NSDictionary *)message;
+- (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn;
 - (void)setLogLevels:(unsigned int)levels;
 - (void)setRemoteLogLevel:(unsigned int)level;
 
@@ -41,44 +41,15 @@ NRLogger *_nr_logger = nil;
      inFile:(NSString *)file
      atLine:(unsigned int)line
    inMethod:(NSString *)method
-withMessage:(NSString *)message {
-    
-    NRLogger *logger = [NRLogger logger];
-    BOOL shouldLog = NO;
-    
-    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
-    // @synchronized(logger) {
-    shouldLog = (logger->logLevels & level) != 0;
-    // }
-    
-    if (shouldLog) {
-        [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
-                               [self levelToString:level], NRLogMessageLevelKey,
-                               file, NRLogMessageFileKey,
-                               [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
-                               method, NRLogMessageMethodKey,
-                               [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
-                               message, NRLogMessageMessageKey,
-                               nil]: NO];
-    }
-}
-
-+ (void)log:(unsigned int)level
-     inFile:(NSString *)file
-     atLine:(unsigned int)line
-   inMethod:(NSString *)method
 withMessage:(NSString *)message
 withAttributes:(NSDictionary *)attributes {
     
     NRLogger *logger = [NRLogger logger];
-    BOOL shouldLog = NO;
-    
-    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
-    // @synchronized(logger) {
-    shouldLog = (logger->logLevels & level) != 0;
-    // }
-    
-    if (shouldLog) {
+
+    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
+    BOOL shouldLog =(logger->logLevels & level) != 0;
+
+    if (shouldLog || shouldRemoteLog) {
         NSMutableDictionary *mutableDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                             [self levelToString:level], NRLogMessageLevelKey,
                                             file, NRLogMessageFileKey,
@@ -99,18 +70,12 @@ withMessage:(NSString *)message
 withAgentLogsOn:(BOOL)agentLogsOn {
 
     NRLogger *logger = [NRLogger logger];
-    BOOL shouldLog = NO;
 
+    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
     // Filter passed logs by log level.
-    shouldLog = (logger->logLevels & level) != 0;
-  
-// Filtering of Console logs is performed based on logLevel.
-//    // If this is an agentLog, only print it if we are currently including the debug level.
-//    if (agentLogsOn) {
-//        shouldLog = (logger->logLevels & NRLogLevelDebug) != 0;
-//    }
+    BOOL shouldLog  = (logger->logLevels & level) != 0;
 
-    if (shouldLog) {
+    if (shouldLog || shouldRemoteLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
                                [self levelToString:level], NRLogMessageLevelKey,
                                file, NRLogMessageFileKey,
@@ -253,7 +218,13 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
-        if (self->logTargets & NRLogTargetConsole) {
+
+        // Only enter this first block if local log level includes this level enabled.
+        NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
+        NRLogLevels level = [NRLogger stringToLevel:levelString];
+        BOOL shouldLog = (self->logLevels & level) != 0;
+
+        if ((self->logTargets & NRLogTargetConsole) && shouldLog) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
                   [NSThread currentThread],
@@ -264,8 +235,6 @@ withAgentLogsOn:(BOOL)agentLogsOn {
             
         }
         // Only enter this block if remote logging is including this messages level.
-        NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
-        NRLogLevels level = [NRLogger stringToLevel:levelString];
 
         BOOL shouldRemoteLog = (self->remoteLogLevel & level) != 0;
 
