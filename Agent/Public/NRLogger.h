@@ -121,12 +121,6 @@ typedef enum _NRLogTargets {
      inFile:(NSString *)file
      atLine:(unsigned int)line
    inMethod:(NSString *)method
-withMessage:(NSString *)message;
-
-+ (void)log:(unsigned int)level
-     inFile:(NSString *)file
-     atLine:(unsigned int)line
-   inMethod:(NSString *)method
 withMessage:(NSString *)message
 withAttributes:(NSDictionary *)attributes;
 
