@@ -1497,6 +1497,7 @@
 		F858F3602AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F86741072BD30F3F00DAA1A2 /* NRMAExceptionDataCollectionWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */; };
+		F8678AAE2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m in Sources */ = {isa = PBXBuildFile; fileRef = F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */; };
 		F8728E412ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
 		F8728E422ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
 		F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABB324E704A600E45C90 /* NRMAWKWebViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -2468,6 +2469,7 @@
 		F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAInteractionEvent.m; sourceTree = "<group>"; };
 		F848CDD52AA133FB0082052F /* NRMAInteractionEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAInteractionEvent.h; sourceTree = "<group>"; };
 		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTests.m; sourceTree = "<group>"; };
+		F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRAutoCollectLogStressTest.m; sourceTree = "<group>"; };
 		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
 		F8728E562ACC9F840056F641 /* NRMANetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkMonitor.h; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -3011,6 +3013,7 @@
 				025658AC24EB2AAC00FE3125 /* Info.plist */,
 				025658D624EB322F00FE3125 /* NRMAStressTestHelper.h */,
 				025658D724EB322F00FE3125 /* NRMAStressTestHelper.m */,
+				F8678AAD2CDBC62B008FD2A2 /* Logging Stress Tests */,
 				025658C524EB2F3300FE3125 /* Measurement Engine Stress Tests */,
 				025658C224EB2EF300FE3125 /* Harvester Stress Tests */,
 				025658BD24EB2ED900FE3125 /* Analytics Stress Tests */,
@@ -3872,6 +3875,14 @@
 				F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */,
 			);
 			path = "DistributedTesting-Tests";
+			sourceTree = "<group>";
+		};
+		F8678AAD2CDBC62B008FD2A2 /* Logging Stress Tests */ = {
+			isa = PBXGroup;
+			children = (
+				F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */,
+			);
+			path = "Logging Stress Tests";
 			sourceTree = "<group>";
 		};
 		F8FBFA3C2A71A32400CDC8C5 /* Events */ = {
@@ -5540,6 +5551,7 @@
 				025658C124EB2EE900FE3125 /* NRMAAnalyticsControllerStressor.m in Sources */,
 				025658CF24EB2F5B00FE3125 /* NRMAMeasurementProducerStressor.m in Sources */,
 				025658C424EB2F3100FE3125 /* NRMAHarvestControllerStressor.m in Sources */,
+				F8678AAE2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m in Sources */,
 				025658D524EB2F6400FE3125 /* NRMAActivityTraceMeasurementCreatorStressor.m in Sources */,
 				025658DD24EB350300FE3125 /* NRAgentTestBase.m in Sources */,
 				025658D424EB2F6400FE3125 /* NRMASummaryMeasurementConsumerStressor.m in Sources */,
@@ -6597,16 +6609,19 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_CODE_COVERAGE = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 7.5.3;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_CURRENT_VERSION = 7.5.3;
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Stress-Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -6636,16 +6651,19 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ENABLE_CODE_COVERAGE = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 7.5.3;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_CURRENT_VERSION = 7.5.3;
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Stress-Tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

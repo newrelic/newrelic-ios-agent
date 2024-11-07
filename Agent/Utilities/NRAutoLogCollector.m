@@ -26,7 +26,12 @@ static BOOL hasRedirectedStdOut = false;
         return true;
     }
     // Create pipes for stdout and stderr
-    if (pipe(stdoutPipe) == -1 || pipe(stderrPipe) == -1) {
+    if (pipe(stdoutPipe) == -1) {
+        return false;
+    }
+    if (pipe(stderrPipe) == -1) {
+        // Should close the valid pipe if the other returns -1
+        close(saved_stdout);
         return false;
     }
 
@@ -162,7 +167,7 @@ static BOOL hasRedirectedStdOut = false;
             }
         }
         
-    return NRLogLevelNone;
+    return NRLogLevelInfo;
 }
 
 @end

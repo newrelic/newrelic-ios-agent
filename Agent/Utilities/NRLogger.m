@@ -98,18 +98,11 @@ withTimestamp:(NSNumber *) timestamp {
     if((timestamp <= 0) ||  (timestamp == nil)){
         timestamp = [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)];
     }
-    if (level > 0){
-        [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
+    [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
                                [self levelToString:level], NRLogMessageLevelKey,
                                timestamp, NRLogMessageTimestampKey,
                                message, NRLogMessageMessageKey,
                                nil] :TRUE];
-    } else {
-        [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
-                               timestamp, NRLogMessageTimestampKey,
-                               message, NRLogMessageMessageKey,
-                               nil] :TRUE];
-    }
 }
 
 + (NRLogLevels) logLevels {
