@@ -241,7 +241,7 @@ withTimestamp:(NSNumber *) timestamp {
         NRLogLevels level = [NRLogger stringToLevel:levelString];
         BOOL shouldLog = (self->logLevels & level) != 0;
 
-        if ((self->logTargets & NRLogTargetConsole) && shouldLog && (![NRMAFlags shouldEnableAutoCollectLogs])) {
+        if ((self->logTargets & NRLogTargetConsole) && shouldLog && ![NRAutoLogCollector hasRedirectedStdOut]) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
                   [NSThread currentThread],
@@ -317,6 +317,7 @@ withTimestamp:(NSNumber *) timestamp {
     }
 
     NSDictionary *requiredAttributes = @{
+                                         NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],
                                          NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
                                          NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
                                          NRLogMessageSessionIdKey: NRSessionId,                                                                                                  // 7

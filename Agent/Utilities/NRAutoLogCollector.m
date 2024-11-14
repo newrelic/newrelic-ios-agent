@@ -107,6 +107,10 @@ static BOOL hasRedirectedStdOut = false;
     hasRedirectedStdOut = false;
 }
 
++ (BOOL) hasRedirectedStdOut {
+    return hasRedirectedStdOut;
+}
+
 + (BOOL) isValidTimestamp:(NSString *) timestampString {
     // Check if the timestamp string can be converted to a double
     double timestamp = [timestampString doubleValue];

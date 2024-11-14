@@ -17,7 +17,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #if DEBUG
         // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
         NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
-        NewRelic.disableFeatures([NRMAFeatureFlags.NRFeatureFlag_AutoCollectLogs])
 #endif
 
         // To enable or disable feature flags in New Relic iOS Agent.

@@ -20,8 +20,8 @@
     }
 }
 
-+ (void) testNSLog {
-    NSLog(@"TEST Objective C!!!!!");
++ (void) testNSLog:(int)num {
+    NSLog(@"TEST Objective C!!!!! %d", num);
 }
 
 @end

@@ -15,5 +15,6 @@
 
 + (BOOL) redirectStandardOutputAndError;
 + (void) restoreStandardOutputAndError;
++ (BOOL) hasRedirectedStdOut;
 
 @end

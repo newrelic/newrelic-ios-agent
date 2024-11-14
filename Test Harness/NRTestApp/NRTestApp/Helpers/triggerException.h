@@ -10,6 +10,6 @@
 @interface triggerException : NSObject
 
 + (void) testing;
-+ (void) testNSLog;
++ (void) testNSLog:(int)num;
 
 @end
