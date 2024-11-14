@@ -16,7 +16,7 @@ jobs:
     name : TestIOS 
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-13 
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@master
       with: 
@@ -96,7 +96,7 @@ jobs:
     name: DeployS3
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-13 
+    runs-on: macos-14
     needs: [testIOS, testTVOS, testWatchOS]
     if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
     outputs:
