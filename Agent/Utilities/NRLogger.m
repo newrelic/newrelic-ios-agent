@@ -316,17 +316,37 @@ withTimestamp:(NSNumber *) timestamp {
         entityGuid = @"";
     }
 
-    NSDictionary *requiredAttributes = @{
-                                         NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],
-                                         NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
-                                         NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
-                                         NRLogMessageSessionIdKey: NRSessionId,                                                                                                  // 7
-                                         NRLogMessageAppIdKey: nrAppId,                                                                                                          // 8
-                                         NRLogMessageEntityGuidKey: entityGuid,                                                                                                  // 9
-                                         NRLogMessageInstrumentationProviderKey: NRLogMessageMobileValue,                                                                        // 10
-                                         NRLogMessageInstrumentationNameKey: nativePlatform,                                                                                               // 11
-                                         NRLogMessageInstrumentationVersionKey: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion,                   // 12
-                                         NRLogMessageInstrumentationCollectorKey: nativePlatform};                                                                                         // 13
+    NSMutableDictionary *requiredAttributes = [NSMutableDictionary dictionary];
+
+    id value = [message objectForKey:NRLogMessageLevelKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageLevelKey]; // 1
+
+    value = [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageFileKey]; // 2
+
+    value = [message objectForKey:NRLogMessageLineNumberKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageLineNumberKey]; // 3
+
+    value = [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageMethodKey]; // 4
+
+    value = [message objectForKey:NRLogMessageTimestampKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageTimestampKey]; // 5
+
+    value = [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageMessageKey]; // 6
+
+    if (NRSessionId) [requiredAttributes setObject:NRSessionId forKey:NRLogMessageSessionIdKey]; // 7
+    if (nrAppId) [requiredAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey]; // 8
+    if (entityGuid) [requiredAttributes setObject:entityGuid forKey:NRLogMessageEntityGuidKey]; // 9
+
+    [requiredAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey]; // 10
+    [requiredAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationNameKey]; // 11
+
+    value = [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion;
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageInstrumentationVersionKey]; // 12
+
+    [requiredAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey]; // 13
 
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];
