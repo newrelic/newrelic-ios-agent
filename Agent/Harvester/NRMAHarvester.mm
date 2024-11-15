@@ -774,7 +774,7 @@
     // This if/else chain should only be entered if log_reporting was found in the config
     if (configuration.has_log_reporting_config) {
         if (configuration.log_reporting_enabled) {
-            if (![NewRelicInternalUtils isDebuggerAttached]){
+            if ([NRMAFlags shouldEnableAutoCollectLogs] && ![NewRelicInternalUtils isDebuggerAttached]){
                 [NRAutoLogCollector redirectStandardOutputAndError];
                 // it is required to enable NRLogTargetFile when using LogReporting.
                 [NRLogger setLogTargets:NRLogTargetFile];
