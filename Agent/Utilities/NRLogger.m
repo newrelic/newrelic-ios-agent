@@ -341,7 +341,7 @@ withTimestamp:(NSNumber *) timestamp {
     if (entityGuid) [requiredAttributes setObject:entityGuid forKey:NRLogMessageEntityGuidKey]; // 9
 
     [requiredAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey]; // 10
-    [requiredAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationNameKey]; // 11
+    [requiredAttributes setObject:name forKey:NRLogMessageInstrumentationNameKey]; // 11
 
     value = [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion;
     if (value) [requiredAttributes setObject:value forKey:NRLogMessageInstrumentationVersionKey]; // 12
