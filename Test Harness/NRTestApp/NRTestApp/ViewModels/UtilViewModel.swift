@@ -51,6 +51,11 @@ class UtilViewModel {
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
 
+        options.append(UtilOption(title: "Notice Network Request w headers/params", handler: { [self] in 
+            Task { await noticeNetworkRequestWithParams() }
+        }))
+
+
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
         options.append(UtilOption(title: "Test Log Error", handler: { [self] in testLogError()}))
         options.append(UtilOption(title: "Test Log Attributes", handler: { [self] in testLogAttributes()}))
@@ -147,6 +152,34 @@ class UtilViewModel {
     func noticeFailedNWRequest() {
         NewRelic.noticeNetworkFailure(for: URL(string: "https://www.google.com"), httpMethod: "GET",
                                       with: NRTimer(), andFailureCode: NSURLErrorTimedOut)
+    }
+
+    func noticeNetworkRequestWithParams() async {
+        let url = URL(string: "https://www.apple.com")!
+
+        let request = URLRequest(url: url)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            print("Async-Await Data request made.")
+            NewRelic.noticeNetworkRequest(
+                for: url,
+                httpMethod: "GET",
+                with: NRTimer(),
+                responseHeaders: ["x-response-header":"12345"],
+                statusCode: 200,
+                bytesSent: 0,
+                bytesReceived: UInt(data.count),
+                responseData: data,
+                traceHeaders: [:],
+                andParams: ["x-foo-header-id": "foo", "x-bar-header-id": "bar"]
+            )
+        }
+        catch {
+            print("\(error): Error making async-await data request.")
+
+        }
+
+
     }
 
     func testLogDict() {
