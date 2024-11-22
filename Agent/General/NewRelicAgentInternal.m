@@ -53,6 +53,7 @@
 #import "NRMAStartTimer.h"
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRAutoLogCollector.h"
 
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness

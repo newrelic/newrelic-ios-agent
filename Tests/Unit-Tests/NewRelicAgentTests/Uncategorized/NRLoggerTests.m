@@ -22,6 +22,8 @@
 #import "NRMAAppToken.h"
 #import "NRMAHarvestController.h"
 #import "NRTestConstants.h"
+#import "NRAutoLogCollector.h"
+#import <os/log.h>
 
 @implementation NRLoggerTests
 - (void) setUp
@@ -345,4 +347,64 @@
     XCTAssertEqual(foundCount, 4, @"Four remote messages should be found.");
 }
 
+- (void) testAutoCollectedLogs {
+    // Set the remote log level to debug.
+    [NRLogger setRemoteLogLevel:NRLogLevelDebug];
+    XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
+
+    sleep(5);
+
+    // Three messages should reach the remote log file for upload.
+    NSLog(@"NSLog Test \n\n");
+    os_log_t customLog = os_log_create("com.agent.tests", "logTest");
+    // Log messages at different levels
+    os_log(customLog, "This is a default os_log message.\n");
+    os_log_info(customLog, "This is an info os_log message.\n");
+    os_log_error(customLog, "This is an error os_log message.\n");
+    os_log_fault(customLog, "This is a fault os_log message.\n");
+    
+    sleep(5);
+    [NRAutoLogCollector restoreStandardOutputAndError];
+
+    NSError* error;
+    NSData* logData = [NRLogger logFileData:&error];
+    if(error){
+        NSLog(@"%@", error.localizedDescription);
+    }
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+    NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+                                                      options:0
+                                                        error:nil];
+    NSLog(@"decode=%@", decode);
+
+    NSArray * expectedValues = @[
+        @{@"message": @"NSLog Test"},
+        @{@"message": @"This is a default os_log message."},
+        @{@"message": @"This is an info os_log message."},
+        @{@"message": @"This is an error os_log message."},
+        @{@"message": @"This is a fault os_log message."},
+    ];
+    // check for existence of 5 logs.
+    int foundCount = 0;
+    // For each expected message.
+    for (NSDictionary *dict in expectedValues) {
+        // Iterate through the collected message logs.
+        for (NSDictionary *dict2 in decode) {
+            //
+            NSString* currentMessage = [dict objectForKey:@"message"];
+            if ([[dict2 objectForKey:@"message"] containsString: currentMessage]) {
+                foundCount += 1;
+                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
+            }
+            // Verify added attributes with logAttributes.
+            if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
+                XCTAssertTrue([[dict2 objectForKey:@"additionalAttribute1"] isEqualToString:@"attribute1"],@"additionalAttribute1 set incorrectly");
+                XCTAssertTrue([[dict2 objectForKey:@"additionalAttribute2"] isEqualToString:@"attribute2"],@"additionalAttribute2 set incorrectly");
+            }
+        }
+    }
+
+    XCTAssertEqual(foundCount, 5, @"Five remote messages should be found.");
+}
 @end
