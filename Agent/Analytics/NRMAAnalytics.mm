@@ -278,6 +278,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
+// New Event System
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                withNRMAPayload:(NRMAPayload *)payload {
@@ -517,6 +518,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
+// Old Event System
 - (BOOL)addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
@@ -528,6 +530,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return NO;
 }
 
+// Old Event System
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
                  withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
@@ -541,6 +544,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return NO;
 }
 
+// Old Event System
 - (BOOL)addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
              withResponse:(NRMANetworkResponseData *)responseData
             withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
