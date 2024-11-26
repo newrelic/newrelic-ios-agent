@@ -13,12 +13,15 @@
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConfiguration.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
+#import "NRAutoLogCollector.h"
 
 NRLogger *_nr_logger = nil;
 
 #define kNRMAMaxLogUploadRetry 3
 
 @interface NRLogger()
+
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn;
 - (void)setLogLevels:(unsigned int)levels;
 - (void)setRemoteLogLevel:(unsigned int)level;
@@ -85,6 +88,21 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                                message, NRLogMessageMessageKey,
                                nil]:agentLogsOn];
     }
+}
+
++ (void) log:(unsigned int)level
+     withMessage:(NSString *) message
+withTimestamp:(NSNumber *) timestamp {
+    NRLogger *logger = [NRLogger logger];
+
+    if((timestamp <= 0) ||  (timestamp == nil)){
+        timestamp = [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)];
+    }
+    [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
+                               [self levelToString:level], NRLogMessageLevelKey,
+                               timestamp, NRLogMessageTimestampKey,
+                               message, NRLogMessageMessageKey,
+                               nil] :TRUE];
 }
 
 + (NRLogLevels) logLevels {
@@ -218,13 +236,12 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
-
         // Only enter this first block if local log level includes this level enabled.
         NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
         NRLogLevels level = [NRLogger stringToLevel:levelString];
         BOOL shouldLog = (self->logLevels & level) != 0;
 
-        if ((self->logTargets & NRLogTargetConsole) && shouldLog) {
+        if ((self->logTargets & NRLogTargetConsole) && shouldLog && ![NRAutoLogCollector hasRedirectedStdOut]) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
                   [NSThread currentThread],
@@ -299,19 +316,37 @@ withAgentLogsOn:(BOOL)agentLogsOn {
         entityGuid = @"";
     }
 
-    NSDictionary *requiredAttributes = @{NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
-                                         NRLogMessageFileKey:       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
-                                         NRLogMessageLineNumberKey: [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
-                                         NRLogMessageMethodKey:     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
-                                         NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
-                                         NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
-                                         NRLogMessageSessionIdKey: NRSessionId,                                                                                                  // 7
-                                         NRLogMessageAppIdKey: nrAppId,                                                                                                          // 8
-                                         NRLogMessageEntityGuidKey: entityGuid,                                                                                                  // 9
-                                         NRLogMessageInstrumentationProviderKey: NRLogMessageMobileValue,                                                                        // 10
-                                         NRLogMessageInstrumentationNameKey: nativePlatform,                                                                                               // 11
-                                         NRLogMessageInstrumentationVersionKey: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion,                   // 12
-                                         NRLogMessageInstrumentationCollectorKey: nativePlatform};                                                                                         // 13
+    NSMutableDictionary *requiredAttributes = [NSMutableDictionary dictionary];
+
+    id value = [message objectForKey:NRLogMessageLevelKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageLevelKey]; // 1
+
+    value = [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageFileKey]; // 2
+
+    value = [message objectForKey:NRLogMessageLineNumberKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageLineNumberKey]; // 3
+
+    value = [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageMethodKey]; // 4
+
+    value = [message objectForKey:NRLogMessageTimestampKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageTimestampKey]; // 5
+
+    value = [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageMessageKey]; // 6
+
+    if (NRSessionId) [requiredAttributes setObject:NRSessionId forKey:NRLogMessageSessionIdKey]; // 7
+    if (nrAppId) [requiredAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey]; // 8
+    if (entityGuid) [requiredAttributes setObject:entityGuid forKey:NRLogMessageEntityGuidKey]; // 9
+
+    [requiredAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey]; // 10
+    [requiredAttributes setObject:name forKey:NRLogMessageInstrumentationNameKey]; // 11
+
+    value = [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion;
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageInstrumentationVersionKey]; // 12
+
+    [requiredAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey]; // 13
 
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];

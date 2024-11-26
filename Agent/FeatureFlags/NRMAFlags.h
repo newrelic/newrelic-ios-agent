@@ -55,6 +55,8 @@
 
 + (BOOL) shouldEnableBackgroundReporting;
 
++ (BOOL) shouldEnableAutoCollectLogs;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting
