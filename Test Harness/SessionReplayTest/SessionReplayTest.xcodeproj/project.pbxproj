@@ -19,6 +19,9 @@
 		343D4B682BC9EB980064F979 /* UIViewAdditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343D4B672BC9EB980064F979 /* UIViewAdditions.swift */; };
 		343D4B6D2BC9F6210064F979 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 343D4B6C2BC9F6210064F979 /* NewRelic.framework */; };
 		343D4B6E2BC9F6210064F979 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 343D4B6C2BC9F6210064F979 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3469DAA52CEFE5470075D9F0 /* DogDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3469DAA42CEFE5470075D9F0 /* DogDetailsViewController.swift */; };
+		3469DAA72CEFEA450075D9F0 /* CheckoutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3469DAA62CEFEA450075D9F0 /* CheckoutViewController.swift */; };
+		3469DAA92CEFF8980075D9F0 /* CheckoutTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3469DAA82CEFF8980075D9F0 /* CheckoutTableViewCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +52,9 @@
 		343D4B612BC9E6990064F979 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		343D4B672BC9EB980064F979 /* UIViewAdditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewAdditions.swift; sourceTree = "<group>"; };
 		343D4B6C2BC9F6210064F979 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3469DAA42CEFE5470075D9F0 /* DogDetailsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DogDetailsViewController.swift; sourceTree = "<group>"; };
+		3469DAA62CEFEA450075D9F0 /* CheckoutViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutViewController.swift; sourceTree = "<group>"; };
+		3469DAA82CEFF8980075D9F0 /* CheckoutTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutTableViewCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +108,9 @@
 				343D4B672BC9EB980064F979 /* UIViewAdditions.swift */,
 				342532BE2C51C0B900B36B7C /* DogListViewController.swift */,
 				342532C22C540AAF00B36B7C /* DogInfoCellTableViewCell.swift */,
+				3469DAA42CEFE5470075D9F0 /* DogDetailsViewController.swift */,
+				3469DAA62CEFEA450075D9F0 /* CheckoutViewController.swift */,
+				3469DAA82CEFF8980075D9F0 /* CheckoutTableViewCell.swift */,
 			);
 			path = SessionReplayTest;
 			sourceTree = "<group>";
@@ -186,12 +195,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3469DAA52CEFE5470075D9F0 /* DogDetailsViewController.swift in Sources */,
 				343D4B682BC9EB980064F979 /* UIViewAdditions.swift in Sources */,
 				342532BF2C51C0B900B36B7C /* DogListViewController.swift in Sources */,
+				3469DAA92CEFF8980075D9F0 /* CheckoutTableViewCell.swift in Sources */,
 				342532C32C540AAF00B36B7C /* DogInfoCellTableViewCell.swift in Sources */,
 				343D4B582BC9E6980064F979 /* HomeViewController.swift in Sources */,
 				343D4B542BC9E6980064F979 /* AppDelegate.swift in Sources */,
 				343D4B562BC9E6980064F979 /* SceneDelegate.swift in Sources */,
+				3469DAA72CEFEA450075D9F0 /* CheckoutViewController.swift in Sources */,
 				342532C12C51C21C00B36B7C /* DogModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
