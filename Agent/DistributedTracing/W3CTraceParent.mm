@@ -14,7 +14,7 @@
     return @"00";
 }
 + (NSString *) getFlags {
-    return @"00";
+    return @"01";
 }
 + (NSString *) getParentId {
     return @"";
