@@ -128,8 +128,18 @@
                                                                                          connectionType:connectionType
                                                                                             contentType:[NRMANetworkFacade contentType:response]
                                                                                               bytesSent:bytesSent];
-        [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
-        
+        if (params) {
+            [NRMAHTTPUtilities addHTTPHeaderTrackingFor:params.allKeys];
+
+            NSMutableDictionary *paramsAndHeaders = [NSMutableDictionary dictionaryWithDictionary:params];
+            [paramsAndHeaders addEntriesFromDictionary:request.allHTTPHeaderFields];
+            [NRMAHTTPUtilities addTrackedHeaders:paramsAndHeaders to:networkRequestData];
+
+        }
+        else {
+            [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
+        }
+
         NSUInteger modifiedBytesReceived = bytesReceived;
         if([response isKindOfClass:[NSHTTPURLResponse class]]) {
             NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
@@ -138,7 +148,7 @@
                 modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
             }
         }
-
+        // Failure case
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
             if([NRMAFlags shouldEnableNewEventSystem]){
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
@@ -149,6 +159,7 @@
                                                                                    withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
                                                                                     withPayload:[NRMAHTTPUtilities retrievePayload:request]];
             }
+        // Success case
         } else {
             if([NRMAFlags shouldEnableNewEventSystem]){
                 

@@ -13,13 +13,16 @@
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConfiguration.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAFlags.h"
+#import "NRAutoLogCollector.h"
 
 NRLogger *_nr_logger = nil;
 
 #define kNRMAMaxLogUploadRetry 3
 
 @interface NRLogger()
-- (void)addLogMessage:(NSDictionary *)message;
+
+- (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn;
 - (void)setLogLevels:(unsigned int)levels;
 - (void)setRemoteLogLevel:(unsigned int)level;
 
@@ -41,44 +44,15 @@ NRLogger *_nr_logger = nil;
      inFile:(NSString *)file
      atLine:(unsigned int)line
    inMethod:(NSString *)method
-withMessage:(NSString *)message {
-    
-    NRLogger *logger = [NRLogger logger];
-    BOOL shouldLog = NO;
-    
-    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
-    // @synchronized(logger) {
-    shouldLog = (logger->logLevels & level) != 0;
-    // }
-    
-    if (shouldLog) {
-        [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
-                               [self levelToString:level], NRLogMessageLevelKey,
-                               file, NRLogMessageFileKey,
-                               [NSNumber numberWithUnsignedInt:line], NRLogMessageLineNumberKey,
-                               method, NRLogMessageMethodKey,
-                               [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)], NRLogMessageTimestampKey,
-                               message, NRLogMessageMessageKey,
-                               nil]: NO];
-    }
-}
-
-+ (void)log:(unsigned int)level
-     inFile:(NSString *)file
-     atLine:(unsigned int)line
-   inMethod:(NSString *)method
 withMessage:(NSString *)message
 withAttributes:(NSDictionary *)attributes {
     
     NRLogger *logger = [NRLogger logger];
-    BOOL shouldLog = NO;
-    
-    // This shouldLog BOOL was previously set within a @synchronized block but I was seeing a deadlock. Trying some tests without
-    // @synchronized(logger) {
-    shouldLog = (logger->logLevels & level) != 0;
-    // }
-    
-    if (shouldLog) {
+
+    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
+    BOOL shouldLog =(logger->logLevels & level) != 0;
+
+    if (shouldLog || shouldRemoteLog) {
         NSMutableDictionary *mutableDict = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                             [self levelToString:level], NRLogMessageLevelKey,
                                             file, NRLogMessageFileKey,
@@ -99,18 +73,12 @@ withMessage:(NSString *)message
 withAgentLogsOn:(BOOL)agentLogsOn {
 
     NRLogger *logger = [NRLogger logger];
-    BOOL shouldLog = NO;
 
+    BOOL shouldRemoteLog = (logger->remoteLogLevel & level) != 0;
     // Filter passed logs by log level.
-    shouldLog = (logger->logLevels & level) != 0;
-  
-// Filtering of Console logs is performed based on logLevel.
-//    // If this is an agentLog, only print it if we are currently including the debug level.
-//    if (agentLogsOn) {
-//        shouldLog = (logger->logLevels & NRLogLevelDebug) != 0;
-//    }
+    BOOL shouldLog  = (logger->logLevels & level) != 0;
 
-    if (shouldLog) {
+    if (shouldLog || shouldRemoteLog) {
         [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
                                [self levelToString:level], NRLogMessageLevelKey,
                                file, NRLogMessageFileKey,
@@ -120,6 +88,21 @@ withAgentLogsOn:(BOOL)agentLogsOn {
                                message, NRLogMessageMessageKey,
                                nil]:agentLogsOn];
     }
+}
+
++ (void) log:(unsigned int)level
+     withMessage:(NSString *) message
+withTimestamp:(NSNumber *) timestamp {
+    NRLogger *logger = [NRLogger logger];
+
+    if((timestamp <= 0) ||  (timestamp == nil)){
+        timestamp = [NSNumber numberWithLongLong: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0)];
+    }
+    [logger addLogMessage:[NSDictionary dictionaryWithObjectsAndKeys:
+                               [self levelToString:level], NRLogMessageLevelKey,
+                               timestamp, NRLogMessageTimestampKey,
+                               message, NRLogMessageMessageKey,
+                               nil] :TRUE];
 }
 
 + (NRLogLevels) logLevels {
@@ -253,7 +236,12 @@ withAgentLogsOn:(BOOL)agentLogsOn {
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
     // The static method checks the log level before we get here.
     dispatch_async(logQueue, ^{
-        if (self->logTargets & NRLogTargetConsole) {
+        // Only enter this first block if local log level includes this level enabled.
+        NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
+        NRLogLevels level = [NRLogger stringToLevel:levelString];
+        BOOL shouldLog = (self->logLevels & level) != 0;
+
+        if ((self->logTargets & NRLogTargetConsole) && shouldLog && ![NRAutoLogCollector hasRedirectedStdOut]) {
             NSLog(@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@",
                   [NewRelicInternalUtils agentVersion],
                   [NSThread currentThread],
@@ -264,8 +252,6 @@ withAgentLogsOn:(BOOL)agentLogsOn {
             
         }
         // Only enter this block if remote logging is including this messages level.
-        NSString *levelString = [message objectForKey:NRLogMessageLevelKey];
-        NRLogLevels level = [NRLogger stringToLevel:levelString];
 
         BOOL shouldRemoteLog = (self->remoteLogLevel & level) != 0;
 
@@ -330,19 +316,37 @@ withAgentLogsOn:(BOOL)agentLogsOn {
         entityGuid = @"";
     }
 
-    NSDictionary *requiredAttributes = @{NRLogMessageLevelKey:      [message objectForKey:NRLogMessageLevelKey],                                                                 // 1
-                                         NRLogMessageFileKey:       [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],   // 2
-                                         NRLogMessageLineNumberKey: [message objectForKey:NRLogMessageLineNumberKey],                                                            // 3
-                                         NRLogMessageMethodKey:     [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""], // 4
-                                         NRLogMessageTimestampKey:  [message objectForKey:NRLogMessageTimestampKey],                                                             // 5
-                                         NRLogMessageMessageKey:    [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""],// 6
-                                         NRLogMessageSessionIdKey: NRSessionId,                                                                                                  // 7
-                                         NRLogMessageAppIdKey: nrAppId,                                                                                                          // 8
-                                         NRLogMessageEntityGuidKey: entityGuid,                                                                                                  // 9
-                                         NRLogMessageInstrumentationProviderKey: NRLogMessageMobileValue,                                                                        // 10
-                                         NRLogMessageInstrumentationNameKey: name,                                                                                               // 11
-                                         NRLogMessageInstrumentationVersionKey: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion,                   // 12
-                                         NRLogMessageInstrumentationCollectorKey: name};                                                                                         // 13
+    NSMutableDictionary *requiredAttributes = [NSMutableDictionary dictionary];
+
+    id value = [message objectForKey:NRLogMessageLevelKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageLevelKey]; // 1
+
+    value = [[message objectForKey:NRLogMessageFileKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageFileKey]; // 2
+
+    value = [message objectForKey:NRLogMessageLineNumberKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageLineNumberKey]; // 3
+
+    value = [[message objectForKey:NRLogMessageMethodKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageMethodKey]; // 4
+
+    value = [message objectForKey:NRLogMessageTimestampKey];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageTimestampKey]; // 5
+
+    value = [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageMessageKey]; // 6
+
+    if (NRSessionId) [requiredAttributes setObject:NRSessionId forKey:NRLogMessageSessionIdKey]; // 7
+    if (nrAppId) [requiredAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey]; // 8
+    if (entityGuid) [requiredAttributes setObject:entityGuid forKey:NRLogMessageEntityGuidKey]; // 9
+
+    [requiredAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey]; // 10
+    [requiredAttributes setObject:name forKey:NRLogMessageInstrumentationNameKey]; // 11
+
+    value = [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion;
+    if (value) [requiredAttributes setObject:value forKey:NRLogMessageInstrumentationVersionKey]; // 12
+
+    [requiredAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey]; // 13
 
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];

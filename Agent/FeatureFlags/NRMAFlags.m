@@ -177,6 +177,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_BackgroundReporting) != 0;
 }
 
++ (BOOL) shouldEnableAutoCollectLogs {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_AutoCollectLogs) != 0;
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -238,6 +242,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
     }
     if ((flags & NRFeatureFlag_BackgroundReporting) == NRFeatureFlag_BackgroundReporting) {
         [retArray addObject:@"BackgroundReporting"];
+    }
+    if ((flags & NRFeatureFlag_AutoCollectLogs) == NRFeatureFlag_AutoCollectLogs) {
+        [retArray addObject:@"AutoCollectLogs"];
     }
     
     return retArray;
