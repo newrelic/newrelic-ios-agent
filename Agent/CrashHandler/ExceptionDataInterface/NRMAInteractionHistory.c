@@ -19,30 +19,34 @@ void NRMA__insertNode(NRMAInteractionHistoryNode* interaction);
 
 void NRMA__AddInteraction(const char* interactionName, long long timestampMillis)
 {
-    NRMAInteractionHistoryNode* node  = (NRMAInteractionHistoryNode*)malloc(sizeof(NRMAInteractionHistoryNode));
-    if (node != NULL) {
-        size_t len = strlen(interactionName);
-        if (len < 1) {
-            free(node);
-            return;
-        }
-        char* temp = malloc(sizeof(char) * (len+1));
-        if (temp == NULL) {
-            free(node);
-            // Failure case hit here.
-            return;
-        }
-        strncpy(temp, interactionName,len);
-        temp[len] = '\0';
-        node->name = temp;
-        node->timestampMillis = timestampMillis;
 
-        NRMA__insertNode(node);
+    if (interactionName == NULL || strlen(interactionName) == 0) {
+        return;
     }
+
+    NRMAInteractionHistoryNode* node  = (NRMAInteractionHistoryNode*)malloc(sizeof(NRMAInteractionHistoryNode));
+
+    if (node == NULL) {
+        return;
+    }
+
+    node->name = strdup(interactionName);
+    if (node->name == NULL) {
+        free(node);
+        return;
+    }
+    node->timestampMillis = timestampMillis;
+    node->next = NULL;
+
+    NRMA__insertNode(node);
 }
 
 void NRMA__insertNode(NRMAInteractionHistoryNode* interaction)
 {
+    if (interaction == NULL) {
+        return;
+    }
+
     interaction->next = __list;
     __list = interaction;
 }
@@ -59,14 +63,16 @@ NRMAInteractionHistoryNode* NRMA__getInteractionHistoryList(void)
 
 void NRMA__deallocInteractionHistoryList(void)
 {
-    NRMAInteractionHistoryNode* head = __list;
-    __list = NULL;
-    while (head != NULL) {
-        free((void*)head->name);
-        head->name = NULL;
-        NRMAInteractionHistoryNode* tmp = head->next;
-        free((void*)head);
-        head = NULL;
-        head = tmp;
+    NRMAInteractionHistoryNode* current = __list;
+    NRMAInteractionHistoryNode *next;
+
+    while (current != NULL) {
+        next = current->next;
+
+        free((void*)current->name);
+        free((void*)current);
+        current = next;
     }
+
+    __list = NULL;
 }

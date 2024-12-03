@@ -757,6 +757,7 @@ static UIBackgroundTaskIdentifier background_task;
     @try {
 #endif
         [NRMATraceController completeActivityTrace];
+
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
@@ -1047,8 +1048,20 @@ void applicationDidEnterBackgroundCF(void) {
         [NRMAUDIDManager deleteStoredID];
 
         // Stored device data, Metadata and crash file are cleared when crash upload.
-        [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
+#ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+    @try {
+#endif
+        [NRMATraceController completeActivityTrace];
 
+        [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
+    }
+#endif
+        
         // Clear stored user defaults
         [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
         [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];
