@@ -19,6 +19,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
 #import "NRTestConstants.h"
+#import "NRMAHTTPUtilities.h"
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -95,6 +96,7 @@
 
 - (void) testRequestEvents {
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    
     NRTimer* timer = [NRTimer new];
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
@@ -107,6 +109,8 @@
                                                                               connectionType:@"wifi"
                                                                                  contentType:@"application/json"
                                                                                    bytesSent:100];
+    [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"trackedHeaderName"]];
+    [NRMAHTTPUtilities addTrackedHeaders:@{@"trackedHeaderName": @"trackedHeaderValue"} to:requestData];
 
     NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
                                                                                           bytesReceived:200
@@ -135,6 +139,9 @@
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
     XCTAssertFalse([json containsString:@"offline"]);
+
+    XCTAssertTrue([decode[0][@"trackedHeaderName"] isEqualToString:@"trackedHeaderValue"]);
+
 
     [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
 }
@@ -1540,5 +1547,6 @@
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
 }
+
 
 @end
