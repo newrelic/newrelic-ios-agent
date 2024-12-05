@@ -7,6 +7,8 @@
 //
 
 #import "NRMAUIViewDetails.h"
+
+#import "NRMAAssociate.h"
 #import "NRMAIdGenerator.h"
 
 @implementation NRMAUIViewDetails
@@ -22,8 +24,16 @@
         _borderWidth = view.layer.borderWidth;
         _borderColor = [UIColor colorWithCGColor:view.layer.borderColor];
         _viewName = NSStringFromClass([view class]);
-        _viewId = [NRMAIdGenerator generateID];
+//        _viewId = [NRMAIdGenerator generateID];
         _childViews = [[NSMutableArray alloc] init];
+        
+        id associatedId = [NRMAAssociate retrieveFrom:view with:@"SessionReplayID"];
+        if(associatedId) {
+            _viewId = [((NSNumber *)associatedId) intValue];
+        } else {
+            _viewId = [NRMAIdGenerator generateID];
+            [NRMAAssociate attach:@(_viewId) to:view with:@"SessionReplayID"];
+        }
     }
     return self;
 }
