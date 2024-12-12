@@ -120,17 +120,13 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                 // Checking for NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY in the headers here. The data usually isn't link to the task yet here so, if that header exists we are handling the task elsewhere and have a better chance of getting the data so we don't need to record it here.
                 NSURLRequest  *currentRequest = task.currentRequest;
 
-                if (currentRequest == nil) {
-                    return;
-                }
-
-                if ([currentRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY] != nil) {
+                if(currentRequest != nil && [currentRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY] != nil) {
                     return;
                 }
 
                 NSURL *url = [currentRequest URL];
                 if (url != nil &&
-                    newState != NSURLSessionTaskStateRunning && task.state == NSURLSessionTaskStateRunning) {
+                    task.state == NSURLSessionTaskStateRunning) {
 
                     // Added this section to add Distributed Tracing traceId\trace.id, guid,id and payload.
                     //1
