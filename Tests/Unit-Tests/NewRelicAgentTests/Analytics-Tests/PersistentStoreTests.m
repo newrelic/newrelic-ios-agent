@@ -289,7 +289,7 @@ static NSTimeInterval shortTimeInterval = 10;
     
     XCTestExpectation *waitForInitialWriteExpectation = [self expectationWithDescription:@"Waiting for the first time the file is written"];
     PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                      andMinimumDelay:1];
+                                                      andMinimumDelay:.025];
     
     NSError *error = nil;
     

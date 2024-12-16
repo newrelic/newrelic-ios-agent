@@ -68,18 +68,6 @@
 
 - (void) testNRLogger {
 
-    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation1 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
-
     [NewRelic logInfo:   @"Info Log..."];
     [NewRelic logError:  @"Error Log..."];
     [NewRelic logVerbose:@"Verbose Log..."];
@@ -93,20 +81,9 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation2 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
+    sleep(5);
     
     NSError* error;
-    NSString *path = [NRLogger logFilePath];
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
         NSLog(@"%@", error.localizedDescription);
@@ -174,17 +151,7 @@
     // Set the remote log level to Debug.
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
 
-    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation1 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
+    sleep(1);
 
     // Seven messages should reach the remote log file for upload.
 
@@ -201,17 +168,7 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation2 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
+    sleep(5);
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -264,17 +221,7 @@
     // Set the remote log level to Info.
     [NRLogger setRemoteLogLevel:NRLogLevelInfo];
 
-    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation1 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
+    sleep(1);
 
     // Seven messages should reach the remote log file for upload.
 
@@ -291,17 +238,7 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation2 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
+    sleep(5);
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -352,7 +289,7 @@
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
 
-    sleep(5);
+    sleep(1);
 
     // Three messages should reach the remote log file for upload.
     NSLog(@"NSLog Test \n\n");
