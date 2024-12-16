@@ -25,5 +25,4 @@
 + (void) stop;
 
 + (void) synchronousDequeue;
-+ (void) synchronousDequeueWithCompletion:(void (^)(BOOL))completion;
 @end
