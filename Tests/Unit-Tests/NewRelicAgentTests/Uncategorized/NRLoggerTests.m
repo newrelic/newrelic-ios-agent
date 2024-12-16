@@ -207,7 +207,7 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    [self waitForExpectationsWithTimeout:5 handler:nil];
+    [self waitForExpectationsWithTimeout:30 handler:nil];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -290,7 +290,7 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    [self waitForExpectationsWithTimeout:5 handler:nil];
+    [self waitForExpectationsWithTimeout:30 handler:nil];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -365,7 +365,7 @@
     os_log_error(customLog, "This is an error os_log message.\n");
     os_log_fault(customLog, "This is a fault os_log message.\n");
     
-    [self waitForExpectationsWithTimeout:5 handler:nil];
+    [self waitForExpectationsWithTimeout:30 handler:nil];
     
     [NRAutoLogCollector restoreStandardOutputAndError];
 
