@@ -52,10 +52,35 @@
 
     [NRLogger clearLog];
 
+    // Open a file descriptor for the file
+    self.fileDescriptor = open([[NRLogger logFilePath] fileSystemRepresentation], O_EVTONLY);
+    if (self.fileDescriptor < 0) {
+        XCTFail(@"Failed to open file descriptor");
+        return;
+    }
+    
+    // Set up dispatch source for file monitoring
+    self.source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, self.fileDescriptor, DISPATCH_VNODE_WRITE, DISPATCH_TARGET_QUEUE_DEFAULT);
+
+    __weak typeof(self) weakSelf = self;
+    dispatch_source_set_cancel_handler(self.source, ^{
+        if (weakSelf.fileDescriptor) {
+            close(weakSelf.fileDescriptor);
+            weakSelf.fileDescriptor = 0;
+        }
+    });
+
 
 }
 - (void) tearDown
 {
+    if (self.fileDescriptor > 0) {
+        close(self.fileDescriptor);
+    }
+    if (self.source) {
+        dispatch_source_cancel(self.source);
+    }
+    
     [NRMAMeasurements removeMeasurementConsumer:helper];
     helper = nil;
 
@@ -82,7 +107,7 @@
     }];
 
     sleep(5);
-    
+
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
@@ -151,8 +176,22 @@
     // Set the remote log level to Debug.
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
 
-    sleep(1);
-
+    // Set up the expectation
+    XCTestExpectation *fileWrittenExpectation = [self expectationWithDescription:@"File has been modified"];
+    
+    __block int count = 0;
+    dispatch_source_set_event_handler(self.source, ^{
+        count++;
+        if(count == 7){
+            // Fulfill the expectation when a write is detected
+            sleep(1);
+            [fileWrittenExpectation fulfill];
+        }
+    });
+    
+    // Start monitoring
+    dispatch_resume(self.source);
+    
     // Seven messages should reach the remote log file for upload.
 
     [NewRelic logInfo:   @"Info Log..."];
@@ -168,7 +207,7 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    sleep(5);
+    [self waitForExpectationsWithTimeout:5 handler:nil];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -221,10 +260,23 @@
     // Set the remote log level to Info.
     [NRLogger setRemoteLogLevel:NRLogLevelInfo];
 
-    sleep(1);
-
+    // Set up the expectation
+    XCTestExpectation *fileWrittenExpectation = [self expectationWithDescription:@"File has been modified"];
+    
+    __block int count = 0;
+    dispatch_source_set_event_handler(self.source, ^{
+        count++;
+        if(count == 4){
+            // Fulfill the expectation when a write is detected
+            sleep(1);
+            [fileWrittenExpectation fulfill];
+        }
+    });
+    
+    // Start monitoring
+    dispatch_resume(self.source);
+    
     // Seven messages should reach the remote log file for upload.
-
     [NewRelic logInfo:   @"Info Log..."];
     [NewRelic logError:  @"Error Log..."];
     [NewRelic logVerbose:@"Verbose Log..."];
@@ -238,7 +290,7 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    sleep(5);
+    [self waitForExpectationsWithTimeout:5 handler:nil];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -289,8 +341,21 @@
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
 
-    sleep(1);
-
+    // Set up the expectation
+    XCTestExpectation *fileWrittenExpectation = [self expectationWithDescription:@"File has been modified"];
+    
+    __block int count = 0;
+    dispatch_source_set_event_handler(self.source, ^{
+        count++;
+        if(count == 5){
+            // Fulfill the expectation when a write is detected
+            sleep(1);
+            [fileWrittenExpectation fulfill];
+        }
+    });
+    
+    // Start monitoring
+    dispatch_resume(self.source);
     // Three messages should reach the remote log file for upload.
     NSLog(@"NSLog Test \n\n");
     os_log_t customLog = os_log_create("com.agent.tests", "logTest");
@@ -300,7 +365,8 @@
     os_log_error(customLog, "This is an error os_log message.\n");
     os_log_fault(customLog, "This is a fault os_log message.\n");
     
-    sleep(5);
+    [self waitForExpectationsWithTimeout:5 handler:nil];
+    
     [NRAutoLogCollector restoreStandardOutputAndError];
 
     NSError* error;
