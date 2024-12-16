@@ -49,8 +49,10 @@
     [[NRMAStartTimer sharedInstance] createDurationMetric];
 
     [NRMASupportMetricHelper processDeferredMetrics];
-    sleep(1);
+    
     [NRMATaskQueue synchronousDequeue];
+   
+    sleep(1);
 
     NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
 
