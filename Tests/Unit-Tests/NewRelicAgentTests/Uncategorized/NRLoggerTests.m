@@ -214,6 +214,9 @@
         // Allow other scheduled run loop activities to proceed
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
     }
+    if (!operationCompleted) {
+        NSLog(@"Failed to detect 7 writes to the log file.");
+    }
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -303,7 +306,9 @@
         // Allow other scheduled run loop activities to proceed
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
     }
-
+    if (!operationCompleted) {
+        NSLog(@"Failed to detect 4 writes to the log file.");
+    }
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
@@ -383,6 +388,9 @@
     while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
         // Allow other scheduled run loop activities to proceed
         [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    if (!operationCompleted) {
+        NSLog(@"Failed to detect 5 writes to the log file.");
     }
     
     [NRAutoLogCollector restoreStandardOutputAndError];
