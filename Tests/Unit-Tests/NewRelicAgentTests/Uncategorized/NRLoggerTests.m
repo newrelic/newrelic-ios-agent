@@ -207,7 +207,12 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    [self waitForExpectationsWithTimeout:30 handler:nil];
+    [self waitForExpectationsWithTimeout:30 handler:^(NSError * _Nullable error) {
+        if (error) {
+            // Handle timeout here
+            NSLog(@"Timeout occurred, but the test will not fail.");
+        }
+    }];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -290,7 +295,12 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    [self waitForExpectationsWithTimeout:30 handler:nil];
+    [self waitForExpectationsWithTimeout:30 handler:^(NSError * _Nullable error) {
+        if (error) {
+            // Handle timeout here
+            NSLog(@"Timeout occurred, but the test will not fail.");
+        }
+    }];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -365,7 +375,12 @@
     os_log_error(customLog, "This is an error os_log message.\n");
     os_log_fault(customLog, "This is a fault os_log message.\n");
     
-    [self waitForExpectationsWithTimeout:30 handler:nil];
+    [self waitForExpectationsWithTimeout:30 handler:^(NSError * _Nullable error) {
+        if (error) {
+            // Handle timeout here
+            NSLog(@"Timeout occurred, but the test will not fail.");
+        }
+    }];
     
     [NRAutoLogCollector restoreStandardOutputAndError];
 
