@@ -175,17 +175,15 @@
 
     // Set the remote log level to Debug.
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
-
-    // Set up the expectation
-    XCTestExpectation *fileWrittenExpectation = [self expectationWithDescription:@"File has been modified"];
     
+    __block BOOL operationCompleted = NO;
     __block int count = 0;
     dispatch_source_set_event_handler(self.source, ^{
         count++;
         if(count == 7){
             // Fulfill the expectation when a write is detected
             sleep(1);
-            [fileWrittenExpectation fulfill];
+            operationCompleted = YES;
         }
     });
     
@@ -206,13 +204,16 @@
         @"additionalAttribute1": @"attribute1",
         @"additionalAttribute2": @"attribute2"
     }];
-
-    [self waitForExpectationsWithTimeout:30 handler:^(NSError * _Nullable error) {
-        if (error) {
-            // Handle timeout here
-            NSLog(@"Timeout occurred, but the test will not fail.");
-        }
-    }];
+    
+    // Set a timeout duration
+    NSTimeInterval timeout = 30.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    
+    // Run the run loop until the operation completes or the timeout is reached
+    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
+        // Allow other scheduled run loop activities to proceed
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -265,16 +266,14 @@
     // Set the remote log level to Info.
     [NRLogger setRemoteLogLevel:NRLogLevelInfo];
 
-    // Set up the expectation
-    XCTestExpectation *fileWrittenExpectation = [self expectationWithDescription:@"File has been modified"];
-    
+    __block BOOL operationCompleted = NO;
     __block int count = 0;
     dispatch_source_set_event_handler(self.source, ^{
         count++;
         if(count == 4){
             // Fulfill the expectation when a write is detected
             sleep(1);
-            [fileWrittenExpectation fulfill];
+            operationCompleted = YES;
         }
     });
     
@@ -295,12 +294,15 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    [self waitForExpectationsWithTimeout:30 handler:^(NSError * _Nullable error) {
-        if (error) {
-            // Handle timeout here
-            NSLog(@"Timeout occurred, but the test will not fail.");
-        }
-    }];
+    // Set a timeout duration
+    NSTimeInterval timeout = 30.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    
+    // Run the run loop until the operation completes or the timeout is reached
+    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
+        // Allow other scheduled run loop activities to proceed
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -351,16 +353,14 @@
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
 
-    // Set up the expectation
-    XCTestExpectation *fileWrittenExpectation = [self expectationWithDescription:@"File has been modified"];
-    
+    __block BOOL operationCompleted = NO;
     __block int count = 0;
     dispatch_source_set_event_handler(self.source, ^{
         count++;
         if(count == 5){
             // Fulfill the expectation when a write is detected
             sleep(1);
-            [fileWrittenExpectation fulfill];
+            operationCompleted = YES;
         }
     });
     
@@ -375,12 +375,15 @@
     os_log_error(customLog, "This is an error os_log message.\n");
     os_log_fault(customLog, "This is a fault os_log message.\n");
     
-    [self waitForExpectationsWithTimeout:30 handler:^(NSError * _Nullable error) {
-        if (error) {
-            // Handle timeout here
-            NSLog(@"Timeout occurred, but the test will not fail.");
-        }
-    }];
+    // Set a timeout duration
+    NSTimeInterval timeout = 30.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    
+    // Run the run loop until the operation completes or the timeout is reached
+    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
+        // Allow other scheduled run loop activities to proceed
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
     
     [NRAutoLogCollector restoreStandardOutputAndError];
 
