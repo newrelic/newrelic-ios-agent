@@ -113,6 +113,7 @@ static NSTimeInterval shortTimeInterval = 10;
     if([fileManager fileExistsAtPath:testFilename]) {
         [fileManager removeItemAtPath:testFilename error:nil];
     }
+    [self.mockNewRelicInternals stopMocking];
 
     [NRMAFlags disableFeatures: NRFeatureFlag_NewEventSystem];
 
