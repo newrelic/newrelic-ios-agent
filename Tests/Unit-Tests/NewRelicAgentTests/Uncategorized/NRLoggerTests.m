@@ -52,10 +52,35 @@
 
     [NRLogger clearLog];
 
+    // Open a file descriptor for the file
+    self.fileDescriptor = open([[NRLogger logFilePath] fileSystemRepresentation], O_EVTONLY);
+    if (self.fileDescriptor < 0) {
+        XCTFail(@"Failed to open file descriptor");
+        return;
+    }
+    
+    // Set up dispatch source for file monitoring
+    self.source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, self.fileDescriptor, DISPATCH_VNODE_WRITE, DISPATCH_TARGET_QUEUE_DEFAULT);
+
+    __weak typeof(self) weakSelf = self;
+    dispatch_source_set_cancel_handler(self.source, ^{
+        if (weakSelf.fileDescriptor) {
+            close(weakSelf.fileDescriptor);
+            weakSelf.fileDescriptor = 0;
+        }
+    });
+
 
 }
 - (void) tearDown
 {
+    if (self.fileDescriptor > 0) {
+        close(self.fileDescriptor);
+    }
+    if (self.source) {
+        dispatch_source_cancel(self.source);
+    }
+    
     [NRMAMeasurements removeMeasurementConsumer:helper];
     helper = nil;
 
@@ -67,18 +92,6 @@
 }
 
 - (void) testNRLogger {
-
-    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation1 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
 
     [NewRelic logInfo:   @"Info Log..."];
     [NewRelic logError:  @"Error Log..."];
@@ -93,20 +106,9 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
+    sleep(5);
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation2 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
-    
     NSError* error;
-    NSString *path = [NRLogger logFilePath];
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
         NSLog(@"%@", error.localizedDescription);
@@ -173,19 +175,21 @@
 
     // Set the remote log level to Debug.
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
-
-    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation1 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
+    
+    __block BOOL operationCompleted = NO;
+    __block int count = 0;
+    dispatch_source_set_event_handler(self.source, ^{
+        count++;
+        if(count == 7){
+            // Fulfill the expectation when a write is detected
+            sleep(1);
+            operationCompleted = YES;
         }
-    }];
-
+    });
+    
+    // Start monitoring
+    dispatch_resume(self.source);
+    
     // Seven messages should reach the remote log file for upload.
 
     [NewRelic logInfo:   @"Info Log..."];
@@ -200,18 +204,19 @@
         @"additionalAttribute1": @"attribute1",
         @"additionalAttribute2": @"attribute2"
     }];
-
-    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation2 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
+    
+    // Set a timeout duration
+    NSTimeInterval timeout = 30.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    
+    // Run the run loop until the operation completes or the timeout is reached
+    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
+        // Allow other scheduled run loop activities to proceed
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    if (!operationCompleted) {
+        NSLog(@"Failed to detect 7 writes to the log file.");
+    }
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
@@ -264,20 +269,21 @@
     // Set the remote log level to Info.
     [NRLogger setRemoteLogLevel:NRLogLevelInfo];
 
-    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation1 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
+    __block BOOL operationCompleted = NO;
+    __block int count = 0;
+    dispatch_source_set_event_handler(self.source, ^{
+        count++;
+        if(count == 4){
+            // Fulfill the expectation when a write is detected
+            sleep(1);
+            operationCompleted = YES;
         }
-    }];
-
+    });
+    
+    // Start monitoring
+    dispatch_resume(self.source);
+    
     // Seven messages should reach the remote log file for upload.
-
     [NewRelic logInfo:   @"Info Log..."];
     [NewRelic logError:  @"Error Log..."];
     [NewRelic logVerbose:@"Verbose Log..."];
@@ -291,18 +297,18 @@
         @"additionalAttribute2": @"attribute2"
     }];
 
-    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [delayExpectation2 fulfill];
-    });
-
-    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
-        if (error) {
-            XCTFail(@"Timeout error");
-        }
-    }];
-
+    // Set a timeout duration
+    NSTimeInterval timeout = 30.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    
+    // Run the run loop until the operation completes or the timeout is reached
+    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
+        // Allow other scheduled run loop activities to proceed
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    if (!operationCompleted) {
+        NSLog(@"Failed to detect 4 writes to the log file.");
+    }
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
@@ -352,8 +358,19 @@
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
 
-    sleep(5);
-
+    __block BOOL operationCompleted = NO;
+    __block int count = 0;
+    dispatch_source_set_event_handler(self.source, ^{
+        count++;
+        if(count == 5){
+            // Fulfill the expectation when a write is detected
+            sleep(1);
+            operationCompleted = YES;
+        }
+    });
+    
+    // Start monitoring
+    dispatch_resume(self.source);
     // Three messages should reach the remote log file for upload.
     NSLog(@"NSLog Test \n\n");
     os_log_t customLog = os_log_create("com.agent.tests", "logTest");
@@ -363,7 +380,19 @@
     os_log_error(customLog, "This is an error os_log message.\n");
     os_log_fault(customLog, "This is a fault os_log message.\n");
     
-    sleep(5);
+    // Set a timeout duration
+    NSTimeInterval timeout = 30.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    
+    // Run the run loop until the operation completes or the timeout is reached
+    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
+        // Allow other scheduled run loop activities to proceed
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    if (!operationCompleted) {
+        NSLog(@"Failed to detect 5 writes to the log file.");
+    }
+    
     [NRAutoLogCollector restoreStandardOutputAndError];
 
     NSError* error;
