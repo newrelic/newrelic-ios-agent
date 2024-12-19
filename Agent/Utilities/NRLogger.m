@@ -536,50 +536,24 @@ withTimestamp:(NSNumber *) timestamp {
                 return;
             }
 
+            // the text of the file contents is just comma separated dict objects
+            // Add the user provided attributes to the message.
+            NSMutableDictionary *commonBlock = [self commonBlockDict];
 
+            NSError* error = nil;
 
-            // modify to contain
-                        /*
-                         [{
-                         "common": {
-                              "attributes": {
-                                "logtype": "accesslogs",
-                                "service": "login-service",
-                                "hostname": "login.example.com"
-                              }
-                            },
-                         "logs": [{
-                                "timestamp": <TIMESTAMP_IN_UNIX_EPOCH_OR_IS08601_FORMAT>,
-                                "message": "User 'xyz' logged in"
-                              },{
-                                "timestamp": <TIMESTAMP_IN_UNIX_EPOCH_OR_IS08601_FORMAT>,
-                                "message": "User 'xyz' logged out",
-                                "attributes": {
-                                  "auditId": 123
-                                }
-                              }]
-                         }]
+            NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
+                                                         options:0
+                                                           error:&error];
 
-                         */
+            if (error) {
+                NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
+            }
 
-                    // the text of the file contents is just comma separated dict objects
-                    // Add the user provided attributes to the message.
-                    NSMutableDictionary *commonBlock = [self commonBlockDict];
-
-                    NSError* error = nil;
-
-                    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
-                                                                 options:0
-                                                                   error:&error];
-
-                    if (error) {
-                        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
-                    }
-
-                    // New version of the line
-                    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
-                                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
-                                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+            // New version of the line
+            NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
+                                         [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
+                                         [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
 
             // Old version of the line
            // NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];

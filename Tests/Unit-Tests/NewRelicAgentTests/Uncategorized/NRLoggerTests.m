@@ -25,6 +25,11 @@
 #import "NRAutoLogCollector.h"
 #import <os/log.h>
 
+@interface NRLogger()
++ (NRLogger *)logger;
+- (NSMutableDictionary*) commonBlockDict;
+@end
+
 @implementation NRLoggerTests
 - (void) setUp
 {
@@ -69,8 +74,6 @@
             weakSelf.fileDescriptor = 0;
         }
     });
-
-
 }
 - (void) tearDown
 {
@@ -108,19 +111,39 @@
 
     sleep(5);
 
-    NSError* error;
+    NSError* error = nil;
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
 
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
+
+    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
+                                                 options:0
+                                                   error:&error];
+
+    if (error) {
+        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
+        XCTAssertNil(error, @"Error creating log payload");
+        return;
+    }
+
+    error = nil;
+    // New version of the line
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
+                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
+                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
 
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:nil];
+                                                        error:&error];
     NSLog(@"decode=%@", decode);
+
+    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
+    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
 
     NSArray * expectedValues = @[
         @{@"message": @"Info Log..."},
@@ -131,31 +154,19 @@
         @{@"message": @"Debug Log..."},
         @{@"message": @"This is a test message for the New Relic logging system."},
     ];
+
     // check for existence of 6 logs.
     int foundCount = 0;
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decode) {
+        for (NSDictionary *dict2 in decodedArray) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
+
+            // Check the logs entries
             if ([[dict2 objectForKey:@"message"] isEqualToString: currentMessage]) {
                 foundCount += 1;
-                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
-                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationProviderKey] isEqualToString:NRLogMessageMobileValue],@"instrumentation provider set incorrectly");
-                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationVersionKey] isEqualToString:@"DEV"],@"instrumentation name set incorrectly");
-
-#if TARGET_OS_WATCH
-                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"watchOSAgent"],@"instrumentation name set incorrectly");
-#else
-                if ([[[UIDevice currentDevice] systemName] isEqualToString:@"tvOS"]) {
-                    XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"tvOSAgent"],@"instrumentation name set incorrectly");
-
-                }
-                else {
-                    XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"iOSAgent"],@"instrumentation name set incorrectly");
-                }
-#endif
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
@@ -166,6 +177,22 @@
     }
 
     XCTAssertEqual(foundCount, 7, @"Seven messages should be found.");
+
+    // Verify Common Block
+    XCTAssertTrue([[decodedCommonBlock objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
+    XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationProviderKey] isEqualToString:NRLogMessageMobileValue],@"instrumentation provider set incorrectly");
+    XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationVersionKey] isEqualToString:@"DEV"],@"instrumentation name set incorrectly");
+
+#if TARGET_OS_WATCH
+    XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"watchOSAgent"],@"instrumentation name set incorrectly");
+#else
+    if ([[[UIDevice currentDevice] systemName] isEqualToString:@"tvOS"]) {
+        XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"tvOSAgent"],@"instrumentation name set incorrectly");
+    }
+    else {
+        XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"iOSAgent"],@"instrumentation name set incorrectly");
+    }
+#endif
 }
 
 
@@ -223,12 +250,33 @@
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
+
+    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
+                                                 options:0
+                                                   error:&error];
+
+    if (error) {
+        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
+        XCTAssertNil(error, @"Error creating log payload");
+        return;
+    }
+
+    error = nil;
+    // New version of the line
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
+                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
+                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:nil];
+                                                        error:&error];
     NSLog(@"decode=%@", decode);
+
+    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
+    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
 
     NSArray * expectedValues = @[
         @{@"message": @"Info Log..."},
@@ -244,12 +292,11 @@
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decode) {
+        for (NSDictionary *dict2 in decodedArray) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
             if ([[dict2 objectForKey:@"message"] isEqualToString: currentMessage]) {
                 foundCount += 1;
-                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
@@ -314,12 +361,33 @@
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
+
+    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
+                                                 options:0
+                                                   error:&error];
+
+    if (error) {
+        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
+        XCTAssertNil(error, @"Error creating log payload");
+        return;
+    }
+
+    error = nil;
+    // New version of the line
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
+                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
+                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:nil];
+                                                        error:&error];
     NSLog(@"decode=%@", decode);
+
+    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
+    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
 
     NSArray * expectedValues = @[
         @{@"message": @"Info Log..."},
@@ -335,12 +403,11 @@
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decode) {
+        for (NSDictionary *dict2 in decodedArray) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
             if ([[dict2 objectForKey:@"message"] isEqualToString: currentMessage]) {
                 foundCount += 1;
-                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
@@ -400,12 +467,34 @@
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
+
+    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
+                                                 options:0
+                                                   error:&error];
+
+    if (error) {
+        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
+        XCTAssertNil(error, @"Error creating log payload");
+        return;
+    }
+
+    error = nil;
+    // New version of the line
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
+                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
+                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:nil];
+                                                        error:&error];
     NSLog(@"decode=%@", decode);
+
+    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
+    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
+
 
     NSArray * expectedValues = @[
         @{@"message": @"NSLog Test"},
@@ -419,12 +508,11 @@
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decode) {
+        for (NSDictionary *dict2 in decodedArray) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
             if ([[dict2 objectForKey:@"message"] containsString: currentMessage]) {
                 foundCount += 1;
-                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
