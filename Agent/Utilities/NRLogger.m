@@ -15,6 +15,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
 #import "NRAutoLogCollector.h"
+#import "NRMAHarvesterConnection+GZip.h"
 
 NRLogger *_nr_logger = nil;
 
@@ -558,8 +559,9 @@ withTimestamp:(NSNumber *) timestamp {
             // Old version of the line
            // NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
            
-            NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-
+            // Here we add gzip compression to the log data.
+            NSData* formattedData = [NRMAHarvesterConnection gzipData:[logMessagesJson dataUsingEncoding:NSUTF8StringEncoding]];
+            
             // We clear the log when we save the existing logs to uploadQueue.
             [self clearLog];
             
@@ -607,6 +609,10 @@ withTimestamp:(NSNumber *) timestamp {
         NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
         [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
         [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+
+        //NSString* contentEncoding = message.length <= 512 ? kNRMAIdentityHeader : kNRMAGZipHeader;
+
+        [req setValue:kNRMAGZipHeader forHTTPHeaderField:kNRMAContentEncodingHeader];
 
         req.HTTPMethod = @"POST";
         
