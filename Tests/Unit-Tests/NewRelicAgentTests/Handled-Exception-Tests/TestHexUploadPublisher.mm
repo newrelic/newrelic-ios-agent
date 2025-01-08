@@ -50,7 +50,8 @@ namespace NewRelic {
     auto appLicense = std::make_shared<NewRelic::Hex::Report::ApplicationLicense>("ABCDEF12345");
     applicationInfo = std::make_shared<NewRelic::Hex::Report::AppInfo>(appLicense.get(),fbs::Platform_iOS);
     attributeValidator = new NewRelic::AttributeValidator([](const char*) {return true;},[](const char*) {return true;},[](const char*) {return true;});
-    context = std::make_shared<NewRelic::Hex::HexReportContext>(applicationInfo,*attributeValidator);
+    auto uploadPublisher = new NewRelic::Hex::HexUploadPublisher(".","AppToken", "1.0", "staging-mobile-collector.staging.com");
+    context = std::make_shared<NewRelic::Hex::HexReportContext>(applicationInfo,*attributeValidator,uploadPublisher);
     sessionId = std::string("ABSDFWERQWE");
     e = std::make_shared<NewRelic::Hex::Report::HandledException>(sessionId,
                                                                           1,
@@ -70,14 +71,14 @@ namespace NewRelic {
     auto appLicense = std::make_shared<NewRelic::Hex::Report::ApplicationLicense>("ABCDEF12345");
     std::shared_ptr<NewRelic::Hex::Report::AppInfo> applicationInfo = std::make_shared<NewRelic::Hex::Report::AppInfo>(appLicense.get(),fbs::Platform_iOS);
     NewRelic::AttributeValidator* attributeValidator = new NewRelic::AttributeValidator([](const char*) {return true;},[](const char*) {return true;},[](const char*) {return true;});
-    std::shared_ptr<NewRelic::Hex::HexReportContext> context = std::make_shared<NewRelic::Hex::HexReportContext>(applicationInfo,*attributeValidator);
+    auto uploadPublisher = new NewRelic::Hex::HexUploadPublisher(".","AppToken", "1.0", "staging-mobile-collector.staging.com");
+    std::shared_ptr<NewRelic::Hex::HexReportContext> context = std::make_shared<NewRelic::Hex::HexReportContext>(applicationInfo,*attributeValidator,uploadPublisher);
     std::shared_ptr<NewRelic::Hex::Report::HandledException> exception = std::make_shared<NewRelic::Hex::Report::HandledException>("sessionId",
                                                                           1,
                                                                           "The tea is too hot.",
                                                                           "HotTeaException",
                                                                           std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>>());
 
-    auto uploadPublisher = new NewRelic::Hex::HexUploadPublisher(".","AppToken", "1.0", "staging-mobile-collector.staging.com");
     XCTAssertTrue(uploadPublisher!=NULL);
 }
 
@@ -88,15 +89,15 @@ namespace NewRelic {
     auto appLicense = std::make_shared<NewRelic::Hex::Report::ApplicationLicense>("ABCDEF12345");
     std::shared_ptr<NewRelic::Hex::Report::AppInfo> applicationInfo = std::make_shared<NewRelic::Hex::Report::AppInfo>(appLicense.get(),fbs::Platform_iOS);
     NewRelic::AttributeValidator* attributeValidator = new NewRelic::AttributeValidator([](const char*) {return true;},[](const char*) {return true;},[](const char*) {return true;});
-    std::shared_ptr<NewRelic::Hex::HexReportContext> context = std::make_shared<NewRelic::Hex::HexReportContext>(applicationInfo,*attributeValidator);
+    auto uploadPublisher = new NewRelic::Hex::TestHexUploadPublisher(".","AppToken", "1.0", "staging-mobile-collector.staging.com");
+    auto uploader = uploadPublisher->getUploaderImpl();
+    std::shared_ptr<NewRelic::Hex::HexReportContext> context = std::make_shared<NewRelic::Hex::HexReportContext>(applicationInfo,*attributeValidator,uploadPublisher);
     std::shared_ptr<NewRelic::Hex::Report::HandledException> exception = std::make_shared<NewRelic::Hex::Report::HandledException>("sessionId",
                                                                                                                                    1,
                                                                                                                                    "The tea is too hot.",
                                                                                                                                    "HotTeaException",
                                                                                                                                    std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>>());
 
-    auto uploadPublisher = new NewRelic::Hex::TestHexUploadPublisher(".","AppToken", "1.0", "staging-mobile-collector.staging.com");
-    auto uploader = uploadPublisher->getUploaderImpl();
 
     id mockWrapper = [OCMockObject partialMockForObject:((UploaderImpl*)uploader)->wrapper];
 
@@ -106,7 +107,7 @@ namespace NewRelic {
 
     context->finalize();
 
-    uploadPublisher->publish(context);
+   // uploadPublisher->publish(context);
 
     XCTAssertNoThrow([mockWrapper verify]);
 }
