@@ -1450,6 +1450,7 @@
 		348713F22B910A9B005A264C /* NRMAUILabelDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 348713F02B910A9B005A264C /* NRMAUILabelDetails.m */; };
 		348714242B979517005A264C /* NRMAIdGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 348714222B979517005A264C /* NRMAIdGenerator.h */; };
 		348714252B979517005A264C /* NRMAIdGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 348714232B979517005A264C /* NRMAIdGenerator.m */; };
+		3493DEFE2D359F2500BF5BED /* NRMASessionReplayTouchCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DEFD2D359F2500BF5BED /* NRMASessionReplayTouchCapture.swift */; };
 		34C1854F292464E500F10825 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929222912D726001449B6 /* Analytics.framework */; };
 		34C18550292464E500F10825 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929282912D72A001449B6 /* Connectivity.framework */; };
 		34C18551292464E500F10825 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
@@ -2457,6 +2458,7 @@
 		348713F02B910A9B005A264C /* NRMAUILabelDetails.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUILabelDetails.m; sourceTree = "<group>"; };
 		348714222B979517005A264C /* NRMAIdGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAIdGenerator.h; sourceTree = "<group>"; };
 		348714232B979517005A264C /* NRMAIdGenerator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAIdGenerator.m; sourceTree = "<group>"; };
+		3493DEFD2D359F2500BF5BED /* NRMASessionReplayTouchCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMASessionReplayTouchCapture.swift; sourceTree = "<group>"; };
 		34A929072912D502001449B6 /* Hex.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Hex.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9290A2912D605001449B6 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34A9290E2912D65B001449B6 /* Analytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Analytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3817,6 +3819,7 @@
 				34EE24522CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessor.m */,
 				3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetails.h */,
 				3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetails.m */,
+				3493DEFD2D359F2500BF5BED /* NRMASessionReplayTouchCapture.swift */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -5354,6 +5357,7 @@
 				02FF4A7B24DC64FC00115469 /* NRMACustomTrace.m in Sources */,
 				02FF496524DC629000115469 /* NRMATraceConfigurations.m in Sources */,
 				348714252B979517005A264C /* NRMAIdGenerator.m in Sources */,
+				3493DEFE2D359F2500BF5BED /* NRMASessionReplayTouchCapture.swift in Sources */,
 				02FF4A0324DC647200115469 /* NRMAMeasurements.m in Sources */,
 				02FF48DD24DC622700115469 /* NRMAUncaughtExceptionHandler.m in Sources */,
 				02FF48EC24DC622700115469 /* NRMAExceptionHandlerJSONKeys.m in Sources */,
@@ -6323,6 +6327,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 7.5.3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
 				DYLIB_CURRENT_VERSION = 7.5.3;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -6398,6 +6403,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 7.5.3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
 				DYLIB_CURRENT_VERSION = 7.5.3;
 				ENABLE_NS_ASSERTIONS = NO;

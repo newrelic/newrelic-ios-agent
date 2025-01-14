@@ -7,11 +7,14 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMASessionReplay : NSObject
+void NRMAOverride__sendEvent(id self, SEL _cmd, UIEvent* event);
 
+@interface NRMASessionReplay : NSObject
+- (void) NRMAOverride__interceptAndRecordTouches:(UIEvent *)event;
 @end
 
 NS_ASSUME_NONNULL_END
