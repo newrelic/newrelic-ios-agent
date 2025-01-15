@@ -14,6 +14,7 @@ import OSLog
 @objcMembers
 public class NRMASessionReplayTouchCapture: NSObject {
     public var touchDetails: [TouchDetail] = []
+    public var earliestDate: TimeInterval?
     let window: UIWindow
     private var idCounter: Int = 0
 
@@ -22,10 +23,10 @@ public class NRMASessionReplayTouchCapture: NSObject {
     public class TouchDetail: NSObject {
         @objc public let location: CGPoint
         @objc public let phase: UITouch.Phase
-        @objc public let date: Date
+        @objc public let date: TimeInterval
         @objc public let id: Int
         
-        init(location: CGPoint, phase: UITouch.Phase, date: Date, id: Int) {
+        init(location: CGPoint, phase: UITouch.Phase, date: TimeInterval, id: Int) {
             self.location = location
             self.phase = phase
             self.date = date
@@ -50,11 +51,19 @@ public class NRMASessionReplayTouchCapture: NSObject {
         }
 
         for touch in touches {
+            if(touchDetails.isEmpty) {
+                self.earliestDate = touch.timestamp
+            }
             touchDetails.append(TouchDetail(location: touch.location(in: window),
                                             phase: touch.phase,
-                                            date: Date(),
+                                            date: touch.timestamp,
                                             id: idCounter))
             idCounter += 1
         }
+    }
+    
+    public func resetEvents() {
+        self.touchDetails.removeAll()
+        self.earliestDate = nil
     }
 }
