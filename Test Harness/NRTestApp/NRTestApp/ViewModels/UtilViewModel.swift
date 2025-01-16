@@ -43,6 +43,12 @@ class UtilViewModel {
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
+        options.append(UtilOption(title: "Async URLSession dataTask", handler: { [self] in
+            Task {
+                try await doAsyncDataTask()
+            }
+        }))
+
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
 
@@ -155,6 +161,18 @@ class UtilViewModel {
         let dataTask = urlSession.dataTask(with: request)
 
         dataTask.resume()
+    }
+
+    // Async
+    func doAsyncDataTask() async throws {
+        let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: taskProcessor, delegateQueue: nil)
+
+        guard let url = URL(string: "https://www.google.com") else { return }
+
+        let request = URLRequest(url: url)
+        let (data, _) = try await urlSession.data(for: request)
+
+        print("Data: \(data)")
     }
 
     func shutDown() {
