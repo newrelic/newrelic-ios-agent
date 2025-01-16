@@ -122,10 +122,12 @@
                                                                                             contentType:[NRMANetworkFacade contentType:response]
                                                                                               bytesSent:bytesSent];
         NSUInteger modifiedBytesReceived = bytesReceived;
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
-        NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
-        if ([header isEqualToString:@"gzip"]) {
-            modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
+        if (([response isKindOfClass:[NSHTTPURLResponse class]])) {
+            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
+            NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
+            if ([header isEqualToString:@"gzip"]) {
+                modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
+            }
         }
 
 
