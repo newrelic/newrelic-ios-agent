@@ -85,10 +85,6 @@ static const NSString* lock = @"com.newrelic.urlsessiontask.instrumentation.lock
     }
 }
 
-+ (NSInteger) statusCode:(NSURLResponse*)response {
-    return [response isKindOfClass:[NSHTTPURLResponse class]] ? [((NSHTTPURLResponse*)response) statusCode] : -1;
-}
-
 // Currently we support NSURLSessionDataTask, NSURLSessionDownloadTask, and NSURLSessionUploadTask.
 + (bool) isSupportedTaskType:(NSURLSessionTask*) task {
     return [task isKindOfClass:[NSURLSessionDataTask class]] || [task isKindOfClass:[NSURLSessionDownloadTask class]] || [task isKindOfClass:[NSURLSessionUploadTask class]];
@@ -137,12 +133,8 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                     [NRMAHTTPUtilities attachPayload:payload
                                                   to:task.originalRequest];
 
-                    // get response code
-                    NSUInteger responseCode = [NRMAURLSessionTaskOverride statusCode:task.response];
-                    if (responseCode != -1) {
-                        NSData *data = NRMA__getDataForSessionTask(task);
-                        NRMA__recordTask(task, data, task.response, task.error);
-                    }
+                    NSData *data = NRMA__getDataForSessionTask(task);
+                    NRMA__recordTask(task, data, task.response, task.error);
                 }
             }
         }
