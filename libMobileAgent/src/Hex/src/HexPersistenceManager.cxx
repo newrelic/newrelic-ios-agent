@@ -28,12 +28,14 @@ void NewRelic::Hex::HexPersistenceManager::retrieveAndPublishReports() {
             auto context = std::make_shared<HexContext>();
             flatbuffers::Offset<HexAgentData> agentDataOffset = HexAgentData::Pack(*context->getBuilder(), agentDataObj.get(), nullptr);
 
-            auto agentDataVector = context->getBuilder()->CreateVector(&agentDataOffset, 1);
+            Offset<Vector<Offset<HexAgentData>>> agentDataVector = context->getBuilder()->CreateVector(&agentDataOffset, 1);
             auto bundle = fbs::CreateHexAgentDataBundle(*context->getBuilder(), agentDataVector);
             FinishHexAgentDataBundleBuffer(*context->getBuilder(), bundle);
 
             // Publish the context for this agent data
-            _publisher->publish(context);
+            if (context) {
+                _publisher->publish(context);
+            }
         }
     });
 
