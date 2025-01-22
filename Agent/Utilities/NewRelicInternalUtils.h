@@ -9,6 +9,7 @@
 #import "NRMAReachability.h"
 #import "NRConstants.h"
 #import "NRMANetworkMonitor.h"
+#import "BlockAttributeValidator.h"
 
 #if __LP64__
 #define NRMA_NSI "ld"
@@ -103,6 +104,8 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 + (NRMANetworkMonitor*) networkMonitor;
 
 + (NRMAReachability*) reachability;
+
++ (id<AttributeValidatorProtocol>) attributeValidator;
 
 @end
 
