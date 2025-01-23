@@ -116,7 +116,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
             
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
-            _attributeValidator = [NewRelicInternalUtils attributeValidator];
+            _attributeValidator = [BlockAttributeValidator attributeValidator];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
 
             NSString* attributes = [self sessionAttributeJSONString];
