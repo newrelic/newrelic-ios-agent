@@ -29,7 +29,7 @@
 #import "NRMAPayload.h"
 #import "NRMANetworkErrorEvent.h"
 #import "NRMASAM.h"
-#import "BlockAttributeValidator.h"
+#import "NRMAAttributeValidator.h"
 #import "NRMASessionEvent.h"
 
 //******************* THIS FILE HAS ARC DISABLED *******************
@@ -116,7 +116,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
             
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
-            _attributeValidator = [BlockAttributeValidator attributeValidator];
+            _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
 
             NSString* attributes = [self sessionAttributeJSONString];
@@ -207,6 +207,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     [__eventTypeRegex release];
     [_eventManager dealloc];
     [_sessionAttributeManager dealloc];
+    [_attributeValidator release];
     [_sessionStartTime release];
 
     [super dealloc];

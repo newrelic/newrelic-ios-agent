@@ -22,8 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
                        valueValidator:(ValueValidator)valueValidator
                 andEventTypeValidator:(EventTypeValidator)eventTypeValidator;
 
-+ (BlockAttributeValidator *) attributeValidator;
-
 @end
 
 NS_ASSUME_NONNULL_END

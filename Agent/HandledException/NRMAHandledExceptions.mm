@@ -22,7 +22,7 @@
 #import "NRMABool.h"
 #import "NRMASupportMetricHelper.h"
 #import "Constants.h"
-#import "BlockAttributeValidator.h"
+#import "NRMAAttributeValidator.h"
 
 @interface NRMAAnalytics(Protected)
 // Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
@@ -40,6 +40,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     NewRelic::Hex::HexUploadPublisher* _publisher;
 
     NRMAAnalytics *analyticsParent;
+    id<AttributeValidatorProtocol> _attributeValidator;
 }
 
 - (void) dealloc {
@@ -50,6 +51,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
     self.sessionId = nil;
     self.sessionStartDate = nil;
+    _attributeValidator = nil;
 
     [super dealloc];
 }
@@ -72,6 +74,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     self = [super init];
     if (self) {
         analyticsParent = analytics;
+        
+        _attributeValidator = [[NRMAAttributeValidator alloc] init];
 
         _analytics = std::shared_ptr<NewRelic::AnalyticsController>([analytics analyticsController]);
         self.sessionStartDate = sessionStartDate;
@@ -199,7 +203,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 resultMap,
                                                 [self createThreadVector:callstack length:frames]
                                                 );
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[BlockAttributeValidator attributeValidator]] autorelease];
+        
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributesNewValidation:attributes];
@@ -219,7 +224,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                                                 [self createThreadVector:callstack length:frames]
                                                 );
         
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[BlockAttributeValidator attributeValidator]] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributes:attributes];
@@ -269,7 +274,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         
         [self checkOffline:report];
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[BlockAttributeValidator attributeValidator]] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributesNewValidation:attributes];
@@ -288,7 +293,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         
         [self checkOffline:report];
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[BlockAttributeValidator attributeValidator]] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
         if (attributes != nil) {
             [contextAdapter addAttributes:attributes];
@@ -372,7 +377,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         report->setAttributeNoValidation("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
         [self checkOffline:report];
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[BlockAttributeValidator attributeValidator]] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
         if (exceptionDictionary != nil) {
             [contextAdapter addAttributesNewValidation:exceptionDictionary];
@@ -389,7 +394,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         report->setAttribute("timeSinceLoad", [[[NSDate new] autorelease] timeIntervalSinceDate:self.sessionStartDate]);
         [self checkOffline:report];
 
-        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:[BlockAttributeValidator attributeValidator]] autorelease];
+        NRMAExceptionReportAdaptor* contextAdapter = [[[NRMAExceptionReportAdaptor alloc] initWithReport:report attributeValidator:_attributeValidator] autorelease];
 
         if (exceptionDictionary != nil) {
             [contextAdapter addAttributes:exceptionDictionary];
