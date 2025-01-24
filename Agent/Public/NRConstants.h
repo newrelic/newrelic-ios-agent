@@ -159,6 +159,8 @@ typedef NSString NRMetricUnit;
 #define NRMA_METRIC_APP_LAUNCH_COLD        @"AppLaunch/Cold"
 #define NRMA_METRIC_APP_LAUNCH_RESUME      @"AppLaunch/Hot"
 
+#define NRMAHandledRequestKey @"NRMAHandledRequest"
+
 // Network Failure Codes
 enum NRNetworkFailureCode {
         NRURLErrorUnknown = -1,

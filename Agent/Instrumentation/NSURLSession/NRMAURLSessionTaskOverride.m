@@ -15,6 +15,7 @@
 #import "NRMAHTTPUtilities.h"
 #import "NRMANetworkFacade.h"
 #import "NRMAFlags.h"
+#import "NRConstants.h"
 
 static IMP NRMAOriginal__resume;
 static IMP NRMAOriginal__urlSessionTask_SetState;
@@ -108,40 +109,56 @@ void NRMAOverride__resume(id self, SEL _cmd)
 }
 
 // This is the only way we have right now to record an swift async await web request.
-void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSURLSessionTaskState *newState)
+void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSURLSessionTaskState newState)
 {
     @synchronized(lock) {
         @synchronized(task) {
             if ([NRMAURLSessionTaskOverride isSupportedTaskType: task]) {
-                // Checking for NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY in the headers here. The data usually isn't link to the task yet here so, if that header exists we are handling the task elsewhere and have a better chance of getting the data so we don't need to record it here.
+
+                NSNumber *isHandled = objc_getAssociatedObject(task, NRMAHandledRequestKey);
+
+                if (isHandled != nil && [isHandled boolValue]) {
+                    if (NRMAOriginal__urlSessionTask_SetState!= nil) {
+                        // Call original setState function.
+                        ((void(*)(NSURLSessionTask *,SEL,NSURLSessionTaskState))NRMAOriginal__urlSessionTask_SetState)(task, _cmd, newState);
+                    }
+                    return;
+                }
+
+
                 NSURLRequest  *currentRequest = task.currentRequest;
 
-                if(currentRequest != nil && [currentRequest valueForHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY] != nil) {
+                if(currentRequest == nil) {
                     return;
                 }
 
                 NSURL *url = [currentRequest URL];
-                if (url != nil &&
-                    task.state == NSURLSessionTaskStateRunning) {
-
+                if (url != nil) {
                     // Added this section to add Distributed Tracing traceId\trace.id, guid,id and payload.
                     //1
                     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:currentRequest];
                     mutableRequest = [NRMAHTTPUtilities addConnectivityHeaderAndPayload:mutableRequest];
 
                     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-                    [NRMAHTTPUtilities attachPayload:payload
-                                                  to:task.originalRequest];
+                    [NRMAHTTPUtilities attachPayload:payload to:task.originalRequest];
 
                     NSData *data = NRMA__getDataForSessionTask(task);
-                    NRMA__recordTask(task, data, task.response, task.error);
+                    
+                    // log the task and data that we will record
+                    //NSLog(@"NRMAOverride__urlSessionTask_SetState newState: %ld, taskState:%ld  task: %@ data: %@", (long) newState, (long)task.state, task, data);
+
+                    if (newState == NSURLSessionTaskStateCompleted) {
+                        // NSLog(@"NRMAOverride NRMA__recordTask called because newState  == NSURLSessionTaskStateCompleted  newState: %ld, taskState:%ld  task: %@ data: %@", (long) newState, (long)task.state, task, data);
+
+                        NRMA__recordTask(task, data, task.response, task.error);
+                    }
                 }
             }
         }
     }
     if (NRMAOriginal__urlSessionTask_SetState!= nil) {
         // Call original setState function.
-        ((void(*)(NSURLSessionTask *,SEL,NSURLSessionTaskState *))NRMAOriginal__urlSessionTask_SetState)(task, _cmd, newState);
+        ((void(*)(NSURLSessionTask *,SEL,NSURLSessionTaskState))NRMAOriginal__urlSessionTask_SetState)(task, _cmd, newState);
     }
 }
 

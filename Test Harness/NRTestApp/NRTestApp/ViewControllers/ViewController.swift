@@ -118,6 +118,11 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
 
+        options.append(UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction()}))
+
+        options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in refreshActionAsync()}))
+
+
     }
     
     func utilitiesAction() {
@@ -131,13 +136,22 @@ class ViewController: UIViewController {
     func refreshAction() {
         viewModel.loadApodData()
     }
+    func brokeRefreshAction() {
+        viewModel.loadApodDataBrokeData()
+    }
 
     func refreshActionAsync() {
         Task {
-            await viewModel.loadApodDataAsync()
+            await viewModel.loadApodDataAsyncBrokeData()
         }
     }
-    
+
+    func brokeRefreshActionAsync() {
+        Task {
+            await viewModel.loadApodDataAsyncBrokeData()
+        }
+    }
+
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)

@@ -48,6 +48,11 @@ class UtilViewModel {
                 try await doAsyncDataTask()
             }
         }))
+        options.append(UtilOption(title: "Async URLSession dataTask Fail", handler: { [self] in
+            Task {
+                try await doAsyncDataTaskFail()
+            }
+        }))
 
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
@@ -168,6 +173,17 @@ class UtilViewModel {
         let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: taskProcessor, delegateQueue: nil)
 
         guard let url = URL(string: "https://www.google.com") else { return }
+
+        let request = URLRequest(url: url)
+        let (data, _) = try await urlSession.data(for: request)
+
+        print("Data: \(data)")
+    }
+
+    func doAsyncDataTaskFail() async throws {
+        let urlSession = URLSession(configuration: URLSession.shared.configuration, delegate: taskProcessor, delegateQueue: nil)
+
+        guard let url = URL(string: "https://www.goo3gle.c3om") else { return }
 
         let request = URLRequest(url: url)
         let (data, _) = try await urlSession.data(for: request)

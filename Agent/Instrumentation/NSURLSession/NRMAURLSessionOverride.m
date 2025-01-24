@@ -216,10 +216,11 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,request);
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
+    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+    [NRMAHTTPUtilities attachPayload:payload
+                                  to:task.originalRequest];
 
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -256,6 +257,7 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
 
     if (completionHandler == nil) {
         task  = ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,completionHandler);
+        objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
         [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
 
@@ -267,11 +269,14 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
 
         [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
 
+        // NSLog(@"NRMA__recordTask called from NRMAOverride__dataTaskWithRequest_completionHandler");
+
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
     });
 
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -291,7 +296,8 @@ NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
     }
 
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURL*))originalImp)(self,_cmd,url);
-    
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;
@@ -312,10 +318,11 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSURL*))originalImp)(self,_cmd,mutableRequest,fileURL);
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
-        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-        [NRMAHTTPUtilities attachPayload:payload
-                                      to:task.originalRequest];
+    NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+    [NRMAHTTPUtilities attachPayload:payload
+                                  to:task.originalRequest];
 
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
@@ -335,6 +342,7 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSData*))originalImp)(self, _cmd, mutableRequest, data);
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
     [NRMAHTTPUtilities attachPayload:payload to:task.originalRequest];
@@ -356,7 +364,8 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
     }
 
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*))originalImp)(self, _cmd,request);
-    
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
     return task;
@@ -381,8 +390,7 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     if (completionHandler == nil) {
         task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,completionHandler);
 
-
-            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
 
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
         return task;
@@ -391,13 +399,15 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     task =  ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,^(NSData* data,
                                                                                                                                                         NSURLResponse* response,
                                                                                                                                                         NSError* error){
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
 
-            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
+       //  NSLog(@"NRMA__recordTask called from NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler");
 
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
     });
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -425,8 +435,7 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     if (completionHandler == nil) {
         task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,completionHandler);
 
-
-            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
 
         [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
         return task;
@@ -434,13 +443,15 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
 
     task =  ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,^(NSData* data, NSURLResponse* response, NSError* error){
 
-
-            [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
+        [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
+        
+        // NSLog(@"NRMA__recordTask called from NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler");
 
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
     });
+    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
