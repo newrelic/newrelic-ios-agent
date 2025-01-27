@@ -45,7 +45,8 @@ void NR__OVERRIDE_NRMAHexUploader_sendData(id self, SEL _cmd, id data) {
                                                              sessionStartTime:[NSDate date]
                                                            agentConfiguration:_agentConfiguration
                                                                      platform:@"iOS"
-                                                                    sessionId:@"id"];
+                                                                    sessionId:@"id"
+                                                           attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
     self.semaphore = dispatch_semaphore_create(procCount);

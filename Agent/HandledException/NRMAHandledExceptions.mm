@@ -51,7 +51,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
     self.sessionId = nil;
     self.sessionStartDate = nil;
-    _attributeValidator = nil;
+    [_attributeValidator release];
 
     [super dealloc];
 }
@@ -60,7 +60,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                             sessionStartTime:(NSDate*)sessionStartDate
                           agentConfiguration:(NRMAAgentConfiguration*)agentConfiguration
                                     platform:(NSString*)platform
-                                   sessionId:(NSString*)sessionId {
+                                   sessionId:(NSString*)sessionId
+                                attributeValidator:(id<AttributeValidatorProtocol>) attributeValidator {
     if (analytics == nil || sessionStartDate == nil || [agentConfiguration applicationToken] == nil || platform == nil || sessionId == nil) {
         NSMutableArray* missingParams = [[NSMutableArray new] autorelease];
         if ([agentConfiguration applicationToken] == nil) [missingParams addObject:@"appToken"];
@@ -75,7 +76,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     if (self) {
         analyticsParent = analytics;
         
-        _attributeValidator = [[NRMAAttributeValidator alloc] init];
+        _attributeValidator = [attributeValidator retain];
 
         _analytics = std::shared_ptr<NewRelic::AnalyticsController>([analytics analyticsController]);
         self.sessionStartDate = sessionStartDate;
