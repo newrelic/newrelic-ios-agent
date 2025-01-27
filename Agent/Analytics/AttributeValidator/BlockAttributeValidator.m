@@ -7,6 +7,9 @@
 //
 
 #import "BlockAttributeValidator.h"
+#import "Constants.h"
+#import "NRMAAnalytics.h"
+#import "NRLogger.h"
 
 @implementation BlockAttributeValidator
 
