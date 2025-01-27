@@ -120,7 +120,7 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction()}))
 
-        options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in refreshActionAsync()}))
+        options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
 
 
     }
@@ -142,7 +142,7 @@ class ViewController: UIViewController {
 
     func refreshActionAsync() {
         Task {
-            await viewModel.loadApodDataAsyncBrokeData()
+            await viewModel.loadApodDataAsync()
         }
     }
 
