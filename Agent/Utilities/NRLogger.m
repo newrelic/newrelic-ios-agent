@@ -330,6 +330,24 @@ withTimestamp:(NSNumber *) timestamp {
     if (nativePlatform) [commonAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey];
     if (nrAppId) [commonAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey];
 
+
+    NSString* sessionAttributes = [[NewRelicAgentInternal sharedInstance].analyticsController sessionAttributeJSONString];
+    if (sessionAttributes != nil && [sessionAttributes length] > 0) {
+        NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                   options:0
+                                                                     error:nil];
+        for (NSString *key in dictionary) {
+            id value = [dictionary objectForKey:key];
+
+
+            if (value) {
+                [commonAttributes setObject:value forKey:key];
+            }
+        }
+    }
+
+
+
     return commonAttributes;
 }
 
@@ -598,7 +616,6 @@ withTimestamp:(NSNumber *) timestamp {
         NSData *formattedData = [self->uploadQueue firstObject];
         
         if (self->debugLogs) {
-            //NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:formattedData encoding:NSUTF8StringEncoding]];
             NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                                    options:0
                                                                      error:nil];
@@ -609,9 +626,6 @@ withTimestamp:(NSNumber *) timestamp {
         NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
         [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
         [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
-
-        //NSString* contentEncoding = message.length <= 512 ? kNRMAIdentityHeader : kNRMAGZipHeader;
-
         [req setValue:kNRMAGZipHeader forHTTPHeaderField:kNRMAContentEncodingHeader];
 
         req.HTTPMethod = @"POST";
