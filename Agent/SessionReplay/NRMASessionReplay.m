@@ -20,7 +20,113 @@
 #import "NRMASessionReplayCapture.h"
 #import "NRMASessionReplayFrameProcessor.h"
 #import "NRMAMethodSwizzling.h"
+#import "NRMAAssociate.h"
 #import <NewRelic/NewRelic-Swift.h>
+
+@interface NRMATouch : NSObject
+
+@property (readonly, nonatomic) NSDate* timestamp;
+@property (readonly, assign) CGPoint touchLocation;
+@property (readonly, assign) NSUInteger identifier;
+
+- (instancetype)initWithTimestamp:(NSDate *)timestamp andLocation:(CGPoint)location andIdentifier: (NSUInteger)identifier;
+
+@end
+
+@implementation NRMATouch
+
+- (instancetype)initWithTimestamp:(NSDate *)timestamp andLocation:(CGPoint)location andIdentifier:(NSUInteger)identifier {
+    self = [super init];
+    if(self) {
+        _timestamp = timestamp;
+        _touchLocation = location;
+        _identifier = identifier;
+    }
+    
+    return self;
+}
+
+@end
+
+@interface  NRMATouchTracker : NSObject
+
+@property (readonly, nonatomic) NRMATouch* startTouch;
+@property (nonatomic) NSMutableArray<NRMATouch *>* moveTouches;
+@property (nonatomic) NRMATouch* endTouch;
+
+-(instancetype)initWithStartTouch:(NRMATouch*)startTouch;
+-(void)addMoveTouch:(NRMATouch*)moveTouch;
+-(void)addEndTouch:(NRMATouch*)endTouch;
+
+@end
+
+@implementation NRMATouchTracker
+
+-(instancetype)initWithStartTouch:(NRMATouch *)startTouch {
+    self = [super init];
+    if(self) {
+        _startTouch = startTouch;
+        _moveTouches = [[NSMutableArray alloc] init];
+    }
+    
+    return self;
+}
+
+- (void)addMoveTouch:(NRMATouch *)moveTouch {
+    [_moveTouches addObject:moveTouch];
+}
+
+- (void)addEndTouch:(NRMATouch *)endTouch {
+    _endTouch = endTouch;
+}
+
+- (NSArray *) jsonDescription {
+    NSMutableArray *touchDescriptions = [[NSMutableArray alloc] init];
+    
+    NSDictionary *startTouchDescription = @{ @"type": @(3),
+                                             @"timestamp": @([_startTouch.timestamp timeIntervalSince1970] * 1000),
+                                             @"data": @{
+                                                 @"source": @(2),
+                                                 @"type": @(7),
+                                                 @"id": @(_startTouch.identifier),
+                                                 @"x": @(_startTouch.touchLocation.x),
+                                                 @"y": @(_startTouch.touchLocation.y)
+                                             }};
+    
+    [touchDescriptions addObject:startTouchDescription];
+    
+    for(NRMATouch *touchDescription in _moveTouches) {
+        NSDictionary *moveTouchDescription = @{ @"type": @(3),
+                                                 @"timestamp": @([touchDescription.timestamp timeIntervalSince1970] * 1000),
+                                                 @"data": @{
+                                                     @"source": @(1),
+                                                     @"positions": @{
+                                                         @"id": @(touchDescription.identifier),
+                                                         @"x": @(touchDescription.touchLocation.x),
+                                                         @"y": @(touchDescription.touchLocation.y)
+                                                     }
+                                                 }};
+        [touchDescriptions addObject:touchDescription];
+    }
+    
+    NSDictionary *endTouchDescription = @{ @"type": @(3),
+                                             @"timestamp": @([_endTouch.timestamp timeIntervalSince1970] * 1000),
+                                             @"data": @{
+                                                 @"source": @(2),
+                                                 @"type": @(9),
+                                                 @"id": @(_endTouch.identifier),
+                                                 @"x": @(_endTouch.touchLocation.x),
+                                                 @"y": @(_endTouch.touchLocation.y)
+                                             }};
+    
+    [touchDescriptions addObject:endTouchDescription];
+    
+    return touchDescriptions;
+}
+
+
+@end
+
 
 IMP NRMAOriginal__sendEvent;
 
@@ -47,6 +153,9 @@ IMP NRMAOriginal__sendEvent;
     NRMASessionReplayCapture* _sessionReplayCapture;
     NRMASessionReplayFrameProcessor* _sessionReplayFrameProcessor;
     NRMASessionReplayTouchCapture* _touchCapture;
+    
+    NSUInteger touchID;
+    NSMutableArray<NRMATouchTracker*>* _trackedTouches;
 }
 
 - (instancetype)init {
@@ -57,7 +166,9 @@ IMP NRMAOriginal__sendEvent;
         _rawFrames = [[NSMutableArray alloc] init];
         _styles = [NSMutableArray new];
         _processedFrames = [NSMutableArray new];
+        _trackedTouches = [[NSMutableArray alloc] init];
         frameCount = 0;
+        touchID = 0;
         
         _sessionReplayCapture = [[NRMASessionReplayCapture alloc] init];
         _sessionReplayFrameProcessor = [[NRMASessionReplayFrameProcessor alloc] init];
@@ -103,7 +214,28 @@ IMP NRMAOriginal__sendEvent;
 
 //            va_end(argp);
 //            NSLog(@"Event: %@", [event description]);
-            [self->_touchCapture captureSendEventTouchesWithEvent:event];
+//            [self->_touchCapture captureSendEventTouchesWithEvent:event];
+            for(UITouch *touch in event.allTouches) {
+
+                if(touch.phase == UITouchPhaseBegan) {
+                    self->touchID++;
+                    NRMATouch *nrmaTouch = [[NRMATouch alloc] initWithTimestamp:[NSDate date]
+                                                                    andLocation:[touch locationInView:touch.window] andIdentifier: self->touchID];
+                    NRMATouchTracker *touchTracker = [[NRMATouchTracker alloc]initWithStartTouch:nrmaTouch];
+                    [NRMAAssociate attach:touchTracker to:touch with:@"TouchTracker"];
+                } else if(touch.phase == UITouchPhaseEnded){
+                    NRMATouchTracker *touchTracker = [NRMAAssociate retrieveFrom:touch with:@"TouchTracker"];
+                    if(touchTracker == nil) {
+                        NSLog(@"ERROR: Touch Tracker didn't associate with touch!");
+                    } else {
+                        NRMATouch *nrmaTouch = [[NRMATouch alloc] initWithTimestamp:[NSDate date]
+                                                                        andLocation:[touch locationInView:touch.window] andIdentifier: self->touchID];
+                        [touchTracker addEndTouch:nrmaTouch];
+                        [self->_trackedTouches addObject:touchTracker];
+                    }
+                }
+            }
+            
             IMP originalImp = NRMAOriginal__sendEvent;
             
             ((void (*)(id, SEL, UIEvent*))originalImp)(self_, originalSendEventSel, event);
@@ -121,7 +253,7 @@ IMP NRMAOriginal__sendEvent;
 //            }), types);
 //            NSLog(@"Class AddMethod success = %d", success);
 //            __block IMP originalSendEventIMP = class_replaceMethod(clazz, originalSendEventSel, imp_implementationWithBlock(^(__unsafe_unretained id self_, UIEvent *event) {
-////                NSLog(@"Touch Swizzle. Event: %@", event);
+//                NSLog(@"Touch Swizzle. Event: %@", event);
 ////                [self->_touchCapture captureSendEventTouchesWithEvent:event];
 //                ((void (*)(id, SEL, UIEvent*))originalSendEventIMP)(self_, originalSendEventSel, event);
 //            }), types);
@@ -146,7 +278,7 @@ IMP NRMAOriginal__sendEvent;
     _touchCapture = [[NRMASessionReplayTouchCapture alloc] initWithWindow:_window];
     [_processedFrames addObject:[self generateInitialNode]];
     _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
-//        [self takeFrame];
+        [self takeFrame];
     }];
 }
 
@@ -186,6 +318,8 @@ IMP NRMAOriginal__sendEvent;
 }
 
 - (NSString *)consolidateFrames {
+    [self processTouches];
+    
     NSData *viewFramesJSONData = [NSJSONSerialization dataWithJSONObject:_processedFrames
                                                                  options:0
                                                                    error:nil];
@@ -193,14 +327,11 @@ IMP NRMAOriginal__sendEvent;
     return frameJSON;
 }
 
-void NRMAOverride__sendEvent(id self_, SEL _cmd, UIEvent* event) {
-    NSLog(@"Touch Swizzle. Event: %@", event);
-    
-//    UIView* view = []
-    
-    IMP originalImp = NRMAOriginal__sendEvent;
-    
-   ((id(*)(id, SEL, UIEvent*))originalImp)(self_, _cmd, event);
+- (void)processTouches {
+    for (NRMATouchTracker *touchTracker in _trackedTouches) {
+        NSArray* touch = [touchTracker jsonDescription];
+        [_processedFrames addObjectsFromArray:touch];
+    }
 }
 
 @end
