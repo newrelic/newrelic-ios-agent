@@ -605,7 +605,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
             } else {
-                NRLOG_AGENT_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                if (name == kNRMA_Attrib_userId && !value ) {
+                    NRLOG_AGENT_VERBOSE(@"Successfully set userId to nil");
+                    return YES;
+
+                }else {
+                    NRLOG_AGENT_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                }
                 return NO;
             }
         } catch (std::exception& error) {

@@ -90,6 +90,10 @@
     BOOL validAttribute = [attributeValidator nameValidator:name];
     BOOL validValue = [attributeValidator valueValidator:value];
 
+    if (name == kNRMA_Attrib_userId && !value ) {
+        NRLOG_AGENT_VERBOSE(@"Successfully set userId to nil");
+        return YES;
+    }
     if (!(validAttribute && validValue)) {
         NRLOG_AGENT_VERBOSE(@"Failed to create attribute named %@", name);
         return NO;
