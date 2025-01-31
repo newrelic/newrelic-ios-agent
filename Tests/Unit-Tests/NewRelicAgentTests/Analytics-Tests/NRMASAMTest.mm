@@ -28,6 +28,14 @@
 
     manager = [self samTest];
     [manager removeAllSessionAttributes];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file]]) {
+        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file] error:nil];
+    }
+    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private]]) {
+        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private] error:nil];
+    }
 }
 
 - (NRMASAM*) samTest {
@@ -293,14 +301,6 @@
 }
 
 - (void)testPersistedSessionAnalytics {
-    
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file]]) {
-        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file] error:nil];
-    }
-    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private]]) {
-        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private] error:nil];
-    }
     
     NSString *attribute = @"blarg";
     NSString *attribute2 = @"blarg2";
