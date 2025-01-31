@@ -37,6 +37,11 @@
     manager = [self samTest];
 }
 
+- (void) tearDown {
+    [super tearDown];
+    [manager removeAllSessionAttributes];
+}
+
 - (NRMASAM*) samTest {
     return [[NRMASAM alloc] initWithAttributeValidator:[[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
         if ([name length] == 0) {
