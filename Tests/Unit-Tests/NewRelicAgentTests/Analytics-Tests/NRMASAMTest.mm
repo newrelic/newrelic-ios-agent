@@ -24,6 +24,7 @@
 
 - (void)setUp {
     [super setUp];
+    [NRLogger setLogLevels:NRLogLevelDebug];
 
     manager = [self samTest];
     [manager removeAllSessionAttributes];
@@ -288,6 +289,7 @@
         // Wait a short period before retrying
         [NSThread sleepForTimeInterval:0.1];
     }    
+    XCTFail(@"Failed to persist expected attributes.");
 }
 
 - (void)testPersistedSessionAnalytics {
@@ -336,7 +338,6 @@
 }
 
 - (void) testClearPersistedSessionAnalytics {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"blarg";
     NSString *attribute2 = @"blarg2";
 
