@@ -222,7 +222,7 @@
 + (NSString*) getLastSessionsAttributes {
     NSError *error;
     NSString *lastSessionAttributesJsonString = nil;
-    NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[self attributeFilePath]];
+    NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM attributeFilePath]];
     NSDictionary *lastSessionPrivateAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM privateAttributeFilePath]];
 
     NSMutableDictionary *mergedDictionary = [NSMutableDictionary dictionary];

@@ -129,6 +129,7 @@
                                                              error:nil];
     XCTAssertTrue([decode[attribute] isEqual:@(2)]);
 }
+
 - (void) testIncrementSessionAttributeDiffTypes {
     NSString* attribute = @"incrementableAttribute";
     float initialValue = 1.2;
@@ -264,6 +265,74 @@
     XCTAssertEqual(decode.count, 0, @"Should have emptied session attributes.");
 
 
+}
+
+- (void)waitForAttributesToPersist:(NSArray<NSString *> *)expectedAttributes timeout:(NSTimeInterval)timeout {
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    while ([timeoutDate timeIntervalSinceNow] > 0) {
+        NSString *attributes = [NRMASAM getLastSessionsAttributes];
+        NSDictionary *decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+        
+        BOOL allAttributesPersisted = YES;
+        for (NSString *attribute in expectedAttributes) {
+            if (![decode objectForKey:attribute]) {
+                allAttributesPersisted = NO;
+                break;
+            }
+        }
+
+        if (allAttributesPersisted) {
+            return;
+        }
+
+        // Wait a short period before retrying
+        [NSThread sleepForTimeInterval:0.1];
+    }    
+}
+
+- (void)testPersistedSessionAnalytics {
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file]]) {
+        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file] error:nil];
+    }
+    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private]]) {
+        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private] error:nil];
+    }
+    
+    NSString *attribute = @"blarg";
+    NSString *attribute2 = @"blarg2";
+    NSString *attribute3 = @"privateBlarg3";
+    NSString *attribute4 = @"Blarg4";
+    NSString *attribute5 = @"privateBlarg5";
+
+    // Set attributes
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute2 value:@"blurg2"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setNRSessionAttribute:attribute3 value:@"blurg2"], @"Failed to successfully set private session attribute");
+    
+    NSString *attributes = [manager sessionAttributeJSONString];
+    NSDictionary *decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+    
+    XCTAssertEqual(decode.count, 3);
+    
+    manager = nil;
+    // Wait for persistence
+    [self waitForAttributesToPersist:@[attribute, attribute2, attribute3] timeout:10];
+
+    manager = [self samTest];
+
+    XCTAssertTrue([manager setSessionAttribute:attribute4 value:@"blurg"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setNRSessionAttribute:attribute5 value:@"blurg2"], @"Failed to successfully set private session attribute");
+
+    attributes = [manager sessionAttributeJSONString];
+    decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+
+    XCTAssertTrue([[decode allKeys] containsObject:attribute], @"Should have persisted and new attribute 1.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute2], @"Should have persisted and new attribute 2.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute3], @"Should have persisted and new private attribute 3.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute4], @"Should have persisted and new attribute 4.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute5], @"Should have persisted and new private attribute 5.");
 }
 
 - (void) testClearPersistedSessionAnalytics {
