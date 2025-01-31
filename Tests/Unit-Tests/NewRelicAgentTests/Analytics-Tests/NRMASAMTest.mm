@@ -32,7 +32,7 @@
         [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private] error:nil];
     }
     
-    [NRLogger setLogLevels:NRLogLevelDebug];
+   // [NRLogger setLogLevels:NRLogLevelDebug];
 
     manager = [self samTest];
 }
