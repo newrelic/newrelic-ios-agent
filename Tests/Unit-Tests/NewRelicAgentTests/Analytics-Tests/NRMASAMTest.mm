@@ -24,11 +24,6 @@
 
 - (void)setUp {
     [super setUp];
-    [NRLogger setLogLevels:NRLogLevelDebug];
-
-    manager = [self samTest];
-    [manager removeAllSessionAttributes];
-    
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file]]) {
         [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file] error:nil];
@@ -36,6 +31,10 @@
     if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private]]) {
         [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private] error:nil];
     }
+    
+    [NRLogger setLogLevels:NRLogLevelDebug];
+
+    manager = [self samTest];
 }
 
 - (NRMASAM*) samTest {
