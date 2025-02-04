@@ -40,11 +40,20 @@
     return self;
 }
 
+- (void) dealloc {
+    if(self.pendingBlock){
+        dispatch_block_cancel(self.pendingBlock);
+    }
+}
+
 - (void)performWrite:(void (^)(void))writeBlock {
     __weak PersistentEventStore *weakSelf = self;
     dispatch_async(self.writeQueue, ^{
         __strong PersistentEventStore *strongSelf = weakSelf;
-        if (!strongSelf) return; // Ensure strongSelf is not nil
+        if (!strongSelf) { // Ensure strongSelf is not nil
+            NRLOG_WARNING(@"A block was scheduled but PersistentEventStore was deallocated before running");
+            return;
+        }
 
         if (strongSelf.pendingBlock != nil) {
             dispatch_block_cancel(strongSelf.pendingBlock);
