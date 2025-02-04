@@ -30,30 +30,31 @@
 - (id)initWithAttributeValidator:(__nullable id<AttributeValidatorProtocol>)validator {
     self = [super init];
     if (self) {
+        attributeValidator = validator;
+
         _attributePersistentStore = [[PersistentEventStore alloc] initWithFilename:[NRMASAM attributeFilePath] andMinimumDelay:.025];
         
         _privateAttributePersistentStore = [[PersistentEventStore alloc] initWithFilename:[NRMASAM privateAttributeFilePath] andMinimumDelay:.025];
 
         // Load public attributes from file.
         NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM attributeFilePath]];
+        attributeDict = [[NSMutableDictionary alloc] init];
         if (lastSessionAttributes != nil) {
-            attributeDict = [lastSessionAttributes mutableCopy];
-        }
-        if (!attributeDict) {
-            attributeDict = [[NSMutableDictionary alloc] init];
+            for(NSString* key in [lastSessionAttributes allKeys]) {
+                [self setAttribute:key value:[lastSessionAttributes valueForKey:key]];
+            }
         }
 
         // Load private attributes from file.
         NSDictionary *lastSessionPrivateAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM privateAttributeFilePath]];
-
+        privateAttributeDict = [[NSMutableDictionary alloc] init];
+        
         if (lastSessionPrivateAttributes != nil) {
-            privateAttributeDict = [lastSessionPrivateAttributes mutableCopy];
+            for(NSString* key in [lastSessionPrivateAttributes allKeys]) {
+                [self setNRSessionAttribute:key value:[lastSessionPrivateAttributes valueForKey:key]];
+            }
         }
-        if (!privateAttributeDict) {
-            privateAttributeDict = [[NSMutableDictionary alloc] init];
-        }
-
-        attributeValidator = validator;
+        
     }
     return self;
 }
@@ -221,7 +222,7 @@
 + (NSString*) getLastSessionsAttributes {
     NSError *error;
     NSString *lastSessionAttributesJsonString = nil;
-    NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[self attributeFilePath]];
+    NSDictionary *lastSessionAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM attributeFilePath]];
     NSDictionary *lastSessionPrivateAttributes = [PersistentEventStore getLastSessionEventsFromFilename:[NRMASAM privateAttributeFilePath]];
 
     NSMutableDictionary *mergedDictionary = [NSMutableDictionary dictionary];

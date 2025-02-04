@@ -24,11 +24,15 @@
 #import "NRTestConstants.h"
 #import "NRAutoLogCollector.h"
 #import <os/log.h>
+#import "NewRelicAgentInternal.h"
+#import <OCMock/OCMock.h>
 
 @interface NRLogger()
 + (NRLogger *)logger;
 - (NSMutableDictionary*) commonBlockDict;
 @end
+
+static NewRelicAgentInternal* _sharedInstance;
 
 @implementation NRLoggerTests
 - (void) setUp
@@ -39,8 +43,15 @@
 
     [NRLogger setLogLevels:NRLogLevelDebug];
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
-
     [NRLogger setLogEntityGuid:@"Entity-Guid-XXXX"];
+
+
+    self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    _sharedInstance = [[NewRelicAgentInternal alloc] init];
+    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
+    [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
+    
+    [_sharedInstance.analyticsController setSessionAttribute:@"myAttribute" value:@(1)];
 
     NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
@@ -86,7 +97,8 @@
     
     [NRMAMeasurements removeMeasurementConsumer:helper];
     helper = nil;
-
+    [self.mockNewRelicInternals stopMocking];
+    _sharedInstance = nil;
     [NRMAMeasurements shutdown];
     [NRMAFlags disableFeatures: NRFeatureFlag_LogReporting];
     [NRLogger setLogTargets:NRLogTargetConsole];
@@ -182,6 +194,10 @@
     XCTAssertTrue([[decodedCommonBlock objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
     XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationProviderKey] isEqualToString:NRLogMessageMobileValue],@"instrumentation provider set incorrectly");
     XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationVersionKey] isEqualToString:@"DEV"],@"instrumentation name set incorrectly");
+
+    // Check for added session attributes
+    XCTAssertTrue([[decodedCommonBlock objectForKey:@"myAttribute"] isEqualToNumber:@(1)],@"session attribute set incorrectly");
+
 
 #if TARGET_OS_WATCH
     XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"watchOSAgent"],@"instrumentation name set incorrectly");
