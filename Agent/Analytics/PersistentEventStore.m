@@ -41,14 +41,24 @@
 }
 
 - (void)performWrite:(void (^)(void))writeBlock {
+    __weak PersistentEventStore *weakSelf = self;
     dispatch_async(self.writeQueue, ^{
-        if (self.pendingBlock != nil) {
-            dispatch_block_cancel(self.pendingBlock);
+        __strong PersistentEventStore *strongSelf = weakSelf;
+        if (!strongSelf) return; // Ensure strongSelf is not nil
+
+        if (strongSelf.pendingBlock != nil) {
+            dispatch_block_cancel(strongSelf.pendingBlock);
         }
 
-        self.pendingBlock = dispatch_block_create(0, writeBlock);
+        strongSelf.pendingBlock = dispatch_block_create(0, writeBlock);
 
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self->_minimumDelay * NSEC_PER_SEC)), self->_writeQueue, self.pendingBlock);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(strongSelf->_minimumDelay * NSEC_PER_SEC)), strongSelf->_writeQueue, ^{
+            __strong PersistentEventStore *innerStrongSelf = weakSelf;
+            if (innerStrongSelf && innerStrongSelf.pendingBlock) {
+                innerStrongSelf.pendingBlock();
+                innerStrongSelf.pendingBlock = nil; // Release the block after execution
+            }
+        });
     });
 }
 
