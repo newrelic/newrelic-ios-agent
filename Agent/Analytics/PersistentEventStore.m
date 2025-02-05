@@ -51,7 +51,7 @@
     dispatch_async(self.writeQueue, ^{
         __strong PersistentEventStore *strongSelf = weakSelf;
         if (!strongSelf) { // Ensure strongSelf is not nil
-            NRLOG_WARNING(@"A block was scheduled but PersistentEventStore was deallocated before running");
+            NRLOG_AGENT_WARNING(@"A block was scheduled but PersistentEventStore was deallocated before running");
             return;
         }
 
