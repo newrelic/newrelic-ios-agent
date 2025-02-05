@@ -334,10 +334,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
 - (void) processAndPublishPersistedReports {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        auto context = _persistenceManager->retrieveStoreReports();
-        if (context) {
-            _publisher->publish(context);
-        }
+        _persistenceManager->retrieveAndPublishReports();
     });
 }
 
