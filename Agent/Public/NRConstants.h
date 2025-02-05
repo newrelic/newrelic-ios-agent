@@ -170,6 +170,8 @@ typedef NSString NRMetricUnit;
 #define kNRMALoggingMetricFailedUpload    kNRMALoggingMetric @"/FailedUpload"
 #define kNRMALoggingMetricSuccessfulSize    kNRMALoggingMetric @"/Size/Uncompressed"
 
+#define NRMAHandledRequestKey @"NRMAHandledRequest"
+
 // Network Failure Codes
 enum NRNetworkFailureCode {
         NRURLErrorUnknown = -1,
