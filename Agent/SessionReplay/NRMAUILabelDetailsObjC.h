@@ -9,11 +9,11 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "NRMAUIViewDetails.h"
+#import "NRMAUIViewDetailsObjC.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMAUILabelDetails : NRMAUIViewDetails
+@interface NRMAUILabelDetailsObjC : NRMAUIViewDetailsObjC
 
 @property (nonatomic, strong) NSString* labelText;
 @property (nonatomic, assign) CGFloat fontSize;

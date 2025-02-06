@@ -6,9 +6,9 @@
 //  Copyright © 2024 New Relic. All rights reserved.
 //
 
-#import "NRMAUIImageViewDetails.h"
+#import "NRMAUIImageViewDetailsObjC.h"
 
-@implementation NRMAUIImageViewDetails
+@implementation NRMAUIImageViewDetailsObjC
 
 - (NSString *)cssDescription {
     NSString *cssSelector = [self generateViewCSSSelector];

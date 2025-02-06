@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMAUIViewDetails : NSObject
+@interface NRMAUIViewDetailsObjC : NSObject
 
 @property (nonatomic, assign) NSInteger viewId;
 @property (nonatomic, assign) CGRect frame;
@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) CGFloat borderWidth;
 @property (nonatomic, strong) UIColor* borderColor;
 @property (nonatomic, strong) NSString* viewName;
-@property (nonatomic, strong) NSMutableArray<NRMAUIViewDetails *>* childViews;
+@property (nonatomic, strong) NSMutableArray<NRMAUIViewDetailsObjC *>* childViews;
 
 - (instancetype)initWithView:(UIView *)view;
 - (NSDictionary *)jsonDescription;

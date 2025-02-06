@@ -8,13 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
-#import "NRMASessionReplayFrame.h"
+#import "NRMASessionReplayFrameObjC.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMASessionReplayFrameProcessor : NSObject
+@interface NRMASessionReplayFrameProcessorObjC : NSObject
 
--(NSDictionary *)process:(NRMASessionReplayFrame *)frame;
+-(NSDictionary *)process:(NRMASessionReplayFrameObjC *)frame;
 
 @end
 

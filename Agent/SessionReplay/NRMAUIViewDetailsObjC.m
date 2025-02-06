@@ -6,12 +6,12 @@
 //  Copyright © 2024 New Relic. All rights reserved.
 //
 
-#import "NRMAUIViewDetails.h"
+#import "NRMAUIViewDetailsObjC.h"
 
 #import "NRMAAssociate.h"
-#import "NRMAIdGenerator.h"
+#import "NRMAIdGeneratorObjC.h"
 
-@implementation NRMAUIViewDetails
+@implementation NRMAUIViewDetailsObjC
 
 - (instancetype)initWithView:(UIView *)view {
     self = [super init];
@@ -31,7 +31,7 @@
         if(associatedId) {
             _viewId = [((NSNumber *)associatedId) intValue];
         } else {
-            _viewId = [NRMAIdGenerator generateID];
+            _viewId = [NRMAIdGeneratorObjC generateID];
             [NRMAAssociate attach:@(_viewId) to:view with:@"SessionReplayID"];
         }
     }
@@ -62,14 +62,14 @@
                           self.frame.size.height];
     
     if(self.backgroundColor) {
-        NSString *backgroundColorString = [NRMAUIViewDetails colorToString:self.backgroundColor includingAlpha:YES];
+        NSString *backgroundColorString = [NRMAUIViewDetailsObjC colorToString:self.backgroundColor includingAlpha:YES];
         [cssStyle appendFormat:@"background-color: %@;", backgroundColorString];
     }
 
     if(self.borderWidth > 0) {
         //border: 4mm ridge rgba(211, 220, 50, .6);
         [cssStyle appendFormat:@"border-radius: %.2fpx;", self.cornerRadius];
-        NSString *borderColorString = [NRMAUIViewDetails colorToString:[UIColor colorWithWhite:0.0 alpha:0.5] includingAlpha:YES];
+        NSString *borderColorString = [NRMAUIViewDetailsObjC colorToString:[UIColor colorWithWhite:0.0 alpha:0.5] includingAlpha:YES];
         [cssStyle appendFormat:@"border: %.2fpx solid %@", self.borderWidth, borderColorString];
     }
     

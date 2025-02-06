@@ -8,16 +8,16 @@
 
 #import <Foundation/Foundation.h>
 
-#import "NRMAUIViewDetails.h"
+#import "NRMAUIViewDetailsObjC.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMASessionReplayFrame : NSObject
+@interface NRMASessionReplayFrameObjC : NSObject
 
 @property (readonly, atomic) NSDate* timestamp;
-@property (readonly, atomic) NSArray<NRMAUIViewDetails *>* nodes;
+@property (readonly, atomic) NSArray<NRMAUIViewDetailsObjC *>* nodes;
 
-- (instancetype)initWithTimestamp:(NSDate *)date andNodes:(NSArray<NRMAUIViewDetails *>*)nodes;
+- (instancetype)initWithTimestamp:(NSDate *)date andNodes:(NSArray<NRMAUIViewDetailsObjC *>*)nodes;
 
 @end
 

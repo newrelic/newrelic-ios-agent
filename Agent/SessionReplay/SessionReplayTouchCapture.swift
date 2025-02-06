@@ -12,7 +12,7 @@ import UIKit
 import OSLog
 
 @objcMembers
-public class NRMASessionReplayTouchCapture: NSObject {
+public class SessionReplayTouchCapture: NSObject {
     public var touchDetails: [TouchDetail] = []
     public var earliestDate: TimeInterval?
     let window: UIWindow

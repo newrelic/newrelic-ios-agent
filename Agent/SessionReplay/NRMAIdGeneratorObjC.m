@@ -6,9 +6,9 @@
 //  Copyright © 2024 New Relic. All rights reserved.
 //
 
-#import "NRMAIdGenerator.h"
+#import "NRMAIdGeneratorObjC.h"
 
-@implementation NRMAIdGenerator
+@implementation NRMAIdGeneratorObjC
 
 
 static NSInteger counter = 0;

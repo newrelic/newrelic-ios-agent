@@ -6,44 +6,44 @@
 //  Copyright © 2024 New Relic. All rights reserved.
 //
 
-#import "NRMASessionReplayCapture.h"
-#import "NRMAUIViewDetails.h"
-#import "NRMAUILabelDetails.h"
-#import "NRMAUIImageViewDetails.h"
+#import "NRMASessionReplayCaptureObjC.h"
+#import "NRMAUIViewDetailsObjC.h"
+#import "NRMAUILabelDetailsObjC.h"
+#import "NRMAUIImageViewDetailsObjC.h"
 
 
-@implementation NRMASessionReplayCapture
+@implementation NRMASessionReplayCaptureObjC
 
--(NSArray<NRMAUIViewDetails *>*)recordFromRootView:(UIView *)rootView {
-    NSMutableArray<NRMAUIViewDetails *>* nodes = [NSMutableArray new];
+-(NSArray<NRMAUIViewDetailsObjC *>*)recordFromRootView:(UIView *)rootView {
+    NSMutableArray<NRMAUIViewDetailsObjC *>* nodes = [NSMutableArray new];
     
     [self recursivelyRecordView:rootView withNodes:nodes];
     
     return nodes;
 }
 
-- (void)recursivelyRecordView:(UIView *)view withNodes:(NSMutableArray<NRMAUIViewDetails *>*)nodes {
-    NRMAUIViewDetails * viewToRecord;
+- (void)recursivelyRecordView:(UIView *)view withNodes:(NSMutableArray<NRMAUIViewDetailsObjC *>*)nodes {
+    NRMAUIViewDetailsObjC * viewToRecord;
     if([view isKindOfClass:[UILabel class]]) {
-        viewToRecord = [[NRMAUILabelDetails alloc] initWithView:view];
+        viewToRecord = [[NRMAUILabelDetailsObjC alloc] initWithView:view];
     } else if ([view isKindOfClass:[UIImageView class]]){
-        viewToRecord = [[NRMAUIImageViewDetails alloc] initWithView:view];
+        viewToRecord = [[NRMAUIImageViewDetailsObjC alloc] initWithView:view];
     } else {
-        viewToRecord = [[NRMAUIViewDetails alloc] initWithView:view];
+        viewToRecord = [[NRMAUIViewDetailsObjC alloc] initWithView:view];
     }
     
     // Determine if the view that we have is one that should be recorded, or is a system view that is going to be culled.
-    NSMutableArray<NRMAUIViewDetails *> *childNodes;
+    NSMutableArray<NRMAUIViewDetailsObjC *> *childNodes;
     if([self shouldRecordView:view]) {
         [nodes addObject:viewToRecord];
-//        childNodes = viewToRecord.childViews;
-//    } else {
-//        childNodes = nodes;
+        childNodes = viewToRecord.childViews;
+    } else {
+        childNodes = nodes;
     }
 
     
     for(UIView* subview in view.subviews) {
-//        [self recursivelyRecordView:subview withNodes:childNodes];
+        [self recursivelyRecordView:subview withNodes:childNodes];
         [self recursivelyRecordView:subview withNodes:nodes];
 
     }

@@ -6,19 +6,19 @@
 //  Copyright © 2024 New Relic. All rights reserved.
 //
 
-#import "NRMASessionReplay.h"
+#import "NRMASessionReplayObjC.h"
 #import "NRLogger.h"
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 #import <objc/message.h>
 
-#import "NRMAUIViewDetails.h"
-#import "NRMAUILabelDetails.h"
-#import "NRMAIdGenerator.h"
-#import "NRMASessionReplayFrame.h"
-#import "NRMASessionReplayCapture.h"
-#import "NRMASessionReplayFrameProcessor.h"
+#import "NRMAUIViewDetailsObjC.h"
+#import "NRMAUILabelDetailsObjC.h"
+#import "NRMAIdGeneratorObjC.h"
+#import "NRMASessionReplayFrameObjC.h"
+#import "NRMASessionReplayCaptureObjC.h"
+#import "NRMASessionReplayFrameProcessorObjC.h"
 #import "NRMAMethodSwizzling.h"
 #import "NRMAAssociate.h"
 #import <NewRelic/NewRelic-Swift.h>
@@ -137,22 +137,22 @@ IMP NRMAOriginal__sendEvent;
 
 @end
 
-@implementation NRMASessionReplay {
+@implementation NRMASessionReplayObjC {
     UIWindow* _window;
 //    NSMutableArray<id<NRMAViewDetailProtocol>>* _views;
-    NRMAUIViewDetails * _rootView;
+    NRMAUIViewDetailsObjC * _rootView;
     
 //    NSMutableArray<NSDictionary *>* _frames;
-    NSMutableArray<NRMAUIViewDetails *>* _rawFrames;
+    NSMutableArray<NRMAUIViewDetailsObjC *>* _rawFrames;
     NSMutableArray<NSDictionary *>* _processedFrames;
     NSMutableArray<NSString *>* _styles;
     int frameCount;
     NSTimer* _frameTimer;
     NSTimer* _screenChangeTimer;
     
-    NRMASessionReplayCapture* _sessionReplayCapture;
-    NRMASessionReplayFrameProcessor* _sessionReplayFrameProcessor;
-    NRMASessionReplayTouchCapture* _touchCapture;
+    NRMASessionReplayCaptureObjC* _sessionReplayCapture;
+    NRMASessionReplayFrameProcessorObjC* _sessionReplayFrameProcessor;
+    SessionReplayTouchCapture* _touchCapture;
     
     NSUInteger touchID;
     NSMutableArray<NRMATouchTracker*>* _trackedTouches;
@@ -170,8 +170,8 @@ IMP NRMAOriginal__sendEvent;
         frameCount = 0;
         touchID = 0;
         
-        _sessionReplayCapture = [[NRMASessionReplayCapture alloc] init];
-        _sessionReplayFrameProcessor = [[NRMASessionReplayFrameProcessor alloc] init];
+        _sessionReplayCapture = [[NRMASessionReplayCaptureObjC alloc] init];
+        _sessionReplayFrameProcessor = [[NRMASessionReplayFrameProcessorObjC alloc] init];
         
         [NSNotificationCenter.defaultCenter addObserver:self
                                                selector:@selector(didBecomeVisible)
@@ -207,7 +207,6 @@ IMP NRMAOriginal__sendEvent;
 - (void)swizzleSendEvent {
     id clazz = objc_getClass("UIApplication");
     if(clazz) {
-//        NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz, @selector(sendEvent:), (IMP)NRMAOverride__sendEvent);
         SEL originalSendEventSel = @selector(sendEvent:);
         NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz, @selector(sendEvent:), imp_implementationWithBlock(^(__unsafe_unretained UIApplication *self_, UIEvent* event) {
 //            NSLog(@"Touch Swizzle. Event: %@", event);
@@ -240,24 +239,7 @@ IMP NRMAOriginal__sendEvent;
             
             ((void (*)(id, SEL, UIEvent*))originalImp)(self_, originalSendEventSel, event);
         }));
-//        SEL originalSendEventSel = @selector(sendEvent:);
-//        const Method method = class_getInstanceMethod(clazz, originalSendEventSel);
-//        if(!method) {
-//            NSLog(@"Unable to get sendEvent: in %@", NSStringFromClass(clazz));
-//        } else {
-//            const char *types = method_getTypeEncoding(method);
-//            BOOL success = class_addMethod(clazz, originalSendEventSel, imp_implementationWithBlock(^(__unsafe_unretained id self_, UIEvent *event) {
-//                struct objc_super super = {self_, clazz};
-//                return ((id(*)(struct objc_super *, SEL, UIEvent*))objc_msgSendSuper)(&super, originalSendEventSel, event);
-//
-//            }), types);
-//            NSLog(@"Class AddMethod success = %d", success);
-//            __block IMP originalSendEventIMP = class_replaceMethod(clazz, originalSendEventSel, imp_implementationWithBlock(^(__unsafe_unretained id self_, UIEvent *event) {
-//                NSLog(@"Touch Swizzle. Event: %@", event);
-////                [self->_touchCapture captureSendEventTouchesWithEvent:event];
-//                ((void (*)(id, SEL, UIEvent*))originalSendEventIMP)(self_, originalSendEventSel, event);
-//            }), types);
-//        }
+
     }
 }
 
@@ -275,7 +257,7 @@ IMP NRMAOriginal__sendEvent;
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did become active");
     self->_window = [[UIApplication sharedApplication] keyWindow];
     [self swizzleSendEvent];
-    _touchCapture = [[NRMASessionReplayTouchCapture alloc] initWithWindow:_window];
+    _touchCapture = [[SessionReplayTouchCapture alloc] initWithWindow:_window];
     [_processedFrames addObject:[self generateInitialNode]];
     _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self takeFrame];
@@ -302,8 +284,8 @@ IMP NRMAOriginal__sendEvent;
     
     _window = [[UIApplication sharedApplication] keyWindow];
 
-    NSArray<NRMAUIViewDetails *>* frameData = [_sessionReplayCapture recordFromRootView:_window];
-    NRMASessionReplayFrame* frame = [[NRMASessionReplayFrame alloc] initWithTimestamp:[NSDate now] andNodes:frameData];
+    NSArray<NRMAUIViewDetailsObjC *>* frameData = [_sessionReplayCapture recordFromRootView:_window];
+    NRMASessionReplayFrameObjC* frame = [[NRMASessionReplayFrameObjC alloc] initWithTimestamp:[NSDate now] andNodes:frameData];
     [_processedFrames addObject:[_sessionReplayFrameProcessor process:frame]];
 
     frameCount++;

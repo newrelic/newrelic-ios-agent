@@ -6,11 +6,11 @@
 //  Copyright © 2024 New Relic. All rights reserved.
 //
 
-#import "NRMAUILabelDetails.h"
-#import "NRMAIdGenerator.h"
-#import "NRMAUIViewDetails.h"
+#import "NRMAUILabelDetailsObjC.h"
+#import "NRMAIdGeneratorObjC.h"
+#import "NRMAUIViewDetailsObjC.h"
 
-@implementation NRMAUILabelDetails
+@implementation NRMAUILabelDetailsObjC
 
 - (instancetype)initWithView:(UIView *)view {
     self = [super initWithView:view];
@@ -42,7 +42,7 @@
     NSDictionary *textNode = @{
         @"type": @(3),
         @"textContent": self.labelText,
-        @"id": @([NRMAIdGenerator generateID])
+        @"id": @([NRMAIdGeneratorObjC generateID])
     };
     [subviews addObject:textNode];
 
@@ -61,7 +61,7 @@
      self.fontSize, self.fontFamily];
     
     if(self.textColor) {
-        NSString *textColorString = [NRMAUIViewDetails colorToString:self.textColor includingAlpha:YES];
+        NSString *textColorString = [NRMAUIViewDetailsObjC colorToString:self.textColor includingAlpha:YES];
         cssStyle = [cssStyle stringByAppendingFormat:@"color: %@;", textColorString];
     }
     

@@ -67,12 +67,12 @@
 }
  */
 
-#import "NRMASessionReplayFrame.h"
+#import "NRMASessionReplayFrameObjC.h"
 
-#import "NRMAIdGenerator.h"
+#import "NRMAIdGeneratorObjC.h"
 
-@implementation NRMASessionReplayFrame {
-    NSArray<NRMAUIViewDetails *>* _nodes;
+@implementation NRMASessionReplayFrameObjC {
+    NSArray<NRMAUIViewDetailsObjC *>* _nodes;
 }
 
 - (instancetype)initWithTimestamp:(NSDate *)date andNodes:(NSArray<id> *)nodes {

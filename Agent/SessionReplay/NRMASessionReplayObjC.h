@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 void NRMAOverride__sendEvent(id self, SEL _cmd, UIEvent* event);
 
-@interface NRMASessionReplay : NSObject
+@interface NRMASessionReplayObjC : NSObject
 - (void) NRMAOverride__interceptAndRecordTouches:(UIEvent *)event;
 @end
 

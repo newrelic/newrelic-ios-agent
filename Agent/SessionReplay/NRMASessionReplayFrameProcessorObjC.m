@@ -6,21 +6,21 @@
 //  Copyright © 2024 New Relic. All rights reserved.
 //
 
-#import "NRMASessionReplayFrameProcessor.h"
-#import "NRMAIdGenerator.h"
+#import "NRMASessionReplayFrameProcessorObjC.h"
+#import "NRMAIdGeneratorObjC.h"
 
-@implementation NRMASessionReplayFrameProcessor {
+@implementation NRMASessionReplayFrameProcessorObjC {
     NSMutableDictionary* rootNode;
     NSMutableDictionary* styleNode;
     NSMutableDictionary* bodyNode;
 }
 
-- (NSDictionary *)process:(NRMASessionReplayFrame *)frame {
+- (NSDictionary *)process:(NRMASessionReplayFrameObjC *)frame {
     [self generateInitialBoilerplateWithTimestamp:frame.timestamp];
     
     NSMutableString *css = [NSMutableString new];
     
-    for(NRMAUIViewDetails* node in frame.nodes) {
+    for(NRMAUIViewDetailsObjC* node in frame.nodes) {
         [css appendString:node.cssDescription];
         [bodyNode[@"childNodes"] addObject:node.jsonDescription];
     }
@@ -30,7 +30,7 @@
     
     NSDictionary *textStyleNode = @{@"type": @(3),
                                     @"isStyle": @(YES),
-                                    @"id":@([NRMAIdGenerator generateID]),
+                                    @"id":@([NRMAIdGeneratorObjC generateID]),
                                     @"textContent":css};
     
     [styleNode[@"childNodes"] addObject:textStyleNode];
@@ -44,7 +44,7 @@
     
     NSMutableDictionary *node = [NSMutableDictionary new];
     node[@"type"] = @(0);
-    node[@"id"] = @([NRMAIdGenerator generateID]);
+    node[@"id"] = @([NRMAIdGeneratorObjC generateID]);
     node[@"childNodes"] = [NSMutableArray new];
     
     NSMutableDictionary *initialOffset = [NSMutableDictionary new];
@@ -75,7 +75,7 @@
     html[@"type"] = @(2);
     html[@"tagName"] = @"html";
     html[@"attributes"] = @{};
-    html[@"id"] = @([NRMAIdGenerator generateID]);
+    html[@"id"] = @([NRMAIdGeneratorObjC generateID]);
     html[@"childNodes"] = [NSMutableArray new];
     return html;
 }
@@ -85,7 +85,7 @@
     head[@"type"] = @(2);
     head[@"tagName"] = @"head";
     head[@"attributes"] = @{};
-    head[@"id"] = @([NRMAIdGenerator generateID]);
+    head[@"id"] = @([NRMAIdGeneratorObjC generateID]);
     head[@"childNodes"] = [NSMutableArray new];
     return head;
 }
@@ -95,7 +95,7 @@
     styles[@"type"] = @(2);
     styles[@"tagName"] = @"style";
     styles[@"attributes"] = @{};
-    styles[@"id"] = @([NRMAIdGenerator generateID]);
+    styles[@"id"] = @([NRMAIdGeneratorObjC generateID]);
     styles[@"childNodes"] = [NSMutableArray new];
     
     return styles;
@@ -106,16 +106,16 @@
     body[@"type"] = @(2);
     body[@"tagName"] = @"body";
     body[@"attributes"] = @{};
-    body[@"id"] = @([NRMAIdGenerator generateID]);
+    body[@"id"] = @([NRMAIdGeneratorObjC generateID]);
     body[@"childNodes"] = [NSMutableArray new];
     return body;
 }
 
-- (NSDictionary *)recursivelyGetChildNodesForNode:(NRMAUIViewDetails *)node andCSSString:(NSMutableString *)cssString {
+- (NSDictionary *)recursivelyGetChildNodesForNode:(NRMAUIViewDetailsObjC *)node andCSSString:(NSMutableString *)cssString {
     NSMutableDictionary *nodeDescription = node.jsonDescription;
     [cssString appendString:node.cssDescription];
     
-    for(NRMAUIViewDetails * childNode in node.childViews) {
+    for(NRMAUIViewDetailsObjC * childNode in node.childViews) {
         [((NSMutableArray *)nodeDescription[@"childNodes"]) addObject:[self recursivelyGetChildNodesForNode:childNode andCSSString:cssString]];
     }
     

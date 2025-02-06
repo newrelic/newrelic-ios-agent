@@ -9,13 +9,13 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "NRMAUIViewDetails.h"
+#import "NRMAUIViewDetailsObjC.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface NRMASessionReplayCapture : NSObject
+@interface NRMASessionReplayCaptureObjC : NSObject
 
--(NSArray<NRMAUIViewDetails *>*)recordFromRootView:(UIView *)rootView;
+-(NSArray<NRMAUIViewDetailsObjC *>*)recordFromRootView:(UIView *)rootView;
 
 @end
 
