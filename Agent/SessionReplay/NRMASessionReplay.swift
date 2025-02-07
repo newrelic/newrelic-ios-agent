@@ -7,13 +7,54 @@
 //
 
 import Foundation
+import UIKit
 
+@available(iOS 13.0, *)
 @objcMembers
 public class NRMASessionReplay: NSObject {
     
-    let sessionReplayCapture: SessionReplayCapture
+    private let sessionReplayCapture: SessionReplayCapture
+    private var frameTimer: Timer!
+    private let rawFrames = [SessionReplayFrame]()
     
     public override init() {
         self.sessionReplayCapture = SessionReplayCapture()
+        
+        super.init()
+        
+        self.frameTimer = Timer(timeInterval: 1.0, repeats: true, block: { [weak self] timer in
+            guard let self else {return}
+            takeFrame()
+        })
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(didBecomeActive),
+                                               name: UIApplication.didBecomeActiveNotification,
+                                               object: nil)
+    }
+    
+    func didBecomeActive() {
+//        NRLOG_AUDIT("[SESSION REPLAY] - App did become active")
+        
+        RunLoop.current.add(self.frameTimer, forMode: .common)
+        
+    }
+    
+    func takeFrame() {
+        guard let window = getWindow() else {
+            return
+        }
+        
+
+    }
+    
+    // maybe move this into something else?
+    private func getWindow() -> UIWindow? {
+        UIApplication
+            .shared
+            .connectedScenes
+            .compactMap {$0 as? UIWindowScene}
+            .flatMap { $0.windows }
+            .last { $0.isKeyWindow }
     }
 }

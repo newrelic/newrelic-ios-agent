@@ -44,7 +44,7 @@
     
     for(UIView* subview in view.subviews) {
         [self recursivelyRecordView:subview withNodes:childNodes];
-        [self recursivelyRecordView:subview withNodes:nodes];
+//        [self recursivelyRecordView:subview withNodes:nodes];
 
     }
 }

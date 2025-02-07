@@ -19,9 +19,20 @@ struct ViewDetails {
     let borderWidth: CGFloat
     let borderColor: UIColor?
     let viewName: String
+    let childViews: [ViewDetails]
     
     var cssSelector: String {
         "\(self.viewName)-\(self.viewId)"
+    }
+    
+    var isVisible: Bool {
+        isHidden &&
+        alpha > 0 &&
+        frame != .zero
+    }
+    
+    var isClear: Bool {
+        alpha <= 1
     }
     
     init(view: UIView, idGenerator: IDGenerator) {
