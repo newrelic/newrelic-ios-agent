@@ -36,8 +36,8 @@ static NSString* _operationType = @"X-APOLLO-OPERATION-TYPE";
 static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
 
 @implementation NRMAHTTPUtilities
-NSString* currentTraceId;
-NSString* currentParentId;
+NSString* currentTraceId = @"";
+NSString* currentParentId = @"";
 
 + (NSArray*) trackedHeaderFields
 {
@@ -195,7 +195,7 @@ NSString* currentParentId;
         return nil;
     }
     
-    @synchronized (currentTraceId) {
+    @synchronized (self) {
         NSString * accountID = @(NewRelic::Application::getInstance().getContext().getAccountId().c_str());
         NSString * appId = @(NewRelic::Application::getInstance().getContext().getApplicationId().c_str());
         NSString * trustedAccountKey =  @(NewRelic::Application::getInstance().getContext().getTrustedAccountKey().c_str());
