@@ -115,7 +115,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
             PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
             
-            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
+            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:[eventStore autorelease]];
             _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
 

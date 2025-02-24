@@ -20,7 +20,7 @@ HexController::HexController(std::shared_ptr<const AnalyticsController>& analyti
         _publisher(publisher),
         _store(store),
         _sessionId(sessionId),
-        _keyContext(std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator())) {
+        _keyContext(std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator(), publisher)) {
 }
 
 HexController::HexController(std::shared_ptr<const AnalyticsController>&& analytics,
@@ -33,7 +33,7 @@ HexController::HexController(std::shared_ptr<const AnalyticsController>&& analyt
         _publisher(publisher),
         _store(store),
         _sessionId(sessionId),
-        _keyContext(std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator())) {
+        _keyContext(std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator(), publisher)) {
 }
 
 // New Event System
@@ -78,20 +78,20 @@ std::shared_ptr<Report::HexReport> HexController::createReport(uint64_t epochMs,
 std::shared_ptr<HexReportContext> HexController::detachKeyContext() {
     std::unique_lock<std::mutex> detachLock(_keyContextMutex);
     auto context = _keyContext;
-    _keyContext = std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator());
+    _keyContext = std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator(), _publisher);
     return context;
 }
 
 void HexController::resetKeyContext() {
     std::unique_lock<std::mutex> resetLock(_keyContextMutex);
-    _keyContext = std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator());
+    _keyContext = std::make_shared<HexReportContext>(_applicationInfo, _analytics->getAttributeValidator(), _publisher);
 }
 
 void HexController::publish() {
     auto context = detachKeyContext();
     if (context->reports() > 0) {
         context->finalize();
-        _publisher->publish(context);
+       // _publisher->publish(context);
     }
 }
 
