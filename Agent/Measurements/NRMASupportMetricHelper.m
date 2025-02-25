@@ -80,8 +80,8 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 }
 
 + (void) enqueueStopAgentMetric {
+    NSString* metricString = [NSString stringWithFormat:kNRMAStopAgentMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
     @synchronized (deferredMetrics) {
-        NSString* metricString = [NSString stringWithFormat:kNRMAStopAgentMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
         [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
                                                               value:@1
                                                               scope:nil]];
@@ -89,8 +89,8 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 }
 
 + (void) enqueueConfigurationUpdateMetric {
+    NSString* metricString = [NSString stringWithFormat:kNRMAConfigurationUpdated, [NewRelicInternalUtils osName], kPlatformPlaceholder];
     @synchronized (deferredMetrics) {
-        NSString* metricString = [NSString stringWithFormat:kNRMAConfigurationUpdated, [NewRelicInternalUtils osName], kPlatformPlaceholder];
         [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
                                                               value:@1
                                                               scope:nil]];
