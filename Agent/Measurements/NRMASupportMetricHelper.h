@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "NewRelicFeatureFlags.h"
 
-static NSMutableArray *deferredMetrics = NULL;
+static NSMutableArray *deferredMetrics;
 
 @interface NRMASupportMetricHelper : NSObject
 + (void) enqueueDataUseMetric:(NSString*)subDestination size:(long)size received:(long)received;
