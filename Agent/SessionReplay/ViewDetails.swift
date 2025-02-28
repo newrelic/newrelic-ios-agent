@@ -61,6 +61,8 @@ struct ViewDetails {
         } else {
             viewId = idGenerator.getId()
         }
+        
+        childViews = []
     }
 }
 

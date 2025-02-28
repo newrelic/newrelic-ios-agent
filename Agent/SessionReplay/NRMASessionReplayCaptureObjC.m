@@ -36,15 +36,15 @@
     NSMutableArray<NRMAUIViewDetailsObjC *> *childNodes;
     if([self shouldRecordView:view]) {
         [nodes addObject:viewToRecord];
-        childNodes = viewToRecord.childViews;
-    } else {
-        childNodes = nodes;
+//        childNodes = viewToRecord.childViews;
+//    } else {
+//        childNodes = nodes;
     }
 
     
     for(UIView* subview in view.subviews) {
-        [self recursivelyRecordView:subview withNodes:childNodes];
-//        [self recursivelyRecordView:subview withNodes:nodes];
+//        [self recursivelyRecordView:subview withNodes:childNodes];
+        [self recursivelyRecordView:subview withNodes:nodes];
 
     }
 }
