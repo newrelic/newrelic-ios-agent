@@ -88,6 +88,7 @@
                                              @"data": @{
                                                  @"source": @(2),
                                                  @"type": @(7),
+                                                 @"pointerType": @(2),
                                                  @"id": @(_startTouch.identifier),
                                                  @"x": @(_startTouch.touchLocation.x),
                                                  @"y": @(_startTouch.touchLocation.y)
@@ -95,19 +96,43 @@
     
     [touchDescriptions addObject:startTouchDescription];
     
-    for(NRMATouch *touchDescription in _moveTouches) {
+    if(!(self.moveTouches.count == 0)) {
+        NSMutableArray* positions = [NSMutableArray new];
+        NSDate* initialDate = self.moveTouches.firstObject.timestamp;
+        
+        for(NRMATouch *touchDescription in self.moveTouches) {
+            NSTimeInterval timeInterval = [touchDescription.timestamp timeIntervalSinceDate:initialDate];
+            [positions addObject:@{ @"id": @(touchDescription.identifier),
+                                    @"x": @(touchDescription.touchLocation.x),
+                                    @"y": @(touchDescription.touchLocation.y),
+                                    @"timeOffset": @(timeInterval)}];
+        }
+        
         NSDictionary *moveTouchDescription = @{ @"type": @(3),
-                                                 @"timestamp": @([touchDescription.timestamp timeIntervalSince1970] * 1000),
+                                                 @"timestamp": @([initialDate timeIntervalSince1970] * 1000),
                                                  @"data": @{
-                                                     @"source": @(1),
-                                                     @"positions": @{
-                                                         @"id": @(touchDescription.identifier),
-                                                         @"x": @(touchDescription.touchLocation.x),
-                                                         @"y": @(touchDescription.touchLocation.y)
-                                                     }
+                                                     @"source": @(6),
+                                                     @"positions": positions
                                                  }};
-        [touchDescriptions addObject:touchDescription];
+        [touchDescriptions addObject:moveTouchDescription];
     }
+    
+//    for(NRMATouch *touchDescription in _moveTouches) {
+//        NSTimeInterval timeInterval = [touchDescription.timestamp timeIntervalSinceDate:self.startTouch.timestamp];
+//        
+//        NSDictionary *moveTouchDescription = @{ @"type": @(3),
+//                                                 @"timestamp": @([touchDescription.timestamp timeIntervalSince1970]),
+//                                                 @"data": @{
+//                                                     @"source": @(1),
+//                                                     @"positions": @[@{
+//                                                         @"id": @(touchDescription.identifier),
+//                                                         @"x": @(touchDescription.touchLocation.x),
+//                                                         @"y": @(touchDescription.touchLocation.y),
+//                                                         @"timeOffset": @(timeInterval)
+//                                                     }]
+//                                                 }};
+//        [touchDescriptions addObject:moveTouchDescription];
+//    }
     
     NSDictionary *endTouchDescription = @{ @"type": @(3),
                                              @"timestamp": @([_endTouch.timestamp timeIntervalSince1970] * 1000),
@@ -222,6 +247,15 @@ IMP NRMAOriginal__sendEvent;
                                                                     andLocation:[touch locationInView:touch.window] andIdentifier: self->touchID];
                     NRMATouchTracker *touchTracker = [[NRMATouchTracker alloc]initWithStartTouch:nrmaTouch];
                     [NRMAAssociate attach:touchTracker to:touch with:@"TouchTracker"];
+                } else if(touch.phase == UITouchPhaseMoved) {
+                    NRMATouchTracker *touchTracker = [NRMAAssociate retrieveFrom:touch with:@"TouchTracker"];
+                    if(touchTracker == nil) {
+                        NSLog(@"ERROR: Touch Tracker didn't associate with touch!");
+                    } else {
+                        NRMATouch *nrmaTouch = [[NRMATouch alloc] initWithTimestamp:[NSDate date]
+                                                                        andLocation:[touch locationInView:touch.window] andIdentifier: self->touchID];
+                        [touchTracker addMoveTouch:nrmaTouch];
+                    }
                 } else if(touch.phase == UITouchPhaseEnded){
                     NRMATouchTracker *touchTracker = [NRMAAssociate retrieveFrom:touch with:@"TouchTracker"];
                     if(touchTracker == nil) {
