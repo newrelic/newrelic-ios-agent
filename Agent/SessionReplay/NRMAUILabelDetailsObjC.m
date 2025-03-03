@@ -57,7 +57,7 @@
     
     NSString *cssStyle = [super generateBaseCSSStyle];
     
-    cssStyle = [cssStyle stringByAppendingFormat:@"font: %.2fpx %@;",
+    cssStyle = [cssStyle stringByAppendingFormat:@"white-space: pre-wrap; font: %.2fpx %@;",
      self.fontSize, self.fontFamily];
     
     if(self.textColor) {
