@@ -77,7 +77,7 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     }
     
     NSTimeInterval oldestEventAge = currentTimeMilliseconds - oldestEventTimestamp;
-    return (oldestEventAge / kDefaultBufferSize) + kBufferTimeSecondsLeeway >= maxBufferTimeSeconds;
+    return (oldestEventAge / 1000) + kBufferTimeSecondsLeeway >= maxBufferTimeSeconds;
 }
 
 - (NSUInteger)getEvictionIndex {

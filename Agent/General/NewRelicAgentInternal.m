@@ -54,7 +54,6 @@
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRAutoLogCollector.h"
-#import "NRMAAttributeValidator.h"
 
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
@@ -569,8 +568,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                      sessionStartTime:self.appSessionStartDate
                                                                                    agentConfiguration:self.agentConfiguration
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:[self currentSessionId]
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:[self currentSessionId]];
 
         if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
             [self.handledExceptionsController processAndPublishPersistedReports];

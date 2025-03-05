@@ -15,12 +15,6 @@
 
 @implementation NRMASupportMetricHelper
 
-static NSMutableArray<NRMAMetric *> *deferredMetrics;
-
-+ (void) initialize {
-    deferredMetrics = [NSMutableArray array];
-}
-
 // The value _additionalValue being non-nil means that this is a Data Usage Supportability Metric.
 + (void) enqueueDataUseMetric:(NSString*)subDestination size:(long)size received:(long)received {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
@@ -37,22 +31,24 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     for (NSString *name in [NRMAFlags namesForFlags:features]) {
         NSString* featureFlagString = [NSString stringWithFormat:@"Supportability/Mobile/%@/%@/API/%@/%@",
                                        nativePlatform, kPlatformPlaceholder, enabled ? @"enableFeature" : @"disableFeature", name];
-        @synchronized (deferredMetrics) {
-            [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:featureFlagString
-                                                                  value:[NSNumber numberWithLongLong:1]
-                                                                  scope:@""
-                                                        produceUnscoped:YES
-                                                        additionalValue:nil]];
+        if (deferredMetrics == nil) {
+            deferredMetrics = [NSMutableArray array];
         }
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:featureFlagString
+                                                              value:[NSNumber numberWithLongLong:1]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
     }
 }
 
 + (void) enqueueInstallMetric {
-    @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAAppInstallMetric
-                                                              value:@1
-                                                              scope:nil]];
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
     }
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAAppInstallMetric
+                                                          value:@1
+                                                          scope:nil]];
 }
 
 + (void) enqueueMaxPayloadSizeLimitMetric:(NSString*)endpoint {
@@ -72,29 +68,32 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 }
 
 + (void) enqueueUpgradeMetric {
-    @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAAppUpgradeMetric
-                                                              value:@1
-                                                              scope:nil]];
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
     }
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAAppUpgradeMetric
+                                                          value:@1
+                                                          scope:nil]];
 }
 
 + (void) enqueueStopAgentMetric {
-    NSString* metricString = [NSString stringWithFormat:kNRMAStopAgentMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
-    @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
-                                                              value:@1
-                                                              scope:nil]];
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
     }
+    NSString* metricString = [NSString stringWithFormat:kNRMAStopAgentMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
+                                                          value:@1
+                                                          scope:nil]];
 }
 
 + (void) enqueueConfigurationUpdateMetric {
-    NSString* metricString = [NSString stringWithFormat:kNRMAConfigurationUpdated, [NewRelicInternalUtils osName], kPlatformPlaceholder];
-    @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
-                                                              value:@1
-                                                              scope:nil]];
+    if (deferredMetrics == nil) {
+        deferredMetrics = [NSMutableArray array];
     }
+    NSString* metricString = [NSString stringWithFormat:kNRMAConfigurationUpdated, [NewRelicInternalUtils osName], kPlatformPlaceholder];
+    [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
+                                                          value:@1
+                                                          scope:nil]];
 }
 
 // Logging
@@ -141,24 +140,26 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 
     // Handle any deferred supportability metrics.
-    @synchronized (deferredMetrics) {
-        for (NRMAMetric *metric in deferredMetrics) {
-            NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-            NSString *deferredMetricName = metric.name;
+    if (deferredMetrics == nil) { return; }
 
-            if ([metric.name containsString:kPlatformPlaceholder]) {
-                deferredMetricName = [metric.name stringByReplacingOccurrencesOfString:kPlatformPlaceholder withString:platform];
-            }
+    for (NRMAMetric *metric in deferredMetrics) {
 
-            [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:deferredMetricName
-                                                            value:[NSNumber numberWithLongLong:1]
-                                                            scope:@""
-                                                  produceUnscoped:YES
-                                                  additionalValue:nil]];
+        NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+        NSString *deferredMetricName = metric.name;
+
+        if ([metric.name containsString:kPlatformPlaceholder]) {
+            deferredMetricName = [metric.name stringByReplacingOccurrencesOfString:kPlatformPlaceholder withString:platform];
         }
 
-        [deferredMetrics removeAllObjects];
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:deferredMetricName
+                                                        value:[NSNumber numberWithLongLong:1]
+                                                        scope:@""
+                                              produceUnscoped:YES
+                                              additionalValue:nil]];
     }
+
+    [deferredMetrics removeAllObjects];
+    deferredMetrics = nil;
 }
 
 @end

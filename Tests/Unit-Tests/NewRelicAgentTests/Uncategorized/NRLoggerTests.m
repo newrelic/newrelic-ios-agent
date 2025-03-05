@@ -24,15 +24,6 @@
 #import "NRTestConstants.h"
 #import "NRAutoLogCollector.h"
 #import <os/log.h>
-#import "NewRelicAgentInternal.h"
-#import <OCMock/OCMock.h>
-
-@interface NRLogger()
-+ (NRLogger *)logger;
-- (NSMutableDictionary*) commonBlockDict;
-@end
-
-static NewRelicAgentInternal* _sharedInstance;
 
 @implementation NRLoggerTests
 - (void) setUp
@@ -43,15 +34,8 @@ static NewRelicAgentInternal* _sharedInstance;
 
     [NRLogger setLogLevels:NRLogLevelDebug];
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
+
     [NRLogger setLogEntityGuid:@"Entity-Guid-XXXX"];
-
-
-    self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
-    _sharedInstance = [[NewRelicAgentInternal alloc] init];
-    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
-    [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
-    
-    [_sharedInstance.analyticsController setSessionAttribute:@"myAttribute" value:@(1)];
 
     NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
@@ -68,37 +52,13 @@ static NewRelicAgentInternal* _sharedInstance;
 
     [NRLogger clearLog];
 
-    // Open a file descriptor for the file
-    self.fileDescriptor = open([[NRLogger logFilePath] fileSystemRepresentation], O_EVTONLY);
-    if (self.fileDescriptor < 0) {
-        XCTFail(@"Failed to open file descriptor");
-        return;
-    }
-    
-    // Set up dispatch source for file monitoring
-    self.source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, self.fileDescriptor, DISPATCH_VNODE_WRITE, DISPATCH_TARGET_QUEUE_DEFAULT);
 
-    __weak typeof(self) weakSelf = self;
-    dispatch_source_set_cancel_handler(self.source, ^{
-        if (weakSelf.fileDescriptor) {
-            close(weakSelf.fileDescriptor);
-            weakSelf.fileDescriptor = 0;
-        }
-    });
 }
 - (void) tearDown
 {
-    if (self.fileDescriptor > 0) {
-        close(self.fileDescriptor);
-    }
-    if (self.source) {
-        dispatch_source_cancel(self.source);
-    }
-    
     [NRMAMeasurements removeMeasurementConsumer:helper];
     helper = nil;
-    [self.mockNewRelicInternals stopMocking];
-    _sharedInstance = nil;
+
     [NRMAMeasurements shutdown];
     [NRMAFlags disableFeatures: NRFeatureFlag_LogReporting];
     [NRLogger setLogTargets:NRLogTargetConsole];
@@ -107,6 +67,18 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 - (void) testNRLogger {
+
+    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation1 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
 
     [NewRelic logInfo:   @"Info Log..."];
     [NewRelic logError:  @"Error Log..."];
@@ -121,41 +93,32 @@ static NewRelicAgentInternal* _sharedInstance;
         @"additionalAttribute2": @"attribute2"
     }];
 
-    sleep(5);
+    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
 
-    NSError* error = nil;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation2 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
+    
+    NSError* error;
+    NSString *path = [NRLogger logFilePath];
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
 
-    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
-
-    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
-                                                 options:0
-                                                   error:&error];
-
-    if (error) {
-        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
-        XCTAssertNil(error, @"Error creating log payload");
-        return;
-    }
-
-    error = nil;
-    // New version of the line
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
-                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
-                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
 
-    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:&error];
+                                                        error:nil];
     NSLog(@"decode=%@", decode);
-
-    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
-    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
 
     NSArray * expectedValues = @[
         @{@"message": @"Info Log..."},
@@ -166,19 +129,31 @@ static NewRelicAgentInternal* _sharedInstance;
         @{@"message": @"Debug Log..."},
         @{@"message": @"This is a test message for the New Relic logging system."},
     ];
-
     // check for existence of 6 logs.
     int foundCount = 0;
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decodedArray) {
+        for (NSDictionary *dict2 in decode) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
-
-            // Check the logs entries
             if ([[dict2 objectForKey:@"message"] isEqualToString: currentMessage]) {
                 foundCount += 1;
+                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
+                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationProviderKey] isEqualToString:NRLogMessageMobileValue],@"instrumentation provider set incorrectly");
+                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationVersionKey] isEqualToString:@"DEV"],@"instrumentation name set incorrectly");
+
+#if TARGET_OS_WATCH
+                XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"watchOSAgent"],@"instrumentation name set incorrectly");
+#else
+                if ([[[UIDevice currentDevice] systemName] isEqualToString:@"tvOS"]) {
+                    XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"tvOSAgent"],@"instrumentation name set incorrectly");
+
+                }
+                else {
+                    XCTAssertTrue([[dict2 objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"iOSAgent"],@"instrumentation name set incorrectly");
+                }
+#endif
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
@@ -189,26 +164,6 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 
     XCTAssertEqual(foundCount, 7, @"Seven messages should be found.");
-
-    // Verify Common Block
-    XCTAssertTrue([[decodedCommonBlock objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
-    XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationProviderKey] isEqualToString:NRLogMessageMobileValue],@"instrumentation provider set incorrectly");
-    XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationVersionKey] isEqualToString:@"DEV"],@"instrumentation name set incorrectly");
-
-    // Check for added session attributes
-    XCTAssertTrue([[decodedCommonBlock objectForKey:@"myAttribute"] isEqualToNumber:@(1)],@"session attribute set incorrectly");
-
-
-#if TARGET_OS_WATCH
-    XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"watchOSAgent"],@"instrumentation name set incorrectly");
-#else
-    if ([[[UIDevice currentDevice] systemName] isEqualToString:@"tvOS"]) {
-        XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"tvOSAgent"],@"instrumentation name set incorrectly");
-    }
-    else {
-        XCTAssertTrue([[decodedCommonBlock objectForKey:NRLogMessageInstrumentationNameKey] isEqualToString:@"iOSAgent"],@"instrumentation name set incorrectly");
-    }
-#endif
 }
 
 
@@ -218,21 +173,19 @@ static NewRelicAgentInternal* _sharedInstance;
 
     // Set the remote log level to Debug.
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
-    
-    __block BOOL operationCompleted = NO;
-    __block int count = 0;
-    dispatch_source_set_event_handler(self.source, ^{
-        count++;
-        if(count == 7){
-            // Fulfill the expectation when a write is detected
-            sleep(1);
-            operationCompleted = YES;
-        }
+
+    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation1 fulfill];
     });
-    
-    // Start monitoring
-    dispatch_resume(self.source);
-    
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
+
     // Seven messages should reach the remote log file for upload.
 
     [NewRelic logInfo:   @"Info Log..."];
@@ -247,52 +200,30 @@ static NewRelicAgentInternal* _sharedInstance;
         @"additionalAttribute1": @"attribute1",
         @"additionalAttribute2": @"attribute2"
     }];
-    
-    // Set a timeout duration
-    NSTimeInterval timeout = 30.0;
-    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
-    
-    // Run the run loop until the operation completes or the timeout is reached
-    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
-        // Allow other scheduled run loop activities to proceed
-        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
-    }
-    if (!operationCompleted) {
-        NSLog(@"Failed to detect 7 writes to the log file.");
-    }
+
+    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation2 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
 
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
-    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
-
-    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
-                                                 options:0
-                                                   error:&error];
-
-    if (error) {
-        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
-        XCTAssertNil(error, @"Error creating log payload");
-        return;
-    }
-
-    error = nil;
-    // New version of the line
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
-                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
-                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-
-    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:&error];
+                                                        error:nil];
     NSLog(@"decode=%@", decode);
-
-    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
-    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
 
     NSArray * expectedValues = @[
         @{@"message": @"Info Log..."},
@@ -308,11 +239,12 @@ static NewRelicAgentInternal* _sharedInstance;
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decodedArray) {
+        for (NSDictionary *dict2 in decode) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
             if ([[dict2 objectForKey:@"message"] isEqualToString: currentMessage]) {
                 foundCount += 1;
+                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
@@ -332,21 +264,20 @@ static NewRelicAgentInternal* _sharedInstance;
     // Set the remote log level to Info.
     [NRLogger setRemoteLogLevel:NRLogLevelInfo];
 
-    __block BOOL operationCompleted = NO;
-    __block int count = 0;
-    dispatch_source_set_event_handler(self.source, ^{
-        count++;
-        if(count == 4){
-            // Fulfill the expectation when a write is detected
-            sleep(1);
-            operationCompleted = YES;
-        }
+    XCTestExpectation *delayExpectation1 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation1 fulfill];
     });
-    
-    // Start monitoring
-    dispatch_resume(self.source);
-    
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
+
     // Seven messages should reach the remote log file for upload.
+
     [NewRelic logInfo:   @"Info Log..."];
     [NewRelic logError:  @"Error Log..."];
     [NewRelic logVerbose:@"Verbose Log..."];
@@ -360,50 +291,29 @@ static NewRelicAgentInternal* _sharedInstance;
         @"additionalAttribute2": @"attribute2"
     }];
 
-    // Set a timeout duration
-    NSTimeInterval timeout = 30.0;
-    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
-    
-    // Run the run loop until the operation completes or the timeout is reached
-    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
-        // Allow other scheduled run loop activities to proceed
-        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
-    }
-    if (!operationCompleted) {
-        NSLog(@"Failed to detect 4 writes to the log file.");
-    }
+    XCTestExpectation *delayExpectation2 = [self expectationWithDescription:@"Waiting for Log Queue"];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [delayExpectation2 fulfill];
+    });
+
+    [self waitForExpectationsWithTimeout:5 handler:^(NSError * _Nullable error) {
+        if (error) {
+            XCTFail(@"Timeout error");
+        }
+    }];
+
     NSError* error;
     NSData* logData = [NRLogger logFileData:&error];
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
-    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
-
-    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
-                                                 options:0
-                                                   error:&error];
-
-    if (error) {
-        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
-        XCTAssertNil(error, @"Error creating log payload");
-        return;
-    }
-
-    error = nil;
-    // New version of the line
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
-                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
-                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-
-    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:&error];
+                                                        error:nil];
     NSLog(@"decode=%@", decode);
-
-    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
-    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
 
     NSArray * expectedValues = @[
         @{@"message": @"Info Log..."},
@@ -419,11 +329,12 @@ static NewRelicAgentInternal* _sharedInstance;
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decodedArray) {
+        for (NSDictionary *dict2 in decode) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
             if ([[dict2 objectForKey:@"message"] isEqualToString: currentMessage]) {
                 foundCount += 1;
+                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {
@@ -441,19 +352,8 @@ static NewRelicAgentInternal* _sharedInstance;
     [NRLogger setRemoteLogLevel:NRLogLevelDebug];
     XCTAssertTrue([NRAutoLogCollector redirectStandardOutputAndError]);
 
-    __block BOOL operationCompleted = NO;
-    __block int count = 0;
-    dispatch_source_set_event_handler(self.source, ^{
-        count++;
-        if(count == 5){
-            // Fulfill the expectation when a write is detected
-            sleep(1);
-            operationCompleted = YES;
-        }
-    });
-    
-    // Start monitoring
-    dispatch_resume(self.source);
+    sleep(5);
+
     // Three messages should reach the remote log file for upload.
     NSLog(@"NSLog Test \n\n");
     os_log_t customLog = os_log_create("com.agent.tests", "logTest");
@@ -463,19 +363,7 @@ static NewRelicAgentInternal* _sharedInstance;
     os_log_error(customLog, "This is an error os_log message.\n");
     os_log_fault(customLog, "This is a fault os_log message.\n");
     
-    // Set a timeout duration
-    NSTimeInterval timeout = 30.0;
-    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
-    
-    // Run the run loop until the operation completes or the timeout is reached
-    while (!operationCompleted && [timeoutDate timeIntervalSinceNow] > 0) {
-        // Allow other scheduled run loop activities to proceed
-        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
-    }
-    if (!operationCompleted) {
-        NSLog(@"Failed to detect 5 writes to the log file.");
-    }
-    
+    sleep(5);
     [NRAutoLogCollector restoreStandardOutputAndError];
 
     NSError* error;
@@ -483,34 +371,12 @@ static NewRelicAgentInternal* _sharedInstance;
     if(error){
         NSLog(@"%@", error.localizedDescription);
     }
-    NSMutableDictionary *commonBlock = [[NRLogger logger] commonBlockDict];
-
-    NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
-                                                 options:0
-                                                   error:&error];
-
-    if (error) {
-        NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
-        XCTAssertNil(error, @"Error creating log payload");
-        return;
-    }
-
-    error = nil;
-    // New version of the line
-    NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
-                                 [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
-                                 [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-
+    NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
     NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
-
-    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:formattedData
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                       options:0
-                                                        error:&error];
+                                                        error:nil];
     NSLog(@"decode=%@", decode);
-
-    NSArray *decodedArray = [[decode valueForKey:@"logs"] objectAtIndex:0];
-    NSDictionary *decodedCommonBlock = [[[decode valueForKey:@"common"] objectAtIndex:0] valueForKey:@"attributes"];
-
 
     NSArray * expectedValues = @[
         @{@"message": @"NSLog Test"},
@@ -524,11 +390,12 @@ static NewRelicAgentInternal* _sharedInstance;
     // For each expected message.
     for (NSDictionary *dict in expectedValues) {
         // Iterate through the collected message logs.
-        for (NSDictionary *dict2 in decodedArray) {
+        for (NSDictionary *dict2 in decode) {
             //
             NSString* currentMessage = [dict objectForKey:@"message"];
             if ([[dict2 objectForKey:@"message"] containsString: currentMessage]) {
                 foundCount += 1;
+                XCTAssertTrue([[dict2 objectForKey:@"entity.guid"] isEqualToString:@"Entity-Guid-XXXX"],@"entity.guid set incorrectly");
             }
             // Verify added attributes with logAttributes.
             if ([[dict2 objectForKey:@"message"] isEqualToString:@"This is a test message for the New Relic logging system."]) {

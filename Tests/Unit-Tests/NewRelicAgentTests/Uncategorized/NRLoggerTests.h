@@ -16,9 +16,4 @@
     NSString* category;
     NSString* name;
 }
-@property (nonatomic) int fileDescriptor;
-@property (nonatomic, strong) dispatch_source_t source;
-
-@property id mockNewRelicInternals;
-
 @end

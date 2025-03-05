@@ -631,21 +631,20 @@
 
 + (BOOL) setUserId:(NSString* _Nullable)userId {
     NSString *previousUserId = [[NewRelicAgentInternal sharedInstance] getUserId];
-
     BOOL newSession = false;
-    
-    // If userId has been set before and is different from the current userId, then we need to start a new session.
-    if ([previousUserId isEqualToString: userId] == NO) {
-        // end session and harvest.
+    // If the client passes a new userId that is non NULL.
+    if (userId != NULL) {
+        // A new userId has been set where the previously set one (during this app session (since app launch)) was not NULL or the previous set one was NULL, we start a new session.
         newSession = true;
     }
+    // If the client passes a new NULL userId.
+    else {
+        if (previousUserId != NULL) {
+            // end session and harvest.
+            newSession = true;
+        }
         // Do nothing if passed userId is null and saved userId (for this app session (since app launch)) is null.
-    if (userId == nil) {
-        // end session and harvest.
-        newSession = true;
     }
-
-    NRLOG_AGENT_VERBOSE(@"setUserId: %@ and previousUserId: %@ and will start newSession=%d", userId, previousUserId, newSession);
 
     // Update in memory userId.
     [NewRelicAgentInternal sharedInstance].userId = userId;

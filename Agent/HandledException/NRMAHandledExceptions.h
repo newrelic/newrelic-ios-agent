@@ -24,8 +24,7 @@ extern const NSString* kHexBackupStoreFolder;
                             sessionStartTime:(NSDate*)sessionStartDate
                           agentConfiguration:(NRMAAgentConfiguration*)agentConfiguration
                                     platform:(NSString*)platform
-                                   sessionId:(NSString*)sessionId
-                          attributeValidator:(id<AttributeValidatorProtocol>) attributeValidator;
+                                   sessionId:(NSString*)sessionId;
 
 - (void) recordHandledException:(NSException*) exception
                      attributes:(NSDictionary* _Nullable)attributes;

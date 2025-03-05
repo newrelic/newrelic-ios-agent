@@ -12,35 +12,28 @@ using namespace NewRelic::Hex;
 using namespace com::newrelic::mobile;
 
 HexReportContext::HexReportContext(const std::shared_ptr<Report::AppInfo>& applicationInfo,
-                                   const AttributeValidator& attributeValidator,
-                                   HexPublisher* publisher)
+                                   const AttributeValidator& attributeValidator)
         : HexContext::HexContext(),
           _attributeValidator(attributeValidator),
-          _applicationInfo(applicationInfo),
-          _publisher(publisher){}
+          _applicationInfo(applicationInfo) {}
 
 void HexReportContext::finalize() {
     std::unique_lock<std::mutex> finalizeLock(reportMutex);
-
+    std::vector<flatbuffers::Offset<fbs::HexAgentData>> agentDataList;
     for (auto& it : reportList) {
         try {
-            auto agentDataOffset = it->finalize(*getBuilder());
-            auto agentDataVector = getBuilder()->CreateVector(&agentDataOffset, 1);
-
-            auto bundle = fbs::CreateHexAgentDataBundle(*getBuilder(), agentDataVector);
-            FinishHexAgentDataBundleBuffer(*getBuilder(), bundle);
-            auto sharedThis = std::static_pointer_cast<HexContext>(shared_from_this());
-
-            _publisher->publish(sharedThis);
-
-            // Clear the builder for the next report
-            getBuilder()->Clear();
+            agentDataList.push_back(it->finalize(*getBuilder()));
         } catch (std::invalid_argument& e) {
             LLOG_AUDIT("Hex report not finalized: %s", e.what());
         } catch (...) {
             LLOG_AUDIT("Hex report not finalized:");
         }
     }
+    getBuilder()->CreateVector(agentDataList);
+
+    auto bundle = fbs::CreateHexAgentDataBundle(*getBuilder(), getBuilder()->CreateVector(agentDataList));
+    FinishHexAgentDataBundleBuffer(*getBuilder(), bundle);
+
 }
 
 std::shared_ptr<Report::HexReport> HexReportContext::createReport(std::shared_ptr<Report::HandledException> exception) {

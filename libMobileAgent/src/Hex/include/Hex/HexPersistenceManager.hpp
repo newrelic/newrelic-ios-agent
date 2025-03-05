@@ -19,7 +19,7 @@ namespace NewRelic {
 
             ~HexPersistenceManager() = default;
 
-            void retrieveAndPublishReports();
+            std::shared_ptr<HexContext> retrieveStoreReports();
 
             void publishContext(std::shared_ptr<HexContext>const& context);
 

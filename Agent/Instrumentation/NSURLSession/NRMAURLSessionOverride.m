@@ -225,8 +225,6 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
     }
     
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURLRequest*))originalImp)(self,_cmd,mutableRequest);
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    
     if([NRMAFlags shouldEnableNewEventSystem]){
         [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload
                                       to:task.originalRequest];
@@ -274,7 +272,6 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
     
     if (completionHandler == nil) {
         task  = ((id(*)(id,SEL,NSURLRequest*,void(^)(NSData*,NSURLResponse*,NSError*)))originalImp)(self,_cmd,mutableRequest,completionHandler);
-        objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
         if([NRMAFlags shouldEnableNewEventSystem]) {
             [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
@@ -293,14 +290,11 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
         } else {
             [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
-        
-        // NRLOG_AGENT_VERBOSE(@"NRMA__recordTask called from NRMAOverride__dataTaskWithRequest_completionHandler");
 
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
     });
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
@@ -320,8 +314,7 @@ NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
     }
 
     NSURLSessionTask* task = ((id(*)(id,SEL,NSURL*))originalImp)(self,_cmd,url);
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
+    
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;
@@ -342,7 +335,6 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSURL*))originalImp)(self,_cmd,mutableRequest,fileURL);
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     if([NRMAFlags shouldEnableNewEventSystem]){
         NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
         [NRMAHTTPUtilities attachNRMAPayload:payload
@@ -371,7 +363,6 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
 
     NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:request];
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*,NSData*))originalImp)(self, _cmd, mutableRequest, data);
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     if([NRMAFlags shouldEnableNewEventSystem]){
         NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
         [NRMAHTTPUtilities attachNRMAPayload:payload to:task.originalRequest];
@@ -397,8 +388,7 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
     }
 
     NSURLSessionTask* task = ((NSURLSessionTask*(*)(id,SEL,NSURLRequest*))originalImp)(self, _cmd,request);
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
+    
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     
     return task;
@@ -425,8 +415,7 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     
     if (completionHandler == nil) {
         task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSURL*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,fileURL,completionHandler);
-        objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
+        
         if([NRMAFlags shouldEnableNewEventSystem]) {
             [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
         } else {
@@ -446,14 +435,11 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
             [NRMAHTTPUtilities attachPayload:payloadHolder.cppPayload to:task.originalRequest];
         }
         
-        //  NSLog(@"NRMA__recordTask called from NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler");
-
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);
     });
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
+    
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;
@@ -482,7 +468,6 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     
     if (completionHandler == nil) {
         task = ((NSURLSessionUploadTask*(*)(id,SEL,NSURLRequest*,NSData*,void(^)(NSData*,NSURLResponse*,NSError*)))originalIMP)(self,_cmd,mutableRequest,bodyData,completionHandler);
-        objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
         if([NRMAFlags shouldEnableNewEventSystem]) {
             [NRMAHTTPUtilities attachNRMAPayload:payloadHolder.objcPayload to:task.originalRequest];
@@ -506,8 +491,7 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
 
         completionHandler(data,response,error);
     });
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
+    
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
     return task;

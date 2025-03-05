@@ -14,8 +14,6 @@
 #import "NRMACustomEvent.h"
 #import "NRMARequestEvent.h"
 #import "NRMAInteractionEvent.h"
-#import "NewRelicAgentInternal.h"
-#import <OCMock/OCMock.h>
 
 #import "BlockAttributeValidator.h"
 #import "NRMAFlags.h"
@@ -67,11 +65,7 @@
 @end
 
 @interface PersistentStoreTests : XCTestCase
-@property id mockNewRelicInternals;
-
 @end
-
-static NewRelicAgentInternal* _sharedInstance;
 
 @implementation PersistentStoreTests {
     BlockAttributeValidator *agreeableAttributeValidator;
@@ -83,11 +77,7 @@ static NSTimeInterval shortTimeInterval = 10;
 
 - (void)setUp {
     [super setUp];
-    self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
-    _sharedInstance = [[NewRelicAgentInternal alloc] init];
-    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
-    [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
-    
+
     if(agreeableAttributeValidator == nil) {
         agreeableAttributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *) {
             return YES;
@@ -113,7 +103,6 @@ static NSTimeInterval shortTimeInterval = 10;
     if([fileManager fileExistsAtPath:testFilename]) {
         [fileManager removeItemAtPath:testFilename error:nil];
     }
-    [self.mockNewRelicInternals stopMocking];
 
     [NRMAFlags disableFeatures: NRFeatureFlag_NewEventSystem];
 
@@ -300,7 +289,7 @@ static NSTimeInterval shortTimeInterval = 10;
     
     XCTestExpectation *waitForInitialWriteExpectation = [self expectationWithDescription:@"Waiting for the first time the file is written"];
     PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                      andMinimumDelay:.025];
+                                                      andMinimumDelay:1];
     
     NSError *error = nil;
     

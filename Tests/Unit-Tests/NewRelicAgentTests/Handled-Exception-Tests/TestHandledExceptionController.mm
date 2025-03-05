@@ -13,7 +13,6 @@
 #import "NRMAAgentConfiguration.h"
 
 #import "NewRelicInternalUtils.h"
-#import "NRMAAttributeValidator.h"
 
 #import <Hex/HexContext.hpp>
 #import "NRAgentTestBase.h"
@@ -64,16 +63,14 @@
                                                                sessionStartTime:0
                                                              agentConfiguration:nil
                                                                        platform:nil
-                                                                      sessionId:nil
-                                                             attributeValidator:nil]);
+                                                                      sessionId:nil]);
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NRMAHandledExceptions* exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:nil
                                                                                   sessionStartTime:0
                                                                                 agentConfiguration:nil
                                                                                           platform:nil
-                                                                                         sessionId:nil
-                                                                                attributeValidator:nil];
+                                                                                         sessionId:nil];
 
 
     XCTAssertTrue(exceptions == nil);
@@ -84,8 +81,7 @@
                                                            sessionStartTime:0
                                                          agentConfiguration:nil
                                                                    platform:nil
-                                                                  sessionId:nil
-                                                         attributeValidator:nil];
+                                                                  sessionId:nil];
 
     XCTAssertTrue(exceptions == nil);
 
@@ -98,8 +94,7 @@
                                                            sessionStartTime:0
                                                          agentConfiguration:agentConfig
                                                                    platform:nil
-                                                                  sessionId:nil
-                                                         attributeValidator:nil];
+                                                                  sessionId:nil];
 
     XCTAssertTrue(exceptions == nil);
 
@@ -109,8 +104,7 @@
                                                            sessionStartTime:0
                                                          agentConfiguration:agentConfig
                                                                    platform:@"iOS"
-                                                                  sessionId:nil
-                                                         attributeValidator:nil];
+                                                                  sessionId:nil];
 
     XCTAssertTrue(exceptions == nil);
 
@@ -125,16 +119,14 @@
                                                                sessionStartTime:0
                                                              agentConfiguration:nil
                                                                        platform:nil
-                                                                      sessionId:nil
-                                                             attributeValidator:nil]);
+                                                                      sessionId:nil]);
 
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NRMAHandledExceptions* exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:nil
                                                                                   sessionStartTime:0
                                                                                 agentConfiguration:nil
                                                                                           platform:nil
-                                                                                         sessionId:nil
-                                                                                attributeValidator:nil];
+                                                                                         sessionId:nil];
 
 
     XCTAssertTrue(exceptions == nil);
@@ -145,8 +137,7 @@
                                                            sessionStartTime:0
                                                          agentConfiguration:nil
                                                                    platform:nil
-                                                                  sessionId:nil
-                                                         attributeValidator:nil];
+                                                                  sessionId:nil];
 
     XCTAssertTrue(exceptions == nil);
 
@@ -159,8 +150,7 @@
                                                            sessionStartTime:0
                                                          agentConfiguration:agentConfig
                                                                    platform:nil
-                                                                  sessionId:nil
-                                                         attributeValidator:nil];
+                                                                  sessionId:nil];
 
     XCTAssertTrue(exceptions == nil);
 
@@ -170,8 +160,7 @@
                                                            sessionStartTime:0
                                                          agentConfiguration:agentConfig
                                                                    platform:@"iOS"
-                                                                  sessionId:nil
-                                                         attributeValidator:nil];
+                                                                  sessionId:nil];
 
     XCTAssertTrue(exceptions == nil);
 
@@ -191,8 +180,7 @@
                                                                                      sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:@"sessionId"
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:@"sessionId"];
 
     XCTAssertNoThrow([hexController recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"
                                                                                    reason:@"the Tea is too hot"
@@ -223,8 +211,7 @@
                                                                                      sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:@"sessionId"
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:@"sessionId"];
 
     id dict = @{@"name": @"Exception name not found",
                 @"reason": @"Reason not found",
@@ -251,8 +238,7 @@
                                                                                      sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:@"sessionId"
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:@"sessionId"];
 
     id dict = @{@"name": @"Exception name not found",
                 @"reason": @"Reason not found",
@@ -280,8 +266,7 @@
                                                                                      sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:@"sessionId"
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:@"sessionId"];
     XCTAssertTrue([hexController fbsPlatformFromString:@"iOS"] == com::newrelic::mobile::fbs::Platform_iOS, @"Method returned %d, but should be %d", [hexController fbsPlatformFromString:@"iOS"],com::newrelic::mobile::fbs::Platform_iOS );
     XCTAssertTrue([hexController fbsPlatformFromString:@"tvOS"] == com::newrelic::mobile::fbs::Platform_tvOS,@"Method returned %d, but should be %d", [hexController fbsPlatformFromString:@"tvOS"],com::newrelic::mobile::fbs::Platform_tvOS);
 
@@ -299,8 +284,7 @@
                                                                                      sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:@"sessionId"
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:@"sessionId"];
     
     id mockLogger = [OCMockObject mockForClass:[NRLogger class]];
     
@@ -335,8 +319,7 @@
                                                                                      sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:@"sessionId"
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:@"sessionId"];
     
     
     NSError* error = [NSError errorWithDomain:@"" code:NSURLErrorUnknown userInfo:@{}];
@@ -368,8 +351,7 @@
                                                                                      sessionStartTime:[NSDate new]
                                                                                    agentConfiguration:agentConfig
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:@"sessionId"
-                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
+                                                                                            sessionId:@"sessionId"];
 
 
     NSError* error = [NSError errorWithDomain:@"" code:NSURLErrorUnknown userInfo:@{}];

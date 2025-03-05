@@ -15,12 +15,3 @@ struct ApodURL {
         self.url = "https://api.nasa.gov/planetary/apod?api_key=L9fVBfet3ldADKiogWO5EZyOOOHczSE45du4FhXT&date=\(date)"
     }
 }
-
-struct ApodURLBroke {
-
-    let url: String
-
-    init(date:String) {
-        self.url = "https://api.nasa.gov/planetary/apod?date=\(date)"
-    }
-}

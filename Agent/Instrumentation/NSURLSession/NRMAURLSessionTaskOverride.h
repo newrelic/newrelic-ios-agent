@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "NRTimer.h"
 void NRMAOverride__resume(id self, SEL _cmd);
-void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask *sessionTask, SEL _cmd, NSURLSessionTaskState newState);
+void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask *sessionTask, SEL _cmd, NSURLSessionTaskState *newState);
 
 @interface NRMAURLSessionTaskOverride : NSObject
 

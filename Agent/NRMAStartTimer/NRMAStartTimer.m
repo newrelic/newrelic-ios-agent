@@ -94,7 +94,7 @@ static NRMAStartTimer *_sharedInstance;
 #endif
 }
 
-- (BOOL)createDurationMetric {
+- (void)createDurationMetric {
 
     // Based on whether or not we've saved a boot timestamp and whether or not the app has been launched this boot we can determine whether or not this is a warm start.
     NSDate *previousBootTime = [[NSUserDefaults standardUserDefaults] objectForKey:systemBootTimestampKey];
@@ -114,16 +114,16 @@ static NRMAStartTimer *_sharedInstance;
     if ([self isPrewarmAvailable] && isPrewarmLaunch) {
         NRLOG_AGENT_INFO(@"New Relic: Skipping App Start Time because iOS prewarmed this launch.");
 
-        return false;
+        return;
     }
     if (self.isWarmLaunch) {
         NRLOG_AGENT_INFO(@"New Relic: Skipping App Start Time because matching boot times.");
-        return false;
+        return;
     }
 
     // If the app was running in the background. Skip recording this launch.
     if (self.wasInBackground) {
-        return false;
+        return;
     }
 
     // App Launch Time: Cold is time between now and when process started.
@@ -132,11 +132,10 @@ static NRMAStartTimer *_sharedInstance;
     // Skip recording obviously wrong extra long app launch durations.
     if (calculatedAppLaunchDuration >= maxAppLaunchDuration) {
         NRLOG_AGENT_INFO(@"New Relic: Skipping app start time metric since %f > allowed.", calculatedAppLaunchDuration);
-        return false;
+        return;
     }
 
     self.appLaunchDuration = calculatedAppLaunchDuration;
-    return true;
 }
 
 - (BOOL)isPrewarmAvailable {

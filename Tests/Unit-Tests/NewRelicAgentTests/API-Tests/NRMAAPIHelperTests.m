@@ -34,9 +34,8 @@
     
         XCTAssert([analytics setUserId:@"AUniqueId1"], @"Good input produced incorrect result");
         
-        // Setting userId to nil is allowed.
-        XCTAssertTrue([analytics setUserId:nil], @"bad input produced a incorrect result");
-
+        XCTAssertFalse([analytics setUserId:nil], @"bad input produced a incorrect result");
+        
         XCTAssertFalse([analytics setUserId:@""], @"bad input produced a incorrect result");
 }
 @end
