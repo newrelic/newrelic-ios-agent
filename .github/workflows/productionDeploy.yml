@@ -67,6 +67,7 @@ jobs:
       run: echo "${{ env.version }}" 
 
     - name: Create Prod Podspec for XCFramework version
+      continue-on-error: true
       run: |
          cd main
 
