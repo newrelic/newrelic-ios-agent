@@ -7,14 +7,16 @@
 #define LIBMOBILEAGENT_HEXREPORTCONTEXT_HPP
 
 #include <Hex/HexContext.hpp>
+#include <Hex/HexPublisher.hpp>
 
 namespace NewRelic {
     namespace Hex {
-        class HexReportContext : public HexContext {
+        class HexReportContext : public HexContext, public std::enable_shared_from_this<HexReportContext> {
 
         public:
             HexReportContext(const std::shared_ptr<Report::AppInfo>& applicationInfo,
-                             const AttributeValidator& attributeValidator);
+                             const AttributeValidator& attributeValidator,
+                             HexPublisher* publisher);
 
             virtual void finalize();
 
@@ -29,6 +31,7 @@ namespace NewRelic {
             std::vector<std::shared_ptr<Report::HexReport>> reportList;
             const AttributeValidator& _attributeValidator;
             const std::shared_ptr<Report::AppInfo>& _applicationInfo;
+            HexPublisher* _publisher;
         };
     }
 }

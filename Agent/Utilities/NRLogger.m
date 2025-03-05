@@ -15,6 +15,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
 #import "NRAutoLogCollector.h"
+#import "NRMAHarvesterConnection+GZip.h"
 
 NRLogger *_nr_logger = nil;
 
@@ -286,10 +287,14 @@ withTimestamp:(NSNumber *) timestamp {
     });
 }
 
-- (NSData*) jsonDictionary:(NSDictionary*)message {
+- (NSMutableDictionary*) commonBlockDict {
     NSString* NRSessionId = [[[NewRelicAgentInternal sharedInstance] currentSessionId] copy];
     NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
+
+    // The following line generates the native platform name which is used as "collector.name" in the log payload.
     NSString* nativePlatform = [NewRelicInternalUtils agentName];
+
+    // The following code generates the variable name that is chosen between native platform name or the Hybrid platform name which is used as "instrumentation.name" in the log payload.
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
     NSString* name = [NRMAAgentConfiguration connectionInformation].deviceInformation.platform == NRMAPlatform_Native ? nativePlatform : platform;
 
@@ -316,6 +321,38 @@ withTimestamp:(NSNumber *) timestamp {
         entityGuid = @"";
     }
 
+    NSMutableDictionary *commonAttributes = [NSMutableDictionary dictionary];
+    [commonAttributes setObject:entityGuid forKey:NRLogMessageEntityGuidKey];
+    if (NRSessionId) [commonAttributes setObject:NRSessionId forKey:NRLogMessageSessionIdKey];
+    [commonAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey];
+    if (name) [commonAttributes setObject:name forKey:NRLogMessageInstrumentationNameKey];
+    [commonAttributes setObject:[NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion forKey:NRLogMessageInstrumentationVersionKey];
+    if (nativePlatform) [commonAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey];
+    if (nrAppId) [commonAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey];
+
+
+    NSString* sessionAttributes = [[NewRelicAgentInternal sharedInstance].analyticsController sessionAttributeJSONString];
+    if (sessionAttributes != nil && [sessionAttributes length] > 0) {
+        NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[sessionAttributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                   options:0
+                                                                     error:nil];
+        for (NSString *key in dictionary) {
+            id value = [dictionary objectForKey:key];
+
+
+            if (value) {
+                [commonAttributes setObject:value forKey:key];
+            }
+        }
+    }
+
+
+
+    return commonAttributes;
+}
+
+- (NSData*) jsonDictionary:(NSDictionary*)message {
+
     NSMutableDictionary *requiredAttributes = [NSMutableDictionary dictionary];
 
     id value = [message objectForKey:NRLogMessageLevelKey];
@@ -335,19 +372,6 @@ withTimestamp:(NSNumber *) timestamp {
 
     value = [[message objectForKey:NRLogMessageMessageKey]stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
     if (value) [requiredAttributes setObject:value forKey:NRLogMessageMessageKey]; // 6
-
-    if (NRSessionId) [requiredAttributes setObject:NRSessionId forKey:NRLogMessageSessionIdKey]; // 7
-    if (nrAppId) [requiredAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey]; // 8
-    if (entityGuid) [requiredAttributes setObject:entityGuid forKey:NRLogMessageEntityGuidKey]; // 9
-
-    [requiredAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey]; // 10
-    [requiredAttributes setObject:name forKey:NRLogMessageInstrumentationNameKey]; // 11
-
-    value = [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion;
-    if (value) [requiredAttributes setObject:value forKey:NRLogMessageInstrumentationVersionKey]; // 12
-
-    [requiredAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey]; // 13
-
 
     NSMutableDictionary *providedAttributes = [message mutableCopy];
     [providedAttributes removeObjectsForKeys:@[NRLogMessageLevelKey,NRLogMessageFileKey,NRLogMessageLineNumberKey,NRLogMessageMethodKey,NRLogMessageTimestampKey,NRLogMessageMessageKey]];
@@ -531,8 +555,30 @@ withTimestamp:(NSNumber *) timestamp {
                 return;
             }
 
-            NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
-            NSData* formattedData = [logMessagesJson dataUsingEncoding:NSUTF8StringEncoding];
+            // the text of the file contents is just comma separated dict objects
+            // Add the user provided attributes to the message.
+            NSMutableDictionary *commonBlock = [self commonBlockDict];
+
+            NSError* error = nil;
+
+            NSData *json = [NRMAJSON dataWithJSONObject:commonBlock
+                                                         options:0
+                                                           error:&error];
+
+            if (error) {
+                NRLOG_AGENT_ERROR(@"Failed to create log payload w error = %@", error);
+            }
+
+            // New version of the line
+            NSString* logMessagesJson = [NSString stringWithFormat:@"[{ \"common\": { \"attributes\": %@}, \"logs\": [ %@ ] }]",
+                                         [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding],
+                                         [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+
+            // Old version of the line
+           // NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:logData encoding:NSUTF8StringEncoding]];
+           
+            // Here we add gzip compression to the log data.
+            NSData* formattedData = [NRMAHarvesterConnection gzipData:[logMessagesJson dataUsingEncoding:NSUTF8StringEncoding]];
             
             // We clear the log when we save the existing logs to uploadQueue.
             [self clearLog];
@@ -570,7 +616,6 @@ withTimestamp:(NSNumber *) timestamp {
         NSData *formattedData = [self->uploadQueue firstObject];
         
         if (self->debugLogs) {
-            //NSString* logMessagesJson = [NSString stringWithFormat:@"[ %@ ]", [[NSString alloc] initWithData:formattedData encoding:NSUTF8StringEncoding]];
             NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
                                                                    options:0
                                                                      error:nil];
@@ -581,6 +626,7 @@ withTimestamp:(NSNumber *) timestamp {
         NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
         [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
         [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        [req setValue:kNRMAGZipHeader forHTTPHeaderField:kNRMAContentEncodingHeader];
 
         req.HTTPMethod = @"POST";
         
