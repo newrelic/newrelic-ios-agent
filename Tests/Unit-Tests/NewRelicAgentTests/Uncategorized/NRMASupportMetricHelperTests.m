@@ -27,7 +27,6 @@
 
     if (deferredMetrics != nil) {
         [deferredMetrics removeAllObjects];
-        deferredMetrics = nil;
     }
     helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
