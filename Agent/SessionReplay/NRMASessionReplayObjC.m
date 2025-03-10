@@ -84,11 +84,11 @@
     NSMutableArray *touchDescriptions = [[NSMutableArray alloc] init];
     
     NSDictionary *startTouchDescription = @{ @"type": @(3),
-                                             @"timestamp": @([_startTouch.timestamp timeIntervalSince1970] * 1000),
+                                             @"timestamp": @(ceil([_startTouch.timestamp timeIntervalSince1970] * 1000)),
                                              @"data": @{
                                                  @"source": @(2),
                                                  @"type": @(7),
-                                                 @"pointerType": @(2),
+//                                                 @"pointerType": @(2),
                                                  @"id": @(_startTouch.identifier),
                                                  @"x": @(_startTouch.touchLocation.x),
                                                  @"y": @(_startTouch.touchLocation.y)
@@ -98,18 +98,18 @@
     
     if(!(self.moveTouches.count == 0)) {
         NSMutableArray* positions = [NSMutableArray new];
-        NSDate* initialDate = self.moveTouches.firstObject.timestamp;
+        NSDate* initialDate = self.moveTouches.lastObject.timestamp;
         
         for(NRMATouch *touchDescription in self.moveTouches) {
             NSTimeInterval timeInterval = [touchDescription.timestamp timeIntervalSinceDate:initialDate];
             [positions addObject:@{ @"id": @(touchDescription.identifier),
                                     @"x": @(touchDescription.touchLocation.x),
                                     @"y": @(touchDescription.touchLocation.y),
-                                    @"timeOffset": @(timeInterval)}];
+                                    @"timeOffset": @(ceil(timeInterval*1000))}];
         }
         
         NSDictionary *moveTouchDescription = @{ @"type": @(3),
-                                                 @"timestamp": @([initialDate timeIntervalSince1970] * 1000),
+                                                 @"timestamp": @(ceil([initialDate timeIntervalSince1970] * 1000)),
                                                  @"data": @{
                                                      @"source": @(6),
                                                      @"positions": positions
@@ -118,12 +118,13 @@
     }
     
 //    for(NRMATouch *touchDescription in _moveTouches) {
-//        NSTimeInterval timeInterval = [touchDescription.timestamp timeIntervalSinceDate:self.startTouch.timestamp];
+////        NSTimeInterval timeInterval = [touchDescription.timestamp timeIntervalSinceDate:self.startTouch.timestamp];
+//        NSTimeInterval timeInterval = [self.endTouch.timestamp timeIntervalSinceDate:touchDescription.timestamp];
 //        
 //        NSDictionary *moveTouchDescription = @{ @"type": @(3),
-//                                                 @"timestamp": @([touchDescription.timestamp timeIntervalSince1970]),
+//                                                 @"timestamp": @([touchDescription.timestamp timeIntervalSince1970] * 1000),
 //                                                 @"data": @{
-//                                                     @"source": @(1),
+//                                                     @"source": @(6),
 //                                                     @"positions": @[@{
 //                                                         @"id": @(touchDescription.identifier),
 //                                                         @"x": @(touchDescription.touchLocation.x),
@@ -135,7 +136,7 @@
 //    }
     
     NSDictionary *endTouchDescription = @{ @"type": @(3),
-                                             @"timestamp": @([_endTouch.timestamp timeIntervalSince1970] * 1000),
+                                             @"timestamp": @(ceil([_endTouch.timestamp timeIntervalSince1970] * 1000)),
                                              @"data": @{
                                                  @"source": @(2),
                                                  @"type": @(9),
@@ -179,7 +180,7 @@ IMP NRMAOriginal__sendEvent;
     NRMASessionReplayFrameProcessorObjC* _sessionReplayFrameProcessor;
     SessionReplayTouchCapture* _touchCapture;
     
-    NSUInteger touchID;
+    NSInteger touchID;
     NSMutableArray<NRMATouchTracker*>* _trackedTouches;
 }
 
@@ -242,9 +243,12 @@ IMP NRMAOriginal__sendEvent;
             for(UITouch *touch in event.allTouches) {
 
                 if(touch.phase == UITouchPhaseBegan) {
-                    self->touchID++;
+                    CGPoint location = [touch locationInView:touch.window];
+                    UIView *touchedView = [touch.window hitTest:location withEvent:nil];
+                    self->touchID = [((NSNumber *)[NRMAAssociate retrieveFrom:touchedView with:@"SessionReplayID"]) intValue ];
                     NRMATouch *nrmaTouch = [[NRMATouch alloc] initWithTimestamp:[NSDate date]
-                                                                    andLocation:[touch locationInView:touch.window] andIdentifier: self->touchID];
+                                                                    andLocation:location 
+                                                                  andIdentifier: self->touchID];
                     NRMATouchTracker *touchTracker = [[NRMATouchTracker alloc]initWithStartTouch:nrmaTouch];
                     [NRMAAssociate attach:touchTracker to:touch with:@"TouchTracker"];
                 } else if(touch.phase == UITouchPhaseMoved) {
@@ -293,7 +297,7 @@ IMP NRMAOriginal__sendEvent;
     [self swizzleSendEvent];
     _touchCapture = [[SessionReplayTouchCapture alloc] initWithWindow:_window];
     [_processedFrames addObject:[self generateInitialNode]];
-    _frameTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
+    _frameTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self takeFrame];
     }];
 }
@@ -325,7 +329,7 @@ IMP NRMAOriginal__sendEvent;
     frameCount++;
     NSLog(@"Captured frame %d", frameCount);
     
-    if(frameCount == 10) {
+    if(frameCount == 25) {
         [_frameTimer invalidate];
 
         NSString* frameJSON = [self consolidateFrames];
