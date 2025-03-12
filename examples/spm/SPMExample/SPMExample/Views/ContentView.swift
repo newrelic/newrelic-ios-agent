@@ -1,19 +1,9 @@
-//
-//  ContentView.swift
-//  SPMExample
-//
-//  Created by Chris Dillard on 9/19/23.
-//
-
 import SwiftUI
-import NewRelic
 
 struct ContentView: View {
     var body: some View {
         NavigationView {
             List {
-                NavigationLink(destination: UtilityView(viewModel: UtilityView.ViewModel())) { Text("Utilities")
-                }
                 NavigationLink(destination: ButtonsView()) {
                     Text("Buttons")
                 }
@@ -57,9 +47,8 @@ struct ContentView: View {
                     Text("Shapes")
                 }
             }
+            .navigationBarTitle("SwiftUI Elements")
         }
-        .navigationBarTitle("SwiftUI Elements")
-        .NRTrackView(name: "ContentView")
     }
 }
 
