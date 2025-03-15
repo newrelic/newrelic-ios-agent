@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 
 struct UIViewThingy: SessionReplayViewThingy {
+    var subviews = [any SessionReplayViewThingy]()
+    
     var shouldRecordSubviews: Bool {
         true
     }
@@ -18,13 +20,5 @@ struct UIViewThingy: SessionReplayViewThingy {
     
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
-    }
-    
-    func jsonDescription() -> [String: Any] {
-        return generateBaseJSONDescription()
-    }
-    
-    func cssDescription() -> String {
-        "#\(viewDetails.cssSelector) { \(generateBaseCSSStyle())"
     }
 }

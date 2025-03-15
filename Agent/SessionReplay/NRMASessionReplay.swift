@@ -15,7 +15,7 @@ public class NRMASessionReplay: NSObject {
     
     private let sessionReplayCapture: SessionReplayCapture
     private var frameTimer: Timer!
-    private let rawFrames = [SessionReplayFrame]()
+    private var rawFrames = [SessionReplayFrame]()
     
     public override init() {
         self.sessionReplayCapture = SessionReplayCapture()
@@ -45,7 +45,8 @@ public class NRMASessionReplay: NSObject {
             return
         }
         
-
+        let frame = sessionReplayCapture.recordFrom(rootView: window)
+        rawFrames.append(frame)
     }
     
     // maybe move this into something else?

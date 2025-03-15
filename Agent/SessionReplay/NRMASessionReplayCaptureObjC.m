@@ -10,6 +10,8 @@
 #import "NRMAUIViewDetailsObjC.h"
 #import "NRMAUILabelDetailsObjC.h"
 #import "NRMAUIImageViewDetailsObjC.h"
+#import "NRLogger.h"
+#import <objc/runtime.h>
 
 
 @implementation NRMASessionReplayCaptureObjC

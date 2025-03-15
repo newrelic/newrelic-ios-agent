@@ -1464,6 +1464,7 @@
 		34C18551292464E500F10825 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
 		34C18552292464E500F10825 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9292E2912D72F001449B6 /* JSON.framework */; };
 		34C18553292464E500F10825 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
+		34D0401E2D86036D007BE92D /* UIColor+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D0401D2D86036D007BE92D /* UIColor+HexString.swift */; };
 		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
 		34DB25372824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
 		34DB25382824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
@@ -2492,6 +2493,7 @@
 		34A929232912D72A001449B6 /* Connectivity.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Connectivity.xcodeproj; path = libMobileAgent/src/Connectivity/Connectivity.xcodeproj; sourceTree = "<group>"; };
 		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/JSON.xcodeproj; sourceTree = "<group>"; };
 		34A9292F2912D736001449B6 /* Utilities.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Utilities.xcodeproj; path = libMobileAgent/src/Utilities/Utilities/Utilities.xcodeproj; sourceTree = "<group>"; };
+		34D0401D2D86036D007BE92D /* UIColor+HexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+HexString.swift"; sourceTree = "<group>"; };
 		34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLTransformer.h; sourceTree = "<group>"; };
 		34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformer.m; sourceTree = "<group>"; };
 		34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMACustomEvent.h; sourceTree = "<group>"; };
@@ -3857,6 +3859,7 @@
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				3493DF4F2D543C8700BF5BED /* IDGenerator.swift */,
+				34D0401D2D86036D007BE92D /* UIColor+HexString.swift */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -5402,6 +5405,7 @@
 				02FF49A024DC62B800115469 /* NRMAScopedMeasurements.m in Sources */,
 				02FF49A824DC62B800115469 /* NRMAAnalyticsEvents.m in Sources */,
 				02FF480A24DB573E00115469 /* NRMAUserActionFacade.mm in Sources */,
+				34D0401E2D86036D007BE92D /* UIColor+HexString.swift in Sources */,
 				2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */,
 				02FF4A9C24DC652E00115469 /* NRMABool.m in Sources */,
 				2B33E5D22AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */,
