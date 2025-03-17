@@ -40,12 +40,12 @@ class SessionReplayCapture {
         return viewThingy
     }
     
-    private func findRecorderForView(view: UIView) -> SessionReplayViewThingy {
-        switch view {
+    private func findRecorderForView(view originalView: UIView) -> SessionReplayViewThingy {
+        switch originalView {
         case let view as UILabel:
             return UILabelThingy(view: view, viewDetails: ViewDetails(view: view, idGenerator: self.idGenerator))
         default:
-            return UIViewThingy(view: view, viewDetails: ViewDetails(view: view, idGenerator: self.idGenerator))
+            return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView, idGenerator: self.idGenerator))
         }
     }
 }
