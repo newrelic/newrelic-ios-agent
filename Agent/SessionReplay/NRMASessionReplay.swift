@@ -8,7 +8,7 @@
 
 import Foundation
 import UIKit
-import NewRelic.Private
+import NewRelicPrivate
 
 @available(iOS 13.0, *)
 @objcMembers
@@ -28,9 +28,9 @@ public class NRMASessionReplay: NSObject {
             takeFrame()
         })
         
-//        let supportability = SupportabilityMetrics()
-//        supportability.createExceptionMetric()
-//        NRMATaskQueue.queue(NRMAMetric(name: "A name", value: 1, scope: ""))
+        let supportability = SupportabilityMetrics()
+        supportability.createExceptionMetric()
+        NRMATaskQueue.queue(NRMAMetric(name: "A name", value: 1, scope: ""))
 
 
         NotificationCenter.default.addObserver(self,

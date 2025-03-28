@@ -4,9 +4,4 @@ framework module NewRelic {
     umbrella header "Agent.h"
     export *
     module * { export * }
-    
-    explicit module Private {
-        header "/Users/smalsam/projects/newrelic-ios-agent/Agent/APrivateHeader.h"
-        export *
-    }
 }
