@@ -29,7 +29,7 @@
 #import "NRMAPayload.h"
 #import "NRMANetworkErrorEvent.h"
 #import "NRMASAM.h"
-#import "BlockAttributeValidator.h"
+#import "NRMAAttributeValidator.h"
 #import "NRMASessionEvent.h"
 
 //******************* THIS FILE HAS ARC DISABLED *******************
@@ -115,56 +115,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
             PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
             
-            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:eventStore];
-            _attributeValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *name) {
-                if ([name length] == 0) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: name length = 0");
-                    return false;
-                }
-                if ([name hasPrefix:@" "]) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: name prefix = \" \"");
-                    return false;
-                }
-                // check if attribute name is reserved or attribute name matches reserved prefix.
-                for (NSString* key in [NRMAAnalytics reservedKeywords]) {
-                    if ([key isEqualToString:name]) {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
-                        return false;
-                    }
-                    if ([name hasPrefix:key])  {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
-                        return false;
-                    }
-                }
-                // check if attribute name exceeds max length.
-                if ([name length] > kNRMA_Attrib_Max_Name_Length) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: name length exceeds limit");
-                    return false;
-                }
-                return true;
-                
-            } valueValidator:^BOOL(id value) {
-                if ([value isKindOfClass:[NSString class]]) {
-                    if ([(NSString*)value length] == 0) {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: value length = 0");
-                        return false;
-                    }
-                    else if ([(NSString*)value length] >= kNRMA_Attrib_Max_Value_Size_Bytes) {
-                        NRLOG_AGENT_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
-                        return false;
-                    }
-                }
-                if (value == nil || [value isKindOfClass:[NSNull class]]) {
-                    NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be nil");
-                    return false;
-                }
-                
-                return true;
-            } andEventTypeValidator:^BOOL(NSString *eventType) {
-                return YES;
-            }];
+            _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:[eventStore autorelease]];
+            _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
-
 
             NSString* attributes = [self sessionAttributeJSONString];
             if (attributes != nil && [attributes length] > 0) {
@@ -275,6 +228,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
+// New Event System
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                withNRMAPayload:(NRMAPayload *)payload {
@@ -514,6 +468,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     }
 }
 
+// Old Event System
 - (BOOL)addNetworkRequestEvent:(NRMANetworkRequestData *)requestData
                   withResponse:(NRMANetworkResponseData *)responseData
                    withPayload:(std::unique_ptr<const Connectivity::Payload>)payload {
@@ -525,6 +480,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return NO;
 }
 
+// Old Event System
 - (BOOL)addNetworkErrorEvent:(NRMANetworkRequestData *)requestData
                 withResponse:(NRMANetworkResponseData *)responseData
                  withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
@@ -538,6 +494,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return NO;
 }
 
+// Old Event System
 - (BOOL)addHTTPErrorEvent:(NRMANetworkRequestData *)requestData
              withResponse:(NRMANetworkResponseData *)responseData
             withPayload:(std::unique_ptr<const NewRelic::Connectivity::Payload>)payload {
@@ -648,7 +605,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                             [](bool) { return true;});
                 return _analyticsController->addNRAttribute(attribute);
             } else {
-                NRLOG_AGENT_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                if (name == kNRMA_Attrib_userId && !value ) {
+                    NRLOG_AGENT_VERBOSE(@"Successfully set userId to nil");
+                    return YES;
+
+                }else {
+                    NRLOG_AGENT_ERROR(@"Session attribute \'value\' must be either an NSString* or NSNumber*");
+                }
                 return NO;
             }
         } catch (std::exception& error) {
@@ -1267,6 +1230,13 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             kNRMA_RA_platformVersion,
             kNRMA_RA_lastInteraction
         ,nil];
+}
+
++ (NSArray<NSString*>*) reservedPrefixes {
+    return [NSArray arrayWithObjects:
+            kNRMA_RP_newRelic,
+            kNRMA_RP_nr,
+            nil];
 }
 
 @end

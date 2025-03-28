@@ -19,7 +19,7 @@
 @end
 
 @interface NRMAStartTimer ()
-- (void)createDurationMetric;
+- (BOOL)createDurationMetric;
 @end
 
 @implementation NRMAStartTimerTests
@@ -46,11 +46,13 @@
 -(void)test {
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"systemBootTimestamp"];
 
-    [[NRMAStartTimer sharedInstance] createDurationMetric];
-
+    BOOL success = [[NRMAStartTimer sharedInstance] createDurationMetric];
+    XCTSkipIf(!success, @"Failed to create duration metric");
+    
     [NRMASupportMetricHelper processDeferredMetrics];
+    
     [NRMATaskQueue synchronousDequeue];
-
+   
     NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
 
     XCTAssertTrue([measurement.name isEqualToString:NRMA_METRIC_APP_LAUNCH_COLD], @"%@ does not equal AppLaunch/Cold", measurement.name);

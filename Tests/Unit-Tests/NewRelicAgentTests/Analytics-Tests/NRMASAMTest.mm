@@ -24,8 +24,21 @@
 
 - (void)setUp {
     [super setUp];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file]]) {
+        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file] error:nil];
+    }
+    if([fileManager fileExistsAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private]]) {
+        [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",[NewRelicInternalUtils getStorePath],kNRMA_Attrib_file_private] error:nil];
+    }
+    
+   // [NRLogger setLogLevels:NRLogLevelDebug];
 
     manager = [self samTest];
+}
+
+- (void) tearDown {
+    [super tearDown];
     [manager removeAllSessionAttributes];
 }
 
@@ -42,12 +55,14 @@
         // check if attribute name is reserved or attribute name matches reserved prefix.
         for (NSString* key in [NRMAAnalytics reservedKeywords]) {
             if ([key isEqualToString:name]) {
-                NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
+                NRLOG_AGENT_ERROR(@"invalid attribute: name disallowed");
                 return NO;
             }
-            if ([key hasPrefix:name])  {
+        }
+        for (NSString* key in [NRMAAnalytics reservedPrefixes]) {
+            if ([name hasPrefix:key])  {
                 NRLOG_AGENT_ERROR(@"invalid attribute: name prefix disallowed");
-                return NO;
+                return false;
             }
         }
         // check if attribute name exceeds max length.
@@ -91,6 +106,19 @@
     XCTAssertTrue([decode[@"blarg"] isEqualToString:@"blurg"]);
 }
 
+- (void) testSetSessionAttributeFail {
+    XCTAssertFalse([manager setSessionAttribute:@"platform" value:@"blurg"], @"Failed to successfully find reserved key for session attribute");
+
+    XCTAssertFalse([manager setSessionAttribute:@"nr.test" value:@"blurg"], @"Failed to successfully find reserved prefix key for session attribute");
+
+    NSString* attributes = [manager sessionAttributeJSONString];
+
+    NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                           options:0
+                                                             error:nil];
+    XCTAssertNil(decode[@"platform"]);
+}
+
 - (void) testSetNRSessionAttribute {
     XCTAssertTrue([manager setNRSessionAttribute:@"blarg" value:@"blurg"], @"Failed to successfully set session attribute");
 
@@ -114,6 +142,7 @@
                                                              error:nil];
     XCTAssertTrue([decode[attribute] isEqual:@(2)]);
 }
+
 - (void) testIncrementSessionAttributeDiffTypes {
     NSString* attribute = @"incrementableAttribute";
     float initialValue = 1.2;
@@ -251,8 +280,68 @@
 
 }
 
+- (void)waitForAttributesToPersist:(NSArray<NSString *> *)expectedAttributes timeout:(NSTimeInterval)timeout {
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    while ([timeoutDate timeIntervalSinceNow] > 0) {
+        NSString *attributes = [NRMASAM getLastSessionsAttributes];
+        NSDictionary *decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+        
+        BOOL allAttributesPersisted = YES;
+        for (NSString *attribute in expectedAttributes) {
+            if (![decode objectForKey:attribute]) {
+                allAttributesPersisted = NO;
+                break;
+            }
+        }
+
+        if (allAttributesPersisted) {
+            return;
+        }
+
+        // Wait a short period before retrying
+        [NSThread sleepForTimeInterval:0.1];
+    }    
+    XCTFail(@"Failed to persist expected attributes.");
+}
+
+- (void)testPersistedSessionAnalytics {
+    
+    NSString *attribute = @"blarg";
+    NSString *attribute2 = @"blarg2";
+    NSString *attribute3 = @"privateBlarg3";
+    NSString *attribute4 = @"Blarg4";
+    NSString *attribute5 = @"privateBlarg5";
+
+    // Set attributes
+    XCTAssertTrue([manager setSessionAttribute:attribute value:@"blurg"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setSessionAttribute:attribute2 value:@"blurg2"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setNRSessionAttribute:attribute3 value:@"blurg2"], @"Failed to successfully set private session attribute");
+    
+    NSString *attributes = [manager sessionAttributeJSONString];
+    NSDictionary *decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+    
+    XCTAssertEqual(decode.count, 3);
+    
+    manager = nil;
+    // Wait for persistence
+    [self waitForAttributesToPersist:@[attribute, attribute2, attribute3] timeout:10];
+
+    manager = [self samTest];
+
+    XCTAssertTrue([manager setSessionAttribute:attribute4 value:@"blurg"], @"Failed to successfully set session attribute");
+    XCTAssertTrue([manager setNRSessionAttribute:attribute5 value:@"blurg2"], @"Failed to successfully set private session attribute");
+
+    attributes = [manager sessionAttributeJSONString];
+    decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+
+    XCTAssertTrue([[decode allKeys] containsObject:attribute], @"Should have persisted and new attribute 1.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute2], @"Should have persisted and new attribute 2.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute3], @"Should have persisted and new private attribute 3.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute4], @"Should have persisted and new attribute 4.");
+    XCTAssertTrue([[decode allKeys] containsObject:attribute5], @"Should have persisted and new private attribute 5.");
+}
+
 - (void) testClearPersistedSessionAnalytics {
-    NRMASAM *manager = [self samTest];
     NSString *attribute = @"blarg";
     NSString *attribute2 = @"blarg2";
 
@@ -280,8 +369,8 @@
     XCTAssertFalse([manager setSessionAttribute:@"  x" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
     XCTAssertFalse([manager setSessionAttribute:@"  " value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
 
-    XCTAssertFalse([manager setSessionAttribute:@"even" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
-    XCTAssertFalse([manager setSessionAttribute:@"event" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
+    XCTAssertFalse([manager setSessionAttribute:@"newRelictest" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
+    XCTAssertFalse([manager setSessionAttribute:@"nr.test" value:@"blurg"], @"Failed to successfully fail when setting invalid name for session attribute");
 
     // Test Max Attribute Length
     NSString *validAttributeName =  [@"" stringByPaddingToLength:kNRMA_Attrib_Max_Name_Length withString:@"x" startingAtIndex:0];

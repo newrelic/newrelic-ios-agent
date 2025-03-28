@@ -75,5 +75,6 @@
 
 + (int64_t) currentTimeMillis;
 + (NSArray<NSString*>*) reservedKeywords;
++ (NSArray<NSString*>*) reservedPrefixes;
 
 @end

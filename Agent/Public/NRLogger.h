@@ -121,12 +121,6 @@ typedef enum _NRLogTargets {
      inFile:(NSString *)file
      atLine:(unsigned int)line
    inMethod:(NSString *)method
-withMessage:(NSString *)message;
-
-+ (void)log:(unsigned int)level
-     inFile:(NSString *)file
-     atLine:(unsigned int)line
-   inMethod:(NSString *)method
 withMessage:(NSString *)message
 withAttributes:(NSDictionary *)attributes;
 
@@ -137,6 +131,10 @@ withAttributes:(NSDictionary *)attributes;
    inMethod:(NSString *)method
 withMessage:(NSString *)message
 withAgentLogsOn:(BOOL)agentLogsOn;
+
++ (void) log:(unsigned int)level
+     withMessage:(NSString *)message
+withTimestamp:(NSNumber *)timestamp;
 
 /*!
  Configure the amount of information the New Relic agent outputs about its internal operation.

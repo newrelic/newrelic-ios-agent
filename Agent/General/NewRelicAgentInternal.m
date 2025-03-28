@@ -53,6 +53,8 @@
 #import "NRMAStartTimer.h"
 #import "NRMAUDIDManager.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRAutoLogCollector.h"
+#import "NRMAAttributeValidator.h"
 #import "NRMASessionReplayObjC.h"
 
 
@@ -571,7 +573,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                                      sessionStartTime:self.appSessionStartDate
                                                                                    agentConfiguration:self.agentConfiguration
                                                                                              platform:[NewRelicInternalUtils osName]
-                                                                                            sessionId:[self currentSessionId]];
+                                                                                            sessionId:[self currentSessionId]
+                                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
         if (status != NotReachable) { // Because we support offline mode check if we're online before sending the handled exceptions
             [self.handledExceptionsController processAndPublishPersistedReports];
@@ -760,6 +763,7 @@ static UIBackgroundTaskIdentifier background_task;
     @try {
 #endif
         [NRMATraceController completeActivityTrace];
+
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
@@ -771,7 +775,70 @@ static UIBackgroundTaskIdentifier background_task;
     // Record the time at which the app goes to the background.
     self->_appLastBackgrounded = mach_absolute_time();
     // Check if the iOS version supports multitasking.
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+    NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+    // Mark the start of the background task
+    [processInfo performExpiringActivityWithReason:@"harvestOnAppBackground"
+                                        usingBlock:^(BOOL expired) {
+        if(expired) {
+            NRLOG_AGENT_VERBOSE(@"Unable to send watchOS OnAppBackground harvest - activity expired");
+            return;
+        }
+
+        @synchronized (kNRMA_BGFG_MUTEX) {
+            if(didFireEnterForeground) {
+                // Entered foreground before we could finish background harvest
+                NRLOG_AGENT_VERBOSE(@"Entered Foreground before background could complete. Bailing out of background logging");
+                return;
+            }
+
+            @synchronized (kNRMA_APPLICATION_WILL_TERMINATE) {
+                if(self.appWillTerminate) {
+                    return;
+                }
+                NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+                @try {
+#endif
+                    self.gestureFacade = nil;
+                    [self.analyticsController sessionWillEnd];
+                    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:@"Session/Duration"
+                                                                    value:[NSNumber numberWithDouble:sessionLength] scope:nil]];
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+                } @catch (NSException *exception) {
+                    [NRMAExceptionHandler logException:exception
+                                                 class:NSStringFromClass([self class])
+                                              selector:NSStringFromSelector(_cmd)];
+                }
+#endif
+            }
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+            @try {
+#endif
+                if(self.appWillTerminate) {
+                    return;
+                }
+                NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
+                [[[NRMAHarvestController harvestController] harvester] execute];
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+            } @catch (NSException *exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([NRMAHarvester class])
+                                          selector:@"execute"];
+            } @finally {
+                if ([NRMAFlags shouldEnableBackgroundReporting]) {
+                    NRLOG_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
+                } else {
+                    [self agentShutdown];
+                }
+            }
+#endif
+            NRLOG_AGENT_VERBOSE(@"Background Harvest Complete");
+        }
+    }];
+    
+#else
+    
     if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)] &&
         [[UIDevice currentDevice] isMultitaskingSupported]) {
 
@@ -784,68 +851,7 @@ static UIBackgroundTaskIdentifier background_task;
             [application endBackgroundTask:background_task];
             background_task = UIBackgroundTaskInvalid;
         }];
-        NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-        // Mark the start of the background task
-        [processInfo performExpiringActivityWithReason:@"harvestOnAppBackground"
-                                            usingBlock:^(BOOL expired) {
-            if(expired) {
-                NRLOG_AGENT_VERBOSE(@"Unable to send watchOS OnAppBackground harvest - activity expired");
-                return;
-            }
-
-            @synchronized (kNRMA_BGFG_MUTEX) {
-                if(didFireEnterForeground) {
-                    // Entered foreground before we could finish background harvest
-                    NRLOG_AGENT_VERBOSE(@"Entered Foreground before background could complete. Bailing out of background logging");
-                    return;
-                }
-
-                @synchronized (kNRMA_APPLICATION_WILL_TERMINATE) {
-                    if(self.appWillTerminate) {
-                        return;
-                    }
-                    NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
-#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
-                    @try {
-#endif
-                        self.gestureFacade = nil;
-                        [self.analyticsController sessionWillEnd];
-                        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:@"Session/Duration"
-                                                                        value:[NSNumber numberWithDouble:sessionLength] scope:nil]];
-#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
-                    } @catch (NSException *exception) {
-                        [NRMAExceptionHandler logException:exception
-                                                     class:NSStringFromClass([self class])
-                                                  selector:NSStringFromSelector(_cmd)];
-                    }
-#endif
-                }
-#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
-                @try {
-#endif
-                    if(self.appWillTerminate) {
-                        return;
-                    }
-                    NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
-                    [[[NRMAHarvestController harvestController] harvester] execute];
-#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
-                } @catch (NSException *exception) {
-                    [NRMAExceptionHandler logException:exception
-                                                 class:NSStringFromClass([NRMAHarvester class])
-                                              selector:@"execute"];
-                } @finally {
-                    if ([NRMAFlags shouldEnableBackgroundReporting]) {
-                        NRLOG_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
-                    } else {
-                        [self agentShutdown];
-                    }
-                }
-#endif
-                NRLOG_AGENT_VERBOSE(@"Background Harvest Complete");
-            }
-        }];
-#endif
-
+        
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                                  0),
                        ^{
@@ -917,7 +923,6 @@ static UIBackgroundTaskIdentifier background_task;
 #endif
             }
         });
-#if !TARGET_OS_WATCH
     } else {
         [NRMAHarvestController stop];
         NRLOG_AGENT_ERROR(@"Multitasking is not supported.  Clearing data.");
@@ -1049,8 +1054,20 @@ void applicationDidEnterBackgroundCF(void) {
         [NRMAUDIDManager deleteStoredID];
 
         // Stored device data, Metadata and crash file are cleared when crash upload.
-        [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
+#ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+    @try {
+#endif
+        [NRMATraceController completeActivityTrace];
 
+        [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
+    }
+#endif
+        
         // Clear stored user defaults
         [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
         [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];

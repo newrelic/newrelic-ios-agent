@@ -40,15 +40,34 @@
     return self;
 }
 
+- (void) dealloc {
+    if(self.pendingBlock){
+        dispatch_block_cancel(self.pendingBlock);
+    }
+}
+
 - (void)performWrite:(void (^)(void))writeBlock {
+    __weak PersistentEventStore *weakSelf = self;
     dispatch_async(self.writeQueue, ^{
-        if (self.pendingBlock != nil) {
-            dispatch_block_cancel(self.pendingBlock);
+        __strong PersistentEventStore *strongSelf = weakSelf;
+        if (!strongSelf) { // Ensure strongSelf is not nil
+            NRLOG_AGENT_WARNING(@"A block was scheduled but PersistentEventStore was deallocated before running");
+            return;
         }
 
-        self.pendingBlock = dispatch_block_create(0, writeBlock);
+        if (strongSelf.pendingBlock != nil) {
+            dispatch_block_cancel(strongSelf.pendingBlock);
+        }
 
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self->_minimumDelay * NSEC_PER_SEC)), self->_writeQueue, self.pendingBlock);
+        strongSelf.pendingBlock = dispatch_block_create(0, writeBlock);
+
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(strongSelf->_minimumDelay * NSEC_PER_SEC)), strongSelf->_writeQueue, ^{
+            __strong PersistentEventStore *innerStrongSelf = weakSelf;
+            if (innerStrongSelf && innerStrongSelf.pendingBlock) {
+                innerStrongSelf.pendingBlock();
+                innerStrongSelf.pendingBlock = nil; // Release the block after execution
+            }
+        });
     });
 }
 

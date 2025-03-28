@@ -7,6 +7,7 @@
 
 import Foundation
 import NewRelic
+import OSLog
 
 struct UtilOption {
     let title:String
@@ -50,6 +51,12 @@ class UtilViewModel {
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
+
+        options.append(UtilOption(title: "Test System Logs", handler: { [self] in testSystemLogs()}))
+        options.append(UtilOption(title: "Notice Network Request w headers/params", handler: { [self] in 
+            Task { await noticeNetworkRequestWithParams() }
+        }))
+
 
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
         options.append(UtilOption(title: "Test Log Error", handler: { [self] in testLogError()}))
@@ -149,11 +156,51 @@ class UtilViewModel {
                                       with: NRTimer(), andFailureCode: NSURLErrorTimedOut)
     }
 
+    func noticeNetworkRequestWithParams() async {
+        let url = URL(string: "https://www.apple.com")!
+
+        let request = URLRequest(url: url)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            print("Async-Await Data request made.")
+            NewRelic.noticeNetworkRequest(
+                for: url,
+                httpMethod: "GET",
+                with: NRTimer(),
+                responseHeaders: ["x-response-header":"12345"],
+                statusCode: 200,
+                bytesSent: 0,
+                bytesReceived: UInt(data.count),
+                responseData: data,
+                traceHeaders: [:],
+                andParams: ["x-foo-header-id": "foo", "x-bar-header-id": "bar"]
+            )
+        }
+        catch {
+            print("\(error): Error making async-await data request.")
+
+        }
+
+
+    }
+
     func testLogDict() {
         NewRelic.logAll([
             "logLevel": "WARN",
             "message": "This is a test message for the New Relic logging system."
         ])
+    }
+    
+    func testSystemLogs() {
+        for i in 0...100 {
+            //triggerException.testNSLog(Int32(i))
+            print("TEST swift!!!!! ", i, "\n")
+            if #available(iOS 14.0, *) {
+                os_log("TEST OSLog!!!!!!! \(i)")
+                let logger = Logger()
+                logger.warning("TEST Logger!!!!! \(i)")
+            }
+        }
     }
     
     func testLogError() {
