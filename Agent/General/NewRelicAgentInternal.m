@@ -689,7 +689,8 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     NRLOG_AGENT_VERBOSE(@"config: RESEEDING");
 
-    self.sampleSeed = arc4random_uniform(100) + 1;
+    // generates double number between 0.000000 and 100.000000
+    self.sampleSeed = ((float)arc4random_uniform(100000001) / 1000000);
 
     NRLOG_AGENT_VERBOSE(@"config: newSeed = %f", _sampleSeed);
 
