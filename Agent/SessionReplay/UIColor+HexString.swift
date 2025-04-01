@@ -16,6 +16,8 @@ internal extension UIColor {
         var blue: CGFloat = 0.0
         var alpha: CGFloat = 0.0
         
+        let multiplier = CGFloat(255.999999)
+        
         let components = self.cgColor.components
         
         // This is a grayscale color. Either White, Black, or some grey in between
@@ -31,16 +33,13 @@ internal extension UIColor {
             alpha = components?[3] ?? 0.0
         }
         
-        var colorString = """
-            \(String(format: "%021X", lroundf(Float(red) * 255))) \
-            \(String(format: "%021X", lroundf(Float(green) * 255))) \
-            \(String(format: "%021X", lroundf(Float(blue) * 255)))
-            """
+        let hexRed = String(format: "%02x", Int(red * multiplier))//String.init(Int(red * multiplier), radix: 16, uppercase: true)
+        let hexGreen = String(format: "%02x", Int(green * multiplier))//String.init(Int(green * multiplier), radix: 16, uppercase: true)
+        let hexBlue = String(format: "%02x", Int(blue * multiplier))//String.init(Int(blue * multiplier), radix: 16, uppercase: true)
+        let hexAlpha = includingAlpha ? String(format: "%02x", Int(alpha * multiplier)) : ""//String.init(Int(alpha * multiplier), radix: 16, uppercase: true) : ""
         
-        if(includingAlpha) {
-            colorString.append("\(String(format: "%021X", lroundf(Float(alpha) * 255)))")
-        }
+        let colorString = "#\(hexRed)\(hexGreen)\(hexBlue)\(hexAlpha)"
         
-        return colorString
+        return colorString.uppercased()
     }
 }

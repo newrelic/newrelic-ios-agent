@@ -25,7 +25,7 @@ enum EventType: Int, Codable {
     case meta = 4
 }
 
-struct MetaEvent: RRWebEvent, Encodable {
+struct MetaEvent: RRWebEvent {
     let type: EventType = .meta
     let timestamp: TimeInterval
     let data: MetaEventData
@@ -65,6 +65,8 @@ struct FullSnapshotEvent: RRWebEvent {
                 try container.encode(elementNode, forKey: .node)
             case let textNode as RRWebElementNode:
                 try container.encode(textNode, forKey: .node)
+            case let documentNode as RRWebDocumentNode:
+                try container.encode(documentNode, forKey: .node)
             default:
                 try container.encodeNil(forKey: .node)
             }
@@ -81,17 +83,62 @@ enum NodeType: Int, Codable {
     case comment
 }
 
+enum TagType: String, Codable {
+    case style = "style"
+    case div = "div"
+    case head = "head"
+    case body = "body"
+    case html = "html"
+}
+
 protocol RRWebNode: Encodable {
     var type: NodeType { get }
     var id: Int { get }
 }
 
-struct RRWebElementNode: RRWebNode {
+class RRWebDocumentNode: RRWebNode {
+    var type: NodeType = .document
+    var id: Int
+    var childNodes: [RRWebNode]
+    
+    enum CodingKeys: CodingKey {
+        case type
+        case id
+        case childNodes
+    }
+    
+    init(id: Int, childNodes: [RRWebNode]) {
+        self.id = id
+        self.childNodes = childNodes
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(id, forKey: .id)
+        var unkeyedContainer = container.nestedUnkeyedContainer(forKey: .childNodes)
+        for node in childNodes {
+            switch node {
+            case let elementNode as RRWebElementNode:
+                try unkeyedContainer.encode(elementNode)
+            case let textNode as RRWebTextNode:
+                try unkeyedContainer.encode(textNode)
+            case let documentNode as RRWebDocumentNode:
+                try unkeyedContainer.encode(documentNode)
+            default:
+                continue
+            }
+        }
+    }
+}
+
+
+class RRWebElementNode: RRWebNode {
     let type: NodeType = .element
     let id: Int
-    let tagName: String
+    let tagName: TagType
     let attributes: [String: String]
-    let childNodes: [RRWebNode]
+    var childNodes: [RRWebNode]
     
     enum CodingKeys: CodingKey {
         case type
@@ -99,6 +146,13 @@ struct RRWebElementNode: RRWebNode {
         case tagName
         case attributes
         case childNodes
+    }
+    
+    init(id: Int, tagName: TagType, attributes: [String : String], childNodes: [RRWebNode]) {
+        self.id = id
+        self.tagName = tagName
+        self.attributes = attributes
+        self.childNodes = childNodes
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -115,6 +169,8 @@ struct RRWebElementNode: RRWebNode {
                 try unkeyedContainer.encode(elementNode)
             case let textNode as RRWebTextNode:
                 try unkeyedContainer.encode(textNode)
+            case let documentNode as RRWebDocumentNode:
+                try unkeyedContainer.encode(documentNode)
             default:
                 continue
             }
@@ -122,9 +178,15 @@ struct RRWebElementNode: RRWebNode {
     }
 }
 
-struct RRWebTextNode: RRWebNode {
+class RRWebTextNode: RRWebNode {
     let type: NodeType = .text
     let id: Int
     let textContent: String
-    let iSString: Bool
+    let isStyle: Bool
+    
+    init(id: Int, textContent: String, isStyle: Bool) {
+        self.id = id
+        self.textContent = textContent
+        self.isStyle = isStyle
+    }
 }

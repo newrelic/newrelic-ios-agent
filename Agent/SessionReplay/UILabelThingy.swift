@@ -44,4 +44,29 @@ struct UILabelThingy: SessionReplayViewThingy {
         
         self.textColor = view.textColor
     }
+    
+    func cssDescription() -> String {
+        let cssSelector = viewDetails.cssSelector
+//        var cssStyle = generateBaseCSSStyle()
+        
+        return """
+#\(viewDetails.cssSelector) { \
+\(generateBaseCSSStyle())\
+white-space: pre-wrap;\
+font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+color: \(textColor.toHexString(includingAlpha: true));\
+} 
+"""
+    }
+    
+    func generateRRWebNode() -> RRWebElementNode  {
+        let textNode = RRWebTextNode(id: IDGenerator.shared.getId(),
+                                     textContent: labelText,
+                                     isStyle: false)
+        
+        return RRWebElementNode(id: viewDetails.viewId,
+                                tagName: .div,
+                                attributes: ["id":viewDetails.cssSelector],
+                                childNodes: [textNode])
+    }
 }

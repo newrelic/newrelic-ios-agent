@@ -9,17 +9,19 @@
 import Foundation
 
 class IDGenerator {
-    private let maxID: Int64
-    private let initialID: Int64
-    private var currentID: Int64 = 0
+    private let maxID: Int
+    private let initialID: Int
+    private var currentID: Int = 0
     
-    init(initialID: Int64 = 0, maxID: Int64 = Int64.max) {
+    static let shared = IDGenerator()
+    
+    private init(initialID: Int = 0, maxID: Int = Int.max) {
         self.maxID = maxID
         self.initialID = initialID
         self.currentID = initialID
     }
     
-    func getId()-> Int64 {
+    func getId()-> Int {
         let nextID = currentID
         currentID = (currentID < maxID) ? currentID + 1 : self.initialID
         return nextID

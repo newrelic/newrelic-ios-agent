@@ -13,14 +13,11 @@ import UIKit
 // potentially remove this annotation once the feature goes to Swift
 @objcMembers
 class SessionReplayCapture {
-    let idGenerator = IDGenerator()
     
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
-        var nodes: [any SessionReplayViewThingy] = []
+        let rootNode = recursivelyRecord(from: rootView)
         
-        nodes.append(recursivelyRecord(from: rootView))
-        
-        return SessionReplayFrame(date: Date(), views: nodes)
+        return SessionReplayFrame(date: Date(), views: rootNode)
     }
     
     func recursivelyRecord(from view:UIView) -> SessionReplayViewThingy {
@@ -43,9 +40,9 @@ class SessionReplayCapture {
     private func findRecorderForView(view originalView: UIView) -> SessionReplayViewThingy {
         switch originalView {
         case let view as UILabel:
-            return UILabelThingy(view: view, viewDetails: ViewDetails(view: view, idGenerator: self.idGenerator))
+            return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
         default:
-            return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView, idGenerator: self.idGenerator))
+            return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
         }
     }
 }

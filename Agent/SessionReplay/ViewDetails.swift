@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 struct ViewDetails {
-    let viewId: Int64
+    let viewId: Int
     let frame: CGRect
     let backgroundColor: UIColor?
     let alpha: CGFloat
@@ -19,7 +19,6 @@ struct ViewDetails {
     let borderWidth: CGFloat
     let borderColor: UIColor?
     let viewName: String
-    var childViews = [ViewDetails]()
     
     var cssSelector: String {
         "\(self.viewName)-\(self.viewId)"
@@ -35,10 +34,10 @@ struct ViewDetails {
         alpha <= 1
     }
     
-    init(view: UIView, idGenerator: IDGenerator) {
+    init(view: UIView) {
         if let superview = view.superview,
            let window = view.window {
-            frame = superview.convert(view.frame, from: window.screen.fixedCoordinateSpace)
+            frame = superview.convert(view.frame, to: window.screen.fixedCoordinateSpace)
         } else {
             frame = view.frame
         }
@@ -48,7 +47,15 @@ struct ViewDetails {
         cornerRadius = view.layer.cornerRadius
         borderWidth = view.layer.borderWidth
         
-        if let borderColor = view.layer.borderColor {
+//        if let borderColor = view.layer.borderColor {
+//            self.borderColor = UIColor(cgColor: borderColor)
+//        } else {
+//            self.borderColor = nil
+//        }
+        
+        // Checking if we have a border, because asking for the layer's
+        // border color will always give us something
+        if view.layer.borderWidth > 0, let borderColor = view.layer.borderColor {
             self.borderColor = UIColor(cgColor: borderColor)
         } else {
             self.borderColor = nil
@@ -59,7 +66,8 @@ struct ViewDetails {
         if let identifier = view.sessionReplayIdentifier {
             viewId = identifier
         } else {
-            viewId = idGenerator.getId()
+            viewId = IDGenerator.shared.getId()
+            view.sessionReplayIdentifier = viewId
         }
     }
 }
@@ -67,7 +75,7 @@ struct ViewDetails {
 fileprivate var associatedSessionReplayViewIDKey: String = "SessionReplayID"
 
 internal extension UIView {
-    var sessionReplayIdentifier: Int64? {
+    var sessionReplayIdentifier: Int? {
         set {
             withUnsafePointer(to: &associatedSessionReplayViewIDKey) {
                 objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -76,7 +84,7 @@ internal extension UIView {
         
         get {
             withUnsafePointer(to: &associatedSessionReplayViewIDKey) {
-                objc_getAssociatedObject(self, $0) as? Int64
+                objc_getAssociatedObject(self, $0) as? Int
             }
         }
     }
