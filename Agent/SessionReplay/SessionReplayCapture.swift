@@ -63,6 +63,8 @@ class SessionReplayCapture {
         switch originalView {
         case let view as UILabel:
             return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
+        case let imageView as UIImageView:
+            return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
         default:
             return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
         }

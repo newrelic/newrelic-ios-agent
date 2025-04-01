@@ -955,6 +955,7 @@
 		340D64162AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */; };
 		340D64172AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */; };
 		340D642E2AA9301900E63CC1 /* PersistentStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */; };
+		341E84D12D9CAAC500968D7D /* UIImageViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */; };
 		3426DABE2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.m */; };
 		3426DABF2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.h */; };
 		342C4B412A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */; };
@@ -2448,6 +2449,7 @@
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
 		340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentStoreTests.m; sourceTree = "<group>"; };
+		341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageViewThingy.swift; sourceTree = "<group>"; };
 		3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUIImageViewDetailsObjC.h; sourceTree = "<group>"; };
 		3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUIImageViewDetailsObjC.m; sourceTree = "<group>"; };
 		342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AttributeValidatorProtocol.h; sourceTree = "<group>"; };
@@ -3886,6 +3888,7 @@
 				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
+				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
 				3493DF4F2D543C8700BF5BED /* IDGenerator.swift */,
 				34D0401D2D86036D007BE92D /* UIColor+HexString.swift */,
 				344E49482D932762008174A1 /* SupportabilityMetrics.swift */,
@@ -5449,6 +5452,7 @@
 				02FF484624DC614200115469 /* NRMATraceController.m in Sources */,
 				3493DF502D543C8700BF5BED /* IDGenerator.swift in Sources */,
 				02FF4A9B24DC652E00115469 /* NRMAFileCleanup.m in Sources */,
+				341E84D12D9CAAC500968D7D /* UIImageViewThingy.swift in Sources */,
 				02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */,
 				34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
 				02FF4A7B24DC64FC00115469 /* NRMACustomTrace.m in Sources */,
