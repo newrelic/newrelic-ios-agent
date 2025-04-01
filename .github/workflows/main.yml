@@ -164,7 +164,7 @@ jobs:
         
     - name: Upload build reports
       if: failure() && steps.build-step.outcome != 'success'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-reports
         path: /Users/runner/Library/Logs/fastlane/xcbuild/
