@@ -15,16 +15,38 @@ import UIKit
 class SessionReplayCapture {
     
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
-        let rootNode = recursivelyRecord(from: rootView)
+        struct ViewPair {
+            let view:UIView
+            let parentRecorder:SessionReplayViewThingy
+        }
         
-        return SessionReplayFrame(date: Date(), views: rootNode)
+        var viewStack = ContiguousArray<ViewPair>()
+        let rootThingy = findRecorderForView(view: rootView)
+        
+        viewStack.append(ViewPair(view: rootView, parentRecorder: rootThingy))
+        
+        while let pair = viewStack.popLast() {
+            let currentView = pair.view
+            var currentParentThingy = pair.parentRecorder
+            
+            for subview in currentView.subviews {
+                if (shouldRecord(view: subview)) {
+                    let childThingy = findRecorderForView(view: subview)
+                    currentParentThingy.subviews.append(childThingy)
+                    viewStack.append(ViewPair(view: subview, parentRecorder: childThingy))
+                } else {
+                    viewStack.append(ViewPair(view: subview, parentRecorder: currentParentThingy))
+                }
+            }
+        }
+        
+        
+//        let rootNode = recursivelyRecord(from: rootView)
+        
+        return SessionReplayFrame(date: Date(), views: rootThingy)
     }
     
     func recursivelyRecord(from view:UIView) -> SessionReplayViewThingy {
-        
-        // Get type of view and it's view thingy
-        // It might be worthwhile splitting this out to a new function.
-        
         var viewThingy = findRecorderForView(view: view)
         var subviewThingies = [SessionReplayViewThingy]()
         
@@ -44,5 +66,16 @@ class SessionReplayCapture {
         default:
             return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
         }
+    }
+    
+    private func shouldRecord(view: UIView) -> Bool {
+        guard let superview = view.superview else {
+            return true
+        }
+        
+        let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
+        let isClear = (view.alpha == 0 || view.alpha == 1)
+        
+        return !(areFramesTheSame && isClear)
     }
 }

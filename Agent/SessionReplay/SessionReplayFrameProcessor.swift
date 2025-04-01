@@ -21,13 +21,13 @@ struct SessionReplayFrameProcessor {
         var cssString = ""
         
         let rootThingy = frame.views
-        var rootRRWebNode = rootThingy.generateRRWebNode()
+        let rootRRWebNode = rootThingy.generateRRWebNode()
 
         thingyStack.append(NodePair(viewThingy: rootThingy, rrwebNode: rootRRWebNode))
         
         while let pair = thingyStack.popLast() {
             let viewThingy = pair.viewThingy
-            var node = pair.rrwebNode
+            let node = pair.rrwebNode
             
             var childNodes = [RRWebElementNode]()
             

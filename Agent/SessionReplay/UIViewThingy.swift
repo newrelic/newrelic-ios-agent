@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-struct UIViewThingy: SessionReplayViewThingy {
+class UIViewThingy: SessionReplayViewThingy {
     var subviews = [any SessionReplayViewThingy]()
     
     var shouldRecordSubviews: Bool {
