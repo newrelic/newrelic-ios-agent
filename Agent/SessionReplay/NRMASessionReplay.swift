@@ -74,7 +74,6 @@ public class NRMASessionReplay: NSObject {
             if let data = jsonData,
                let jsonString = String(data: data, encoding: .utf8){
                 NSLog(jsonString)
-
             }
         }
     }
