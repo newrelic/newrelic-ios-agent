@@ -55,7 +55,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRAutoLogCollector.h"
 #import "NRMAAttributeValidator.h"
-#import "NRMASessionReplayObjC.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
@@ -83,7 +83,7 @@ static NRMAURLTransformer* urlTransformer;
     NSMutableArray* _transactionDataList;
     double _appLastBackgrounded;
     NSTimeInterval _startTime_ms;
-    NRMASessionReplayObjC* _sessionReplay;
+    SessionReplayManager* _sessionReplay;
 }
 
 // The token sent from the RPM service on connect that is used when sending data.
@@ -363,7 +363,10 @@ static NewRelicAgentInternal* _sharedInstance;
         [NRMAHarvestController start];
     }
 #endif
-    _sessionReplay = [[NRMASessionReplayObjC alloc] init];
+    if (@available(iOS 13.0, *)) {
+        _sessionReplay = [[SessionReplayManager alloc] initWithAgentVersion:[NewRelicInternalUtils agentVersion] sessionId:[self currentSessionId]];
+        [_sessionReplay start];
+    }
     
 }
 
@@ -540,6 +543,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     CFRelease(uuid);
     if (self->_agentConfiguration.sessionIdentifier.length > 0) {
         NRMA_setSessionId([self->_agentConfiguration.sessionIdentifier UTF8String]);
+        [_sessionReplay setSessionId:self->_agentConfiguration.sessionIdentifier];
     }
 
     NRMA_setSessionStartTime([NSString stringWithFormat:@"%lld",
@@ -704,6 +708,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
+    [_sessionReplay start];
     [self onSessionStart];
 }
 
@@ -749,6 +754,7 @@ static UIBackgroundTaskIdentifier background_task;
     _currentApplicationState = UIApplicationStateBackground;
 #endif
     [[NRMAHarvestController harvestController].harvestTimer stop];
+    [_sessionReplay stop];
 
     // Disable observers.
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -895,6 +901,7 @@ static UIBackgroundTaskIdentifier background_task;
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
+                    [self->_sessionReplay harvest];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                     [NRMAExceptionHandler        logException:exception
