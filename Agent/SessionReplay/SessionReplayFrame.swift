@@ -10,5 +10,5 @@ import Foundation
 
 struct SessionReplayFrame {
     let date: Date
-    let views: [any SessionReplayViewThingy]
+    let views: SessionReplayViewThingy
 }

@@ -955,6 +955,13 @@
 		340D64162AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */; };
 		340D64172AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */; };
 		340D642E2AA9301900E63CC1 /* PersistentStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */; };
+		341E84D12D9CAAC500968D7D /* UIImageViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */; };
+		341E84D42D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */; };
+		341E84D62D9DDB5D00968D7D /* TouchEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E84D52D9DDB5D00968D7D /* TouchEvent.swift */; };
+		341E85062D9F4B5600968D7D /* SerializedNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E85052D9F4B5600968D7D /* SerializedNode.swift */; };
+		341E851B2D9F643300968D7D /* AnyRRWebEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851A2D9F643300968D7D /* AnyRRWebEvent.swift */; };
+		341E851D2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851C2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift */; };
+		341E851F2DA0503400968D7D /* RRWebFullSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851E2DA0503400968D7D /* RRWebFullSnapshotEvent.swift */; };
 		3426DABE2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.m */; };
 		3426DABF2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.h */; };
 		342C4B412A3BCE9300116992 /* AttributeValidatorProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */; };
@@ -1057,6 +1064,10 @@
 		344508DF291AD7C300322DA7 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
 		344508E0291AD7C300322DA7 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9292E2912D72F001449B6 /* JSON.framework */; };
 		344508E1291AD7C300322DA7 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
+		344E49492D932762008174A1 /* SupportabilityMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E49482D932762008174A1 /* SupportabilityMetrics.swift */; };
+		344E494B2D93288F008174A1 /* APrivateHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 344E494A2D93288F008174A1 /* APrivateHeader.h */; };
+		344E494D2D934CF8008174A1 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */; };
+		344E49502D935072008174A1 /* RRWebEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494F2D935072008174A1 /* RRWebEvent.swift */; };
 		34544D142A3142F900B5A8D1 /* NRMAEventManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 34544D122A3142F900B5A8D1 /* NRMAEventManager.h */; };
 		34544D152A3142F900B5A8D1 /* NRMAEventManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 34544D122A3142F900B5A8D1 /* NRMAEventManager.h */; };
 		34544D162A3142F900B5A8D1 /* NRMAEventManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 34544D132A3142F900B5A8D1 /* NRMAEventManager.m */; };
@@ -1464,6 +1475,7 @@
 		34C18551292464E500F10825 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
 		34C18552292464E500F10825 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9292E2912D72F001449B6 /* JSON.framework */; };
 		34C18553292464E500F10825 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
+		34D0401E2D86036D007BE92D /* UIColor+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D0401D2D86036D007BE92D /* UIColor+HexString.swift */; };
 		34D64BB926B3329000A75A72 /* libCrashReporter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 344891D826AA0F4E00AADB9D /* libCrashReporter.a */; };
 		34DB25372824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
 		34DB25382824791B00A5BC45 /* NRMAURLTransformer.h in Headers */ = {isa = PBXBuildFile; fileRef = 34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */; };
@@ -2443,6 +2455,13 @@
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
 		340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentStoreTests.m; sourceTree = "<group>"; };
+		341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageViewThingy.swift; sourceTree = "<group>"; };
+		341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayTouchEventProcessor.swift; sourceTree = "<group>"; };
+		341E84D52D9DDB5D00968D7D /* TouchEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchEvent.swift; sourceTree = "<group>"; };
+		341E85052D9F4B5600968D7D /* SerializedNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerializedNode.swift; sourceTree = "<group>"; };
+		341E851A2D9F643300968D7D /* AnyRRWebEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyRRWebEvent.swift; sourceTree = "<group>"; };
+		341E851C2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RRWebIncrementalSnapshotEvent.swift; sourceTree = "<group>"; };
+		341E851E2DA0503400968D7D /* RRWebFullSnapshotEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RRWebFullSnapshotEvent.swift; sourceTree = "<group>"; };
 		3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUIImageViewDetailsObjC.h; sourceTree = "<group>"; };
 		3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUIImageViewDetailsObjC.m; sourceTree = "<group>"; };
 		342C4B402A3BCE9300116992 /* AttributeValidatorProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AttributeValidatorProtocol.h; sourceTree = "<group>"; };
@@ -2451,6 +2470,10 @@
 		3431DD172BED375E00FF145F /* Agent-watchos-Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Agent-watchos-Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3431DD952BED4F0700FF145F /* Agent-watchOS.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Agent-watchOS.xctestplan"; sourceTree = "<group>"; };
 		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
+		344E49482D932762008174A1 /* SupportabilityMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportabilityMetrics.swift; sourceTree = "<group>"; };
+		344E494A2D93288F008174A1 /* APrivateHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = APrivateHeader.h; sourceTree = "<group>"; };
+		344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayFrameProcessor.swift; sourceTree = "<group>"; };
+		344E494F2D935072008174A1 /* RRWebEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RRWebEvent.swift; sourceTree = "<group>"; };
 		34544D122A3142F900B5A8D1 /* NRMAEventManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAEventManager.h; sourceTree = "<group>"; };
 		34544D132A3142F900B5A8D1 /* NRMAEventManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAEventManager.m; sourceTree = "<group>"; };
 		34544D2B2A323D1400B5A8D1 /* TestIntegratedEventManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestIntegratedEventManager.m; sourceTree = "<group>"; };
@@ -2460,6 +2483,7 @@
 		34731B0A26B378FE00CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731B0C26B3790600CE568A /* TVUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVUIKit.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/TVUIKit.framework; sourceTree = DEVELOPER_DIR; };
 		34731B0E26B3791000CE568A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		3477DD092D9753BA0061C3E4 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		3478A89126B36F920056F3B3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -2492,6 +2516,7 @@
 		34A929232912D72A001449B6 /* Connectivity.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Connectivity.xcodeproj; path = libMobileAgent/src/Connectivity/Connectivity.xcodeproj; sourceTree = "<group>"; };
 		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/JSON.xcodeproj; sourceTree = "<group>"; };
 		34A9292F2912D736001449B6 /* Utilities.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Utilities.xcodeproj; path = libMobileAgent/src/Utilities/Utilities/Utilities.xcodeproj; sourceTree = "<group>"; };
+		34D0401D2D86036D007BE92D /* UIColor+HexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+HexString.swift"; sourceTree = "<group>"; };
 		34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLTransformer.h; sourceTree = "<group>"; };
 		34DB25362824791B00A5BC45 /* NRMAURLTransformer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformer.m; sourceTree = "<group>"; };
 		34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMACustomEvent.h; sourceTree = "<group>"; };
@@ -3016,6 +3041,7 @@
 		021A15BC24C9EEE700E8DFD5 /* Agent */ = {
 			isa = PBXGroup;
 			children = (
+				3477DCF42D9753900061C3E4 /* Project Module */,
 				348713D32B8D39C1005A264C /* SessionReplay */,
 				022A81C62502F22F003748E6 /* General */,
 				02FF4AC824DC657100115469 /* Network */,
@@ -3039,6 +3065,7 @@
 				02FF480324DB572400115469 /* UserAction */,
 				02FF47DC24DB566700115469 /* Public */,
 				021A15BE24C9EEE700E8DFD5 /* Info.plist */,
+				344E494A2D93288F008174A1 /* APrivateHeader.h */,
 			);
 			path = Agent;
 			sourceTree = "<group>";
@@ -3829,9 +3856,42 @@
 			path = NRMAStartTimer;
 			sourceTree = "<group>";
 		};
+		341E84D22D9CB1F000968D7D /* ViewCaptors */ = {
+			isa = PBXGroup;
+			children = (
+				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
+				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
+				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
+				3493DF042D397D2400BF5BED /* ViewDetails.swift */,
+			);
+			path = ViewCaptors;
+			sourceTree = "<group>";
+		};
+		344E494E2D934D44008174A1 /* RRWebModels */ = {
+			isa = PBXGroup;
+			children = (
+				341E85052D9F4B5600968D7D /* SerializedNode.swift */,
+				344E494F2D935072008174A1 /* RRWebEvent.swift */,
+				341E851E2DA0503400968D7D /* RRWebFullSnapshotEvent.swift */,
+				341E851C2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift */,
+				341E851A2D9F643300968D7D /* AnyRRWebEvent.swift */,
+			);
+			path = RRWebModels;
+			sourceTree = "<group>";
+		};
+		3477DCF42D9753900061C3E4 /* Project Module */ = {
+			isa = PBXGroup;
+			children = (
+				3477DD092D9753BA0061C3E4 /* module.modulemap */,
+			);
+			path = "Project Module";
+			sourceTree = "<group>";
+		};
 		348713D32B8D39C1005A264C /* SessionReplay */ = {
 			isa = PBXGroup;
 			children = (
+				341E84D22D9CB1F000968D7D /* ViewCaptors */,
+				344E494E2D934D44008174A1 /* RRWebModels */,
 				348713E72B8D39E7005A264C /* NRMASessionReplayObjC.h */,
 				348713E82B8D39E7005A264C /* NRMASessionReplayObjC.m */,
 				348713EB2B8D56CB005A264C /* NRMAUIViewDetailsObjC.h */,
@@ -3849,14 +3909,16 @@
 				3426DABC2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.h */,
 				3426DABD2CB48C5700C0DDDB /* NRMAUIImageViewDetailsObjC.m */,
 				3493DEFD2D359F2500BF5BED /* SessionReplayTouchCapture.swift */,
+				341E84D52D9DDB5D00968D7D /* TouchEvent.swift */,
 				3493DEFF2D3844C400BF5BED /* SessionReplayCapture.swift */,
-				3493DF042D397D2400BF5BED /* ViewDetails.swift */,
 				3493DF322D4C332500BF5BED /* NRMASessionReplay.swift */,
 				3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */,
 				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
-				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
-				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				3493DF4F2D543C8700BF5BED /* IDGenerator.swift */,
+				34D0401D2D86036D007BE92D /* UIColor+HexString.swift */,
+				344E49482D932762008174A1 /* SupportabilityMetrics.swift */,
+				344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */,
+				341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -4163,6 +4225,7 @@
 				02FF4ACF24DC657B00115469 /* NRMAHTTPUtilities.h in Headers */,
 				02FF4ACE24DC657B00115469 /* NRMAHTTPUtilities+cppInterface.h in Headers */,
 				02FF4AD024DC657B00115469 /* NRMANetworkFacade.h in Headers */,
+				344E494B2D93288F008174A1 /* APrivateHeader.h in Headers */,
 				02FF49A724DC62B800115469 /* NRMAScopedMeasurements.h in Headers */,
 				02FF491524DC624400115469 /* NRMACrashReport_SignalInfo.h in Headers */,
 				02FF4AA424DC652E00115469 /* NewRelicInternalUtils.h in Headers */,
@@ -5374,11 +5437,14 @@
 				02FF49AA24DC62B800115469 /* NRMAHarvestableVitals.m in Sources */,
 				02FF49A424DC62B800115469 /* NRMAHTTPTransactions.m in Sources */,
 				02FF4A1D24DC648600115469 /* NRMAMachineMeasurementConsumer.m in Sources */,
+				341E851D2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift in Sources */,
 				02FF4A3324DC64AE00115469 /* NRMAMetric.m in Sources */,
 				02FF48F324DC623400115469 /* NRMAInteractionHistory.c in Sources */,
 				02FF484E24DC614200115469 /* NRMAActivityNameGenerator.m in Sources */,
 				340D64162AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */,
+				344E49502D935072008174A1 /* RRWebEvent.swift in Sources */,
 				02FF49C424DC62B800115469 /* NRMAScopedMeasurement.m in Sources */,
+				341E851B2D9F643300968D7D /* AnyRRWebEvent.swift in Sources */,
 				3493DF332D4C332500BF5BED /* NRMASessionReplay.swift in Sources */,
 				02FF4AA924DC652E00115469 /* NRMAAppToken.m in Sources */,
 				02FF4AC324DC656900115469 /* NRMAPayloadContainer.mm in Sources */,
@@ -5402,6 +5468,9 @@
 				02FF49A024DC62B800115469 /* NRMAScopedMeasurements.m in Sources */,
 				02FF49A824DC62B800115469 /* NRMAAnalyticsEvents.m in Sources */,
 				02FF480A24DB573E00115469 /* NRMAUserActionFacade.mm in Sources */,
+				341E851F2DA0503400968D7D /* RRWebFullSnapshotEvent.swift in Sources */,
+				344E494D2D934CF8008174A1 /* SessionReplayFrameProcessor.swift in Sources */,
+				34D0401E2D86036D007BE92D /* UIColor+HexString.swift in Sources */,
 				2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */,
 				02FF4A9C24DC652E00115469 /* NRMABool.m in Sources */,
 				2B33E5D22AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */,
@@ -5412,6 +5481,7 @@
 				02FF484624DC614200115469 /* NRMATraceController.m in Sources */,
 				3493DF502D543C8700BF5BED /* IDGenerator.swift in Sources */,
 				02FF4A9B24DC652E00115469 /* NRMAFileCleanup.m in Sources */,
+				341E84D12D9CAAC500968D7D /* UIImageViewThingy.swift in Sources */,
 				02FF491B24DC624400115469 /* NRMACrashReport.m in Sources */,
 				34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
 				02FF4A7B24DC64FC00115469 /* NRMACustomTrace.m in Sources */,
@@ -5441,6 +5511,7 @@
 				02FF4AAF24DC652E00115469 /* NRMACPUVitals.m in Sources */,
 				02FF484924DC614200115469 /* NRMAActivityTrace.m in Sources */,
 				34DB25392824791B00A5BC45 /* NRMAURLTransformer.m in Sources */,
+				341E84D62D9DDB5D00968D7D /* TouchEvent.swift in Sources */,
 				02FF491424DC624400115469 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				02FF491324DC624400115469 /* NRMACrashReport_SignalInfo.m in Sources */,
 				02FF493424DC625A00115469 /* NRMARetryTracker.m in Sources */,
@@ -5505,6 +5576,7 @@
 				02FF495524DC626E00115469 /* NRMAHarvestTimer.m in Sources */,
 				02FF481B24DB5B8100115469 /* NRMAGestureRecognizerInstrumentation.m in Sources */,
 				02FF4ABB24DC654D00115469 /* NRMAReachability.m in Sources */,
+				341E84D42D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift in Sources */,
 				34EE24532CA4DD9600FCDD98 /* NRMASessionReplayFrameProcessorObjC.m in Sources */,
 				02FF4A0124DC647200115469 /* NRMAMeasurementEngine.m in Sources */,
 				02FF4AC724DC656900115469 /* NRMAAssociate.m in Sources */,
@@ -5537,6 +5609,7 @@
 				02FF4A0224DC647200115469 /* NRMAMeasurementType.m in Sources */,
 				02FF493D24DC625A00115469 /* NRMAHandledExceptions.mm in Sources */,
 				02FF4AAE24DC652E00115469 /* NRMABase64.m in Sources */,
+				341E85062D9F4B5600968D7D /* SerializedNode.swift in Sources */,
 				02FF496D24DC629000115469 /* NRMAAgentConfiguration.m in Sources */,
 				02FF48E524DC622700115469 /* NRMAExceptionDataCollectionWrapper.m in Sources */,
 				02FF496A24DC629000115469 /* NRMAHarvestResponse.m in Sources */,
@@ -5544,6 +5617,7 @@
 				02FF485E24DC615A00115469 /* NRMALoggerBridge.mm in Sources */,
 				02FF496E24DC629000115469 /* NRMAHarvesterConfiguration.m in Sources */,
 				02FF483F24DC614200115469 /* NRMATraceMachineAgentUserInterface.m in Sources */,
+				344E49492D932762008174A1 /* SupportabilityMetrics.swift in Sources */,
 				02FF488224DC61A100115469 /* NRMANSURLConnectionDelegateBase.m in Sources */,
 				3493DF482D4C4BEE00BF5BED /* SessionReplayFrame.swift in Sources */,
 				3493DF4C2D542D9900BF5BED /* UIViewThingy.swift in Sources */,
@@ -6430,6 +6504,7 @@
 					"-Wno-varargs",
 				);
 				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "\"$(SRCROOT)/Agent/Project Module\" $(SRCROOT)/Agent/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -6500,6 +6575,7 @@
 					"-Wno-varargs",
 				);
 				SDKROOT = iphoneos;
+				SWIFT_INCLUDE_PATHS = "\"$(SRCROOT)/Agent/Project Module\" $(SRCROOT)/Agent/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";

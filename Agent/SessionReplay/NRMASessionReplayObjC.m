@@ -178,7 +178,7 @@ IMP NRMAOriginal__sendEvent;
     
     NRMASessionReplayCaptureObjC* _sessionReplayCapture;
     NRMASessionReplayFrameProcessorObjC* _sessionReplayFrameProcessor;
-    SessionReplayTouchCapture* _touchCapture;
+//    SessionReplayTouchCapture* _touchCapture;
     
     NSInteger touchID;
     NSMutableArray<NRMATouchTracker*>* _trackedTouches;
@@ -295,7 +295,7 @@ IMP NRMAOriginal__sendEvent;
     NRLOG_AUDIT(@"[SESSION REPLAY] - App did become active");
     self->_window = [[UIApplication sharedApplication] keyWindow];
     [self swizzleSendEvent];
-    _touchCapture = [[SessionReplayTouchCapture alloc] initWithWindow:_window];
+//    _touchCapture = [[SessionReplayTouchCapture alloc] initWithWindow:_window];
     [_processedFrames addObject:[self generateInitialNode]];
     _frameTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 repeats:YES block:^(NSTimer * _Nonnull timer) {
         [self takeFrame];
