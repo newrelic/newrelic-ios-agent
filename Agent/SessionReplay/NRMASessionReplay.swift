@@ -8,6 +8,9 @@
 
 import Foundation
 import UIKit
+import NewRelicPrivate
+
+import OSLog
 
 protocol NRMASessionReplayDelegate: AnyObject {
     func didReachDataSizeLimit()
@@ -19,6 +22,7 @@ public class NRMASessionReplay: NSObject {
     weak var delegate: NRMASessionReplayDelegate?
 
     private let sessionReplayCapture: SessionReplayCapture
+    private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
     private var frameTimer: Timer!
     private let rawFrames = [SessionReplayFrame]()
     
@@ -76,6 +80,7 @@ public class NRMASessionReplay: NSObject {
         }
         
         let frame = sessionReplayCapture.recordFrom(rootView: window)
+/*<<<<<<< NR-378712
         if processedFrames.count == 0 {
             objc_sync_enter(processedFrames)
             processedFrames.add(sessionReplayFrameProcessor.process(frame: frame));
@@ -109,6 +114,24 @@ public class NRMASessionReplay: NSObject {
             objc_sync_enter(self.processedFrames)
             self.processedFrames.add(self.sessionReplayFrameProcessor.process(frame: frame))
             objc_sync_exit(self.processedFrames)
+=======*/
+        rawFrames.append(frame)
+        
+        if(rawFrames.count > 10) {
+            let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
+            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
+            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
+            
+            container.append(contentsOf: rawFrames.map { AnyRRWebEvent(sessionReplayFrameProcessor.processFrame($0))})
+            
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = []
+            let jsonData = try? encoder.encode(container)
+            
+            if let data = jsonData,
+               let jsonString = String(data: data, encoding: .utf8){
+                NSLog(jsonString)
+            }
         }
     }
     

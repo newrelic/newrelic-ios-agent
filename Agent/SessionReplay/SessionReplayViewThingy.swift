@@ -12,23 +12,13 @@ protocol SessionReplayViewThingy {
     var viewDetails: ViewDetails { get }
     var shouldRecordSubviews: Bool { get }
     
-    func jsonDescription() -> Dictionary<String,Any>
+    var subviews: [any SessionReplayViewThingy] { get set }
+    
     func cssDescription() -> String
+    func generateRRWebNode() -> ElementNodeData
 }
 
-extension SessionReplayViewThingy {
-    func generateBaseJSONDescription() -> [String: Any] {
-        [
-            "type": 2,
-            "tagName": "div",
-            "attributes": [
-                "id": viewDetails.cssSelector
-            ],
-            "childNodes": [String: Any](),
-            "id": viewDetails.viewId
-        ] as [String : Any]
-    }
-    
+extension SessionReplayViewThingy {    
     func generateBaseCSSStyle() -> String {
         var cssStyle = """
             position: fixed; \
@@ -39,16 +29,16 @@ extension SessionReplayViewThingy {
             """
         
         if let backgroundColor = self.viewDetails.backgroundColor {
-            let backgroundColorString = "background-color: \(backgroundColor.toHexString(includingAlpha: true))"
+            let backgroundColorString = "background-color: \(backgroundColor.toHexString(includingAlpha: true));"
             cssStyle.append(backgroundColorString)
         }
         
         if let borderColor = self.viewDetails.borderColor,
            self.viewDetails.borderWidth > 0 {
             let borderString = """
-                border-radius: \(String(format: "%.2f", self.viewDetails.cornerRadius))px; \
-                border: \(String(format: "%.2f", self.viewDetails.borderWidth))px; \
-                solid \(borderColor.toHexString(includingAlpha: true))
+            border-radius: \(String(format: "%.2f", self.viewDetails.cornerRadius))px; \
+            border: \(String(format: "%.2f", self.viewDetails.borderWidth))px \
+            solid \(borderColor.toHexString(includingAlpha: true))
             """
             cssStyle.append(borderString)
         }
