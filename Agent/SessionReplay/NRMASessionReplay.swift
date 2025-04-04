@@ -86,25 +86,29 @@ public class NRMASessionReplay: NSObject {
     }
     
     func checkCompressedDataSize(frame: SessionReplayFrame) {
-        processQueue.async { [self] in
+        processQueue.async { [weak self] in
+            guard let self = self else { return }
 
             // Check the size of compressed data
-            let jsonData = currentFramesData()
-            guard jsonData.gzipped() != nil else {
+            guard let jsonData = self.currentFramesData().gzipped() else {
                 return
             }
-            
-            let newFrameJSONData = try? JSONSerialization.data(withJSONObject: sessionReplayFrameProcessor.process(frame: frame), options: [])
-            let sizeInBytes = jsonData.count + newFrameJSONData!.count
+
+            guard let newFrameJSONData = try? JSONSerialization.data(withJSONObject: self.sessionReplayFrameProcessor.process(frame: frame), options: []) else {
+                return
+            }
+
+            let sizeInBytes = jsonData.count + newFrameJSONData.count
             let sizeInMB = Double(sizeInBytes) / (1024.0 * 1024.0)
             print(sizeInMB)
-            
+
             if sizeInMB >= 1.0 {
-                delegate?.didReachDataSizeLimit()
+                self.delegate?.didReachDataSizeLimit()
             }
-            objc_sync_enter(processedFrames)
-            processedFrames.add(sessionReplayFrameProcessor.process(frame: frame));
-            objc_sync_exit(processedFrames)
+
+            objc_sync_enter(self.processedFrames)
+            self.processedFrames.add(self.sessionReplayFrameProcessor.process(frame: frame))
+            objc_sync_exit(self.processedFrames)
         }
     }
     

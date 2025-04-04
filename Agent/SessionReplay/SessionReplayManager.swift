@@ -6,8 +6,7 @@
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
-import Foundation 
-//import NewRelicPrivate
+import Foundation
 
 @available(iOS 13.0, *)
 @objcMembers
@@ -15,10 +14,10 @@ public class SessionReplayManager: NSObject {
     
     private let sessionReplay: NRMASessionReplay
     private var sessionReplayReporter: SessionReplayReporter
-    private var thread: Thread!
+    private var thread: Thread?
     
     public var harvestPeriod: Int64 = 60 * 1000 // milliseconds
-    public var harvestTimer: Timer!
+    public var harvestTimer: Timer?
     
     @objc public init(agentVersion: String, sessionId: String) {
         self.sessionReplay = NRMASessionReplay()
@@ -33,30 +32,31 @@ public class SessionReplayManager: NSObject {
     }
 
     public func start() {
-        if isRunning() {
+        guard !isRunning() else {
             print("Session replay harvest timer attempting to start while already running.")
             return
         }
 
         print("Session replay harvest timer starting with a period of \(harvestPeriod) ms")
-        thread = Thread { [self] in
-            self.harvestTimer = Timer(timeInterval: TimeInterval(harvestPeriod) / 1000.0, target: self, selector: #selector(harvest), userInfo: nil, repeats: true)
+        thread = Thread { [weak self] in
+            guard let self = self else { return }
+            self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod) / 1000.0, target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
 
-            RunLoop.current.add(self.harvestTimer, forMode: .default)
+            RunLoop.current.add(self.harvestTimer!, forMode: .default)
             RunLoop.current.run()
         }
-        thread.start()
+        thread?.start()
     }
     
-   public func stop() {
+    public func stop() {
         sessionReplay.stop()
-        if (!isRunning()) {
+        guard isRunning() else {
             print("Session replay harvest timer attempting to stop when not running.")
-            return;
+            return
         }
         
-       self.harvestTimer.invalidate()
-       self.harvestTimer = nil
+        harvestTimer?.invalidate()
+        harvestTimer = nil
     }
 
     func isRunning() -> Bool {
@@ -66,8 +66,9 @@ public class SessionReplayManager: NSObject {
     @objc public func harvest() {
         DispatchQueue.global(qos: .default).async {
             do {
-                let sessionReplayData = try self.sessionReplay.getSessionReplayJSONData()
-                self.sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: sessionReplayData!)
+                if let sessionReplayData = try self.sessionReplay.getSessionReplayJSONData() {
+                    self.sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: sessionReplayData)
+                }
             } catch {
                 print("Error fetching session replay JSON data: \(error)")
             }
