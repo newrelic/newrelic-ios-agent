@@ -47,12 +47,6 @@ struct ViewDetails {
         cornerRadius = view.layer.cornerRadius
         borderWidth = view.layer.borderWidth
         
-//        if let borderColor = view.layer.borderColor {
-//            self.borderColor = UIColor(cgColor: borderColor)
-//        } else {
-//            self.borderColor = nil
-//        }
-        
         // Checking if we have a border, because asking for the layer's
         // border color will always give us something
         if view.layer.borderWidth > 0, let borderColor = view.layer.borderColor {

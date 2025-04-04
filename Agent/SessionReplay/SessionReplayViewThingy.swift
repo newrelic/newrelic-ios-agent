@@ -14,24 +14,11 @@ protocol SessionReplayViewThingy {
     
     var subviews: [any SessionReplayViewThingy] { get set }
     
-//    func jsonDescription() -> Dictionary<String,Any>
     func cssDescription() -> String
-    func generateRRWebNode() -> RRWebElementNode
+    func generateRRWebNode() -> ElementNodeData
 }
 
-extension SessionReplayViewThingy {
-    func generateBaseJSONDescription() -> [String: Any] {
-        [
-            "type": 2,
-            "tagName": "div",
-            "attributes": [
-                "id": viewDetails.cssSelector
-            ],
-            "childNodes": [String: Any](),
-            "id": viewDetails.viewId
-        ] as [String : Any]
-    }
-    
+extension SessionReplayViewThingy {    
     func generateBaseCSSStyle() -> String {
         var cssStyle = """
             position: fixed; \

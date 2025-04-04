@@ -11,5 +11,6 @@
 
 #import "NRMAMetric.h"
 #import "NRMATaskQueue.h"
+#import "NRMAAssociate.h"
 
 #endif /* APrivateHeader_h */

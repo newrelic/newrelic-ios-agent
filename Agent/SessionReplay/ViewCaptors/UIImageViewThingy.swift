@@ -30,7 +30,10 @@ class UIImageViewThingy: SessionReplayViewThingy {
         return "#\(viewDetails.cssSelector) { \(generateBaseCSSStyle()) \(imagePlaceholderCSS) }"
     }
     
-    func generateRRWebNode() -> RRWebElementNode {
-        return RRWebElementNode(id: viewDetails.viewId, tagName: .div, attributes: ["id":viewDetails.cssSelector], childNodes: [])
+    func generateRRWebNode() -> ElementNodeData {
+        return ElementNodeData(id: viewDetails.viewId,
+                                        tagName: .div,
+                                        attributes: ["id":viewDetails.cssSelector],
+                                        childNodes: [])
     }
 }

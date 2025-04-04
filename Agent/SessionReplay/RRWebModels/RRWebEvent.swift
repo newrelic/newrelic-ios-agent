@@ -8,185 +8,98 @@
 
 import Foundation
 
-protocol RRWebEvent: Encodable {
-    var type: EventType { get }
-    var timestamp: TimeInterval { get }
-}
-
-enum RRWebRecordedEvent: Encodable {
-    case fullSnapshot
-    case incrementalSnapshot
-    case meta
-}
-
-enum EventType: Int, Codable {
+enum RRWebEventType: Int, Codable {
     case fullSnapshot = 2
     case incrementalSnapshot = 3
     case meta = 4
 }
 
-struct MetaEvent: RRWebEvent {
-    let type: EventType = .meta
-    let timestamp: TimeInterval
-    let data: MetaEventData
+protocol RRWebEventCommon: Codable {
+    var type: RRWebEventType { get }
+    var timestamp: TimeInterval { get }
+}
+
+protocol RRWebEventData: Codable {
+    static var eventType: RRWebEventType { get }
+}
+struct RRWebEvent<T: RRWebEventData>: RRWebEventCommon {
+    var timestamp: TimeInterval
+    let data: T
     
-    struct MetaEventData: Codable {
-        let href: String
-        let width: Int
-        let height: Int
+    var type: RRWebEventType {
+        return T.eventType
     }
-}
-
-struct FullSnapshotEvent: RRWebEvent {
-    let type: EventType = .fullSnapshot
-    let timestamp: TimeInterval
-    let data: FullSnapshotData
-    
-    struct InitialOffset: Encodable {
-        let top: Int
-        let left: Double
-    }
-    
-    struct FullSnapshotData: Encodable {
-        let initialOffset: InitialOffset
-        let node: RRWebNode
-        
-        enum CodingKeys: String, CodingKey {
-            case initialOffset
-            case node
-        }
-        
-        public func encode(to encoder: any Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(initialOffset, forKey: .initialOffset)
-            // encode child node array
-            switch node {
-            case let elementNode as RRWebElementNode:
-                try container.encode(elementNode, forKey: .node)
-            case let textNode as RRWebElementNode:
-                try container.encode(textNode, forKey: .node)
-            case let documentNode as RRWebDocumentNode:
-                try container.encode(documentNode, forKey: .node)
-            default:
-                try container.encodeNil(forKey: .node)
-            }
-        }
-    }
-}
-
-enum NodeType: Int, Codable {
-    case document
-    case documentType
-    case element
-    case text
-    case cdata
-    case comment
-}
-
-enum TagType: String, Codable {
-    case style = "style"
-    case div = "div"
-    case head = "head"
-    case body = "body"
-    case html = "html"
-}
-
-protocol RRWebNode: Encodable {
-    var type: NodeType { get }
-    var id: Int { get }
-}
-
-class RRWebDocumentNode: RRWebNode {
-    var type: NodeType = .document
-    var id: Int
-    var childNodes: [RRWebNode]
     
     enum CodingKeys: CodingKey {
-        case type
-        case id
-        case childNodes
+        case timestamp, type, data
     }
     
-    init(id: Int, childNodes: [RRWebNode]) {
-        self.id = id
-        self.childNodes = childNodes
+    init(timestamp: TimeInterval, data: T) {
+        self.timestamp = timestamp
+        self.data = data
     }
     
-    public func encode(to encoder: any Encoder) throws {
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.timestamp = try container.decode(TimeInterval.self, forKey: .timestamp)
+        self.data = try container.decode(T.self, forKey: .data)
+        let decodedType = try container.decode(RRWebEventType.self, forKey: .type)
+        guard decodedType == T.eventType else {
+            throw RRWebDecodingError.eventTypeMismatch(
+                actual: decodedType,
+                expected: T.eventType,
+                dataType: T.self,
+                codingPath: container.codingPath)
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(id, forKey: .id)
-        var unkeyedContainer = container.nestedUnkeyedContainer(forKey: .childNodes)
-        for node in childNodes {
-            switch node {
-            case let elementNode as RRWebElementNode:
-                try unkeyedContainer.encode(elementNode)
-            case let textNode as RRWebTextNode:
-                try unkeyedContainer.encode(textNode)
-            case let documentNode as RRWebDocumentNode:
-                try unkeyedContainer.encode(documentNode)
-            default:
-                continue
-            }
+        try container.encode(T.eventType, forKey: .type)
+        try container.encode(self.timestamp, forKey: .timestamp)
+        try container.encode(self.data, forKey: .data)
+    }
+}
+
+enum RRWebDecodingError: Error {
+    case eventTypeMismatch(actual: RRWebEventType, expected: RRWebEventType, dataType: Any.Type, codingPath: [CodingKey])
+}
+
+extension RRWebDecodingError: CustomDebugStringConvertible {
+    var debugDescription: String {
+        switch self {
+        case .eventTypeMismatch(let actual, let expected, let dataType, let codingPath):
+            let pathString = codingPath.map { key in
+                if let index = key.intValue {
+                    return "[\(index)]"
+                }
+                return "." + key.stringValue
+            }.joined().dropFirst()
+            
+            return """
+            RRWebDecodingError: Event Type Mismatch
+                Path: \(pathString)
+                FoundType: \(actual) (\(actual.rawValue))
+                ExpectedType: \(expected) (\(expected.rawValue))
+                For data structure: \(String(describing: dataType))
+            """
         }
     }
 }
 
-
-class RRWebElementNode: RRWebNode {
-    let type: NodeType = .element
-    let id: Int
-    let tagName: TagType
-    let attributes: [String: String]
-    var childNodes: [RRWebNode]
-    
-    enum CodingKeys: CodingKey {
-        case type
-        case id
-        case tagName
-        case attributes
-        case childNodes
-    }
-    
-    init(id: Int, tagName: TagType, attributes: [String : String], childNodes: [RRWebNode]) {
-        self.id = id
-        self.tagName = tagName
-        self.attributes = attributes
-        self.childNodes = childNodes
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(type, forKey: .type)
-        try container.encode(id, forKey: .id)
-        try container.encode(tagName, forKey: .tagName)
-        try container.encode(attributes, forKey: .attributes)
-        // encode child node array
-        var unkeyedContainer = container.nestedUnkeyedContainer(forKey: .childNodes)
-        for node in childNodes {
-            switch node {
-            case let elementNode as RRWebElementNode:
-                try unkeyedContainer.encode(elementNode)
-            case let textNode as RRWebTextNode:
-                try unkeyedContainer.encode(textNode)
-            case let documentNode as RRWebDocumentNode:
-                try unkeyedContainer.encode(documentNode)
-            default:
-                continue
-            }
+extension RRWebDecodingError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .eventTypeMismatch(let actual, let expected, let dataType, let codingPath):
+            return "RRWebDecoding Error: The event type code (\(actual.rawValue)) found in the JSON does not match the expected type code (\(expected.rawValue)) for the event data structure '\(String(describing: dataType))'."
         }
     }
 }
 
-class RRWebTextNode: RRWebNode {
-    let type: NodeType = .text
-    let id: Int
-    let textContent: String
-    let isStyle: Bool
-    
-    init(id: Int, textContent: String, isStyle: Bool) {
-        self.id = id
-        self.textContent = textContent
-        self.isStyle = isStyle
-    }
+typealias MetaEvent = RRWebEvent<RRWebMetaData>
+struct RRWebMetaData: RRWebEventData {
+    static let eventType: RRWebEventType = .meta
+    let href: String
+    let width: Int
+    let height: Int
 }

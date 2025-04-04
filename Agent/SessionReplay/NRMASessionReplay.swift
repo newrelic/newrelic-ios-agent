@@ -20,9 +20,7 @@ public class NRMASessionReplay: NSObject {
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
     private var frameTimer: Timer!
     private var rawFrames = [SessionReplayFrame]()
-    
-//    private let sessionReplayLogger = Log
-    
+        
     public override init() {
         self.sessionReplayCapture = SessionReplayCapture()
         
@@ -32,11 +30,6 @@ public class NRMASessionReplay: NSObject {
             guard let self else {return}
             takeFrame()
         })
-        
-//        let supportability = SupportabilityMetrics()
-//        supportability.createExceptionMetric()
-//        NRMATaskQueue.queue(NRMAMetric(name: "A name", value: 1, scope: ""))
-
 
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(didBecomeActive),
@@ -60,12 +53,11 @@ public class NRMASessionReplay: NSObject {
         rawFrames.append(frame)
         
         if(rawFrames.count > 10) {
-            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: MetaEvent.MetaEventData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0)))
+            let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
+            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
+            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
             
-            var processedFrames: [RRWebEvent] = [metaEvent]
-            processedFrames.append(contentsOf: rawFrames.map {sessionReplayFrameProcessor.processFrame($0)})
-            
-            let container = EncodableFramesContainer(items: processedFrames)
+            container.append(contentsOf: rawFrames.map { AnyRRWebEvent(sessionReplayFrameProcessor.processFrame($0))})
             
             let encoder = JSONEncoder()
             encoder.outputFormatting = []
@@ -86,16 +78,5 @@ public class NRMASessionReplay: NSObject {
             .compactMap {$0 as? UIWindowScene}
             .flatMap { $0.windows }
             .last { $0.isKeyWindow }
-    }
-}
-
-struct EncodableFramesContainer: Encodable {
-    let items: [any RRWebEvent]
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.unkeyedContainer()
-        for item in items {
-            try container.encode(item)
-        }
     }
 }

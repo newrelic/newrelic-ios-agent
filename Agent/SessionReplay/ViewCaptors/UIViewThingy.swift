@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 
 class UIViewThingy: SessionReplayViewThingy {
+    
     var subviews = [any SessionReplayViewThingy]()
     
     var shouldRecordSubviews: Bool {
@@ -23,15 +24,14 @@ class UIViewThingy: SessionReplayViewThingy {
     }
     
     func cssDescription() -> String {
-//        var cssDescription = generateBaseCSSStyle()
         return "#\(viewDetails.cssSelector) {\(generateBaseCSSStyle())} "
     }
     
-    func generateRRWebNode() -> RRWebElementNode {
-        return RRWebElementNode(id: viewDetails.viewId,
-                                tagName: .div,
-                                attributes: ["id":viewDetails.cssSelector],
-                                childNodes: [])
+    func generateRRWebNode() -> ElementNodeData {
+        return ElementNodeData(id: viewDetails.viewId,
+                               tagName: .div,
+                               attributes: ["id":viewDetails.cssSelector],
+                               childNodes: [])
     }
 }
 

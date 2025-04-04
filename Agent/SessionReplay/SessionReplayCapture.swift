@@ -40,9 +40,6 @@ class SessionReplayCapture {
             }
         }
         
-        
-//        let rootNode = recursivelyRecord(from: rootView)
-        
         return SessionReplayFrame(date: Date(), views: rootThingy)
     }
     

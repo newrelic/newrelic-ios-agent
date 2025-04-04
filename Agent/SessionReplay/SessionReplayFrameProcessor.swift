@@ -10,11 +10,11 @@ import Foundation
 
 struct SessionReplayFrameProcessor {
     
-    func processFrame(_ frame: SessionReplayFrame) -> RRWebEvent {
+    func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon {
         
         struct NodePair {
             let viewThingy: any SessionReplayViewThingy
-            let rrwebNode: RRWebElementNode
+            let rrwebNode: ElementNodeData
         }
         
         var thingyStack = ContiguousArray<NodePair>()
@@ -29,11 +29,11 @@ struct SessionReplayFrameProcessor {
             let viewThingy = pair.viewThingy
             let node = pair.rrwebNode
             
-            var childNodes = [RRWebElementNode]()
+            var childNodes = [SerializedNode]()
             
             for childThingy in viewThingy.subviews {
                 let childNode = childThingy.generateRRWebNode()
-                childNodes.append(childNode)
+                childNodes.append(.element(childNode))
                 thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
             }
             
@@ -41,37 +41,37 @@ struct SessionReplayFrameProcessor {
             cssString.append(contentsOf: viewThingy.cssDescription())
         }
         
-        let cssTextNode = RRWebTextNode(id: IDGenerator.shared.getId(),
-                                    textContent: cssString,
-                                    isStyle: true)
+        let cssTextNode = TextNodeData(id: IDGenerator.shared.getId(),
+                                       isStyle: true,
+                                       textContent: cssString,
+                                       childNodes: [])
         
-        let cssElementNode = RRWebElementNode(id: IDGenerator.shared.getId(),
-                                              tagName: .style,
+        let cssElementNode = ElementNodeData(id: IDGenerator.shared.getId(),
+                                             tagName: .style,
+                                             attributes: [:],
+                                             childNodes: [.text(cssTextNode)])
+        
+        let headElementNode = ElementNodeData(id: IDGenerator.shared.getId(),
+                                              tagName: .head,
                                               attributes: [:],
-                                              childNodes: [cssTextNode])
+                                              childNodes: [.element(cssElementNode)])
         
-        let headElementNode = RRWebElementNode(id: IDGenerator.shared.getId(),
-                                               tagName: .head,
-                                               attributes: [:],
-                                               childNodes: [cssElementNode])
+        let bodyElementNode = ElementNodeData(id: IDGenerator.shared.getId(),
+                                              tagName: .body,
+                                              attributes: [:],
+                                              childNodes: [.element(rootRRWebNode)])
         
-        let bodyElementNode = RRWebElementNode(id: IDGenerator.shared.getId(),
-                                               tagName: .body,
-                                               attributes: [:],
-                                               childNodes: [rootRRWebNode])
+        let htmlElementNode = ElementNodeData(id: IDGenerator.shared.getId(),
+                                              tagName: .html,
+                                              attributes: [:],
+                                              childNodes: [.element(headElementNode), .element(bodyElementNode)])
         
-        let htmlElementNode = RRWebElementNode(id: IDGenerator.shared.getId(),
-                                               tagName: .html,
-                                               attributes: [:],
-                                               childNodes: [headElementNode, bodyElementNode])
+        let documentNode = DocumentNodeData(id: IDGenerator.shared.getId(),
+                                            childNodes: [.element(htmlElementNode)])
         
-        let documentNode = RRWebDocumentNode(id: IDGenerator.shared.getId(),
-                                             childNodes: [htmlElementNode])
+        let snapshotData = RRWebFullSnapshotData(node: .document(documentNode),
+                                                 initialOffset: RRWebFullSnapshotData.InitialOffset(top: 0, left: 0))
         
-        let snapshotData = FullSnapshotEvent.FullSnapshotData(initialOffset: FullSnapshotEvent.InitialOffset(top: 0, left: 0), node: documentNode)
-        
-        return FullSnapshotEvent(timestamp: frame.date.timeIntervalSince1970 * 1000,
-                                             data: snapshotData)
-        
+        return RRWebEvent(timestamp: frame.date.timeIntervalSince1970 * 1000, data: snapshotData)
     }
 }
