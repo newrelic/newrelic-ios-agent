@@ -24,12 +24,7 @@ public class NRMASessionReplay: NSObject {
     private let sessionReplayCapture: SessionReplayCapture
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
     private var frameTimer: Timer!
-    private let rawFrames = [SessionReplayFrame]()
-    
-    private var touchCapture: SessionReplayTouchCapture!
-    private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
-    private var processedFrames = NSMutableArray()
-    private let processQueue = DispatchQueue(label: "com.newrelicagent.sessionreplayqueue")
+    private var rawFrames = [SessionReplayFrame]()
     
     public override init() {
         self.sessionReplayCapture = SessionReplayCapture()
@@ -50,7 +45,7 @@ public class NRMASessionReplay: NSObject {
 
         self.frameTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(takeFrame), userInfo: nil, repeats: true)
         RunLoop.current.add(self.frameTimer, forMode: .common)
-
+        RunLoop.current.run()
     }
     
    public func stop() {
@@ -69,7 +64,6 @@ public class NRMASessionReplay: NSObject {
     
     func didBecomeActive() {
 //        NRLOG_AUDIT("[SESSION REPLAY] - App did become active")
-        self.touchCapture = SessionReplayTouchCapture(window: getWindow()!)
 
         start()
     }
@@ -80,59 +74,7 @@ public class NRMASessionReplay: NSObject {
         }
         
         let frame = sessionReplayCapture.recordFrom(rootView: window)
-/*<<<<<<< NR-378712
-        if processedFrames.count == 0 {
-            objc_sync_enter(processedFrames)
-            processedFrames.add(sessionReplayFrameProcessor.process(frame: frame));
-            objc_sync_exit(processedFrames)
-            return
-        }
-        checkCompressedDataSize(frame: frame)
-    }
-    
-    func checkCompressedDataSize(frame: SessionReplayFrame) {
-        processQueue.async { [weak self] in
-            guard let self = self else { return }
-
-            // Check the size of compressed data
-            guard let jsonData = self.currentFramesData().gzipped() else {
-                return
-            }
-
-            guard let newFrameJSONData = try? JSONSerialization.data(withJSONObject: self.sessionReplayFrameProcessor.process(frame: frame), options: []) else {
-                return
-            }
-
-            let sizeInBytes = jsonData.count + newFrameJSONData.count
-            let sizeInMB = Double(sizeInBytes) / (1024.0 * 1024.0)
-            print(sizeInMB)
-
-            if sizeInMB >= 1.0 {
-                self.delegate?.didReachDataSizeLimit()
-            }
-
-            objc_sync_enter(self.processedFrames)
-            self.processedFrames.add(self.sessionReplayFrameProcessor.process(frame: frame))
-            objc_sync_exit(self.processedFrames)
-=======*/
         rawFrames.append(frame)
-        
-        if(rawFrames.count > 10) {
-            let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
-            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
-            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
-            
-            container.append(contentsOf: rawFrames.map { AnyRRWebEvent(sessionReplayFrameProcessor.processFrame($0))})
-            
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = []
-            let jsonData = try? encoder.encode(container)
-            
-            if let data = jsonData,
-               let jsonString = String(data: data, encoding: .utf8){
-                NSLog(jsonString)
-            }
-        }
     }
     
     // maybe move this into something else?
@@ -145,39 +87,12 @@ public class NRMASessionReplay: NSObject {
             .last { $0.isKeyWindow }
     }
     
-    func getSessionReplayJSONData() throws -> Data? {
-        var data: Data?
-        
-        data = currentFramesData()
-        objc_sync_enter(processedFrames)
-
-        processedFrames.removeAllObjects()
-        
-        objc_sync_exit(processedFrames)
+    func getSessionReplayFrames() -> [SessionReplayFrame] {
+        let data = rawFrames
+        rawFrames.removeAll()
         
         return data
     }
-
-    func consolidateFrames() -> String {
-        let viewFramesJSONData = currentFramesData()
-        let frameJSON = String(data: viewFramesJSONData, encoding: .utf8) ?? ""
-        return frameJSON
-    }
-
-    func currentFramesData() -> Data {
-        objc_sync_enter(processedFrames)
-        defer { objc_sync_exit(processedFrames) }
-        
-        let jsonData = try? JSONSerialization.data(withJSONObject: processedFrames, options: [])
-        return jsonData ?? Data()
-    }
-    
-    /*func processTouches() {
-        for touchTracker in trackedTouches {
-            let touch = touchTracker.jsonDescription();
-            processedFrames.append(touch)
-        }
-    }*/
 }
 
 extension Date {
