@@ -34,11 +34,6 @@ public class NRMASessionReplay: NSObject {
         self.sessionReplayCapture = SessionReplayCapture()
         
         super.init()
-     
-        self.frameTimer = Timer(timeInterval: 0.5, repeats: true, block: { [weak self] timer in
-            guard let self else {return}
-            takeFrame()
-        })
 
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(didBecomeActive),
@@ -51,10 +46,9 @@ public class NRMASessionReplay: NSObject {
             print("Session replay timer attempting to start while already running.")
             return
         }
-
+        
         self.frameTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(takeFrame), userInfo: nil, repeats: true)
         RunLoop.current.add(self.frameTimer, forMode: .common)
-        RunLoop.current.run()
     }
     
    public func stop() {
@@ -95,7 +89,7 @@ public class NRMASessionReplay: NSObject {
 //        NRLOG_AUDIT("[SESSION REPLAY] - App did become active")
         self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: getWindow()!)
         swizzleSendEvent()
-        RunLoop.current.add(self.frameTimer, forMode: .common)
+        start()
     }
     
     func takeFrame() {
@@ -106,25 +100,25 @@ public class NRMASessionReplay: NSObject {
         let frame = sessionReplayCapture.recordFrom(rootView: window)
         rawFrames.append(frame)
 
-        if(rawFrames.count > 10) {
-            let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
-            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
-            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
-            
-            container.append(contentsOf: rawFrames.map { AnyRRWebEvent(sessionReplayFrameProcessor.processFrame($0))})
-            
-            let processedTouches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
-            container.append(contentsOf: processedTouches.map { AnyRRWebEvent($0)})
-            
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = []
-            let jsonData = try? encoder.encode(container)
-            
-            if let data = jsonData,
-               let jsonString = String(data: data, encoding: .utf8){
-                NSLog(jsonString)
-            }
-        }
+//        if(rawFrames.count > 10) {
+//            let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
+//            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
+//            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
+//            
+//            container.append(contentsOf: rawFrames.map { AnyRRWebEvent(sessionReplayFrameProcessor.processFrame($0))})
+//            
+//            let processedTouches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
+//            container.append(contentsOf: processedTouches.map { AnyRRWebEvent($0)})
+//            
+//            let encoder = JSONEncoder()
+//            encoder.outputFormatting = []
+//            let jsonData = try? encoder.encode(container)
+//            
+//            if let data = jsonData,
+//               let jsonString = String(data: data, encoding: .utf8){
+//                NSLog(jsonString)
+//            }
+//        }
     }
     
     // maybe move this into something else?
@@ -142,6 +136,12 @@ public class NRMASessionReplay: NSObject {
         rawFrames.removeAll()
         
         return data
+    }
+    
+    func getSessionReplayTouches() -> [IncrementalEvent] {
+        let touches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
+        
+        return touches
     }
 }
 

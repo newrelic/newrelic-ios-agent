@@ -64,7 +64,6 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
-        DispatchQueue.main.async { [self] in
             let rawFrames = self.sessionReplay.getSessionReplayFrames()
             let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
             let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
@@ -74,6 +73,9 @@ public class SessionReplayManager: NSObject {
                 AnyRRWebEvent(self.sessionReplayFrameProcessor.processFrame($0))
                 
             })
+        
+            let processedTouches = sessionReplay.getSessionReplayTouches()
+            container.append(contentsOf: processedTouches.map { AnyRRWebEvent($0)})
             
             let encoder = JSONEncoder()
             encoder.outputFormatting = []
@@ -85,7 +87,6 @@ public class SessionReplayManager: NSObject {
                 sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: data)
                 
             }
-        }
     }
     
    /* func checkCompressedDataSize(frame: SessionReplayFrame) {
