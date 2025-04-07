@@ -18,6 +18,20 @@ enum RRWebIncrementalData: RRWebEventData {
     
     case mouseInteraction(RRWebMouseInteractionData)
     case touchMove(RRWebTouchMoveData)
+    
+//    enum CodingKeys: CodingKey {
+//        case source
+//    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+            case .mouseInteraction(let value):
+            try container.encode(value)
+        case .touchMove(let value):
+            try container.encode(value)
+        }
+    }
 }
 
 enum RRWebMouseInteractionType: Int, Codable {
@@ -27,18 +41,20 @@ enum RRWebMouseInteractionType: Int, Codable {
 
 struct RRWebMouseInteractionData: Codable {
     let type: RRWebMouseInteractionType
+    let source: RRWebIncrementalSource = .mouseInteraction
     let id: Int
-    let x: Int
-    let y: Int
+    let x: CGFloat
+    let y: CGFloat
 }
 
 struct RRWebTouchPosition: Codable {
-    let x: Int
-    let y: Int
+    let x: CGFloat
+    let y: CGFloat
     let id: Int
     let timeOffset: TimeInterval
 }
 
 struct RRWebTouchMoveData: Codable {
+    let source: RRWebIncrementalSource = .touchMove
     let positions: [RRWebTouchPosition]
 }

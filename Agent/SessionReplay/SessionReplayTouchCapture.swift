@@ -20,22 +20,16 @@ class SessionReplayTouchCapture: NSObject {
     
     // potentially move this to a struct once all Swift
 
-    
     init(window: UIWindow) {
         self.window = window
     }
     
+    @objc dynamic
     public func captureSendEventTouches(event: UIEvent) {
         guard event.type == .touches,
               let touches = event.touches(for: window) else {
                   return
               }
-        
-        if #available(iOS 14.0, *) {
-            os_log("Touch Swizzle. Event: \(event)")
-        } else {
-            // Fallback on earlier versions
-        }
 
         for touch in touches {
             
@@ -44,28 +38,28 @@ class SessionReplayTouchCapture: NSObject {
                 let location = touch.location(in: touch.window)
                 let touchedView = touch.window?.hitTest(location, with: nil)
                 let viewID = touchedView?.sessionReplayIdentifier ?? 0
-                let touchDetail = TouchEvent.Detail(location: location, phase: .began, date: touch.timestamp)
+                let touchDetail = TouchEvent.Detail(location: location, phase: .began, date: Date().timeIntervalSince1970)
                 let touchTracker = TouchEvent(startTouch: touchDetail, with: viewID)
                 
-                NRMAAssociate.attach(touchTracker, to: touch, with: "TouchTracker")
+                touch.touchTracker = touchTracker
             case .moved:
-                guard let touchTracker = NRMAAssociate.retrieve(from: touch, with: "TouchTracker") as? TouchEvent else {
+                guard let touchTracker = touch.touchTracker else {
                     os_log( "ERROR: Touch Tracker not associated with Touch!")
                     continue
                 }
                 
                 let location = touch.location(in: touch.window)
-                let touchDetail = TouchEvent.Detail(location: location, phase: .moved, date: touch.timestamp)
+                let touchDetail = TouchEvent.Detail(location: location, phase: .moved, date: Date().timeIntervalSince1970)
                 touchTracker.moveTouches.append(touchDetail)
                 
             case .ended:
-                guard let touchTracker = NRMAAssociate.retrieve(from: touch, with: "TouchTracker") as? TouchEvent else {
+                guard let touchTracker = touch.touchTracker else {
                     os_log( "ERROR: Touch Tracker not associated with Touch!")
                     continue
                 }
                 
                 let location = touch.location(in: touch.window)
-                let touchDetail = TouchEvent.Detail(location: location, phase: .ended, date: touch.timestamp)
+                let touchDetail = TouchEvent.Detail(location: location, phase: .ended, date: Date().timeIntervalSince1970)
                 touchTracker.endTouch = touchDetail
                 
                 self.touchEvents.append(touchTracker)
@@ -80,5 +74,24 @@ class SessionReplayTouchCapture: NSObject {
     public func resetEvents() {
         self.touchEvents.removeAll()
         self.earliestDate = nil
+    }
+}
+
+fileprivate var associatedTouchTrackerIDKey: String = "TouchTracker"
+
+internal extension UITouch {
+    var touchTracker: TouchEvent? {
+        set {
+            withUnsafePointer(to: &associatedTouchTrackerIDKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+        
+        get {
+            withUnsafePointer(to: &associatedTouchTrackerIDKey) {
+                objc_getAssociatedObject(self, $0) as? TouchEvent
+            }
+        }
+        
     }
 }

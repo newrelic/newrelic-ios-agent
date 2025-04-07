@@ -18,14 +18,18 @@ public class NRMASessionReplay: NSObject {
     
     private let sessionReplayCapture: SessionReplayCapture
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
+    private var sessionReplayTouchCapture: SessionReplayTouchCapture!
+    private let sessionReplayTouchProcessor = TouchEventProcessor()
     private var frameTimer: Timer!
     private var rawFrames = [SessionReplayFrame]()
+    
+    private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
         
     public override init() {
         self.sessionReplayCapture = SessionReplayCapture()
         
         super.init()
-        
+                
         self.frameTimer = Timer(timeInterval: 0.5, repeats: true, block: { [weak self] timer in
             guard let self else {return}
             takeFrame()
@@ -37,11 +41,31 @@ public class NRMASessionReplay: NSObject {
                                                object: nil)
     }
     
+    func swizzleSendEvent() {
+        guard let clazz = objc_getClass("UIApplication") else {
+            os_log("ERROR: Unable to swizzle send event. Not able to track touches")
+            return
+        }
+        
+        let originalSelector = #selector(UIApplication.sendEvent(_:))
+        
+        let block: @convention(block)(UIApplication, UIEvent) -> Void = { app, event in
+            self.sessionReplayTouchCapture.captureSendEventTouches(event: event)
+            typealias Func = @convention(c)(AnyObject, Selector, UIEvent) -> Void
+            let function = unsafeBitCast(self.NRMAOriginal__sendEvent, to: Func.self)
+            function(app, originalSelector, event)
+        }
+        
+        let newImp = imp_implementationWithBlock(block)
+
+        self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
+    }
+    
     func didBecomeActive() {
 //        NRLOG_AUDIT("[SESSION REPLAY] - App did become active")
-        
+        self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: getWindow()!)
+        swizzleSendEvent()
         RunLoop.current.add(self.frameTimer, forMode: .common)
-        
     }
     
     func takeFrame() {
@@ -58,6 +82,9 @@ public class NRMASessionReplay: NSObject {
             var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
             
             container.append(contentsOf: rawFrames.map { AnyRRWebEvent(sessionReplayFrameProcessor.processFrame($0))})
+            
+            let processedTouches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
+            container.append(contentsOf: processedTouches.map { AnyRRWebEvent($0)})
             
             let encoder = JSONEncoder()
             encoder.outputFormatting = []
