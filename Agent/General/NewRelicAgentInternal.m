@@ -365,7 +365,7 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 #endif
     if (@available(iOS 13.0, *)) {
-        _sessionReplay = [[SessionReplayManager alloc] initWithAgentVersion:[NewRelicInternalUtils agentVersion] sessionId:[self currentSessionId]];
+        _sessionReplay = [[SessionReplayManager alloc] initWithAgentVersion:[NewRelicInternalUtils agentVersion] sessionId:[[self currentSessionId] copy] ];
         [_sessionReplay start];
     }
     

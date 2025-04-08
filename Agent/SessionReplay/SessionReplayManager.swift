@@ -62,7 +62,7 @@ public class SessionReplayManager: NSObject {
 
     @objc public func harvest() {
         Task {
-            // Fetch raw frames and processed touches concurrently
+            // Fetch processed frames and processed touches concurrently
             async let processedFrames = sessionReplay.getSessionReplayFrames()
             async let processedTouches = sessionReplay.getSessionReplayTouches()
             
@@ -77,7 +77,7 @@ public class SessionReplayManager: NSObject {
             // Initialize container with meta event
             var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
             
-            // Process raw frames and touches
+            // Process frames and touches
             container.append(contentsOf: (await processedFrames).map {
                 AnyRRWebEvent($0)
             })

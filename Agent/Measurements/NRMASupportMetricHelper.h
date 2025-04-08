@@ -25,4 +25,7 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueLogSuccessMetric:(long)size;
 + (void) enqueueLogFailedMetric;
 
++ (void) enqueueSessionReplaySuccessMetric:(long)size;
++ (void) enqueueSessionReplayFailedMetric;
+
 @end
