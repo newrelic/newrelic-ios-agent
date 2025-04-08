@@ -85,8 +85,8 @@ public class NRMASessionReplay: NSObject {
         self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
     }
     
-    func didBecomeActive() {
-//        NRLOG_AUDIT("[SESSION REPLAY] - App did become active")
+    @objc func didBecomeActive() {
+        print("[SESSION REPLAY] - App did become active")
         self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: getWindow()!)
         swizzleSendEvent()
         start()
@@ -131,16 +131,16 @@ public class NRMASessionReplay: NSObject {
             .last { $0.isKeyWindow }
     }
     
-    func getSessionReplayFrames() -> [SessionReplayFrame] {
+    @MainActor
+    func getSessionReplayFrames() async -> [SessionReplayFrame] {
         let data = rawFrames
         rawFrames.removeAll()
-        
         return data
     }
-    
-    func getSessionReplayTouches() -> [IncrementalEvent] {
+
+    @MainActor
+    func getSessionReplayTouches() async -> [IncrementalEvent] {
         let touches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
-        
         return touches
     }
 }

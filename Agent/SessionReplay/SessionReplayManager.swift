@@ -45,7 +45,6 @@ public class SessionReplayManager: NSObject {
         self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod) / 1000.0, target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
 
         RunLoop.current.add(self.harvestTimer!, forMode: .default)
-        RunLoop.current.run()
     }
     
     public func stop() {
@@ -64,29 +63,37 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
-            let rawFrames = self.sessionReplay.getSessionReplayFrames()
-            let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
-            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
+        Task {
+            // Fetch raw frames and processed touches concurrently
+            async let rawFrames = sessionReplay.getSessionReplayFrames()
+            async let processedTouches = sessionReplay.getSessionReplayTouches()
+            
+            // Create meta event data
+            let metaEventData = await RRWebMetaData(
+                href: "http://newrelic.com",
+                width: Int(getWindow()?.frame.width ?? 0),
+                height: Int(getWindow()?.frame.height ?? 0)
+            )
+            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().millisecondsSince1970), data: metaEventData)
+            
+            // Initialize container with meta event
             var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
             
-            container.append(contentsOf: rawFrames.map {
+            // Process raw frames and touches
+            container.append(contentsOf: (await rawFrames).map {
                 AnyRRWebEvent(self.sessionReplayFrameProcessor.processFrame($0))
-                
             })
-        
-            let processedTouches = sessionReplay.getSessionReplayTouches()
-            container.append(contentsOf: processedTouches.map { AnyRRWebEvent($0)})
+            container.append(contentsOf: (await processedTouches).map {
+                AnyRRWebEvent($0)
+            })
             
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = []
-            let jsonData = try? encoder.encode(container)
-            
-            if let data = jsonData,
-               let jsonString = String(data: data, encoding: .utf8){
+            // Encode container to JSON
+            if let jsonData = try? JSONEncoder().encode(container),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
                 NSLog(jsonString)
-                sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: data)
-                
+                sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: jsonData)
             }
+        }
     }
     
    /* func checkCompressedDataSize(frame: SessionReplayFrame) {
@@ -113,6 +120,7 @@ public class SessionReplayManager: NSObject {
     }*/
     
     // maybe move this into something else?
+    @MainActor
     private func getWindow() -> UIWindow? {
         UIApplication
             .shared
