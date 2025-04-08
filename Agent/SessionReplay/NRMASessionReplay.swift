@@ -12,14 +12,9 @@ import NewRelicPrivate
 
 import OSLog
 
-protocol NRMASessionReplayDelegate: AnyObject {
-    func didReachDataSizeLimit()
-}
-
 @available(iOS 13.0, *)
 @objcMembers
 public class NRMASessionReplay: NSObject {
-    weak var delegate: NRMASessionReplayDelegate?
 
     private let sessionReplayCapture: SessionReplayCapture
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
@@ -99,26 +94,6 @@ public class NRMASessionReplay: NSObject {
         
         let frame = sessionReplayCapture.recordFrom(rootView: window)
         rawFrames.append(frame)
-
-//        if(rawFrames.count > 10) {
-//            let metaEventData = RRWebMetaData(href: "http://newrelic.com", width: Int(getWindow()?.frame.width ?? 0), height: Int(getWindow()?.frame.height ?? 0))
-//            let metaEvent = MetaEvent(timestamp: Date().timeIntervalSince1970 * 1000, data: metaEventData)
-//            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
-//            
-//            container.append(contentsOf: rawFrames.map { AnyRRWebEvent(sessionReplayFrameProcessor.processFrame($0))})
-//            
-//            let processedTouches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
-//            container.append(contentsOf: processedTouches.map { AnyRRWebEvent($0)})
-//            
-//            let encoder = JSONEncoder()
-//            encoder.outputFormatting = []
-//            let jsonData = try? encoder.encode(container)
-//            
-//            if let data = jsonData,
-//               let jsonString = String(data: data, encoding: .utf8){
-//                NSLog(jsonString)
-//            }
-//        }
     }
     
     // maybe move this into something else?

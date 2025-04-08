@@ -24,7 +24,6 @@ public class SessionReplayManager: NSObject {
         self.sessionReplayReporter = SessionReplayReporter(agentVersion: agentVersion, sessionId: sessionId)
         super.init()
         
-        self.sessionReplay.delegate = self
     }
     
     public func setSessionId(_ sessionID: String) {
@@ -94,29 +93,6 @@ public class SessionReplayManager: NSObject {
         }
     }
     
-   /* func checkCompressedDataSize(frame: SessionReplayFrame) {
-        guard let self = self else { return }
-        
-        // Check the size of compressed data
-        guard let jsonData = self.currentFramesData().gzipped() else {
-            return
-        }
-        
-        guard let newFrameJSONData = try? JSONSerialization.data(withJSONObject: self.sessionReplayFrameProcessor.processFrame(frame), options: []) else {
-            return
-        }
-        
-        let sizeInBytes = jsonData.count + newFrameJSONData.count
-        let sizeInMB = Double(sizeInBytes) / (1024.0 * 1024.0)
-        print(sizeInMB)
-        
-        if sizeInMB >= 1.0 {
-            self.delegate?.didReachDataSizeLimit()
-        }
-        
-        self.processedFrames.add(self.sessionReplayFrameProcessor.processFrame(frame))
-    }*/
-    
     // maybe move this into something else?
     @MainActor
     private func getWindow() -> UIWindow? {
@@ -126,12 +102,5 @@ public class SessionReplayManager: NSObject {
             .compactMap {$0 as? UIWindowScene}
             .flatMap { $0.windows }
             .last { $0.isKeyWindow }
-    }
-}
-
-@available(iOS 13.0, *)
-extension SessionReplayManager: NRMASessionReplayDelegate {
-    func didReachDataSizeLimit() {
-        harvest()
     }
 }
