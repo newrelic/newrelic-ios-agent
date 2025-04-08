@@ -18,9 +18,7 @@ public class SessionReplayManager: NSObject {
     
     public var harvestPeriod: Int64 = 60 * 1000 // milliseconds
     public var harvestTimer: Timer?
-    
-    private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
-    
+        
     @objc public init(agentVersion: String, sessionId: String) {
         self.sessionReplay = NRMASessionReplay()
         self.sessionReplayReporter = SessionReplayReporter(agentVersion: agentVersion, sessionId: sessionId)
@@ -65,7 +63,7 @@ public class SessionReplayManager: NSObject {
     @objc public func harvest() {
         Task {
             // Fetch raw frames and processed touches concurrently
-            async let rawFrames = sessionReplay.getSessionReplayFrames()
+            async let processedFrames = sessionReplay.getSessionReplayFrames()
             async let processedTouches = sessionReplay.getSessionReplayTouches()
             
             // Create meta event data
@@ -80,8 +78,8 @@ public class SessionReplayManager: NSObject {
             var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
             
             // Process raw frames and touches
-            container.append(contentsOf: (await rawFrames).map {
-                AnyRRWebEvent(self.sessionReplayFrameProcessor.processFrame($0))
+            container.append(contentsOf: (await processedFrames).map {
+                AnyRRWebEvent($0)
             })
             container.append(contentsOf: (await processedTouches).map {
                 AnyRRWebEvent($0)

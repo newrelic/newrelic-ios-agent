@@ -132,10 +132,14 @@ public class NRMASessionReplay: NSObject {
     }
     
     @MainActor
-    func getSessionReplayFrames() async -> [SessionReplayFrame] {
-        let data = rawFrames
+    func getSessionReplayFrames() async -> [RRWebEventCommon] {
+        var processedFrames: [RRWebEventCommon] = []
+        processedFrames.append(contentsOf: (rawFrames).map {
+            self.sessionReplayFrameProcessor.processFrame($0)
+        })
+
         rawFrames.removeAll()
-        return data
+        return processedFrames
     }
 
     @MainActor
