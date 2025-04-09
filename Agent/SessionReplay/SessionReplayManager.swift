@@ -62,8 +62,8 @@ public class SessionReplayManager: NSObject {
     @objc public func harvest() {
         Task {
             // Fetch processed frames and processed touches concurrently
-            async let processedFrames = sessionReplay.getSessionReplayFrames()
-            async let processedTouches = sessionReplay.getSessionReplayTouches()
+            let processedFrames = sessionReplay.getSessionReplayFrames()
+            let processedTouches = sessionReplay.getSessionReplayTouches()
             
             // Create meta event data
             let metaEventData = await RRWebMetaData(
@@ -71,16 +71,16 @@ public class SessionReplayManager: NSObject {
                 width: Int(getWindow()?.frame.width ?? 0),
                 height: Int(getWindow()?.frame.height ?? 0)
             )
-            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().millisecondsSince1970), data: metaEventData)
+            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().timeIntervalSince1970), data: metaEventData)
             
             // Initialize container with meta event
             var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
             
             // Process frames and touches
-            container.append(contentsOf: (await processedFrames).map {
+            container.append(contentsOf: (processedFrames).map {
                 AnyRRWebEvent($0)
             })
-            container.append(contentsOf: (await processedTouches).map {
+            container.append(contentsOf: (processedTouches).map {
                 AnyRRWebEvent($0)
             })
             

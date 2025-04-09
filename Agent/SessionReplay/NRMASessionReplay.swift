@@ -80,6 +80,7 @@ public class NRMASessionReplay: NSObject {
         self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
     }
     
+    @MainActor
     @objc func didBecomeActive() {
         print("[SESSION REPLAY] - App did become active")
         self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: getWindow()!)
@@ -88,15 +89,18 @@ public class NRMASessionReplay: NSObject {
     }
     
     func takeFrame() {
-        guard let window = getWindow() else {
-            return
+        Task{
+            guard let window = await getWindow() else {
+                return
+            }
+            
+            let frame = await sessionReplayCapture.recordFrom(rootView: window)
+            rawFrames.append(frame)
         }
-        
-        let frame = sessionReplayCapture.recordFrom(rootView: window)
-        rawFrames.append(frame)
     }
     
     // maybe move this into something else?
+    @MainActor
     private func getWindow() -> UIWindow? {
         UIApplication
             .shared
@@ -106,8 +110,7 @@ public class NRMASessionReplay: NSObject {
             .last { $0.isKeyWindow }
     }
     
-    @MainActor
-    func getSessionReplayFrames() async -> [RRWebEventCommon] {
+    func getSessionReplayFrames() -> [RRWebEventCommon] {
         var processedFrames: [RRWebEventCommon] = []
         processedFrames.append(contentsOf: (rawFrames).map {
             self.sessionReplayFrameProcessor.processFrame($0)
@@ -117,8 +120,7 @@ public class NRMASessionReplay: NSObject {
         return processedFrames
     }
 
-    @MainActor
-    func getSessionReplayTouches() async -> [IncrementalEvent] {
+    func getSessionReplayTouches() -> [IncrementalEvent] {
         let touches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
         return touches
     }

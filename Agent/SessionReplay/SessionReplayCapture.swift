@@ -14,6 +14,7 @@ import UIKit
 @objcMembers
 class SessionReplayCapture {
     
+    @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
         struct ViewPair {
             let view:UIView
