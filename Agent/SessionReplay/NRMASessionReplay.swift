@@ -60,24 +60,27 @@ public class NRMASessionReplay: NSObject {
         return self.frameTimer != nil && self.frameTimer!.isValid
     }
   
-      func swizzleSendEvent() {
-        guard let clazz = objc_getClass("UIApplication") else {
-            os_log("ERROR: Unable to swizzle send event. Not able to track touches")
-            return
-        }
-        
-        let originalSelector = #selector(UIApplication.sendEvent(_:))
-        
-        let block: @convention(block)(UIApplication, UIEvent) -> Void = { app, event in
-            self.sessionReplayTouchCapture.captureSendEventTouches(event: event)
-            typealias Func = @convention(c)(AnyObject, Selector, UIEvent) -> Void
-            let function = unsafeBitCast(self.NRMAOriginal__sendEvent, to: Func.self)
-            function(app, originalSelector, event)
-        }
-        
-        let newImp = imp_implementationWithBlock(block)
 
-        self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
+    func swizzleSendEvent() {
+        DispatchQueue.once(token: "com.newrelic.swizzleSendEvent") {
+            guard let clazz = objc_getClass("UIApplication") else {
+                os_log("ERROR: Unable to swizzle send event. Not able to track touches")
+                return
+            }
+            
+            let originalSelector = #selector(UIApplication.sendEvent(_:))
+            
+            let block: @convention(block)(UIApplication, UIEvent) -> Void = { app, event in
+                self.sessionReplayTouchCapture.captureSendEventTouches(event: event)
+                typealias Func = @convention(c)(AnyObject, Selector, UIEvent) -> Void
+                let function = unsafeBitCast(self.NRMAOriginal__sendEvent, to: Func.self)
+                function(app, originalSelector, event)
+            }
+            
+            let newImp = imp_implementationWithBlock(block)
+            
+            self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
+        }
     }
     
     @MainActor
@@ -126,13 +129,18 @@ public class NRMASessionReplay: NSObject {
     }
 }
 
-extension Date {
-    var millisecondsSince1970:Int64 {
-        Int64((self.timeIntervalSince1970 * 1000.0).rounded())
-    }
+extension DispatchQueue {
+    private static var _onceTracker = [String]()
     
-    init(milliseconds:Int64) {
-        self = Date(timeIntervalSince1970: TimeInterval(milliseconds) / 1000)
+    static func once(token: String, block: () -> Void) {
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
+        
+        if _onceTracker.contains(token) {
+            return
+        }
+        
+        _onceTracker.append(token)
+        block()
     }
 }
-
