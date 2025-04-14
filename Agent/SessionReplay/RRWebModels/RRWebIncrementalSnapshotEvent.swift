@@ -8,6 +8,7 @@
 
 
 enum RRWebIncrementalSource: Int, Codable {
+    case mutation = 0
     case mouseInteraction = 2
     case touchMove = 6
 }
@@ -16,6 +17,7 @@ typealias IncrementalEvent = RRWebEvent<RRWebIncrementalData>
 enum RRWebIncrementalData: RRWebEventData {
     static let eventType: RRWebEventType = .incrementalSnapshot
     
+    case mutation(RRWebMutationData)
     case mouseInteraction(RRWebMouseInteractionData)
     case touchMove(RRWebTouchMoveData)
     
@@ -26,11 +28,46 @@ enum RRWebIncrementalData: RRWebEventData {
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
-            case .mouseInteraction(let value):
+        case .mutation(let value):
+            try container.encode(value)
+        case .mouseInteraction(let value):
             try container.encode(value)
         case .touchMove(let value):
             try container.encode(value)
         }
+    }
+}
+
+struct RRWebMutationData: Codable {
+    struct AddRecord: Codable {
+        let parentId: Int
+        let nextId: Int
+        let node: SerializedNode
+    }
+    
+    struct RemoveRecord: Codable {
+        let parentId: Int
+        let id: Int
+    }
+    
+    struct TextRecord: Codable {
+        let id: Int
+        let value: String
+    }
+    
+    struct AttributeRecord: Codable {
+        let id: Int
+        let attributes: RRWebAttributes
+    }
+    let source: RRWebIncrementalSource = .mutation
+    
+    let adds: [AddRecord]?
+    let removes: [RemoveRecord]?
+    let texts: [TextRecord]?
+    let attributes: [AttributeRecord]?
+    
+    enum CodingKeys: CodingKey {
+        case adds, removes, texts, attributes
     }
 }
 
