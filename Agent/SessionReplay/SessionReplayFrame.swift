@@ -11,4 +11,5 @@ import Foundation
 struct SessionReplayFrame {
     let date: Date
     let views: SessionReplayViewThingy
+    let rootViewControllerId: String?
 }
