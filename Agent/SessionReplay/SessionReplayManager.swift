@@ -16,18 +16,14 @@ public class SessionReplayManager: NSObject {
     private let sessionReplay: NRMASessionReplay
     private var sessionReplayReporter: SessionReplayReporter
     
-    public var harvestPeriod: Int64 = 60 * 1000 // milliseconds
+    public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
         
-    @objc public init(agentVersion: String, sessionId: String) {
+    @objc public init(applicationToken: String) {
         self.sessionReplay = NRMASessionReplay()
-        self.sessionReplayReporter = SessionReplayReporter(agentVersion: agentVersion, sessionId: sessionId)
+        self.sessionReplayReporter = SessionReplayReporter(applicationToken: applicationToken)
         super.init()
         
-    }
-    
-    public func setSessionId(_ sessionID: String) {
-        self.sessionReplayReporter.sessionId = sessionID
     }
 
     public func start() {
@@ -39,7 +35,7 @@ public class SessionReplayManager: NSObject {
 
         print("Session replay harvest timer starting with a period of \(harvestPeriod) ms")
 
-        self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod) / 1000.0, target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
+        self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
 
         RunLoop.current.add(self.harvestTimer!, forMode: .default)
     }

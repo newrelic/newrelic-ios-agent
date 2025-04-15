@@ -17,12 +17,10 @@ public class SessionReplayReporter: NSObject {
     private var failureCount = 0
     private let uploadQueue = DispatchQueue(label: "com.newrelicagent.sessionreplayqueue")
     private let kNRMAMaxUploadRetry = 3
-    private let agentVersion: String
-    public var sessionId: String
+    private let applicationToken: String
 
-    @objc public init(agentVersion: String, sessionId: String) {
-        self.agentVersion = agentVersion
-        self.sessionId = sessionId
+    @objc public init(applicationToken: String) {
+        self.applicationToken = applicationToken
     }
 
     @objc public func enqueueSessionReplayUpload(sessionReplayFramesData: Data) {
@@ -55,6 +53,8 @@ public class SessionReplayReporter: NSObject {
              var request = URLRequest(url: self.uploadURL()!)
              request.setValue("application/json", forHTTPHeaderField: "Content-Type")
              request.setValue("deflate", forHTTPHeaderField: "Content-Encoding")
+             request.setValue(applicationToken, forHTTPHeaderField:"X-App-License-Key")
+
              request.httpMethod = "POST"
 
              let session = URLSession(configuration: .default)
@@ -81,12 +81,12 @@ public class SessionReplayReporter: NSObject {
            self.failureCount = 0
            NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(originalDataSize)
        } else {
-           print("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
            self.failureCount += 1
-           NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
        }
 
        if self.failureCount > self.kNRMAMaxUploadRetry {
+           print("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+           NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
        }
@@ -96,9 +96,7 @@ public class SessionReplayReporter: NSObject {
    }
     
     private func uploadURL() -> URL? {
-        let urlString = """
-        https://staging-bam.nr-data.net/browser/blobs?browser_monitoring_key=NRJS-136db61998107c1947d&type=SessionReplay&app_id=213729589&protocol_version=0&timestamp=\(Date().timeIntervalSince1970 * 1000)&attributes=entityGuid%MTA4MTY5OTR8QlJPV1NFUnxBUFBMSUNBVElPTnwyMTM3Mjk1ODk%26harvestId%3D852c55a391bf26cf_e511ee33802cb580_2%26replay.firstTimestamp%3D1740776671411%26replay.lastTimestamp%3D1740776691411%26replay.nodes%3D311%26session.durationMs%3D32708%26agentVersion%3D\(String(describing: NewRelicInternalUtils.agentVersion()))%26session%3D\(String(describing: NewRelicAgentInternal.currentSessionId))%26hasMeta%3Dtrue%26hasSnapshot%3Dtrue%26hasError%3Dfalse%26isFirstChunk%3Dtrue%26invalidStylesheetsDetected%3Dfalse%26inlinedAllStylesheets%3Dtrue%26rrweb.version%3D%255E2.0.0-alpha.17%26payload.type%3Dstandard%26enduser.id%3Dywang%40newrelic.com%26currentUrl%3Dhttps%3A%2F%2Fstaging-one.newrelic.com%2Fcatalogs%2Fsoftware
-        """
+        let urlString = "https://staging-mobile-collector.newrelic.com/mobile/blobs?type=SessionReplay&app_id=0&attributes=version%3Dsasha-tests-the-pipeline"
         return URL(string: urlString)
     }
 }

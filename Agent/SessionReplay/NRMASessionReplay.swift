@@ -125,6 +125,7 @@ public class NRMASessionReplay: NSObject {
 
     func getSessionReplayTouches() -> [IncrementalEvent] {
         let touches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
+        sessionReplayTouchCapture.resetEvents()
         return touches
     }
 }

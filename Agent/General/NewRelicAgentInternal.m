@@ -365,7 +365,7 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 #endif
     if (@available(iOS 13.0, *)) {
-        _sessionReplay = [[SessionReplayManager alloc] initWithAgentVersion:[NewRelicInternalUtils agentVersion] sessionId:[[self currentSessionId] copy] ];
+        _sessionReplay = [[SessionReplayManager alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
         [_sessionReplay start];
     }
     
@@ -544,7 +544,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     CFRelease(uuid);
     if (self->_agentConfiguration.sessionIdentifier.length > 0) {
         NRMA_setSessionId([self->_agentConfiguration.sessionIdentifier UTF8String]);
-        [_sessionReplay setSessionId:self->_agentConfiguration.sessionIdentifier];
     }
 
     NRMA_setSessionStartTime([NSString stringWithFormat:@"%lld",
