@@ -36,4 +36,23 @@ class UIImageViewThingy: SessionReplayViewThingy {
                                         attributes: ["id":viewDetails.cssSelector],
                                         childNodes: [])
     }
+    
+    func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
+        guard let typedOther = other as? UIImageViewThingy else {
+            return []
+        }
+        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: generateBaseDifferences(from: typedOther))]
+    }
+}
+
+extension UIImageViewThingy: Equatable {
+    static func == (lhs: UIImageViewThingy, rhs: UIImageViewThingy) -> Bool {
+        return lhs.viewDetails == rhs.viewDetails
+    }
+}
+
+extension UIImageViewThingy: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(viewDetails)
+    }
 }

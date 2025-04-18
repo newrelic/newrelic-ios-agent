@@ -38,24 +38,28 @@ enum RRWebIncrementalData: RRWebEventData {
     }
 }
 
+protocol MutationRecord {
+    
+}
+
 struct RRWebMutationData: Codable {
-    struct AddRecord: Codable {
+    struct AddRecord: Codable, MutationRecord {
         let parentId: Int
         let nextId: Int
         let node: SerializedNode
     }
     
-    struct RemoveRecord: Codable {
+    struct RemoveRecord: Codable, MutationRecord {
         let parentId: Int
         let id: Int
     }
     
-    struct TextRecord: Codable {
+    struct TextRecord: Codable, MutationRecord {
         let id: Int
         let value: String
     }
     
-    struct AttributeRecord: Codable {
+    struct AttributeRecord: Codable, MutationRecord {
         let id: Int
         let attributes: RRWebAttributes
     }

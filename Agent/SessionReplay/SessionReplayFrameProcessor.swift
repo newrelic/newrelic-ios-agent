@@ -20,8 +20,8 @@ class SessionReplayFrameProcessor {
         if frame.rootViewControllerId != lastFullFrame?.rootViewControllerId ||
             frame.views.viewDetails.viewId != lastFullFrame?.views.viewDetails.viewId {
             rrwebCommon = processFullSnapshot(frame)
-//        } else if let lastFullFrame = lastFullFrame{
-//            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
+        } else if let lastFullFrame = lastFullFrame {
+            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
         } else {
             // We don't have anything, so just do a full snapshot
             rrwebCommon = processFullSnapshot(frame)
@@ -101,160 +101,40 @@ class SessionReplayFrameProcessor {
         let oldFlattenedThingies = flattenTree(rootThingy: oldFrame.views)
         let newFlattenedThingies = flattenTree(rootThingy: newFrame.views)
         
-        var table: [Int: Symbol] = [:]
+        let operations = generateDiff(old: oldFlattenedThingies, new: newFlattenedThingies)
+
         
-        // Go through the arrays according to Heckel's Algorithm. Since each thingy is only going to appear once,
-        // we don't have to worry about things being "many".
-        class Symbol {
-            var inNew: Bool
-            var indexInOld: Int?
-            
-            init(inNew: Bool, indexInOld: Int? = nil) {
-                self.inNew = inNew
-                self.indexInOld = indexInOld
-            }
-        }
+        var adds = [RRWebMutationData.AddRecord]()
+        var removes = [RRWebMutationData.RemoveRecord]()
+        var texts = [RRWebMutationData.TextRecord]()
+        var attributes = [RRWebMutationData.AttributeRecord]()
         
-        enum Entry {
-            case symbol(Symbol)
-            case index(Int)
-        }
-        
-        var newArrayEntries = [Entry]()
-        var oldArrayEntries = [Entry]()
-        
-        // Pass One: Each element of the New array is gone through, and an entry in the table made for each thing
-        for thingy in newFlattenedThingies {
-            let entry = Symbol(inNew: true, indexInOld: nil)
-            table[thingy.viewDetails.viewId] = entry
-            newArrayEntries.append(.symbol(entry))
-        }
-        
-        //Pass Two: Each element of the Old array is gone through, and an entry in the table made for each thing
-        for (index, thingy) in oldFlattenedThingies.enumerated() {
-            var entry: Symbol?
-            if table[thingy.viewDetails.viewId] == nil {
-                entry = Symbol(inNew: false, indexInOld: index)
-                table[thingy.viewDetails.viewId] = entry
-            } else {
-                table[thingy.viewDetails.viewId]?.indexInOld = index
-                entry = table[thingy.viewDetails.viewId]
-            }
-            
-            if let entry = entry {
-                oldArrayEntries.append(.symbol(entry))
-            }
-        }
-        
-        //Pass Three: Use the first observation. If an entry occurs only once in each list, it must be the same
-        // entry, although it could have been moved. Cross reference the two
-        for (index, item) in newArrayEntries.enumerated() {
-            if case let .symbol(entry) = item {
-                if entry.inNew, let indexInOld = entry.indexInOld {
-                    newArrayEntries[index] = .index(indexInOld)
-                    oldArrayEntries[indexInOld] = .index(index)
-                }
-            }
-        }
-        
-        // Pass Four: Use the next observation. If NewArray[i] points to OldArray[j] and NewArray[i+1] and OldArray[j+1]
-        // contain identical symbol table entries, then OldArray[j+1] is set to line i+1 and NewArray[i+1] is set to
-        // line j+1
-        if newArrayEntries.count > 1 {
-            for i in (0 ..< (newArrayEntries.count - 1)) {
-                if case let .index(j) = newArrayEntries[i], j + 1 < oldArrayEntries.count,
-                   case let .symbol(newEntry) = newArrayEntries[i + 1],
-                   case let .symbol(oldEntry) = oldArrayEntries[j + 1],
-                   newEntry === oldEntry {
-                    newArrayEntries[i + 1] = .index(j + 1)
-                    oldArrayEntries[j + 1] = .index(i + 1)
-                }
-            }
-        }
-        
-        // Pass Five: Same as Pass 4, but in reverse!
-        if newArrayEntries.count > 1 {
-            for i in (1 ..< newArrayEntries.count).reversed() {
-                if case let .index(j) = newArrayEntries[i], j - 1 >= 0,
-                   case let .symbol(newEntry) = newArrayEntries[i - 1],
-                   case let .symbol(oldEntry) = oldArrayEntries[j - 1],
-                   newEntry === oldEntry {
-                    newArrayEntries[i - 1] = .index(j - 1)
-                    oldArrayEntries[j - 1] = .index(i - 1)
-                }
-            }
-        }
-        
-        enum Operation {
-            case Add(AddChange)
-            case Remove(RemoveChange)
-            case Text(TextChange)
-            case Attribute(AttributeChange)
-        }
-        
-        struct RemoveChange {
-            let parentId: Int
-            let id: Int
-        }
-        
-        struct TextChange {
-            let id: Int
-            let value: String
-        }
-        
-        struct AttributeChange {
-            let id: Int
-            let attributes: [String: String]
-        }
-        
-        struct AddChange {
-            let parentId: Int
-            let id: Int?
-            let node: SessionReplayViewThingy
-        }
-        
-        var changes = [Operation]()
-        
-        // get removals
-        var deleteOffsets = Array(repeating: 0, count: oldArrayEntries.count)
-        var runningOffset = 0
-        for(index, entry) in oldArrayEntries.enumerated() {
-            deleteOffsets[index] = runningOffset
-            if case .symbol = entry {
-                changes.append(.Remove(RemoveChange(parentId: 0, id: oldFlattenedThingies[index].viewDetails.viewId)))
-                runningOffset += 1
-            }
-        }
-        
-        runningOffset = 0
-        
-        // Get Additions and Alterations
-        for (index, entry) in newArrayEntries.enumerated() {
-            switch entry {
-            case .symbol:
-                changes.append(.Add(AddChange(parentId: 0, id: newFlattenedThingies[index].viewDetails.viewId, node: newFlattenedThingies[index])))
-                runningOffset += 1
+        for operation in operations {
+            switch operation {
+            case .Remove(let change):
+                removes.append(RRWebMutationData.RemoveRecord(parentId: change.parentId, id: change.id))
                 
-            case .index(let indexInOld):
-                let deleteOffset = deleteOffsets[index]
-                let newElement = newFlattenedThingies[index]
-                let oldElement = oldFlattenedThingies[index]
-                
-                
-                if (indexInOld - deleteOffset + runningOffset) != index {
-                    // If this doesn't get us to where we currently are, then the thing was moved
-                    changes.append(.Remove(RemoveChange(parentId: 0, id: newFlattenedThingies[index].viewDetails.viewId)))
-                    changes.append(.Add(AddChange(parentId: 0, id: newFlattenedThingies[index].viewDetails.viewId, node: newFlattenedThingies[index])))
-                } else {
-                    // There was some other change
-                    
+            case .Add(let change):
+                let node = change.node.generateRRWebNode()
+                adds.append(RRWebMutationData.AddRecord(parentId: change.parentId, nextId: change.id ?? 0, node: .element(node)))
+            case .Update(let change):
+                let mutations = change.oldElement.generateDifference(from: change.newElement)
+                for mutation in mutations {
+                    switch mutation {
+                    case let mutation as RRWebMutationData.AttributeRecord:
+                        attributes.append(mutation)
+                    case let mutation as RRWebMutationData.TextRecord:
+                        texts.append(mutation)
+                    default:
+                        // ignore it.
+                        continue
+                    }
                 }
             }
         }
         
-        let incrementalUpdate: RRWebIncrementalData = .mutation(RRWebMutationData(adds: [], removes: [], texts: [], attributes: []))
-        
-        let incrementalEvent = IncrementalEvent(timestamp: newFrame.date.timeIntervalSince1970, data: incrementalUpdate)
+        let incrementalUpdate: RRWebIncrementalData = .mutation(RRWebMutationData(adds: adds, removes: removes, texts: texts, attributes: attributes))
+        let incrementalEvent = IncrementalEvent(timestamp: newFrame.date.timeIntervalSince1970*1000, data: incrementalUpdate)
         return incrementalEvent
         
 //         For nodes that have not been added/removed, we should get the difference they've got as a dictionary (that can be turned into JSON
@@ -338,9 +218,9 @@ class SessionReplayFrameProcessor {
 
     }
     
-    private func flattenTree(rootThingy: SessionReplayViewThingy) -> [SessionReplayViewThingy] {
-        var thingies: [SessionReplayViewThingy] = []
-        var queue: [SessionReplayViewThingy] = [rootThingy]
+    private func flattenTree(rootThingy: any SessionReplayViewThingy) -> [any SessionReplayViewThingy] {
+        var thingies: [any SessionReplayViewThingy] = []
+        var queue: [any SessionReplayViewThingy] = [rootThingy]
         
         while let thingy = queue.popLast() {
             thingies.append(thingy)

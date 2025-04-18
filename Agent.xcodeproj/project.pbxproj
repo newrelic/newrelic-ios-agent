@@ -950,6 +950,7 @@
 		2BFFB1EC28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
 		34099ED32C9E1731007EC50D /* NRMASessionReplayFrameObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 34099ED22C9E1731007EC50D /* NRMASessionReplayFrameObjC.m */; };
 		34099ED42C9E1731007EC50D /* NRMASessionReplayFrameObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 34099ED12C9E1731007EC50D /* NRMASessionReplayFrameObjC.h */; };
+		340A8CE42DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */; };
 		340D64142AA92FCE00E63CC1 /* PersistentEventStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */; };
 		340D64152AA92FCE00E63CC1 /* PersistentEventStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */; };
 		340D64162AA92FCE00E63CC1 /* PersistentEventStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */; };
@@ -2458,6 +2459,7 @@
 		2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelperTests.m; sourceTree = "<group>"; };
 		34099ED12C9E1731007EC50D /* NRMASessionReplayFrameObjC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASessionReplayFrameObjC.h; sourceTree = "<group>"; };
 		34099ED22C9E1731007EC50D /* NRMASessionReplayFrameObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASessionReplayFrameObjC.m; sourceTree = "<group>"; };
+		340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGenerator.swift; sourceTree = "<group>"; };
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
 		340D642D2AA9301900E63CC1 /* PersistentStoreTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentStoreTests.m; sourceTree = "<group>"; };
@@ -3874,6 +3876,8 @@
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
+				3493DF042D397D2400BF5BED /* ViewDetails.swift */,
+				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
 			);
 			path = ViewCaptors;
 			sourceTree = "<group>";
@@ -3927,12 +3931,12 @@
 				F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */,
 				3493DF322D4C332500BF5BED /* NRMASessionReplay.swift */,
 				3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */,
-				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
 				3493DF4F2D543C8700BF5BED /* IDGenerator.swift */,
 				34D0401D2D86036D007BE92D /* UIColor+HexString.swift */,
 				344E49482D932762008174A1 /* SupportabilityMetrics.swift */,
 				344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */,
 				341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */,
+				340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */,
 			);
 			path = SessionReplay;
 			sourceTree = "<group>";
@@ -5488,6 +5492,7 @@
 				34D0401E2D86036D007BE92D /* UIColor+HexString.swift in Sources */,
 				2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */,
 				02FF4A9C24DC652E00115469 /* NRMABool.m in Sources */,
+				340A8CE42DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift in Sources */,
 				2B33E5D22AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */,
 				02FF486F24DC618F00115469 /* NRMAThreadTransition.m in Sources */,
 				02FF47D924DB563600115469 /* NewRelic.m in Sources */,

@@ -8,7 +8,7 @@
 
 import Foundation
 
-protocol SessionReplayViewThingy {
+protocol SessionReplayViewThingy: Hashable {
     var viewDetails: ViewDetails { get }
     var shouldRecordSubviews: Bool { get }
     
@@ -16,6 +16,7 @@ protocol SessionReplayViewThingy {
     
     func cssDescription() -> String
     func generateRRWebNode() -> ElementNodeData
+    func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord]
 }
 
 extension SessionReplayViewThingy {    
@@ -44,5 +45,28 @@ extension SessionReplayViewThingy {
         }
         
         return cssStyle
+    }
+    
+    func generateBaseDifferences(from other: Self) -> [String:String] {
+        // get style differences
+        var styleDifferences = [String:String]()
+        
+        // check frames
+        if(!viewDetails.frame.equalTo(other.viewDetails.frame)) {
+            styleDifferences["left"] = "\(String(format: "%.2f", other.viewDetails.frame.origin.x))px"
+            styleDifferences["top"] = "\(String(format: "%.2f", other.viewDetails.frame.origin.y))px"
+            styleDifferences["width"] = "\(String(format: "%.2f", other.viewDetails.frame.size.width))px"
+            styleDifferences["height"] = "\(String(format: "%.2f", other.viewDetails.frame.size.height))px"
+        }
+        
+        // background color
+        if let otherBackgroundColor = other.viewDetails.backgroundColor {
+            if let backgroundColor = viewDetails.backgroundColor,
+               !(backgroundColor == otherBackgroundColor) {
+                styleDifferences["background-color: \(otherBackgroundColor.toHexString(includingAlpha: true))"]
+            }
+        }
+        
+        return styleDifferences
     }
 }
