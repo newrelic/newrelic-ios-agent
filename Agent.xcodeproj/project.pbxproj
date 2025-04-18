@@ -1554,6 +1554,9 @@
 		F8A455492AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A455472AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
+		F8E17C322DB19C280098C3CB /* NRLoggerPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = F8E17C312DB19C1E0098C3CB /* NRLoggerPrivate.h */; };
+		F8E17C332DB19C280098C3CB /* NRLoggerPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = F8E17C312DB19C1E0098C3CB /* NRLoggerPrivate.h */; };
+		F8E17C342DB19C280098C3CB /* NRLoggerPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = F8E17C312DB19C1E0098C3CB /* NRLoggerPrivate.h */; };
 		F8E202DE2B07BA61008E0B7B /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		F8E202DF2B07BA61008E0B7B /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		F8EF24542BC0797B00591F58 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
@@ -2565,6 +2568,7 @@
 		F8A455472AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTestsOldEventSystem.m; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
+		F8E17C312DB19C1E0098C3CB /* NRLoggerPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRLoggerPrivate.h; sourceTree = "<group>"; };
 		F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAOfflineStorage.m; sourceTree = "<group>"; };
 		F8E202F32B07BA6E008E0B7B /* NRMAOfflineStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAOfflineStorage.h; sourceTree = "<group>"; };
 		F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMARequestEvent.m; sourceTree = "<group>"; };
@@ -3736,6 +3740,7 @@
 				02FF4A8924DC652D00115469 /* NewRelicInternalUtils.h */,
 				02FF4A9024DC652D00115469 /* NewRelicInternalUtils.m */,
 				02FF4A7E24DC652B00115469 /* NRLogger.m */,
+				F8E17C312DB19C1E0098C3CB /* NRLoggerPrivate.h */,
 				F891A6D42CB6F5D8007675F4 /* NRAutoLogCollector.h */,
 				F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */,
 				02FF4A8224DC652C00115469 /* NRMAAppToken.h */,
@@ -4250,6 +4255,7 @@
 				02FF4A9D24DC652E00115469 /* NRMAAppToken.h in Headers */,
 				02FF4AC424DC656900115469 /* NRMAPayloadContainer+cppInterface.h in Headers */,
 				02FF495424DC626E00115469 /* NRMAHarvester.h in Headers */,
+				F8E17C342DB19C280098C3CB /* NRLoggerPrivate.h in Headers */,
 				02FF495024DC626E00115469 /* NRMAHarvestAware.h in Headers */,
 				02FF48E824DC622700115469 /* NRMAExceptionHandlerJSONKeys.h in Headers */,
 				02FF4A4724DC64D500115469 /* NRMANamedValueMeasurement.h in Headers */,
@@ -4418,6 +4424,7 @@
 				02FF4B9624E3201400115469 /* NRMAHarvestableActivity.h in Headers */,
 				02FF4B9724E3201400115469 /* NRMAHarvestableHTTPTransaction.h in Headers */,
 				02FF4B9824E3201400115469 /* NewRelic.h in Headers */,
+				F8E17C332DB19C280098C3CB /* NRLoggerPrivate.h in Headers */,
 				02FF4B9924E3201400115469 /* NRMAMeasuredActivityProtocol.h in Headers */,
 				02FF4B9A24E3201400115469 /* NRMACrashReport_Exception.h in Headers */,
 				02FF4B9B24E3201400115469 /* NRMAGestureProcessor.h in Headers */,
@@ -4637,6 +4644,7 @@
 				348232B32BC5F1F60070FAC3 /* NRMAHarvestAware.h in Headers */,
 				348233242BC5F2270070FAC3 /* NRMACrashReport_CodeType.h in Headers */,
 				348233442BC5F25A0070FAC3 /* NRMAWKWebViewInstrumentation.h in Headers */,
+				F8E17C322DB19C280098C3CB /* NRLoggerPrivate.h in Headers */,
 				3482330D2BC5F21B0070FAC3 /* NRMAExceptionHandlerManager.h in Headers */,
 				3482328E2BC5F1D20070FAC3 /* NRMAMeasuredActivityProtocol.h in Headers */,
 				3482324A2BC5F1040070FAC3 /* W3CTraceParent.h in Headers */,

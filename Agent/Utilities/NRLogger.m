@@ -7,6 +7,7 @@
 //
 
 #import "NRLogger.h"
+#import "NRLoggerPrivate.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAJSON.h"
 #import "NewRelicAgentInternal.h"
@@ -232,6 +233,30 @@ withTimestamp:(NSNumber *) timestamp {
             self->logFile = nil;
         }
     }
+}
+
++ (void)agentLogInfo:(NSString*) message {
+    NRLOG_AGENT_INFO(@"%@", message);
+}
+
++ (void)agentLogWarning:(NSString*) message {
+    NRLOG_AGENT_WARNING(@"%@", message);
+}
+
++ (void)agentLogError:(NSString*) message {
+    NRLOG_AGENT_ERROR(@"%@", message);
+}
+
++ (void)agentLogAudit:(NSString*) message {
+    NRLOG_AGENT_AUDIT(@"%@", message);
+}
+
++ (void)agentLogVerbose:(NSString*) message {
+    NRLOG_AGENT_VERBOSE(@"%@", message);
+}
+
++ (void)agentLogDebug:(NSString*) message {
+    NRLOG_AGENT_DEBUG(@"%@", message);
 }
 
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn {
