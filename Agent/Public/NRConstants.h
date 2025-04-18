@@ -170,6 +170,11 @@ typedef NSString NRMetricUnit;
 #define kNRMALoggingMetricFailedUpload    kNRMALoggingMetric @"/FailedUpload"
 #define kNRMALoggingMetricSuccessfulSize    kNRMALoggingMetric @"/Size/Uncompressed"
 
+// Session Replay
+#define kNRMASessionReplay kNRAgentHealthPrefix @"/%@/%@/SessionReplay"
+#define kNRMASessionReplayMetricFailedUpload    kNRMASessionReplay @"/FailedUpload"
+#define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
+
 #define NRMAHandledRequestKey @"NRMAHandledRequest"
 
 // Network Failure Codes

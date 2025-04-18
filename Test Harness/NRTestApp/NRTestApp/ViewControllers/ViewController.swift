@@ -26,24 +26,24 @@ class ViewController: UIViewController {
         self.view.backgroundColor = .orange
 #endif
         setupSpaceStack()
-//        setupButtonsTable()
+        setupButtonsTable()
         
-//        viewModel.error.onUpdate = { [weak self] _ in
-//            if let error = self?.viewModel.error.value {
-//                NewRelic.recordError(error)
-//            }
-//        }
-//
-//        viewModel.apodResponse.onUpdate = { [weak self] _ in
-//            if let url = self?.viewModel.apodResponse.value?.url {
-//                self?.spaceImageView.loadImage(withUrl: url)
-//            }
-//            if let title = self?.viewModel.apodResponse.value?.title, let date = self?.viewModel.apodResponse.value?.date{
-//                self?.spaceLabel.text = title + ", " + date
-//            }
-//        }
-//        
-//        viewModel.loadApodData()
+        viewModel.error.onUpdate = { [weak self] _ in
+            if let error = self?.viewModel.error.value {
+                NewRelic.recordError(error)
+            }
+        }
+
+        viewModel.apodResponse.onUpdate = { [weak self] _ in
+            if let url = self?.viewModel.apodResponse.value?.url {
+                self?.spaceImageView.loadImage(withUrl: url)
+            }
+            if let title = self?.viewModel.apodResponse.value?.title, let date = self?.viewModel.apodResponse.value?.date{
+                self?.spaceLabel.text = title + ", " + date
+            }
+        }
+        
+        viewModel.loadApodData()
 
         NewRelic.logInfo("ViewController viewDidLoad finished.")
     }
@@ -75,7 +75,7 @@ class ViewController: UIViewController {
         spaceStack.alignment = .center
         spaceStack.spacing = 16.0
 
-//        spaceStack.addArrangedSubview(spaceImageView)
+        spaceStack.addArrangedSubview(spaceImageView)
         spaceStack.addArrangedSubview(spaceLabel)
         spaceStack.addArrangedSubview(helloButton)
         spaceStack.translatesAutoresizingMaskIntoConstraints = false

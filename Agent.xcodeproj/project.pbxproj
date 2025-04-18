@@ -1463,7 +1463,6 @@
 		348714252B979517005A264C /* NRMAIdGeneratorObjC.m in Sources */ = {isa = PBXBuildFile; fileRef = 348714232B979517005A264C /* NRMAIdGeneratorObjC.m */; };
 		3493DEFE2D359F2500BF5BED /* SessionReplayTouchCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DEFD2D359F2500BF5BED /* SessionReplayTouchCapture.swift */; };
 		3493DF002D3844C400BF5BED /* SessionReplayCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DEFF2D3844C400BF5BED /* SessionReplayCapture.swift */; };
-		3493DF052D397D2400BF5BED /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF042D397D2400BF5BED /* ViewDetails.swift */; };
 		3493DF332D4C332500BF5BED /* NRMASessionReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF322D4C332500BF5BED /* NRMASessionReplay.swift */; };
 		3493DF482D4C4BEE00BF5BED /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
 		3493DF4A2D4C4E6000BF5BED /* SessionReplayViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */; };
@@ -1521,6 +1520,10 @@
 		F6E79D2B25A788AB006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F6E79D3A25A78B42006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
+		F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */; };
+		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
+		F806E42A2D9C80330003B9D6 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */; };
+		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
@@ -2499,7 +2502,6 @@
 		348714232B979517005A264C /* NRMAIdGeneratorObjC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAIdGeneratorObjC.m; sourceTree = "<group>"; };
 		3493DEFD2D359F2500BF5BED /* SessionReplayTouchCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayTouchCapture.swift; sourceTree = "<group>"; };
 		3493DEFF2D3844C400BF5BED /* SessionReplayCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayCapture.swift; sourceTree = "<group>"; };
-		3493DF042D397D2400BF5BED /* ViewDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDetails.swift; sourceTree = "<group>"; };
 		3493DF322D4C332500BF5BED /* NRMASessionReplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMASessionReplay.swift; sourceTree = "<group>"; };
 		3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayFrame.swift; sourceTree = "<group>"; };
 		3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayViewThingy.swift; sourceTree = "<group>"; };
@@ -2540,6 +2542,10 @@
 		F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = TestNRMATraceContext.mm; sourceTree = "<group>"; };
 		F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceParent.mm; sourceTree = "<group>"; };
 		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
+		F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporter.swift; sourceTree = "<group>"; };
+		F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayManager.swift; sourceTree = "<group>"; };
+		F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayFrameProcessor.swift; sourceTree = "<group>"; };
+		F80C1D692DA07691007C0F52 /* ViewDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDetails.swift; sourceTree = "<group>"; };
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
@@ -3859,10 +3865,10 @@
 		341E84D22D9CB1F000968D7D /* ViewCaptors */ = {
 			isa = PBXGroup;
 			children = (
+				F80C1D692DA07691007C0F52 /* ViewDetails.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
-				3493DF042D397D2400BF5BED /* ViewDetails.swift */,
 			);
 			path = ViewCaptors;
 			sourceTree = "<group>";
@@ -3911,6 +3917,9 @@
 				3493DEFD2D359F2500BF5BED /* SessionReplayTouchCapture.swift */,
 				341E84D52D9DDB5D00968D7D /* TouchEvent.swift */,
 				3493DEFF2D3844C400BF5BED /* SessionReplayCapture.swift */,
+				F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */,
+				F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */,
+				F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */,
 				3493DF322D4C332500BF5BED /* NRMASessionReplay.swift */,
 				3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */,
 				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
@@ -5423,6 +5432,7 @@
 				02FF49CD24DC62B800115469 /* NRMAHarvestableEvent.m in Sources */,
 				02FF49BC24DC62B800115469 /* NRMAScopedHTTPTransactionMeasurement.m in Sources */,
 				02FF48C024DC61F600115469 /* NRMAMethodSwizzling.m in Sources */,
+				F806E42A2D9C80330003B9D6 /* SessionReplayFrameProcessor.swift in Sources */,
 				02FF4A9824DC652E00115469 /* NRMACrashReporterRecorder.m in Sources */,
 				02FF492024DC624400115469 /* NRMACrashReport_CodeType.m in Sources */,
 				02FF49C624DC62B800115469 /* NRMAHarvestableHTTPTransaction.m in Sources */,
@@ -5502,8 +5512,8 @@
 				02FF48BE24DC61F600115469 /* NRMAMethodProfiler.m in Sources */,
 				02FF49E124DC636100115469 /* NRMAHarvestableValue.m in Sources */,
 				02FF480C24DB573E00115469 /* NRMAUserAction.m in Sources */,
-				3493DF052D397D2400BF5BED /* ViewDetails.swift in Sources */,
 				02FF489D24DC61D200115469 /* NRMAURLSessionTaskOverride.m in Sources */,
+				F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */,
 				02FF491C24DC624400115469 /* NRMACrashReport_Library.m in Sources */,
 				2BF42C6628B80B82006E9C27 /* NRMASysctlBinding.c in Sources */,
 				02FF49D924DC636100115469 /* NRMAHarvestable.m in Sources */,
@@ -5593,6 +5603,7 @@
 				34EE243C2CA4C9C800FCDD98 /* NRMASessionReplayCaptureObjC.m in Sources */,
 				02FF493324DC625A00115469 /* NRMAHexUploader.m in Sources */,
 				2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */,
+				F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */,
 				02FF49B224DC62B800115469 /* NRMADeviceInformation.m in Sources */,
 				02FF48F824DC623400115469 /* NRMAInteractionHistoryObjCInterface.m in Sources */,
 				02FF4A6A24DC64E600115469 /* NRMAActivityTraceMeasurementProducer.m in Sources */,
@@ -5600,6 +5611,7 @@
 				02FF4A2124DC648600115469 /* NRMASummaryMeasurementConsumer.m in Sources */,
 				02FF482924DB5BA500115469 /* NRMAFlags.m in Sources */,
 				F891A6BE2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */,
+				F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */,
 				02FF48D924DC622700115469 /* NRMACrashDataWriter.m in Sources */,
 				02FF487224DC618F00115469 /* NRGCDOverride.m in Sources */,
 				02FF494D24DC626E00115469 /* NRMAHarvesterConnection.m in Sources */,

@@ -13,5 +13,8 @@
 #import "NRMATaskQueue.h"
 #import "NRMAAssociate.h"
 #import "NRMAMethodSwizzling.h"
+#import "NRMASupportMetricHelper.h"
+#import "NewRelicInternalUtils.h"
+#import "NewRelicAgentInternal.h"
 
 #endif /* APrivateHeader_h */
