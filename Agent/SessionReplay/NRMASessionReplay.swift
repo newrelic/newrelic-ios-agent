@@ -38,7 +38,7 @@ public class NRMASessionReplay: NSObject {
     
     public func start() {
         if isRunning() {
-            print("Session replay timer attempting to start while already running.")
+            NRLogger.agentLogWarning("Session replay timer attempting to start while already running.")
             return
         }
         
@@ -48,7 +48,7 @@ public class NRMASessionReplay: NSObject {
     
    public func stop() {
         if (!isRunning()) {
-            print("Session replay timer attempting to stop when not running.")
+            NRLogger.agentLogWarning("Session replay timer attempting to stop when not running.")
             return;
         }
         
@@ -64,7 +64,7 @@ public class NRMASessionReplay: NSObject {
     func swizzleSendEvent() {
         DispatchQueue.once(token: "com.newrelic.swizzleSendEvent") {
             guard let clazz = objc_getClass("UIApplication") else {
-                os_log("ERROR: Unable to swizzle send event. Not able to track touches")
+                NRLogger.agentLogError("ERROR: Unable to swizzle send event. Not able to track touches")
                 return
             }
             
@@ -85,7 +85,7 @@ public class NRMASessionReplay: NSObject {
     
     @MainActor
     @objc func didBecomeActive() {
-        print("[SESSION REPLAY] - App did become active")
+        NRLogger.agentLogDebug("[SESSION REPLAY] - App did become active")
         self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: getWindow()!)
         swizzleSendEvent()
         start()
