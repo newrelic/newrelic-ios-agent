@@ -44,7 +44,7 @@ class SessionReplayTouchCapture: NSObject {
                 touch.touchTracker = touchTracker
             case .moved:
                 guard let touchTracker = touch.touchTracker else {
-                    os_log( "ERROR: Touch Tracker not associated with Touch!")
+                    NRLOG_ERROR( "ERROR: Touch Tracker not associated with Touch!")
                     continue
                 }
                 
@@ -54,7 +54,7 @@ class SessionReplayTouchCapture: NSObject {
                 
             case .ended:
                 guard let touchTracker = touch.touchTracker else {
-                    os_log( "ERROR: Touch Tracker not associated with Touch!")
+                    NRLOG_ERROR( "ERROR: Touch Tracker not associated with Touch!")
                     continue
                 }
                 

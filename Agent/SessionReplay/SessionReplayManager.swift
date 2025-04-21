@@ -29,11 +29,11 @@ public class SessionReplayManager: NSObject {
     public func start() {
         sessionReplay.start()
         guard !isRunning() else {
-            print("Session replay harvest timer attempting to start while already running.")
+            NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
             return
         }
 
-        print("Session replay harvest timer starting with a period of \(harvestPeriod) ms")
+        NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) ms")
 
         self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
 
@@ -43,7 +43,7 @@ public class SessionReplayManager: NSObject {
     public func stop() {
         sessionReplay.stop()
         guard isRunning() else {
-            print("Session replay harvest timer attempting to stop when not running.")
+            NRLOG_WARNING("Session replay harvest timer attempting to stop when not running.")
             return
         }
         
@@ -83,7 +83,7 @@ public class SessionReplayManager: NSObject {
             // Encode container to JSON
             if let jsonData = try? JSONEncoder().encode(container),
                let jsonString = String(data: jsonData, encoding: .utf8) {
-                NSLog(jsonString)
+                NRLOG_DEBUG(jsonString)
                 sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: jsonData)
             }
         }

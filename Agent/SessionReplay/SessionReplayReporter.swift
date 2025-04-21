@@ -26,7 +26,7 @@ public class SessionReplayReporter: NSObject {
     @objc public func enqueueSessionReplayUpload(sessionReplayFramesData: Data) {
        uploadQueue.async {
            guard let gzippedData = sessionReplayFramesData.gzipped() else {
-               print("Failed to gzip session replay data")
+               NRLOG_ERROR("Failed to gzip session replay data")
                return
            }
            self.sessionReplayFramesUploadArray.append(gzippedData)
@@ -44,7 +44,7 @@ public class SessionReplayReporter: NSObject {
              let formattedData = self.sessionReplayFramesUploadArray.first!
 
              if formattedData.count > kNRMAMaxPayloadSizeLimit {
-                 print("Unable to send session replay frames because payload is larger than 1 MB.")
+                 NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB.")
                  self.isUploading = false
                  NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("replay") // SUBJECT TO CHANGE WITH ENDPOINT NAME
                  return
@@ -76,7 +76,7 @@ public class SessionReplayReporter: NSObject {
        }
 
        if error == nil && !errorCode {
-           print("Session replay frames uploaded successfully.")
+           NRLOG_DEBUG("Session replay frames uploaded successfully.")
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
            NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(originalDataSize)
@@ -85,7 +85,7 @@ public class SessionReplayReporter: NSObject {
        }
 
        if self.failureCount > self.kNRMAMaxUploadRetry {
-           print("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+           NRLOG_ERROR("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
            NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
