@@ -16,6 +16,5 @@
 #import "NRMASupportMetricHelper.h"
 #import "NewRelicInternalUtils.h"
 #import "NewRelicAgentInternal.h"
-#import "NRLoggerPrivate.h"
 
 #endif /* APrivateHeader_h */
