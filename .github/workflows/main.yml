@@ -16,7 +16,7 @@ jobs:
     name : TestIOS 
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@master
       with: 
@@ -24,7 +24,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '15.4'
+        xcode-version: '16.2'
 
     - name: Install lcov
       run: |
@@ -52,7 +52,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '15.4'
+        xcode-version: '16.2'
 
     - name: Install lcov
       run: brew install lcov
@@ -78,7 +78,7 @@ jobs:
       
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '15.4'
+          xcode-version: '16.2'
 
       - name: Install lcov
         run: brew install lcov
@@ -96,7 +96,7 @@ jobs:
     name: DeployS3
     # runs-on: will be set to macos-latest when running on actual GHA. 
     # *** runs-on: ubuntu-latest is used when running via act on mac os. ***
-    runs-on: macos-14
+    runs-on: macos-15
     needs: [testIOS, testTVOS, testWatchOS]
     if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
     outputs:
@@ -108,7 +108,7 @@ jobs:
     
     - uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '15.4'
+        xcode-version: '16.2'
 
     - name: Install the Apple certificate and provisioning profile
       env:
