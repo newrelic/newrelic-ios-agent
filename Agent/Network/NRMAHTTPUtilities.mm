@@ -292,11 +292,11 @@ NSString* currentParentId = @"";
 }
 
 +  (void)addHTTPHeaderTrackingFor:(NSArray *)headers {
-    NSArray *array = [self trackedHeaderFields];
-    NSArray *newArray = array?[array arrayByAddingObjectsFromArray:headers]:[[NSArray alloc] initWithArray:headers];
-
-    _trackedHeaderFields = (NSArray *)[[NSSet setWithArray:newArray] allObjects];
-
+    @synchronized (self) {
+        NSMutableSet *combinedSet = [NSMutableSet setWithArray:[self trackedHeaderFields]];
+        [combinedSet addObjectsFromArray:headers];
+        _trackedHeaderFields = (NSArray *)[combinedSet allObjects];
+    }
 }
 
 + (NSString*) normalizeApolloHeaders:(NSString*) headerField {
@@ -316,28 +316,31 @@ NSString* currentParentId = @"";
     }
     if([NRMAFlags shouldEnableNewEventSystem]){
         NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
-        for(NSString* key in [self trackedHeaderFields]) {
-            NSString* value = headers[key];
-            
-            if(value != nil) {
-                NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
-                [dict setValue:value forKey:normalizedKey];
+        @synchronized (self) {
+            for(NSString* key in [self trackedHeaderFields]) {
+                NSString* value = headers[key];
+                
+                if(value != nil) {
+                    NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
+                    [dict setValue:value forKey:normalizedKey];
+                }
             }
         }
         requestData.trackedHeaders = dict;
     } else {
         std::map<std::string, std::string> cDict;
-        for(NSString* key in [self trackedHeaderFields]) {
-            NSString* value = headers[key];
-            
-            if(value != nil) {
-                NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
-                std::string cValue = std::string(value.UTF8String);
-                std::string cKey = std::string(normalizedKey.UTF8String);
-                cDict[cKey] = cValue;
+        @synchronized (self) {
+            for(NSString* key in [self trackedHeaderFields]) {
+                NSString* value = headers[key];
+                
+                if(value != nil) {
+                    NSString* normalizedKey = [NRMAHTTPUtilities normalizeApolloHeaders:key];
+                    std::string cValue = std::string(value.UTF8String);
+                    std::string cKey = std::string(normalizedKey.UTF8String);
+                    cDict[cKey] = cValue;
+                }
             }
         }
-        
         NewRelic::NetworkRequestData* wrappedRequestData = [requestData getNetworkRequestData];
         wrappedRequestData->setTrackedHeaders(cDict);
     }
