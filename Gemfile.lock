@@ -220,6 +220,7 @@ PLATFORMS
   arm64-darwin-23
   universal-darwin-21
   universal-darwin-22
+  x86_64-linux
 
 DEPENDENCIES
   fastlane (= 2.227.1)
