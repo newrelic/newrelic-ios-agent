@@ -66,6 +66,10 @@ struct ViewDetails {
     }
 }
 
+extension ViewDetails: Hashable {
+    
+}
+
 fileprivate var associatedSessionReplayViewIDKey: String = "SessionReplayID"
 
 internal extension UIView {

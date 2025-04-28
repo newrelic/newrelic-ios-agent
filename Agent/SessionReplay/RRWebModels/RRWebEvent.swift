@@ -22,6 +22,7 @@ protocol RRWebEventCommon: Codable {
 protocol RRWebEventData: Codable {
     static var eventType: RRWebEventType { get }
 }
+
 struct RRWebEvent<T: RRWebEventData>: RRWebEventCommon {
     var timestamp: TimeInterval
     let data: T

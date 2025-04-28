@@ -16,9 +16,15 @@ class SessionReplayCapture {
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
+        var effectiveViewController = findRootViewController(rootView: rootView)
+        var rootViewControllerID:String?
+        if let rootViewController = effectiveViewController {
+            rootViewControllerID = String(describing: type(of: rootViewController))
+        }
+        
         struct ViewPair {
             let view:UIView
-            let parentRecorder:SessionReplayViewThingy
+            let parentRecorder:any SessionReplayViewThingy
         }
         
         var viewStack = ContiguousArray<ViewPair>()
@@ -41,23 +47,45 @@ class SessionReplayCapture {
             }
         }
         
-        return SessionReplayFrame(date: Date(), views: rootThingy)
+        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID)
     }
     
-    func recursivelyRecord(from view:UIView) -> SessionReplayViewThingy {
-        var viewThingy = findRecorderForView(view: view)
-        var subviewThingies = [SessionReplayViewThingy]()
-        
-        for subview in view.subviews {
-            let subviewDetails = recursivelyRecord(from: subview)
-            subviewThingies.append(subviewDetails)
+    private func findRootViewController(rootView: UIView) -> UIViewController? {
+        var initialViewController: UIViewController? = nil
+        if let foundViewController = rootView.parentViewController {
+            initialViewController = foundViewController
+        } else if let window = rootView.window, let rootViewController = window.rootViewController {
+            initialViewController = rootViewController
         }
-        viewThingy.subviews = subviewThingies
         
-        return viewThingy
+        var effectiveViewController = initialViewController
+                
+        while true {
+            guard let currentViewController = effectiveViewController else {
+                break
+            }
+            
+            if let navigationController = currentViewController as? UINavigationController {
+                if let visibleViewController = navigationController.visibleViewController {
+                    effectiveViewController = visibleViewController
+                } else {
+                    break
+                }
+            } else if let tabBarController = currentViewController as? UITabBarController {
+                if let selectedViewController = tabBarController.selectedViewController {
+                    effectiveViewController = selectedViewController
+                } else {
+                    break
+                }
+            } else {
+                break
+            }
+        }
+        
+        return effectiveViewController
     }
     
-    private func findRecorderForView(view originalView: UIView) -> SessionReplayViewThingy {
+    private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
         switch originalView {
         case let view as UILabel:
             return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
@@ -77,5 +105,18 @@ class SessionReplayCapture {
         let isClear = (view.alpha == 0 || view.alpha == 1)
         
         return !(areFramesTheSame && isClear)
+    }
+}
+
+extension UIView {
+    var parentViewController: UIViewController? {
+        var parentResponder: UIResponder? = self
+        while let responder = parentResponder {
+            if let viewController = responder as? UIViewController {
+                return viewController
+            }
+            parentResponder = responder.next
+        }
+        return nil
     }
 }
