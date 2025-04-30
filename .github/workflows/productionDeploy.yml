@@ -1,5 +1,5 @@
 name: productionDeploy
-on: 
+on:
   workflow_dispatch:
     # The input version number (ex: 7.4.0) and branch: main are required for the production build.
     inputs:
@@ -12,109 +12,109 @@ jobs:
   # inputs: version (String): The version number to promote to production. (ex 7.4.0)
   deployS3Production:
     name: deployS3Production
-    runs-on: macos-latest
+    runs-on: macos-15
     if: github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.setOutput.outputs.version }}
     steps:
-    - uses: actions/checkout@v3
-      with: 
-        submodules: true
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
 
-    - name: Update gem
-      run: bundle update
+      - name: Update gem
+        run: bundle update
 
-    - name: Install gems
-      run: bundle install
+      - name: Install gems
+        run: bundle install
 
-    - name: Get name
-      run: echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+      - name: Get name
+        run: echo "version=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
-    - id: setOutput
-      name: Print name
-      run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
-    
-    - name: Deploy to production S3
-      run: "aws s3 cp s3://nr-downloads-main/ios-v5/NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios_agent/ --copy-props none"
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-  
+      - id: setOutput
+        name: Print name
+        run: echo "version=${{ env.version }}"  >> $GITHUB_OUTPUT
+
+      - name: Deploy to production S3
+        run: "aws s3 cp s3://nr-downloads-main/ios-v5/NewRelic_XCFramework_Agent_${{ env.version }}.zip s3://nr-downloads-main/ios_agent/ --copy-props none"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
   # The deployProductionSpecs job creates the prod Podspec and Prod Package.swift from template and pushes to cp trunk.
   deployProductionSpecs:
     name: deployProductionSpecs
-    runs-on: macos-latest 
+    runs-on: macos-15
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     steps:
-    - name: Checkout Main repo
-      uses: actions/checkout@v3
-      with:
-        path: main
+      - name: Checkout Main repo
+        uses: actions/checkout@v3
+        with:
+          path: main
 
-    - name: Checkout SPM
-      uses: actions/checkout@v3
-      with:
-        repository: newrelic/newrelic-ios-agent-spm
-        token: ${{ secrets.SPM_PAT }}
-        path: spm
+      - name: Checkout SPM
+        uses: actions/checkout@v3
+        with:
+          repository: newrelic/newrelic-ios-agent-spm
+          token: ${{ secrets.SPM_PAT }}
+          path: spm
 
-    - name: Get name
-      run: echo "version=${{needs.deployS3Production.outputs.version}}" >> $GITHUB_ENV
+      - name: Get name
+        run: echo "version=${{needs.deployS3Production.outputs.version}}" >> $GITHUB_ENV
 
-    - name: Print XCFramework name
-      run: echo "${{ env.version }}" 
+      - name: Print XCFramework name
+        run: echo "${{ env.version }}"
 
-    - name: Create Prod Podspec for XCFramework version
-      continue-on-error: true
-      run: |
-         cd main
+      - name: Create Prod Podspec for XCFramework version
+        continue-on-error: true
+        run: |
+          cd main
 
-         cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
-         REPLACE=X.XX
-         sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
+          cp cocoapods/NewRelicAgent.podspec.template NewRelicAgent.podspec
+          REPLACE=X.XX
+          sed -i bak "s/$REPLACE/${{ env.version }}/g" NewRelicAgent.podspec
 
-         rm NewRelicAgent.podspecbak
+          rm NewRelicAgent.podspecbak
 
-         pod trunk push --allow-warnings NewRelicAgent.podspec
-      env:
-         COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+          pod trunk push --allow-warnings NewRelicAgent.podspec
+        env:
+          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
 
-    - name: Create Prod Package.swift for XCFramework version
-      run: |
-       cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
-       cd spm
+      - name: Create Prod Package.swift for XCFramework version
+        run: |
+          cp main/NewRelic-SwiftPackage/Package.swift.template spm/Package.swift
+          cd spm
 
-       REPLACEVER={{VERSION}}
-       REPLACECHECKSUM={{CHECKSUM}}
+          REPLACEVER={{VERSION}}
+          REPLACECHECKSUM={{CHECKSUM}}
 
-       XCFRAMEWORK_NAME="NewRelic_XCFramework_Agent_${{ env.version }}.zip"
-       curl https://download.newrelic.com/ios_agent/$XCFRAMEWORK_NAME -o $XCFRAMEWORK_NAME
-       SPM_CHECKSUM=`swift package compute-checksum  ${XCFRAMEWORK_NAME}`
+          XCFRAMEWORK_NAME="NewRelic_XCFramework_Agent_${{ env.version }}.zip"
+          curl https://download.newrelic.com/ios_agent/$XCFRAMEWORK_NAME -o $XCFRAMEWORK_NAME
+          SPM_CHECKSUM=`swift package compute-checksum  ${XCFRAMEWORK_NAME}`
 
-       sed -i bak "s/$REPLACEVER/${{ env.version }}/g" Package.swift
-       sed -i -e "s/$REPLACECHECKSUM/$SPM_CHECKSUM/g" Package.swift
+          sed -i bak "s/$REPLACEVER/${{ env.version }}/g" Package.swift
+          sed -i -e "s/$REPLACECHECKSUM/$SPM_CHECKSUM/g" Package.swift
 
-       rm Package.swift-e
-       rm Package.swiftbak
+          rm Package.swift-e
+          rm Package.swiftbak
 
-       rm $XCFRAMEWORK_NAME
-                
-       git add Package.swift
-       git commit -m "Added build ${{ env.version }}"
-       git tag ${{ env.version }}
-       git push origin main --tags
+          rm $XCFRAMEWORK_NAME
+                   
+          git add Package.swift
+          git commit -m "Added build ${{ env.version }}"
+          git tag ${{ env.version }}
+          git push origin main --tags
 
-       cp Package.swift ../main/
+          cp Package.swift ../main/
 
-     # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
-     # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
-     # Since production builds are infrequent this creates a PR that must be manually approved and merged.
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v3
-      with:
-        path: main
-        title: "[${{ env.version }}] Production Release"
-        branch: "auto-production-release-${{ env.version }}"
-        base: main
+        # At this point we have NewRelicAgent.podspec and Package.swift corresponding to the production build sitting at the repo root.
+        # The following step creates a PR containing that new NewRelicAgent.podspec and Package.swift file at the root of the repo.
+        # Since production builds are infrequent this creates a PR that must be manually approved and merged.
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          path: main
+          title: "[${{ env.version }}] Production Release"
+          branch: "auto-production-release-${{ env.version }}"
+          base: main
