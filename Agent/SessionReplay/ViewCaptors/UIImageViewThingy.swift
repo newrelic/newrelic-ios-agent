@@ -11,6 +11,7 @@ import UIKit
 
 class UIImageViewThingy: SessionReplayViewThingy {
     var viewDetails: ViewDetails
+    var imageData: Data?
     
     var shouldRecordSubviews: Bool {
         true
@@ -20,6 +21,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     
     init(view: UIImageView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
+        self.imageData = (view.image?.pngData() ?? nil)
     }
     
     func cssDescription() -> String {
@@ -31,10 +33,17 @@ class UIImageViewThingy: SessionReplayViewThingy {
     }
     
     func generateRRWebNode() -> ElementNodeData {
-        return ElementNodeData(id: viewDetails.viewId,
-                                        tagName: .div,
-                                        attributes: ["id":viewDetails.cssSelector],
-                                        childNodes: [])
+        if let imageData = imageData {
+            return ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .image,
+                                   attributes: ["id":viewDetails.cssSelector,"src":"data/image/png;base64,\(imageData.base64EncodedString())"],
+                                   childNodes: [])
+        } else {
+            return ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .div,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        }
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {

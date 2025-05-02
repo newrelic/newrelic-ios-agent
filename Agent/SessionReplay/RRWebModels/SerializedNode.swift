@@ -117,6 +117,7 @@ enum TagType: String, Codable {
     case head = "head"
     case body = "body"
     case html = "html"
+    case image = "img"
 }
 
 class ElementNodeData: SerializedNodeData {
