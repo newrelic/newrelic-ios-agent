@@ -243,14 +243,16 @@ withTimestamp:(NSNumber *) timestamp {
         BOOL shouldLog = (self->logLevels & level) != 0;
 
         if ((self->logTargets & NRLogTargetConsole) && shouldLog && ![NRAutoLogCollector hasRedirectedStdOut]) {
-            printf("NewRelic(%s,%p):\t%s:%d\t%s\n\t%s\n",
-                  [NewRelicInternalUtils agentVersion].UTF8String,
-                  [NSThread currentThread],
-                  [[message objectForKey:NRLogMessageFileKey] UTF8String],
-                  [[message objectForKey:NRLogMessageLineNumberKey] intValue],
-                  [[message objectForKey:NRLogMessageMethodKey] UTF8String],
-                  [[message objectForKey:NRLogMessageMessageKey] UTF8String]);
 
+            NSString *log = [NSString stringWithFormat:@"NewRelic(%@,%p):\t%@:%@\t%@\n\t%@\n",
+            [NewRelicInternalUtils agentVersion],
+            [NSThread currentThread],
+            [message objectForKey:NRLogMessageFileKey],
+            [message objectForKey:NRLogMessageLineNumberKey],
+            [message objectForKey:NRLogMessageMethodKey],
+            [message objectForKey:NRLogMessageMessageKey]];
+            fputs([log cStringUsingEncoding:NSUTF8StringEncoding], stderr);
+            fflush(stderr);
         }
         // Only enter this block if remote logging is including this messages level.
 
