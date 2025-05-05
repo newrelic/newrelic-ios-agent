@@ -102,7 +102,7 @@ class SessionReplayCapture {
         }
         
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
-        let isClear = (view.alpha == 0 || view.alpha == 1)
+        let isClear = (view.alpha == 0)
         
         return !(areFramesTheSame && isClear)
     }

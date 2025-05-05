@@ -36,7 +36,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
         if let imageData = imageData {
             return ElementNodeData(id: viewDetails.viewId,
                                    tagName: .image,
-                                   attributes: ["id":viewDetails.cssSelector,"src":"data/image/png;base64,\(imageData.base64EncodedString())"],
+                                   attributes: ["id":viewDetails.cssSelector,"src":"data:image/png;base64,\(imageData.base64EncodedString())"],
                                    childNodes: [])
         } else {
             return ElementNodeData(id: viewDetails.viewId,

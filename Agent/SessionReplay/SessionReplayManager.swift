@@ -81,7 +81,9 @@ public class SessionReplayManager: NSObject {
             })
             
             // Encode container to JSON
-            if let jsonData = try? JSONEncoder().encode(container),
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .withoutEscapingSlashes
+            if let jsonData = try? encoder.encode(container),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 NRLOG_DEBUG(jsonString)
                 sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: jsonData)
