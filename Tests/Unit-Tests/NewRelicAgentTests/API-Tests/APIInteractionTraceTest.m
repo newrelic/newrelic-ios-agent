@@ -66,7 +66,7 @@ BOOL NRMA__shouldCancelCurrentTrace(id __unsafe_unretained obj);
 {
     id mockAgentInternal = [OCMockObject niceMockForClass:[NewRelicAgentInternal class]];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
 
     [[[[mockAgentInternal stub] classMethod]  andReturn:mockAgentInternal] sharedInstance];
 
@@ -117,7 +117,7 @@ BOOL NRMA__shouldCancelCurrentTrace(id __unsafe_unretained obj);
 {
     id mockAgentInternal = [OCMockObject niceMockForClass:[NewRelicAgentInternal class]];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
 
     [[[[mockAgentInternal stub] classMethod]  andReturn:mockAgentInternal] sharedInstance];
 

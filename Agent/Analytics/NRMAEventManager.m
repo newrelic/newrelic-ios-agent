@@ -93,9 +93,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         // The event fits within the buffer
         if (events.count < maxBufferSize) {
             [events addObject:event];
-            
-            [_persistentStore setObject:event forKey:[self createKeyForEvent:event]];
-            
+            NSString *key = [self createKeyForEvent:event];
+            [_persistentStore setObject:event forKey:key];
+
             if(events.count == 1) {
                 oldestEventTimestamp = event.timestamp;
             }
@@ -106,8 +106,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             if (evictionIndex < events.count) {
                 [events removeObjectAtIndex:evictionIndex];
                 [events addObject:event];
-                
-                [_persistentStore removeObjectForKey:[self createKeyForEvent:event]];
+                NSString *key = [self createKeyForEvent:event];
+
+                [_persistentStore removeObjectForKey:key];
             }
         }
     }

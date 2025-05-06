@@ -41,9 +41,9 @@ using namespace NewRelic;
     std::shared_ptr<AnalyticsController> _analyticsController;
     BOOL _sessionWillEnd;
     BOOL _newSession;
-
-    NSRegularExpression* __eventTypeRegex;
     
+    NSRegularExpression* __eventTypeRegex;
+
     NRMAEventManager *_eventManager;
     NRMASAM *_sessionAttributeManager;
     NSDate *_sessionStartTime;
@@ -74,7 +74,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                      }};
     });
     return (*__eventStore);
-}   
+}
 
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController {
     return _analyticsController;
@@ -106,7 +106,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return [_eventManager getMaxEventBufferTimeInSeconds];
 }
 
-- (id) initWithSessionStartTimeMS:(long long) sessionStartTime {
+- (id) initWithSessionStartTimeMS:(long long) sessionStartTime with: (NSArray*) initialEvents {
     self = [super init];
     if(self){
         // Handle New Event System NRMAnalytics Constructor
@@ -114,7 +114,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
 
             PersistentEventStore *eventStore = [[PersistentEventStore alloc] initWithFilename:filename andMinimumDelay:.025];
-            
+
             _eventManager = [[NRMAEventManager alloc] initWithPersistentStore:[eventStore autorelease]];
             _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
@@ -144,6 +144,31 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                     [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_sessionDuration];
                 }
             }
+
+            // Do the rehydration based on stored events.
+            for (NSDictionary* eventJson in initialEvents) {
+
+                NSNumber* timestamp = eventJson[kNRMA_RA_timestamp];
+                NSNumber* sessionElapsedTime = eventJson[kNRMA_RA_sessionElapsedTime];
+
+                // Create array containing all but kNRMA_RA_eventType
+                NSMutableArray* attributes = [NSMutableArray array];
+                for (NSString* key in eventJson) {
+                    if (![key isEqualToString:kNRMA_RA_timestamp] && ![key isEqualToString:kNRMA_RA_sessionElapsedTime]) {
+                        [attributes addObject:key];
+                    }
+                }
+                NRMAMobileEvent *mobileEvent = [[NRMAMobileEvent alloc] initWithTimestamp:timestamp.doubleValue sessionElapsedTimeInSeconds:sessionElapsedTime.doubleValue withAttributeValidator:nil];
+
+                for (NSString* key in attributes) {
+                    id value = eventJson[key];
+
+                    [mobileEvent insertAttribute:key value:value];
+                }
+
+                [_eventManager addEvent:[mobileEvent autorelease]];
+            }
+
         }
         // Use old Event system
         else {
@@ -183,6 +208,35 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                     _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
                 }
             }
+
+            // Do the rehydration based on stored events.
+            for (NSDictionary* eventJson in initialEvents) {
+                NSString* name = eventJson[kNRMA_RA_eventType];
+
+                // Create array containing all but kNRMA_RA_eventType
+                NSMutableArray* attributes = [NSMutableArray array];
+                for (NSString* key in eventJson) {
+                    if (![key isEqualToString:kNRMA_RA_eventType]) {
+                        [attributes addObject:key];
+                    }
+                }
+
+                auto event = _analyticsController->newEvent(name.UTF8String);
+                if (event == nullptr) {
+                    NRLOG_AGENT_ERROR(@"Unable to create event with name: \"%@\"",name);
+                }
+
+                if (event) {
+                    // event add all the attributes
+
+                    // SPECIAL: We use eventInsert in order to bypass key validation.
+                    if([self eventInsert:event withAttributes:eventJson]) {
+                        _analyticsController->addEvent(event);
+                    }
+
+                }
+            }
+
         }
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
@@ -221,7 +275,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] name:name category:@"Interaction"
                                                      withAttributeValidator:_attributeValidator];
         [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
-        
+
         return [_eventManager addEvent:[event autorelease]];
     } else {
         return _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkOfflineStatus], [self checkBackgroundStatus]);
@@ -251,14 +305,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             traceId = payload.traceId;
             addDistributedTracing = payload.dtEnabled;
         }
-        
+
         NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
-        
+
         NRMARequestEvent *event = [[NRMARequestEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec payload:payload withAttributeValidator:_attributeValidator];
         if (event == nil) {
             return false;
         }
-        
+
         NSString* requestUrl = requestData.requestUrl;
         NSString* requestDomain = requestData.requestDomain;
         NSString* requestPath = requestData.requestPath;
@@ -269,15 +323,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSNumber *responseTime = @(responseData.timeInSeconds);
         NSNumber* bytesReceived = @(responseData.bytesReceived);
         NSNumber* statusCode = @(responseData.statusCode);
-        
+
         if (requestUrl.length == 0) {
             NRLOG_AGENT_WARNING(@"Unable to add NetworkEvent with empty URL.");
             return false;
         }
-        
+
         [event addAttribute:kNRMA_Attrib_requestUrl value:requestUrl];
         [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
-        
+
         if (addDistributedTracing) {
             if (distributedTracingId.length > 0) {
                 [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
@@ -288,45 +342,45 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 [event addAttribute:kNRMA_Attrib_traceId value:traceId];
             }
         }
-        
+
         if (requestDomain.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
         }
-        
+
         if (requestPath.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
         }
-        
+
         if (requestMethod.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
         }
-        
+
         if ((connectionType.length > 0)) {
             [event addAttribute:kNRMA_Attrib_connectionType value:connectionType];
         }
-        
+
         if (![bytesReceived isEqual: @(0)]) {
             [event addAttribute:kNRMA_Attrib_bytesReceived value:bytesReceived];
         }
-        
+
         if (![bytesSent isEqual: @(0)]) {
             [event addAttribute:kNRMA_Attrib_bytesSent value:bytesSent];
         }
-        
+
         if (![statusCode isEqual: @(0)]) {
             [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
         }
-        
+
         if (contentType.length > 0) {
             [event addAttribute:kNRMA_Attrib_contentType value:contentType];
         }
-        
+
         if (requestData.trackedHeaders.count > 0) {
             for(NSString* key in requestData.trackedHeaders.allKeys) {
                 [event addAttribute:key value:requestData.trackedHeaders[key]];
             }
         }
-        
+
         return [_eventManager addEvent:[event autorelease]];
     } @catch (NSException *exception) {
         NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);
@@ -340,7 +394,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NRMANetworkErrorEvent *event = (NRMANetworkErrorEvent*)[self createErrorEvent:requestData withResponse:responseData withNRMAPayload:payload];
         if(event == nil){ return NO; }
         [event addAttribute:kNRMA_Attrib_errorType value:kNRMA_Val_errorType_Network];
-            
+
         return [_eventManager addEvent:[event autorelease]];
     }
     return NO;
@@ -371,9 +425,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             traceId = payload.traceId;
             addDistributedTracing = payload.dtEnabled;
         }
-        
+
         NSTimeInterval sessionDuration_sec = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
-        
+
         NSString* requestUrl = requestData.requestUrl;
         NSString* requestDomain = requestData.requestDomain;
         NSString* requestPath = requestData.requestPath;
@@ -388,20 +442,20 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         NSNumber *responseTime = @(responseData.timeInSeconds);
         NSNumber* bytesReceived = @(responseData.bytesReceived);
         NSNumber* statusCode = @(responseData.statusCode);
-        
+
         if (requestUrl.length == 0) {
             NRLOG_AGENT_WARNING(@"Unable to add NetworkEvent with empty URL.");
             return nil;
         }
-        
+
         NRMANetworkErrorEvent *event = [[NRMANetworkErrorEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis] sessionElapsedTimeInSeconds:sessionDuration_sec encodedResponseBody:encodedResponseBody appDataHeader:appDataHeader payload:payload withAttributeValidator:_attributeValidator];
         if (event == nil) {
             return nil;
         }
-        
+
         [event addAttribute:kNRMA_Attrib_requestUrl value:requestUrl];
         [event addAttribute:kNRMA_Attrib_responseTime value:responseTime];
-        
+
         if (addDistributedTracing) {
             if (distributedTracingId.length > 0) {
                 [event addAttribute:kNRMA_Attrib_dtGuid value:distributedTracingId];
@@ -411,57 +465,57 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
             }
         }
-        
+
         if (requestDomain.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestDomain value:requestDomain];
         }
-        
+
         if (requestPath.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestPath value:requestPath];
         }
-        
+
         if (requestMethod.length > 0) {
             [event addAttribute:kNRMA_Attrib_requestMethod value:requestMethod];
         }
-        
+
         if (connectionType.length > 0) {
             [event addAttribute:kNRMA_Attrib_connectionType value:connectionType];
         }
-        
+
         if (![bytesReceived isEqual: @(0)]) {
             [event addAttribute:kNRMA_Attrib_bytesReceived value:bytesReceived];
         }
-        
+
         if (![bytesSent isEqual: @(0)]) {
             [event addAttribute:kNRMA_Attrib_bytesSent value:bytesSent];
         }
-        
+
         if (encodedResponseBody.length > 0) {
             [event addAttribute:kNRMA_Attrib_networkError value:networkErrorMessage];
         }
-        
+
         if (![networkErrorCode isEqual: @(0)]) {
             [event addAttribute:kNRMA_Attrib_networkErrorCode value:networkErrorCode];
         }
-        
+
         if (networkErrorMessage.length > 0) {
             [event addAttribute:kNRMA_Attrib_networkError value:networkErrorMessage];
         }
-        
+
         if (![statusCode isEqual: @(0)]) {
             [event addAttribute:kNRMA_Attrib_statusCode value:statusCode];
         }
-        
+
         if (contentType.length > 0) {
             [event addAttribute:kNRMA_Attrib_contentType value:contentType];
         }
-        
+
         if (requestData.trackedHeaders.count > 0) {
             for(NSString* key in requestData.trackedHeaders.allKeys) {
                 [event addAttribute:key value:requestData.trackedHeaders[key]];
             }
         }
-        
+
         return event;
     } @catch (NSException *exception) {
         NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);
@@ -532,7 +586,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                                  [](float num) {
                         return true;
                     });
-                    
+
                     return _analyticsController->addNRAttribute(attribute);
                 }
                 if ([NewRelicInternalUtils isInteger:number]) {
@@ -571,7 +625,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } catch (...) {
             NRLOG_AGENT_VERBOSE(@"failed to add NR session attribute.");
             return NO;
-            
+
         }
     }
 }
@@ -620,7 +674,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } catch (...) {
             NRLOG_AGENT_ERROR(@"failed to add session attribute.");
             return NO;
-            
+
         }
     }
 }
@@ -661,7 +715,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } catch (...) {
             NRLOG_AGENT_ERROR(@"failed to add session attribute.");
             return NO;
-            
+
         }
     }
 }
@@ -703,7 +757,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         } catch (...) {
             NRLOG_AGENT_ERROR(@"Failed to remove all attributes.");
             return NO;
-            
+
         }
     }
 }
@@ -718,7 +772,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];
         }];
-        
+
         return [_eventManager addEvent:[event autorelease]];
     } else {
         try {
@@ -727,7 +781,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 NRLOG_AGENT_ERROR(@"Unable to create event with name: \"%@\"",name);
                 return NO;
             }
-            
+
             if ([self event:event withAttributes:attributes]) {
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
@@ -760,28 +814,28 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             NRLOG_AGENT_ERROR(@"Unable to create breadcrumb event");
             return NO;
         }
-        
+
         [event addAttribute:kNRMA_Attrib_name value:name]; // Add the name as an attribute
-        
+
         [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             [event addAttribute:key value:obj];
         }];
-        
+
         return [_eventManager addEvent:[event autorelease]];
     } else {
         try {
-            
+
             if(!name.length) {
                 NRLOG_AGENT_ERROR(@"Breadcrumb must be named.");
                 return NO;
             }
-            
+
             auto event = _analyticsController->newBreadcrumbEvent();
             if (event == nullptr) {
                 NRLOG_AGENT_ERROR(@"Unable to create breadcrumb event");
                 return NO;
             }
-            
+
             if ([self event:event withAttributes:attributes]) {
                 event->addAttribute("name",name.UTF8String);
                 if([self checkOfflineStatus]){
@@ -832,16 +886,16 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 [event addAttribute:key value:obj];
             }];
             [_eventManager addEvent:[event autorelease]];
-            
+
             return YES;
         } else {
             auto event = _analyticsController->newCustomEvent(eventType.UTF8String);
-            
+
             if (event == nullptr) {
                 NRLOG_AGENT_ERROR(@"Unable to create event with name: \"%@\"",eventType);
                 return NO;
             }
-                        
+
             if([self event:event withAttributes:attributes]) {
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
@@ -884,6 +938,85 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return YES;
 }
 
+- (BOOL) eventInsert:(std::shared_ptr<AnalyticEvent>)event withAttributes:(NSDictionary*)attributes {
+    for (NSString* key in attributes.allKeys) {
+        id value = attributes[key];
+
+
+
+
+        if ([value isKindOfClass:[NSString class]]) {
+
+            auto attrib = Attribute<bool>::createAttribute(key.UTF8String,
+                                                           [](bool) {return true;},
+                                                           ((NSString*)value).UTF8String,
+                                                           [](bool) {return true;});
+            if (attrib == nullptr) {
+                return false;
+            }
+
+            event->insertAttribute(attrib);
+        } else if ([value isKindOfClass:[NSNumber class]]) {
+
+
+            NSNumber* number = (NSNumber*)value;
+
+            if ([NewRelicInternalUtils isInteger:number]) {
+
+                auto attrib = Attribute<bool>::createAttribute(key.UTF8String,
+                                                               [](bool) {return true;},
+                                                               number.longLongValue,
+                                                               [](bool) {return true;});
+                if (attrib == nullptr) {
+                    return false;
+                }
+
+                event->insertAttribute(attrib);
+            } else if ([NewRelicInternalUtils isFloat:number]) {
+
+                auto attrib = Attribute<bool>::createAttribute(key.UTF8String,
+                                                               [](bool) {return true;},
+                                                               number.doubleValue,
+                                                               [](bool) {return true;});
+                if (attrib == nullptr) {
+                    return false;
+                }
+
+                event->insertAttribute(attrib);
+            } else if ([NewRelicInternalUtils isBool:number]) {
+
+
+                auto attrib = Attribute<bool>::createAttribute(key.UTF8String,
+                                                               [](bool) {return true;},
+                                                               number.boolValue,
+                                                               [](bool) {return true;});
+                if (attrib == nullptr) {
+                    return false;
+                }
+
+                event->insertAttribute(attrib);
+
+            } else {
+                NRLOG_AGENT_ERROR(@"Failed to add attribute \"%@\" value is invalid NSNumber with objCType: %s",key,[number objCType]);
+            }
+        } else if([value isKindOfClass:[NRMABool class]]) {
+
+            auto attrib = Attribute<bool>::createAttribute(key.UTF8String,
+                                                           [](bool) {return true;},
+                                                           (bool)((NRMABool*)value).value,
+                                                           [](bool) {return true;});
+            if (attrib == nullptr) {
+                return false;
+            }
+
+            event->insertAttribute(attrib);
+        } else {
+            NRLOG_AGENT_ERROR(@"Failed to add attribute values must be type NSNumber* or NSString*.");
+        }
+    }
+    return YES;
+}
+
 - (BOOL) checkOfflineStatus {
     if([NRMAFlags shouldEnableOfflineStorage]) {
         NRMAReachability* r = [NewRelicInternalUtils reachability];
@@ -912,7 +1045,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL)recordUserAction:(NRMAUserAction *)userAction {
     if (userAction == nil) { return NO; };
-    
+
     NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileUserAction
                                                               timestamp:[NRMAAnalytics currentTimeMillis]
                                             sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
@@ -1022,12 +1155,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if([NRMAFlags shouldEnableNewEventSystem]){
         return [NRMASAM getLastSessionsAttributes];
     } else {
-        
+
         try {
             auto attributes = AnalyticsController::fetchDuplicatedAttributes([self attributeDupStore], YES);
             std::stringstream stream;
             stream << std::setprecision(13)<< *attributes;
-            
+
             NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
             if (!jsonString.length) {
                 return nil;
@@ -1051,22 +1184,22 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             auto events = AnalyticsController::fetchDuplicatedEvents([self eventDupStore], true);
             std::stringstream stream;
             stream << std::setprecision(13) << *events;
-            
+
             NSString* jsonString = [NSString stringWithUTF8String:stream.str().c_str()];
-            
+
             if (!jsonString.length) {
                 return nil;
             }
-            
+
             return jsonString;
         } catch (std::exception& e) {
             NRLOG_AGENT_VERBOSE(@"Failed to fetch event dup store: %s",e.what());
-            
+
         } catch (...) {
             NRLOG_AGENT_VERBOSE(@"Failed to fetch event dup store.");
         }
     }
-    
+
     return nil;
 }
 
@@ -1103,7 +1236,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (void) sessionWillEnd {
     _sessionWillEnd = YES;
-    
+
     if([NRMAFlags shouldEnableGestureInstrumentation])
     {
         NRMAUserAction* backgroundGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder *builder) {

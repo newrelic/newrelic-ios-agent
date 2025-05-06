@@ -305,10 +305,10 @@ static NewRelicAgentInternal* _sharedInstance;
     // Update old files (no more files in the docs folder)
     [NRMAFileCleanup updateDocFileLocations];
 
-    NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
+    self.exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
 
     // Last session's analytics must be fetched (asynchronously) before instrumentation
-    [exceptionHandlerStartupManager fetchLastSessionsAnalytics];
+    [self.exceptionHandlerStartupManager fetchLastSessionsAnalytics];
 
     [self initializeInstrumentation];
 
@@ -317,7 +317,7 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 
     if ([NRMAFlags shouldEnableCrashReporting]) {
-        [exceptionHandlerStartupManager startExceptionHandler:[[NRMACrashDataUploader alloc] initWithCrashCollectorURL:_agentConfiguration.crashCollectorHost
+        [self.exceptionHandlerStartupManager startExceptionHandler:[[NRMACrashDataUploader alloc] initWithCrashCollectorURL:_agentConfiguration.crashCollectorHost
                                                                                                       applicationToken:_agentConfiguration.applicationToken.value
                                                                                                  connectionInformation:[NRMAAgentConfiguration connectionInformation]
                                                                                                                 useSSL:self->_agentConfiguration.useSSL]];
@@ -447,8 +447,33 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 - (void) initializeAnalytics {
     @synchronized(kNRMAAnalyticsInitializationLock) {
         // [NRMAAnalytics clearDuplicationStores];
+
+
+        // Rehydrate the persistentStore
+            NSString *eventJson = [[self.exceptionHandlerStartupManager eventJson] copy];
+
+            NSError* serializationError;
+            NSArray* events;
+        
+            @try {
+                if (eventJson != nil && [eventJson length] > 0) {
+        
+                    events = [NSJSONSerialization JSONObjectWithData:[eventJson dataUsingEncoding:NSUTF8StringEncoding]
+                                                             options:0
+                                                               error:&serializationError];
+                }
+                if (serializationError != nil) {
+                    NRLOG_AGENT_VERBOSE(@"Failed to load last session's events: %@",serializationError.localizedDescription);
+                }
+            } @catch (NSException* e) {
+                NRLOG_AGENT_VERBOSE(@"failed to serialize last session's events event json: %@",e.reason);
+            }
+
+
+
+
         if(!self.analyticsController) {
-            self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
+            self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000) with:events];
         } else if(didFireEnterForeground && didFireEnterBackground) {
             // We are coming back to the foreground after having a background stint
             [self.analyticsController newSessionWithStartTime:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];

@@ -48,7 +48,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
     self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
     _sharedInstance = [[NewRelicAgentInternal alloc] init];
-    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
+    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
     
     [_sharedInstance.analyticsController setSessionAttribute:@"myAttribute" value:@(1)];
