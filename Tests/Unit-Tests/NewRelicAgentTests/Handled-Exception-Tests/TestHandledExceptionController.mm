@@ -67,7 +67,7 @@
                                                                       sessionId:nil
                                                              attributeValidator:nil]);
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAHandledExceptions* exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:nil
                                                                                   sessionStartTime:0
                                                                                 agentConfiguration:nil
@@ -128,7 +128,7 @@
                                                                       sessionId:nil
                                                              attributeValidator:nil]);
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAHandledExceptions* exceptions = [[NRMAHandledExceptions alloc] initWithAnalyticsController:nil
                                                                                   sessionStartTime:0
                                                                                 agentConfiguration:nil
@@ -181,7 +181,7 @@
 }
 
 - (void) testHandleException {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
                                                                           collectorAddress:nil
                                                                               crashAddress:nil];
@@ -213,7 +213,7 @@
 
 // Old Event System
 - (void) testHandleExceptionWithStackTrace {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
                                                                           collectorAddress:nil
                                                                               crashAddress:nil];
@@ -241,7 +241,7 @@
 - (void) testHandleExceptionWithStackTraceNewEventSystem {
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
                                                                           collectorAddress:nil
                                                                               crashAddress:nil];
@@ -270,7 +270,7 @@
 }
 
 - (void) testPlatform {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
                                                                           collectorAddress:nil
                                                                               crashAddress:nil];
@@ -288,7 +288,7 @@
 }
 
 - (void) testDontRecordUnThrownExceptions {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
                                                                           collectorAddress:nil
                                                                               crashAddress:nil];
@@ -325,7 +325,7 @@
 }
 
 - (void) testRecordError {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
                                                                           collectorAddress:nil
                                                                               crashAddress:nil];
@@ -358,7 +358,7 @@
 - (void) testRecordErrorNewEventSystem {
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"blah"]
                                                                           collectorAddress:nil
                                                                               crashAddress:nil];

@@ -36,7 +36,6 @@ class NRMAURLSessionAsyncTests: XCTestCase {
 
         helper = nil
         NewRelic.disableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport])
-
         try super.tearDownWithError()
     }
 

@@ -29,7 +29,7 @@
     [super setUp];
     [NRMAFlags enableFeatures: NRFeatureFlag_NewEventSystem];
     kSessionAttributeNames = @[@"1234", @"Hello", @"Pew",@"Test",@"Red",@"Yellow",@"Blue"];
-    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
     self.semaphore = dispatch_semaphore_create(procCount * kNRMASemaphoreMultiplier);
 }
