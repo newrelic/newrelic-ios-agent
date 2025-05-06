@@ -154,9 +154,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 // Create array containing all but kNRMA_RA_eventType
                 NSMutableArray* attributes = [NSMutableArray array];
                 for (NSString* key in eventJson) {
-                    if (![key isEqualToString:kNRMA_RA_timestamp] && ![key isEqualToString:kNRMA_RA_sessionElapsedTime]) {
                         [attributes addObject:key];
-                    }
                 }
                 NRMAMobileEvent *mobileEvent = [[NRMAMobileEvent alloc] initWithTimestamp:timestamp.doubleValue sessionElapsedTimeInSeconds:sessionElapsedTime.doubleValue withAttributeValidator:nil];
 
@@ -227,16 +225,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 }
 
                 if (event) {
-                    // event add all the attributes
-
                     // SPECIAL: We use eventInsert in order to bypass key validation.
                     if([self eventInsert:event withAttributes:eventJson]) {
                         _analyticsController->addEvent(event);
                     }
-
                 }
             }
-
         }
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
         // the NSDate time interval is multiplied by 1000 to get milliseconds.
