@@ -56,6 +56,8 @@ class SessionReplayCapture {
             initialViewController = foundViewController
         } else if let window = rootView.window, let rootViewController = window.rootViewController {
             initialViewController = rootViewController
+        } else if let window = rootView as? UIWindow, let rootViewController = window.rootViewController {
+            initialViewController = rootViewController
         }
         
         var effectiveViewController = initialViewController

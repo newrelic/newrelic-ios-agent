@@ -67,7 +67,7 @@ public class SessionReplayManager: NSObject {
                 width: Int(getWindow()?.frame.width ?? 0),
                 height: Int(getWindow()?.frame.height ?? 0)
             )
-            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().timeIntervalSince1970), data: metaEventData)
+            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().timeIntervalSince1970 * 1000), data: metaEventData)
             
             // Initialize container with meta event
             var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
