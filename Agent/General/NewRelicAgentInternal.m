@@ -84,7 +84,10 @@ static NRMAURLTransformer* urlTransformer;
     NSMutableArray* _transactionDataList;
     double _appLastBackgrounded;
     NSTimeInterval _startTime_ms;
+    
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     SessionReplayManager* _sessionReplay;
+#endif
 }
 
 // The token sent from the RPM service on connect that is used when sending data.
@@ -365,8 +368,10 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 #endif
     if (@available(iOS 13.0, *)) {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
         _sessionReplay = [[SessionReplayManager alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
         [_sessionReplay start];
+#endif
     }
     
 }
@@ -708,7 +713,9 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     [_sessionReplay start];
+#endif
     [self onSessionStart];
 }
 
@@ -754,7 +761,9 @@ static UIBackgroundTaskIdentifier background_task;
     _currentApplicationState = UIApplicationStateBackground;
 #endif
     [[NRMAHarvestController harvestController].harvestTimer stop];
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
     [_sessionReplay stop];
+#endif
 
     // Disable observers.
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -901,7 +910,9 @@ static UIBackgroundTaskIdentifier background_task;
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
                     [self->_sessionReplay harvest];
+#endif
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
                     [NRMAExceptionHandler        logException:exception
