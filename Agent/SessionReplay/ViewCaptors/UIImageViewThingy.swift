@@ -27,9 +27,12 @@ class UIImageViewThingy: SessionReplayViewThingy {
     func cssDescription() -> String {
         let cssSelector = viewDetails.cssSelector
         
-        let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
-        
-        return "#\(viewDetails.cssSelector) { \(generateBaseCSSStyle()) \(imagePlaceholderCSS) }"
+       // if let _ = imageData {
+            return "#\(viewDetails.cssSelector) { \(generateBaseCSSStyle()) }"
+//        } else {
+//            let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
+//            return "#\(viewDetails.cssSelector) { \(generateBaseCSSStyle()) \(imagePlaceholderCSS) }"
+//        }
     }
     
     func generateRRWebNode() -> ElementNodeData {
@@ -50,13 +53,17 @@ class UIImageViewThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UIImageViewThingy else {
             return []
         }
-        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: generateBaseDifferences(from: typedOther))]
+        var differences = generateBaseDifferences(from: typedOther)
+        if let imageData = imageData {
+            differences["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+        }
+        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: differences)]
     }
 }
 
 extension UIImageViewThingy: Equatable {
     static func == (lhs: UIImageViewThingy, rhs: UIImageViewThingy) -> Bool {
-        return lhs.viewDetails == rhs.viewDetails
+        return lhs.viewDetails == rhs.viewDetails && lhs.imageData?.hashValue == rhs.imageData?.hashValue
     }
 }
 
