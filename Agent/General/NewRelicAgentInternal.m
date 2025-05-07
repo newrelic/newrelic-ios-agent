@@ -367,13 +367,13 @@ static NewRelicAgentInternal* _sharedInstance;
         [NRMAHarvestController start];
     }
 #endif
-    if (@available(iOS 13.0, *)) {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-        _sessionReplay = [[SessionReplayManager alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
+    if (@available(iOS 13.0, *)) {
+        SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
+        _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter];
         [_sessionReplay start];
-#endif
     }
-    
+#endif
 }
 
 // Initialize all of the categories which swizzle into existing classes.
@@ -713,6 +713,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
+
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     [_sessionReplay start];
 #endif
@@ -761,6 +762,7 @@ static UIBackgroundTaskIdentifier background_task;
     _currentApplicationState = UIApplicationStateBackground;
 #endif
     [[NRMAHarvestController harvestController].harvestTimer stop];
+
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     [_sessionReplay stop];
 #endif
@@ -910,6 +912,7 @@ static UIBackgroundTaskIdentifier background_task;
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
                     [[[NRMAHarvestController harvestController] harvester] execute];
+
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
                     [self->_sessionReplay harvest];
 #endif

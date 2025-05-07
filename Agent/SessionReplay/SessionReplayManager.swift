@@ -14,14 +14,14 @@ import UIKit
 public class SessionReplayManager: NSObject {
     
     private let sessionReplay: NRMASessionReplay
-    private var sessionReplayReporter: SessionReplayReporter
+    private let sessionReplayReporter: SessionReplayReporter
     
     public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
         
-    @objc public init(applicationToken: String) {
+    @objc public init(reporter: SessionReplayReporter) {
         self.sessionReplay = NRMASessionReplay()
-        self.sessionReplayReporter = SessionReplayReporter(applicationToken: applicationToken)
+        self.sessionReplayReporter = reporter
         super.init()
         
     }
