@@ -372,7 +372,6 @@ static NewRelicAgentInternal* _sharedInstance;
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter];
         [_sessionReplay start];
-#endif
     }
 #endif
 }
