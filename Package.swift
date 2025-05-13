@@ -12,15 +12,13 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "NewRelic",
-            targets: ["NewRelicPackage", "NewRelic"]),
+            targets: ["NewRelic"]),
     ],
     targets: [
         .target(
-            name: "NewRelicPackage",
+            name: "NewRelic",
             dependencies: []),
-        .binaryTarget(name: "NewRelic",
-                      url: "https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agent_7.5.5.zip",
-                      checksum: "a5bbf601f11dae051db48be2ea7d1a9e0018b7afad96c5c74387bb34f2750960")
+
     ]
 )
 
