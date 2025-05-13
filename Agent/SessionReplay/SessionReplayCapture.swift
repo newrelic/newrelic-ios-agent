@@ -56,8 +56,11 @@ class SessionReplayCapture {
             initialViewController = foundViewController
         } else if let window = rootView.window, let rootViewController = window.rootViewController {
             initialViewController = rootViewController
+        } else if let window = rootView as? UIWindow, let rootViewController = window.rootViewController {
+            initialViewController = rootViewController
         }
-        
+
+
         var effectiveViewController = initialViewController
                 
         while true {
@@ -102,8 +105,8 @@ class SessionReplayCapture {
         }
         
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
-        let isClear = (view.alpha == 0 || view.alpha == 1)
-        
+        let isClear = (view.alpha == 0)
+
         return !(areFramesTheSame && isClear)
     }
 }

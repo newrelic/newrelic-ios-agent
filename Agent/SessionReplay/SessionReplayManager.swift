@@ -67,8 +67,8 @@ public class SessionReplayManager: NSObject {
                 width: Int(getWindow()?.frame.width ?? 0),
                 height: Int(getWindow()?.frame.height ?? 0)
             )
-            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().timeIntervalSince1970), data: metaEventData)
-            
+            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().timeIntervalSince1970 * 1000), data: metaEventData)
+
             // Initialize container with meta event
             var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
             
@@ -81,7 +81,10 @@ public class SessionReplayManager: NSObject {
             })
             
             // Encode container to JSON
-            if let jsonData = try? JSONEncoder().encode(container),
+            let encoder = JSONEncoder ()
+            encoder.outputFormatting = .withoutEscapingSlashes
+
+            if let jsonData = try? encoder.encode(container),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 NRLOG_DEBUG(jsonString)
                 sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: jsonData)
