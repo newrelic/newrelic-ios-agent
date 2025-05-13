@@ -11,7 +11,7 @@ import UIKit
 
 import OSLog
 
-import NewRelicPrivate
+@_implementationOnly import NewRelicPrivate
 
 class SessionReplayTouchCapture: NSObject {
     var touchEvents: [TouchEvent] = []

@@ -8,7 +8,7 @@
 
 import Foundation
 import Compression
-import NewRelicPrivate
+@_implementationOnly import NewRelicPrivate
 
 @objcMembers
 public class SessionReplayReporter: NSObject {

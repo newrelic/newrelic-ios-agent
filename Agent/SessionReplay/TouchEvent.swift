@@ -10,7 +10,7 @@
 import Foundation
 import UIKit
 import OSLog
-import NewRelicPrivate
+@_implementationOnly import NewRelicPrivate
 
 class TouchEvent {
         var startTouch: Detail
