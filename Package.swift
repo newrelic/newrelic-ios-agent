@@ -15,10 +15,12 @@ let package = Package(
             targets: ["NewRelic"]),
     ],
     targets: [
+
         .target(
             name: "NewRelic",
-            dependencies: []),
-
+            dependencies: [],
+            path: "Agent" // Specify the path to your source files
+        )
     ]
 )
 
