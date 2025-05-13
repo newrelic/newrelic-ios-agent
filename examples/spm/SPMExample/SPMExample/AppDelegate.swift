@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NRLogger.setLogLevels(NRLogLevelVerbose.rawValue)
 #endif
 
-        NewRelic.start(withApplicationToken:"APP-TOKEN")
+        NewRelicA.start(withApplicationToken:"APP-TOKEN")
 
         return true
     }

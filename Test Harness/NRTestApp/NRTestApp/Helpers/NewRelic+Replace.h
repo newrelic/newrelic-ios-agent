@@ -7,7 +7,7 @@
 
 #import <NewRelic/NewRelic.h>
 
-@interface NewRelic (Replace)
+@interface NewRelicA (Replace)
 + (void) replaceDeviceIdentifier:(NSString*)identifier;
 + (void) saltDeviceUUID:(BOOL)enabled;
 @end

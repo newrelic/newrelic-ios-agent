@@ -22,10 +22,10 @@ internal struct NRViewModifier: SwiftUI.ViewModifier {
 
     func body(content: Content) -> some View {
         content.onAppear {
-            uniqueInteractionTraceIdentifier = NewRelic.startInteraction(withName: name)
+            uniqueInteractionTraceIdentifier = NewRelicA.startInteraction(withName: name)
         }
         .onDisappear {
-            NewRelic.stopCurrentInteraction(uniqueInteractionTraceIdentifier)
+            NewRelicA.stopCurrentInteraction(uniqueInteractionTraceIdentifier)
         }
     }
 }

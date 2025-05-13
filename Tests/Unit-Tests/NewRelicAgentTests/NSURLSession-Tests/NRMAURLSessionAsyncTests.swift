@@ -19,7 +19,7 @@ class NRMAURLSessionAsyncTests: XCTestCase {
     override func setUp() async throws {
         try super.setUpWithError()
         
-        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport])
+        NewRelicA.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport])
 
         NRMAURLSessionOverride.beginInstrumentation()
 
@@ -35,7 +35,7 @@ class NRMAURLSessionAsyncTests: XCTestCase {
         NRMAMeasurements.shutdown()
 
         helper = nil
-        NewRelic.disableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport])
+        NewRelicA.disableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport])
 
         try super.tearDownWithError()
     }

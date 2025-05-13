@@ -30,7 +30,7 @@ class ViewController: UIViewController {
         
         viewModel.error.onUpdate = { [weak self] _ in
             if let error = self?.viewModel.error.value {
-                NewRelic.recordError(error)
+                NewRelicA.recordError(error)
             }
         }
 
@@ -45,7 +45,7 @@ class ViewController: UIViewController {
         
         viewModel.loadApodData()
 
-        NewRelic.logInfo("ViewController viewDidLoad finished.")
+        NewRelicA.logInfo("ViewController viewDidLoad finished.")
     }
     
     func setupSpaceStack() {

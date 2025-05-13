@@ -10,6 +10,7 @@ import Foundation
 import Compression
 @_implementationOnly import NewRelicPrivate
 
+@available(iOS 13.0, *)
 @objcMembers
 public class SessionReplayReporter: NSObject {
     private var sessionReplayFramesUploadArray: [Data] = []

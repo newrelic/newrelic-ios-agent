@@ -38,10 +38,10 @@ extension UIImageView {
                     
                     // Stop the timer to record the stop time, and the difference can be passed in as a value in a custom metric
                     timer.stop()
-                    NewRelic.recordMetric(withName: "SpaceImageDownloadAndDecode", category: "CustomMetricCategory", value: NSNumber(value: timer.timeElapsedInMilliSeconds()))
+                    NewRelicA.recordMetric(withName: "SpaceImageDownloadAndDecode", category: "CustomMetricCategory", value: NSNumber(value: timer.timeElapsedInMilliSeconds()))
                 }
             } catch {
-                NewRelic.recordError(error)
+                NewRelicA.recordError(error)
                 DispatchQueue.main.async {
                     activityIndicator.stopAnimating()
                     activityIndicator.removeFromSuperview()
