@@ -20,7 +20,7 @@ default_platform(:ios)
 
 platform :ios do
 
-  desc "Build NewRelic.XCFramework for all platforms"
+  desc "Build NewRelicAgent.xcframework for all platforms"
   lane :buildFramework do
 
     deleteBuildArtifacts
@@ -33,14 +33,14 @@ platform :ios do
     internalOutputXCFramework
   end
 
-  desc "Run Tests for iOS/tvOS and Build NewRelic.XCFramework for all platforms"
+  desc "Run Tests for iOS/tvOS and Build NewRelicAgent.xcframework for all platforms"
   lane :testAndBuild do
     
     puts "Running tests 🧪 for iOS and tvOS"
     
     runTests
     
-    puts "Successfully ran tests. 🚀 Building NewRelic.xcframework for all platforms"
+    puts "Successfully ran tests. 🚀 Building NewRelicAgent.xcframework for all platforms"
 
     buildAndZip
   end
@@ -54,21 +54,21 @@ lane :buildAndZip do
     zipFramework
 end
 
-  # zip cocoapods/LICENSE, cocoapods/README, cocoapods/README.md, and NewRelic.xcframework 
+  # zip cocoapods/LICENSE, cocoapods/README, cocoapods/README.md, and NewRelicAgent.xcframework 
   # => into NewRelic_XCFramework_Agent_Version.zip
   lane :zipFramework do
     version = File.read("build_version")
     Dir.chdir("..") do
-        sh("mv NewRelic.xcframework cocoapods")
+        sh("mv NewRelicAgent.xcframework cocoapods")
         Dir.chdir("cocoapods") do
-            sh("zip -r -y ../NewRelic_XCFramework_Agent_#{version}.zip LICENSE README README.md NewRelic.xcframework")
+            sh("zip -r -y ../NewRelic_XCFramework_Agent_#{version}.zip LICENSE README README.md NewRelicAgent.xcframework")
         end
     end
   end
 
   # DEBUG LANES
 
-  desc "Build NewRelic.XCFramework for iOS Only"
+  desc "Build NewRelicAgent.xcframework for iOS Only"
   lane :buildFrameworkIOSOnly do
 
     deleteBuildArtifacts
