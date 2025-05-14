@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "348232212BC5EEE60070FAC3"
-               BuildableName = "NewRelic.framework"
+               BuildableName = "NewRelicAgent.framework"
                BlueprintName = "Agent-watchOS"
                ReferencedContainer = "container:Agent.xcodeproj">
             </BuildableReference>
@@ -56,7 +56,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "348232212BC5EEE60070FAC3"
-            BuildableName = "NewRelic.framework"
+            BuildableName = "NewRelicAgent.framework"
             BlueprintName = "Agent-watchOS"
             ReferencedContainer = "container:Agent.xcodeproj">
          </BuildableReference>

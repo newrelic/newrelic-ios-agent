@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "021A15B924C9EEE700E8DFD5"
-               BuildableName = "NewRelic.framework"
+               BuildableName = "NewRelicAgent.framework"
                BlueprintName = "Agent_iOS"
                ReferencedContainer = "container:Agent.xcodeproj">
             </BuildableReference>
@@ -47,7 +47,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "021A15B924C9EEE700E8DFD5"
-            BuildableName = "NewRelic.framework"
+            BuildableName = "NewRelicAgent.framework"
             BlueprintName = "Agent_iOS"
             ReferencedContainer = "container:Agent.xcodeproj">
          </BuildableReference>
@@ -101,7 +101,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "021A15B924C9EEE700E8DFD5"
-            BuildableName = "NewRelic.framework"
+            BuildableName = "NewRelicAgent.framework"
             BlueprintName = "Agent_iOS"
             ReferencedContainer = "container:Agent.xcodeproj">
          </BuildableReference>
