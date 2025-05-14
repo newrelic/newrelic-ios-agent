@@ -23,7 +23,7 @@ extension UtilityView {
         let taskProcessor = TaskProcessor()
 
         func crash() {
-            NewRelicA.crashNow("New Relic intentionally crashed to test Utils")
+            NewRelic.crashNow("New Relic intentionally crashed to test Utils")
         }
         func hugeCrashReport() {
             let crashOutputFilePath = String(format: "%@%@/%d.%@", NSTemporaryDirectory(), "nrcrashreports", 42, "nrcrashreport")
@@ -39,16 +39,16 @@ extension UtilityView {
             }
         }
         func removeAttributes() -> Bool{
-            return NewRelicA.removeAllAttributes()
+            return NewRelic.removeAllAttributes()
         }
         func setAttributes(){
-            attributes = "test1: " + String(NewRelicA.setAttribute("test1", value: 1)) + " '': " + String(NewRelicA.setAttribute("", value: 2))
+            attributes = "test1: " + String(NewRelic.setAttribute("test1", value: 1)) + " '': " + String(NewRelic.setAttribute("", value: 2))
         }
         func makeError(){
             do {
                 try errorMethod()
             } catch {
-                NewRelicA.recordError(error)
+                NewRelic.recordError(error)
                 
             }
         }
@@ -56,7 +56,7 @@ extension UtilityView {
             throw CancellationError.init()
         }
         func makeBreadcrumb(name: String, attributes: Dictionary<String, Any>){
-            let madeBreadCrumb = NewRelicA.recordBreadcrumb(name,
+            let madeBreadCrumb = NewRelic.recordBreadcrumb(name,
                                                            attributes: attributes)
             if madeBreadCrumb == true {
                 self.numBreadcrumbs += 1
@@ -64,7 +64,7 @@ extension UtilityView {
         }
         
         func makeEvent(){
-            let madeEvent = NewRelicA.recordCustomEvent("ButtonPress")
+            let madeEvent = NewRelic.recordCustomEvent("ButtonPress")
             if madeEvent == true {
                 events += 1
             }
@@ -72,7 +72,7 @@ extension UtilityView {
 
         func make100Events() {
             for i in 0...100 {
-                NewRelicA.recordCustomEvent("ButtonPress")
+                NewRelic.recordCustomEvent("ButtonPress")
             }
         }
 
@@ -92,19 +92,19 @@ extension UtilityView {
                 print("no interaction to stop...")
                 return
             }
-            NewRelicA.stopCurrentInteraction(identifier)
+            NewRelic.stopCurrentInteraction(identifier)
 
             uniqueInteractionTraceIdentifier = nil
         }
 
         func startInteractionTrace() {
-            uniqueInteractionTraceIdentifier = NewRelicA.startInteraction(withName: "myInteractionName")
+            uniqueInteractionTraceIdentifier = NewRelic.startInteraction(withName: "myInteractionName")
         }
 
 
 
         func noticeFailedNWRequest() {
-            NewRelicA.noticeNetworkFailure(for: URL(string: "https://www.google.com"), httpMethod: "GET",
+            NewRelic.noticeNetworkFailure(for: URL(string: "https://www.google.com"), httpMethod: "GET",
                                           with: NRTimer(), andFailureCode: NSURLErrorTimedOut)
         }
 
@@ -112,7 +112,7 @@ extension UtilityView {
            // NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
            //                               statusCode: 200, bytesSent: 1000, bytesReceived: 1000, responseData: Data(), traceHeaders: nil, andParams: nil)
 
-            NewRelicA.noticeNetworkRequest(for: URL(string:"https://fakeurl.com"),
+            NewRelic.noticeNetworkRequest(for: URL(string:"https://fakeurl.com"),
                                           httpMethod: "GET",
                                           startTime: Date().timeIntervalSince1970,
                                           endTime: Date().timeIntervalSince1970,
@@ -126,7 +126,7 @@ extension UtilityView {
         }
 
         func setBuild() {
-            NewRelicA.setApplicationBuild("42")
+            NewRelic.setApplicationBuild("42")
         }
 
 

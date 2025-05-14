@@ -41,12 +41,12 @@
 }
 
 - (void) testRecordCustomEventWithName {
-    XCTAssertTrue([NewRelicA recordCustomEvent:@"asdf"
+    XCTAssertTrue([NewRelic recordCustomEvent:@"asdf"
                                    attributes:nil]);
-    XCTAssertTrue([NewRelicA recordCustomEvent:@"asdf"
+    XCTAssertTrue([NewRelic recordCustomEvent:@"asdf"
                                          name:nil
                                    attributes:nil]);
-    XCTAssertTrue([NewRelicA recordCustomEvent:@"asdf"
+    XCTAssertTrue([NewRelic recordCustomEvent:@"asdf"
                                          name:@"blah"
                                    attributes:@{@"name":@"unblah"}]);
 }

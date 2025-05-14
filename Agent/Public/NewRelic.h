@@ -28,7 +28,7 @@ extern "C" {
 
 
 
-@interface NewRelicA : NSObject
+@interface NewRelic : NSObject
 
 /**************************************/
 /** Initializing the New Relic agent **/
@@ -825,7 +825,7 @@ extern "C" {
 @end
 
 // Deprecated class name, included for compatibility
-@interface NewRelicAgent : NewRelicA
+@interface NewRelicAgent : NewRelic
 @end
 
 #ifdef __cplusplus

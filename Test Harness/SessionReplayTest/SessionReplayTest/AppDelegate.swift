@@ -22,9 +22,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // The New Relic agent is set to log at NRLogLevelInfo by default, verbose logging should only be used for debugging.
         NRLogger.setLogLevels(NRLogLevelAudit.rawValue)
 //#endif
-        NewRelicA.enableFeatures([.NRFeatureFlag_NewEventSystem, .NRFeatureFlag_GestureInstrumentation])
+        NewRelic.enableFeatures([.NRFeatureFlag_NewEventSystem, .NRFeatureFlag_GestureInstrumentation])
 //        NewRelic.start(withApplicationToken:"AA49a8e151d4e77acbeb11b04f1d5e0fd57d805a77-NRMA")
-        NewRelicA.start(withApplicationToken:"AA49a8e151d4e77acbeb11b04f1d5e0fd57d805a77-NRMA",
+        NewRelic.start(withApplicationToken:"AA49a8e151d4e77acbeb11b04f1d5e0fd57d805a77-NRMA",
                        andCollectorAddress: "staging-mobile-collector.newrelic.com",
                        andCrashCollectorAddress: "staging-mobile-crash.newrelic.com")
         return true

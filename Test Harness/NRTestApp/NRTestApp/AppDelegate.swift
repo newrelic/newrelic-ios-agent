@@ -27,26 +27,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         ])
 #endif
 
-        NewRelicA.addHTTPHeaderTracking(for: ["Test"])
-        NewRelicA.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
+        NewRelic.addHTTPHeaderTracking(for: ["Test"])
+        NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
         
-        NewRelicA.saltDeviceUUID(true)
+        NewRelic.saltDeviceUUID(true)
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")
         
-        NewRelicA.setMaxEventPoolSize(5000)
-        NewRelicA.setMaxEventBufferTime(60)
+        NewRelic.setMaxEventPoolSize(5000)
+        NewRelic.setMaxEventBufferTime(60)
 
         if ProcessInfo.processInfo.environment["UITesting"] != nil {
             if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
                 clearConnectUserDefaults()
             }
 
-            NewRelicA.start(withApplicationToken: "APP-TOKEN-NRMA",
+            NewRelic.start(withApplicationToken: "APP-TOKEN-NRMA",
                            andCollectorAddress: "localhost:8080",
                            andCrashCollectorAddress: "localhost:8080")
         }
@@ -60,19 +60,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             // If the entries for collectorAddress or crashCollectorAddress are empty in NRAPI-Info.plist, start the New Relic agent with default production endpoints.
             if collectorAddress.isEmpty || crashCollectorAddress.isEmpty {
                 // Start the agent using default endpoints.
-                NewRelicA.start(withApplicationToken:apiKey)
+                NewRelic.start(withApplicationToken:apiKey)
             } else {
                 // Start the agent with custom endpoints.
-                NewRelicA.start(withApplicationToken:apiKey,
+                NewRelic.start(withApplicationToken:apiKey,
                                andCollectorAddress: collectorAddress,
                                andCrashCollectorAddress: crashCollectorAddress)
             }
         }
         
-        NewRelicA.setMaxEventPoolSize(5000)
-        NewRelicA.setMaxEventBufferTime(60)
+        NewRelic.setMaxEventPoolSize(5000)
+        NewRelic.setMaxEventBufferTime(60)
 
-        NewRelicA.logVerbose("NewRelic.start was called.")
+        NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }
 
@@ -94,7 +94,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // Background fetch handling.
     func application(_ application: UIApplication, performFetchWithCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
 
-        NewRelicA.logVerbose("performFetchWithCompletionHandler called")
+        NewRelic.logVerbose("performFetchWithCompletionHandler called")
         completionHandler(.newData)
     }
 }

@@ -16,7 +16,7 @@
                               reason:@"Intentionally created exception"
                             userInfo:nil];
     } @catch (NSException* e) {
-        [NewRelicA recordHandledException:e];
+        [NewRelic recordHandledException:e];
     }
 }
 

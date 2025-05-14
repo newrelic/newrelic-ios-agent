@@ -37,7 +37,7 @@
 - (void) testWanTypeInHarvestController
 {
     __block BOOL completed = NO;
-    NRTimer* timer = [NewRelicA createAndStartTimer];
+    NRTimer* timer = [NewRelic createAndStartTimer];
     __block NRMAHarvestableHTTPTransaction* measurement = nil;
     id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
     [[[[mockUtils stub] classMethod] andReturn:@"CDMA"] getCurrentWanType];
@@ -52,7 +52,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelicA noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                withTimer:timer
                          responseHeaders:nil
@@ -87,7 +87,7 @@
 - (void) testWanTypeInHarvestController5G
 {
     __block BOOL completed = NO;
-    NRTimer* timer = [NewRelicA createAndStartTimer];
+    NRTimer* timer = [NewRelic createAndStartTimer];
     __block NRMAHarvestableHTTPTransaction* measurement = nil;
     id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
     [[[[mockUtils stub] classMethod] andReturn:@"5G"] getCurrentWanType];
@@ -102,7 +102,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelicA noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                withTimer:timer
                          responseHeaders:nil
@@ -195,7 +195,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelicA noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                startTime:6000
                                  endTime:10000
@@ -234,7 +234,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelicA noticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelic noticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                startTime:6000
                                  endTime:10000
