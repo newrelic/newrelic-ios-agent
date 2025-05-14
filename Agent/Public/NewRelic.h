@@ -15,12 +15,12 @@
  *  data collection.
  */
 
-#import <NewRelic/NewRelicFeatureFlags.h>
-#import <NewRelic/NRConstants.h>
-#import <NewRelic/NRTimer.h>
-#import <NewRelic/NRLogger.h>
-#import <NewRelic/NewRelicCustomInteractionInterface.h>
-#import <NewRelic/NRGCDOverride.h>
+#import <NewRelicAgent/NewRelicFeatureFlags.h>
+#import <NewRelicAgent/NRConstants.h>
+#import <NewRelicAgent/NRTimer.h>
+#import <NewRelicAgent/NRLogger.h>
+#import <NewRelicAgent/NewRelicCustomInteractionInterface.h>
+#import <NewRelicAgent/NRGCDOverride.h>
 
 #ifdef __cplusplus
 extern "C" {

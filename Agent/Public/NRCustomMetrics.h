@@ -13,7 +13,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import <NewRelic/NRConstants.h>
+#import <NewRelicAgent/NRConstants.h>
 
 #ifdef __cplusplus
 extern "C" {

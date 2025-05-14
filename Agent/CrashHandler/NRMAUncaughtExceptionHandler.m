@@ -9,7 +9,7 @@
 #import "NRMAUncaughtExceptionHandler.h"
 #import "NRLogger.h"
 #import "NewRelicInternalUtils.h"
-#import <NewRelic/NewRelic.h>
+#import <NewRelicAgent/NewRelic.h>
 #import <sys/sysctl.h>
 
 @interface NRMAUncaughtExceptionHandler ()
