@@ -13,7 +13,7 @@ platform :ios do
       # Running in ./fastlane so switch dir to proj root.
       Dir.chdir("..") do
         begin
-          sh "rm -rf NewRelic.xcframework"
+          sh "rm -rf NewRelicAgent.xcframework"
           sh "rm -rf #{Constants::ARCHIVES}"
           sh "rm -rf Frameworks"
           sh "rm -rf libMobileAgent/build"
@@ -21,7 +21,7 @@ platform :ios do
           sh "rm -rf #{Constants::DD}"
           sh "rm -rf build"
           sh "rm -rf build.out"
-          sh "rm -rf cocoapods/NewRelic.xcframework"
+          sh "rm -rf cocoapods/NewRelicAgent.xcframework"
 
         rescue => ex
           # handle error

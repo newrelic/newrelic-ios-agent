@@ -2,7 +2,7 @@ import "ConstantsFastfile"
 
 platform :ios do
 
-  desc "Ouput Universal NewRelic.xcframework"
+  desc "Ouput Universal NewRelicAgent.xcframework"
   lane :internalOutputXCFramework do 
     # Now that we have the iOS.xcarchive, tvOS.xcarchive, and macOS.xcarchive 
     # and the iOS and tvOS Sim Frameworks built in archives and dd folder we can create the xcframework.
@@ -10,20 +10,20 @@ platform :ios do
       dirName = File.basename(Dir.getwd)
 
       wd = Dir.pwd
-      iosArchive = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
-      iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
-      iosSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-iphonesimulator/NewRelic.framework"
+      iosArchive = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/Products/Library/Frameworks/NewRelicAgent.framework"
+      iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelicAgent.framework.dSYM"
+      iosSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-iphonesimulator/NewRelicAgent.framework"
 
-      tvOSArchive = "#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
-      tvOSDsym = "#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
-      tvOSSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-appletvsimulator/NewRelic.framework"
+      tvOSArchive = "#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/Products/Library/Frameworks/NewRelicAgent.framework"
+      tvOSDsym = "#{wd}/#{Constants::ARCHIVES}/tvOS.xcarchive/dSYMs/NewRelicAgent.framework.dSYM"
+      tvOSSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-appletvsimulator/NewRelicAgent.framework"
 
-      watchOSArchive = "#{wd}/#{Constants::ARCHIVES}/watchOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
-      watchOSDsym = "#{wd}/#{Constants::ARCHIVES}/watchOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
-      watchOSSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-watchsimulator/NewRelic.framework"
+      watchOSArchive = "#{wd}/#{Constants::ARCHIVES}/watchOS.xcarchive/Products/Library/Frameworks/NewRelicAgent.framework"
+      watchOSDsym = "#{wd}/#{Constants::ARCHIVES}/watchOS.xcarchive/dSYMs/NewRelicAgent.framework.dSYM"
+      watchOSSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-watchsimulator/NewRelicAgent.framework"
 
-      macOSArchive = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
-      macOSDsym = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
+      macOSArchive = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/Products/Library/Frameworks/NewRelicAgent.framework"
+      macOSDsym = "#{wd}/#{Constants::ARCHIVES}/macOS.xcarchive/dSYMs/NewRelicAgent.framework.dSYM"
 
       create_xcframework(frameworks_with_dsyms: {
         iosArchive => { dsyms: iosDsym },
@@ -33,7 +33,7 @@ platform :ios do
         watchOSArchive => { dsyms: watchOSDsym },
         watchOSSimArchive => {},
         macOSArchive => { dsyms: macOSDsym }
-      }, output: "#{dirName}/NewRelic.xcframework")
+      }, output: "#{dirName}/NewRelicAgent.xcframework")
     end
 
     codesignFramework
@@ -46,30 +46,30 @@ platform :ios do
   desc "Copy dsym-upload-tools to xcframework"
   lane :cpDsymToolsToFramework do 
     Dir.chdir("..") do
-      sh("mkdir -p NewRelic.xcframework/Resources/")
-      sh("cp -r dsym-upload-tools/ NewRelic.xcframework/Resources/")
+      sh("mkdir -p NewRelicAgent.xcframework/Resources/")
+      sh("cp -r dsym-upload-tools/ NewRelicAgent.xcframework/Resources/")
     end
   end
   desc "Codesign xcframework"
   lane :codesignFramework do 
     Dir.chdir("..") do
-      sh("codesign --timestamp -v --sign \"Apple Distribution: New Relic Inc (SU7SUNGZJP)\" NewRelic.xcframework")
+      sh("codesign --timestamp -v --sign \"Apple Distribution: New Relic Inc (SU7SUNGZJP)\" NewRelicAgent.xcframework")
     end
   end
   # DEBUG LANES
   
-  desc "Ouput Universal NewRelic.xcframework for iOS Only"
+  desc "Ouput Universal NewRelicAgent.xcframework for iOS Only"
   lane :internalOutputXCFrameworkIOSOnly do 
     Dir.chdir("..") do
       wd = Dir.pwd
-      iosArchive = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/Products/Library/Frameworks/NewRelic.framework"
-      iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelic.framework.dSYM"
-      iosSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-iphonesimulator/NewRelic.framework"
+      iosArchive = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/Products/Library/Frameworks/NewRelicAgent.framework"
+      iosDsym = "#{wd}/#{Constants::ARCHIVES}/iOS.xcarchive/dSYMs/NewRelicAgent.framework.dSYM"
+      iosSimArchive = "#{wd}/#{Constants::DD}/Build/Products/#{Constants::MODE}-iphonesimulator/NewRelicAgent.framework"
 
       create_xcframework(frameworks_with_dsyms: {
         iosArchive => { dsyms: iosDsym },
         iosSimArchive => {},
-      }, output: "dylib-ios-agent/NewRelic.xcframework")
+      }, output: "dylib-ios-agent/NewRelicAgent.xcframework")
     end
 
     cpDsymToolsToFramework
