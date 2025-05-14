@@ -12,6 +12,8 @@
 #import "NRMAHandledExceptions.h"
 #import "NRMAUserActionFacade.h"
 #import "NRMAURLTransformer.h"
+#import "NRMAExceptionHandlerStartupManager.h"
+
 #if TARGET_OS_WATCH
 #import <WatchKit/WatchKit.h>
 #endif
@@ -39,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(atomic, strong) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
+@property(atomic, strong) NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager;
 @property(atomic, strong) NSString* userId;
 @property(assign) double sampleSeed;
 

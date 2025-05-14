@@ -21,7 +21,6 @@ namespace NewRelic {
         AttributeValidator& _attributeValidator;
         std::map<std::string, std::shared_ptr<AttributeBase>> _attributes;
     protected:
-        bool insertAttribute(std::shared_ptr<AttributeBase> attribute);
 
         AnalyticEvent(const std::shared_ptr<std::string> eventType,
                       unsigned long long timestamp_epoch_millis,
@@ -30,6 +29,8 @@ namespace NewRelic {
 
 
     public:
+        bool insertAttribute(std::shared_ptr<AttributeBase> attribute);
+
         static const char _delimiter = '\t';
         virtual ~AnalyticEvent();
         virtual const std::string& getEventType() const;

@@ -20,7 +20,7 @@
 
 - (void)setUp {
     [super setUp];
-    self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
 
     self.mockAgentInternal = [OCMockObject niceMockForClass:[NewRelicAgentInternal class]];
 

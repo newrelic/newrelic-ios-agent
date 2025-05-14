@@ -20,7 +20,7 @@
 - (void) setMaxEventBufferSize:(unsigned int) size;
 - (NSUInteger) getMaxEventBufferTime;
 
-- (id) initWithSessionStartTimeMS:(long long) sessionStartTime;
+- (id) initWithSessionStartTimeMS:(long long) sessionStartTime with: (NSArray*) initialEvents;
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes;
 

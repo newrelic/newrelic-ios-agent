@@ -81,6 +81,12 @@ static NSString* const kAttributesKey = @"Attributes";
     return true;
 }
 
+- (BOOL)insertAttribute:(NSString *)name value:(id)value {
+
+    _attributes[name] = value;
+    return true;
+}
+
 - (id)JSONObject {
     
     // There was a way to do this using the Objective-C runtime
