@@ -823,11 +823,6 @@ extern "C" {
           attributes:(NSDictionary* _Nullable)attributes;
 
 @end
-
-// Deprecated class name, included for compatibility
-@interface NewRelicAgent : NewRelic
-@end
-
 #ifdef __cplusplus
 }
 #endif

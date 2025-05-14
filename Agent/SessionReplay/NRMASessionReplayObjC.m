@@ -21,7 +21,7 @@
 #import "NRMASessionReplayFrameProcessorObjC.h"
 #import "NRMAMethodSwizzling.h"
 #import "NRMAAssociate.h"
-#import <NewRelic/NewRelic-Swift.h>
+#import <NewRelicAgent/NewRelicAgent-Swift.h>
 
 @interface NRMATouch : NSObject
 

@@ -8,7 +8,7 @@
 
 import Foundation
 import UIKit
-@_implementationOnly import NewRelicPrivate
+//@_implementationOnly import NewRelic_Private
 
 import OSLog
 

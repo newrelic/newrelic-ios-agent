@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
+		0209ABBD24E7054900E45C90 /* NewRelicAgent.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelicAgent.framework */; };
 		0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAC24E7042C00E45C90 /* NRAgentTestBase.m */; };
 		0209ABC424E7058500E45C90 /* NRMeasurementConsumerHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAD24E7042C00E45C90 /* NRMeasurementConsumerHelper.m */; };
 		0209ABC524E7058F00E45C90 /* testUploadFile.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0209ABAE24E7042C00E45C90 /* testUploadFile.txt */; };
@@ -180,7 +180,7 @@
 		0256584B24EB19BF00FE3125 /* NRMethodProfilerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC7624E7392E00E45C90 /* NRMethodProfilerTests.m */; };
 		0256584C24EB19BF00FE3125 /* MachineMeasurementsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC1324E7071D00E45C90 /* MachineMeasurementsTest.m */; };
 		0256584D24EB19BF00FE3125 /* NRThreadInfoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABEC24E706FA00E45C90 /* NRThreadInfoTests.m */; };
-		0256585324EB19BF00FE3125 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
+		0256585324EB19BF00FE3125 /* NewRelicAgent.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelicAgent.framework */; };
 		0256585B24EB19BF00FE3125 /* testUploadFile.txt in Resources */ = {isa = PBXBuildFile; fileRef = 0209ABAE24E7042C00E45C90 /* testUploadFile.txt */; };
 		0256585C24EB19BF00FE3125 /* JdAWN9v.png in Resources */ = {isa = PBXBuildFile; fileRef = 0209ACC024EB015D00E45C90 /* JdAWN9v.png */; };
 		025658BC24EB2ED600FE3125 /* NRMAHandledExcaptionStressor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 025658BB24EB2ED600FE3125 /* NRMAHandledExcaptionStressor.mm */; };
@@ -195,7 +195,7 @@
 		025658D424EB2F6400FE3125 /* NRMASummaryMeasurementConsumerStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 025658D124EB2F6400FE3125 /* NRMASummaryMeasurementConsumerStressor.m */; };
 		025658D524EB2F6400FE3125 /* NRMAActivityTraceMeasurementCreatorStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 025658D224EB2F6400FE3125 /* NRMAActivityTraceMeasurementCreatorStressor.m */; };
 		025658D824EB322F00FE3125 /* NRMAStressTestHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 025658D724EB322F00FE3125 /* NRMAStressTestHelper.m */; };
-		025658DC24EB34CF00FE3125 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
+		025658DC24EB34CF00FE3125 /* NewRelicAgent.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelicAgent.framework */; };
 		025658DD24EB350300FE3125 /* NRAgentTestBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAC24E7042C00E45C90 /* NRAgentTestBase.m */; };
 		025658DE24ED97CE00FE3125 /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ABAA24E7042B00E45C90 /* libOCMock.a */; };
 		025658E224EDA93500FE3125 /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ABAA24E7042B00E45C90 /* libOCMock.a */; };
@@ -216,7 +216,6 @@
 		02FF47FB24DB56B100115469 /* NewRelicAgentInternal.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F524DB56B000115469 /* NewRelicAgentInternal.m */; };
 		02FF47FC24DB56B100115469 /* NRMATaskQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47F624DB56B000115469 /* NRMATaskQueue.h */; };
 		02FF47FD24DB56B100115469 /* NRMATaskQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F724DB56B000115469 /* NRMATaskQueue.m */; };
-		02FF47FE24DB56B100115469 /* NewRelicAgent.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F824DB56B000115469 /* NewRelicAgent.m */; };
 		02FF480124DB56B900115469 /* NRMAExceptionHandlerStartupManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47FF24DB56B800115469 /* NRMAExceptionHandlerStartupManager.h */; };
 		02FF480224DB56B900115469 /* NRMAExceptionHandlerStartupManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF480024DB56B800115469 /* NRMAExceptionHandlerStartupManager.m */; };
 		02FF480A24DB573E00115469 /* NRMAUserActionFacade.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF480424DB573E00115469 /* NRMAUserActionFacade.mm */; };
@@ -726,7 +725,6 @@
 		02FF4BF824E3201400115469 /* NRMAHarvestableHTTPTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF499824DC62B700115469 /* NRMAHarvestableHTTPTransaction.m */; };
 		02FF4BF924E3201400115469 /* NRMAHarvestableActivity.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF498B24DC62B600115469 /* NRMAHarvestableActivity.m */; };
 		02FF4BFA24E3201400115469 /* NRMAUUIDStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A8824DC652C00115469 /* NRMAUUIDStore.m */; };
-		02FF4BFB24E3201400115469 /* NewRelicAgent.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F824DB56B000115469 /* NewRelicAgent.m */; };
 		02FF4BFC24E3201400115469 /* NRMACrashReportFileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48C624DC622400115469 /* NRMACrashReportFileManager.m */; };
 		02FF4BFD24E3201400115469 /* NRMATraceMachine.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF483B24DC614200115469 /* NRMATraceMachine.m */; };
 		02FF4BFF24E3201400115469 /* HexUploadPublisher.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492724DC625A00115469 /* HexUploadPublisher.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
@@ -872,7 +870,7 @@
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
-		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2B30CFBF283BFC05002341DA /* NewRelicAgent.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelicAgent.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2B33E5D22AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B33E5BD2AA9160E00AEB7B4 /* NRMASessionEvent.m */; };
 		2B33E5D32AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B33E5BD2AA9160E00AEB7B4 /* NRMASessionEvent.m */; };
 		2B33E5D42AA9160E00AEB7B4 /* NRMASessionEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B33E5D12AA9160E00AEB7B4 /* NRMASessionEvent.h */; };
@@ -1065,8 +1063,7 @@
 		344508DF291AD7C300322DA7 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
 		344508E0291AD7C300322DA7 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9292E2912D72F001449B6 /* JSON.framework */; };
 		344508E1291AD7C300322DA7 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
-		344E49492D932762008174A1 /* SupportabilityMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E49482D932762008174A1 /* SupportabilityMetrics.swift */; };
-		344E494B2D93288F008174A1 /* APrivateHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 344E494A2D93288F008174A1 /* APrivateHeader.h */; };
+		344E494B2D93288F008174A1 /* APrivateHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 344E494A2D93288F008174A1 /* APrivateHeader.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		344E494D2D934CF8008174A1 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */; };
 		344E49502D935072008174A1 /* RRWebEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494F2D935072008174A1 /* RRWebEvent.swift */; };
 		34544D142A3142F900B5A8D1 /* NRMAEventManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 34544D122A3142F900B5A8D1 /* NRMAEventManager.h */; };
@@ -1433,7 +1430,6 @@
 		348233A12BC5F3250070FAC3 /* NRMAUserAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF480624DB573E00115469 /* NRMAUserAction.m */; };
 		348233A22BC5F32B0070FAC3 /* Agent.h in Headers */ = {isa = PBXBuildFile; fileRef = 021A15BD24C9EEE700E8DFD5 /* Agent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		348233A32BC5F32B0070FAC3 /* NRMATaskQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F724DB56B000115469 /* NRMATaskQueue.m */; };
-		348233A42BC5F32B0070FAC3 /* NewRelicAgent.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F824DB56B000115469 /* NewRelicAgent.m */; };
 		348233A52BC5F32B0070FAC3 /* NRMAExceptionHandlerStartupManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47FF24DB56B800115469 /* NRMAExceptionHandlerStartupManager.h */; };
 		348233A62BC5F32B0070FAC3 /* NRURLSessionTaskDelegateBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47E324DB567600115469 /* NRURLSessionTaskDelegateBase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		348233A72BC5F32B0070FAC3 /* NewRelicCustomInteractionInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47E424DB567600115469 /* NewRelicCustomInteractionInterface.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1921,7 +1917,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */,
+				2B30CFBF283BFC05002341DA /* NewRelicAgent.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2063,7 +2059,7 @@
 		0209ACB424E747FA00E45C90 /* NewRelicAgentTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NewRelicAgentTests.m; sourceTree = "<group>"; };
 		0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewRelicAgentTests.h; sourceTree = "<group>"; };
 		0209ACC024EB015D00E45C90 /* JdAWN9v.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = JdAWN9v.png; sourceTree = "<group>"; };
-		021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		021A15BA24C9EEE700E8DFD5 /* NewRelicAgent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelicAgent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		021A15BD24C9EEE700E8DFD5 /* Agent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Agent.h; sourceTree = "<group>"; };
 		021A15BE24C9EEE700E8DFD5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0256586024EB19BF00FE3125 /* Agent_tvos_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Agent_tvos_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2100,7 +2096,6 @@
 		02FF47F524DB56B000115469 /* NewRelicAgentInternal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NewRelicAgentInternal.m; sourceTree = "<group>"; };
 		02FF47F624DB56B000115469 /* NRMATaskQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMATaskQueue.h; sourceTree = "<group>"; };
 		02FF47F724DB56B000115469 /* NRMATaskQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMATaskQueue.m; sourceTree = "<group>"; };
-		02FF47F824DB56B000115469 /* NewRelicAgent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NewRelicAgent.m; sourceTree = "<group>"; };
 		02FF47FF24DB56B800115469 /* NRMAExceptionHandlerStartupManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAExceptionHandlerStartupManager.h; sourceTree = "<group>"; };
 		02FF480024DB56B800115469 /* NRMAExceptionHandlerStartupManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAExceptionHandlerStartupManager.m; sourceTree = "<group>"; };
 		02FF480424DB573E00115469 /* NRMAUserActionFacade.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMAUserActionFacade.mm; sourceTree = "<group>"; };
@@ -2478,7 +2473,6 @@
 		3431DD172BED375E00FF145F /* Agent-watchos-Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Agent-watchos-Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3431DD952BED4F0700FF145F /* Agent-watchOS.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Agent-watchOS.xctestplan"; sourceTree = "<group>"; };
 		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
-		344E49482D932762008174A1 /* SupportabilityMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportabilityMetrics.swift; sourceTree = "<group>"; };
 		344E494A2D93288F008174A1 /* APrivateHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = APrivateHeader.h; sourceTree = "<group>"; };
 		344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayFrameProcessor.swift; sourceTree = "<group>"; };
 		344E494F2D935072008174A1 /* RRWebEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RRWebEvent.swift; sourceTree = "<group>"; };
@@ -2491,7 +2485,6 @@
 		34731B0A26B378FE00CE568A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
 		34731B0C26B3790600CE568A /* TVUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVUIKit.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/TVUIKit.framework; sourceTree = DEVELOPER_DIR; };
 		34731B0E26B3791000CE568A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.5.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
-		3477DD092D9753BA0061C3E4 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		3478A89126B36F920056F3B3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A526B36F9C0056F3B3 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/CoreTelephony.framework; sourceTree = DEVELOPER_DIR; };
 		3478A8A726B36FA70056F3B3 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -2602,7 +2595,7 @@
 				34731AFC26B376B400CE568A /* CoreTelephony.framework in Frameworks */,
 				34731AFB26B376A600CE568A /* CoreData.framework in Frameworks */,
 				025658DE24ED97CE00FE3125 /* libOCMock.a in Frameworks */,
-				0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */,
+				0209ABBD24E7054900E45C90 /* NewRelicAgent.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2635,7 +2628,7 @@
 				34731B0F26B3791000CE568A /* SystemConfiguration.framework in Frameworks */,
 				34731B0D26B3790600CE568A /* TVUIKit.framework in Frameworks */,
 				34731B0B26B378FE00CE568A /* CoreData.framework in Frameworks */,
-				0256585324EB19BF00FE3125 /* NewRelic.framework in Frameworks */,
+				0256585324EB19BF00FE3125 /* NewRelicAgent.framework in Frameworks */,
 				025658E224EDA93500FE3125 /* libOCMock.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2644,7 +2637,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				025658DC24EB34CF00FE3125 /* NewRelic.framework in Frameworks */,
+				025658DC24EB34CF00FE3125 /* NewRelicAgent.framework in Frameworks */,
 				025658E324EDA93600FE3125 /* libOCMock.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3039,7 +3032,7 @@
 		021A15BB24C9EEE700E8DFD5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */,
+				021A15BA24C9EEE700E8DFD5 /* NewRelicAgent.framework */,
 				02FF4CAC24E3201400115469 /* NewRelic.framework */,
 				0209ABB824E7054800E45C90 /* Agent_Tests.xctest */,
 				0256586024EB19BF00FE3125 /* Agent_tvos_Tests.xctest */,
@@ -3053,7 +3046,6 @@
 		021A15BC24C9EEE700E8DFD5 /* Agent */ = {
 			isa = PBXGroup;
 			children = (
-				3477DCF42D9753900061C3E4 /* Project Module */,
 				348713D32B8D39C1005A264C /* SessionReplay */,
 				022A81C62502F22F003748E6 /* General */,
 				02FF4AC824DC657100115469 /* Network */,
@@ -3190,7 +3182,6 @@
 				021A15BD24C9EEE700E8DFD5 /* Agent.h */,
 				02FF47FF24DB56B800115469 /* NRMAExceptionHandlerStartupManager.h */,
 				02FF480024DB56B800115469 /* NRMAExceptionHandlerStartupManager.m */,
-				02FF47F824DB56B000115469 /* NewRelicAgent.m */,
 				02FF47F424DB56B000115469 /* NRMAAgentVersion.h */,
 				02FF47F624DB56B000115469 /* NRMATaskQueue.h */,
 				02FF47F724DB56B000115469 /* NRMATaskQueue.m */,
@@ -3876,7 +3867,6 @@
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
-				3493DF042D397D2400BF5BED /* ViewDetails.swift */,
 				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
 			);
 			path = ViewCaptors;
@@ -3892,14 +3882,6 @@
 				341E851A2D9F643300968D7D /* AnyRRWebEvent.swift */,
 			);
 			path = RRWebModels;
-			sourceTree = "<group>";
-		};
-		3477DCF42D9753900061C3E4 /* Project Module */ = {
-			isa = PBXGroup;
-			children = (
-				3477DD092D9753BA0061C3E4 /* module.modulemap */,
-			);
-			path = "Project Module";
 			sourceTree = "<group>";
 		};
 		348713D32B8D39C1005A264C /* SessionReplay */ = {
@@ -3933,7 +3915,6 @@
 				3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */,
 				3493DF4F2D543C8700BF5BED /* IDGenerator.swift */,
 				34D0401D2D86036D007BE92D /* UIColor+HexString.swift */,
-				344E49482D932762008174A1 /* SupportabilityMetrics.swift */,
 				344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */,
 				341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */,
 				340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */,
@@ -4100,6 +4081,7 @@
 				021A15BF24C9EEE700E8DFD5 /* Agent.h in Headers */,
 				02FF47EB24DB567600115469 /* NRWKNavigationDelegateBase.h in Headers */,
 				02FF47EF24DB567600115469 /* NewRelicCustomInteractionInterface.h in Headers */,
+				344E494B2D93288F008174A1 /* APrivateHeader.h in Headers */,
 				02FF490F24DC624400115469 /* NRMACrashReport_Thread.h in Headers */,
 				02FF481E24DB5B8100115469 /* NRMAApplicationInstrumentation.h in Headers */,
 				02FF480D24DB573E00115469 /* NRMAUserActionFacade.h in Headers */,
@@ -4243,7 +4225,6 @@
 				02FF4ACF24DC657B00115469 /* NRMAHTTPUtilities.h in Headers */,
 				02FF4ACE24DC657B00115469 /* NRMAHTTPUtilities+cppInterface.h in Headers */,
 				02FF4AD024DC657B00115469 /* NRMANetworkFacade.h in Headers */,
-				344E494B2D93288F008174A1 /* APrivateHeader.h in Headers */,
 				02FF49A724DC62B800115469 /* NRMAScopedMeasurements.h in Headers */,
 				02FF491524DC624400115469 /* NRMACrashReport_SignalInfo.h in Headers */,
 				02FF4AA424DC652E00115469 /* NewRelicInternalUtils.h in Headers */,
@@ -4777,7 +4758,7 @@
 			);
 			name = Agent_iOS;
 			productName = Agent;
-			productReference = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */;
+			productReference = 021A15BA24C9EEE700E8DFD5 /* NewRelicAgent.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		025657F124EB19BF00FE3125 /* Agent_tvos_Tests */ = {
@@ -5448,7 +5429,6 @@
 				348713EE2B8D56CB005A264C /* NRMAUIViewDetailsObjC.m in Sources */,
 				02FF49B924DC62B800115469 /* NRMAHarvestableActivity.m in Sources */,
 				02FF4AA324DC652E00115469 /* NRMAUUIDStore.m in Sources */,
-				02FF47FE24DB56B100115469 /* NewRelicAgent.m in Sources */,
 				02FF48DB24DC622700115469 /* NRMACrashReportFileManager.m in Sources */,
 				02FF484D24DC614200115469 /* NRMATraceMachine.m in Sources */,
 				02FF48AB24DC61E900115469 /* NRMAWKWebViewInstrumentation.m in Sources */,
@@ -5640,7 +5620,6 @@
 				02FF485E24DC615A00115469 /* NRMALoggerBridge.mm in Sources */,
 				02FF496E24DC629000115469 /* NRMAHarvesterConfiguration.m in Sources */,
 				02FF483F24DC614200115469 /* NRMATraceMachineAgentUserInterface.m in Sources */,
-				344E49492D932762008174A1 /* SupportabilityMetrics.swift in Sources */,
 				02FF488224DC61A100115469 /* NRMANSURLConnectionDelegateBase.m in Sources */,
 				3493DF482D4C4BEE00BF5BED /* SessionReplayFrame.swift in Sources */,
 				3493DF4C2D542D9900BF5BED /* UIViewThingy.swift in Sources */,
@@ -5804,7 +5783,6 @@
 				02FF4BF824E3201400115469 /* NRMAHarvestableHTTPTransaction.m in Sources */,
 				02FF4BF924E3201400115469 /* NRMAHarvestableActivity.m in Sources */,
 				02FF4BFA24E3201400115469 /* NRMAUUIDStore.m in Sources */,
-				02FF4BFB24E3201400115469 /* NewRelicAgent.m in Sources */,
 				02FF4BFC24E3201400115469 /* NRMACrashReportFileManager.m in Sources */,
 				02FF4BFD24E3201400115469 /* NRMATraceMachine.m in Sources */,
 				02FF4BFF24E3201400115469 /* HexUploadPublisher.mm in Sources */,
@@ -6235,7 +6213,6 @@
 				348232D22BC5F2050070FAC3 /* NRMAHarvestableMetric.m in Sources */,
 				348232BB2BC5F1F60070FAC3 /* NRMAHarvesterConnection+GZip.m in Sources */,
 				348232FC2BC5F20B0070FAC3 /* NRMATraceConfiguration.m in Sources */,
-				348233A42BC5F32B0070FAC3 /* NewRelicAgent.m in Sources */,
 				348232812BC5F1AE0070FAC3 /* NRMAHarvestableHTTPTransactionGeneration.m in Sources */,
 				348233082BC5F2140070FAC3 /* NRMAExceptionReportAdaptor.mm in Sources */,
 				3482327D2BC5F1AE0070FAC3 /* NRMAMeasurementConsumer.m in Sources */,
@@ -6655,7 +6632,7 @@
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
-				PRODUCT_NAME = NewRelic;
+				PRODUCT_NAME = NewRelicAgent;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";
@@ -6712,7 +6689,7 @@
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
-				PRODUCT_NAME = NewRelic;
+				PRODUCT_NAME = NewRelicAgent;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";

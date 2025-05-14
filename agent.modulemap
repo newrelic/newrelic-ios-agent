@@ -1,7 +1,12 @@
 //  Copyright © 2023 New Relic. All rights reserved.
 
-framework module NewRelic {
+framework module NewRelicAgent {
     umbrella header "Agent.h"
     export *
     module * { export * }
+    
+    explicit module NewRelicAgent_Private {
+        header "APrivateHeader.h"
+        export *
+    }
 }

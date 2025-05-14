@@ -56,7 +56,8 @@
 #import "NRAutoLogCollector.h"
 #import "NRMAAttributeValidator.h"
 
-#import <NewRelic/NewRelic-Swift.h>
+//#import <NewRelic/NewRelic-Swift.h>
+#import <NewRelicAgent/NewRelicAgent-Swift.h>
 
 
 // Support for teardown and re-setup of the agent within a process lifetime for our test harness
