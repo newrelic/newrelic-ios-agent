@@ -71,7 +71,7 @@ struct RRWebMutationData: Codable {
     let attributes: [AttributeRecord]?
     
     enum CodingKeys: CodingKey {
-        case adds, removes, texts, attributes
+        case adds, removes, texts, attributes, source
     }
 }
 
