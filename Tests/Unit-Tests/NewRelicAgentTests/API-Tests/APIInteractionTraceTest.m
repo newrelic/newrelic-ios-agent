@@ -17,7 +17,7 @@
 #import <OCMock/OCMock.h>
 #import <objc/runtime.h>
 #import "NRMATaskQueue.h"
-#import "NewRelic.h"
+#import "NewRelicAgent.h"
 #import "NewRelicAgentInternal.h"
 #import "NRMAAnalytics.h"
 #import <OCMock/OCMock.h>

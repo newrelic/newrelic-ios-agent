@@ -31,7 +31,7 @@
 
 #define kNRMA_NAME @"name"
 
-@implementation NewRelic
+@implementation NewRelicAgent : NSObject 
 
 + (void) crashNow
 {
@@ -614,7 +614,7 @@
 }
 
 + (BOOL) incrementAttribute:(NSString*)name {
-    return [NewRelic incrementAttribute:name value:@1];
+    return [NewRelicAgent incrementAttribute:name value:@1];
 }
 
 + (BOOL) incrementAttribute:(NSString*)name
@@ -700,7 +700,7 @@
     if(name.length) {
         [mutableAttributes setValue:name forKey:kNRMA_NAME];
     }
-    return [NewRelic recordCustomEvent:eventType attributes:mutableAttributes];
+    return [NewRelicAgent recordCustomEvent:eventType attributes:mutableAttributes];
 }
 
 + (BOOL) recordCustomEvent:(NSString*)eventType

@@ -7,7 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import <NewRelic/NewRelic.h>
+#import <NewRelic/NewRelicAgent.h>
 #import <OCMock/OCMock.h>
 #import "NRMAAnalytics.h"
 #import "NewRelicAgentInternal.h"
@@ -41,12 +41,12 @@
 }
 
 - (void) testRecordCustomEventWithName {
-    XCTAssertTrue([NewRelic recordCustomEvent:@"asdf"
+    XCTAssertTrue([NewRelicAgent recordCustomEvent:@"asdf"
                                    attributes:nil]);
-    XCTAssertTrue([NewRelic recordCustomEvent:@"asdf"
+    XCTAssertTrue([NewRelicAgent recordCustomEvent:@"asdf"
                                          name:nil
                                    attributes:nil]);
-    XCTAssertTrue([NewRelic recordCustomEvent:@"asdf"
+    XCTAssertTrue([NewRelicAgent recordCustomEvent:@"asdf"
                                          name:@"blah"
                                    attributes:@{@"name":@"unblah"}]);
 }

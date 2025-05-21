@@ -28,7 +28,7 @@ extern "C" {
 
 
 
-@interface NewRelic : NSObject
+@interface NewRelicAgent : NSObject
 
 /**************************************/
 /** Initializing the New Relic agent **/
@@ -822,10 +822,6 @@ extern "C" {
 + (void) recordError:(NSError* _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes;
 
-@end
-
-// Deprecated class name, included for compatibility
-@interface NewRelicAgent : NewRelic
 @end
 
 #ifdef __cplusplus

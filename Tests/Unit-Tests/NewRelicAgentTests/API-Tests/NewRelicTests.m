@@ -8,7 +8,7 @@
 
 #import <XCTest/XCTest.h>
 #import "NRMATraceController.h"
-#import "NewRelic.h"
+#import "NewRelicAgent.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMAFLags.h"
 #import "NRMAAgentConfiguration.h"
@@ -94,13 +94,13 @@ static NewRelicAgentInternal* _sharedInstance;
     [NRMATraceController startTracingWithName:@"TEST"
                             interactionObject:self];
     XCTAssertNoThrow(
-                     [NewRelic startTracingMethod:NSSelectorFromString(@"asdf123__3;.//@@$@!")
+                     [NewRelicAgentstartTracingMethod:NSSelectorFromString(@"asdf123__3;.//@@$@!")
                                            object:self
                                             timer:[[NRTimer alloc] init]
                                          category:NRTraceTypeDatabase], @"");
 
     XCTAssertNoThrow(
-                     [NewRelic startTracingMethod:nil
+                     [NewRelicAgentstartTracingMethod:nil
                                            object:self
                                             timer:[[NRTimer alloc] init]
                                          category:NRTraceTypeImages],@"");
@@ -111,7 +111,7 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 - (void) testCrashNow {
-    XCTAssertThrowsSpecific([NewRelic crashNow], NSException);
+    XCTAssertThrowsSpecific([NewRelicAgentcrashNow], NSException);
 }
 
 - (void) testEnableCrashReporting {
@@ -120,14 +120,14 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertFalse(flags, @"flags should be empty");
     
     BOOL enable = TRUE;
-    [NewRelic enableCrashReporting:enable];
+    [NewRelicAgentenableCrashReporting:enable];
     flags = [NRMAFlags featureFlags];
 
     XCTAssertTrue(flags & NRFeatureFlag_CrashReporting, @"flags should have Crash Reporting enabled");
     XCTAssertFalse(flags & ~NRFeatureFlag_CrashReporting , @"flags shouldn't have any other bit enabled.");
     
     BOOL disable = FALSE;
-    [NewRelic enableCrashReporting:disable];
+    [NewRelicAgentenableCrashReporting:disable];
     flags = [NRMAFlags featureFlags];
     XCTAssertFalse(flags & NRFeatureFlag_CrashReporting, @"flags should have Crash Reporting disabled");
 }
@@ -136,7 +136,7 @@ static NewRelicAgentInternal* _sharedInstance;
     NRMAConnectInformation* config = [NRMAAgentConfiguration connectionInformation];
     NRMAApplicationPlatform currentPlatform = config.deviceInformation.platform;
     XCTAssertNotEqual(currentPlatform, NRMAPlatform_Flutter);
-    [NewRelic setPlatform:NRMAPlatform_Flutter];
+    [NewRelicAgentsetPlatform:NRMAPlatform_Flutter];
     config = [NRMAAgentConfiguration connectionInformation];
     currentPlatform = config.deviceInformation.platform;
     XCTAssertEqual(currentPlatform, NRMAPlatform_Flutter);
@@ -150,7 +150,7 @@ static NewRelicAgentInternal* _sharedInstance;
     double startTime = 6000;
     double endTime = 10000;
 
-    [NewRelic noticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelicAgentnoticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
                           andFailureCode:-1];
@@ -175,14 +175,14 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertFalse(flags, @"flags should be empty");
     
     XCTAssertFalse([NRMAFlags shouldEnableInteractionTracing], @"flags should be empty");
-    XCTAssertNil([NewRelic startInteractionWithName:@"test"], @"should be nil when Interaction Tracing is disabled");
+    XCTAssertNil([NewRelicAgentstartInteractionWithName:@"test"], @"should be nil when Interaction Tracing is disabled");
     
-    [NewRelic enableFeatures:NRFeatureFlag_InteractionTracing];
+    [NewRelicAgentenableFeatures:NRFeatureFlag_InteractionTracing];
     flags = [NRMAFlags featureFlags];
     XCTAssertTrue(flags & NRFeatureFlag_InteractionTracing, @"flags should have Interaction Tracing enabled");
     XCTAssertFalse(flags & ~NRFeatureFlag_InteractionTracing , @"flags shouldn't have any other bit enabled.");
     
-    XCTAssertNotNil([NewRelic startInteractionWithName:@"test"]);
+    XCTAssertNotNil([NewRelicAgentstartInteractionWithName:@"test"]);
 }
 
 - (void) testEnableNewEventSystem {
@@ -192,11 +192,11 @@ static NewRelicAgentInternal* _sharedInstance;
     
     XCTAssertFalse([NRMAFlags shouldEnableNewEventSystem], @"flags should be empty");
     
-    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
+    [NewRelicAgentenableFeatures:NRFeatureFlag_NewEventSystem];
     flags = [NRMAFlags featureFlags];
     XCTAssertTrue(flags & NRFeatureFlag_NewEventSystem, @"flags should have New Event System enabled");
     XCTAssertFalse(flags & ~NRFeatureFlag_NewEventSystem , @"flags shouldn't have any other bit enabled.");
-    [NewRelic disableFeatures:NRFeatureFlag_NewEventSystem];
+    [NewRelicAgentdisableFeatures:NRFeatureFlag_NewEventSystem];
 }
 
 - (void) testEnableOfflineStorage {
@@ -206,7 +206,7 @@ static NewRelicAgentInternal* _sharedInstance;
     
     XCTAssertFalse([NRMAFlags shouldEnableOfflineStorage], @"flags should be empty");
     
-    [NewRelic enableFeatures:NRFeatureFlag_OfflineStorage];
+    [NewRelicAgentenableFeatures:NRFeatureFlag_OfflineStorage];
     flags = [NRMAFlags featureFlags];
     XCTAssertTrue(flags & NRFeatureFlag_OfflineStorage, @"flags should have offline storage enabled");
     XCTAssertFalse(flags & ~NRFeatureFlag_OfflineStorage , @"flags shouldn't have any other bit enabled.");
@@ -217,7 +217,7 @@ static NewRelicAgentInternal* _sharedInstance;
     NRMAMeasurementConsumerHelper* metricHelper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:metricHelper];
-    [NewRelic recordMetricWithName:@"world" category:@"hello"];
+    [NewRelicAgentrecordMetricWithName:@"world" category:@"hello"];
 
     double delayInSeconds = 2.0;
     __block bool done = false;
@@ -247,7 +247,7 @@ static NewRelicAgentInternal* _sharedInstance;
     NRMAMeasurementConsumerHelper* metricHelper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:metricHelper];
-    [NewRelic recordMetricWithName:@"world" category:@"hello" value:[NSNumber numberWithInt:200]];
+    [NewRelicAgentrecordMetricWithName:@"world" category:@"hello" value:[NSNumber numberWithInt:200]];
 
     double delayInSeconds = 2.0;
     __block bool done = NO;
@@ -274,7 +274,7 @@ static NewRelicAgentInternal* _sharedInstance;
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:metricHelper];
     NSString* fullMetricName = [NSString stringWithFormat:@"Custom/%@/%@[%@]",@"hello",@"world",kNRMetricUnitsOperations];
-    [NewRelic recordMetricWithName:@"world"
+    [NewRelicAgentrecordMetricWithName:@"world"
                           category:@"hello"
                              value:[NSNumber numberWithInt:100]
                         valueUnits:kNRMetricUnitsOperations];
@@ -303,7 +303,7 @@ static NewRelicAgentInternal* _sharedInstance;
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:metricHelper];
     NSString* fullMetricName = [NSString stringWithFormat:@"Custom/%@/%@[|%@]",@"hello",@"world",kNRMetricUnitSeconds];
-    [NewRelic recordMetricWithName:@"world"
+    [NewRelicAgentrecordMetricWithName:@"world"
                           category:@"hello"
                              value:[NSNumber numberWithInt:1]
                         valueUnits:nil
@@ -328,26 +328,26 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 - (void) testSetAttribute {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
-    XCTAssertEqual([analytics setSessionAttribute:@"a" value:@4], [NewRelic setAttribute:@"a" value:@4]);
+    XCTAssertEqual([analytics setSessionAttribute:@"a" value:@4], [NewRelicAgentsetAttribute:@"a" value:@4]);
 }
 
 - (void) testIncrementAttribute {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
-    XCTAssertEqual([analytics incrementSessionAttribute:@"a" value:@1], [NewRelic incrementAttribute:@"a"]);
+    XCTAssertEqual([analytics incrementSessionAttribute:@"a" value:@1], [NewRelicAgentincrementAttribute:@"a"]);
 }
 
 - (void) testSetUserID {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
     XCTAssertTrue([analytics setSessionAttribute:@"userId" value:@"test"]);
-    XCTAssertTrue([NewRelic setUserId:@"test"]);
+    XCTAssertTrue([NewRelicAgentsetUserId:@"test"]);
 }
 
 - (void) testSetUserIdSessionBehavior {
     // set userId to testId
-    BOOL success = [NewRelic setUserId:@"testId"];
+    BOOL success = [NewRelicAgentsetUserId:@"testId"];
     XCTAssertTrue(success);
     // set userId to Bob
-    success = [NewRelic setUserId:@"Bob"];
+    success = [NewRelicAgentsetUserId:@"Bob"];
     XCTAssertTrue(success);
     NSString* attributes = [[NewRelicAgentInternal sharedInstance].analyticsController sessionAttributeJSONString];
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
@@ -355,7 +355,7 @@ static NewRelicAgentInternal* _sharedInstance;
                                                              error:nil];
     XCTAssertTrue([decode[@"userId"] isEqualToString:@"Bob"]);
     // set userId to NULL
-    success = [NewRelic setUserId:NULL];
+    success = [NewRelicAgentsetUserId:NULL];
     XCTAssertTrue(success);
     [self.mockNewRelicInternals stopMocking];
 }
@@ -365,28 +365,28 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertTrue([analytics setSessionAttribute:@"a" value:@"test"]);
     XCTAssertTrue([analytics removeSessionAttributeNamed:@"a"]);
     XCTAssertTrue([analytics setSessionAttribute:@"a" value:@"test"]);
-    XCTAssertTrue([NewRelic removeAttribute:@"a"]);
+    XCTAssertTrue([NewRelicAgentremoveAttribute:@"a"]);
 }
 
 - (void) testRemoveAllAttributes {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
-    XCTAssertEqual([analytics removeAllSessionAttributes], [NewRelic removeAllAttributes]);
+    XCTAssertEqual([analytics removeAllSessionAttributes], [NewRelicAgentremoveAllAttributes]);
 }
 - (void) testRecordHandledExceptions {
-    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+    XCTAssertNoThrow([NewRelicAgentrecordHandledException:[NSException exceptionWithName:@"testException"
                                                                               reason:@"testing"
                                                                             userInfo:@{}]]);
-    XCTAssertNoThrow([NewRelic recordHandledException:nil withAttributes: nil]);
-    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+    XCTAssertNoThrow([NewRelicAgentrecordHandledException:nil withAttributes: nil]);
+    XCTAssertNoThrow([NewRelicAgentrecordHandledException:[NSException exceptionWithName:@"testException"
                                                                               reason:@"testing"
                                                                             userInfo:@{}] withAttributes: nil]);
     NSDictionary *dict = @{ @"name" : @"test name", @"reason" : @"test reason"};
-    XCTAssertNoThrow([NewRelic recordHandledExceptionWithStackTrace: dict]);
+    XCTAssertNoThrow([NewRelicAgentrecordHandledExceptionWithStackTrace: dict]);
 }
 - (void) testRecordError {
-    XCTAssertNoThrow([NewRelic recordError:[NSError errorWithDomain:@"Unknown" code:NSURLErrorCancelled userInfo:nil]]);
-    XCTAssertNoThrow([NewRelic recordError:nil attributes: nil]);
-    XCTAssertNoThrow([NewRelic recordError:[NSException exceptionWithName:@"testException"
+    XCTAssertNoThrow([NewRelicAgentrecordError:[NSError errorWithDomain:@"Unknown" code:NSURLErrorCancelled userInfo:nil]]);
+    XCTAssertNoThrow([NewRelicAgentrecordError:nil attributes: nil]);
+    XCTAssertNoThrow([NewRelicAgentrecordError:[NSException exceptionWithName:@"testException"
                                                                    reason:@"testing"
                                                                  userInfo:@{}] attributes: nil]);
 }
@@ -398,8 +398,8 @@ static NewRelicAgentInternal* _sharedInstance;
         [[NewRelicAgentInternal sharedInstance] destroyAgent];
     }
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
-    XCTAssertNoThrow([NewRelic setApplicationVersion:@"1.0"]);
-    XCTAssertNoThrow([NewRelic setApplicationBuild:@"1.0"], );
+    XCTAssertNoThrow([NewRelicAgentsetApplicationVersion:@"1.0"]);
+    XCTAssertNoThrow([NewRelicAgentsetApplicationBuild:@"1.0"], );
     
 }
 
@@ -407,16 +407,16 @@ static NewRelicAgentInternal* _sharedInstance;
     [self.mockNewRelicInternals stopMocking];
     
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
-    [NewRelic startWithApplicationToken:Nil];
+    [NewRelicAgentstartWithApplicationToken:Nil];
     XCTAssertNil([NewRelicAgentInternal sharedInstance], @"Should not start agent without application token");
 }
 
 // XCode will run tests in alphabetical order, so the sharedInstance will exist for any tests alphabetically after this
 -(void) testSetApplicationBuildAndVersionPostSessionStart {
-    [NewRelic startWithApplicationToken:@"test"];
+    [NewRelicAgentstartWithApplicationToken:@"test"];
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
-    XCTAssertThrows([NewRelic setApplicationBuild:@"1.0"], @"Should throw if a session has already been started. Application Version must be set first.");
-    XCTAssertThrows([NewRelic setApplicationVersion:@"1.0"], @"Should throw if a session has already been started. Application Version must be set first.");
+    XCTAssertThrows([NewRelicAgentsetApplicationBuild:@"1.0"], @"Should throw if a session has already been started. Application Version must be set first.");
+    XCTAssertThrows([NewRelicAgentsetApplicationVersion:@"1.0"], @"Should throw if a session has already been started. Application Version must be set first.");
     [[NewRelicAgentInternal sharedInstance] destroyAgent];
 }
 
@@ -433,20 +433,20 @@ static NewRelicAgentInternal* _sharedInstance;
     [[controller harvester] configureHarvester:harvesterConfig];
     
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
-    XCTAssertNotNil([NewRelic generateDistributedTracingHeaders]);
+    XCTAssertNotNil([NewRelicAgentgenerateDistributedTracingHeaders]);
 }
 
 -(void) testCrossProcessId {
-    XCTAssertEqual([[[[NRMAHarvestController harvestController] harvester] crossProcessID] copy], [NewRelic crossProcessId]);
+    XCTAssertEqual([[[[NRMAHarvestController harvestController] harvester] crossProcessID] copy], [NewRelicAgentcrossProcessId]);
 }
 
 -(void) testCurrentSessionId {
-    XCTAssertEqual([[[NewRelicAgentInternal sharedInstance] currentSessionId] copy], [NewRelic currentSessionId]);
+    XCTAssertEqual([[[NewRelicAgentInternal sharedInstance] currentSessionId] copy], [NewRelicAgentcurrentSessionId]);
 }
 
 -(void) testRecordBreadcrumb {
     NRMAAnalytics* analytics = [NewRelicAgentInternal sharedInstance].analyticsController;
-    XCTAssertEqual([analytics addBreadcrumb:@"test" withAttributes:nil], [NewRelic recordBreadcrumb:@"test" attributes:nil]);
+    XCTAssertEqual([analytics addBreadcrumb:@"test" withAttributes:nil], [NewRelicAgentrecordBreadcrumb:@"test" attributes:nil]);
 }
 
 -(void) testURLRegexRules {
@@ -454,7 +454,7 @@ static NewRelicAgentInternal* _sharedInstance;
     @{ @"^http(s{0,1})://(http).*/(\\d)\\d*" : @"https://httpbin.org/status/418"
     };
     
-    [NewRelic setURLRegexRules:regexs];
+    [NewRelicAgentsetURLRegexRules:regexs];
     NRMAURLTransformer *regexTransformer = [[NRMAURLTransformer alloc] initWithRegexRules:regexs];
     NRMAURLTransformer *internalTransformer = [NewRelicAgentInternal getURLTransformer];
     NSURL *test1 = [regexTransformer transformURL:[NSURL URLWithString:@"https://httpstat.us/200"]];
@@ -467,17 +467,17 @@ static NewRelicAgentInternal* _sharedInstance;
     [self.mockNewRelicInternals stopMocking];
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
 
-    [NewRelic shutdown];
+    [NewRelicAgentshutdown];
 }
 
 -(void) testAddHTTPHeaderTrackingDefault {
     [self.mockNewRelicInternals stopMocking];
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
-//    [NewRelic httpHeadersAddedForTracking]
-    XCTAssertNotNil([NewRelic httpHeadersAddedForTracking]);
-    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-NAME"]);
-    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-TYPE"]);
-    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-ID"]);
+//    [NewRelicAgenthttpHeadersAddedForTracking]
+    XCTAssertNotNil([NewRelicAgenthttpHeadersAddedForTracking]);
+    XCTAssertTrue([[NewRelicAgenthttpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-NAME"]);
+    XCTAssertTrue([[NewRelicAgenthttpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-TYPE"]);
+    XCTAssertTrue([[NewRelicAgenthttpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-ID"]);
 }
 
 -(void) testAddHTTPHeaderTracking {
@@ -485,16 +485,16 @@ static NewRelicAgentInternal* _sharedInstance;
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
     
     // Add a new header value to track
-    [NewRelic addHTTPHeaderTrackingFor:@[@"Test"]];
+    [NewRelicAgentaddHTTPHeaderTrackingFor:@[@"Test"]];
 
-    XCTAssertNotNil([NewRelic httpHeadersAddedForTracking]);
-    XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"Test"]);
-    XCTAssertFalse([[NewRelic httpHeadersAddedForTracking] containsObject:@"Fake"]);
+    XCTAssertNotNil([NewRelicAgenthttpHeadersAddedForTracking]);
+    XCTAssertTrue([[NewRelicAgenthttpHeadersAddedForTracking] containsObject:@"Test"]);
+    XCTAssertFalse([[NewRelicAgenthttpHeadersAddedForTracking] containsObject:@"Fake"]);
     
     // Make sure you can't add duplicates
-    NSUInteger count = [NewRelic httpHeadersAddedForTracking].count;
-    [NewRelic addHTTPHeaderTrackingFor:@[@"Test", @"X-APOLLO-OPERATION-TYPE"]];
-    XCTAssertTrue([NewRelic httpHeadersAddedForTracking].count == count);
+    NSUInteger count = [NewRelicAgenthttpHeadersAddedForTracking].count;
+    [NewRelicAgentaddHTTPHeaderTrackingFor:@[@"Test", @"X-APOLLO-OPERATION-TYPE"]];
+    XCTAssertTrue([NewRelicAgenthttpHeadersAddedForTracking].count == count);
 }
 
 -(void) testSetShutdown {
@@ -503,101 +503,101 @@ static NewRelicAgentInternal* _sharedInstance;
         
         XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
         
-        [NewRelic shutdown];
+        [NewRelicAgentshutdown];
         // Test double shutdown call
-        [NewRelic shutdown];
+        [NewRelicAgentshutdown];
         // Test log when agent is shutdown.
-        XCTAssertNoThrow([NewRelic logInfo:@"Wazzzup?"]);
-        XCTAssertNoThrow([NewRelic logError:@"Wazzzup?"]);
-        XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
-        XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
-        XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelicAgentlogInfo:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelicAgentlogError:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelicAgentlogVerbose:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelicAgentlogWarning:@"Wazzzup?"]);
+        XCTAssertNoThrow([NewRelicAgentlogAudit:@"Wazzzup?"]);
         
         // Can't assert
-        [NewRelic startTracingMethod:NSSelectorFromString(@"methodName")
+        [NewRelicAgentstartTracingMethod:NSSelectorFromString(@"methodName")
                               object:self
                                timer:[[NRTimer alloc] init]
                             category:NRTraceTypeDatabase];
         
         // NR shouldn't crash if agent is shutdown.
-        XCTAssertNoThrow([NewRelic crashNow]);
+        XCTAssertNoThrow([NewRelicAgentcrashNow]);
         
         // Can't assert.
-        [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]];
+        [NewRelicAgentrecordHandledException:[NSException exceptionWithName:@"Hot Tea Exception" reason:@"the Tea is too hot" userInfo:@{}]];
         NSDictionary* dict = @{@"string":@"string",
                                @"num":@1};
         // Can't assert
-        [NewRelic recordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"
+        [NewRelicAgentrecordHandledException:[NSException exceptionWithName:@"Hot Tea Exception"
                                                                  reason:@"the tea is too hot"
                                                                userInfo:nil]
                           withAttributes:dict];
         // Can't assert
-        [NewRelic recordHandledExceptionWithStackTrace:dict];
+        [NewRelicAgentrecordHandledExceptionWithStackTrace:dict];
         // Can't assert
-        [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}]];
+        [NewRelicAgentrecordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}]];
         // Can't assert
-        [NewRelic recordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}] attributes:dict];
+        [NewRelicAgentrecordError:[NSError errorWithDomain:@"domain" code:NSURLErrorUnknown userInfo:@{}] attributes:dict];
         
-        XCTAssertFalse([NewRelic startInteractionWithName:@"InteractionName"]);
-        
-        // Can't assert
-        [NewRelic stopCurrentInteraction:@"InteractionName"];
+        XCTAssertFalse([NewRelicAgentstartInteractionWithName:@"InteractionName"]);
         
         // Can't assert
-        [NewRelic endTracingMethodWithTimer:[[NRTimer alloc] init]];
+        [NewRelicAgentstopCurrentInteraction:@"InteractionName"];
         
-        XCTAssertFalse([NewRelic setAttribute:@"attr" value:@5]);
-        XCTAssertFalse([NewRelic incrementAttribute: @"attr"]);
+        // Can't assert
+        [NewRelicAgentendTracingMethodWithTimer:[[NRTimer alloc] init]];
         
-        XCTAssertFalse([NewRelic removeAttribute: @"attr"]);
-        XCTAssertFalse([NewRelic removeAllAttributes]);
-        XCTAssertFalse([NewRelic recordCustomEvent:@"asdf"
+        XCTAssertFalse([NewRelicAgentsetAttribute:@"attr" value:@5]);
+        XCTAssertFalse([NewRelicAgentincrementAttribute: @"attr"]);
+        
+        XCTAssertFalse([NewRelicAgentremoveAttribute: @"attr"]);
+        XCTAssertFalse([NewRelicAgentremoveAllAttributes]);
+        XCTAssertFalse([NewRelicAgentrecordCustomEvent:@"asdf"
                                               name:@"blah"
                                         attributes:@{@"name":@"unblah"}]);
-        XCTAssertFalse([NewRelic recordBreadcrumb:@"test" attributes:dict]);
+        XCTAssertFalse([NewRelicAgentrecordBreadcrumb:@"test" attributes:dict]);
         
         // Can't assert
-        [NewRelic recordCustomEvent:@"EventName" attributes:dict];
+        [NewRelicAgentrecordCustomEvent:@"EventName" attributes:dict];
     } @finally{
         resetMyBoolPropertyMock();
     }
 }
 
 - (void) testLogging {
-    XCTAssertNoThrow([NewRelic logInfo:@"Wazzzup?"]);
-    XCTAssertNoThrow([NewRelic logError:@"Wazzzup?"]);
-    XCTAssertNoThrow([NewRelic logVerbose:@"Wazzzup?"]);
-    XCTAssertNoThrow([NewRelic logWarning:@"Wazzzup?"]);
-    XCTAssertNoThrow([NewRelic logAudit:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelicAgentlogInfo:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelicAgentlogError:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelicAgentlogVerbose:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelicAgentlogWarning:@"Wazzzup?"]);
+    XCTAssertNoThrow([NewRelicAgentlogAudit:@"Wazzzup?"]);
 
     NSDictionary *dict = @{@"logLevel": @"WARN",
                            @"message": @"This is a test message for the New Relic logging system."};
 
-    XCTAssertNoThrow([NewRelic logAll:dict]);
+    XCTAssertNoThrow([NewRelicAgentlogAll:dict]);
 
     NSError* error = [NSError errorWithDomain:@"NSErrorUnknownDomain" code:NSURLErrorUnknown userInfo:@{}];
 
-    XCTAssertNoThrow([NewRelic logErrorObject:error]);
+    XCTAssertNoThrow([NewRelicAgentlogErrorObject:error]);
 
     NSDictionary *dict2 = @{@"logLevel": @"WARN",
                            @"message": @"This is a test message for the New Relic logging system."};
 
-    XCTAssertNoThrow([NewRelic logAttributes:dict2]);
+    XCTAssertNoThrow([NewRelicAgentlogAttributes:dict2]);
 
 }
 
 - (void) testRecordHandledExceptionsNewEventSystem {
-    [NewRelic enableFeatures:NRFeatureFlag_NewEventSystem];
-    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+    [NewRelicAgentenableFeatures:NRFeatureFlag_NewEventSystem];
+    XCTAssertNoThrow([NewRelicAgentrecordHandledException:[NSException exceptionWithName:@"testException"
                                                                               reason:@"testing"
                                                                             userInfo:@{}]]);
-    XCTAssertNoThrow([NewRelic recordHandledException:nil withAttributes: nil]);
-    XCTAssertNoThrow([NewRelic recordHandledException:[NSException exceptionWithName:@"testException"
+    XCTAssertNoThrow([NewRelicAgentrecordHandledException:nil withAttributes: nil]);
+    XCTAssertNoThrow([NewRelicAgentrecordHandledException:[NSException exceptionWithName:@"testException"
                                                                               reason:@"testing"
                                                                             userInfo:@{}] withAttributes: nil]);
     NSDictionary *dict = @{ @"name" : @"test name", @"reason" : @"test reason"};
-    XCTAssertNoThrow([NewRelic recordHandledExceptionWithStackTrace: dict]);
-    [NewRelic disableFeatures:NRFeatureFlag_NewEventSystem];
+    XCTAssertNoThrow([NewRelicAgentrecordHandledExceptionWithStackTrace: dict]);
+    [NewRelicAgentdisableFeatures:NRFeatureFlag_NewEventSystem];
 
 }
 
