@@ -7,13 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "NewRelicFeatureFlags.h"
 
 static NSMutableArray *deferredMetrics;
 
 @interface NRMASupportMetricHelper : NSObject
 + (void) enqueueDataUseMetric:(NSString*)subDestination size:(long)size received:(long)received;
-+ (void) enqueueFeatureFlagMetric:(BOOL)enabled features:(NRMAFeatureFlags)features;
++ (void) enqueueFeatureFlagMetric:(BOOL)enabled features:(unsigned long long)features;
 + (void) enqueueInstallMetric;
 + (void) enqueueMaxPayloadSizeLimitMetric:(NSString*)endpoint;
 + (void) enqueueUpgradeMetric;

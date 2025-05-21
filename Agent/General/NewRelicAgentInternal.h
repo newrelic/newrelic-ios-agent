@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "NewRelicFeatureFlags.h"
 #import "NRMAMeasurements.h"
 #import "NRMAHandledExceptions.h"
 #import "NRMAUserActionFacade.h"

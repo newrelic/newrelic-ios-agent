@@ -32,7 +32,7 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
                                           additionalValue:[NSNumber numberWithLongLong:received]]];
 }
 
-+ (void) enqueueFeatureFlagMetric:(BOOL)enabled features:(NRMAFeatureFlags)features {
++ (void) enqueueFeatureFlagMetric:(BOOL)enabled features:(unsigned long long)features {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     for (NSString *name in [NRMAFlags namesForFlags:features]) {
         NSString* featureFlagString = [NSString stringWithFormat:@"Supportability/Mobile/%@/%@/API/%@/%@",
