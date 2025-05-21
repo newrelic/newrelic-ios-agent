@@ -47,15 +47,15 @@ static NewRelicAgentInternal* _sharedInstance;
     NSURLSession* session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:self.queue];
     self.mockSession = [OCMockObject partialMockForObject:session];
     
-    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-
     NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
                                                   collectorAddress:KNRMA_TEST_COLLECTOR_HOST
                                                       crashAddress:nil];
     [NRMAHarvestController initialize:config];
-
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
     NRMAHarvesterConfiguration* harvesterConfig = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
     [harvesterConfig setTrusted_account_key:@"777"];
+    harvesterConfig.account_id = 1234567;
+    harvesterConfig.application_id = 1234567;
     [[controller harvester] configureHarvester:harvesterConfig];
     
     self.finished = false;
