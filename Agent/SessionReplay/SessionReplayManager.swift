@@ -19,6 +19,8 @@ public class SessionReplayManager: NSObject {
     public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
         
+    public var isFistChunck = true
+
     @objc public init(reporter: SessionReplayReporter) {
         self.sessionReplay = NRMASessionReplay()
         self.sessionReplayReporter = reporter
@@ -56,6 +58,9 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
+        guard let url = sessionReplayReporter.uploadURL(isFistChunk: true) else {
+            return
+        }
         Task {
             // Fetch processed frames and processed touches concurrently
             let processedFrames = sessionReplay.getSessionReplayFrames()
@@ -87,7 +92,7 @@ public class SessionReplayManager: NSObject {
             if let jsonData = try? encoder.encode(container),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 NRLOG_DEBUG(jsonString)
-                sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: jsonData)
+                sessionReplayReporter.enqueueSessionReplayUpload(upload: SessionReplayData.init(sessionReplayFramesData: jsonData, url: url))
             }
         }
     }
