@@ -19,7 +19,7 @@ public class SessionReplayManager: NSObject {
     public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
         
-    public var isFistChunck = true
+    public var isFirstChunck = true
 
     @objc public init(reporter: SessionReplayReporter) {
         self.sessionReplay = NRMASessionReplay()
