@@ -35,7 +35,7 @@ public class SessionReplayManager: NSObject {
             return
         }
 
-        NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) ms")
+        NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
 
         self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
 

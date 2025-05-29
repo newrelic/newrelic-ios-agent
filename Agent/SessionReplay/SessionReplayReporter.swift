@@ -25,7 +25,7 @@ public class SessionReplayReporter: NSObject {
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
        uploadQueue.async {
-           guard let gzippedData = upload.sessionReplayFramesData.gzipped() else {
+           guard let gzippedData = NRMAHarvesterConnection.gzipData(upload.sessionReplayFramesData) else {
                NRLOG_ERROR("Failed to gzip session replay data")
                return
            }
@@ -53,8 +53,10 @@ public class SessionReplayReporter: NSObject {
              }
 
              var request = URLRequest(url: upload.url)
-             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-             request.setValue("deflate", forHTTPHeaderField: "Content-Encoding")
+             request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+             request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
+             request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+             request.setValue(String(formattedData.count), forHTTPHeaderField: "Content-Length")
              request.setValue(applicationToken, forHTTPHeaderField:"X-App-License-Key")
 
              request.httpMethod = "POST"
@@ -128,25 +130,5 @@ public class SessionReplayReporter: NSObject {
 
         NRLOG_DEBUG(urlComponents?.url?.absoluteString ?? "Error constructing URL for session replay upload")
         return urlComponents?.url
-    }
-}
-
-extension Data {
-    func gzipped() -> Data? {
-        guard !self.isEmpty else { return nil }
-        return self.withUnsafeBytes { (sourcePointer: UnsafeRawBufferPointer) -> Data? in
-            guard let sourceBaseAddress = sourcePointer.baseAddress else { return nil }
-            
-            let sourceBuffer = UnsafeBufferPointer(start: sourceBaseAddress.assumingMemoryBound(to: UInt8.self), count: self.count)
-            
-            let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: self.count)
-            defer { destinationBuffer.deallocate() }
-            
-            let compressedSize = compression_encode_buffer(destinationBuffer, self.count, sourceBuffer.baseAddress!, sourceBuffer.count, nil, COMPRESSION_ZLIB)
-            
-            guard compressedSize != 0 else { return nil }
-            
-            return Data(bytes: destinationBuffer, count: compressedSize)
-        }
     }
 }
