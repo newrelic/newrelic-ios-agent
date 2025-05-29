@@ -23,7 +23,7 @@ public class SessionReplayReporter: NSObject {
         self.applicationToken = applicationToken
     }
 
-    internal func enqueueSessionReplayUpload(upload: SessionReplayData) {
+    func enqueueSessionReplayUpload(upload: SessionReplayData) {
        uploadQueue.async {
            guard let gzippedData = upload.sessionReplayFramesData.gzipped() else {
                NRLOG_ERROR("Failed to gzip session replay data")
@@ -106,7 +106,7 @@ public class SessionReplayReporter: NSObject {
             "entityGuid": config.entity_guid,
             "agentVersion": NewRelicInternalUtils.agentVersion(),
             "session": NewRelicAgentInternal.sharedInstance().currentSessionId(),
-            "isFirstChunk": String(isFistChunk),
+            "isFirstChunk": String(isFirstChunk),
             "rrweb.version": "^2.0.0-alpha.17",
             "payload.type": "standard"
         ]
@@ -126,9 +126,7 @@ public class SessionReplayReporter: NSObject {
             URLQueryItem(name: "attributes", value: attributesString)
         ]
 
-        if let finalURL = urlComponents?.url {
-            NRLOG_DEBUG(finalURL.absoluteString)
-        }
+        NRLOG_DEBUG(urlComponents?.url?.absoluteString ?? "Error constructing URL for session replay upload")
         return urlComponents?.url
     }
 }
