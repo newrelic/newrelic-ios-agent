@@ -58,7 +58,7 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
-        guard let url = sessionReplayReporter.uploadURL(isFistChunk: true) else {
+        guard let url = sessionReplayReporter.uploadURL(isFirstChunk: true) else {
             return
         }
         Task {
