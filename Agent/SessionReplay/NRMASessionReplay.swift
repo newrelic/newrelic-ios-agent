@@ -42,8 +42,12 @@ public class NRMASessionReplay: NSObject {
             return
         }
         
-        self.frameTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(takeFrame), userInfo: nil, repeats: true)
-        RunLoop.current.add(self.frameTimer, forMode: .common)
+        sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
+        
+        DispatchQueue.main.async { [self] in
+            self.frameTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(takeFrame), userInfo: nil, repeats: true)
+            RunLoop.current.add(self.frameTimer, forMode: .common)
+        }
     }
     
    public func stop() {

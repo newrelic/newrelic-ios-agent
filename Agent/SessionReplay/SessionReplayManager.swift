@@ -30,16 +30,18 @@ public class SessionReplayManager: NSObject {
 
     public func start() {
         sessionReplay.start()
+        isFirstChunck = true
         guard !isRunning() else {
             NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
             return
         }
 
         NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
-
-        self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
-
-        RunLoop.current.add(self.harvestTimer!, forMode: .default)
+        DispatchQueue.main.async { [self] in
+            self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
+            
+            RunLoop.current.add(self.harvestTimer!, forMode: .default)
+        }
     }
     
     public func stop() {
@@ -58,9 +60,10 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
-        guard let url = sessionReplayReporter.uploadURL(isFirstChunk: true) else {
+        guard let url = sessionReplayReporter.uploadURL(isFirstChunk: isFirstChunck) else {
             return
         }
+        isFirstChunck = false
         Task {
             // Fetch processed frames and processed touches concurrently
             let processedFrames = sessionReplay.getSessionReplayFrames()
