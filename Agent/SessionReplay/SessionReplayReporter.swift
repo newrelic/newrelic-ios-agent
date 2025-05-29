@@ -97,7 +97,7 @@ public class SessionReplayReporter: NSObject {
        self.processNextUploadTask()
    }
     
-    func uploadURL(isFistChunk: Bool) -> URL? {
+    func uploadURL(isFirstChunk: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
             NRLOG_ERROR("Error accessing config information")
             return nil
