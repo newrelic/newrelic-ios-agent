@@ -40,9 +40,10 @@ public class SessionReplayReporter: NSObject {
              guard let self = self, !self.isUploading, !self.sessionReplayFramesUploadArray.isEmpty else {
                  return
              }
-             let upload = self.sessionReplayFramesUploadArray.first!
 
              self.isUploading = true
+             
+             let upload = self.sessionReplayFramesUploadArray.first!
              let formattedData = upload.sessionReplayFramesData
 
              if formattedData.count > kNRMAMaxPayloadSizeLimit {
