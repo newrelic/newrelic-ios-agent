@@ -29,18 +29,19 @@ public class SessionReplayManager: NSObject {
     }
 
     public func start() {
-        DispatchQueue.main.async { [self] in
+        DispatchQueue.global(qos: .background).async { [self] in
             sessionReplay.start()
             isFirstChunck = true
             guard !isRunning() else {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
             }
-
+            
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
             self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvestTick), userInfo: nil, repeats: true)
             
             RunLoop.current.add(self.harvestTimer!, forMode: .default)
+            RunLoop.current.run()
         }
     }
     
