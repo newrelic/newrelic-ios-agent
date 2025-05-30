@@ -371,7 +371,6 @@ static NewRelicAgentInternal* _sharedInstance;
     if (@available(iOS 13.0, *)) {
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter];
-        [_sessionReplay start];
     }
 #endif
 }

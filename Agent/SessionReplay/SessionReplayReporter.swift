@@ -101,7 +101,7 @@ public class SessionReplayReporter: NSObject {
     
     func uploadURL(isFirstChunk: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
-            NRLOG_ERROR("Error accessing config information")
+            NRLOG_ERROR("Error accessing harvester configuration information")
             return nil
         }
         let attributes: [String: String] = [

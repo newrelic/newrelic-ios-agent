@@ -22,7 +22,8 @@ public class NRMASessionReplay: NSObject {
     private let sessionReplayTouchProcessor = TouchEventProcessor()
     private var frameTimer: Timer!
     private var rawFrames = [SessionReplayFrame]()
-    
+    public var windowDimensions = CGSize(width: 0, height: 0)
+
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
         
     public override init() {
@@ -44,10 +45,8 @@ public class NRMASessionReplay: NSObject {
         
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
         
-        DispatchQueue.main.async { [self] in
-            self.frameTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(takeFrame), userInfo: nil, repeats: true)
-            RunLoop.current.add(self.frameTimer, forMode: .common)
-        }
+        self.frameTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(takeFrame), userInfo: nil, repeats: true)
+        RunLoop.current.add(self.frameTimer, forMode: .common)
     }
     
    public func stop() {
@@ -90,7 +89,13 @@ public class NRMASessionReplay: NSObject {
     @MainActor
     @objc func didBecomeActive() {
         NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
-        self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: getWindow()!)
+        guard let window = getWindow() else {
+            NRLOG_ERROR("No key window found on didBecomeActive")
+            return
+        }
+        self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
+        windowDimensions.width = window.frame.width
+        windowDimensions.height = window.frame.height
         swizzleSendEvent()
         start()
     }
