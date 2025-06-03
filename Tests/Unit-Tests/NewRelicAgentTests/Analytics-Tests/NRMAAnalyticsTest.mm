@@ -905,8 +905,10 @@
     NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
                                                                                           bytesReceived:200
                                                                                            responseTime:[timer timeElapsedInSeconds]];
-
-    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+    
+    NRMAPayload *payload = [[NRMAPayload alloc] initWithTimestamp:[timer timeElapsedInSeconds] accountID:@"1" appID:@"1" traceID:@"1" parentID:@"1" trustedAccountKey:@"1"];
+    payload.dtEnabled = true;
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:payload]);
     
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -923,6 +925,10 @@
     XCTAssertTrue([decode[0][@"bytesSent"] isEqual:@100]);
     XCTAssertTrue([decode[0][@"bytesReceived"] isEqual:@200]);
     XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
+    XCTAssertTrue([decode[0][@"traceId"] isEqual:@"1"]);
+    XCTAssertTrue([decode[0][@"trace.id"] isEqual:@"1"]);
+    XCTAssertNotNil(decode[0][@"id"]);
+    XCTAssertNotNil(decode[0][@"guid"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertFalse([decode[0][@"requestUrl"] isEqualToString:urlString]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
@@ -959,7 +965,9 @@
                                                                            encodedResponseBody:responseBody
                                                                                  appDataHeader:appDataHeader];
 
-    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+    NRMAPayload *payload = [[NRMAPayload alloc] initWithTimestamp:[timer timeElapsedInSeconds] accountID:@"1" appID:@"1" traceID:@"1" parentID:@"1" trustedAccountKey:@"1"];
+    payload.dtEnabled = true;
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:payload]);
 
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -981,7 +989,10 @@
     XCTAssertTrue([decode[0][@"networkError"] isEqualToString:@"unauthorized"]);
     XCTAssertTrue([decode[0][@"nr.X-NewRelic-App-Data"] isEqualToString:appDataHeader]);
     XCTAssertTrue([decode[0][@"nr.responseBody"] isEqualToString:responseBodyEncoded]);
-
+    XCTAssertTrue([decode[0][@"traceId"] isEqual:@"1"]);
+    XCTAssertTrue([decode[0][@"trace.id"] isEqual:@"1"]);
+    XCTAssertNotNil(decode[0][@"id"]);
+    XCTAssertNotNil(decode[0][@"guid"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertNil(decode[0][@"networkErrorCode"]);
 
