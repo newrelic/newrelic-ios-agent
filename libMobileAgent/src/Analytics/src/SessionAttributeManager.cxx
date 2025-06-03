@@ -548,7 +548,11 @@ SessionAttributeManager::SessionAttributeManager(PersistentStore<std::string,Bas
         NRJSON::JsonObject object = NRJSON::JsonObject();
         for (const auto& attribute : attributes) {
             auto value = attribute.second->getValue();
-            switch(value->getCategory()) {
+            if (!value) { // Null check
+                LLOG_ERROR("Attribute \"%s\" has a null value.", attribute.first.c_str());
+                continue;
+            }
+            switch (value->getCategory()) {
                 case BaseValue::Category::STRING:
                     object[(std::string) attribute.first] = (dynamic_cast<String*>(value.get()))->getValue().c_str();
                     break;
@@ -558,10 +562,13 @@ SessionAttributeManager::SessionAttributeManager(PersistentStore<std::string,Bas
                 case BaseValue::Category::BOOLEAN:
                     object[(std::string) attribute.first] = (dynamic_cast<Boolean*>(value.get()))->getValue();
                     break;
+                default:
+                    LLOG_ERROR("Unknown category for attribute \"%s\".", attribute.first.c_str());
+                    break;
             }
         }
 
-       auto returnObject = std::make_shared<NRJSON::JsonObject>(object);
+        auto returnObject = std::make_shared<NRJSON::JsonObject>(object);
         return returnObject;
     }
 }

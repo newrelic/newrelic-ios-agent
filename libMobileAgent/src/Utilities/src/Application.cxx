@@ -20,7 +20,9 @@ const ApplicationContext& Application::getContext() const {
 }
 
 bool Application::isValid() {
-    return _context.getApplicationId().length() > 0 && _context.getAccountId().length() > 0;
+    // The default applicationId and accountId is 0
+    return _context.getApplicationId().length() > 0 && _context.getApplicationId() != "0"
+        && _context.getAccountId().length() > 0 && _context.getAccountId() != "0";
 }
 
 void Application::setContext(ApplicationContext&& context) {

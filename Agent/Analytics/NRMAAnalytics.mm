@@ -409,6 +409,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
             if (traceId.length > 0) {
                 [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+                [event addAttribute:kNRMA_Attrib_traceId value:traceId];
             }
         }
         

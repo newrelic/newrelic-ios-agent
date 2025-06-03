@@ -37,7 +37,7 @@
 }
 + (NSString *) headerFromContext:(NRMATraceContext*) traceContext {
                           //1  2  3  4  5  6  7   9  10
-    NSString *formatStr = @"%@=%@-%@-%@-%@-%@-%@-%@-%lld";
+    NSString *formatStr = @"%@=%@-%@-%@-%@-%@-%@-%@--%lld";
 
     // Do not base64 encode. traceContext.spanId should equal traceparent->parentId.
     NSString *headerString = [NSString stringWithFormat:formatStr,
