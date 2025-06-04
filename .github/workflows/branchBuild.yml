@@ -1,5 +1,5 @@
 name: BespokeBuild
-on:  
+on:
   workflow_dispatch:
     # The input version number (ex: 7.4.0) and branch are required for the bespoke branch build. Branch is an automatically added selector for all github actions.
     inputs:
