@@ -100,7 +100,7 @@ public class SessionReplayReporter: NSObject {
        self.processNextUploadTask()
    }
     
-    func uploadURL(isFirstChunk: Bool) -> URL? {
+    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
             NRLOG_ERROR("Error accessing harvester configuration information")
             return nil
@@ -111,7 +111,11 @@ public class SessionReplayReporter: NSObject {
             "session": NewRelicAgentInternal.sharedInstance().currentSessionId(),
             "isFirstChunk": String(isFirstChunk),
             "rrweb.version": "^2.0.0-alpha.17",
-            "payload.type": "standard"
+            "payload.type": "standard",
+            "hasMeta": String(true),
+            "decompressedBytes": String(uncompressedDataSize),
+            "replay.firstTimestamp": String(firstTimestamp),
+            "replay.lastTimestamp": String(lastTimestamp)
         ]
         
         let attributesString = attributes.map { key, value in
