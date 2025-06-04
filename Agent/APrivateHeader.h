@@ -18,5 +18,6 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConnection+GZip.h"
+#import "NRMABool.h"
 
 #endif /* APrivateHeader_h */
