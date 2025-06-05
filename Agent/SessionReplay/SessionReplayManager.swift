@@ -31,11 +31,11 @@ public class SessionReplayManager: NSObject {
     public func start() {
         DispatchQueue.global(qos: .background).async { [self] in
             sessionReplay.start()
-            isFirstChunck = true
             guard !isRunning() else {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
             }
+            isFirstChunck = true
             
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
             self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvestTick), userInfo: nil, repeats: true)
@@ -58,6 +58,13 @@ public class SessionReplayManager: NSObject {
 
     func isRunning() -> Bool {
         return self.harvestTimer != nil && self.harvestTimer!.isValid
+    }
+    
+    // This function is to handle a session change created by a change in userId
+    @objc public func newSession() {
+        stop()
+        harvest()
+        start()
     }
     
     @objc func harvestTick() {

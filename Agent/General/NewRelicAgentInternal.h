@@ -83,6 +83,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
 
+- (void) sessionReplayStartNewSession;
+
 @end
 
 /*

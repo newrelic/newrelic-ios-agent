@@ -117,7 +117,7 @@ public class SessionReplayReporter: NSObject {
             "replay.firstTimestamp": String(firstTimestamp),
             "replay.lastTimestamp": String(lastTimestamp)
         ]
-        if let userId = NewRelicAgentInternal.sharedInstance().userId, !userId.isEmpty {
+        if let userId = NewRelicAgentInternal.sharedInstance().getUserId(), !userId.isEmpty {
             attributes["userId"] = userId
         }
         
