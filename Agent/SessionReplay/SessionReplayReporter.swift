@@ -105,7 +105,7 @@ public class SessionReplayReporter: NSObject {
             NRLOG_ERROR("Error accessing harvester configuration information")
             return nil
         }
-        let attributes: [String: String] = [
+        var attributes: [String: String] = [
             "entityGuid": config.entity_guid,
             "agentVersion": NewRelicInternalUtils.agentVersion(),
             "session": NewRelicAgentInternal.sharedInstance().currentSessionId(),
@@ -117,6 +117,9 @@ public class SessionReplayReporter: NSObject {
             "replay.firstTimestamp": String(firstTimestamp),
             "replay.lastTimestamp": String(lastTimestamp)
         ]
+        if let userId = NewRelicAgentInternal.sharedInstance().userId, !userId.isEmpty {
+            attributes["userId"] = userId
+        }
         
         let attributesString = attributes.map { key, value in
             let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
