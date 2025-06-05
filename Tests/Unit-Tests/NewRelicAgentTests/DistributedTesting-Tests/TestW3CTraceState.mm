@@ -45,8 +45,8 @@
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
     
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *desiredHeader = @"1@nr=0-2-10816994-25789457-17172750e6ff8549---1609970157093";
-    
+    NSString *desiredHeader = @"1@nr=0-2-10816994-25789457-17172750e6ff8549----1609970157093";
+
     // assert
     XCTAssert([traceState isEqualToString: desiredHeader]);
 }
@@ -63,8 +63,8 @@
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
     
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *desiredHeader = @"1@nr=0-2-10816994-25789457-17172750e6ff8549---1609970157093";
-    
+    NSString *desiredHeader = @"1@nr=0-2-10816994-25789457-17172750e6ff8549----1609970157093";
+
     // assert
     XCTAssert([traceState isEqualToString: desiredHeader]);
 }
@@ -86,7 +86,7 @@
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithPayload: payload];
     
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *desiredHeader = @"@nr=0-2-10816994-25789457-17172750e6ff8549---1609970157093";
+    NSString *desiredHeader = @"@nr=0-2-10816994-25789457-17172750e6ff8549----1609970157093";
 
     // assert
     XCTAssert([traceState isEqualToString: desiredHeader]);
@@ -105,7 +105,7 @@
     NRMATraceContext *traceContext = [[NRMATraceContext alloc] initWithNRMAPayload: payload];
     
     NSString *traceState = [W3CTraceState headerFromContext:traceContext];
-    NSString *desiredHeader = @"@nr=0-2-10816994-25789457-17172750e6ff8549---1609970157093";
+    NSString *desiredHeader = @"@nr=0-2-10816994-25789457-17172750e6ff8549----1609970157093";
 
     // assert
     XCTAssert([traceState isEqualToString: desiredHeader]);

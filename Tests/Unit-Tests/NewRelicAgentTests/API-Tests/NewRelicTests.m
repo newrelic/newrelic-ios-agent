@@ -25,6 +25,8 @@
 #import "NewRelicAgentTests.h"
 #import "NRMAHarvestController.h"
 #import "NRMAHTTPUtilities.h"
+#import "NRMAAppToken.h"
+#import "NRTestConstants.h"
 #import <OCMock/OCMock.h>
 #import <objc/runtime.h>
 
@@ -419,6 +421,17 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 -(void) testTracingHeaders {
+    NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                  collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                      crashAddress:nil];
+    [NRMAHarvestController initialize:config];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+
+    NRMAHarvesterConfiguration* harvesterConfig = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+    harvesterConfig.account_id = 1234567;
+    harvesterConfig.application_id = 1234567;
+    [[controller harvester] configureHarvester:harvesterConfig];
+    
     XCTAssertNotNil([NewRelicAgentInternal sharedInstance]);
     XCTAssertNotNil([NewRelic generateDistributedTracingHeaders]);
 }
