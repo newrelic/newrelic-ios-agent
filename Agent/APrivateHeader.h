@@ -19,5 +19,6 @@
 #import "NRMAHarvestController.h"
 #import "NRMAHarvesterConnection+GZip.h"
 #import "NRMABool.h"
+#import "Constants.h"
 
 #endif /* APrivateHeader_h */
