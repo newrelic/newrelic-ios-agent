@@ -115,7 +115,8 @@ public class SessionReplayReporter: NSObject {
             "hasMeta": String(true),
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(firstTimestamp),
-            "replay.lastTimestamp": String(lastTimestamp)
+            "replay.lastTimestamp": String(lastTimestamp),
+            "content_encoding": "gzip"
         ]
         if let userId = NewRelicAgentInternal.sharedInstance().getUserId(), !userId.isEmpty {
             attributes["userId"] = userId
