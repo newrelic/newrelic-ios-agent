@@ -34,6 +34,7 @@ extern NSString *const kNRMA_RA_upgradeFrom;
 extern NSString *const kNRMA_RA_platform;
 extern NSString *const kNRMA_RA_platformVersion;
 extern NSString *const kNRMA_RA_lastInteraction;
+extern NSString *const kNRMA_RA_hasReplay;
 extern NSString *const kNRMA_RA_appDataHeader;
 extern NSString *const kNRMA_RA_responseBody;
 
