@@ -107,8 +107,6 @@ public class SessionReplayReporter: NSObject {
         }
         var attributes: [String: String] = [
             "entityGuid": config.entity_guid,
-            "agentVersion": NewRelicInternalUtils.agentVersion(),
-            "session": NewRelicAgentInternal.sharedInstance().currentSessionId(),
             "isFirstChunk": String(isFirstChunk),
             "rrweb.version": "^2.0.0-alpha.17",
             "payload.type": "standard",
@@ -118,8 +116,17 @@ public class SessionReplayReporter: NSObject {
             "replay.lastTimestamp": String(lastTimestamp),
             "content_encoding": "gzip"
         ]
-        if let userId = NewRelicAgentInternal.sharedInstance().getUserId(), !userId.isEmpty {
-            attributes["userId"] = userId
+        do {
+            if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
+               !sessionAttributes.isEmpty,
+               let data = sessionAttributes.data(using: .utf8),
+               let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                for (key, value) in dictionary {
+                    attributes[key] = value as? String
+                }
+            }
+        } catch {
+            NRLOG_ERROR("Failed to retrieve session attributes: \(error)")
         }
         
         let attributesString = attributes.map { key, value in
