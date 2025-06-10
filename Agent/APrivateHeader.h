@@ -20,5 +20,6 @@
 #import "NRMAHarvesterConnection+GZip.h"
 #import "NRMABool.h"
 #import "Constants.h"
+#import "NRMAExceptionMetaDataStore.h"
 
 #endif /* APrivateHeader_h */

@@ -105,6 +105,10 @@ public class SessionReplayReporter: NSObject {
             NRLOG_ERROR("Error accessing harvester configuration information")
             return nil
         }
+        guard let cStringAppVersion: UnsafePointer<CChar> = NRMA_getAppVersion(), let appVersion = String(validatingUTF8: cStringAppVersion) else {
+            NRLOG_ERROR("Error accessing app version information")
+            return nil
+        }
         var attributes: [String: String] = [
             "entityGuid": config.entity_guid,
             "isFirstChunk": String(isFirstChunk),
@@ -114,7 +118,8 @@ public class SessionReplayReporter: NSObject {
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(firstTimestamp),
             "replay.lastTimestamp": String(lastTimestamp),
-            "content_encoding": "gzip"
+            "content_encoding": "gzip",
+            "appVersion": appVersion
         ]
         do {
             if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
