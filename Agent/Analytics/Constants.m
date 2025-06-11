@@ -35,6 +35,7 @@ NSString * const kNRMA_RA_upgradeFrom        = @"upgradeFrom";
 NSString * const kNRMA_RA_platform           = @"platform";
 NSString * const kNRMA_RA_platformVersion    = @"platformVersion";
 NSString * const kNRMA_RA_lastInteraction    = @"lastInteraction";
+NSString * const kNRMA_RA_hasReplay          = @"hasReplay";
 NSString * const kNRMA_RA_appDataHeader      = @"nr.X-NewRelic-App-Data";
 NSString * const kNRMA_RA_responseBody       = @"nr.responseBody";
 

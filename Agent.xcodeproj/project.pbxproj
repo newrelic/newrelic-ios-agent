@@ -1532,6 +1532,7 @@
 		F83A77B12B48810900B3D180 /* NRMAOfflineStorageTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F83A77AF2B48810900B3D180 /* NRMAOfflineStorageTests.m */; };
 		F848CDC02AA133EA0082052F /* NRMAInteractionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */; };
 		F848CDC12AA133EA0082052F /* NRMAInteractionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */; };
+		F85558532DE7C4F6008B6EDD /* SessionReplayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */; };
 		F858F3602AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F86741072BD30F3F00DAA1A2 /* NRMAExceptionDataCollectionWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */; };
@@ -2553,6 +2554,7 @@
 		F83A77AF2B48810900B3D180 /* NRMAOfflineStorageTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAOfflineStorageTests.m; sourceTree = "<group>"; };
 		F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAInteractionEvent.m; sourceTree = "<group>"; };
 		F848CDD52AA133FB0082052F /* NRMAInteractionEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAInteractionEvent.h; sourceTree = "<group>"; };
+		F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayData.swift; sourceTree = "<group>"; };
 		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTests.m; sourceTree = "<group>"; };
 		F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRAutoCollectLogStressTest.m; sourceTree = "<group>"; };
 		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
@@ -3923,6 +3925,7 @@
 				F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */,
 				F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */,
 				F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */,
+				F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */,
 				3493DF322D4C332500BF5BED /* NRMASessionReplay.swift */,
 				3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */,
 				3493DF4F2D543C8700BF5BED /* IDGenerator.swift */,
@@ -5565,6 +5568,7 @@
 				02FF489924DC61D200115469 /* NRMAURLSessionTaskDelegateBase.m in Sources */,
 				02FF4A9F24DC652E00115469 /* NRMAMemoryVitals.m in Sources */,
 				02FF4AB124DC652E00115469 /* NRMAJSON.m in Sources */,
+				F85558532DE7C4F6008B6EDD /* SessionReplayData.swift in Sources */,
 				02FF49F124DC645B00115469 /* NRMAAppUpgradeMetricGenerator.m in Sources */,
 				02FF48DA24DC622700115469 /* NRMATimestampContainer.m in Sources */,
 				F8728E412ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */,

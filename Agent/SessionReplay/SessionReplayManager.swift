@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import NewRelicPrivate
 
 @available(iOS 13.0, *)
 @objcMembers
@@ -19,6 +20,8 @@ public class SessionReplayManager: NSObject {
     public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
         
+    public var isFirstChunck = true
+
     @objc public init(reporter: SessionReplayReporter) {
         self.sessionReplay = NRMASessionReplay()
         self.sessionReplayReporter = reporter
@@ -27,17 +30,22 @@ public class SessionReplayManager: NSObject {
     }
 
     public func start() {
-        sessionReplay.start()
-        guard !isRunning() else {
-            NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
-            return
+        DispatchQueue.global(qos: .background).async { [self] in
+            sessionReplay.start()
+            guard !isRunning() else {
+                NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
+                return
+            }
+            isFirstChunck = true
+            
+            NewRelicAgentInternal.sharedInstance().analyticsController.setNRSessionAttribute(kNRMA_RA_hasReplay, value: NRMABool(bool: true))
+
+            NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
+            self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvestTick), userInfo: nil, repeats: true)
+            
+            RunLoop.current.add(self.harvestTimer!, forMode: .default)
+            RunLoop.current.run()
         }
-
-        NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) ms")
-
-        self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvest), userInfo: nil, repeats: true)
-
-        RunLoop.current.add(self.harvestTimer!, forMode: .default)
     }
     
     public func stop() {
@@ -49,46 +57,81 @@ public class SessionReplayManager: NSObject {
         
         harvestTimer?.invalidate()
         harvestTimer = nil
+        
+        NewRelicAgentInternal.sharedInstance().analyticsController.removeSessionAttributeNamed(kNRMA_RA_hasReplay)
     }
 
     func isRunning() -> Bool {
         return self.harvestTimer != nil && self.harvestTimer!.isValid
     }
+    
+    // This function is to handle a session change created by a change in userId
+    @objc public func newSession() {
+        stop()
+        harvest()
+        start()
+    }
+    
+    @objc func harvestTick() {
+        NRLOG_DEBUG("Session replay harvest timer firing.")
+        harvest()
+    }
 
     @objc public func harvest() {
-        Task {
-            // Fetch processed frames and processed touches concurrently
-            let processedFrames = sessionReplay.getSessionReplayFrames()
-            let processedTouches = sessionReplay.getSessionReplayTouches()
-            
-            // Create meta event data
-            let metaEventData = await RRWebMetaData(
-                href: "http://newrelic.com",
-                width: Int(getWindow()?.frame.width ?? 0),
-                height: Int(getWindow()?.frame.height ?? 0)
-            )
-            let metaEvent = MetaEvent(timestamp: TimeInterval(Date().timeIntervalSince1970 * 1000), data: metaEventData)
+        // Fetch processed frames and touches
+        let processedFrames = sessionReplay.getSessionReplayFrames()
+        let processedTouches = sessionReplay.getSessionReplayTouches()
 
-            // Initialize container with meta event
-            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
-            
-            // Process frames and touches
-            container.append(contentsOf: (processedFrames).map {
-                AnyRRWebEvent($0)
-            })
-            container.append(contentsOf: (processedTouches).map {
-                AnyRRWebEvent($0)
-            })
-            
-            // Encode container to JSON
-            let encoder = JSONEncoder ()
-            encoder.outputFormatting = .withoutEscapingSlashes
+        // Early exit if nothing to send
+        if processedFrames.isEmpty && processedTouches.isEmpty {
+            NRLOG_WARNING("No session replay frames or touches to harvest.")
+            return
+        }
 
-            if let jsonData = try? encoder.encode(container),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
+        let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
+        let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
+
+        // Create meta event data
+        let metaEventData = RRWebMetaData(
+            href: "http://newrelic.com",
+            width: Int(sessionReplay.windowDimensions.width),
+            height: Int(sessionReplay.windowDimensions.height)
+        )
+        let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
+
+        // Initialize container with meta event
+        var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
+        
+        // Process frames and touches
+        container.append(contentsOf: (processedFrames).map {
+            AnyRRWebEvent($0)
+        })
+        container.append(contentsOf: (processedTouches).map {
+            AnyRRWebEvent($0)
+        })
+        
+        // Encode container to JSON
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+
+        do {
+            let jsonData = try encoder.encode(container)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
                 NRLOG_DEBUG(jsonString)
-                sessionReplayReporter.enqueueSessionReplayUpload(sessionReplayFramesData: jsonData)
             }
+            guard let url = sessionReplayReporter.uploadURL(
+                uncompressedDataSize: jsonData.count,
+                firstTimestamp: firstTimestamp,
+                lastTimestamp: lastTimestamp,
+                isFirstChunk: isFirstChunck
+            ) else {
+                NRLOG_ERROR("Failed to construct upload URL for session replay.")
+                return
+            }
+            sessionReplayReporter.enqueueSessionReplayUpload(upload: SessionReplayData(sessionReplayFramesData: jsonData, url: url))
+            isFirstChunck = false
+        } catch {
+            NRLOG_ERROR("Failed to encode session replay events: \(error)")
         }
     }
     

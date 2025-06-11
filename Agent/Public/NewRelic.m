@@ -647,17 +647,19 @@
 
     NRLOG_AGENT_VERBOSE(@"setUserId: %@ and previousUserId: %@ and will start newSession=%d", userId, previousUserId, newSession);
 
-    // Update in memory userId.
-    [NewRelicAgentInternal sharedInstance].userId = userId;
-
     if (newSession) {
         [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
+        
+        [[NewRelicAgentInternal sharedInstance] sessionReplayStartNewSession];
 
         // Perform harvest
         [self harvestNow];
 
         [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
     }
+    
+    // Update in memory userId.
+    [NewRelicAgentInternal sharedInstance].userId = userId;
 
     BOOL success = [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:kNRMA_Attrib_userId
                                                                                              value:userId

@@ -371,7 +371,6 @@ static NewRelicAgentInternal* _sharedInstance;
     if (@available(iOS 13.0, *)) {
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter];
-        [_sessionReplay start];
     }
 #endif
 }
@@ -621,6 +620,14 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [NRMAHarvestController addHarvestListener:self.appUpgradeMetricGenerator];
 }
 
+- (void) sessionReplayStartNewSession {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if (true) { // Placeholder for determining if session replay should start.
+        [_sessionReplay newSession];
+    }
+#endif
+}
+
 static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWillTerm";
 
@@ -715,7 +722,9 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     [NRMAHarvestController start];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    [_sessionReplay start];
+    if (true) { // Placeholder for determining if session replay should start.
+        [_sessionReplay start];
+    }
 #endif
     [self onSessionStart];
 }
@@ -914,7 +923,9 @@ static UIBackgroundTaskIdentifier background_task;
                     [[[NRMAHarvestController harvestController] harvester] execute];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-                    [self->_sessionReplay harvest];
+                    if (true) { // Placeholder for determining if session replay should start.
+                        [self->_sessionReplay harvest];
+                    }
 #endif
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {

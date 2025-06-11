@@ -16,5 +16,10 @@
 #import "NRMASupportMetricHelper.h"
 #import "NewRelicInternalUtils.h"
 #import "NewRelicAgentInternal.h"
+#import "NRMAHarvestController.h"
+#import "NRMAHarvesterConnection+GZip.h"
+#import "NRMABool.h"
+#import "Constants.h"
+#import "NRMAExceptionMetaDataStore.h"
 
 #endif /* APrivateHeader_h */

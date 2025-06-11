@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(atomic, strong) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
-@property(atomic, strong) NSString* userId;
+@property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
 
 // Track the total number of successful network requests logged by the agent
@@ -82,6 +82,8 @@ NS_ASSUME_NONNULL_BEGIN
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
+
+- (void) sessionReplayStartNewSession;
 
 @end
 
