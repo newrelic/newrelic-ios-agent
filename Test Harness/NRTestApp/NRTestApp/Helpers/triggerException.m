@@ -6,7 +6,8 @@
 //
 
 #import "triggerException.h"
-#import "NewRelic/NewRelic.h"
+
+#import <NewRelic/NewRelic.h>
 
 @implementation triggerException
 
@@ -16,7 +17,7 @@
                               reason:@"Intentionally created exception"
                             userInfo:nil];
     } @catch (NSException* e) {
-        [NewRelic recordHandledException:e];
+        [NewRelicAgent recordHandledException:e];
     }
 }
 

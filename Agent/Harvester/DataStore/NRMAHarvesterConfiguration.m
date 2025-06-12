@@ -8,6 +8,7 @@
 
 #import "NRMAHarvesterConfiguration.h"
 #import "NRLogger.h"
+#import "NRConstants.h"
 
 @implementation NRMAHarvesterConfiguration
 
@@ -252,6 +253,7 @@
 
     configuration.session_replay_customRules = [NSMutableSet set];
 
+    configuration.session_replay_textMaskingStrategy = MaskAllText;
     // Session Replay Default harvester Configuration
 
     return configuration;
