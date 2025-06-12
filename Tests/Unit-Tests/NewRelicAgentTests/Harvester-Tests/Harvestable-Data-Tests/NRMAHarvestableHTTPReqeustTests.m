@@ -52,7 +52,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelicAgentnoticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelicAgent noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                withTimer:timer
                          responseHeaders:nil
