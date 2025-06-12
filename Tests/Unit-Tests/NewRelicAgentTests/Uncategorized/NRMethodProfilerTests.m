@@ -19,7 +19,7 @@
 #import "NRMATraceController.h"
 #import "NRMAClassDataContainer.h"
 #import "NewRelicAgentInternal.h"
-#import "NewRelic/NewRelicAgent.h"
+#import "NewRelic/NewRelic.h"
 
 #ifdef NRNonJenkinsTests
 #import "NewRelicNonJenkinsTests-Swift.h"

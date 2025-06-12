@@ -14,7 +14,7 @@
 #import "NRMAActivityTraceMeasurement.h"
 #import <OCMock/OCMock.h>
 #import "NRMATaskQueue.h"
-#import "NewRelicAgent.h"
+#import "NewRelic.h"
 @interface NRMATaskQueue ()
 + (NRMATaskQueue*) taskQueue;
 + (void) clear;

@@ -17,7 +17,7 @@
 #import "NRAgentTestBase.h"
 #import "NRMAMeasurements.h"
 #import "NewRelicInternalUtils.h"
-#import "NewRelicAgent.h"
+#import "NewRelic.h"
 
 @interface NRMAHexUploader ()
 - (void) handledErroredRequest:(NSURLRequest*)request;

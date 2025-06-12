@@ -21,7 +21,7 @@
 #import "NRMAMethodProfiler.h"
 #import "NRMATaskQueue.h"
 #import "NRMAThreadLocalStore.h"
-#import "NewRelicAgent.h"
+#import "NewRelic.h"
 #import "NRGCDOverride.h"
 
 @interface NRMATaskQueue ()
