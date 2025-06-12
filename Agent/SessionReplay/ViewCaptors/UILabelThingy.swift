@@ -28,10 +28,12 @@ class UILabelThingy: SessionReplayViewThingy {
     let fontFamily: String
     let textColor: UIColor
     
-    init(view: UILabel, viewDetails: ViewDetails, isMasked: Bool = true) {
+    init(view: UILabel, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
-        if isMasked {
+        self.isMasked = viewDetails.isMasked
+
+        if self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
             self.labelText = String(repeating: "*", count: view.text?.count ?? 0)
@@ -58,7 +60,6 @@ class UILabelThingy: SessionReplayViewThingy {
 
         self.textColor = view.textColor
 
-        self.isMasked = viewDetails.isMasked || isMasked
     }
     
     func cssDescription() -> String {

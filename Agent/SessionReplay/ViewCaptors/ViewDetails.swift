@@ -118,6 +118,8 @@ struct ViewDetails {
         view.sessionReplayMaskState = shouldMask
 
         isMasked = shouldMask
+
+       // NRLOG_DEBUG("Session Replay: isMask = \(shouldMask) for view \(viewName) with id \(viewId)")
     }
 }
 
