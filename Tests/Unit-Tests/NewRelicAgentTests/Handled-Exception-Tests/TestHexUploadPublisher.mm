@@ -16,7 +16,7 @@ struct UploaderImpl {
     NRMAHexUploader* wrapper;
 };
 
-namespace NewRelicAgent {
+namespace NewRelic {
     namespace Hex {
 
         class TestHexUploadPublisher : public HexUploadPublisher {

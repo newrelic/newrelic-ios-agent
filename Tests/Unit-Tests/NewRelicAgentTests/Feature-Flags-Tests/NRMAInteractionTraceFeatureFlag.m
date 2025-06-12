@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <OCMock/OCMock.h>
 #import <XCTest/XCTest.h>
-#import "NewRelicAgent.h"
+#import "NewRelic.h"
 #import "NRMATraceMachine.h"
 #import "NRMATraceController.h"
 @interface NRMAInteractionTraceFeatureFlag : XCTestCase

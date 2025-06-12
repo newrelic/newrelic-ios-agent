@@ -7,7 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import <NewRelic/NewRelicAgent.h>
+#import "NewRelic.h"
 #import <OCMock/OCMock.h>
 #import "NRMAAnalytics.h"
 #import "NewRelicAgentInternal.h"
