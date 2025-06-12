@@ -8,7 +8,6 @@
 
 #import <XCTest/XCTest.h>
 #import "NRMATraceController.h"
-#import "NewRelic.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMAFLags.h"
 #import "NRMAAgentConfiguration.h"
