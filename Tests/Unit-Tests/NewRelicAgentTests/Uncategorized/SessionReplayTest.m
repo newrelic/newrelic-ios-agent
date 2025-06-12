@@ -89,4 +89,22 @@
     XCTAssertFalse([[NewRelicAgentInternal sharedInstance]  isClassNameMasked:nil], @"Nil class name should not be considered masked");
 }
 
+
+- (void)testAccessibilityIdentifierUnmasking {
+
+    // Test unmasking an identifier that was never masked
+    NSString *unmaskedIdentifier = @"unmaskedField";
+    XCTAssertFalse([[NewRelicAgentInternal sharedInstance]  isAccessibilityIdentifierMasked:unmaskedIdentifier], @"Unmasked identifier should not be considered masked");
+
+    // Test unmasking a previously masked identifier
+    NSString *maskedIdentifier = @"sensitiveField";
+    [[NewRelicAgentInternal sharedInstance]  addUnmaskedAccessibilityIdentifier:maskedIdentifier];
+    [[NewRelicAgentInternal sharedInstance]  removeMaskedAccessibilityIdentifier:maskedIdentifier];
+    XCTAssertFalse([[NewRelicAgentInternal sharedInstance]  isAccessibilityIdentifierMasked:maskedIdentifier], @"Identifier should not be masked after unmasking");
+
+    // Test unmasking a class name that was never masked
+    NSString *unmaskedClassName = @"UnmaskedClass";
+    XCTAssertFalse([[NewRelicAgentInternal sharedInstance]  isClassNameMasked:unmaskedClassName], @"Unmasked class name should not be considered masked");
+}
+
 @end

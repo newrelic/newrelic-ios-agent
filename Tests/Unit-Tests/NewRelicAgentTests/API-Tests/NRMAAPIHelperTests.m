@@ -7,7 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "NewRelic.h"
+#import "NewRelicAgent.h"
 #import "NewRelicAgentInternal.h"
 
 @interface NRMAAPIHelperTests: XCTestCase

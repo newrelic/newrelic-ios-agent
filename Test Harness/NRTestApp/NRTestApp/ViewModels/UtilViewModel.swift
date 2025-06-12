@@ -71,24 +71,24 @@ class UtilViewModel {
 
     func crash() {
         // This will cause a crash to test the crash uploader, crash files may not get recorded if the debugger is running.
-        NewRelic.crashNow("New Relic intentionally crashed to test Utils")
+        NewRelicAgent.crashNow("New Relic intentionally crashed to test Utils")
     }
     
     func removeAttributes() {
-        if(NewRelic.removeAllAttributes()){
+        if(NewRelicAgent.removeAllAttributes()){
             attributes = ""
         }
     }
     
     func setAttributes(){
-        attributes = String(NewRelic.setAttribute("test1", value: 1))
+        attributes = String(NewRelicAgent.setAttribute("test1", value: 1))
     }
     
     func makeError(){
         do {
             try errorMethod()
         } catch {
-            NewRelic.recordError(error)
+            NewRelicAgent.recordError(error)
             
         }
     }
@@ -98,14 +98,14 @@ class UtilViewModel {
     }
     
     func changeUserID() {
-        NewRelic.setUserId("testID")
+        NewRelicAgent.setUserId("testID")
     }
     func changeUserID2() {
-        NewRelic.setUserId("Bob")
+        NewRelicAgent.setUserId("Bob")
     }
 
     func changeUserIDToNil() {
-        NewRelic.setUserId(nil)
+        NewRelicAgent.setUserId(nil)
     }
 
     func makeValidBreadcrumb() {
@@ -117,7 +117,7 @@ class UtilViewModel {
     }
     
     private func makeBreadcrumb(name: String, attributes: Dictionary<String, Any>){
-        let madeBreadCrumb = NewRelic.recordBreadcrumb(name,
+        let madeBreadCrumb = NewRelicAgent.recordBreadcrumb(name,
                                                        attributes: attributes)
         if madeBreadCrumb == true {
             self.numBreadcrumbs += 1
@@ -125,7 +125,7 @@ class UtilViewModel {
     }
     
     func makeEvent(){
-        let madeEvent = NewRelic.recordCustomEvent("ButtonPress")
+        let madeEvent = NewRelicAgent.recordCustomEvent("ButtonPress")
         if madeEvent == true {
             events += 1
         }
@@ -133,7 +133,7 @@ class UtilViewModel {
 
     func make100Events() {
         for _ in 0...100 {
-            NewRelic.recordCustomEvent("ButtonPress")
+            NewRelicAgent.recordCustomEvent("ButtonPress")
         }
     }
     
@@ -142,17 +142,17 @@ class UtilViewModel {
             print("no interaction to stop...")
             return
         }
-        NewRelic.stopCurrentInteraction(identifier)
+        NewRelicAgent.stopCurrentInteraction(identifier)
 
         uniqueInteractionTraceIdentifier = nil
     }
 
     func startInteractionTrace() {
-        uniqueInteractionTraceIdentifier = NewRelic.startInteraction(withName: "myInteractionName")
+        uniqueInteractionTraceIdentifier = NewRelicAgent.startInteraction(withName: "myInteractionName")
     }
 
     func noticeFailedNWRequest() {
-        NewRelic.noticeNetworkFailure(for: URL(string: "https://www.google.com"), httpMethod: "GET",
+        NewRelicAgent.noticeNetworkFailure(for: URL(string: "https://www.google.com"), httpMethod: "GET",
                                       with: NRTimer(), andFailureCode: NSURLErrorTimedOut)
     }
 
@@ -163,7 +163,7 @@ class UtilViewModel {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             print("Async-Await Data request made.")
-            NewRelic.noticeNetworkRequest(
+            NewRelicAgent.noticeNetworkRequest(
                 for: url,
                 httpMethod: "GET",
                 with: NRTimer(),
@@ -185,7 +185,7 @@ class UtilViewModel {
     }
 
     func testLogDict() {
-        NewRelic.logAll([
+        NewRelicAgent.logAll([
             "logLevel": "WARN",
             "message": "This is a test message for the New Relic logging system."
         ])
@@ -207,12 +207,12 @@ class UtilViewModel {
         do {
             try errorMethod()
         } catch {
-            NewRelic.logErrorObject(error)
+            NewRelicAgent.logErrorObject(error)
         }
     }
 
     func testLogAttributes() {
-        NewRelic.logAttributes([
+        NewRelicAgent.logAttributes([
             "logLevel": "WARN",
             "message": "This is a test message for the New Relic logging system.",
             "additionalAttribute1": "attribute1",
@@ -222,12 +222,12 @@ class UtilViewModel {
 
 
     func noticeNWRequest() {
-        NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
+        NewRelicAgent.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
                                       statusCode: 200, bytesSent: 1000, bytesReceived: 1000, responseData: Data(), traceHeaders: nil, andParams: nil)
     }
 
     func setBuild() {
-        NewRelic.setApplicationBuild("42")
+        NewRelicAgent.setApplicationBuild("42")
     }
 
     func doDataTask() {
@@ -254,42 +254,42 @@ class UtilViewModel {
 
     @objc func make100SpecialCharacterLogs() {
         for _ in 0...100 {
-            NewRelic.logInfo("/")
+            NewRelicAgent.logInfo("/")
             // Testing special character
-            NewRelic.logInfo("\\")
+            NewRelicAgent.logInfo("\\")
 
-            NewRelic.logInfo(";")
-            NewRelic.logInfo(":")
-            NewRelic.logInfo("!")
-            NewRelic.logInfo("#")
-            NewRelic.logInfo("&")
-            NewRelic.logInfo("-")
-            NewRelic.logInfo("?")
-            NewRelic.logInfo("'")
-            NewRelic.logInfo("$")
+            NewRelicAgent.logInfo(";")
+            NewRelicAgent.logInfo(":")
+            NewRelicAgent.logInfo("!")
+            NewRelicAgent.logInfo("#")
+            NewRelicAgent.logInfo("&")
+            NewRelicAgent.logInfo("-")
+            NewRelicAgent.logInfo("?")
+            NewRelicAgent.logInfo("'")
+            NewRelicAgent.logInfo("$")
         }
     }
 
     @objc func make100Logs() {
         for _ in 0...100 {
-            NewRelic.logInfo("I")
-            NewRelic.logInfo("L")
-            NewRelic.logInfo("O")
-            NewRelic.logInfo("V")
-            NewRelic.logInfo("E")
-            NewRelic.logInfo("N")
-            NewRelic.logInfo("E")
-            NewRelic.logInfo("W")
-            NewRelic.logInfo("R")
-            NewRelic.logInfo("E")
-            NewRelic.logInfo("L")
-            NewRelic.logInfo("I")
-            NewRelic.logInfo("C")
+            NewRelicAgent.logInfo("I")
+            NewRelicAgent.logInfo("L")
+            NewRelicAgent.logInfo("O")
+            NewRelicAgent.logInfo("V")
+            NewRelicAgent.logInfo("E")
+            NewRelicAgent.logInfo("N")
+            NewRelicAgent.logInfo("E")
+            NewRelicAgent.logInfo("W")
+            NewRelicAgent.logInfo("R")
+            NewRelicAgent.logInfo("E")
+            NewRelicAgent.logInfo("L")
+            NewRelicAgent.logInfo("I")
+            NewRelicAgent.logInfo("C")
         }
     }
 
     func shutDown() {
-        NewRelic.shutdown()
+        NewRelicAgent.shutdown()
     }
 }
 

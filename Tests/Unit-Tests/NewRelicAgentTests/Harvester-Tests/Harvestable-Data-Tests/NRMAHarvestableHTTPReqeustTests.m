@@ -12,7 +12,7 @@
 #import "NewRelicInternalUtils.h"
 #import "NRMAmeasurements.h"
 #import "NRMAHarvestableHTTPTransactionGeneration.h"
-#import "NewRelic.h"
+#import "NewRelicAgent.h"
 #import "NRMAMeasurementEngine.h"
 #import "NRMAHTTPTransactionMeasurement.h"
 #import "NRMAHarvestController.h"
@@ -37,7 +37,7 @@
 - (void) testWanTypeInHarvestController
 {
     __block BOOL completed = NO;
-    NRTimer* timer = [NewRelic createAndStartTimer];
+    NRTimer* timer = [NewRelicAgentcreateAndStartTimer];
     __block NRMAHarvestableHTTPTransaction* measurement = nil;
     id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
     [[[[mockUtils stub] classMethod] andReturn:@"CDMA"] getCurrentWanType];
@@ -52,7 +52,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelicAgentnoticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                withTimer:timer
                          responseHeaders:nil
@@ -87,7 +87,7 @@
 - (void) testWanTypeInHarvestController5G
 {
     __block BOOL completed = NO;
-    NRTimer* timer = [NewRelic createAndStartTimer];
+    NRTimer* timer = [NewRelicAgentcreateAndStartTimer];
     __block NRMAHarvestableHTTPTransaction* measurement = nil;
     id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
     [[[[mockUtils stub] classMethod] andReturn:@"5G"] getCurrentWanType];
@@ -102,7 +102,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelicAgentnoticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                withTimer:timer
                          responseHeaders:nil
@@ -138,7 +138,7 @@
 //- (void) testConnectionErrorInHarvestController
 //{
 //    __block BOOL completed = NO;
-//    NRTimer* timer = [NewRelic createAndStartTimer];
+//    NRTimer* timer = [NewRelicAgentcreateAndStartTimer];
 //    __block NRMAHarvestableHTTPError* measurement = nil;
 //
 //    id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
@@ -155,7 +155,7 @@
 //
 //
 //    [[[harvestController stub] andReturn:[NRMAHarvesterConfiguration defaultHarvesterConfiguration] ] configuration];
-//    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+//    [NewRelicAgentnoticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
 //                              httpMethod:@"post"
 //                               withTimer:timer
 //                         responseHeaders:nil
@@ -195,7 +195,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelicAgentnoticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                startTime:6000
                                  endTime:10000
@@ -234,7 +234,7 @@
         completed = YES;
     }] addHarvestableHTTPTransaction:OCMOCK_ANY];
 
-    [NewRelic noticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
+    [NewRelicAgentnoticeNetworkFailureForURL:[NSURL URLWithString:@"google.com"]
                               httpMethod:@"post"
                                startTime:6000
                                  endTime:10000

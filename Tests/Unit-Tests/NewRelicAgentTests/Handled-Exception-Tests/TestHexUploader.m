@@ -17,7 +17,7 @@
 #import "NRAgentTestBase.h"
 #import "NRMAMeasurements.h"
 #import "NewRelicInternalUtils.h"
-#import "NewRelic.h"
+#import "NewRelicAgent.h"
 
 @interface NRMAHexUploader ()
 - (void) handledErroredRequest:(NSURLRequest*)request;
@@ -36,7 +36,7 @@
 - (void)setUp {
     [super setUp];
 
-    [NewRelic setPlatform:NRMAPlatform_Native];
+    [NewRelicAgent setPlatform:NRMAPlatform_Native];
 
     self.hexUploader = [[NRMAHexUploader alloc] initWithHost:@"localhost"];
 
