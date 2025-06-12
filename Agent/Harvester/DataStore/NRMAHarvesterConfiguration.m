@@ -154,6 +154,47 @@
         } else {
             self.activity_trace_max_send_attempts = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SEND_ATTEMPTS;
         }
+
+
+        // session replay configuration parsing
+
+        if ([dict objectForKey:kNRMA_SESSION_REPLAY_CONFIG_KEY]) {
+            self.has_session_replay_config = YES;
+
+            self.session_replay_enabled = YES;
+
+            // handle double
+            self.session_replay_sampling_rate = 100.0;
+
+            // handle double
+            self.session_replay_error_sampling_rate = 100.0;
+
+            // Handle mode string
+            self.session_replay_mode =@"custom";
+
+            self.session_replay_maskApplicationText = true;
+            self.session_replay_maskUserInputText = true;
+            self.session_replay_maskAllUserTouches = true;
+            self.session_replay_maskAllImages = true;
+
+        }
+        else {
+
+            self.has_session_replay_config = NO;
+        }
+
+        // Masked
+        self.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
+        self.session_replay_maskedClassNames = [NSMutableSet set];
+        // Unmasked
+        self.session_replay_unmaskedClassNames = [NSMutableSet set];
+        self.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
+
+        self.session_replay_customRules = [NSMutableSet set];
+
+        // end session replay configuration parsing
+
+
     }
     return self;
 }
@@ -180,6 +221,38 @@
     configuration.log_reporting_enabled = NO;
     configuration.sampling_rate = 100.0;
     configuration.request_header_map = [NSDictionary dictionary];
+
+
+    // Session Replay Default harvester Configuration
+
+    configuration.has_session_replay_config = YES;
+
+    configuration.session_replay_enabled = YES;
+
+    // handle double
+    configuration.session_replay_sampling_rate = 100.0;
+
+    // handle double
+    configuration.session_replay_error_sampling_rate = 100.0;
+
+    // Handle mode string
+    configuration.session_replay_mode =@"custom";
+
+    configuration.session_replay_maskApplicationText = true;
+    configuration.session_replay_maskUserInputText = true;
+    configuration.session_replay_maskAllUserTouches = true;
+    configuration.session_replay_maskAllImages = true;
+
+    // Maksed
+    configuration.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
+    configuration.session_replay_maskedClassNames = [NSMutableSet set];
+    // Unmasked
+    configuration.session_replay_unmaskedClassNames = [NSMutableSet set];
+    configuration.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
+
+    configuration.session_replay_customRules = [NSMutableSet set];
+
+    // Session Replay Default harvester Configuration
 
     return configuration;
 }
@@ -245,6 +318,57 @@
         dictionary[KNRMA_REQUEST_HEADER_MAP_KEY] = [NSDictionary dictionary];
     }
 
+
+    if (self.has_session_replay_config) {
+        dictionary[kNRMA_SESSION_REPLAY_CONFIG_KEY] =
+        @{kNRMA_SESSION_REPLAY_CONFIG_KEY: @{kNRMA_LOG_REPORTING_ENABLED_KEY: @(self.session_replay_enabled),
+                                             kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY: self.session_replay_mode,
+                                             kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY : @(self.session_replay_sampling_rate),
+                                             kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY : @(self.session_replay_error_sampling_rate),
+                                             kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY: @(self.session_replay_maskApplicationText),
+                                            kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY: @(self.session_replay_maskUserInputText),
+                                            kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY: @(self.session_replay_maskAllUserTouches),
+                                            kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY: @(self.session_replay_maskAllImages),
+                                            kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY: [self.session_replay_customRules allObjects],
+        }};
+    }
+    else {
+
+    }
+
+//    configuration.has_session_replay_config = YES;
+//
+//    configuration.session_replay_enabled = YES;
+//
+//    // handle double
+//    configuration.session_replay_sampling_rate = 100.0;
+//
+//    // handle double
+//    configuration.session_replay_error_sampling_rate = 100.0;
+//
+//    // Handle mode string
+//    configuration.session_replay_mode =@"custom";
+//
+//    configuration.session_replay_maskApplicationText = true;
+//    configuration.session_replay_maskUserInputText = true;
+//    configuration.session_replay_maskAllUserTouches = true;
+//    configuration.session_replay_maskAllImages = true;
+//
+//    // Maksed
+//    configuration.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
+//    configuration.session_replay_maskedClassNames = [NSMutableSet set];
+//    // Unmasked
+//    configuration.session_replay_unmaskedClassNames = [NSMutableSet set];
+//    configuration.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
+//
+//    configuration.session_replay_customRules = [NSMutableSet set];
+
+
+    //
+
+
+
+
     return dictionary;
 }
 
@@ -309,4 +433,22 @@
 
     return result;
 }
+@end
+
+@implementation SessionReplayCustomMaskingRule
+
+- (id) initWithDictionary:(NSDictionary*)dict {
+    self = [super init];
+
+    if (self) {
+
+        self.identifier = [dict valueForKey:kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY];
+        self.name = [dict valueForKey:kNRMA_SESSION_REPLAY_CONFIG_NAME_KEY];
+        self.operatorName = [dict valueForKey:kNRMA_SESSION_REPLAY_CONFIG_OPERATOR_KEY];
+        self.type = [dict valueForKey:kNRMA_SESSION_REPLAY_CONFIG_TYPE_KEY];
+
+    }
+    return self;
+}
+
 @end

@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "NRMADataToken.h"
 #import "NRMATraceConfigurations.h"
+#import "NRConstants.h"
 
 #define kNRMA_LICENSE_KEY @"application_token"
 #define kNRMA_COLLECT_NETWORK_ERRORS @"collect_network_errors"
@@ -31,6 +32,27 @@
 #define kNRMA_TRUSTED_ACCOUNT_KEY @"trusted_account_key"
 #define kNRMA_ENTITY_GUID_KEY @"entity_guid"
 #define kNRMA_CONFIG_KEY @"configuration"
+
+// Session Replay Configuration Keys
+#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"session_replay_configuration"
+
+#define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"idemtifier"
+#define kNRMA_SESSION_REPLAY_CONFIG_NAME_KEY @"name"
+#define kNRMA_SESSION_REPLAY_CONFIG_OPERATOR_KEY @"name"
+#define kNRMA_SESSION_REPLAY_CONFIG_TYPE_KEY @"type"
+
+#define kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY @"enabled"
+#define kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY @"samplingRate"
+#define kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY @"errorSamplingRate"
+#define kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY @"mode"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY @"maskApplicationText"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY @"maskUserInputText"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY @"maskAllUserTouches"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY @"maskAllImages"
+#define kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY @"customMaskingRules"
+
+// End Session Replay Configuration Keys
+
 #define kNRMA_LOG_REPORTING_KEY @"logs"
 #define kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY @"sampling_rate"
 #define KNRMA_REQUEST_HEADER_MAP_KEY @"request_headers_map"
@@ -79,6 +101,36 @@
 // NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
 @property(nonatomic,assign) NSString* log_reporting_level;
 
+// Session Replay Configuration
+
+@property(nonatomic,assign) BOOL      has_session_replay_config;
+@property(nonatomic,assign) BOOL      session_replay_enabled;
+@property(nonatomic,assign) double    session_replay_sampling_rate;
+@property(nonatomic,assign) double    session_replay_error_sampling_rate;
+@property(nonatomic,assign) NSString*    session_replay_mode;
+
+@property(nonatomic,assign) BOOL      session_replay_maskApplicationText;
+@property(nonatomic,assign) BOOL      session_replay_maskUserInputText;
+@property(nonatomic,assign) BOOL      session_replay_maskAllUserTouches;
+@property(nonatomic,assign) BOOL     session_replay_maskAllImages;
+
+@property(nonatomic,assign) BOOL     session_replay_customMaskingRules;
+@property(nonatomic,assign) enum SessionReplayTextMaskingStrategy     session_replay_textMaskingStrategy;
+
+// Lists for tracking masked elements in SessionReplay
+@property (nonatomic, strong) NSMutableSet *session_replay_maskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableSet *session_replay_maskedClassNames;
+
+
+// Lists for tracking unmasked elements in SessionReplay
+@property (nonatomic, strong) NSMutableSet *session_replay_unmaskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableSet *session_replay_unmaskedClassNames;
+
+
+@property (nonatomic, strong) NSMutableSet *session_replay_customRules;
+
+// End Session Replay Configuration
+
 + (id) defaultHarvesterConfiguration;
 - (BOOL) isValid;
 - (BOOL) isEqual:(id)object;
@@ -88,3 +140,14 @@
 - (BOOL) isSampled;
 
 @end
+
+
+@interface SessionReplayCustomMaskingRule : NSObject
+@property(nonatomic,assign) NSString*    identifier;
+@property(nonatomic,assign) NSString*    name;
+@property(nonatomic,assign) NSString*    operatorName;
+@property(nonatomic,assign) NSString*    type;
+
+
+@end
+

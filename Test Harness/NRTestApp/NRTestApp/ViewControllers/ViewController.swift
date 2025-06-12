@@ -117,6 +117,9 @@ class ViewController: UIViewController {
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
         options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
+
+        options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
@@ -155,6 +158,10 @@ class ViewController: UIViewController {
              await viewModel.loadApodDataAsyncBrokeData()
          }
      }
+
+    func textMaskingAction() {
+        coordinator?.showTextMaskingController()
+    }
 
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)

@@ -25,5 +25,10 @@ enum ViewControllerProvider {
         return viewController
     }
 #endif
+
+    static var textMaskingViewController: TextMaskingViewController {
+        let viewController = TextMaskingViewController()
+        return viewController
+    }
 }
 

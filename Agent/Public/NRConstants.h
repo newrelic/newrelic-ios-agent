@@ -64,6 +64,13 @@ enum NRTraceType {
     NRTraceTypeNetwork
 };
 
+//Custom Text Masking Types
+enum SessionReplayTextMaskingStrategy {
+    MaskAllText,
+    MaskUserInputText,
+    MaskNoText
+};
+
 
 
 #define X_APP_LICENSE_KEY_REQUEST_HEADER        @"X-App-License-Key"

@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-class UILabelThingy: SessionReplayViewThingy {
+class UITextViewThingy: SessionReplayViewThingy {
     var isMasked: Bool
     
     var subviews = [any SessionReplayViewThingy]()
@@ -19,18 +19,17 @@ class UILabelThingy: SessionReplayViewThingy {
     }
     
     let viewDetails: ViewDetails
-
     
     let labelText: String
     let fontSize: CGFloat
     let fontName: String
-    let textAlignment: String
     let fontFamily: String
+    
     let textColor: UIColor
     
-    init(view: UILabel, viewDetails: ViewDetails, isMasked: Bool = true) {
+    init(view: UITextView, viewDetails: ViewDetails, isMasked: Bool = true) {
         self.viewDetails = viewDetails
-
+        
         if isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
@@ -40,27 +39,33 @@ class UILabelThingy: SessionReplayViewThingy {
             self.labelText = view.text ?? ""
         }
 
-        self.fontSize = view.font.pointSize
-        let fontNameRaw = view.font.fontName
+        let font = view.font ?? UIFont.systemFont(ofSize: 17.0)
+
+        self.fontSize = font.pointSize
+        let fontNameRaw = font.fontName
         if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
         } else {
             self.fontName = fontNameRaw
         }
-        
-        let fontFamilyRaw = view.font.familyName
+
+        let fontFamilyRaw = font.familyName
         if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
             self.fontFamily = String(fontFamilyRaw.dropFirst())
         } else {
             self.fontFamily = fontFamilyRaw
         }
-        self.textAlignment = view.textAlignmentString()
 
-        self.textColor = view.textColor
+        if #available(iOS 13.0, *) {
+            self.textColor = view.textColor ?? UIColor.label
+        } else {
+            // Fallback on earlier versions
+            self.textColor = view.textColor ?? UIColor.black
+        }
 
         self.isMasked = viewDetails.isMasked || isMasked
     }
-    
+
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
@@ -68,7 +73,6 @@ class UILabelThingy: SessionReplayViewThingy {
                 white-space: pre-wrap;\
                 font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true));\
-                text-align: \(textAlignment);\
                 } 
                 """
     }
@@ -86,7 +90,7 @@ class UILabelThingy: SessionReplayViewThingy {
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
-        guard let typedOther = other as? UILabelThingy else {
+        guard let typedOther = other as? UITextViewThingy else {
             return []
         }
         
@@ -96,10 +100,6 @@ class UILabelThingy: SessionReplayViewThingy {
         // get text color difference
         if textColor != typedOther.textColor {
             frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-        }
-        
-        if textAlignment != typedOther.textAlignment {
-            frameDifferences["text-align"] = typedOther.textAlignment
         }
         
         let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
@@ -114,19 +114,18 @@ class UILabelThingy: SessionReplayViewThingy {
     }
 }
 
-extension UILabelThingy: Equatable {
-    static func == (lhs: UILabelThingy, rhs: UILabelThingy) -> Bool {
+extension UITextViewThingy: Equatable {
+    static func == (lhs: UITextViewThingy, rhs: UITextViewThingy) -> Bool {
         return lhs.viewDetails == rhs.viewDetails &&
             lhs.labelText == rhs.labelText &&
             lhs.fontSize == rhs.fontSize &&
             lhs.fontName == rhs.fontName &&
             lhs.fontFamily == rhs.fontFamily &&
-            lhs.textAlignment == rhs.textAlignment &&
             lhs.textColor == rhs.textColor
     }
 }
 
-extension UILabelThingy: Hashable {
+extension UITextViewThingy: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(viewDetails)
         hasher.combine(labelText)
@@ -136,26 +135,3 @@ extension UILabelThingy: Hashable {
         hasher.combine(textColor)
     }
 }
-
-internal extension UILabel {
-    
-    func textAlignmentString() -> String {
-        switch self.textAlignment {
-        case .left:
-            return "left"
-        case .center:
-            return "center"
-        case .right:
-            return "right"
-        case .justified:
-            return "justify"
-        case .natural:
-            // In CSS, 'start' is the logical value that aligns to the beginning
-            // of the text flow, respecting LTR/RTL direction, similar to .natural.
-            return "start"
-        @unknown default:
-            return "left"
-        }
-    }
-}
-

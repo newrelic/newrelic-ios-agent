@@ -85,10 +85,41 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayStartNewSession;
 
+// SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
+
+- (BOOL)setSessionReplayTextMaskingStrategy:(enum SessionReplayTextMaskingStrategy)strategy;
+
+// Masked section
+
+// Masked Accessibility Identifiers
+- (void)addMaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier;
+- (BOOL)isAccessibilityIdentifierMasked:(NSString *)identifier;
+
+// Masked Classes
+- (void)addMaskedClassName:(NSString *)className;
+- (void)removeMaskedClassName:(NSString *)className;
+- (BOOL)isClassNameMasked:(NSString *)className;
+
+// Unmasked section
+
+// Unmasked Accessibility Identifiers
+- (void)addUnmaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier;
+- (BOOL)isAccessibilityIdentifierUnmasked:(NSString *)identifier;
+
+// Unmasked Classes
+- (void)addUnmaskedClassName:(NSString *)className;
+- (void)removeUnmaskedClassName:(NSString *)className;
+- (BOOL)isClassNameUnmasked:(NSString *)className;
+
+
+// END SESSION REPLAY SECTION End Methods to manage masked elements for SessionReplay
+
 @end
 
 /*
- Categories that swizzle methods to intercept method calls implement this protocol.  The 
+ Categories that swizzle methods to intercept method calls implement this protocol.  The
  initializeInstrumentation method of NewRelicAgentInternal calls NewRelicInitializeInstrumentation
  on each category.
  */
