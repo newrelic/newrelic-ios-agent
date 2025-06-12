@@ -20,11 +20,11 @@
 
 - (void)setUp {
     [super setUp];
-    [NewRelic disableFeatures:NRFeatureFlag_InteractionTracing];
+    [NewRelicAgent disableFeatures:NRFeatureFlag_InteractionTracing];
 }
 
 - (void)tearDown {
-    [NewRelic enableFeatures:NRFeatureFlag_InteractionTracing];
+    [NewRelicAgent enableFeatures:NRFeatureFlag_InteractionTracing];
     [super tearDown];
 }
 
@@ -33,7 +33,7 @@
 
     (void) [[mockTraceMachine expect] initWithRootTrace:OCMOCK_ANY];
 
-    [NewRelic startInteractionWithName:@"HELLO WORLD"]; //one way to start a interaction
+    [NewRelicAgent startInteractionWithName:@"HELLO WORLD"]; //one way to start a interaction
 
     UIViewController* testController = [[UIViewController alloc] init];
 
@@ -49,7 +49,7 @@
 - (void) testNoTraceWithGCD {
     __block BOOL finished = NO;
     dispatch_queue_t queue = dispatch_get_current_queue();
-    [NewRelic startInteractionWithName:@"HELLO WORLD"]; //one way to start a interaction
+    [NewRelicAgent startInteractionWithName:@"HELLO WORLD"]; //one way to start a interaction
     id mockTraceController = [OCMockObject mockForClass:[NRMATraceController class]];
     [[[mockTraceController expect] classMethod] enterMethod:OCMOCK_ANY name:OCMOCK_ANY];
     [[[mockTraceController expect] classMethod] exitMethod];

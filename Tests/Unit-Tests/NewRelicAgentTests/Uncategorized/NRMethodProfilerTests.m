@@ -597,11 +597,11 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
 
 - (void) testDefaultTracingDisabled
 {
-    [NewRelic disableFeatures:NRFeatureFlag_DefaultInteractions];
+    [NewRelicAgent disableFeatures:NRFeatureFlag_DefaultInteractions];
 
     XCTAssertEqual([[NRMAMethodProfiler actualTraceList] count], 0);
 
-    [NewRelic enableFeatures:NRFeatureFlag_DefaultInteractions];
+    [NewRelicAgent enableFeatures:NRFeatureFlag_DefaultInteractions];
 }
 
 @end

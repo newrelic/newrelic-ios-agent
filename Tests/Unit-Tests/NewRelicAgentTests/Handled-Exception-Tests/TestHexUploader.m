@@ -36,7 +36,7 @@
 - (void)setUp {
     [super setUp];
 
-    [NewRelic setPlatform:NRMAPlatform_Native];
+    [NewRelicAgent setPlatform:NRMAPlatform_Native];
 
     self.hexUploader = [[NRMAHexUploader alloc] initWithHost:@"localhost"];
 

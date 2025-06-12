@@ -20,8 +20,8 @@ class SessionReplayFrameProcessor {
         if frame.rootViewControllerId != lastFullFrame?.rootViewControllerId ||
             frame.views.viewDetails.viewId != lastFullFrame?.views.viewDetails.viewId {
             rrwebCommon = processFullSnapshot(frame)
-        } else if let lastFullFrame = lastFullFrame {
-            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
+//        } else if let lastFullFrame = lastFullFrame {
+//            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
         } else {
             // We don't have anything, so just do a full snapshot
             rrwebCommon = processFullSnapshot(frame)

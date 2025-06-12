@@ -6,7 +6,7 @@
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
-import NewRelicPrivate
+@_implementationOnly import NewRelicPrivate
 
 // Convenience functions for specific log levels
 func NRLOG_ERROR(_ message: String, file: String = #file, line: Int = #line, function: String = #function) {

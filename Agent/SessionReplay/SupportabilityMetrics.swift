@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import NewRelicPrivate
+@_implementationOnly import NewRelicPrivate
 
 class SupportabilityMetrics {
 //    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityDistributedTracing@"/Create/Exception"
