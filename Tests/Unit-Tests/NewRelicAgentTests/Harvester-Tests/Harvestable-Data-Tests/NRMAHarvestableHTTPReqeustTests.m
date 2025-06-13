@@ -138,7 +138,7 @@
 //- (void) testConnectionErrorInHarvestController
 //{
 //    __block BOOL completed = NO;
-//    NRTimer* timer = [NewRelicAgent createAndStartTimer];
+//    NRTimer* timer = [NewRelic createAndStartTimer];
 //    __block NRMAHarvestableHTTPError* measurement = nil;
 //
 //    id mockUtils = [OCMockObject mockForClass:[NewRelicInternalUtils class]];
@@ -155,7 +155,7 @@
 //
 //
 //    [[[harvestController stub] andReturn:[NRMAHarvesterConfiguration defaultHarvesterConfiguration] ] configuration];
-//    [NewRelicAgent noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
+//    [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"google.com"]
 //                              httpMethod:@"post"
 //                               withTimer:timer
 //                         responseHeaders:nil

@@ -224,7 +224,7 @@
 //                                   threadInfo:OCMOCK_ANY];
 //    
 //
-//    [NewRelicAgent disableFeatures:NRFeatureFlag_HttpResponseBodyCapture];
+//    [NewRelic disableFeatures:NRFeatureFlag_HttpResponseBodyCapture];
 //
 //    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com/"]];
 //    [request setHTTPMethod:@"GET"];
