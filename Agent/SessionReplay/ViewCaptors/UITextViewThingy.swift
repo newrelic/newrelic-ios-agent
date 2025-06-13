@@ -1,8 +1,8 @@
 //
-//  UILabelThingy.swift
+//  UITextViewThingy.swift
 //  Agent_iOS
 //
-//  Created by Steve Malsam on 2/5/25.
+//  Created by Chris Dillard on 6/13/25.
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
