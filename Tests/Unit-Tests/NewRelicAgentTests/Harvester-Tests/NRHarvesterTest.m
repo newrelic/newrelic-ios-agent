@@ -285,8 +285,8 @@
 
 - (void) testOfflineStorage
 {
-    XCTAssertNoThrow([NewRelicAgent setMaxOfflineStorageSize:1000]);
-    [NewRelicAgent enableFeatures:NRFeatureFlag_OfflineStorage];
+    XCTAssertNoThrow([NewRelic setMaxOfflineStorageSize:1000]);
+    [NewRelic enableFeatures:NRFeatureFlag_OfflineStorage];
 
     NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
     id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
@@ -337,13 +337,13 @@
 
     [mockHarvester stopMocking];
     [connectionMock stopMocking];
-    [NewRelicAgent disableFeatures:NRFeatureFlag_OfflineStorage];
+    [NewRelic disableFeatures:NRFeatureFlag_OfflineStorage];
 }
 
 - (void) testOfflineStorageDisabled
 {
-    [NewRelicAgent disableFeatures:NRFeatureFlag_OfflineStorage];
-    XCTAssertNoThrow([NewRelicAgent setMaxOfflineStorageSize:1000]);
+    [NewRelic disableFeatures:NRFeatureFlag_OfflineStorage];
+    XCTAssertNoThrow([NewRelic setMaxOfflineStorageSize:1000]);
 
     NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
     id mockNSURLSession = [self makeMockURLSessionResponseError:[[NSError alloc] initWithDomain:@"" code:NSURLErrorNotConnectedToInternet userInfo:nil] statusCode:200];
@@ -596,7 +596,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-    [NewRelicAgent setApplicationVersion:nil];
+    [NewRelic setApplicationVersion:nil];
 #pragma clang diagnsotic pop
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
 
@@ -609,14 +609,14 @@
 {
     NSString *overrideVersion = @"9.5.4.1";
 
-    [NewRelicAgent setApplicationVersion:overrideVersion];
+    [NewRelic setApplicationVersion:overrideVersion];
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
 
     XCTAssertEqual(info.applicationInformation.appVersion, overrideVersion,
                    @"appInfo.appVersion should equal '%@' but is '%@'",
                    overrideVersion, info.applicationInformation.appVersion);
 
-    [NewRelicAgent setApplicationVersion:@""];
+    [NewRelic setApplicationVersion:@""];
 }
 
 - (void) testAppVersionClearsOverride
@@ -624,18 +624,18 @@
     NSString *realBundleVersion = [[[self class] fakeInfoDictionary] objectForKey:@"CFBundleShortVersionString"];
     NSString *overrideVersion = @"9.5.4.1";
 
-    [NewRelicAgent setApplicationVersion:overrideVersion];
+    [NewRelic setApplicationVersion:overrideVersion];
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-    [NewRelicAgent setApplicationVersion:nil];
+    [NewRelic setApplicationVersion:nil];
 #pragma clang diagnostic pop
     info = [NRMAAgentConfiguration connectionInformation];
 
     XCTAssertEqual(info.applicationInformation.appVersion, realBundleVersion,
                    @"appInfo.appVersion should equal '%@' but is '%@'",
                    realBundleVersion, info.applicationInformation.appVersion);
-    [NewRelicAgent setApplicationVersion:@""];
+    [NewRelic setApplicationVersion:@""];
 }
 
 - (void) testBuildVersionUsesCFBundleVersion
@@ -644,7 +644,7 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-    [NewRelicAgent setApplicationVersion:nil];
+    [NewRelic setApplicationVersion:nil];
 #pragma clang diagnostic pop
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
 
@@ -657,14 +657,14 @@
 {
     NSString *overrideBuild = @"9541";
 
-    [NewRelicAgent setApplicationBuild:overrideBuild];
+    [NewRelic setApplicationBuild:overrideBuild];
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
 
     XCTAssertEqual(info.applicationInformation.appBuild, overrideBuild,
                    @"appInfo.appBuild should equal '%@' but is '%@'",
                    overrideBuild, info.applicationInformation.appBuild);
 
-    [NewRelicAgent setApplicationVersion:@""];
+    [NewRelic setApplicationVersion:@""];
 }
 
 - (void) testBuildVersionClearsOverride
@@ -672,18 +672,18 @@
     NSString *realBundleVersion = [[[self class] fakeInfoDictionary] objectForKey:@"CFBundleVersion"];
     NSString *overrideVersion = @"9541";
 
-    [NewRelicAgent setApplicationBuild:overrideVersion];
+    [NewRelic setApplicationBuild:overrideVersion];
     NRMAConnectInformation *info = [NRMAAgentConfiguration connectionInformation];
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-    [NewRelicAgent setApplicationBuild:nil];
+    [NewRelic setApplicationBuild:nil];
 #pragma clang diagnostic pop
     info = [NRMAAgentConfiguration connectionInformation];
 
     XCTAssertEqual(info.applicationInformation.appBuild, realBundleVersion,
                    @"appInfo.appBuild should equal '%@' but is '%@'",
                    realBundleVersion, info.applicationInformation.appBuild);
-    [NewRelicAgent setApplicationBuild:@""];
+    [NewRelic setApplicationBuild:@""];
 }
 
 
