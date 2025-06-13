@@ -6523,6 +6523,7 @@
 					"-fvisibility=default",
 					"-Wno-varargs",
 				);
+				OTHER_SWIFT_FLAGS = "-alias-module-names-in-module-interface";
 				SDKROOT = iphoneos;
 				SWIFT_INCLUDE_PATHS = "\"$(SRCROOT)/Agent/Project Module\" $(SRCROOT)/Agent/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
@@ -6594,6 +6595,7 @@
 					"-fvisibility=default",
 					"-Wno-varargs",
 				);
+				OTHER_SWIFT_FLAGS = "-alias-module-names-in-module-interface";
 				SDKROOT = iphoneos;
 				SWIFT_INCLUDE_PATHS = "\"$(SRCROOT)/Agent/Project Module\" $(SRCROOT)/Agent/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
