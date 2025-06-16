@@ -8,6 +8,7 @@
 
 import Foundation
 import Compression
+import zlib
 @_implementationOnly import NewRelicPrivate
 
 @objcMembers
@@ -24,15 +25,18 @@ public class SessionReplayReporter: NSObject {
     }
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
-       uploadQueue.async {
-           guard let gzippedData = NRMAHarvesterConnection.gzipData(upload.sessionReplayFramesData) else {
-               NRLOG_ERROR("Failed to gzip session replay data")
-               return
-           }
-           upload.sessionReplayFramesData = gzippedData
-           self.sessionReplayFramesUploadArray.append(upload)
-           self.processNextUploadTask()
-       }
+        uploadQueue.async {
+            do {
+                let gzippedData = try upload.sessionReplayFramesData.gzipped()
+                upload.sessionReplayFramesData = gzippedData
+                
+                self.sessionReplayFramesUploadArray.append(upload)
+                self.processNextUploadTask()
+            } catch {
+                NRLOG_ERROR("Failed to gzip session replay data: \(error.localizedDescription)")
+                return
+            }
+        }
    }
 
     private func processNextUploadTask() {
@@ -135,8 +139,7 @@ public class SessionReplayReporter: NSObject {
         }
         
         let attributesString = attributes.map { key, value in
-            let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            return "\(key)=\(encodedValue)"
+            return "\(key)=\(value)"
         }.joined(separator: "&")
 
         var urlComponents = URLComponents(string: "https://staging-mobile-collector.newrelic.com/mobile/blobs")
@@ -153,3 +156,62 @@ public class SessionReplayReporter: NSObject {
         return urlComponents?.url
     }
 }
+
+extension Data {
+    func gzipped() throws -> Data {
+        var stream = z_stream()
+        var status: Int32
+
+        status = deflateInit2_(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
+
+        guard status == Z_OK else {
+            throw GzipError(code: status, message: "deflateInit2_ failed")
+        }
+
+        var compressedData = Data()
+       
+        try self.withUnsafeBytes { (inputBuffer: UnsafeRawBufferPointer) in
+            stream.next_in = UnsafeMutablePointer(mutating: inputBuffer.baseAddress!.assumingMemoryBound(to: Bytef.self))
+            stream.avail_in = uInt(self.count)
+
+            repeat {
+                let chunkSize = 16384
+                var outputBuffer = [UInt8](repeating: 0, count: chunkSize)
+               
+                try outputBuffer.withUnsafeMutableBytes { (outputBufferPointer: UnsafeMutableRawBufferPointer) in
+                    // Get a typed pointer to the start of the buffer's memory.
+                    let typedPointer = outputBufferPointer.baseAddress!.assumingMemoryBound(to: Bytef.self)
+                   
+                    stream.next_out = typedPointer
+                    // This avoids accessing `outputBuffer.count` inside the closure.
+                    stream.avail_out = uInt(chunkSize)
+
+                    status = deflate(&stream, Z_FINISH)
+                   
+                    if status != Z_OK && status != Z_STREAM_END {
+                        throw GzipError(code: status, message: "deflate failed")
+                    }
+                   
+                    let bytesWritten = chunkSize - Int(stream.avail_out)
+                   
+                    if bytesWritten > 0 {
+                        //This avoids referencing the `outputBuffer` variable itself.
+                        compressedData.append(typedPointer, count: bytesWritten)
+                    }
+                }
+            } while status != Z_STREAM_END
+        }
+
+        guard deflateEnd(&stream) == Z_OK else {
+            throw GzipError(code: Z_ERRNO, message: "deflateEnd failed")
+        }
+
+        return compressedData
+    }
+}
+
+  // A simple error struct for the legacy fallback
+  struct GzipError: Error {
+      let code: Int32
+      let message: String
+  }
