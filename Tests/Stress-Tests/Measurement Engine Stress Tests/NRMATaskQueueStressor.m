@@ -150,14 +150,14 @@
     switch (rand() % option) {
         case 0:
             [timer stopTimer];
-            [NewRelicAgent noticeNetworkFailureForURL:[NSURL URLWithString:@"http://google.com"]
+            [NewRelic noticeNetworkFailureForURL:[NSURL URLWithString:@"http://google.com"]
                                       httpMethod:@"GET"
                                        withTimer:timer
                                   andFailureCode:-1000];
             break;
         case 1:
             [timer stopTimer];
-            [NewRelicAgent noticeNetworkRequestForURL:[NSURL URLWithString:@"http://yahoo.com"]
+            [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"http://yahoo.com"]
                                       httpMethod:@"GET"
                                        withTimer:timer
                                  responseHeaders:nil
@@ -170,7 +170,7 @@
             break;
         case 2:
             [timer stopTimer];
-            [NewRelicAgent noticeNetworkRequestForURL:[NSURL URLWithString:@"http://yahoo.com"]
+            [NewRelic noticeNetworkRequestForURL:[NSURL URLWithString:@"http://yahoo.com"]
                                       httpMethod:@"GET"
                                        withTimer:timer
                                  responseHeaders:nil

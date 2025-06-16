@@ -7,7 +7,7 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "NewRelic/NewRelicAgent.h"
+#import "NewRelic/NewRelic.h"
 #import "NRMAFlags.h"
 
 @interface NRMAAnalyticsControllerCustomEventStressor : XCTestCase
@@ -29,19 +29,19 @@
 }
 
 - (void) stress {
-    [NewRelicAgent startWithApplicationToken:@"xx-NRMA-xx"];
+    [NewRelic startWithApplicationToken:@"xx-NRMA-xx"];
     
     for (int i = 0; i < 20000; i++) {
         if(i  % 1000 == 0) {
             NSLog(@"iteration: %d", i);
         }
-        [NewRelicAgent recordCustomEvent:@"MYEVENTTYPE" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
-        [NewRelicAgent recordCustomEvent:@"MYEVENTTYPE2" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
-        [NewRelicAgent recordCustomEvent:@"MYEVENTTYPE3" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
+        [NewRelic recordCustomEvent:@"MYEVENTTYPE" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
+        [NewRelic recordCustomEvent:@"MYEVENTTYPE2" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
+        [NewRelic recordCustomEvent:@"MYEVENTTYPE3" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
 
-        [NewRelicAgent recordCustomEvent:@"MYEVENTTYPE4" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
-        [NewRelicAgent recordCustomEvent:@"MYEVENTTYPE5" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
-        [NewRelicAgent recordCustomEvent:@"MYEVENTTYPE6" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
+        [NewRelic recordCustomEvent:@"MYEVENTTYPE4" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
+        [NewRelic recordCustomEvent:@"MYEVENTTYPE5" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
+        [NewRelic recordCustomEvent:@"MYEVENTTYPE6" name: [[NSUUID UUID] UUIDString] attributes:@{[[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString], [[NSUUID UUID] UUIDString]: [[NSUUID UUID] UUIDString]}];
     }
 }
 
