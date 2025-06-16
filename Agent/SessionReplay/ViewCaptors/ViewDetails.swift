@@ -8,7 +8,7 @@
 
 import Foundation
 import UIKit
-import NewRelicPrivate
+@_implementationOnly import NewRelicPrivate
 
 struct ViewDetails {
     let viewId: Int
