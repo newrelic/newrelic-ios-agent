@@ -20,7 +20,7 @@ public class SessionReplayManager: NSObject {
     public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
         
-    public var isFirstChunck = true
+    public var isFirstChunk = true
 
     @objc public init(reporter: SessionReplayReporter) {
         self.sessionReplay = NRMASessionReplay()
@@ -36,7 +36,7 @@ public class SessionReplayManager: NSObject {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
             }
-            isFirstChunck = true
+            isFirstChunk = true
             
             NewRelicAgentInternal.sharedInstance().analyticsController.setNRSessionAttribute(kNRMA_RA_hasReplay, value: NRMABool(bool: true))
 
@@ -110,29 +110,52 @@ public class SessionReplayManager: NSObject {
             AnyRRWebEvent($0)
         })
         
-        // Encode container to JSON
+        guard let upload = createReplayUpload(container: container, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp) else {
+            return
+        }
+        sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        isFirstChunk = false
+
+    }
+    
+    func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
 
+        // Encode container to JSON
+        var jsonData: Data
         do {
-            let jsonData = try encoder.encode(container)
+            jsonData = try encoder.encode(container)
             if let jsonString = String(data: jsonData, encoding: .utf8) {
                 NRLOG_DEBUG(jsonString)
             }
-            guard let url = sessionReplayReporter.uploadURL(
-                uncompressedDataSize: jsonData.count,
-                firstTimestamp: firstTimestamp,
-                lastTimestamp: lastTimestamp,
-                isFirstChunk: isFirstChunck
-            ) else {
-                NRLOG_ERROR("Failed to construct upload URL for session replay.")
-                return
-            }
-            sessionReplayReporter.enqueueSessionReplayUpload(upload: SessionReplayData(sessionReplayFramesData: jsonData, url: url))
-            isFirstChunck = false
         } catch {
-            NRLOG_ERROR("Failed to encode session replay events: \(error)")
+            NRLOG_ERROR("Failed to encode session replay events to JSON: \(error)")
+            return nil
         }
+
+        let uncompressedDataSize = jsonData.count
+
+        do {
+            let gzippedData = try jsonData.gzipped()
+            jsonData = gzippedData
+        } catch {
+            NRLOG_WARNING("Failed to gzip session replay data: \(error.localizedDescription)")
+        }
+
+        // Construct upload URL
+        guard let url = sessionReplayReporter.uploadURL(
+            uncompressedDataSize: uncompressedDataSize,
+            firstTimestamp: firstTimestamp,
+            lastTimestamp: lastTimestamp,
+            isFirstChunk: isFirstChunk,
+            isGZipped: jsonData.isGzipped
+        ) else {
+            NRLOG_ERROR("Failed to construct upload URL for session replay.")
+            return nil
+        }
+
+        return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
     
     // maybe move this into something else?
