@@ -26,16 +26,8 @@ public class SessionReplayReporter: NSObject {
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
         uploadQueue.async {
-            do {
-                let gzippedData = try upload.sessionReplayFramesData.gzipped()
-                upload.sessionReplayFramesData = gzippedData
-                
-                self.sessionReplayFramesUploadArray.append(upload)
-                self.processNextUploadTask()
-            } catch {
-                NRLOG_ERROR("Failed to gzip session replay data: \(error.localizedDescription)")
-                return
-            }
+            self.sessionReplayFramesUploadArray.append(upload)
+            self.processNextUploadTask()
         }
    }
 
@@ -48,34 +40,36 @@ public class SessionReplayReporter: NSObject {
              self.isUploading = true
              
              let upload = self.sessionReplayFramesUploadArray.first!
-             let formattedData = upload.sessionReplayFramesData
 
-             if formattedData.count > kNRMAMaxPayloadSizeLimit {
-                 NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB.")
+             if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
+                 NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
                  self.isUploading = false
-                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("replay") // SUBJECT TO CHANGE WITH ENDPOINT NAME
+                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("SessionReplay")
+                 self.sessionReplayFramesUploadArray.removeFirst()
                  return
              }
 
              var request = URLRequest(url: upload.url)
              request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-             request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
-             request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
-             request.setValue(String(formattedData.count), forHTTPHeaderField: "Content-Length")
+             if upload.sessionReplayFramesData.isGzipped {
+                 request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
+                 request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+             }
+             request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
              request.setValue(applicationToken, forHTTPHeaderField:"X-App-License-Key")
 
              request.httpMethod = "POST"
 
              let session = URLSession(configuration: .default)
-             let uploadTask = session.uploadTask(with: request, from: formattedData) { data, response, error in
-                 self.handleUploadResponse(data: data, response: response, error: error, originalDataSize: formattedData.count)
+             let uploadTask = session.uploadTask(with: request, from: upload.sessionReplayFramesData) { data, response, error in
+                 self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count)
              }
 
              uploadTask.resume()
          }
      }
     
-    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, originalDataSize: Int) {
+    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, dataSize: Int) {
        var errorCode = false
        var errorCodeInt = 0
 
@@ -88,7 +82,7 @@ public class SessionReplayReporter: NSObject {
            NRLOG_DEBUG("Session replay frames uploaded successfully.")
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
-           NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(originalDataSize)
+           NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
        } else {
            self.failureCount += 1
        }
@@ -104,7 +98,7 @@ public class SessionReplayReporter: NSObject {
        self.processNextUploadTask()
    }
     
-    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool) -> URL? {
+    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
             NRLOG_ERROR("Error accessing harvester configuration information")
             return nil
@@ -122,9 +116,11 @@ public class SessionReplayReporter: NSObject {
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(firstTimestamp),
             "replay.lastTimestamp": String(lastTimestamp),
-            "content_encoding": "gzip",
             "appVersion": appVersion
         ]
+        if isGZipped {
+            attributes["content_encoding"] = "gzip"
+        }
         do {
             if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
                !sessionAttributes.isEmpty,
@@ -208,9 +204,13 @@ extension Data {
 
         return compressedData
     }
+    
+    var isGzipped: Bool {
+        return self.count >= 2 && self[0] == 0x1f && self[1] == 0x8b
+    }
 }
 
-  // A simple error struct for the legacy fallback
+  // A simple error struct
   struct GzipError: Error {
       let code: Int32
       let message: String
