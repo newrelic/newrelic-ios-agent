@@ -7,8 +7,11 @@
 
 import UIKit
 
-class TextMaskingViewController: UIViewController {
+class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     var viewModel = TextMaskingViewModel()
+
+    let data = [("Title 1", "Subtitle 1"), ("Title 2", "Subtitle 2"), ("Title 3", "Subtitle 3")]
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,8 +23,10 @@ class TextMaskingViewController: UIViewController {
         let unmaskedStack = createSectionStack(title: "Unmasked Fields", isMasked: false)
         let parentChildStack = createParentChildSection()
 
+        let tableViewStack = createTableViewSection()
+
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [maskedStack, unmaskedStack, parentChildStack])
+        let mainStack = UIStackView(arrangedSubviews: [maskedStack, unmaskedStack, parentChildStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -205,5 +210,122 @@ class TextMaskingViewController: UIViewController {
         ])
 
         return containerView
+    }
+
+
+    private func createTableViewSection() -> UIStackView {
+        let sectionLabel = UILabel()
+        sectionLabel.text = "TableView Masking Test"
+        sectionLabel.font = .boldSystemFont(ofSize: 18)
+
+        // Create a container for the tableview with proper label
+        let tableViewContainer = UIView()
+        tableViewContainer.translatesAutoresizingMaskIntoConstraints = false
+
+        let descriptionLabel = UILabel()
+        descriptionLabel.text = "Testing masking propagation in TableView hierarchy"
+        descriptionLabel.numberOfLines = 0
+        descriptionLabel.font = .systemFont(ofSize: 14)
+        descriptionLabel.textColor = .secondaryLabel
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        // Create the tableview with masking identifier
+        let tableView = UITableView()
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.register(MaskTestTableViewCell.self, forCellReuseIdentifier: "MaskTestCell")
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.rowHeight = 80
+        tableView.accessibilityIdentifier = "nr-mask"
+        tableView.layer.borderWidth = 1
+        tableView.layer.borderColor = UIColor.systemBlue.cgColor
+        tableView.layer.cornerRadius = 8
+
+        // Add views to container
+        tableViewContainer.addSubview(descriptionLabel)
+        tableViewContainer.addSubview(tableView)
+
+        NSLayoutConstraint.activate([
+            tableViewContainer.heightAnchor.constraint(equalToConstant: 300),
+
+            descriptionLabel.topAnchor.constraint(equalTo: tableViewContainer.topAnchor),
+            descriptionLabel.leadingAnchor.constraint(equalTo: tableViewContainer.leadingAnchor),
+            descriptionLabel.trailingAnchor.constraint(equalTo: tableViewContainer.trailingAnchor),
+
+            tableView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
+            tableView.leadingAnchor.constraint(equalTo: tableViewContainer.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: tableViewContainer.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: tableViewContainer.bottomAnchor)
+        ])
+
+        let sectionStack = UIStackView(arrangedSubviews: [sectionLabel, tableViewContainer])
+        sectionStack.axis = .vertical
+        sectionStack.spacing = 8
+        return sectionStack
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return data.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "MaskTestCell", for: indexPath) as? MaskTestTableViewCell else {
+            return UITableViewCell()
+        }
+        let (title, subtitle) = data[indexPath.row]
+        cell.titleLabel.text = title
+        cell.subtitleLabel.text = subtitle
+        return cell
+    }
+
+    // UITableViewDelegate Methods
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print("Selected row at \(indexPath.row)")
+    }
+
+}
+
+class MaskTestTableViewCell: UITableViewCell {
+    let titleLabel = UILabel()
+    let subtitleLabel = UILabel()
+    let accessoryButton = UIButton(type: .system)
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+
+        // Configure titleLabel
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(titleLabel)
+
+        // Configure subtitleLabel
+        subtitleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        subtitleLabel.textColor = .gray
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(subtitleLabel)
+
+        // Configure accessoryButton
+        accessoryButton.setTitle("Action", for: .normal)
+        accessoryButton.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(accessoryButton)
+
+        // Add constraints
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: accessoryButton.leadingAnchor, constant: -8),
+
+            subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            subtitleLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+            subtitleLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8),
+
+            accessoryButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            accessoryButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+        ])
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

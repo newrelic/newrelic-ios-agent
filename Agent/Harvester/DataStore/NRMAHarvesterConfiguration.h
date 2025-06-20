@@ -34,7 +34,7 @@
 #define kNRMA_CONFIG_KEY @"configuration"
 
 // Session Replay Configuration Keys
-#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"session_replay_configuration"
+#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"mobile_session_replay"
 
 #define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"idemtifier"
 #define kNRMA_SESSION_REPLAY_CONFIG_NAME_KEY @"name"
@@ -95,7 +95,7 @@
 @property(nonatomic,assign) double    sampling_rate;
 @property(nonatomic,assign) BOOL      has_log_reporting_config;
 @property(nonatomic,assign) NSDictionary* request_header_map;
-@property(nonatomic,assign) double sampleSeed;
+
 
 // CAN BE
 // NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
@@ -137,7 +137,6 @@
 - (NSUInteger) hash;
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
-- (BOOL) isSampled;
 
 @end
 
@@ -147,6 +146,7 @@
 @property(nonatomic,assign) NSString*    name;
 @property(nonatomic,assign) NSString*    operatorName;
 @property(nonatomic,assign) NSString*    type;
+- (id) initWithDictionary:(NSDictionary*)dict;
 
 
 @end

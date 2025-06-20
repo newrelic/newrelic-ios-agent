@@ -24,11 +24,11 @@ class ApodViewModel {
                     self?.loadApodData()
                     return
                 }
-                NewRelicAgent.logInfo("ApodViewModel loadApodData finished.")
+                NewRelic.logInfo("ApodViewModel loadApodData finished.")
 
                 self?.apodResponse.value = response
             case .failure(let error):
-                NewRelicAgent.logError("ApodViewModel loadApodData encountered error=error=\(error.localizedDescription).")
+                NewRelic.logError("ApodViewModel loadApodData encountered error=error=\(error.localizedDescription).")
 
                 self?.error.value = error
             }
@@ -50,12 +50,12 @@ class ApodViewModel {
             if decoded.media_type == "video" {
                 return await loadApodDataAsync()
             }
-            NewRelicAgent.logInfo("ApodViewModel loadApodDataAsync finished.")
+            NewRelic.logInfo("ApodViewModel loadApodDataAsync finished.")
 
             self.apodResponse.value = decoded
         } catch {
 
-            NewRelicAgent.logError("ApodViewModel loadApodDataAsync encountered error=\(error.localizedDescription).")
+            NewRelic.logError("ApodViewModel loadApodDataAsync encountered error=\(error.localizedDescription).")
 
             self.error.value = error
         }
@@ -73,11 +73,11 @@ class ApodViewModel {
                     self?.loadApodData()
                     return
                 }
-                NewRelicAgent.logInfo("ApodViewModel loadApodData finished.")
+                NewRelic.logInfo("ApodViewModel loadApodData finished.")
 
                 self?.apodResponse.value = response
             case .failure(let error):
-                NewRelicAgent.logError("ApodViewModel loadApodData encountered error=error=\(error.localizedDescription).")
+                NewRelic.logError("ApodViewModel loadApodData encountered error=error=\(error.localizedDescription).")
 
                 self?.error.value = error
             }
@@ -97,12 +97,12 @@ class ApodViewModel {
             if decoded.media_type == "video" {
                 return await loadApodDataAsync()
             }
-            NewRelicAgent.logInfo("ApodViewModel loadApodDataAsync finished.")
+            NewRelic.logInfo("ApodViewModel loadApodDataAsync finished.")
 
             self.apodResponse.value = decoded
         } catch {
 
-            NewRelicAgent.logError("ApodViewModel loadApodDataAsync encountered error=\(error.localizedDescription).")
+            NewRelic.logError("ApodViewModel loadApodDataAsync encountered error=\(error.localizedDescription).")
 
             self.error.value = error
         }

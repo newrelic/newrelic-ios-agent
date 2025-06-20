@@ -41,6 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
+@property(assign) double sessionReplaySampleSeed;
+@property(assign) double sessionReplayErrorSampleSeed;
 
 // Track the total number of successful network requests logged by the agent
 @property (nonatomic, readonly, assign) NSUInteger lifetimeRequestCount;

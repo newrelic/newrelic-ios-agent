@@ -705,10 +705,14 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     NRLOG_AGENT_VERBOSE(@"config: RESEEDING");
 
-    // generates double number between 0.000000 and 100.000000
+    // generates double numbers between 0.000000 and 100.000000
     self.sampleSeed = ((float)arc4random_uniform(100000001) / 1000000);
+    self.sessionReplaySampleSeed = ((float)arc4random_uniform(100000001) / 1000000);
+    self.sessionReplayErrorSampleSeed = ((float)arc4random_uniform(100000001) / 1000000);
 
     NRLOG_AGENT_VERBOSE(@"config: newSeed = %f", _sampleSeed);
+    NRLOG_AGENT_VERBOSE(@"config: sessionReplaySampleSeed = %f", _sessionReplaySampleSeed);
+    NRLOG_AGENT_VERBOSE(@"config: sessionReplayErrorSampleSeed = %f", _sessionReplayErrorSampleSeed);
 
     self.appSessionStartDate = [NSDate date];
     [NRMACPUVitals setAppStartCPUTime];
