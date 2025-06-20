@@ -8,6 +8,7 @@
 
 import Foundation
 import Compression
+import zlib
 @_implementationOnly import NewRelicPrivate
 
 @objcMembers
@@ -24,15 +25,10 @@ public class SessionReplayReporter: NSObject {
     }
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
-       uploadQueue.async {
-           guard let gzippedData = NRMAHarvesterConnection.gzipData(upload.sessionReplayFramesData) else {
-               NRLOG_ERROR("Failed to gzip session replay data")
-               return
-           }
-           upload.sessionReplayFramesData = gzippedData
-           self.sessionReplayFramesUploadArray.append(upload)
-           self.processNextUploadTask()
-       }
+        uploadQueue.async {
+            self.sessionReplayFramesUploadArray.append(upload)
+            self.processNextUploadTask()
+        }
    }
 
     private func processNextUploadTask() {
@@ -44,34 +40,36 @@ public class SessionReplayReporter: NSObject {
              self.isUploading = true
              
              let upload = self.sessionReplayFramesUploadArray.first!
-             let formattedData = upload.sessionReplayFramesData
 
-             if formattedData.count > kNRMAMaxPayloadSizeLimit {
-                 NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB.")
+             if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
+                 NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
                  self.isUploading = false
-                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("replay") // SUBJECT TO CHANGE WITH ENDPOINT NAME
+                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("SessionReplay")
+                 self.sessionReplayFramesUploadArray.removeFirst()
                  return
              }
 
              var request = URLRequest(url: upload.url)
              request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-             request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
-             request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
-             request.setValue(String(formattedData.count), forHTTPHeaderField: "Content-Length")
+             if upload.sessionReplayFramesData.isGzipped {
+                 request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
+                 request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+             }
+             request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
              request.setValue(applicationToken, forHTTPHeaderField:"X-App-License-Key")
 
              request.httpMethod = "POST"
 
              let session = URLSession(configuration: .default)
-             let uploadTask = session.uploadTask(with: request, from: formattedData) { data, response, error in
-                 self.handleUploadResponse(data: data, response: response, error: error, originalDataSize: formattedData.count)
+             let uploadTask = session.uploadTask(with: request, from: upload.sessionReplayFramesData) { data, response, error in
+                 self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count)
              }
 
              uploadTask.resume()
          }
      }
     
-    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, originalDataSize: Int) {
+    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, dataSize: Int) {
        var errorCode = false
        var errorCodeInt = 0
 
@@ -84,7 +82,7 @@ public class SessionReplayReporter: NSObject {
            NRLOG_DEBUG("Session replay frames uploaded successfully.")
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
-           NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(originalDataSize)
+           NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
        } else {
            self.failureCount += 1
        }
@@ -100,7 +98,7 @@ public class SessionReplayReporter: NSObject {
        self.processNextUploadTask()
    }
     
-    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool) -> URL? {
+    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
             NRLOG_ERROR("Error accessing harvester configuration information")
             return nil
@@ -118,9 +116,11 @@ public class SessionReplayReporter: NSObject {
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(firstTimestamp),
             "replay.lastTimestamp": String(lastTimestamp),
-            "content_encoding": "gzip",
             "appVersion": appVersion
         ]
+        if isGZipped {
+            attributes["content_encoding"] = "gzip"
+        }
         do {
             if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
                !sessionAttributes.isEmpty,
@@ -135,8 +135,7 @@ public class SessionReplayReporter: NSObject {
         }
         
         let attributesString = attributes.map { key, value in
-            let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            return "\(key)=\(encodedValue)"
+            return "\(key)=\(value)"
         }.joined(separator: "&")
 
         var urlComponents = URLComponents(string: "https://staging-mobile-collector.newrelic.com/mobile/blobs")
@@ -153,3 +152,66 @@ public class SessionReplayReporter: NSObject {
         return urlComponents?.url
     }
 }
+
+extension Data {
+    func gzipped() throws -> Data {
+        var stream = z_stream()
+        var status: Int32
+
+        status = deflateInit2_(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
+
+        guard status == Z_OK else {
+            throw GzipError(code: status, message: "deflateInit2_ failed")
+        }
+
+        var compressedData = Data()
+       
+        try self.withUnsafeBytes { (inputBuffer: UnsafeRawBufferPointer) in
+            stream.next_in = UnsafeMutablePointer(mutating: inputBuffer.baseAddress!.assumingMemoryBound(to: Bytef.self))
+            stream.avail_in = uInt(self.count)
+
+            repeat {
+                let chunkSize = 16384
+                var outputBuffer = [UInt8](repeating: 0, count: chunkSize)
+               
+                try outputBuffer.withUnsafeMutableBytes { (outputBufferPointer: UnsafeMutableRawBufferPointer) in
+                    // Get a typed pointer to the start of the buffer's memory.
+                    let typedPointer = outputBufferPointer.baseAddress!.assumingMemoryBound(to: Bytef.self)
+                   
+                    stream.next_out = typedPointer
+                    // This avoids accessing `outputBuffer.count` inside the closure.
+                    stream.avail_out = uInt(chunkSize)
+
+                    status = deflate(&stream, Z_FINISH)
+                   
+                    if status != Z_OK && status != Z_STREAM_END {
+                        throw GzipError(code: status, message: "deflate failed")
+                    }
+                   
+                    let bytesWritten = chunkSize - Int(stream.avail_out)
+                   
+                    if bytesWritten > 0 {
+                        //This avoids referencing the `outputBuffer` variable itself.
+                        compressedData.append(typedPointer, count: bytesWritten)
+                    }
+                }
+            } while status != Z_STREAM_END
+        }
+
+        guard deflateEnd(&stream) == Z_OK else {
+            throw GzipError(code: Z_ERRNO, message: "deflateEnd failed")
+        }
+
+        return compressedData
+    }
+    
+    var isGzipped: Bool {
+        return self.count >= 2 && self[0] == 0x1f && self[1] == 0x8b
+    }
+}
+
+  // A simple error struct
+  struct GzipError: Error {
+      let code: Int32
+      let message: String
+  }
