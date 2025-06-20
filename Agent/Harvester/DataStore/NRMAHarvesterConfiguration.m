@@ -348,8 +348,7 @@
 
 
     if (self.has_session_replay_config) {
-        dictionary[kNRMA_SESSION_REPLAY_CONFIG_KEY] =
-        @{kNRMA_SESSION_REPLAY_CONFIG_KEY: @{kNRMA_LOG_REPORTING_ENABLED_KEY: @(self.session_replay_enabled),
+        dictionary[kNRMA_CONFIG_KEY] =  @{kNRMA_SESSION_REPLAY_CONFIG_KEY: @{kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY: @(self.session_replay_enabled),
                                              kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY: self.session_replay_mode,
                                              kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY : @(self.session_replay_sampling_rate),
                                              kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY : @(self.session_replay_error_sampling_rate),
@@ -357,16 +356,10 @@
                                             kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY: @(self.session_replay_maskUserInputText),
                                             kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY: @(self.session_replay_maskAllUserTouches),
                                             kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY: @(self.session_replay_maskAllImages),
-                                            kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY: [self.session_replay_customRules allObjects],
+                                            kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY: @[],
         }};
     }
 
-//    // Masked
-//    configuration.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
-//    configuration.session_replay_maskedClassNames = [NSMutableSet set];
-//    // Unmasked
-//    configuration.session_replay_unmaskedClassNames = [NSMutableSet set];
-//    configuration.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
 
     return dictionary;
 }

@@ -110,6 +110,31 @@
     config.sampling_rate = 100.0;
     config.entity_guid = @"";
 
+    // MSR Section
+    config.has_session_replay_config = YES;
+    config.session_replay_enabled = YES;
+    config.session_replay_sampling_rate = 100.0;
+    config.session_replay_error_sampling_rate = 100.0;
+    config.session_replay_mode = SessionReplayMaskingModeCustom;
+
+    config.session_replay_maskApplicationText = YES;
+    config.session_replay_maskUserInputText = YES;
+    config.session_replay_maskAllUserTouches = YES;
+    config.session_replay_maskAllImages = YES;
+
+    config.session_replay_textMaskingStrategy = MaskAllText;
+
+    // Lists for tracking masked elements in SessionReplay
+    config.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
+    config.session_replay_maskedClassNames = [NSMutableSet set];
+
+    // Lists for tracking unmasked elements in SessionReplay
+    config.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
+    config.session_replay_unmaskedClassNames = [NSMutableSet set];
+
+    config.session_replay_customRules = [NSMutableSet set];
+
+    // End MSR Section
     return config;
 }
 
@@ -167,7 +192,8 @@
     NRMAHarvesterConfiguration *secondConfig = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]];
     NSLog(@"secondConfig = @+%@", secondConfig);
 
-    XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
+    NRMAHarvesterConfiguration *thirdConfig = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]];
+    XCTAssertTrue([config isEqual:thirdConfig], @"test asDictionary and initWithDictionary is correct");
 }
 
 - (void) testBadHarvestConfiguration {

@@ -114,7 +114,6 @@
 @property(nonatomic,assign) BOOL      session_replay_maskAllUserTouches;
 @property(nonatomic,assign) BOOL     session_replay_maskAllImages;
 
-@property(nonatomic,assign) BOOL     session_replay_customMaskingRules;
 @property(nonatomic,assign) enum SessionReplayTextMaskingStrategy     session_replay_textMaskingStrategy;
 
 // Lists for tracking masked elements in SessionReplay
