@@ -250,8 +250,8 @@
 
     configuration.entity_guid = @"";
     configuration.log_reporting_level = kNRMA_LOG_REPORTING_LEVEL_DEFAULT;
-    configuration.has_log_reporting_config = NO;
-    configuration.log_reporting_enabled = NO;
+    configuration.has_log_reporting_config = YES;
+    configuration.log_reporting_enabled = YES;
     configuration.sampling_rate = 100.0;
     configuration.request_header_map = [NSDictionary dictionary];
 

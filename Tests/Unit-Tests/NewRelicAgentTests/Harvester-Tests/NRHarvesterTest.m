@@ -106,10 +106,12 @@
     config.request_header_map = [NSDictionary dictionary];
     config.encoding_key = @"encoding_key";
     config.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+
     config.log_reporting_level = @"WARN";
     config.sampling_rate = 100.0;
     config.entity_guid = @"";
-
+    config.has_log_reporting_config = YES;
+    config.log_reporting_enabled = NO;
     // MSR Section
     config.has_session_replay_config = YES;
     config.session_replay_enabled = YES;
