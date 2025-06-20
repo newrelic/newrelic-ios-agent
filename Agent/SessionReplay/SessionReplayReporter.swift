@@ -114,8 +114,8 @@ public class SessionReplayReporter: NSObject {
             "payload.type": "standard",
             "hasMeta": String(true),
             "decompressedBytes": String(uncompressedDataSize),
-            "replay.firstTimestamp": String(firstTimestamp),
-            "replay.lastTimestamp": String(lastTimestamp),
+            "replay.firstTimestamp": String(Int(firstTimestamp)),
+            "replay.lastTimestamp": String(Int(lastTimestamp)),
             "appVersion": appVersion
         ]
         if isGZipped {
