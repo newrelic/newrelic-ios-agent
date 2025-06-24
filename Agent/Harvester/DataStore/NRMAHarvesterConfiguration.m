@@ -163,7 +163,7 @@
 
             self.has_session_replay_config = YES;
 
-            BOOL enabled = [innerDict[kNRMA_LOG_REPORTING_ENABLED_KEY] boolValue];
+            BOOL enabled = [innerDict[kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY] boolValue];
             if (enabled) {
                 self.session_replay_enabled = YES;
 
@@ -192,14 +192,47 @@
             }
 
             // Handle mode string
-            self.session_replay_mode =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY];;
+            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY]) {
+                self.session_replay_mode =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY];
+            }
+            else {
+                self.session_replay_mode = SessionReplayMaskingModeCustom;
+            }
 
 
             // Handle the BOOL masking options.
-            self.session_replay_maskApplicationText =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY];;
-            self.session_replay_maskUserInputText =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY];;
-            self.session_replay_maskAllUserTouches =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY];;
-            self.session_replay_maskAllImages =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY];;
+            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY]) {
+                self.session_replay_maskApplicationText =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY];
+
+            }
+            else {
+                self.session_replay_maskApplicationText = YES;
+            }
+
+            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY]) {
+                self.session_replay_maskUserInputText =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY];
+
+            }
+            else {
+                self.session_replay_maskUserInputText = NO;
+            }
+
+            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY]) {
+                self.session_replay_maskAllUserTouches =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY];
+
+            }
+            else {
+                self.session_replay_maskAllUserTouches =  NO;
+            }
+
+            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY]) {
+                self.session_replay_maskAllImages =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY];
+
+            }
+            else {
+                self.session_replay_maskAllImages =  NO;
+
+            }
 
             // Handle the custom rule options.
 
@@ -219,7 +252,7 @@
             self.session_replay_sampling_rate = 100.0;
             self.session_replay_error_sampling_rate = 100.0;
             self.session_replay_mode = SessionReplayMaskingModeCustom;
-
+            self.session_replay_textMaskingStrategy = MaskAllText;
             self.session_replay_maskApplicationText = true;
             self.session_replay_maskUserInputText = true;
             self.session_replay_maskAllUserTouches = true;
@@ -405,7 +438,6 @@
 
 
     // session replay equality
-
     if (self.session_replay_sampling_rate != that.session_replay_sampling_rate) return NO;
     if (![self.session_replay_mode isEqualToString:that.session_replay_mode]) return NO;
     if (self.session_replay_enabled != that.session_replay_enabled) return NO;
@@ -444,6 +476,12 @@
 
 
     // session replay
+
+//    result = 31 * result + self.log_reporting_level.hash;
+    result = 31 * result + self.session_replay_enabled;
+    result = 31 * result + self.session_replay_sampling_rate;
+    result = 31 * result + self.session_replay_mode.hash;
+
     return result;
 }
 @end

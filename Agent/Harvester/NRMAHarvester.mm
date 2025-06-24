@@ -606,7 +606,6 @@
 
          NRLOG_AGENT_VERBOSE(@"Harvest config: %@", response.responseBody);
 
-       // id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
         id jsonObject = [NRMAJSON JSONObjectWithData:dataFromResp
                                                options:0
                                                error:&error];
