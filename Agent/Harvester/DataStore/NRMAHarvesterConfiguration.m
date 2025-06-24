@@ -215,6 +215,16 @@
         else {
 
             self.has_session_replay_config = NO;
+            self.session_replay_enabled = NO;
+            self.session_replay_sampling_rate = 100.0;
+            self.session_replay_error_sampling_rate = 100.0;
+            self.session_replay_mode = SessionReplayMaskingModeCustom;
+
+            self.session_replay_maskApplicationText = true;
+            self.session_replay_maskUserInputText = true;
+            self.session_replay_maskAllUserTouches = true;
+            self.session_replay_maskAllImages = true;
+
         }
 
         // Masked
