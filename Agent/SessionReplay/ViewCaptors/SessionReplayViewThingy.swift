@@ -11,7 +11,8 @@ import Foundation
 protocol SessionReplayViewThingy: Hashable {
     var viewDetails: ViewDetails { get }
     var shouldRecordSubviews: Bool { get }
-    
+    var isMasked: Bool { get set }
+
     var subviews: [any SessionReplayViewThingy] { get set }
     
     func cssDescription() -> String

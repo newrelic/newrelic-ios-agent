@@ -156,7 +156,7 @@
 {
     [NRMATraceController startTracing:YES];
     helper.result = nil;
-    [NewRelicAgent startInteractionWithName:@"Test"];
+    [NewRelic startInteractionWithName:@"Test"];
     __block BOOL wait = YES;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -239,7 +239,7 @@
 
     [NRMATraceController startTracing:YES];
     NRTimer* timer = [NRTimer new];
-    [NewRelicAgent startTracingMethod:_cmd object:self timer:timer category:NRTraceTypeImages];
+    [NewRelic startTracingMethod:_cmd object:self timer:timer category:NRTraceTypeImages];
     dispatch_queue_t myqueue = dispatch_queue_create("pwd", NULL);
     __block BOOL finished = NO;
     dispatch_async(myqueue, ^{
@@ -255,7 +255,7 @@
         });
     });
     sleep(1);
-    [NewRelicAgent endTracingMethodWithTimer:timer];
+    [NewRelic endTracingMethodWithTimer:timer];
     [NRMATraceController completeActivityTrace];
 
     [NRMATraceController startTracing:YES];

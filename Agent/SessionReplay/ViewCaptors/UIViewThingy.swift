@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 
 class UIViewThingy: SessionReplayViewThingy {
+    var isMasked: Bool
+    
     var subviews = [any SessionReplayViewThingy]()
     
     var shouldRecordSubviews: Bool {
@@ -20,6 +22,7 @@ class UIViewThingy: SessionReplayViewThingy {
     
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
+        self.isMasked = viewDetails.isMasked
     }
     
     func cssDescription() -> String {

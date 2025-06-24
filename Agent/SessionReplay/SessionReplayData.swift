@@ -6,7 +6,7 @@
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
-class SessionReplayData {
+class SessionReplayData: Codable {
     var sessionReplayFramesData: Data
     let url: URL
     

@@ -45,4 +45,9 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(webViewController, animated: true)
 #endif
     }
+
+    func showTextMaskingController() {
+        let webViewController = ViewControllerProvider.textMaskingViewController
+        navigationController.pushViewController(webViewController, animated: true)
+    }
 }

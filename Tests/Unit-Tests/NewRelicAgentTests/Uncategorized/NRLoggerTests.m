@@ -108,13 +108,13 @@ static NewRelicAgentInternal* _sharedInstance;
 
 - (void) testNRLogger {
 
-    [NewRelicAgent logInfo:   @"Info Log..."];
-    [NewRelicAgent logError:  @"Error Log..."];
-    [NewRelicAgent logVerbose:@"Verbose Log..."];
-    [NewRelicAgent logWarning:@"Warning Log..."];
-    [NewRelicAgent logAudit:  @"Audit Log..."];
-    [NewRelicAgent logDebug:  @"Debug Log..."];
-    [NewRelicAgent logAttributes:@{
+    [NewRelic logInfo:   @"Info Log..."];
+    [NewRelic logError:  @"Error Log..."];
+    [NewRelic logVerbose:@"Verbose Log..."];
+    [NewRelic logWarning:@"Warning Log..."];
+    [NewRelic logAudit:  @"Audit Log..."];
+    [NewRelic logDebug:  @"Debug Log..."];
+    [NewRelic logAttributes:@{
         @"logLevel": @"WARN",
         @"message": @"This is a test message for the New Relic logging system.",
         @"additionalAttribute1": @"attribute1",
@@ -235,13 +235,13 @@ static NewRelicAgentInternal* _sharedInstance;
     
     // Seven messages should reach the remote log file for upload.
 
-    [NewRelicAgent logInfo:   @"Info Log..."];
-    [NewRelicAgent logError:  @"Error Log..."];
-    [NewRelicAgent logVerbose:@"Verbose Log..."];
-    [NewRelicAgent logWarning:@"Warning Log..."];
-    [NewRelicAgent logAudit:  @"Audit Log..."];
-    [NewRelicAgent logDebug:  @"Debug Log..."];
-    [NewRelicAgent logAttributes:@{
+    [NewRelic logInfo:   @"Info Log..."];
+    [NewRelic logError:  @"Error Log..."];
+    [NewRelic logVerbose:@"Verbose Log..."];
+    [NewRelic logWarning:@"Warning Log..."];
+    [NewRelic logAudit:  @"Audit Log..."];
+    [NewRelic logDebug:  @"Debug Log..."];
+    [NewRelic logAttributes:@{
         @"logLevel": @"WARN",
         @"message": @"This is a test message for the New Relic logging system.",
         @"additionalAttribute1": @"attribute1",
@@ -347,13 +347,13 @@ static NewRelicAgentInternal* _sharedInstance;
     dispatch_resume(self.source);
     
     // Seven messages should reach the remote log file for upload.
-    [NewRelicAgent logInfo:   @"Info Log..."];
-    [NewRelicAgent logError:  @"Error Log..."];
-    [NewRelicAgent logVerbose:@"Verbose Log..."];
-    [NewRelicAgent logWarning:@"Warning Log..."];
-    [NewRelicAgent logAudit:  @"Audit Log..."];
-    [NewRelicAgent logDebug:  @"Debug Log..."];
-    [NewRelicAgent logAttributes:@{
+    [NewRelic logInfo:   @"Info Log..."];
+    [NewRelic logError:  @"Error Log..."];
+    [NewRelic logVerbose:@"Verbose Log..."];
+    [NewRelic logWarning:@"Warning Log..."];
+    [NewRelic logAudit:  @"Audit Log..."];
+    [NewRelic logDebug:  @"Debug Log..."];
+    [NewRelic logAttributes:@{
         @"logLevel": @"WARN",
         @"message": @"This is a test message for the New Relic logging system.",
         @"additionalAttribute1": @"attribute1",

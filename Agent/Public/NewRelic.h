@@ -28,7 +28,7 @@ extern "C" {
 
 
 
-@interface NewRelicAgent : NSObject
+@interface NewRelic : NSObject
 
 /**************************************/
 /** Initializing the New Relic agent **/
@@ -219,7 +219,7 @@ extern "C" {
  ******************************************************************************/
 + (NSString* _Null_unspecified) startInteractionWithName:(NSString* _Null_unspecified)interactionName;
 
-#define NR_START_NAMED_INTERACTION(name) [NewRelicAgent startInteractionWithName:name]
+#define NR_START_NAMED_INTERACTION(name) [NewRelic startInteractionWithName:name]
 /*******************************************************************************
  *  + (void) stopCurrentInteraction(NSString*)InteractionIdentifier;
  *
@@ -238,7 +238,7 @@ extern "C" {
  *
  ******************************************************************************/
 + (void) stopCurrentInteraction:(NSString* _Null_unspecified)interactionIdentifier;
-#define NR_INTERACTION_STOP(interactionIdentifier) [NewRelicAgent stopCurrentInteraction:interactionIdentifier]
+#define NR_INTERACTION_STOP(interactionIdentifier) [NewRelic stopCurrentInteraction:interactionIdentifier]
 
 /************************/
 /**   Method Tracing   **/
@@ -286,7 +286,7 @@ extern "C" {
                       timer:(NRTimer* _Null_unspecified)timer
                    category:(enum NRTraceType)category;
 
-#define NR_TRACE_METHOD_START(traceCategory)  NRTimer *__nr__trace__timer = [[NRTimer alloc] init]; [NewRelicAgent startTracingMethod:_cmd object:self timer:__nr__trace__timer category:traceCategory];
+#define NR_TRACE_METHOD_START(traceCategory)  NRTimer *__nr__trace__timer = [[NRTimer alloc] init]; [NewRelic startTracingMethod:_cmd object:self timer:__nr__trace__timer category:traceCategory];
 
 
 
@@ -316,8 +316,8 @@ extern "C" {
 
 + (void) endTracingMethodWithTimer:(NRTimer* _Null_unspecified)timer;
 
-#define NR_TRACE_METHOD_STOP   [NewRelicAgent endTracingMethodWithTimer:__nr__trace__timer]; __nr__trace__timer = nil;
-#define NR_NONARC_TRACE_METHOD_STOP   [NewRelicAgent endTracingMethodWithTimer:__nr__trace__timer]; [__nr__trace__timer release];__nr__trace__timer = nil;
+#define NR_TRACE_METHOD_STOP   [NewRelic endTracingMethodWithTimer:__nr__trace__timer]; __nr__trace__timer = nil;
+#define NR_NONARC_TRACE_METHOD_STOP   [NewRelic endTracingMethodWithTimer:__nr__trace__timer]; [__nr__trace__timer release];__nr__trace__timer = nil;
 
 
 
