@@ -157,15 +157,4 @@ public class SessionReplayManager: NSObject {
 
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
-    
-    // maybe move this into something else?
-    @MainActor
-    private func getWindow() -> UIWindow? {
-        UIApplication
-            .shared
-            .connectedScenes
-            .compactMap {$0 as? UIWindowScene}
-            .flatMap { $0.windows }
-            .last { $0.isKeyWindow }
-    }
 }

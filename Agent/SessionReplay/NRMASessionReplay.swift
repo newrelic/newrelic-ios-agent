@@ -124,9 +124,21 @@ public class NRMASessionReplay: NSObject {
     
     func getSessionReplayFrames() -> [RRWebEventCommon] {
         var processedFrames: [RRWebEventCommon] = []
-        processedFrames.append(contentsOf: (rawFrames).map {
-            self.sessionReplayFrameProcessor.processFrame($0)
-        })
+        var currentSize = rawFrames.first?.size ?? .zero
+        
+        for frame in rawFrames {
+            if currentSize != frame.size {
+                currentSize = frame.size
+                let metaEventData = RRWebMetaData(
+                    href: "http://newrelic.com",
+                    width: Int(currentSize.width),
+                    height: Int(currentSize.height)
+                )
+                let metaEvent = MetaEvent(timestamp: frame.date.timeIntervalSince1970 * 1000, data: metaEventData)
+                processedFrames.append(metaEvent)
+            }
+            processedFrames.append(sessionReplayFrameProcessor.processFrame(frame))
+        }
 
         rawFrames.removeAll()
         return processedFrames

@@ -37,7 +37,7 @@ struct ViewDetails {
     init(view: UIView) {
         if let superview = view.superview,
            let window = view.window {
-            frame = superview.convert(view.frame, to: window.screen.fixedCoordinateSpace)
+            frame = superview.convert(view.frame, to: window.screen.coordinateSpace)
         } else {
             frame = view.frame
         }
