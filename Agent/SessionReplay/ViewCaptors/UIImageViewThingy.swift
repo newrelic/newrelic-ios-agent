@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 
 class UIImageViewThingy: SessionReplayViewThingy {
+    var isMasked: Bool
+    
     var viewDetails: ViewDetails
     var image: UIImage?
     
@@ -24,6 +26,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
         if false {
             self.image = (view.image ?? nil)
         }
+        self.isMasked = viewDetails.isMasked
     }
     
     func cssDescription() -> String {

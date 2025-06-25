@@ -30,7 +30,7 @@ class ViewController: UIViewController {
         
         viewModel.error.onUpdate = { [weak self] _ in
             if let error = self?.viewModel.error.value {
-                NewRelicAgent.recordError(error)
+                NewRelic.recordError(error)
             }
         }
 
@@ -45,7 +45,7 @@ class ViewController: UIViewController {
         
         viewModel.loadApodData()
 
-        NewRelicAgent.logInfo("ViewController viewDidLoad finished.")
+        NewRelic.logInfo("ViewController viewDidLoad finished.")
     }
     
     func setupSpaceStack() {
@@ -117,6 +117,9 @@ class ViewController: UIViewController {
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
         options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
+
+        options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
@@ -155,6 +158,10 @@ class ViewController: UIViewController {
              await viewModel.loadApodDataAsyncBrokeData()
          }
      }
+
+    func textMaskingAction() {
+        coordinator?.showTextMaskingController()
+    }
 
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)

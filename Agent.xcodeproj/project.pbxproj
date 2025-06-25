@@ -870,6 +870,8 @@
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
+		2B0B6BAD2DEA349D0080C3D6 /* UITextFieldThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */; };
+		2B0B6BAE2DEA349D0080C3D6 /* UITextViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2B33E5D22AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B33E5BD2AA9160E00AEB7B4 /* NRMASessionEvent.m */; };
 		2B33E5D32AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B33E5BD2AA9160E00AEB7B4 /* NRMASessionEvent.m */; };
@@ -928,6 +930,7 @@
 		2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		2BA9CA46280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
 		2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
+		2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */; };
 		2BCA57B42B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BCA57B52B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BDCA8A42A8C40D50005740D /* NRMASAM.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BDCA8A32A8C40D50005740D /* NRMASAM.h */; };
@@ -2431,6 +2434,8 @@
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
+		2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextFieldThingy.swift; sourceTree = "<group>"; };
+		2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextViewThingy.swift; sourceTree = "<group>"; };
 		2B33E5BD2AA9160E00AEB7B4 /* NRMASessionEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASessionEvent.m; sourceTree = "<group>"; };
 		2B33E5D12AA9160E00AEB7B4 /* NRMASessionEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASessionEvent.h; sourceTree = "<group>"; };
 		2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHTTPUtilitiesTests.m; sourceTree = "<group>"; };
@@ -2443,6 +2448,7 @@
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
 		2BBBE6FA28BD528F003CADF3 /* NRMAStartTimerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAStartTimerTests.h; sourceTree = "<group>"; };
 		2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimerTests.m; sourceTree = "<group>"; };
+		2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SessionReplayTest.m; sourceTree = "<group>"; };
 		2BCA579F2B7E85AD00991C5E /* NRLoggerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRLoggerTests.h; sourceTree = "<group>"; };
 		2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRLoggerTests.m; sourceTree = "<group>"; };
 		2BDCA8A32A8C40D50005740D /* NRMASAM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASAM.h; sourceTree = "<group>"; };
@@ -2949,6 +2955,7 @@
 		0209AC6424E7391000E45C90 /* Uncategorized */ = {
 			isa = PBXGroup;
 			children = (
+				2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */,
 				0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */,
 				0209ACB424E747FA00E45C90 /* NewRelicAgentTests.m */,
 				0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */,
@@ -3869,6 +3876,8 @@
 		341E84D22D9CB1F000968D7D /* ViewCaptors */ = {
 			isa = PBXGroup;
 			children = (
+				2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */,
+				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
 				F80C1D692DA07691007C0F52 /* ViewDetails.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
@@ -5375,6 +5384,7 @@
 				0209AC5124E707AB00E45C90 /* NRMAUserActionBuilderTest.m in Sources */,
 				0209AC9D24E7393300E45C90 /* NRMAUpgradeMetricGeneratorTest.m in Sources */,
 				0209AC4024E7075200E45C90 /* NRHarvesterConnectionTests.m in Sources */,
+				2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */,
 				0209AC9B24E7393300E45C90 /* NRCPUVitalsTest.m in Sources */,
 				0209AC1224E7071500E45C90 /* NRMAAPIHelperTests.m in Sources */,
 				0209AC4524E7078000E45C90 /* NRMAFeatureFlagsTests.m in Sources */,
@@ -5614,6 +5624,8 @@
 				F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */,
 				02FF49B224DC62B800115469 /* NRMADeviceInformation.m in Sources */,
 				02FF48F824DC623400115469 /* NRMAInteractionHistoryObjCInterface.m in Sources */,
+				2B0B6BAD2DEA349D0080C3D6 /* UITextFieldThingy.swift in Sources */,
+				2B0B6BAE2DEA349D0080C3D6 /* UITextViewThingy.swift in Sources */,
 				02FF4A6A24DC64E600115469 /* NRMAActivityTraceMeasurementProducer.m in Sources */,
 				02FF48F424DC623400115469 /* NRMAExceptionMetaDataStore.m in Sources */,
 				02FF4A2124DC648600115469 /* NRMASummaryMeasurementConsumer.m in Sources */,
@@ -6523,6 +6535,7 @@
 					"-fvisibility=default",
 					"-Wno-varargs",
 				);
+				OTHER_SWIFT_FLAGS = "-alias-module-names-in-module-interface";
 				SDKROOT = iphoneos;
 				SWIFT_INCLUDE_PATHS = "\"$(SRCROOT)/Agent/Project Module\" $(SRCROOT)/Agent/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
@@ -6594,6 +6607,7 @@
 					"-fvisibility=default",
 					"-Wno-varargs",
 				);
+				OTHER_SWIFT_FLAGS = "-alias-module-names-in-module-interface";
 				SDKROOT = iphoneos;
 				SWIFT_INCLUDE_PATHS = "\"$(SRCROOT)/Agent/Project Module\" $(SRCROOT)/Agent/**";
 				SWIFT_OBJC_BRIDGING_HEADER = "";

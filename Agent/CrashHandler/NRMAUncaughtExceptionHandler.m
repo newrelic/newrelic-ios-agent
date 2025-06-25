@@ -22,7 +22,7 @@
 @end
 
 static void uncaught_exception_handler(NSException *exception) {
-    [NewRelicAgent recordHandledException:exception];
+    [NewRelic recordHandledException:exception];
 }
 
 @implementation NRMAUncaughtExceptionHandler

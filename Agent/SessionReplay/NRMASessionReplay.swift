@@ -24,6 +24,8 @@ public class NRMASessionReplay: NSObject {
     private var rawFrames = [SessionReplayFrame]()
     public var windowDimensions = CGSize(width: 0, height: 0)
 
+    private let rawFramesQueue = DispatchQueue(label: "com.newrelic.rawFramesQueue", attributes: .concurrent)
+
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
         
     public override init() {
@@ -107,10 +109,26 @@ public class NRMASessionReplay: NSObject {
             }
             
             let frame = await sessionReplayCapture.recordFrom(rootView: window)
-            rawFrames.append(frame)
+            addFrame(frame)
         }
     }
-    
+
+    func addFrame(_ frame: SessionReplayFrame) {
+        rawFramesQueue.async(flags: .barrier) {
+            self.rawFrames.append(frame)
+        }
+    }
+    func getAndClearFrames() -> [SessionReplayFrame] {
+        var frames = [SessionReplayFrame]()
+        rawFramesQueue.sync {
+            frames = self.rawFrames
+        }
+        rawFramesQueue.async(flags: .barrier) {
+            self.rawFrames.removeAll()
+        }
+        return frames
+    }
+
     // maybe move this into something else?
     @MainActor
     private func getWindow() -> UIWindow? {
@@ -124,9 +142,11 @@ public class NRMASessionReplay: NSObject {
     
     func getSessionReplayFrames() -> [RRWebEventCommon] {
         var processedFrames: [RRWebEventCommon] = []
+
         var currentSize = rawFrames.first?.size ?? .zero
-        
-        for frame in rawFrames {
+        let frames = getAndClearFrames()
+
+        for frame in frames {
             if currentSize != frame.size {
                 currentSize = frame.size
                 let metaEventData = RRWebMetaData(
@@ -139,8 +159,7 @@ public class NRMASessionReplay: NSObject {
             }
             processedFrames.append(sessionReplayFrameProcessor.processFrame(frame))
         }
-
-        rawFrames.removeAll()
+      
         return processedFrames
     }
 

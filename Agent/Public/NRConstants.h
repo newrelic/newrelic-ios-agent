@@ -64,7 +64,17 @@ enum NRTraceType {
     NRTraceTypeNetwork
 };
 
+//Custom Text Masking Types
+enum SessionReplayTextMaskingStrategy {
+    MaskAllText,
+    MaskUserInputText,
+    MaskNoText
+};
 
+typedef NSString * SessionReplayMaskingMode NS_STRING_ENUM;
+
+static SessionReplayMaskingMode const SessionReplayMaskingModeDefault = @"default";
+static SessionReplayMaskingMode const SessionReplayMaskingModeCustom = @"custom";
 
 #define X_APP_LICENSE_KEY_REQUEST_HEADER        @"X-App-License-Key"
 

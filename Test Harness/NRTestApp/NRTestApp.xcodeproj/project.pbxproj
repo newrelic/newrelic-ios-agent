@@ -8,6 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
+		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
+		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
+		2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
+		2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
+		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
+		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -248,6 +254,8 @@
 /* Begin PBXFileReference section */
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
+		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
+		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
@@ -545,6 +553,7 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */,
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
@@ -556,6 +565,7 @@
 		F8302B8F297078F2003EC291 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */,
 				F8302B8D297078EA003EC291 /* ApodViewModel.swift */,
 				F86428472971C661002ABA01 /* UtilViewModel.swift */,
 				F86428502971EE89002ABA01 /* Services */,
@@ -1045,12 +1055,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F802EED52BE12E5700AB956F /* UtilViewModel.swift in Sources */,
 				F802EED12BE023E000AB956F /* triggerException.m in Sources */,
 				F802EECD2BE023CB00AB956F /* plistHelper.swift in Sources */,
 				F802EECF2BE023D200AB956F /* Variable.swift in Sources */,
 				F802EED02BE023D700AB956F /* Date.swift in Sources */,
 				F802EEAE2BE021E600AB956F /* WatchAppDelegate.swift in Sources */,
+				2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				F802EE982BE0218600AB956F /* ContentView.swift in Sources */,
 				F802EECE2BE023CE00AB956F /* ApodURL.swift in Sources */,
 				F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */,
@@ -1078,7 +1090,9 @@
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
+				2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
+				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
@@ -1108,6 +1122,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
+				2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,
 				F86429312979CDFA002ABA01 /* Date.swift in Sources */,
 				F86429322979CDFA002ABA01 /* Variable.swift in Sources */,

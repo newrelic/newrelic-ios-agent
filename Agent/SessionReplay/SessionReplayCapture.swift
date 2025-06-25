@@ -94,6 +94,13 @@ class SessionReplayCapture {
             return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
         case let imageView as UIImageView:
             return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
+
+        case let textField as UITextField:
+            return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
+
+        case let textView as UITextView:
+            return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
+
         default:
             return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
         }

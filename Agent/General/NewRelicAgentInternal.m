@@ -84,7 +84,7 @@ static NRMAURLTransformer* urlTransformer;
     NSMutableArray* _transactionDataList;
     double _appLastBackgrounded;
     NSTimeInterval _startTime_ms;
-    
+
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     SessionReplayManager* _sessionReplay;
 #endif
@@ -179,7 +179,7 @@ static NewRelicAgentInternal* _sharedInstance;
         }
 #endif
 
-        // TODO: UserId tweaking
+
         self.userId = NULL;
 
         self.appWillTerminate = NO;
@@ -466,7 +466,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
             [self.analyticsController newSessionWithStartTime:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
 //            self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
         }
-        
+
         // We are coming back to the foreground after having a background stint
     }
 
@@ -652,12 +652,12 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                     return;
                 }
                 didFireEnterForeground = YES;
-                
+
                 if([NRMAFlags shouldEnableBackgroundReporting] && didFireEnterBackground) {
                     [self.analyticsController addCustomEvent:@"Return Harvest" withAttributes:nil];
                     [NewRelicAgentInternal harvestNow];
                 }
-                
+
 
                 /*
                  * NRMAMeasurements must be started before the
@@ -705,10 +705,14 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     NRLOG_AGENT_VERBOSE(@"config: RESEEDING");
 
-    // generates double number between 0.000000 and 100.000000
+    // generates double numbers between 0.000000 and 100.000000
     self.sampleSeed = ((float)arc4random_uniform(100000001) / 1000000);
+    self.sessionReplaySampleSeed = ((float)arc4random_uniform(100000001) / 1000000);
+    self.sessionReplayErrorSampleSeed = ((float)arc4random_uniform(100000001) / 1000000);
 
     NRLOG_AGENT_VERBOSE(@"config: newSeed = %f", _sampleSeed);
+    NRLOG_AGENT_VERBOSE(@"config: sessionReplaySampleSeed = %f", _sessionReplaySampleSeed);
+    NRLOG_AGENT_VERBOSE(@"config: sessionReplayErrorSampleSeed = %f", _sessionReplayErrorSampleSeed);
 
     self.appSessionStartDate = [NSDate date];
     [NRMACPUVitals setAppStartCPUTime];
@@ -863,9 +867,9 @@ static UIBackgroundTaskIdentifier background_task;
             NRLOG_AGENT_VERBOSE(@"Background Harvest Complete");
         }
     }];
-    
+
 #else
-    
+
     if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)] &&
         [[UIDevice currentDevice] isMultitaskingSupported]) {
 
@@ -878,7 +882,7 @@ static UIBackgroundTaskIdentifier background_task;
             [application endBackgroundTask:background_task];
             background_task = UIBackgroundTaskInvalid;
         }];
-        
+
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                                  0),
                        ^{
@@ -1100,7 +1104,7 @@ void applicationDidEnterBackgroundCF(void) {
                                   selector:NSStringFromSelector(_cmd)];
     }
 #endif
-        
+
         // Clear stored user defaults
         [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
         [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];
@@ -1195,6 +1199,140 @@ void applicationDidEnterBackgroundCF(void) {
             NRLOG_AGENT_INFO(@"The New Relic Agent is disabled");
         }
     });
+}
+
+#pragma mark - Session Replay Management
+
+- (BOOL) setSessionReplayTextMaskingStrategy:(enum SessionReplayTextMaskingStrategy) strategy {
+
+    [NRMAHarvestController configuration].session_replay_textMaskingStrategy = strategy;
+    return YES;
+}
+
+#pragma mark - Masked Elements Management
+
+- (void)addMaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+        @synchronized([NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers) {
+            [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers addObject:identifier];
+            NRLOG_AGENT_VERBOSE(@"Added masked accessibility identifier: %@", identifier);
+        }
+    }
+}
+
+- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+        @synchronized([NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers) {
+            [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers removeObject:identifier];
+            NRLOG_AGENT_VERBOSE(@"Removed masked accessibility identifier: %@", identifier);
+        }
+    }
+}
+
+- (BOOL)isAccessibilityIdentifierMasked:(NSString *)identifier {
+    if (identifier.length == 0) {
+        return NO;
+    }
+
+    BOOL isMasked = NO;
+    @synchronized([NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers) {
+        isMasked = [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers containsObject:identifier];
+    }
+    return isMasked;
+}
+
+- (void)addMaskedClassName:(NSString *)className {
+    if (className.length > 0) {
+        @synchronized([NRMAHarvestController configuration].session_replay_maskedClassNames) {
+            [[NRMAHarvestController configuration].session_replay_maskedClassNames addObject:className];
+            NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", className);
+        }
+    }
+}
+
+- (void)removeMaskedClassName:(NSString *)className {
+    if (className.length > 0) {
+        @synchronized([NRMAHarvestController configuration].session_replay_maskedClassNames) {
+            [[NRMAHarvestController configuration].session_replay_maskedClassNames removeObject:className];
+            NRLOG_AGENT_VERBOSE(@"Removed masked class name: %@", className);
+        }
+    }
+}
+
+- (BOOL)isClassNameMasked:(NSString *)className {
+    if (className.length == 0) {
+        return NO;
+    }
+
+    BOOL isMasked = NO;
+    @synchronized([NRMAHarvestController configuration].session_replay_maskedClassNames) {
+        isMasked = [[NRMAHarvestController configuration].session_replay_maskedClassNames containsObject:className];
+    }
+    return isMasked;
+}
+
+#pragma mark - Unmasked Elements Management
+
+- (void)addUnmaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+
+        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers) {
+            [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers addObject:identifier];
+            NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", identifier);
+        }
+    }
+}
+
+- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers) {
+            [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers removeObject:identifier];
+            NRLOG_AGENT_VERBOSE(@"Removed unmasked accessibility identifier: %@", identifier);
+        }
+    }
+}
+
+- (BOOL)isAccessibilityIdentifierUnmasked:(NSString *)identifier {
+    if (identifier.length == 0) {
+        return NO;
+    }
+
+    BOOL isUnmasked = NO;
+    @synchronized([NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers) {
+        isUnmasked = [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers containsObject:identifier];
+    }
+    return isUnmasked;
+}
+
+- (void)addUnmaskedClassName:(NSString *)className {
+
+    if (className.length > 0) {
+        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedClassNames) {
+            [[NRMAHarvestController configuration].session_replay_unmaskedClassNames addObject:className];
+            NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", className);
+        }
+    }
+}
+
+- (void)removeUnmaskedClassName:(NSString *)className {
+    if (className.length > 0) {
+        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedClassNames) {
+            [[NRMAHarvestController configuration].session_replay_unmaskedClassNames removeObject:className];
+            NRLOG_AGENT_VERBOSE(@"Removed unmasked class name: %@", className);
+        }
+    }
+}
+
+- (BOOL)isClassNameUnmasked:(NSString *)className {
+    if (className.length == 0) {
+        return NO;
+    }
+
+    BOOL isUnmasked = NO;
+    @synchronized([NRMAHarvestController configuration].session_replay_unmaskedClassNames) {
+        isUnmasked = [[NRMAHarvestController configuration].session_replay_unmaskedClassNames containsObject:className];
+    }
+    return isUnmasked;
 }
 
 @end
