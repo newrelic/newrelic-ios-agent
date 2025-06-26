@@ -47,7 +47,7 @@ class SessionReplayCapture {
             }
         }
         
-        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID)
+        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, size: rootView.frame.size)
     }
     
     private func findRootViewController(rootView: UIView) -> UIViewController? {
