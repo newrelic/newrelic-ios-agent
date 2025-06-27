@@ -30,7 +30,7 @@
 }
 
 - (void) testSetUserId {
-        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 with:@[]];
     
         XCTAssert([analytics setUserId:@"AUniqueId1"], @"Good input produced incorrect result");
         

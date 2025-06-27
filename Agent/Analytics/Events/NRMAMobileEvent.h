@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSTimeInterval)getEventAge;
 - (BOOL)addAttribute:(NSString *)name value:(id)value;
+- (BOOL)insertAttribute:(NSString *)name value:(id)value;
 
 
 @end

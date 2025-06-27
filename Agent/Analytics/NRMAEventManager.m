@@ -93,9 +93,10 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         // The event fits within the buffer
         if (events.count < maxBufferSize) {
             [events addObject:event];
-            
-            [_persistentStore setObject:event forKey:[self createKeyForEvent:event]];
-            
+            NSString *key = [self createKeyForEvent:event];
+            NRLOG_VERBOSE(@"Adding event: %@", key);
+            [_persistentStore setObject:event forKey:key];
+
             if(events.count == 1) {
                 oldestEventTimestamp = event.timestamp;
             }
@@ -106,8 +107,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             if (evictionIndex < events.count) {
                 [events removeObjectAtIndex:evictionIndex];
                 [events addObject:event];
-                
-                [_persistentStore removeObjectForKey:[self createKeyForEvent:event]];
+                NSString *key = [self createKeyForEvent:event];
+                NRLOG_VERBOSE(@"Removing event: %@", key);
+                [_persistentStore removeObjectForKey:key];
             }
         }
     }
@@ -160,8 +162,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         @try {
             NSMutableArray *jsonEvents = [[NSMutableArray alloc] init];
             for(id<NRMAAnalyticEventProtocol> event in lastSessionEvents.allValues) {
-                [jsonEvents addObject:[event JSONObject]];
-                
+                NSDictionary *jsonObject = [event JSONObject];
+                [jsonEvents addObject:jsonObject];
+
                 NSData *lastSessionEventJsonData = [NRMAJSON dataWithJSONObject:jsonEvents
                                                                         options:0
                                                                           error:nil];
