@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 protocol SessionReplayViewThingy: Hashable {
     var viewDetails: ViewDetails { get }
@@ -17,6 +18,7 @@ protocol SessionReplayViewThingy: Hashable {
     
     func cssDescription() -> String
     func generateRRWebNode() -> ElementNodeData
+    func generateRRWebAdditionNode(parentNode: Int) -> [RRWebMutationData.AddRecord]
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord]
 }
 
@@ -54,6 +56,7 @@ extension SessionReplayViewThingy {
         
         // check frames
         if(!viewDetails.frame.equalTo(other.viewDetails.frame)) {
+            styleDifferences["position"] = "fixed"
             styleDifferences["left"] = "\(String(format: "%.2f", other.viewDetails.frame.origin.x))px"
             styleDifferences["top"] = "\(String(format: "%.2f", other.viewDetails.frame.origin.y))px"
             styleDifferences["width"] = "\(String(format: "%.2f", other.viewDetails.frame.size.width))px"

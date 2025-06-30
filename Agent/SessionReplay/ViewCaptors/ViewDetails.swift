@@ -20,6 +20,7 @@ struct ViewDetails {
     let borderWidth: CGFloat
     let borderColor: UIColor?
     let viewName: String
+    let parentId: Int?
 
     // Indicates if this view should have its content masked in session replay
     let isMasked: Bool
@@ -67,6 +68,8 @@ struct ViewDetails {
             viewId = IDGenerator.shared.getId()
             view.sessionReplayIdentifier = viewId
         }
+        
+        self.parentId = view.superview?.sessionReplayIdentifier
 
         // Determine if this view should be masked
         var shouldMask = false

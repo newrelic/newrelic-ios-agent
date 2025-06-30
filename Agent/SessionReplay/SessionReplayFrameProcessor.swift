@@ -20,8 +20,8 @@ class SessionReplayFrameProcessor {
         if frame.rootViewControllerId != lastFullFrame?.rootViewControllerId ||
             frame.views.viewDetails.viewId != lastFullFrame?.views.viewDetails.viewId {
             rrwebCommon = processFullSnapshot(frame)
-//        } else if let lastFullFrame = lastFullFrame {
-//            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
+        } else if let lastFullFrame = lastFullFrame {
+            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
         } else {
             // We don't have anything, so just do a full snapshot
             rrwebCommon = processFullSnapshot(frame)
@@ -115,8 +115,8 @@ class SessionReplayFrameProcessor {
                 removes.append(RRWebMutationData.RemoveRecord(parentId: change.parentId, id: change.id))
                 
             case .Add(let change):
-                let node = change.node.generateRRWebNode()
-                adds.append(RRWebMutationData.AddRecord(parentId: change.parentId, nextId: change.id ?? 0, node: .element(node)))
+                let nodes = change.node.generateRRWebAdditionNode(parentNode: change.parentId)
+                adds.append(contentsOf: nodes)
             case .Update(let change):
                 let mutations = change.oldElement.generateDifference(from: change.newElement)
                 for mutation in mutations {

@@ -18,7 +18,8 @@ class ViewController: UIViewController {
     var spaceLabel = UILabel()
     var spaceStack = UIStackView()
     var helloButton = UIButton()
-
+    var helloWorldLabel: UILabel?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -130,6 +131,10 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction()}))
 
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
+        
+        // In setupButtonsTable(), add these options:
+        options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
+        options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
     }
     
     func utilitiesAction() {
@@ -170,6 +175,23 @@ class ViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         return button
+    }
+    
+    // Add these methods to your ViewController class
+    func addHelloWorldLabel() {
+        guard helloWorldLabel == nil else { return }
+        let label = UILabel()
+        label.text = "Hello world"
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        self.spaceStack.addArrangedSubview(label)
+
+        helloWorldLabel = label
+    }
+
+    func removeHelloWorldLabel() {
+        helloWorldLabel?.removeFromSuperview()
+        helloWorldLabel = nil
     }
 }
 

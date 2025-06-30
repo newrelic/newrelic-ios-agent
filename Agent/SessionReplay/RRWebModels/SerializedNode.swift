@@ -124,7 +124,7 @@ class ElementNodeData: SerializedNodeData {
     let type: SerializedNodeType = .element
     let id: Int
     let tagName: TagType
-    let attributes: RRWebAttributes
+    var attributes: RRWebAttributes
     var childNodes: [SerializedNode] = []
     
     enum CodingKeys: CodingKey {

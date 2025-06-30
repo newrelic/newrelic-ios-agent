@@ -66,15 +66,21 @@ class UITextViewThingy: SessionReplayViewThingy {
         }
 
     }
-
+    
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
+                \(inlineCSSDescription())\
+                }
+                """
+    }
+    
+    func inlineCSSDescription() -> String {
+        return """
                 \(generateBaseCSSStyle())\
                 white-space: pre-wrap;\
                 font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                color: \(textColor.toHexString(includingAlpha: true));\
-                } 
+                color: \(textColor.toHexString(includingAlpha: true));
                 """
     }
     
@@ -88,6 +94,24 @@ class UITextViewThingy: SessionReplayViewThingy {
                                         tagName: .div,
                                         attributes: ["id":viewDetails.cssSelector],
                                         childNodes: [textNode])
+    }
+    
+    func generateRRWebAdditionNode(parentNode: Int) -> [RRWebMutationData.AddRecord] {
+        let elementNode = ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .div,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        elementNode.attributes["style"] = inlineCSSDescription()
+        
+        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
+                                                        isStyle: false,
+                                                        textContent: labelText,
+                                                        childNodes: []))
+        
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNode, nextId: nil,  node: .element(elementNode))
+        let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
+
+        return [addElementNode, addTextNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {

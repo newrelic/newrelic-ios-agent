@@ -45,7 +45,7 @@ protocol MutationRecord {
 struct RRWebMutationData: Codable {
     struct AddRecord: Codable, MutationRecord {
         let parentId: Int
-        let nextId: Int
+        let nextId: Int?
         let node: SerializedNode
     }
     
@@ -62,6 +62,44 @@ struct RRWebMutationData: Codable {
     struct AttributeRecord: Codable, MutationRecord {
         let id: Int
         let attributes: RRWebAttributes
+        
+        init(id: Int, attributes: RRWebAttributes) {
+            self.id = id
+            self.attributes = attributes
+        }
+        
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            var styleString = attributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
+            if !styleString.isEmpty {
+                styleString.append("; ")
+            }
+            try container.encode(id, forKey: .id)
+            try container.encode(styleString, forKey: .style)
+        }
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(Int.self, forKey: .id)
+            let styleString = try container.decode(String.self, forKey: .style)
+            let pairs = styleString
+                .split(separator: ";")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+            var attributes: RRWebAttributes = [:]
+            for pair in pairs {
+                let parts = pair.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count == 2 {
+                    attributes[String(parts[0])] = String(parts[1])
+                }
+            }
+            self.attributes = attributes
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case style
+        }
     }
     let source: RRWebIncrementalSource = .mutation
     

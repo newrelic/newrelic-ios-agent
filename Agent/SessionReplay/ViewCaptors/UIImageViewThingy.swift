@@ -30,14 +30,29 @@ class UIImageViewThingy: SessionReplayViewThingy {
     }
     
     func cssDescription() -> String {
-        let cssSelector = viewDetails.cssSelector
-        
+        return """
+                #\(viewDetails.cssSelector) { \
+                \(inlineCSSDescription())\
+                }
+                """
+    }
+    
+    func inlineCSSDescription() -> String {
         if let _ = image {
-            return "#\(cssSelector) { \(generateBaseCSSStyle()) }"
+            return generateBaseCSSStyle()
         } else {
             let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
-            return "#\(cssSelector) { \(generateBaseCSSStyle()) \(imagePlaceholderCSS) }"
+            return "\(generateBaseCSSStyle()) \(imagePlaceholderCSS)"
         }
+    }
+    
+    func generateRRWebAdditionNode(parentNode: Int) -> [RRWebMutationData.AddRecord] {
+        let elementNode = generateRRWebNode()
+        elementNode.attributes["style"] = inlineCSSDescription()
+        
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNode, nextId: nil, node: .element(elementNode))
+
+        return [addElementNode]
     }
     
     func generateRRWebNode() -> ElementNodeData {

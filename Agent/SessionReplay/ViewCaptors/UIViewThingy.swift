@@ -36,6 +36,14 @@ class UIViewThingy: SessionReplayViewThingy {
                                childNodes: [])
     }
     
+    func generateRRWebAdditionNode(parentNode: Int) -> [RRWebMutationData.AddRecord] {
+        let node = generateRRWebNode()
+        node.attributes["style"] = generateBaseCSSStyle()
+        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNode, nextId: nil, node: .element(node))
+        
+        return [addNode]
+    }
+    
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
         guard let typedOther = other as? UIViewThingy else {
             return []
