@@ -1523,7 +1523,6 @@
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */; };
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
-		F806E42A2D9C80330003B9D6 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
@@ -2552,7 +2551,6 @@
 		F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestW3CTraceState.mm; sourceTree = "<group>"; };
 		F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporter.swift; sourceTree = "<group>"; };
 		F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayManager.swift; sourceTree = "<group>"; };
-		F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayFrameProcessor.swift; sourceTree = "<group>"; };
 		F80C1D692DA07691007C0F52 /* ViewDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDetails.swift; sourceTree = "<group>"; };
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
@@ -3933,7 +3931,6 @@
 				3493DEFF2D3844C400BF5BED /* SessionReplayCapture.swift */,
 				F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */,
 				F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */,
-				F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */,
 				F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */,
 				3493DF322D4C332500BF5BED /* NRMASessionReplay.swift */,
 				3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */,
@@ -5448,7 +5445,6 @@
 				02FF49CD24DC62B800115469 /* NRMAHarvestableEvent.m in Sources */,
 				02FF49BC24DC62B800115469 /* NRMAScopedHTTPTransactionMeasurement.m in Sources */,
 				02FF48C024DC61F600115469 /* NRMAMethodSwizzling.m in Sources */,
-				F806E42A2D9C80330003B9D6 /* SessionReplayFrameProcessor.swift in Sources */,
 				02FF4A9824DC652E00115469 /* NRMACrashReporterRecorder.m in Sources */,
 				02FF492024DC624400115469 /* NRMACrashReport_CodeType.m in Sources */,
 				02FF49C624DC62B800115469 /* NRMAHarvestableHTTPTransaction.m in Sources */,

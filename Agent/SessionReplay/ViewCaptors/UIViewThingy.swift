@@ -36,10 +36,10 @@ class UIViewThingy: SessionReplayViewThingy {
                                childNodes: [])
     }
     
-    func generateRRWebAdditionNode(parentNode: Int) -> [RRWebMutationData.AddRecord] {
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
         let node = generateRRWebNode()
         node.attributes["style"] = generateBaseCSSStyle()
-        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNode, nextId: nil, node: .element(node))
+        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(node))
         
         return [addNode]
     }

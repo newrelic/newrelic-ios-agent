@@ -97,7 +97,7 @@ class UITextFieldThingy: SessionReplayViewThingy {
                                         childNodes: [textNode])
     }
     
-    func generateRRWebAdditionNode(parentNode: Int) -> [RRWebMutationData.AddRecord] {
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
         let elementNode = ElementNodeData(id: viewDetails.viewId,
                                    tagName: .div,
                                    attributes: ["id":viewDetails.cssSelector],
@@ -109,7 +109,7 @@ class UITextFieldThingy: SessionReplayViewThingy {
                                                         textContent: labelText,
                                                         childNodes: []))
         
-        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNode, nextId: nil, node: .element(elementNode))
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(elementNode))
         let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
         
         return [addElementNode, addTextNode]

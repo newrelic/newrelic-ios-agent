@@ -101,13 +101,37 @@ class DocumentNodeData: SerializedNodeData {
 class DocumentTypeNodeData: SerializedNodeData {
     let type: SerializedNodeType = .documentType
     let id: Int
-    let name: String
+    let name: TagType
     var childNodes: [SerializedNode] = []
+    let publicId: String
+    let systemId: String
     
-    init(id: Int, name: String, childNodes: [SerializedNode]) {
+    enum CodingKeys: String, CodingKey {
+        case type, id, name, publicId, systemId
+    }
+    
+    init(id: Int, name: TagType, publicId: String = "", systemId: String = "") {
         self.id = id
         self.name = name
-        self.childNodes = childNodes
+        self.publicId = publicId
+        self.systemId = systemId
+    }
+    
+    required init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        name = try container.decode(TagType.self, forKey: .name)
+        publicId = try container.decodeIfPresent(String.self, forKey: .publicId) ?? ""
+        systemId = try container.decodeIfPresent(String.self, forKey: .systemId) ?? ""
+    }
+    
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type.rawValue, forKey: .type)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(publicId, forKey: .publicId)
+        try container.encode(systemId, forKey: .systemId)
     }
 }
 

@@ -70,22 +70,30 @@ struct RRWebMutationData: Codable {
         
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
-            var styleString = attributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
-            if !styleString.isEmpty {
-                styleString.append("; ")
-            }
             try container.encode(id, forKey: .id)
-            try container.encode(styleString, forKey: .style)
+            
+            // Create nested container for attributes
+            var attributesContainer = container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
+            
+            // Build style string from attributes dictionary
+            let styleString = attributes.map { "\($0.key): \($0.value);" }.joined(separator: " ")
+            try attributesContainer.encode(styleString, forKey: .style)
         }
         
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             id = try container.decode(Int.self, forKey: .id)
-            let styleString = try container.decode(String.self, forKey: .style)
+            
+            // Decode nested attributes container
+            let attributesContainer = try container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
+            let styleString = try attributesContainer.decode(String.self, forKey: .style)
+            
+            // Parse style string into attributes dictionary
             let pairs = styleString
                 .split(separator: ";")
                 .map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty }
+            
             var attributes: RRWebAttributes = [:]
             for pair in pairs {
                 let parts = pair.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
@@ -95,9 +103,13 @@ struct RRWebMutationData: Codable {
             }
             self.attributes = attributes
         }
-
+        
         enum CodingKeys: String, CodingKey {
             case id
+            case attributes
+        }
+        
+        enum AttributeKeys: String, CodingKey {
             case style
         }
     }

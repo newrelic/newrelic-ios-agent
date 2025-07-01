@@ -18,7 +18,7 @@ protocol SessionReplayViewThingy: Hashable {
     
     func cssDescription() -> String
     func generateRRWebNode() -> ElementNodeData
-    func generateRRWebAdditionNode(parentNode: Int) -> [RRWebMutationData.AddRecord]
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord]
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord]
 }
 

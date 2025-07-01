@@ -18,7 +18,8 @@ class SessionReplayFrameProcessor {
         
         var rrwebCommon: any RRWebEventCommon
         if frame.rootViewControllerId != lastFullFrame?.rootViewControllerId ||
-            frame.views.viewDetails.viewId != lastFullFrame?.views.viewDetails.viewId {
+            frame.views.viewDetails.viewId != lastFullFrame?.views.viewDetails.viewId ||
+            frame.size != lastFullFrame?.size {
             rrwebCommon = processFullSnapshot(frame)
         } else if let lastFullFrame = lastFullFrame {
             rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
@@ -86,8 +87,10 @@ class SessionReplayFrameProcessor {
                                               attributes: [:],
                                               childNodes: [.element(headElementNode), .element(bodyElementNode)])
         
+        let documentTypeNode = DocumentTypeNodeData(id: IDGenerator.shared.getId(), name: .html, publicId: "", systemId: "")
+        
         let documentNode = DocumentNodeData(id: IDGenerator.shared.getId(),
-                                            childNodes: [.element(htmlElementNode)])
+                                            childNodes: [.documentType(documentTypeNode), .element(htmlElementNode)])
         
         let snapshotData = RRWebFullSnapshotData(node: .document(documentNode),
                                                  initialOffset: RRWebFullSnapshotData.InitialOffset(top: 0, left: 0))
@@ -115,7 +118,7 @@ class SessionReplayFrameProcessor {
                 removes.append(RRWebMutationData.RemoveRecord(parentId: change.parentId, id: change.id))
                 
             case .Add(let change):
-                let nodes = change.node.generateRRWebAdditionNode(parentNode: change.parentId)
+                let nodes = change.node.generateRRWebAdditionNode(parentNodeId: change.parentId)
                 adds.append(contentsOf: nodes)
             case .Update(let change):
                 let mutations = change.oldElement.generateDifference(from: change.newElement)
