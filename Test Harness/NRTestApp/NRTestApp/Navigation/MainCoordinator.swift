@@ -55,4 +55,9 @@ class MainCoordinator: Coordinator {
         let collectionViewController = ViewControllerProvider.collectionViewController
         navigationController.pushViewController(collectionViewController, animated: true)
     }
+    
+    func showInfiniteScrollController() {
+        let infiniteViewController = ViewControllerProvider.infiniteViewController
+        navigationController.pushViewController(infiniteViewController, animated: true)
+    }
 }

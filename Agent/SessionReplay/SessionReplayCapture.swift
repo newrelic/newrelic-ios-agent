@@ -100,6 +100,9 @@ class SessionReplayCapture {
 
         case let textView as UITextView:
             return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
+            
+        case let visualEffectView as UIVisualEffectView:
+            return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
 
         default:
             return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
@@ -114,7 +117,7 @@ class SessionReplayCapture {
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
         let isClippedOut = view.frame.intersection(superview.frame).isEmpty
-
+        
         return !(areFramesTheSame && isClear && isClippedOut)
     }
 }

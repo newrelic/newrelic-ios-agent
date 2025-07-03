@@ -35,5 +35,10 @@ enum ViewControllerProvider {
         let viewController = ScrollableCollectionViewController()
         return viewController
     }
+    
+    static var infiniteViewController: InfiniteScrollTableViewController {
+        let viewController = InfiniteScrollTableViewController()
+        return viewController
+    }
 }
 

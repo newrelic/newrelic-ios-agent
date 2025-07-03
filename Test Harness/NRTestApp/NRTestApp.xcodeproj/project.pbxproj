@@ -57,6 +57,8 @@
 		F802EED52BE12E5700AB956F /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428472971C661002ABA01 /* UtilViewModel.swift */; };
 		F81061F82E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */; };
 		F81061F92E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */; };
+		F81062182E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */; };
+		F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */; };
 		F824A30229A811E8000886A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F824A30129A811E8000886A6 /* Assets.xcassets */; };
 		F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */; };
 		F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */; };
@@ -292,6 +294,7 @@
 		F802EE9C2BE0218700AB956F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F802EEAD2BE021E600AB956F /* WatchAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WatchAppDelegate.swift; sourceTree = "<group>"; };
 		F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableCollectionViewController.swift; sourceTree = "<group>"; };
+		F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteScrollViewController.swift; sourceTree = "<group>"; };
 		F824A30129A811E8000886A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
 		F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageFullScreen.swift; sourceTree = "<group>"; };
@@ -560,6 +563,7 @@
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
+				F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
 			);
@@ -1088,6 +1092,7 @@
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
+				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
@@ -1130,6 +1135,7 @@
 				2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,
+				F81062182E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
 				F81061F92E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				F86429312979CDFA002ABA01 /* Date.swift in Sources */,
 				F86429322979CDFA002ABA01 /* Variable.swift in Sources */,

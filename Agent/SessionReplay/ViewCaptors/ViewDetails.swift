@@ -13,7 +13,7 @@ import UIKit
 struct ViewDetails {
     let viewId: Int
     let frame: CGRect
-    let backgroundColor: UIColor?
+    var backgroundColor: UIColor?
     let alpha: CGFloat
     let isHidden: Bool
     let cornerRadius: CGFloat
