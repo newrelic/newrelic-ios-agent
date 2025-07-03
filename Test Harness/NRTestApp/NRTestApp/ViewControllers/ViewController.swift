@@ -120,6 +120,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
 
+        options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
@@ -163,6 +165,9 @@ class ViewController: UIViewController {
         coordinator?.showTextMaskingController()
     }
 
+    func collectionViewAction() {
+        coordinator?.showCollectionController()
+    }
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)

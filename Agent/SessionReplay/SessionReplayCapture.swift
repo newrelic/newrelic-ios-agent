@@ -16,7 +16,7 @@ class SessionReplayCapture {
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
-        var effectiveViewController = findRootViewController(rootView: rootView)
+        let effectiveViewController = findRootViewController(rootView: rootView)
         var rootViewControllerID:String?
         if let rootViewController = effectiveViewController {
             rootViewControllerID = String(describing: type(of: rootViewController))
@@ -113,8 +113,9 @@ class SessionReplayCapture {
         
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
+        let isClippedOut = view.frame.intersection(superview.frame).isEmpty
 
-        return !(areFramesTheSame && isClear)
+        return !(areFramesTheSame && isClear && isClippedOut)
     }
 }
 

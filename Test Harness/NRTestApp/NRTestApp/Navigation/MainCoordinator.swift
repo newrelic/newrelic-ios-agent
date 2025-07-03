@@ -50,4 +50,9 @@ class MainCoordinator: Coordinator {
         let webViewController = ViewControllerProvider.textMaskingViewController
         navigationController.pushViewController(webViewController, animated: true)
     }
+    
+    func showCollectionController() {
+        let collectionViewController = ViewControllerProvider.collectionViewController
+        navigationController.pushViewController(collectionViewController, animated: true)
+    }
 }
