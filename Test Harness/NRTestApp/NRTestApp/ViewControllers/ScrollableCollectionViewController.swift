@@ -71,22 +71,45 @@ extension ScrollableCollectionViewController: UICollectionViewDelegate {
 // MARK: - Custom Cell
 class ColorCollectionViewCell: UICollectionViewCell {
     private let label = UILabel()
+    private let blurEffectView: UIVisualEffectView
     
     override init(frame: CGRect) {
+        // Create blur effect
+        let blurEffect = UIBlurEffect(style: .systemMaterial)
+        blurEffectView = UIVisualEffectView(effect: blurEffect)
+        
         super.init(frame: frame)
         
+        // Configure cell appearance
         layer.cornerRadius = 8
         clipsToBounds = true
         
-        label.textAlignment = .center
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(label)
+        // Set up blur effect view
+        blurEffectView.frame = contentView.bounds
+        blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        contentView.addSubview(blurEffectView)
         
-        // Set up constraints for the label to be centered in the cell
+        // Configure label
+        label.textAlignment = .center
+        label.textColor = .black // Uses dynamic color that adapts to light/dark mode
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add label to the vibrancy effect view for better text rendering on blur
+        let vibrancyEffect = UIVibrancyEffect(blurEffect: blurEffect)
+        let vibrancyView = UIVisualEffectView(effect: vibrancyEffect)
+        vibrancyView.frame = blurEffectView.bounds
+        vibrancyView.contentView.addSubview(label)
+        blurEffectView.contentView.addSubview(vibrancyView)
+        
+        // Set up constraints for the label
         NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+            label.centerXAnchor.constraint(equalTo: vibrancyView.contentView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: vibrancyView.contentView.centerYAnchor),
+            vibrancyView.leadingAnchor.constraint(equalTo: blurEffectView.leadingAnchor),
+            vibrancyView.trailingAnchor.constraint(equalTo: blurEffectView.trailingAnchor),
+            vibrancyView.topAnchor.constraint(equalTo: blurEffectView.topAnchor),
+            vibrancyView.bottomAnchor.constraint(equalTo: blurEffectView.bottomAnchor)
         ])
     }
     
