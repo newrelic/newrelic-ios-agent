@@ -76,12 +76,18 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
     
     func cssDescription() -> String {
         return """
-        #\(viewDetails.cssSelector) { \
-        \(generateBaseCSSStyle()) \
-        -webkit-backdrop-filter: blur(\(blurIntensity)px); \
-        box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.3);
-        }
-        """
+                #\(viewDetails.cssSelector) { \
+                \(inlineCSSDescription())\
+                }
+                """
+    }
+    
+    func inlineCSSDescription() -> String {
+        return """
+                \(generateBaseCSSStyle()) \
+                -webkit-backdrop-filter: blur(\(blurIntensity)px); \
+                box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.3);
+                """
     }
     
     func generateRRWebNode() -> ElementNodeData {
@@ -89,6 +95,14 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
                                tagName: .div,
                                attributes: ["id":viewDetails.cssSelector],
                                childNodes: [])
+    }
+    
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let node = generateRRWebNode()
+        node.attributes["style"] = generateBaseCSSStyle()
+        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(node))
+        
+        return [addNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
