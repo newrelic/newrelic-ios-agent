@@ -13,7 +13,7 @@ import UIKit
 struct ViewDetails {
     let viewId: Int
     let frame: CGRect
-    let backgroundColor: UIColor?
+    var backgroundColor: UIColor?
     let alpha: CGFloat
     let isHidden: Bool
     let cornerRadius: CGFloat
@@ -21,6 +21,7 @@ struct ViewDetails {
     let borderColor: UIColor?
     let viewName: String
     let parentId: Int?
+    let clip: CGRect
 
     // Indicates if this view should have its content masked in session replay
     let isMasked: Bool
@@ -30,21 +31,28 @@ struct ViewDetails {
     }
 
     var isVisible: Bool {
-        isHidden &&
+        !isHidden &&
         alpha > 0 &&
-        frame != .zero
+        frame != .zero &&
+        !frame.intersection(clip).isEmpty
     }
 
     var isClear: Bool {
-        alpha <= 1
+        backgroundColor == .clear || alpha == 0
     }
 
     init(view: UIView) {
-        if let superview = view.superview,
-           let window = view.window {
-            frame = superview.convert(view.frame, to: window.screen.coordinateSpace)
+        if let superview = view.superview, let window = view.window {
+            let rawFrame = superview.convert(view.frame, to: window)
+            let clippingRect = ViewDetails.getClippingRect(for: view, in: window)
+            
+            let visibleFrame = rawFrame.intersection(clippingRect)
+            
+            self.frame = visibleFrame.isNull ? .zero : visibleFrame
+            self.clip = clippingRect
         } else {
-            frame = view.frame
+            self.frame = view.frame
+            self.clip = view.bounds
         }
         backgroundColor = view.backgroundColor
         alpha = view.alpha
@@ -123,6 +131,34 @@ struct ViewDetails {
         isMasked = shouldMask
 
        // NRLOG_DEBUG("Session Replay: isMask = \(shouldMask) for view \(viewName) with id \(viewId)")
+    }
+    
+    private static func getClippingRect(for view: UIView, in window: UIWindow) -> CGRect {
+        var clippingView: UIView? = view.superview
+        while clippingView != nil {
+            if clippingView is UIScrollView || clippingView?.clipsToBounds == true {
+                break
+            }
+            clippingView = clippingView?.superview
+        }
+        
+        if let clippingView = clippingView {
+            return clippingView.convert(clippingView.bounds, to: window)
+        }
+        
+        return window.frame // Default to window bounds if no clipping view is found
+    }
+    
+    // Helper method to find scrollview ancestor
+    static func findScrollViewAncestor(for view: UIView) -> UIScrollView? {
+        var current: UIView? = view.superview
+        while current != nil {
+            if let scrollView = current as? UIScrollView {
+                return scrollView
+            }
+            current = current?.superview
+        }
+        return nil
     }
 }
 

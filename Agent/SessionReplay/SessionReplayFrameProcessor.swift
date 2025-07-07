@@ -53,9 +53,13 @@ class SessionReplayFrameProcessor {
             var childNodes = [SerializedNode]()
             
             for childThingy in viewThingy.subviews {
-                let childNode = childThingy.generateRRWebNode()
-                childNodes.append(.element(childNode))
-                thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
+                if childThingy.viewDetails.isVisible {
+                    let childNode = childThingy.generateRRWebNode()
+                    childNodes.append(.element(childNode))
+                    thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
+                } else {
+                    NRLOG_DEBUG("Skipping hidden view \(childThingy.cssDescription())")
+                }
             }
             
             node.childNodes.append(contentsOf: childNodes)
