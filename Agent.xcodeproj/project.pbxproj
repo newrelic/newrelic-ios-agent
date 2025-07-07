@@ -1525,6 +1525,7 @@
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
 		F806E42A2D9C80330003B9D6 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
+		F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
@@ -2554,6 +2555,7 @@
 		F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayManager.swift; sourceTree = "<group>"; };
 		F806E4292D9C80310003B9D6 /* SessionReplayFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayFrameProcessor.swift; sourceTree = "<group>"; };
 		F80C1D692DA07691007C0F52 /* ViewDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDetails.swift; sourceTree = "<group>"; };
+		F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVisualEffectViewThingy.swift; sourceTree = "<group>"; };
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
@@ -3880,6 +3882,7 @@
 				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
 				F80C1D692DA07691007C0F52 /* ViewDetails.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
+				F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
 				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
@@ -5634,6 +5637,7 @@
 				F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */,
 				02FF48D924DC622700115469 /* NRMACrashDataWriter.m in Sources */,
 				02FF487224DC618F00115469 /* NRGCDOverride.m in Sources */,
+				F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */,
 				02FF494D24DC626E00115469 /* NRMAHarvesterConnection.m in Sources */,
 				02FF48B924DC61F600115469 /* NRMAClassDataContainer.m in Sources */,
 				02FF4A0724DC647200115469 /* NRMAMeasurementPool.m in Sources */,

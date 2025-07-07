@@ -40,6 +40,9 @@ public class SessionReplayReporter: NSObject {
              self.isUploading = true
              
              let upload = self.sessionReplayFramesUploadArray.first!
+             let dataSizeInBytes = upload.sessionReplayFramesData.count
+             let dataSizeInMB = Double(dataSizeInBytes) / (1024.0 * 1024.0)
+             NRLOG_DEBUG("Session replay frames data: \(String(format: "%.2f", dataSizeInMB)) MB")
 
              if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
                  NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
