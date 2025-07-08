@@ -315,6 +315,7 @@ static NewRelicAgentInternal* _sharedInstance;
 
     // Last session's analytics must be fetched (asynchronously) before instrumentation
     [exceptionHandlerStartupManager fetchLastSessionsAnalytics];
+    
 
     [self initializeInstrumentation];
 
@@ -371,6 +372,9 @@ static NewRelicAgentInternal* _sharedInstance;
     if (@available(iOS 13.0, *)) {
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter];
+
+        // CHECK FOR MSR FILES FROM PREVIOUSLY CRASHED SESSIONS
+        [_sessionReplay checkForPreviousSessionFiles];
     }
 #endif
 }

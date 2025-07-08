@@ -13,20 +13,20 @@ import UIKit
 @available(iOS 13.0, *)
 @objcMembers
 public class SessionReplayManager: NSObject {
-    
+
     private let sessionReplay: NRMASessionReplay
     private let sessionReplayReporter: SessionReplayReporter
-    
+
     public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
-        
+
     public var isFirstChunk = true
 
     @objc public init(reporter: SessionReplayReporter) {
         self.sessionReplay = NRMASessionReplay()
         self.sessionReplayReporter = reporter
         super.init()
-        
+
     }
 
     public func start() {
@@ -37,41 +37,41 @@ public class SessionReplayManager: NSObject {
                 return
             }
             isFirstChunk = true
-            
+
             NewRelicAgentInternal.sharedInstance().analyticsController.setNRSessionAttribute(kNRMA_RA_hasReplay, value: NRMABool(bool: true))
 
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
             self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvestTick), userInfo: nil, repeats: true)
-            
+
             RunLoop.current.add(self.harvestTimer!, forMode: .default)
             RunLoop.current.run()
         }
     }
-    
+
     public func stop() {
         sessionReplay.stop()
         guard isRunning() else {
             NRLOG_WARNING("Session replay harvest timer attempting to stop when not running.")
             return
         }
-        
+
         harvestTimer?.invalidate()
         harvestTimer = nil
-        
+
         NewRelicAgentInternal.sharedInstance().analyticsController.removeSessionAttributeNamed(kNRMA_RA_hasReplay)
     }
 
     func isRunning() -> Bool {
         return self.harvestTimer != nil && self.harvestTimer!.isValid
     }
-    
+
     // This function is to handle a session change created by a change in userId
     @objc public func newSession() {
         stop()
         harvest()
         start()
     }
-    
+
     @objc func harvestTick() {
         NRLOG_DEBUG("Session replay harvest timer firing.")
         harvest()
@@ -101,7 +101,7 @@ public class SessionReplayManager: NSObject {
 
         // Initialize container with meta event
         var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
-        
+
         // Process frames and touches
         container.append(contentsOf: (processedFrames).map {
             AnyRRWebEvent($0)
@@ -109,7 +109,7 @@ public class SessionReplayManager: NSObject {
         container.append(contentsOf: (processedTouches).map {
             AnyRRWebEvent($0)
         })
-        
+
         guard let upload = createReplayUpload(container: container, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp) else {
             return
         }
@@ -117,7 +117,7 @@ public class SessionReplayManager: NSObject {
         isFirstChunk = false
 
     }
-    
+
     func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
@@ -156,5 +156,202 @@ public class SessionReplayManager: NSObject {
         }
 
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
+    }
+
+    // REPLAY PERSISTENCE
+
+    public func checkForPreviousSessionFiles() {
+        // CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS
+        NRLOG_DEBUG("CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS")
+
+        guard let sessionReplayDirectory = getSessionReplayDirectory() else {
+            NRLOG_WARNING("Could not access session replay directory")
+            return
+        }
+
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: sessionReplayDirectory, includingPropertiesForKeys: nil)
+
+            // Extract unique session IDs from session replay files
+            let sessionIds = Set(fileURLs.compactMap { fileURL -> String? in
+                let fileName = fileURL.lastPathComponent
+                if fileName.hasSuffix("_upload_url.txt") {
+                    return fileName.replacingOccurrences(of: "_upload_url.txt", with: "")
+                }
+                return nil
+            })
+            NRLOG_DEBUG("MSR DIRECTORIES FOUND \(sessionIds)")
+
+            // Process each session
+            for sessionId in sessionIds {
+                processSessionReplayFile(sessionId: sessionId, directory: sessionReplayDirectory)
+            }
+
+        } catch {
+            NRLOG_ERROR("Failed to read session replay directory: \(error)")
+        }
+
+    }
+
+    private func processSessionReplayFile(sessionId: String, directory: URL) {
+        let urlFile = directory.appendingPathComponent("\(sessionId)_upload_url.txt")
+
+        do {
+            NRLOG_DEBUG("Processing session replay for session ID: \(sessionId)")
+
+            // BEGIN URL CONSTRUCTION
+
+            guard let urlString = try? String(contentsOf: urlFile).removingPercentEncoding,
+                  let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+                NRLOG_ERROR("No valid URL found for session replay file with session ID: \(sessionId)")
+                return
+            }
+
+            // END URL CONSTRUCTION
+
+            // BEGIN DATA CONSTRUCTION
+
+            // Find all frame files for this session
+            let sessionDirectory = directory.appendingPathComponent(sessionId)
+            guard FileManager.default.fileExists(atPath: sessionDirectory.path) else {
+                NRLOG_WARNING("Session directory not found for session ID: \(sessionId)")
+                return
+            }
+
+            let frameFiles = try FileManager.default.contentsOfDirectory(at: sessionDirectory, includingPropertiesForKeys: nil)
+                .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("frame_") }
+                .sorted { (url1, url2) -> Bool in
+                    let name1 = url1.deletingPathExtension().lastPathComponent
+                    let name2 = url2.deletingPathExtension().lastPathComponent
+
+                    let number1 = Int(name1.replacingOccurrences(of: "frame_", with: "")) ?? 0
+                    let number2 = Int(name2.replacingOccurrences(of: "frame_", with: "")) ?? 0
+
+                    return number1 < number2
+                }
+
+            if frameFiles.isEmpty {
+                NRLOG_WARNING("No frame files found for session ID: \(sessionId)")
+                try? FileManager.default.removeItem(at: urlFile)
+                try? FileManager.default.removeItem(at: sessionDirectory)
+                return
+            }
+
+            // Read and combine all frame files
+            var frameContents: [String] = []
+            for frameFile in frameFiles {
+                do {
+                    // remove outer [] from frameFile if they exist
+
+
+
+                    var frameContent = try String(contentsOf: frameFile).trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    var frameContentWithOuterBracketsRemoved = frameContent
+                    if frameContent.hasPrefix("[") && frameContent.hasSuffix("]") {
+                        frameContentWithOuterBracketsRemoved = String(frameContent.dropFirst().dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+                    if !frameContent.isEmpty {
+                        frameContents.append(frameContentWithOuterBracketsRemoved)
+
+                        // parse frameContents
+                        let frameData = try? JSONSerialization.jsonObject(with: Data(frameContent.utf8), options: [])
+                        if let frameData = try? JSONSerialization.jsonObject(with: Data(frameContent.utf8), options: []) as? [Any?] {
+
+                            for frame in frameData {
+                                var timestamp = (frame as? NSMutableDictionary)?["timestamp"] as? TimeInterval
+                                NRLOG_DEBUG("Frame \(frameFile.lastPathComponent) timestamp: \(timestamp)")
+
+                            }
+
+                        } else {
+                            NRLOG_WARNING("Invalid frame content in file \(frameFile.lastPathComponent)")
+                        }
+                    }
+                } catch {
+                    NRLOG_WARNING("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
+                }
+            }
+
+            if frameContents.isEmpty {
+                NRLOG_WARNING("No valid frame content found for session ID: \(sessionId)")
+                try FileManager.default.removeItem(at: sessionDirectory)
+                try? FileManager.default.removeItem(at: urlFile)
+                return
+            }
+
+            // ALWAYS add one meta event at the beginning of the array
+            var attributesString = ""
+            // get firstTimestamp from  the URL paramters on the variable `url`
+            if let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                  let queryItems = urlComponents.queryItems,
+                  let attibutesString = queryItems.first(where: { $0.name == "replay.firstTimestamp" })?.value {
+                
+                attributesString = attibutesString
+            }
+            else  if let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                     let queryItems = urlComponents.queryItems,
+                     let attibutesString = queryItems.first(where: { $0.name == "attributes" })?.value {
+                // Parse attributes string to find replay.firstTimestamp
+                // This assumes attributes are in the format "key1=value1&key2=value2"
+
+                    // parse replay.firstTimeStamp from attributes
+
+                print(attibutesString)
+                // parse the timestamp where the attibutesString looks like replay.firstTimestamp=1751989720195
+
+                if let firstTimestampRange = attibutesString.range(of: "replay.firstTimestamp=") {
+                    let timestampString = attibutesString[firstTimestampRange.upperBound...]
+                    if let timestampValue = timestampString.split(separator: "&").first {
+                        attributesString = String(timestampValue)
+                    }
+                }
+
+               }
+
+            let firstTimestamp = TimeInterval(Int(attributesString ?? "") ?? 0)
+
+
+
+            // remove outer brackets from frameContents string
+            
+
+
+            // Construct JSON array from frame contents
+
+            let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
+
+            guard let jsonData = jsonArrayString.data(using: .utf8) else {
+                NRLOG_ERROR("Failed to convert JSON string to data for session ID: \(sessionId)")
+                return
+            }
+
+            // END DATA CONSTRUCTION
+
+            var finalData = jsonData
+            do {
+                let gzippedData = try jsonData.gzipped()
+                finalData = gzippedData
+            } catch {
+                NRLOG_WARNING("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
+            }
+
+            let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
+            sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+            NRLOG_DEBUG("Enqueued previous session replay for session ID: \(sessionId)")
+
+            // Remove processed files
+            try FileManager.default.removeItem(at: sessionDirectory)
+            try? FileManager.default.removeItem(at: urlFile)
+
+        } catch {
+            NRLOG_ERROR("Failed to process session replay file for session ID \(sessionId): \(error)")
+        }
+    }
+    private func getSessionReplayDirectory() -> URL? {
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        return documentsDirectory.appendingPathComponent("SessionReplayFrames")
     }
 }
