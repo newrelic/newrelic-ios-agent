@@ -30,5 +30,15 @@ enum ViewControllerProvider {
         let viewController = TextMaskingViewController()
         return viewController
     }
+    
+    static var collectionViewController: ScrollableCollectionViewController {
+        let viewController = ScrollableCollectionViewController()
+        return viewController
+    }
+    
+    static var infiniteViewController: InfiniteScrollTableViewController {
+        let viewController = InfiniteScrollTableViewController()
+        return viewController
+    }
 }
 

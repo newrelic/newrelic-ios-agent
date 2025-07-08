@@ -16,7 +16,7 @@ class SessionReplayCapture {
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
-        var effectiveViewController = findRootViewController(rootView: rootView)
+        let effectiveViewController = findRootViewController(rootView: rootView)
         var rootViewControllerID:String?
         if let rootViewController = effectiveViewController {
             rootViewControllerID = String(describing: type(of: rootViewController))
@@ -100,6 +100,9 @@ class SessionReplayCapture {
 
         case let textView as UITextView:
             return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
+            
+        case let visualEffectView as UIVisualEffectView:
+            return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
 
         default:
             return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
@@ -113,8 +116,9 @@ class SessionReplayCapture {
         
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
-
-        return !(areFramesTheSame && isClear)
+        let isClippedOut = view.frame.intersection(superview.frame).isEmpty
+        
+        return !(areFramesTheSame && isClear && isClippedOut)
     }
 }
 

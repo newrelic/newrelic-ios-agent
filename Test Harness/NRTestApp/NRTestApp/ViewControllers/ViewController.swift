@@ -120,6 +120,10 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
 
+        options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
+       
+        options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
@@ -163,6 +167,14 @@ class ViewController: UIViewController {
         coordinator?.showTextMaskingController()
     }
 
+    func collectionViewAction() {
+        coordinator?.showCollectionController()
+    }
+    
+    func infiniteViewAction() {
+        coordinator?.showInfiniteScrollController()
+    }
+    
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
