@@ -23,7 +23,7 @@ struct ViewDetails {
     let clip: CGRect
 
     // Indicates if this view should have its content masked in session replay
-    let isMasked: Bool
+    var isMasked: Bool?
 
     var cssSelector: String {
         "\(self.viewName)-\(self.viewId)"
@@ -76,58 +76,52 @@ struct ViewDetails {
             view.sessionReplayIdentifier = viewId
         }
 
+        if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
+            self.isMasked = shouldMask
+            view.sessionReplayMaskState = shouldMask
+        }
+    }
+    
+    private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
-        var shouldMask = false
         let agent = NewRelicAgentInternal.sharedInstance()
+        
+        if let accessibilityId = view.accessibilityIdentifier,
+           accessibilityId == "nr-mask" {
+            //This view is explicitly marked to not be masked.
+            return true
+        }
 
         // Handle decision for masking based on accessibility identifier in this section.
         // Check for accessibility identifier in the masking list
         if let accessibilityId = view.accessibilityIdentifier,
         agent.isAccessibilityIdentifierMasked(accessibilityId) {
-            shouldMask = true
+            return true
         }
-
+        
+        // Check for class name in the masking list if not already masked
+        if agent.isClassNameMasked(viewName) {
+            return true
+        }
+        
         // Check if parent is masked (propagate masking to children)
-        if !shouldMask,
-           let parentView = view.superview,
+        if let parentView = view.superview,
            let parentMasked = parentView.sessionReplayMaskState,
            parentMasked {
-            shouldMask = true
+            return true
         }
 
-        if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId == "nr-unmask" {
-               //This view is explicitly marked to not be masked. If its parent is not masked, unmask it.
-               if let parentView = view.superview,
-                  let parentMasked = parentView.sessionReplayMaskState,
-               !parentMasked {
-                   shouldMask = false
-                  }
+        if let accessibilityId = view.accessibilityIdentifier, accessibilityId == "nr-unmask" {
+            return false
+        }
+        
+        // Check for class name in the unmasking list
+        if agent.isClassNameUnmasked(viewName) {
+            return false
         }
 
-        if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId == "nr-mask" {
-            //This view is explicitly marked to not be masked.
-            shouldMask = true
-        }
-        // END Handle decision for masking based on accessibility identifier in this section.
-
-        // Handle decision for masking based on class names in this section.
-
-        // Check for class name in the masking list if not already masked
-        if !shouldMask,
-           agent.isClassNameMasked(viewName) {
-            shouldMask = true
-        }
-           
-        // END Handle decision for masking based on class names in this section.
-
-        // Store masking state for children to inherit
-        view.sessionReplayMaskState = shouldMask
-
-        isMasked = shouldMask
-
-       // NRLOG_DEBUG("Session Replay: isMask = \(shouldMask) for view \(viewName) with id \(viewId)")
+        // Return nil if no custom masked setting is found
+        return nil
     }
     
     private static func getClippingRect(for view: UIView, in window: UIWindow) -> CGRect {

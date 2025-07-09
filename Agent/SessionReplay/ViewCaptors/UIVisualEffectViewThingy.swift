@@ -23,7 +23,7 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
     
     init(view: UIVisualEffectView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
-        self.isMasked = viewDetails.isMasked
+        self.isMasked = viewDetails.isMasked ?? false
         
         // Determine blur style and intensity based on the effect
         var intensity: CGFloat = 10.0
