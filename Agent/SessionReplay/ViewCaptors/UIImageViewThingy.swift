@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+@_implementationOnly import NewRelicPrivate
 
 class UIImageViewThingy: SessionReplayViewThingy {
     var isMasked: Bool
@@ -26,7 +27,11 @@ class UIImageViewThingy: SessionReplayViewThingy {
         if false {
             self.image = (view.image ?? nil)
         }
-        self.isMasked = viewDetails.isMasked
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        } else {
+            self.isMasked = NRMAHarvestController.configuration().session_replay_maskAllImages
+        }
     }
     
     func cssDescription() -> String {
