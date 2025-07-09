@@ -53,16 +53,16 @@ class SessionReplayTouchCapture: NSObject {
                 }
                 
                 // Check if the touch has moved to a masked view
-                if shouldMaskTouchesForView(touchedView) {
-                    // End tracking this touch as it's entered a masked area
-                    let touchDetail = TouchEvent.Detail(location: touchTracker.moveTouches.last?.location ?? location,
-                                                       phase: .ended,
-                                                       date: Date().timeIntervalSince1970)
-                    touchTracker.endTouch = touchDetail
-                    self.touchEvents.append(touchTracker)
-                    NRMAAssociate.remove(from: touch, with: "TouchTracker")
-                    continue
-                }
+//                if shouldMaskTouchesForView(touchedView) {
+//                    // End tracking this touch as it's entered a masked area
+//                    let touchDetail = TouchEvent.Detail(location: touchTracker.moveTouches.last?.location ?? location,
+//                                                       phase: .ended,
+//                                                       date: Date().timeIntervalSince1970)
+//                    touchTracker.endTouch = touchDetail
+//                    self.touchEvents.append(touchTracker)
+//                    NRMAAssociate.remove(from: touch, with: "TouchTracker")
+//                    continue
+//                }
                 
                 // Continue tracking in unmasked area
                 let touchDetail = TouchEvent.Detail(location: location, phase: .moved, date: Date().timeIntervalSince1970)
@@ -75,15 +75,15 @@ class SessionReplayTouchCapture: NSObject {
                 }
                 
                 // Record end location only if it's in an unmasked view
-                if !shouldMaskTouchesForView(touchedView) {
+//                if !shouldMaskTouchesForView(touchedView) {
                     let touchDetail = TouchEvent.Detail(location: location, phase: .ended, date: Date().timeIntervalSince1970)
                     touchTracker.endTouch = touchDetail
-                } else {
-                    // Use the last known unmasked location as the end point
-                    let lastLocation = touchTracker.moveTouches.last?.location ?? touchTracker.startTouch.location
-                    let touchDetail = TouchEvent.Detail(location: lastLocation, phase: .ended, date: Date().timeIntervalSince1970)
-                    touchTracker.endTouch = touchDetail
-                }
+//                } else {
+//                    // Use the last known unmasked location as the end point
+//                    let lastLocation = touchTracker.moveTouches.last?.location ?? touchTracker.startTouch.location
+//                    let touchDetail = TouchEvent.Detail(location: lastLocation, phase: .ended, date: Date().timeIntervalSince1970)
+//                    touchTracker.endTouch = touchDetail
+//                }
                 
                 self.touchEvents.append(touchTracker)
                 NRMAAssociate.remove(from: touch, with: "TouchTracker")
