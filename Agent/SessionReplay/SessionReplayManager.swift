@@ -84,7 +84,7 @@ public class SessionReplayManager: NSObject {
 
         // Early exit if nothing to send
         if processedFrames.isEmpty && processedTouches.isEmpty {
-            NRLOG_WARNING("No session replay frames or touches to harvest.")
+            NRLOG_DEBUG("No session replay frames or touches to harvest.")
             return
         }
 
@@ -130,7 +130,7 @@ public class SessionReplayManager: NSObject {
                 NRLOG_DEBUG(jsonString)
             }
         } catch {
-            NRLOG_ERROR("Failed to encode session replay events to JSON: \(error)")
+            NRLOG_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil
         }
 
@@ -140,7 +140,7 @@ public class SessionReplayManager: NSObject {
             let gzippedData = try jsonData.gzipped()
             jsonData = gzippedData
         } catch {
-            NRLOG_WARNING("Failed to gzip session replay data: \(error.localizedDescription)")
+            NRLOG_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
         }
 
         // Construct upload URL
@@ -165,7 +165,7 @@ public class SessionReplayManager: NSObject {
         NRLOG_DEBUG("CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS")
 
         guard let sessionReplayDirectory = getSessionReplayDirectory() else {
-            NRLOG_WARNING("Could not access session replay directory")
+            NRLOG_DEBUG("Could not access session replay directory")
             return
         }
 
@@ -188,7 +188,7 @@ public class SessionReplayManager: NSObject {
             }
 
         } catch {
-            NRLOG_ERROR("Failed to read session replay directory: \(error)")
+            NRLOG_DEBUG("Failed to read session replay directory: \(error)")
         }
 
     }
@@ -203,7 +203,7 @@ public class SessionReplayManager: NSObject {
 
             guard let urlString = try? String(contentsOf: urlFile).removingPercentEncoding,
                   let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-                NRLOG_ERROR("No valid URL found for session replay file with session ID: \(sessionId)")
+                NRLOG_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
                 return
             }
 
@@ -214,7 +214,7 @@ public class SessionReplayManager: NSObject {
             // Find all frame files for this session
             let sessionDirectory = directory.appendingPathComponent(sessionId)
             guard FileManager.default.fileExists(atPath: sessionDirectory.path) else {
-                NRLOG_WARNING("Session directory not found for session ID: \(sessionId)")
+                NRLOG_DEBUG("Session directory not found for session ID: \(sessionId)")
                 return
             }
 
@@ -231,7 +231,7 @@ public class SessionReplayManager: NSObject {
                 }
 
             if frameFiles.isEmpty {
-                NRLOG_WARNING("No frame files found for session ID: \(sessionId)")
+                NRLOG_DEBUG("No frame files found for session ID: \(sessionId)")
                 try? FileManager.default.removeItem(at: urlFile)
                 try? FileManager.default.removeItem(at: sessionDirectory)
                 return
@@ -242,80 +242,26 @@ public class SessionReplayManager: NSObject {
             for frameFile in frameFiles {
                 do {
                     // remove outer [] from frameFile if they exist
-
-
-
-                    var frameContent = try String(contentsOf: frameFile).trimmingCharacters(in: .whitespacesAndNewlines)
+                    let frameContent = try String(contentsOf: frameFile).trimmingCharacters(in: .whitespacesAndNewlines)
 
                     var frameContentWithOuterBracketsRemoved = frameContent
                     if frameContent.hasPrefix("[") && frameContent.hasSuffix("]") {
                         frameContentWithOuterBracketsRemoved = String(frameContent.dropFirst().dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
                     }
-                    if !frameContent.isEmpty {
+                    if !frameContentWithOuterBracketsRemoved.isEmpty {
                         frameContents.append(frameContentWithOuterBracketsRemoved)
-
-                        // parse frameContents
-                        let frameData = try? JSONSerialization.jsonObject(with: Data(frameContent.utf8), options: [])
-                        if let frameData = try? JSONSerialization.jsonObject(with: Data(frameContent.utf8), options: []) as? [Any?] {
-
-                            for frame in frameData {
-                                var timestamp = (frame as? NSMutableDictionary)?["timestamp"] as? TimeInterval
-                                NRLOG_DEBUG("Frame \(frameFile.lastPathComponent) timestamp: \(timestamp)")
-
-                            }
-
-                        } else {
-                            NRLOG_WARNING("Invalid frame content in file \(frameFile.lastPathComponent)")
-                        }
                     }
                 } catch {
-                    NRLOG_WARNING("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
+                    NRLOG_DEBUG("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
                 }
             }
 
             if frameContents.isEmpty {
-                NRLOG_WARNING("No valid frame content found for session ID: \(sessionId)")
+                NRLOG_DEBUG("No valid frame content found for session ID: \(sessionId)")
                 try FileManager.default.removeItem(at: sessionDirectory)
                 try? FileManager.default.removeItem(at: urlFile)
                 return
             }
-
-            // ALWAYS add one meta event at the beginning of the array
-            var attributesString = ""
-            // get firstTimestamp from  the URL paramters on the variable `url`
-            if let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
-                  let queryItems = urlComponents.queryItems,
-                  let attibutesString = queryItems.first(where: { $0.name == "replay.firstTimestamp" })?.value {
-                
-                attributesString = attibutesString
-            }
-            else  if let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
-                     let queryItems = urlComponents.queryItems,
-                     let attibutesString = queryItems.first(where: { $0.name == "attributes" })?.value {
-                // Parse attributes string to find replay.firstTimestamp
-                // This assumes attributes are in the format "key1=value1&key2=value2"
-
-                    // parse replay.firstTimeStamp from attributes
-
-                print(attibutesString)
-                // parse the timestamp where the attibutesString looks like replay.firstTimestamp=1751989720195
-
-                if let firstTimestampRange = attibutesString.range(of: "replay.firstTimestamp=") {
-                    let timestampString = attibutesString[firstTimestampRange.upperBound...]
-                    if let timestampValue = timestampString.split(separator: "&").first {
-                        attributesString = String(timestampValue)
-                    }
-                }
-
-               }
-
-            let firstTimestamp = TimeInterval(Int(attributesString ?? "") ?? 0)
-
-
-
-            // remove outer brackets from frameContents string
-            
-
 
             // Construct JSON array from frame contents
 
@@ -333,7 +279,7 @@ public class SessionReplayManager: NSObject {
                 let gzippedData = try jsonData.gzipped()
                 finalData = gzippedData
             } catch {
-                NRLOG_WARNING("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
+                NRLOG_DEBUG("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
             }
 
             let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
@@ -345,7 +291,7 @@ public class SessionReplayManager: NSObject {
             try? FileManager.default.removeItem(at: urlFile)
 
         } catch {
-            NRLOG_ERROR("Failed to process session replay file for session ID \(sessionId): \(error)")
+            NRLOG_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
         }
     }
     private func getSessionReplayDirectory() -> URL? {
