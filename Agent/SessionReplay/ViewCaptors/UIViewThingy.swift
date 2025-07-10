@@ -22,7 +22,7 @@ class UIViewThingy: SessionReplayViewThingy {
     
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
-        self.isMasked = viewDetails.isMasked
+        self.isMasked = viewDetails.isMasked ?? false
     }
     
     func cssDescription() -> String {

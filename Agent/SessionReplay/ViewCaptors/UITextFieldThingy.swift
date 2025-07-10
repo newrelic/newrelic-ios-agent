@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+@_implementationOnly import NewRelicPrivate
 
 class UITextFieldThingy: SessionReplayViewThingy {
     var isMasked: Bool
@@ -30,8 +31,12 @@ class UITextFieldThingy: SessionReplayViewThingy {
     init(view: UITextField, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
-        self.isMasked = viewDetails.isMasked
-
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        } else {
+            self.isMasked = NRMAHarvestController.configuration().session_replay_maskUserInputText
+        }
+        
         if self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label

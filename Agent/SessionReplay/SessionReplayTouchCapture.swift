@@ -32,35 +32,58 @@ class SessionReplayTouchCapture: NSObject {
               }
 
         for touch in touches {
+            let location = touch.location(in: touch.window)
+            let touchedView = touch.window?.hitTest(location, with: nil)
             
             switch(touch.phase) {
             case .began:
-                let location = touch.location(in: touch.window)
-                let touchedView = touch.window?.hitTest(location, with: nil)
-                let viewID = touchedView?.sessionReplayIdentifier ?? 0
-                let touchDetail = TouchEvent.Detail(location: location, phase: .began, date: Date().timeIntervalSince1970)
-                let touchTracker = TouchEvent(startTouch: touchDetail, with: viewID)
+                // Only start tracking if the initial touch is on an unmasked view
+                if !shouldMaskTouchesForView(touchedView) {
+                    let viewID = touchedView?.sessionReplayIdentifier ?? 0
+                    let touchDetail = TouchEvent.Detail(location: location, phase: .began, date: Date().timeIntervalSince1970)
+                    let touchTracker = TouchEvent(startTouch: touchDetail, with: viewID)
+                    
+                    touch.touchTracker = touchTracker
+                }
                 
-                touch.touchTracker = touchTracker
             case .moved:
                 guard let touchTracker = touch.touchTracker else {
-                    NRLOG_ERROR( "ERROR: Touch Tracker not associated with Touch!")
+                    // This touch is either already masked or missing tracker
                     continue
                 }
                 
-                let location = touch.location(in: touch.window)
+                // Check if the touch has moved to a masked view
+//                if shouldMaskTouchesForView(touchedView) {
+//                    // End tracking this touch as it's entered a masked area
+//                    let touchDetail = TouchEvent.Detail(location: touchTracker.moveTouches.last?.location ?? location,
+//                                                       phase: .ended,
+//                                                       date: Date().timeIntervalSince1970)
+//                    touchTracker.endTouch = touchDetail
+//                    self.touchEvents.append(touchTracker)
+//                    NRMAAssociate.remove(from: touch, with: "TouchTracker")
+//                    continue
+//                }
+                
+                // Continue tracking in unmasked area
                 let touchDetail = TouchEvent.Detail(location: location, phase: .moved, date: Date().timeIntervalSince1970)
                 touchTracker.moveTouches.append(touchDetail)
                 
             case .ended:
                 guard let touchTracker = touch.touchTracker else {
-                    NRLOG_ERROR( "ERROR: Touch Tracker not associated with Touch!")
+                    // This touch is either masked or missing tracker
                     continue
                 }
                 
-                let location = touch.location(in: touch.window)
-                let touchDetail = TouchEvent.Detail(location: location, phase: .ended, date: Date().timeIntervalSince1970)
-                touchTracker.endTouch = touchDetail
+                // Record end location only if it's in an unmasked view
+//                if !shouldMaskTouchesForView(touchedView) {
+                    let touchDetail = TouchEvent.Detail(location: location, phase: .ended, date: Date().timeIntervalSince1970)
+                    touchTracker.endTouch = touchDetail
+//                } else {
+//                    // Use the last known unmasked location as the end point
+//                    let lastLocation = touchTracker.moveTouches.last?.location ?? touchTracker.startTouch.location
+//                    let touchDetail = TouchEvent.Detail(location: lastLocation, phase: .ended, date: Date().timeIntervalSince1970)
+//                    touchTracker.endTouch = touchDetail
+//                }
                 
                 self.touchEvents.append(touchTracker)
                 NRMAAssociate.remove(from: touch, with: "TouchTracker")
@@ -69,6 +92,19 @@ class SessionReplayTouchCapture: NSObject {
                 continue
             }
         }
+    }
+    
+    // Determines if touches for a specific view should be masked based on configuration
+    private func shouldMaskTouchesForView(_ view: UIView?) -> Bool {
+        guard let view = view else {
+            return true
+        }
+        
+        if let maskState = view.sessionReplayMaskState {
+            return maskState
+        }
+        
+        return NRMAHarvestController.configuration().session_replay_maskAllUserTouches
     }
     
     public func resetEvents() {
