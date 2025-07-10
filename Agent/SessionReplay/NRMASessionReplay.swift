@@ -25,7 +25,6 @@ public class NRMASessionReplay: NSObject {
 
     private var frameCounter: Int = 0
     private let framesDirectory: URL
-    private var hasMeta: Bool = false
 
     public var windowDimensions = CGSize(width: 0, height: 0)
 
@@ -156,7 +155,6 @@ public class NRMASessionReplay: NSObject {
                 DispatchQueue.global(qos: .background).async { [self] in
 
                     self.frameCounter = 0
-                    self.hasMeta = false
                     // clear the frames directory
                     do {
                         try FileManager.default.removeItem(at: self.framesDirectory)
@@ -222,37 +220,30 @@ public class NRMASessionReplay: NSObject {
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getSessionReplayTouches(clear: false)
 
-        let processedFrames = getSessionReplayFrames(clear: false)
 
+        let processedFrames = getSessionReplayFrames(clear: false)
         let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
         let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
+
+//        let firstTimestamp: TimeInterval = TimeInterval(frame.date.timeIntervalSince1970 ?? 0)
+//        let lastTimestamp: TimeInterval = TimeInterval(frame.date.timeIntervalSince1970 ?? 0)
 
 
         var container: [AnyRRWebEvent] = []
 
-//        if frameCounter == 0 {
-            let metaEventData = RRWebMetaData(
-                href: "http://newrelic.com",
-                width: Int(self.windowDimensions.width),
-                height: Int(self.windowDimensions.height)
-            )
-            let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
-            container.append(AnyRRWebEvent(metaEvent))
+        let metaEventData = RRWebMetaData(
+            href: "http://newrelic.com",
+            width: Int(frame.size.width),
+            height: Int(frame.size.height)
+        )
+        let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
+        container.append(AnyRRWebEvent(metaEvent))
 
-            container.append(AnyRRWebEvent(processedFrame))
-
-//        }
-//        else {
-//            container.append(contentsOf: [AnyRRWebEvent(processedFrame)])
-//
-//        }
-
-        // append processed frame to container with the below .map { AnyRRWebEvent($0) }
+        container.append(AnyRRWebEvent(processedFrame))
 
         container.append(contentsOf: (processedTouches).map {
             AnyRRWebEvent($0)
         })
-
 
         // Extract URL generation logic from createReplayUpload
         let encoder = JSONEncoder()
