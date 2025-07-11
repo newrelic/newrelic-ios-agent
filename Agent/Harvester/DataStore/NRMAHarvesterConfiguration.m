@@ -9,6 +9,7 @@
 #import "NRMAHarvesterConfiguration.h"
 #import "NRLogger.h"
 #import "NRConstants.h"
+#import "NRMAAgentConfiguration.h"
 
 @implementation NRMAHarvesterConfiguration
 
@@ -233,6 +234,18 @@
                 self.session_replay_maskAllImages =  NO;
 
             }
+            
+            //When in default mode, the user does not have the ability to change the booleans, we use the defaults for the boolean
+            //input text mask - true
+            //application text mask - true
+            //image placeholders - true
+            //hide taps and touches - false
+            if (self.session_replay_mode == SessionReplayMaskingModeDefault){
+                self.session_replay_maskApplicationText = YES;
+                self.session_replay_maskUserInputText = YES;
+                self.session_replay_maskAllImages = YES;
+                self.session_replay_maskAllUserTouches = NO;
+            }
 
             // Handle the custom rule options.
 
@@ -252,7 +265,6 @@
             self.session_replay_sampling_rate = 100.0;
             self.session_replay_error_sampling_rate = 100.0;
             self.session_replay_mode = SessionReplayMaskingModeCustom;
-            self.session_replay_textMaskingStrategy = MaskAllText;
             self.session_replay_maskApplicationText = true;
             self.session_replay_maskUserInputText = true;
             self.session_replay_maskAllUserTouches = true;
@@ -261,9 +273,11 @@
         }
 
         // Masked
-        self.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
-        self.session_replay_maskedClassNames = [NSMutableSet set];
+        // New masking rules should be added to the local config
+        self.session_replay_maskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers];
+        self.session_replay_maskedClassNames = [NRMAAgentConfiguration local_session_replay_maskedClassNames];
         // Unmasked
+        // New unmasking rules replace the local config
         self.session_replay_unmaskedClassNames = [NSMutableSet set];
         self.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
 
@@ -320,15 +334,14 @@
     configuration.session_replay_maskAllImages = true;
 
     // Masked
-    configuration.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
-    configuration.session_replay_maskedClassNames = [NSMutableSet set];
+    configuration.session_replay_maskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers];
+    configuration.session_replay_maskedClassNames = [NRMAAgentConfiguration local_session_replay_maskedClassNames];
     // Unmasked
-    configuration.session_replay_unmaskedClassNames = [NSMutableSet set];
-    configuration.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
+    configuration.session_replay_unmaskedClassNames = [NRMAAgentConfiguration local_session_replay_unmaskedClassNames];
+    configuration.session_replay_unmaskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers];
 
     configuration.session_replay_customRules = [NSMutableSet set];
 
-    configuration.session_replay_textMaskingStrategy = MaskAllText;
     // Session Replay Default harvester Configuration
 
     return configuration;

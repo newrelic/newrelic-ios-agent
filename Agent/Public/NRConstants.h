@@ -64,13 +64,6 @@ enum NRTraceType {
     NRTraceTypeNetwork
 };
 
-//Custom Text Masking Types
-enum SessionReplayTextMaskingStrategy {
-    MaskAllText,
-    MaskUserInputText,
-    MaskNoText
-};
-
 typedef NSString * SessionReplayMaskingMode NS_STRING_ENUM;
 
 static SessionReplayMaskingMode const SessionReplayMaskingModeDefault = @"default";
