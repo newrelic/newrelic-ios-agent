@@ -117,13 +117,6 @@ struct ViewDetails {
             return true
         }
 
-        return checkIsUnmasked(view: view, viewName: viewName)
-    }
-    
-    private static func checkIsUnmasked(view: UIView, viewName: String) -> Bool? {
-        // Determine if this view should be unmasked
-        let agent = NewRelicAgentInternal.sharedInstance()
-        
         if let accessibilityId = view.accessibilityIdentifier, accessibilityId == "nr-unmask" {
             return false
         }
@@ -133,6 +126,7 @@ struct ViewDetails {
             return false
         }
         
+        // Return nil if no custom masked setting is found
         return nil
     }
     
