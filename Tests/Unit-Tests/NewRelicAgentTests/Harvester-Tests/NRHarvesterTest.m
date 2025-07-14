@@ -124,8 +124,6 @@
     config.session_replay_maskAllUserTouches = YES;
     config.session_replay_maskAllImages = YES;
 
-    config.session_replay_textMaskingStrategy = MaskAllText;
-
     // Lists for tracking masked elements in SessionReplay
     config.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
     config.session_replay_maskedClassNames = [NSMutableSet set];
