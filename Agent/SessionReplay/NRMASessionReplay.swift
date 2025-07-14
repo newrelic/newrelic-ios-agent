@@ -223,11 +223,7 @@ public class NRMASessionReplay: NSObject {
 
         let processedFrames = getSessionReplayFrames(clear: false)
         let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
-        let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
-
-//        let firstTimestamp: TimeInterval = TimeInterval(frame.date.timeIntervalSince1970 ?? 0)
-//        let lastTimestamp: TimeInterval = TimeInterval(frame.date.timeIntervalSince1970 ?? 0)
-
+        let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
 
         var container: [AnyRRWebEvent] = []
 
