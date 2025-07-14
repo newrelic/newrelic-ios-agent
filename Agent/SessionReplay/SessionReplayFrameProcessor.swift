@@ -57,7 +57,7 @@ class SessionReplayFrameProcessor {
                     childNodes.append(.element(childNode))
                     thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
                 } else {
-                    NRLOG_DEBUG("Skipping hidden view \(childThingy.cssDescription())")
+                   // NRLOG_DEBUG("Skipping hidden view \(childThingy.cssDescription())")
                 }
             }
             
