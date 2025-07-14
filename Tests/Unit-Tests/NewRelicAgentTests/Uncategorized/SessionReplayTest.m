@@ -8,18 +8,32 @@
 #import <XCTest/XCTest.h>
 #import <OCMock/OCMock.h>
 #import "NewRelicAgentInternal.h"
+#import "NRMAHarvestController.h"
 
 @interface SessionReplayTest : XCTestCase
+@property id mockNewRelicInternals;
+@property id mockHarvestController;
+
 @end
+static NewRelicAgentInternal* _sharedInstance;
 
 @implementation SessionReplayTest
 
 - (void)setUp {
     [super setUp];
+    self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
+    _sharedInstance = [[NewRelicAgentInternal alloc] init];
+    [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
+    
+    self.mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+    [[[[self.mockHarvestController stub] classMethod] andReturn:[NRMAHarvesterConfiguration defaultHarvesterConfiguration]] configuration];
 }
 
 - (void)tearDown {
     [super tearDown];
+    
+    [self.mockHarvestController stopMocking];
+    [self.mockNewRelicInternals stopMocking];
 }
 
 // Tests for Accessibility Identifier masking
