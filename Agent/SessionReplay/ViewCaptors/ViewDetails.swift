@@ -82,9 +82,15 @@ struct ViewDetails {
         }
     }
     
+    // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
     private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
         let agent = NewRelicAgentInternal.sharedInstance()
+        
+        // If masking is in default mode we want to use the default value which is determined by the global for it's type.
+        if NRMAHarvestController.configuration().session_replay_mode as SessionReplayMaskingMode == SessionReplayMaskingMode.default {
+            return nil
+        }
         
         if let accessibilityId = view.accessibilityIdentifier,
            accessibilityId == "nr-mask" {
@@ -119,7 +125,7 @@ struct ViewDetails {
         if agent.isClassNameUnmasked(viewName) {
             return false
         }
-
+        
         // Return nil if no custom masked setting is found
         return nil
     }

@@ -89,8 +89,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 // SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
 
-- (BOOL)setSessionReplayTextMaskingStrategy:(enum SessionReplayTextMaskingStrategy)strategy;
-
 // Masked section
 
 // Masked Accessibility Identifiers

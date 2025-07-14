@@ -14,6 +14,7 @@ class UtilitiesViewController: UIViewController {
         super.viewDidLoad()
                 
         self.title = "Utilities"
+        self.navigationController?.navigationBar.accessibilityIdentifier = "public"
         
         let tableView = UITableView()
         

@@ -53,4 +53,14 @@
 
 + (void) setMaxOfflineStorageSize:(NSUInteger)megabytes;
 + (NSUInteger) getMaxOfflineStorageSize;
+
++ (NSMutableSet*) local_session_replay_maskedClassNames;
++ (NSMutableSet*) local_session_replay_unmaskedClassNames;
++ (NSMutableSet*) local_session_replay_maskedAccessibilityIdentifiers;
++ (NSMutableSet*) local_session_replay_unmaskedAccessibilityIdentifiers;
+
++ (BOOL)addLocalMaskedAccessibilityIdentifier:(NSString *)identifier;
++ (BOOL)addLocalUnmaskedAccessibilityIdentifier:(NSString *)identifier;
++ (BOOL)addLocalMaskedClassName:(NSString *)className;
++ (BOOL)addLocalUnmaskedClassName:(NSString *)className;
 @end

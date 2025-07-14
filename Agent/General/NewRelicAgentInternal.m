@@ -1207,12 +1207,6 @@ void applicationDidEnterBackgroundCF(void) {
 
 #pragma mark - Session Replay Management
 
-- (BOOL) setSessionReplayTextMaskingStrategy:(enum SessionReplayTextMaskingStrategy) strategy {
-
-    [NRMAHarvestController configuration].session_replay_textMaskingStrategy = strategy;
-    return YES;
-}
-
 #pragma mark - Masked Elements Management
 
 - (void)addMaskedAccessibilityIdentifier:(NSString *)identifier {

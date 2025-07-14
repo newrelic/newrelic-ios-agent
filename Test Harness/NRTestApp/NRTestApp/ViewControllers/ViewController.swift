@@ -15,7 +15,7 @@ class ViewController: UIViewController {
     var options =  [UtilOption]()
     
     var spaceImageView = UIImageView()
-    var spaceLabel = UILabel()
+    var spaceLabel = SecureLabel()
     var spaceStack = UIStackView()
     var helloButton = UIButton()
 
