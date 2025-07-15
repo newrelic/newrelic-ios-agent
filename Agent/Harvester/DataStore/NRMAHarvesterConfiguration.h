@@ -36,9 +36,9 @@
 // Session Replay Configuration Keys
 #define kNRMA_SESSION_REPLAY_CONFIG_KEY @"mobile_session_replay"
 
-#define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"idemtifier"
+#define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"identifier"
 #define kNRMA_SESSION_REPLAY_CONFIG_NAME_KEY @"name"
-#define kNRMA_SESSION_REPLAY_CONFIG_OPERATOR_KEY @"name"
+#define kNRMA_SESSION_REPLAY_CONFIG_OPERATOR_KEY @"operator"
 #define kNRMA_SESSION_REPLAY_CONFIG_TYPE_KEY @"type"
 
 #define kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY @"enabled"
@@ -116,16 +116,14 @@
 
 
 // Lists for tracking masked elements in SessionReplay
-@property (nonatomic, strong) NSMutableSet *session_replay_maskedAccessibilityIdentifiers;
-@property (nonatomic, strong) NSMutableSet *session_replay_maskedClassNames;
+@property (nonatomic, strong) NSMutableArray *session_replay_maskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableArray *session_replay_maskedClassNames;
 
 
 // Lists for tracking unmasked elements in SessionReplay
-@property (nonatomic, strong) NSMutableSet *session_replay_unmaskedAccessibilityIdentifiers;
-@property (nonatomic, strong) NSMutableSet *session_replay_unmaskedClassNames;
+@property (nonatomic, strong) NSMutableArray *session_replay_unmaskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableArray *session_replay_unmaskedClassNames;
 
-
-@property (nonatomic, strong) NSMutableSet *session_replay_customRules;
 
 // End Session Replay Configuration
 
@@ -141,7 +139,7 @@
 
 @interface SessionReplayCustomMaskingRule : NSObject
 @property(nonatomic,assign) NSString*    identifier;
-@property(nonatomic,assign) NSString*    name;
+@property(nonatomic,assign) NSArray*     name;
 @property(nonatomic,assign) NSString*    operatorName;
 @property(nonatomic,assign) NSString*    type;
 - (id) initWithDictionary:(NSDictionary*)dict;

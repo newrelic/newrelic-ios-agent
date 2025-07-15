@@ -247,13 +247,34 @@
                 self.session_replay_maskAllUserTouches = NO;
             }
 
+            // Masked
+            // New masking rules should be added to the local config
+            self.session_replay_maskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers];
+            self.session_replay_maskedClassNames = [NRMAAgentConfiguration local_session_replay_maskedClassNames];
+            
+            // Unmasked
+            // New unmasking rules replace the local config
+            self.session_replay_unmaskedClassNames = [NSMutableArray array];
+            self.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableArray array];
+            
             // Handle the custom rule options.
-
             NSArray *customRulesArray = innerDict[kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY];
             if (customRulesArray && [customRulesArray isKindOfClass:[NSArray class]]) {
                 for (NSDictionary *ruleDict in customRulesArray) {
                     SessionReplayCustomMaskingRule *rule = [[SessionReplayCustomMaskingRule alloc] initWithDictionary:ruleDict];
-                    [self.session_replay_customRules addObject:rule];
+                    if ([rule.identifier isEqual: @"accessbilityIdentifier"] && [rule.type isEqual: @"mask"]) {
+                        [self.session_replay_maskedAccessibilityIdentifiers addObjectsFromArray: rule.name];
+                        
+                    } else if ([rule.identifier isEqual: @"className"] && [rule.type isEqual: @"mask"]) {
+                        [self.session_replay_maskedClassNames addObjectsFromArray: rule.name];
+                        
+                    } else if ([rule.identifier isEqual: @"accessbilityIdentifier"] && [rule.type isEqual: @"unmask"]) {
+                        [self.session_replay_unmaskedAccessibilityIdentifiers addObjectsFromArray: rule.name];
+                        
+                    } else if ([rule.identifier isEqual: @"className"] && [rule.type isEqual: @"unmask"]) {
+                        [self.session_replay_unmaskedClassNames addObjectsFromArray: rule.name];
+                        
+                    }
                 }
             }
 
@@ -271,17 +292,6 @@
             self.session_replay_maskAllImages = true;
 
         }
-
-        // Masked
-        // New masking rules should be added to the local config
-        self.session_replay_maskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers];
-        self.session_replay_maskedClassNames = [NRMAAgentConfiguration local_session_replay_maskedClassNames];
-        // Unmasked
-        // New unmasking rules replace the local config
-        self.session_replay_unmaskedClassNames = [NSMutableSet set];
-        self.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
-
-        self.session_replay_customRules = [NSMutableSet set];
 
         // end session replay configuration parsing
 
@@ -339,8 +349,6 @@
     // Unmasked
     configuration.session_replay_unmaskedClassNames = [NRMAAgentConfiguration local_session_replay_unmaskedClassNames];
     configuration.session_replay_unmaskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers];
-
-    configuration.session_replay_customRules = [NSMutableSet set];
 
     // Session Replay Default harvester Configuration
 
