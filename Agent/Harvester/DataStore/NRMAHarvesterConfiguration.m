@@ -11,6 +11,10 @@
 
 @implementation NRMAHarvesterConfiguration
 
+// Store the account and application Id to use in the default config
+static long long _applicationId;
+static long long _accountId;
+
 - (id) initWithDictionary:(NSDictionary*)dict
 {
     self = [super init];
@@ -95,8 +99,10 @@
         }
 
         self.account_id = [[dict valueForKey:kNRMA_ACCOUNT_ID] longLongValue];
+        _accountId = self.account_id;
 
         self.application_id = self.data_token.clusterAgentId;
+        _applicationId = self.application_id;
 
         self.trusted_account_key = [dict valueForKey:kNRMA_TRUSTED_ACCOUNT_KEY];
 
@@ -180,6 +186,9 @@
     configuration.log_reporting_enabled = NO;
     configuration.sampling_rate = 100.0;
     configuration.request_header_map = [NSDictionary dictionary];
+
+    configuration.account_id = _accountId;
+    configuration.application_id = _applicationId;
 
     return configuration;
 }
