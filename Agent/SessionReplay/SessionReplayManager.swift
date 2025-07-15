@@ -21,9 +21,11 @@ public class SessionReplayManager: NSObject {
     public var harvestTimer: Timer?
 
     public var isFirstChunk = true
+    private let url: NSString
 
-    @objc public init(reporter: SessionReplayReporter) {
-        self.sessionReplay = NRMASessionReplay()
+    @objc public init(reporter: SessionReplayReporter, url: NSString) {
+        self.url = url
+        self.sessionReplay = NRMASessionReplay(url: self.url)
         self.sessionReplayReporter = reporter
         super.init()
 

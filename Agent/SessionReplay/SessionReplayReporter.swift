@@ -19,9 +19,11 @@ public class SessionReplayReporter: NSObject {
     private let uploadQueue = DispatchQueue(label: "com.newrelicagent.sessionreplayqueue")
     private let kNRMAMaxUploadRetry = 3
     private let applicationToken: String
+    private let url: NSString
 
-    @objc public init(applicationToken: String) {
+    @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
+        self.url = url
     }
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
@@ -141,7 +143,7 @@ public class SessionReplayReporter: NSObject {
             return "\(key)=\(value)"
         }.joined(separator: "&")
 
-        var urlComponents = URLComponents(string: "https://staging-mobile-collector.newrelic.com/mobile/blobs")
+        var urlComponents = URLComponents(string:"https://\(self.url as String)")
 
         urlComponents?.queryItems = [
             URLQueryItem(name: "type", value: "SessionReplay"),
