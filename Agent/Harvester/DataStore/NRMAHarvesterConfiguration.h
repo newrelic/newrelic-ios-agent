@@ -140,6 +140,15 @@
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
 
+- (void)addMaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addMaskedClassNames:(NSArray *)array;
+- (void)removeMaskedClassName:(NSString *)className;
+- (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addUnmaskedClassNames:(NSArray *)array;
+- (void)removeUnmaskedClassName:(NSString *)className;
+
 @end
 
 
