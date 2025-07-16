@@ -92,25 +92,17 @@ NS_ASSUME_NONNULL_BEGIN
 // Masked section
 
 // Masked Accessibility Identifiers
-- (void)addMaskedAccessibilityIdentifier:(NSString *)identifier;
-- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier;
 - (BOOL)isAccessibilityIdentifierMasked:(NSString *)identifier;
 
 // Masked Classes
-- (void)addMaskedClassName:(NSString *)className;
-- (void)removeMaskedClassName:(NSString *)className;
 - (BOOL)isClassNameMasked:(NSString *)className;
 
 // Unmasked section
 
 // Unmasked Accessibility Identifiers
-- (void)addUnmaskedAccessibilityIdentifier:(NSString *)identifier;
-- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier;
 - (BOOL)isAccessibilityIdentifierUnmasked:(NSString *)identifier;
 
 // Unmasked Classes
-- (void)addUnmaskedClassName:(NSString *)className;
-- (void)removeUnmaskedClassName:(NSString *)className;
 - (BOOL)isClassNameUnmasked:(NSString *)className;
 
 

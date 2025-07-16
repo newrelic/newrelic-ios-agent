@@ -43,8 +43,8 @@
 
 #define kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY @"mask"
 #define kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY @"unmask"
-#define kNRMA_SESSION_REPLAY_CONFIG_ACCESSIBILITY_IDENTIFIER_KEY @"accessibilityIdentifier"
-#define kNRMA_SESSION_REPLAY_CONFIG_CLASS_NAME_KEY @"className"
+#define kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY @"tag"
+#define kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY @"class"
 
 #define kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY @"enabled"
 #define kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY @"sampling_rate"
@@ -129,6 +129,7 @@
 @property (nonatomic, strong) NSMutableArray *session_replay_unmaskedAccessibilityIdentifiers;
 @property (nonatomic, strong) NSMutableArray *session_replay_unmaskedClassNames;
 
+@property (nonatomic, strong) NSMutableArray *session_replay_customRules;
 
 // End Session Replay Configuration
 
@@ -138,6 +139,15 @@
 - (NSUInteger) hash;
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
+
+- (void)addMaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addMaskedClassNames:(NSArray *)array;
+- (void)removeMaskedClassName:(NSString *)className;
+- (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addUnmaskedClassNames:(NSArray *)array;
+- (void)removeUnmaskedClassName:(NSString *)className;
 
 @end
 

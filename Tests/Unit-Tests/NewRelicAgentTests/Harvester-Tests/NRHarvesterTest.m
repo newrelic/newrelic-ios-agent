@@ -123,6 +123,8 @@
     config.session_replay_maskUserInputText = YES;
     config.session_replay_maskAllUserTouches = YES;
     config.session_replay_maskAllImages = YES;
+    
+    config.session_replay_customRules = [NSMutableArray array];;
 
     // Lists for tracking masked elements in SessionReplay
     config.session_replay_maskedAccessibilityIdentifiers = [NSMutableArray array];
