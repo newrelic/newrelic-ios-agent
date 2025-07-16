@@ -66,45 +66,45 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
     return __NRMA__maxOfflineStorageSize;
 }
 
-static NSMutableSet * __NRMA__session_replay_maskedClassNames;
-+ (NSMutableSet*) local_session_replay_maskedClassNames
+static NSMutableArray * __NRMA__session_replay_maskedClassNames;
++ (NSMutableArray*) local_session_replay_maskedClassNames
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        __NRMA__session_replay_maskedClassNames = [NSMutableSet set];
+        __NRMA__session_replay_maskedClassNames = [NSMutableArray array];
     });
 
     return (__NRMA__session_replay_maskedClassNames);
 }
 
-static NSMutableSet * __NRMA__session_replay_unmaskedClassNames;
-+ (NSMutableSet*) local_session_replay_unmaskedClassNames
+static NSMutableArray * __NRMA__session_replay_unmaskedClassNames;
++ (NSMutableArray*) local_session_replay_unmaskedClassNames
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        __NRMA__session_replay_unmaskedClassNames = [NSMutableSet set];
+        __NRMA__session_replay_unmaskedClassNames = [NSMutableArray array];
     });
 
     return (__NRMA__session_replay_unmaskedClassNames);
 }
 
-static NSMutableSet * __NRMA__session_replay_maskedAccessibilityIdentifiers;
-+ (NSMutableSet*) local_session_replay_maskedAccessibilityIdentifiers
+static NSMutableArray * __NRMA__session_replay_maskedAccessibilityIdentifiers;
++ (NSMutableArray*) local_session_replay_maskedAccessibilityIdentifiers
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        __NRMA__session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
+        __NRMA__session_replay_maskedAccessibilityIdentifiers = [NSMutableArray array];
     });
 
     return (__NRMA__session_replay_maskedAccessibilityIdentifiers);
 }
 
-static NSMutableSet * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
-+ (NSMutableSet*) local_session_replay_unmaskedAccessibilityIdentifiers
+static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
++ (NSMutableArray*) local_session_replay_unmaskedAccessibilityIdentifiers
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        __NRMA__session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
+        __NRMA__session_replay_unmaskedAccessibilityIdentifiers = [NSMutableArray array];
     });
 
     return (__NRMA__session_replay_unmaskedAccessibilityIdentifiers);
