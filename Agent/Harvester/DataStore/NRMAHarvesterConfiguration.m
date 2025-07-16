@@ -569,7 +569,7 @@
     if (![self.session_replay_mode isEqualToString:that.session_replay_mode]) return NO;
     if (self.session_replay_enabled != that.session_replay_enabled) return NO;
     if (self.has_session_replay_config != that.has_session_replay_config) return NO;
-    if (self.session_replay_customRules != that.session_replay_customRules) return NO;
+    if (![self.session_replay_customRules isEqualToArray:that.session_replay_customRules]) return NO;
     if (self.session_replay_maskAllImages != that.session_replay_maskAllImages) return NO;
     if (self.session_replay_maskApplicationText != that.session_replay_maskApplicationText) return NO;
     if (self.session_replay_maskUserInputText != that.session_replay_maskUserInputText) return NO;
