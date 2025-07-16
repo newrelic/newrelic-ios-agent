@@ -626,7 +626,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) sessionReplayStartNewSession {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    if ([NRMAHarvestController configuration].session_replay_enabled) {
+    BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed] <= [NRMAHarvestController configuration].session_replay_sampling_rate;
+
+    if (isSampled && [NRMAHarvestController configuration].session_replay_enabled) {
         [_sessionReplay newSession];
     }
 #endif
@@ -730,7 +732,9 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     [NRMAHarvestController start];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    if ([NRMAHarvestController configuration].session_replay_enabled) {
+    BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed] <= [NRMAHarvestController configuration].session_replay_sampling_rate;
+
+    if (isSampled && [NRMAHarvestController configuration].session_replay_enabled) {
         [_sessionReplay start];
     }
 #endif
@@ -931,7 +935,9 @@ static UIBackgroundTaskIdentifier background_task;
                     [[[NRMAHarvestController harvestController] harvester] execute];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-                    if ([NRMAHarvestController configuration].session_replay_enabled) {
+                    BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed] <= [NRMAHarvestController configuration].session_replay_sampling_rate;
+
+                    if (isSampled && [NRMAHarvestController configuration].session_replay_enabled) {
                         [self->_sessionReplay harvest];
                     }
 #endif
