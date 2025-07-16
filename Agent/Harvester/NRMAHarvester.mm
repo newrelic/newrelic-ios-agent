@@ -468,6 +468,7 @@
         configuration.application_token = connection.applicationToken;
 
         [self handleLoggingConfigurationUpdate];
+        [self handleSessionReplayConfigurationUpdate];
 
         [self saveHarvesterConfiguration:configuration];
 
@@ -858,6 +859,28 @@
         // No Log Reporting Config Detected, not automating feature flags or logging config.
          NRLOG_AGENT_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
     }
+}
+
+- (void) handleSessionReplayConfigurationUpdate {
+    // if it was on and now its off stop MSR
+
+    // if it was off and now its on start MSR
+    if (configuration.has_session_replay_config) {
+        if (configuration.session_replay_enabled) {
+            
+            NRLOG_AGENT_DEBUG(@"config: Has SESSION REPLAY ENABLED");
+
+        }
+        else {
+            NRLOG_AGENT_DEBUG(@"config: SESSION REPLAY DISABLED");
+            
+        }
+    }
+    // No replay config at all, don't mess with replay
+    else {
+        NRLOG_AGENT_DEBUG(@"no config: No SESSION REPLAY Config Detected.");
+    }
+
 }
 
 @end

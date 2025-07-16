@@ -34,7 +34,7 @@
 #define kNRMA_CONFIG_KEY @"configuration"
 
 // Session Replay Configuration Keys
-#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"mobile_session_replay"
+#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"session_replay"
 
 #define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"idemtifier"
 #define kNRMA_SESSION_REPLAY_CONFIG_NAME_KEY @"name"
@@ -42,14 +42,14 @@
 #define kNRMA_SESSION_REPLAY_CONFIG_TYPE_KEY @"type"
 
 #define kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY @"enabled"
-#define kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY @"samplingRate"
-#define kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY @"errorSamplingRate"
+#define kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY @"sampling_rate"
+#define kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY @"error_sampling_rate"
 #define kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY @"mode"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY @"maskApplicationText"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY @"maskUserInputText"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY @"maskAllUserTouches"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY @"maskAllImages"
-#define kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY @"customMaskingRules"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY @"mask_application_text"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY @"mask_user_input_text"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY @"mask_all_user_touches"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY @"mask_all_images"
+#define kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY @"custom_masking_rules"
 
 // End Session Replay Configuration Keys
 

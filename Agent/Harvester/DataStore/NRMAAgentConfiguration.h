@@ -32,6 +32,8 @@
 @property(readonly,strong) NSString* crashCollectorHost;
 @property(readonly,strong) NSString* loggingHost;
 @property(readonly,strong) NSString* loggingURL;
+@property(readonly,strong) NSString* sessionReplayURL;
+
 @property(readonly,strong) NRMAAppToken* applicationToken;
 @property(atomic,strong) NSString* sessionIdentifier;
 @property(nonatomic,readonly) BOOL      useSSL;

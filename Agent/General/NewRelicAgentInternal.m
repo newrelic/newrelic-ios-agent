@@ -370,8 +370,8 @@ static NewRelicAgentInternal* _sharedInstance;
 #endif
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (@available(iOS 13.0, *)) {
-        SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value];
-        _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter];
+        SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value url: [self->_agentConfiguration sessionReplayURL]];
+        _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
 
         // CHECK FOR MSR FILES FROM PREVIOUSLY CRASHED SESSIONS
         [_sessionReplay checkForPreviousSessionFiles];
@@ -626,7 +626,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) sessionReplayStartNewSession {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    if (true) { // Placeholder for determining if session replay should start.
+    if ([NRMAHarvestController configuration].session_replay_enabled) {
         [_sessionReplay newSession];
     }
 #endif
@@ -730,7 +730,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     [NRMAHarvestController start];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    if (true) { // Placeholder for determining if session replay should start.
+    if ([NRMAHarvestController configuration].session_replay_enabled) {
         [_sessionReplay start];
     }
 #endif
@@ -931,7 +931,7 @@ static UIBackgroundTaskIdentifier background_task;
                     [[[NRMAHarvestController harvestController] harvester] execute];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-                    if (true) { // Placeholder for determining if session replay should start.
+                    if ([NRMAHarvestController configuration].session_replay_enabled) {
                         [self->_sessionReplay harvest];
                     }
 #endif
