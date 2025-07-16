@@ -1215,24 +1215,6 @@ void applicationDidEnterBackgroundCF(void) {
 
 #pragma mark - Masked Elements Management
 
-- (void)addMaskedAccessibilityIdentifier:(NSString *)identifier {
-    if (identifier.length > 0) {
-        @synchronized([NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers) {
-            [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers addObject:identifier];
-            NRLOG_AGENT_VERBOSE(@"Added masked accessibility identifier: %@", identifier);
-        }
-    }
-}
-
-- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier {
-    if (identifier.length > 0) {
-        @synchronized([NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers) {
-            [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers removeObject:identifier];
-            NRLOG_AGENT_VERBOSE(@"Removed masked accessibility identifier: %@", identifier);
-        }
-    }
-}
-
 - (BOOL)isAccessibilityIdentifierMasked:(NSString *)identifier {
     if (identifier.length == 0) {
         return NO;
@@ -1243,24 +1225,6 @@ void applicationDidEnterBackgroundCF(void) {
         isMasked = [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers containsObject:identifier];
     }
     return isMasked;
-}
-
-- (void)addMaskedClassName:(NSString *)className {
-    if (className.length > 0) {
-        @synchronized([NRMAHarvestController configuration].session_replay_maskedClassNames) {
-            [[NRMAHarvestController configuration].session_replay_maskedClassNames addObject:className];
-            NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", className);
-        }
-    }
-}
-
-- (void)removeMaskedClassName:(NSString *)className {
-    if (className.length > 0) {
-        @synchronized([NRMAHarvestController configuration].session_replay_maskedClassNames) {
-            [[NRMAHarvestController configuration].session_replay_maskedClassNames removeObject:className];
-            NRLOG_AGENT_VERBOSE(@"Removed masked class name: %@", className);
-        }
-    }
 }
 
 - (BOOL)isClassNameMasked:(NSString *)className {
@@ -1277,25 +1241,6 @@ void applicationDidEnterBackgroundCF(void) {
 
 #pragma mark - Unmasked Elements Management
 
-- (void)addUnmaskedAccessibilityIdentifier:(NSString *)identifier {
-    if (identifier.length > 0) {
-
-        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers) {
-            [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers addObject:identifier];
-            NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", identifier);
-        }
-    }
-}
-
-- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier {
-    if (identifier.length > 0) {
-        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers) {
-            [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers removeObject:identifier];
-            NRLOG_AGENT_VERBOSE(@"Removed unmasked accessibility identifier: %@", identifier);
-        }
-    }
-}
-
 - (BOOL)isAccessibilityIdentifierUnmasked:(NSString *)identifier {
     if (identifier.length == 0) {
         return NO;
@@ -1306,25 +1251,6 @@ void applicationDidEnterBackgroundCF(void) {
         isUnmasked = [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers containsObject:identifier];
     }
     return isUnmasked;
-}
-
-- (void)addUnmaskedClassName:(NSString *)className {
-
-    if (className.length > 0) {
-        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedClassNames) {
-            [[NRMAHarvestController configuration].session_replay_unmaskedClassNames addObject:className];
-            NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", className);
-        }
-    }
-}
-
-- (void)removeUnmaskedClassName:(NSString *)className {
-    if (className.length > 0) {
-        @synchronized([NRMAHarvestController configuration].session_replay_unmaskedClassNames) {
-            [[NRMAHarvestController configuration].session_replay_unmaskedClassNames removeObject:className];
-            NRLOG_AGENT_VERBOSE(@"Removed unmasked class name: %@", className);
-        }
-    }
 }
 
 - (BOOL)isClassNameUnmasked:(NSString *)className {

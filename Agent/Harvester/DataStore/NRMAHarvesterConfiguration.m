@@ -249,13 +249,13 @@
 
             // Masked
             // New masking rules should be added to the local config
-            self.session_replay_maskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers];
-            self.session_replay_maskedClassNames = [NRMAAgentConfiguration local_session_replay_maskedClassNames];
+            [self addMaskedAccessibilityIdentifiers: [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers]];
+            [self addMaskedClassNames:[NRMAAgentConfiguration local_session_replay_maskedClassNames]];
             
             // Unmasked
             // New unmasking rules replace the local config
-            self.session_replay_unmaskedClassNames = [NRMAAgentConfiguration local_session_replay_unmaskedClassNames];
-            self.session_replay_unmaskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers];
+            [self addUnmaskedClassNames: [NRMAAgentConfiguration local_session_replay_unmaskedClassNames]];
+            [self addUnmaskedAccessibilityIdentifiers: [NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers]];
             
             self.session_replay_customRules = [NSMutableArray array];
             
@@ -267,16 +267,16 @@
                     [self.session_replay_customRules addObject:rule];
                     
                     if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
-                        [self.session_replay_maskedAccessibilityIdentifiers addObjectsFromArray: rule.name];
+                        [self addMaskedAccessibilityIdentifiers: rule.name];
                         
                     } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
-                        [self.session_replay_maskedClassNames addObjectsFromArray: rule.name];
+                        [self addMaskedClassNames: rule.name];
                         
                     } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
-                        [self.session_replay_unmaskedAccessibilityIdentifiers addObjectsFromArray: rule.name];
+                        [self addUnmaskedAccessibilityIdentifiers: rule.name];
                         
                     } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
-                        [self.session_replay_unmaskedClassNames addObjectsFromArray: rule.name];
+                        [self addUnmaskedClassNames: rule.name];
                         
                     }
                 }
@@ -460,6 +460,80 @@
     return serializedRules;
 }
 
+- (void)addMaskedAccessibilityIdentifiers:(NSArray *)array {
+    if (array.count > 0) {
+        @synchronized(_session_replay_maskedAccessibilityIdentifiers) {
+            [_session_replay_maskedAccessibilityIdentifiers addObjectsFromArray:array];
+            NRLOG_AGENT_VERBOSE(@"Added masked accessibility identifier: %@", array);
+        }
+    }
+}
+
+- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+        @synchronized(_session_replay_maskedAccessibilityIdentifiers) {
+            [_session_replay_maskedAccessibilityIdentifiers removeObject:identifier];
+            NRLOG_AGENT_VERBOSE(@"Removed masked accessibility identifier: %@", identifier);
+        }
+    }
+}
+
+- (void)addMaskedClassNames:(NSArray *)array {
+    if (array.count > 0) {
+        @synchronized(_session_replay_maskedClassNames) {
+            [_session_replay_maskedClassNames addObjectsFromArray:array];
+            NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", array);
+        }
+    }
+}
+
+- (void)removeMaskedClassName:(NSString *)className {
+    if (className.length > 0) {
+        @synchronized(_session_replay_maskedClassNames) {
+            [_session_replay_maskedClassNames removeObject:className];
+            NRLOG_AGENT_VERBOSE(@"Removed masked class name: %@", className);
+        }
+    }
+}
+
+- (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array {
+    if (array.count > 0) {
+
+        @synchronized(_session_replay_unmaskedAccessibilityIdentifiers) {
+            [_session_replay_unmaskedAccessibilityIdentifiers addObjectsFromArray:array];
+            NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", array);
+        }
+    }
+}
+
+- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+        @synchronized(_session_replay_unmaskedAccessibilityIdentifiers) {
+            [_session_replay_unmaskedAccessibilityIdentifiers removeObject:identifier];
+            NRLOG_AGENT_VERBOSE(@"Removed unmasked accessibility identifier: %@", identifier);
+        }
+    }
+}
+
+- (void)addUnmaskedClassNames:(NSArray *)array {
+
+    if (array.count > 0) {
+        @synchronized(_session_replay_unmaskedClassNames) {
+            [_session_replay_unmaskedClassNames addObjectsFromArray:array];
+            NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", array);
+        }
+    }
+}
+
+- (void)removeUnmaskedClassName:(NSString *)className {
+    if (className.length > 0) {
+        @synchronized(_session_replay_unmaskedClassNames) {
+            [_session_replay_unmaskedClassNames removeObject:className];
+            NRLOG_AGENT_VERBOSE(@"Removed unmasked class name: %@", className);
+        }
+    }
+}
+
 - (BOOL) isEqual:(id)object {
     if (self == object) return YES;
     if (object == nil || ![object isKindOfClass:self.class]) return NO;
@@ -495,6 +569,11 @@
     if (![self.session_replay_mode isEqualToString:that.session_replay_mode]) return NO;
     if (self.session_replay_enabled != that.session_replay_enabled) return NO;
     if (self.has_session_replay_config != that.has_session_replay_config) return NO;
+    if (self.session_replay_customRules != that.session_replay_customRules) return NO;
+    if (self.session_replay_maskAllImages != that.session_replay_maskAllImages) return NO;
+    if (self.session_replay_maskApplicationText != that.session_replay_maskApplicationText) return NO;
+    if (self.session_replay_maskUserInputText != that.session_replay_maskUserInputText) return NO;
+    if (self.session_replay_maskAllUserTouches != that.session_replay_maskAllUserTouches) return NO;
 
 
     return [self.data_token isEqual:that.data_token];
