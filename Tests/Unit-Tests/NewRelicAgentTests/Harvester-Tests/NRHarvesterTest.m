@@ -125,14 +125,13 @@
     config.session_replay_maskAllImages = YES;
 
     // Lists for tracking masked elements in SessionReplay
-    config.session_replay_maskedAccessibilityIdentifiers = [NSMutableSet set];
-    config.session_replay_maskedClassNames = [NSMutableSet set];
+    config.session_replay_maskedAccessibilityIdentifiers = [NSMutableArray array];
+    config.session_replay_maskedClassNames = [NSMutableArray array];
 
     // Lists for tracking unmasked elements in SessionReplay
-    config.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableSet set];
-    config.session_replay_unmaskedClassNames = [NSMutableSet set];
+    config.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableArray array];
+    config.session_replay_unmaskedClassNames = [NSMutableArray array];
 
-    config.session_replay_customRules = [NSMutableSet set];
 
     // End MSR Section
     return config;
