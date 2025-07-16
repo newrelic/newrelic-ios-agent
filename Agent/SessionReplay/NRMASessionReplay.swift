@@ -228,8 +228,10 @@ public class NRMASessionReplay: NSObject {
             NRLOG_ERROR("Failed to get first frame when processing replay frame to file")
             return
         }
-        let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000)
-        let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
+        
+        let processedFrames = getSessionReplayFrames(clear: false)
+        let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
+        let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
 
         var container: [AnyRRWebEvent] = []
 
