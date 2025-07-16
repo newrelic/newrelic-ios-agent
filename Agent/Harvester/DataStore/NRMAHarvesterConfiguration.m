@@ -203,7 +203,7 @@
 
             // Handle the BOOL masking options.
             if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY]) {
-                self.session_replay_maskApplicationText =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY];
+                self.session_replay_maskApplicationText =  [innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY] boolValue];
 
             }
             else {
@@ -211,27 +211,27 @@
             }
 
             if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY]) {
-                self.session_replay_maskUserInputText =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY];
+                self.session_replay_maskUserInputText =  [innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY] boolValue];
 
             }
             else {
-                self.session_replay_maskUserInputText = NO;
+                self.session_replay_maskUserInputText = YES;
             }
 
             if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY]) {
-                self.session_replay_maskAllUserTouches =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY];
+                self.session_replay_maskAllUserTouches =  [innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY] boolValue];
 
             }
             else {
                 self.session_replay_maskAllUserTouches =  NO;
             }
 
-            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY]) {
+            if ([[innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY] boolValue]) {
                 self.session_replay_maskAllImages =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY];
 
             }
             else {
-                self.session_replay_maskAllImages =  NO;
+                self.session_replay_maskAllImages =  YES;
 
             }
             
