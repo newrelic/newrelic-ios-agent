@@ -262,16 +262,16 @@
             if (customRulesArray && [customRulesArray isKindOfClass:[NSArray class]]) {
                 for (NSDictionary *ruleDict in customRulesArray) {
                     SessionReplayCustomMaskingRule *rule = [[SessionReplayCustomMaskingRule alloc] initWithDictionary:ruleDict];
-                    if ([rule.identifier isEqual: @"accessbilityIdentifier"] && [rule.type isEqual: @"mask"]) {
+                    if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_ACCESSIBILITY_IDENTIFIER_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
                         [self.session_replay_maskedAccessibilityIdentifiers addObjectsFromArray: rule.name];
                         
-                    } else if ([rule.identifier isEqual: @"className"] && [rule.type isEqual: @"mask"]) {
+                    } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_CLASS_NAME_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY]) {
                         [self.session_replay_maskedClassNames addObjectsFromArray: rule.name];
                         
-                    } else if ([rule.identifier isEqual: @"accessbilityIdentifier"] && [rule.type isEqual: @"unmask"]) {
+                    } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_ACCESSIBILITY_IDENTIFIER_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
                         [self.session_replay_unmaskedAccessibilityIdentifiers addObjectsFromArray: rule.name];
                         
-                    } else if ([rule.identifier isEqual: @"className"] && [rule.type isEqual: @"unmask"]) {
+                    } else if ([rule.identifier isEqual: kNRMA_SESSION_REPLAY_CONFIG_CLASS_NAME_KEY] && [rule.type isEqual: kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY]) {
                         [self.session_replay_unmaskedClassNames addObjectsFromArray: rule.name];
                         
                     }
