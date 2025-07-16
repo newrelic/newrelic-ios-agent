@@ -192,12 +192,13 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
     else {
         _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
     }
+    _sessionReplayURL = [_loggingURL stringByAppendingFormat:@"/mobile/blobs"];
     _loggingURL = [_loggingURL stringByAppendingFormat:@"/mobile/logs"];
+    // since setLoggingURL is always called we can make the session replay url here.
 
     NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
     
     [NRLogger setLogURL:logURL];
-
     [NRLogger setLogIngestKey:self.applicationToken.value];
 }
 

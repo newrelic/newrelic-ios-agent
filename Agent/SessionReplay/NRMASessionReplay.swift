@@ -32,7 +32,10 @@ public class NRMASessionReplay: NSObject {
 
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
 
-    public override init() {
+    private let url: NSString
+
+    public init(url: NSString) {
+        self.url = url
         self.sessionReplayCapture = SessionReplayCapture()
 
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -299,7 +302,8 @@ public class NRMASessionReplay: NSObject {
             return "\(key)=\(value)"
         }.joined(separator: "&")
 
-        var urlComponents = URLComponents(string: "https://staging-mobile-collector.newrelic.com/mobile/blobs")
+        var urlComponents = URLComponents(string:"https://\(self.url as String)")
+
         urlComponents?.queryItems = [
             URLQueryItem(name: "type", value: "SessionReplay"),
             URLQueryItem(name: "app_id", value: String(config.application_id)),
