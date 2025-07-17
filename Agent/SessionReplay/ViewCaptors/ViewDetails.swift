@@ -121,6 +121,11 @@ struct ViewDetails {
             return false
         }
         
+        if let accessibilityId = view.accessibilityIdentifier,
+           agent.isAccessibilityIdentifierUnmasked(accessibilityId) {
+            return false
+        }
+        
         // Check for class name in the unmasking list
         if agent.isClassNameUnmasked(viewName) {
             return false
