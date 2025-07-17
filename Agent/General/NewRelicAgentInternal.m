@@ -179,8 +179,6 @@ static NewRelicAgentInternal* _sharedInstance;
         }
 #endif
 
-       // [self makeSampleSeeds];
-
         self.userId = NULL;
 
         self.appWillTerminate = NO;
@@ -375,7 +373,7 @@ static NewRelicAgentInternal* _sharedInstance;
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
 
         // CHECK FOR MSR FILES FROM PREVIOUSLY CRASHED SESSIONS
-        // [_sessionReplay checkForPreviousSessionFiles];
+         [_sessionReplay checkForPreviousSessionFiles];
     }
 #endif
 }
