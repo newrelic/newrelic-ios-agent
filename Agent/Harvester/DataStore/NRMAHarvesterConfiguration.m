@@ -249,13 +249,13 @@
 
             // Masked
             // New masking rules should be added to the local config
-            [self addMaskedAccessibilityIdentifiers: [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers]];
-            [self addMaskedClassNames:[NRMAAgentConfiguration local_session_replay_maskedClassNames]];
+            self.session_replay_maskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers];
+            self.session_replay_maskedClassNames = [NRMAAgentConfiguration local_session_replay_maskedClassNames];
             
             // Unmasked
             // New unmasking rules replace the local config
-            [self addUnmaskedClassNames: [NRMAAgentConfiguration local_session_replay_unmaskedClassNames]];
-            [self addUnmaskedAccessibilityIdentifiers: [NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers]];
+            self.session_replay_unmaskedClassNames = [NRMAAgentConfiguration local_session_replay_unmaskedClassNames];
+            self.session_replay_unmaskedAccessibilityIdentifiers = [NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers];
             
             self.session_replay_customRules = [NSMutableArray array];
             
