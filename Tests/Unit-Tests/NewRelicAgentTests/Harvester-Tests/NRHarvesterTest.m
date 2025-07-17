@@ -114,10 +114,10 @@
     config.log_reporting_enabled = NO;
     // MSR Section
     config.has_session_replay_config = YES;
-    config.session_replay_enabled = YES;
+    config.session_replay_enabled = NO;
     config.session_replay_sampling_rate = 100.0;
     config.session_replay_error_sampling_rate = 100.0;
-    config.session_replay_mode = SessionReplayMaskingModeCustom;
+    config.session_replay_mode = SessionReplayMaskingModeDefault;
 
     config.session_replay_maskApplicationText = YES;
     config.session_replay_maskUserInputText = YES;

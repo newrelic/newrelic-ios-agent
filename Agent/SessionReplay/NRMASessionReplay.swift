@@ -223,11 +223,6 @@ public class NRMASessionReplay: NSObject {
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getSessionReplayTouches(clear: false)
 
-
-        guard let firstFrame = rawFrames.first else {
-            NRLOG_ERROR("Failed to get first frame when processing replay frame to file")
-            return
-        }
         
         let processedFrames = getSessionReplayFrames(clear: false)
         let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
@@ -336,7 +331,9 @@ public class NRMASessionReplay: NSObject {
             // Save/update URL separately
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
 
-            NRLOG_DEBUG("SessionReplay - Frame \(frameCounter) written to \(frameURL.path)")
+            if frameCounter % 10 == 0 {
+                NRLOG_DEBUG("SessionReplay - Frame \(frameCounter) processed and written to \(frameURL.path)")
+            }
 
             frameCounter += 1
         } catch {

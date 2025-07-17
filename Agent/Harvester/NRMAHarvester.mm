@@ -550,59 +550,7 @@
 {
     NRMAHarvesterConfiguration* config = nil;
     @try {
-        NSError* error = nil;
-
-//        // TODO: Remove CannedConnect response
-//        NSString *cannedConnect = @"{\n"
-//            @"    \"data_token\": [152067033, 225398769],\n"
-//            @"    \"account_id\": \"10816994\",\n"
-//            @"    \"trusted_account_key\": \"1\",\n"
-//            @"    \"entity_guid\": \"MTA4MTY5OTR8TU9CSUxFfEFQUExJQ0FUSU9OfDE1MjA2NzAzMw\",\n"
-//            @"    \"request_headers_map\": {\n"
-//            @"        \"NR-Session\": \"BhV6ew5PoJFPAKUN4g1vT_EAAAEBLCQoAAAAHQECBAkQW9nIAAAAAWhRvlsDAANERVYAAAAJTlJUZXN0QXBw\",\n"
-//            @"        \"NR-AgentConfiguration\": \"AQAAAZcX8L8Y\"\n"
-//            @"    },\n"
-//            @"    \"configuration\": {\n"
-//            @"        \"logs\": {\n"
-//            @"            \"enabled\": true,\n"
-//            @"            \"level\": \"INFO\",\n"
-//            @"            \"sampling_rate\": 50.0\n"
-//            @"        },\n"
-//            @"        \"application_exit_info\": {\n"
-//            @"            \"enabled\": true\n"
-//            @"        },\n"
-//            @"        \"mobile_session_replay\": {\n"
-//            @"            \"enabled\": true,\n"
-//            @"            \"sampling_rate\": 100.0,\n"
-//            @"            \"error_sampling_rate\": 100.0,\n"
-//            @"            \"mode\": \"custom\",\n"
-//            @"            \"maskApplicationText\": false,\n"
-//            @"            \"maskUserInputText\": true,\n"
-//            @"            \"maskAllUserTouches\": true,\n"
-//            @"            \"maskAllImages\": true,\n"
-//            @"            \"customMaskingRules\": [\n"
-//            @"                {\n"
-//            @"                    \"identifier\": \"accessbilityIdentifier\",\n"
-//            @"                    \"name\": [\"social_security\"],\n"
-//            @"                    \"operator\": \"equals\",\n"
-//            @"                    \"type\": \"mask\"\n"
-//            @"                },\n"
-//            @"                {\n"
-//            @"                    \"identifier\": \"tag\",\n"
-//            @"                    \"name\": [\"dateOfBirth\", \"anotherMod\"],\n"
-//            @"                    \"operator\": \"contains\",\n"
-//            @"                    \"type\": \"unmask\"\n"
-//            @"                }\n"
-//            @"            ]\n"
-//            @"        }\n"
-//            @"    }\n"
-//            @"}";
-//
-//        // Use this line for a cannedConnect response.
-//         NSData *dataFromResp = [cannedConnect dataUsingEncoding:NSUTF8StringEncoding];
-
-        // use this line for the real connect response.
-        
+        NSError* error = nil;        
         NSData *dataFromResp = [response.responseBody dataUsingEncoding:NSUTF8StringEncoding];
 
          NRLOG_AGENT_VERBOSE(@"Harvest config: %@", response.responseBody);
