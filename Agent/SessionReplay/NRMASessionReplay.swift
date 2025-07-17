@@ -15,6 +15,7 @@ import OSLog
 @available(iOS 13.0, *)
 @objcMembers
 public class NRMASessionReplay: NSObject {
+    public weak var delegate: NRMASessionReplayDelegate?
 
     private let sessionReplayCapture: SessionReplayCapture
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
@@ -22,7 +23,10 @@ public class NRMASessionReplay: NSObject {
     private let sessionReplayTouchProcessor = TouchEventProcessor()
     private var frameTimer: Timer!
     private var rawFrames = [SessionReplayFrame]()
-
+    
+    public var isFirstChunk = true
+    var uncompressedDataSize: Int = 0
+    
     private var frameCounter: Int = 0
     private let framesDirectory: URL
 
@@ -34,7 +38,8 @@ public class NRMASessionReplay: NSObject {
 
     private let url: NSString
 
-    public init(url: NSString) {
+    public init(url: NSString, delegate: NRMASessionReplayDelegate? = nil) {
+        self.delegate = delegate
         self.url = url
         self.sessionReplayCapture = SessionReplayCapture()
 
@@ -158,6 +163,7 @@ public class NRMASessionReplay: NSObject {
                 DispatchQueue.global(qos: .background).async { [self] in
 
                     self.frameCounter = 0
+                    self.uncompressedDataSize = 0
                     // clear the frames directory
                     do {
                         try FileManager.default.removeItem(at: self.framesDirectory)
@@ -223,10 +229,11 @@ public class NRMASessionReplay: NSObject {
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getSessionReplayTouches(clear: false)
 
-        
-        let processedFrames = getSessionReplayFrames(clear: false)
-        let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
-        let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
+        guard let firstFrame = rawFrames.first else {
+            return
+        }
+        let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000)
+        let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
 
         var container: [AnyRRWebEvent] = []
 
@@ -254,63 +261,18 @@ public class NRMASessionReplay: NSObject {
             return
         }
 
-        let uncompressedDataSize = jsonData.count
+        uncompressedDataSize += jsonData.count
 
     // BEGIN URL GENERATION
         // Generate upload URL that would be used if accumulated frames uploaded directly
-        guard let config = NRMAHarvestController.configuration() else {
-            NRLOG_ERROR("Error accessing harvester configuration information")
-            return
-        }
-
-        guard let cStringAppVersion: UnsafePointer<CChar> = NRMA_getAppVersion(),
-              let appVersion = String(validatingUTF8: cStringAppVersion) else {
-            NRLOG_ERROR("Error accessing app version information")
-            return
-        }
-
-        var attributes: [String: String] = [
-            "entityGuid": config.entity_guid,
-            "isFirstChunk": "false", // Persisted frames are never first chunk
-            "rrweb.version": "^2.0.0-alpha.17",
-            "payload.type": "standard",
-            "hasMeta": "true",
-            "decompressedBytes": String(uncompressedDataSize),
-            "replay.firstTimestamp": String(Int(firstTimestamp)),
-            "replay.lastTimestamp": String(Int(lastTimestamp)),
-            "appVersion": appVersion
-        ]
-
-        // Add session attributes
-        do {
-            if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
-               !sessionAttributes.isEmpty,
-               let data = sessionAttributes.data(using: .utf8),
-               let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                for (key, value) in dictionary {
-                    attributes[key] = value as? String
-                }
-            }
-        } catch {
-            NRLOG_ERROR("Failed to retrieve session attributes: \(error)")
-        }
-
-        let attributesString = attributes.map { key, value in
-            return "\(key)=\(value)"
-        }.joined(separator: "&")
-
-        var urlComponents = URLComponents(string:"https://\(self.url as String)")
-
-        urlComponents?.queryItems = [
-            URLQueryItem(name: "type", value: "SessionReplay"),
-            URLQueryItem(name: "app_id", value: String(config.application_id)),
-            URLQueryItem(name: "protocol_version", value: "0"),
-            URLQueryItem(name: "timestamp", value: String(Int64(Date().timeIntervalSince1970 * 1000))),
-            URLQueryItem(name: "attributes", value: attributesString)
-        ]
-
-        guard let uploadUrl = urlComponents?.url else {
-            NRLOG_ERROR("Failed to generate upload URL for frame persistence")
+        guard let uploadUrl = delegate?.generateUploadURL(
+            uncompressedDataSize: uncompressedDataSize,
+            firstTimestamp: firstTimestamp,
+            lastTimestamp: lastTimestamp,
+            isFirstChunk: isFirstChunk,
+            isGZipped: true
+        ) else {
+            NRLOG_ERROR("Failed to construct upload URL for session replay.")
             return
         }
         // END URL GENERATION
@@ -342,6 +304,17 @@ public class NRMASessionReplay: NSObject {
     }
 }
 
+@available(iOS 13.0, *)
+public protocol NRMASessionReplayDelegate: AnyObject {
+    func generateUploadURL(
+        uncompressedDataSize: Int,
+        firstTimestamp: TimeInterval,
+        lastTimestamp: TimeInterval,
+        isFirstChunk: Bool,
+        isGZipped: Bool
+    ) -> URL?
+}
+
 extension DispatchQueue {
     private static var _onceTracker = [String]()
     
@@ -357,3 +330,4 @@ extension DispatchQueue {
         block()
     }
 }
+
