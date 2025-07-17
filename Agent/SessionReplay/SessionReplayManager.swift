@@ -20,7 +20,6 @@ public class SessionReplayManager: NSObject {
     public var harvestPeriod: Int64 = 60
     public var harvestTimer: Timer?
 
-    public var isFirstChunk = true
     private let url: NSString
 
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
@@ -28,6 +27,8 @@ public class SessionReplayManager: NSObject {
         self.sessionReplay = NRMASessionReplay(url: self.url)
         self.sessionReplayReporter = reporter
         super.init()
+        
+        self.sessionReplay.delegate = self
 
     }
 
@@ -38,7 +39,7 @@ public class SessionReplayManager: NSObject {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
             }
-            isFirstChunk = true
+            self.sessionReplay.isFirstChunk = true
 
             NewRelicAgentInternal.sharedInstance().analyticsController.setNRSessionAttribute(kNRMA_RA_hasReplay, value: NRMABool(bool: true))
 
@@ -116,7 +117,7 @@ public class SessionReplayManager: NSObject {
             return
         }
         sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-        isFirstChunk = false
+        self.sessionReplay.isFirstChunk = false
 
     }
 
@@ -150,7 +151,7 @@ public class SessionReplayManager: NSObject {
             uncompressedDataSize: uncompressedDataSize,
             firstTimestamp: firstTimestamp,
             lastTimestamp: lastTimestamp,
-            isFirstChunk: isFirstChunk,
+            isFirstChunk: self.sessionReplay.isFirstChunk,
             isGZipped: jsonData.isGzipped
         ) else {
             NRLOG_ERROR("Failed to construct upload URL for session replay.")
@@ -203,7 +204,7 @@ public class SessionReplayManager: NSObject {
 
             // BEGIN URL CONSTRUCTION
 
-            guard let urlString = try? String(contentsOf: urlFile).removingPercentEncoding,
+            guard let urlString = try? String(contentsOf: urlFile),
                   let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
                 NRLOG_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
                 return
@@ -273,6 +274,9 @@ public class SessionReplayManager: NSObject {
                 NRLOG_ERROR("Failed to convert JSON string to data for session ID: \(sessionId)")
                 return
             }
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                NRLOG_DEBUG(jsonString)
+            }
 
             // END DATA CONSTRUCTION
 
@@ -296,10 +300,24 @@ public class SessionReplayManager: NSObject {
             NRLOG_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
         }
     }
+    
     private func getSessionReplayDirectory() -> URL? {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             return nil
         }
         return documentsDirectory.appendingPathComponent("SessionReplayFrames")
+    }
+}
+
+@available(iOS 13.0, *)
+extension SessionReplayManager: NRMASessionReplayDelegate {
+    public func generateUploadURL(
+        uncompressedDataSize: Int,
+        firstTimestamp: TimeInterval,
+        lastTimestamp: TimeInterval,
+        isFirstChunk: Bool,
+        isGZipped: Bool
+    ) -> URL? {
+        return self.sessionReplayReporter.uploadURL(uncompressedDataSize: uncompressedDataSize, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp, isFirstChunk: isFirstChunk, isGZipped: isGZipped)
     }
 }
