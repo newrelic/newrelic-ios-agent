@@ -34,6 +34,8 @@ public class NRMASessionReplay: NSObject {
 
     private let url: NSString
 
+    public var isFirstChunk = true
+
     public init(url: NSString) {
         self.url = url
         self.sessionReplayCapture = SessionReplayCapture()
@@ -269,50 +271,19 @@ public class NRMASessionReplay: NSObject {
             return
         }
 
-        var attributes: [String: String] = [
-            "entityGuid": config.entity_guid,
-            "isFirstChunk": "false", // Persisted frames are never first chunk
-            "rrweb.version": "^2.0.0-alpha.17",
-            "payload.type": "standard",
-            "hasMeta": "true",
-            "decompressedBytes": String(uncompressedDataSize),
-            "replay.firstTimestamp": String(Int(firstTimestamp)),
-            "replay.lastTimestamp": String(Int(lastTimestamp)),
-            "appVersion": appVersion
-        ]
-
-        // Add session attributes
-        do {
-            if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
-               !sessionAttributes.isEmpty,
-               let data = sessionAttributes.data(using: .utf8),
-               let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                for (key, value) in dictionary {
-                    attributes[key] = value as? String
-                }
-            }
-        } catch {
-            NRLOG_ERROR("Failed to retrieve session attributes: \(error)")
-        }
-
-        let attributesString = attributes.map { key, value in
-            return "\(key)=\(value)"
-        }.joined(separator: "&")
-
-        var urlComponents = URLComponents(string:"https://\(self.url as String)")
-
-        urlComponents?.queryItems = [
-            URLQueryItem(name: "type", value: "SessionReplay"),
-            URLQueryItem(name: "app_id", value: String(config.application_id)),
-            URLQueryItem(name: "protocol_version", value: "0"),
-            URLQueryItem(name: "timestamp", value: String(Int64(Date().timeIntervalSince1970 * 1000))),
-            URLQueryItem(name: "attributes", value: attributesString)
-        ]
-
-        guard let uploadUrl = urlComponents?.url else {
-            NRLOG_ERROR("Failed to generate upload URL for frame persistence")
+        guard let uploadURL = SessionReplayReporter.uploadURL(
+            baseURL:self.url,
+            uncompressedDataSize: uncompressedDataSize,
+            firstTimestamp: firstTimestamp,
+            lastTimestamp: lastTimestamp,
+            isFirstChunk: isFirstChunk,
+            isGZipped: jsonData.isGzipped
+        ) else {
+            NRLOG_ERROR("Failed to construct upload URL for session replay.")
             return
         }
+
+
         // END URL GENERATION
 
 
@@ -329,7 +300,7 @@ public class NRMASessionReplay: NSObject {
             try jsonData.write(to: frameURL)
 
             // Save/update URL separately
-            try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
+            try uploadURL.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
 
             if frameCounter % 10 == 0 {
                 NRLOG_DEBUG("SessionReplay - Frame \(frameCounter) processed and written to \(frameURL.path)")

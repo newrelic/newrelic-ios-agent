@@ -39,7 +39,7 @@ public class SessionReplayManager: NSObject {
                 return
             }
             isFirstChunk = true
-
+            sessionReplay.isFirstChunk = true
             NewRelicAgentInternal.sharedInstance().analyticsController.setNRSessionAttribute(kNRMA_RA_hasReplay, value: NRMABool(bool: true))
 
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
@@ -117,6 +117,7 @@ public class SessionReplayManager: NSObject {
         }
         sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
         isFirstChunk = false
+        sessionReplay.isFirstChunk = false
 
     }
 
@@ -146,7 +147,8 @@ public class SessionReplayManager: NSObject {
         }
 
         // Construct upload URL
-        guard let url = sessionReplayReporter.uploadURL(
+        guard let url = SessionReplayReporter.uploadURL(
+            baseURL: self.url,
             uncompressedDataSize: uncompressedDataSize,
             firstTimestamp: firstTimestamp,
             lastTimestamp: lastTimestamp,

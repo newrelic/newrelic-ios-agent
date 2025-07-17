@@ -103,7 +103,7 @@ public class SessionReplayReporter: NSObject {
        self.processNextUploadTask()
    }
     
-    func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
+    static func uploadURL(baseURL: NSString, uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
             NRLOG_ERROR("Error accessing harvester configuration information")
             return nil
@@ -143,7 +143,7 @@ public class SessionReplayReporter: NSObject {
             return "\(key)=\(value)"
         }.joined(separator: "&")
 
-        var urlComponents = URLComponents(string:"https://\(self.url as String)")
+        var urlComponents = URLComponents(string:"https://\(baseURL as String)")
 
         urlComponents?.queryItems = [
             URLQueryItem(name: "type", value: "SessionReplay"),
@@ -153,7 +153,7 @@ public class SessionReplayReporter: NSObject {
             URLQueryItem(name: "attributes", value: attributesString)
         ]
 
-        NRLOG_DEBUG(urlComponents?.url?.absoluteString ?? "Error constructing URL for session replay upload")
+        // NRLOG_DEBUG(urlComponents?.url?.absoluteString ?? "Error constructing URL for session replay upload")
         return urlComponents?.url
     }
 }
