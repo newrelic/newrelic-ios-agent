@@ -68,6 +68,9 @@ class ViewController: UIViewController {
         //Button
         helloButton.setTitleColor(.green, for: .normal)
         helloButton.setTitle("Hello", for: .normal)
+        if let helloButtonTitleLabel = helloButton.titleLabel {
+            helloButton.titleLabel?.accessibilityIdentifier = "public"
+        }
         
         //Stack View
         spaceStack.axis = .vertical
