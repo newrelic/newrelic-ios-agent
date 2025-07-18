@@ -157,6 +157,7 @@ public class SessionReplayManager: NSObject {
             NRLOG_ERROR("Failed to construct upload URL for session replay.")
             return nil
         }
+        NRLOG_DEBUG(url.absoluteString ?? "Error constructing URL for session replay upload")
 
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
@@ -209,6 +210,7 @@ public class SessionReplayManager: NSObject {
                 NRLOG_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
                 return
             }
+            NRLOG_DEBUG(url.absoluteString)
 
             // END URL CONSTRUCTION
 
