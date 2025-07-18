@@ -463,8 +463,12 @@
 - (void)addMaskedAccessibilityIdentifiers:(NSArray *)array {
     if (array.count > 0) {
         @synchronized(_session_replay_maskedAccessibilityIdentifiers) {
-            [_session_replay_maskedAccessibilityIdentifiers addObjectsFromArray:array];
-            NRLOG_AGENT_VERBOSE(@"Added masked accessibility identifier: %@", array);
+            for (id item in array) {
+                if (![_session_replay_maskedAccessibilityIdentifiers containsObject:item]) {
+                    [_session_replay_maskedAccessibilityIdentifiers addObject:item];
+                    NRLOG_AGENT_VERBOSE(@"Added masked accessibility identifier: %@", item);
+                }
+            }
         }
     }
 }
@@ -480,9 +484,11 @@
 
 - (void)addMaskedClassNames:(NSArray *)array {
     if (array.count > 0) {
-        @synchronized(_session_replay_maskedClassNames) {
-            [_session_replay_maskedClassNames addObjectsFromArray:array];
-            NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", array);
+        for (id item in array) {
+            if (![_session_replay_maskedClassNames containsObject:item]) {
+                [_session_replay_maskedClassNames addObject:item];
+                NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", array);
+            }
         }
     }
 }
@@ -498,10 +504,11 @@
 
 - (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array {
     if (array.count > 0) {
-
-        @synchronized(_session_replay_unmaskedAccessibilityIdentifiers) {
-            [_session_replay_unmaskedAccessibilityIdentifiers addObjectsFromArray:array];
-            NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", array);
+        for (id item in array) {
+            if (![_session_replay_unmaskedAccessibilityIdentifiers containsObject:item]) {
+                [_session_replay_unmaskedAccessibilityIdentifiers addObject:item];
+                NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", array);
+            }
         }
     }
 }
@@ -516,10 +523,9 @@
 }
 
 - (void)addUnmaskedClassNames:(NSArray *)array {
-
-    if (array.count > 0) {
-        @synchronized(_session_replay_unmaskedClassNames) {
-            [_session_replay_unmaskedClassNames addObjectsFromArray:array];
+    for (id item in array) {
+        if (![_session_replay_unmaskedClassNames containsObject:item]) {
+            [_session_replay_unmaskedClassNames addObject:item];
             NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", array);
         }
     }
