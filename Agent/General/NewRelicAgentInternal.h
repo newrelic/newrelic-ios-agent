@@ -87,6 +87,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayStartNewSession;
 
+- (void) sessionReplayStop;
+
 // SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
 
 // Masked section

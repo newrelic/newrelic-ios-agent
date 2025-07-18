@@ -56,6 +56,7 @@
         connection = [[NRMAHarvesterConnection alloc] init];
         _harvestData = [[NRMAHarvestData alloc] init];
         self.harvestAwareObjects = [[NSMutableArray alloc] init];
+        configuration = [self fetchHarvestConfiguration];
     }
     return self;
 }
@@ -821,7 +822,7 @@
         }
         else {
             NRLOG_AGENT_DEBUG(@"config: SESSION REPLAY DISABLED");
-            
+            [[NewRelicAgentInternal sharedInstance] sessionReplayStop];
         }
     }
     // No replay config at all, don't mess with replay

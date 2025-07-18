@@ -77,6 +77,13 @@ public class NRMASessionReplay: NSObject {
         self.frameTimer.invalidate()
         self.frameTimer = nil
     }
+    
+    public func clearFrames() {
+        rawFramesQueue.async(flags: .barrier) { [self] in
+            rawFrames.removeAll()
+            sessionReplayTouchCapture.resetEvents()
+        }
+    }
 
     func isRunning() -> Bool {
         return self.frameTimer != nil && self.frameTimer!.isValid
@@ -116,7 +123,6 @@ public class NRMASessionReplay: NSObject {
         windowDimensions.width = window.frame.width
         windowDimensions.height = window.frame.height
         swizzleSendEvent()
-        start()
     }
 
     func takeFrame() {
