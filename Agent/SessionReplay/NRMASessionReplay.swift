@@ -76,7 +76,9 @@ public class NRMASessionReplay: NSObject {
 
         self.frameTimer.invalidate()
         self.frameTimer = nil
-        
+    }
+    
+    public func clearFrames() {
         rawFramesQueue.async(flags: .barrier) { [self] in
             rawFrames.removeAll()
             sessionReplayTouchCapture.resetEvents()

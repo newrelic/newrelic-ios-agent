@@ -74,7 +74,11 @@ public class SessionReplayManager: NSObject {
         harvest()
         start()
     }
-
+    
+    @objc public func clearFrames() {
+        sessionReplay.clearFrames()
+    }
+    
     @objc func harvestTick() {
         NRLOG_DEBUG("Session replay harvest timer firing.")
         harvest()

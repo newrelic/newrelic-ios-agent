@@ -636,6 +636,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 - (void) sessionReplayStop {
     if(_sessionReplay != nil){
         [_sessionReplay stop];
+        [_sessionReplay clearFrames];
     }
 }
 
