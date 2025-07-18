@@ -1292,11 +1292,11 @@ void applicationDidEnterBackgroundCF(void) {
 }
 
 - (BOOL) isSessionReplayEnabled {
-    double sampleRate = 100.0;
+    BOOL enabled = false;
     if ( [NRMAHarvestController configuration] != nil) {
-        sampleRate = [NRMAHarvestController configuration].session_replay_enabled;
+        enabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
-    return YES;
+    return enabled;
 }
 
 @end
