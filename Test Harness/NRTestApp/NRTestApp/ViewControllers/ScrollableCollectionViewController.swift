@@ -70,7 +70,7 @@ extension ScrollableCollectionViewController: UICollectionViewDelegate {
 
 // MARK: - Custom Cell
 class ColorCollectionViewCell: UICollectionViewCell {
-    private let label = UILabel()
+    private let label = UnsecureLabel()
     private let blurEffectView: UIVisualEffectView
     
     override init(frame: CGRect) {

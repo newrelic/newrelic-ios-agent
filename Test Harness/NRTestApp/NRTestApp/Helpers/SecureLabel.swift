@@ -10,3 +10,7 @@ import UIKit
 class SecureLabel: UILabel {
 
 }
+
+class UnsecureLabel: UILabel {
+
+}

@@ -19,14 +19,18 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         
         self.title = "Text Masking"
         self.view.backgroundColor = .systemBackground
-        let maskedStack = createSectionStack(title: "Masked Fields", isMasked: true)
-        let unmaskedStack = createSectionStack(title: "Unmasked Fields", isMasked: false)
+        let maskedStack = createSectionStack(title: "Masked Fields", isMasked: true, isCustom: false)
+        let unmaskedStack = createSectionStack(title: "Unmasked Fields", isMasked: false, isCustom: false)
+        
+        let customMaskedStack = createSectionStack(title: "Custom Masked Fields", isMasked: true, isCustom: true)
+        let customUnmaskedStack = createSectionStack(title: "Custom Unmasked Fields", isMasked: false, isCustom: true)
+        
         let parentChildStack = createParentChildSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [maskedStack, unmaskedStack, parentChildStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -53,7 +57,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         ])
     }
 
-    private func createSectionStack(title: String, isMasked: Bool) -> UIStackView {
+    private func createSectionStack(title: String, isMasked: Bool, isCustom: Bool) -> UIStackView {
         let sectionLabel = UILabel()
         sectionLabel.text = title
         sectionLabel.font = .boldSystemFont(ofSize: 18)
@@ -66,8 +70,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         for i in 1...4 {
             let label = UILabel()
             label.text = "\(title) UILabel \(i)"
-            label.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
-
+            if isCustom {
+                label.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                label.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             //             label.accessibilityIdentifier = isMasked ? "nr-masked-label-\(i)" : "nr-unmasked-label-\(i)"
 
             fieldsStack.addArrangedSubview(label)
@@ -78,8 +85,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textField.borderStyle = .roundedRect
             textField.placeholder = "\(title) UITextField \(i)"
             //textField.accessibilityIdentifier = isMasked ? "nr-mask-textfield-\(i)" : "nr-unmask-textfield-\(i)"
-            textField.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
-
+            if isCustom {
+                textField.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                textField.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             fieldsStack.addArrangedSubview(textField)
         }
         // UITextViews
@@ -89,7 +99,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textView.layer.borderWidth = 1
             textView.layer.borderColor = UIColor.systemGray4.cgColor
             textView.layer.cornerRadius = 6
-            textView.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            if isCustom {
+                textView.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                textView.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             // textView.accessibilityIdentifier = isMasked ? "nr-mask-textview-\(i)" : "nr-unmask-textview-\(i)"
 
             textView.heightAnchor.constraint(equalToConstant: 60).isActive = true
