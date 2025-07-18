@@ -30,7 +30,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [maskedStack, customMaskedStack, unmaskedStack, customUnmaskedStack, parentChildStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -85,8 +85,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textField.borderStyle = .roundedRect
             textField.placeholder = "\(title) UITextField \(i)"
             //textField.accessibilityIdentifier = isMasked ? "nr-mask-textfield-\(i)" : "nr-unmask-textfield-\(i)"
-            textField.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
-
+            if isCustom {
+                textField.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                textField.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             fieldsStack.addArrangedSubview(textField)
         }
         // UITextViews
@@ -96,7 +99,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textView.layer.borderWidth = 1
             textView.layer.borderColor = UIColor.systemGray4.cgColor
             textView.layer.cornerRadius = 6
-            textView.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            if isCustom {
+                textView.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                textView.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             // textView.accessibilityIdentifier = isMasked ? "nr-mask-textview-\(i)" : "nr-unmask-textview-\(i)"
 
             textView.heightAnchor.constraint(equalToConstant: 60).isActive = true
