@@ -41,7 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.addSessionReplayMaskedAccessibilityIdentifier("private")
         NewRelic.addSessionReplayUnmaskedAccessibilityIdentifier("public")
         NewRelic.addSessionReplayMaskViewClass("SecureLabel")
-        NewRelic.addSessionReplayUnmaskViewClass("UIButton")
+        NewRelic.addSessionReplayUnmaskViewClass("UnsecureLabel")
 
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
