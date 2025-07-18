@@ -626,7 +626,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 - (void) sessionReplayStartNewSession {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     BOOL isSampled = [self isSessionReplaySampled];
-    NRLOG_AGENT_DEBUG(@"sessionReplayStartNewSession session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], [NRMAHarvestController configuration].session_replay_sampling_rate);
 
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay newSession];
@@ -728,7 +727,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     BOOL isSampled = [self isSessionReplaySampled];
-    NRLOG_AGENT_DEBUG(@"sessionStartInitialization session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], [NRMAHarvestController configuration].session_replay_sampling_rate);
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay start];
     }
@@ -782,7 +780,6 @@ static UIBackgroundTaskIdentifier background_task;
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
 
     BOOL isSampled = [self isSessionReplaySampled];
-    NRLOG_AGENT_DEBUG(@"sessionStartInitialization session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], [NRMAHarvestController configuration].session_replay_sampling_rate);
 
     if (isSampled && [self isSessionReplayEnabled]) {
 
@@ -938,7 +935,6 @@ static UIBackgroundTaskIdentifier background_task;
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
                     BOOL isSampled = [self isSessionReplaySampled];
-                    NRLOG_AGENT_DEBUG(@"applicationDidEnterBackground session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], [NRMAHarvestController configuration].session_replay_sampling_rate);
 
                     if (isSampled && [self isSessionReplayEnabled]) {
                         [self->_sessionReplay harvest];
@@ -1288,15 +1284,20 @@ void applicationDidEnterBackgroundCF(void) {
     if ( [NRMAHarvestController configuration] != nil) {
         sampleRate = [NRMAHarvestController configuration].session_replay_sampling_rate;
     }
+    else {
+        NRLOG_AGENT_DEBUG(@"isSessionReplaySampled using default rate of 100.0");
+    }
+    NRLOG_AGENT_DEBUG(@"isSessionReplaySampled session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplaySampleSeed <= sampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], sampleRate);
+
     return (self.sessionReplaySampleSeed <= sampleRate);
 }
 
 - (BOOL) isSessionReplayEnabled {
-    double sampleRate = 100.0;
+    BOOL enabled = false;
     if ( [NRMAHarvestController configuration] != nil) {
-        sampleRate = [NRMAHarvestController configuration].session_replay_enabled;
+        enabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
-    return YES;
+    return enabled;
 }
 
 @end
