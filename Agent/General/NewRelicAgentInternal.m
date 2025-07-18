@@ -634,6 +634,12 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
 }
 
+- (void) sessionReplayStop {
+    if(_sessionReplay != nil){
+        [_sessionReplay stop];
+    }
+}
+
 static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWillTerm";
 
