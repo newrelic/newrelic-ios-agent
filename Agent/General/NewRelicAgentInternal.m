@@ -1265,8 +1265,6 @@ void applicationDidEnterBackgroundCF(void) {
 }
 
 - (void) makeSampleSeeds {
-    NRLOG_AGENT_DEBUG(@"config: sessionStartInitialization. Make sampling decision");
-
     NRLOG_AGENT_DEBUG(@"config: RESEEDING");
 
     // generates double numbers between 0.000000 and 100.000000
@@ -1293,11 +1291,16 @@ void applicationDidEnterBackgroundCF(void) {
 }
 
 - (BOOL) isSessionReplayEnabled {
-    BOOL enabled = false;
+    BOOL isEnabled = true;
     if ( [NRMAHarvestController configuration] != nil) {
-        enabled = [NRMAHarvestController configuration].session_replay_enabled;
+        isEnabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
-    return enabled;
+    else {
+        NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of false");
+    }
+    NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %d", isEnabled);
+
+    return isEnabled;
 }
 
 @end
