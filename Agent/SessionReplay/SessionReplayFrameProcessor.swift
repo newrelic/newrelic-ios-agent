@@ -60,6 +60,11 @@ class SessionReplayFrameProcessor {
                    // NRLOG_DEBUG("Skipping hidden view \(childThingy.cssDescription())")
                 }
             }
+            if let textViewThingy = viewThingy as? UITextFieldThingy {
+                if let childTextNode = textViewThingy.generateRRWebTextNode(){
+                    childNodes.append(.element(childTextNode)) // Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
+                }
+            }
             
             node.childNodes.append(contentsOf: childNodes)
             cssString.append(contentsOf: viewThingy.cssDescription())
