@@ -68,6 +68,10 @@ struct ViewDetails {
         }
 
         viewName = String(describing: type(of: view))
+        
+        if viewName == "_UITextFieldRoundedRectBackgroundViewNeue" {
+            self.backgroundColor = .clear
+        }
 
         if let identifier = view.sessionReplayIdentifier {
             viewId = identifier
