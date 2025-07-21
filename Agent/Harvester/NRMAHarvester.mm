@@ -674,7 +674,7 @@
 
 
         BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sampleSeed] <= [configuration sampling_rate];
-        NRLOG_AGENT_VERBOSE(@"config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
+        // NRLOG_AGENT_VERBOSE(@"logging config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
         if (isSampled && [NRMAFlags shouldEnableLogReporting]) {
             // Do log upload
             [NRLogger enqueueLogUpload];

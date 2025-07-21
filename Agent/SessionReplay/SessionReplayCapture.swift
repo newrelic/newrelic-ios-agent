@@ -89,23 +89,49 @@ class SessionReplayCapture {
     }
     
     private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
-        switch originalView {
-        case let view as UILabel:
-            return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
-        case let imageView as UIImageView:
-            return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
 
-        case let textField as UITextField:
-            return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
+        if #available(iOS 14.0, *) {
+            switch originalView {
+            case let view as UILabel:
+                return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
+            case let imageView as UIImageView:
+                return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
 
-        case let textView as UITextView:
-            return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
-            
-        case let visualEffectView as UIVisualEffectView:
-            return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
+            case let textField as UITextField:
+                return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
 
-        default:
-            return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            case let textView as UITextView:
+                return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
+
+            case let visualEffectView as UIVisualEffectView:
+                return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
+
+            case let textView as UISearchBar:
+                return UISearchBarThingy(view: textView, viewDetails: ViewDetails(view: textView))
+
+            default:
+                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            }
+        }
+        else {
+            switch originalView {
+            case let view as UILabel:
+                return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
+            case let imageView as UIImageView:
+                return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
+
+            case let textField as UITextField:
+                return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
+
+            case let textView as UITextView:
+                return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
+
+            case let visualEffectView as UIVisualEffectView:
+                return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
+                
+            default:
+                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            }
         }
     }
     

@@ -127,7 +127,7 @@ public class SessionReplayReporter: NSObject {
             attributes["content_encoding"] = "gzip"
         }
         do {
-            if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
+            if let sessionAttributes = NewRelicAgentInternal.sharedInstance()?.analyticsController.sessionAttributeJSONString(),
                !sessionAttributes.isEmpty,
                let data = sessionAttributes.data(using: .utf8),
                let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {

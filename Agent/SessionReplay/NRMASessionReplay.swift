@@ -286,7 +286,7 @@ public class NRMASessionReplay: NSObject {
 
         // Save frame data and URL separately
         let agent = NewRelicAgentInternal.sharedInstance()
-        let sessionId = agent.currentSessionId()
+        let sessionId = agent?.currentSessionId() ?? "unknown_session"
         let frameFolder = self.framesDirectory.appendingPathComponent("\(sessionId)/")
 
         let urlFile = self.framesDirectory.appendingPathComponent("\(sessionId)_upload_url.txt")

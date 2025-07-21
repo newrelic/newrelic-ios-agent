@@ -31,7 +31,10 @@ class UITextViewThingy: SessionReplayViewThingy {
     init(view: UITextView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
-        if let isMasked = viewDetails.isMasked {
+        if view.isSecureTextEntry {
+            self.isMasked = true
+        }
+        else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         } else {
             self.isMasked = NRMAHarvestController.configuration().session_replay_maskUserInputText
