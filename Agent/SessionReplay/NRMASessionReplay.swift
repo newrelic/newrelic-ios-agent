@@ -114,7 +114,7 @@ public class NRMASessionReplay: NSObject {
 
     @MainActor
     @objc func didBecomeActive() {
-        NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
+        //NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
         guard let window = getWindow() else {
             NRLOG_ERROR("No key window found on didBecomeActive")
             return
