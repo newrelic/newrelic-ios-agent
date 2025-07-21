@@ -39,8 +39,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property(atomic, strong) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
-@property(atomic, strong) NSString* userId;
+@property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
+@property(assign) double sessionReplaySampleSeed;
+@property(assign) double sessionReplayErrorSampleSeed;
 
 // Track the total number of successful network requests logged by the agent
 @property (nonatomic, readonly, assign) NSUInteger lifetimeRequestCount;
@@ -71,7 +73,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) applicationWillEnterForeground;
 - (void) sessionStartInitialization;
-+ (NewRelicAgentInternal*) sharedInstance;
++ (NewRelicAgentInternal* _Nullable) sharedInstance;
 
 - (NSString*) currentSessionId;
 
@@ -83,10 +85,35 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
 
+- (void) sessionReplayStartNewSession;
+
+- (void) sessionReplayStop;
+
+// SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
+
+// Masked section
+
+// Masked Accessibility Identifiers
+- (BOOL)isAccessibilityIdentifierMasked:(NSString *)identifier;
+
+// Masked Classes
+- (BOOL)isClassNameMasked:(NSString *)className;
+
+// Unmasked section
+
+// Unmasked Accessibility Identifiers
+- (BOOL)isAccessibilityIdentifierUnmasked:(NSString *)identifier;
+
+// Unmasked Classes
+- (BOOL)isClassNameUnmasked:(NSString *)className;
+
+
+// END SESSION REPLAY SECTION End Methods to manage masked elements for SessionReplay
+
 @end
 
 /*
- Categories that swizzle methods to intercept method calls implement this protocol.  The 
+ Categories that swizzle methods to intercept method calls implement this protocol.  The
  initializeInstrumentation method of NewRelicAgentInternal calls NewRelicInitializeInstrumentation
  on each category.
  */

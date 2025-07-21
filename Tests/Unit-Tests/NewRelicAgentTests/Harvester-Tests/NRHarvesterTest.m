@@ -106,10 +106,36 @@
     config.request_header_map = [NSDictionary dictionary];
     config.encoding_key = @"encoding_key";
     config.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
+
     config.log_reporting_level = @"WARN";
     config.sampling_rate = 100.0;
     config.entity_guid = @"";
+    config.has_log_reporting_config = YES;
+    config.log_reporting_enabled = NO;
+    // MSR Section
+    config.has_session_replay_config = YES;
+    config.session_replay_enabled = NO;
+    config.session_replay_sampling_rate = 100.0;
+    config.session_replay_error_sampling_rate = 100.0;
+    config.session_replay_mode = SessionReplayMaskingModeDefault;
 
+    config.session_replay_maskApplicationText = YES;
+    config.session_replay_maskUserInputText = YES;
+    config.session_replay_maskAllUserTouches = YES;
+    config.session_replay_maskAllImages = YES;
+    
+    config.session_replay_customRules = [NSMutableArray array];;
+
+    // Lists for tracking masked elements in SessionReplay
+    config.session_replay_maskedAccessibilityIdentifiers = [NSMutableArray array];
+    config.session_replay_maskedClassNames = [NSMutableArray array];
+
+    // Lists for tracking unmasked elements in SessionReplay
+    config.session_replay_unmaskedAccessibilityIdentifiers = [NSMutableArray array];
+    config.session_replay_unmaskedClassNames = [NSMutableArray array];
+
+
+    // End MSR Section
     return config;
 }
 
@@ -167,7 +193,8 @@
     NRMAHarvesterConfiguration *secondConfig = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]];
     NSLog(@"secondConfig = @+%@", secondConfig);
 
-    XCTAssertTrue([config isEqual:[[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]]], @"test asDictionary and initWithDictionary is correct");
+    NRMAHarvesterConfiguration *thirdConfig = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[config asDictionary]];
+    XCTAssertTrue([config isEqual:thirdConfig], @"test asDictionary and initWithDictionary is correct");
 }
 
 - (void) testBadHarvestConfiguration {

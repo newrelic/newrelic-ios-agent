@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "NRMADataToken.h"
 #import "NRMATraceConfigurations.h"
+#import "NRConstants.h"
 
 #define kNRMA_LICENSE_KEY @"application_token"
 #define kNRMA_COLLECT_NETWORK_ERRORS @"collect_network_errors"
@@ -31,6 +32,32 @@
 #define kNRMA_TRUSTED_ACCOUNT_KEY @"trusted_account_key"
 #define kNRMA_ENTITY_GUID_KEY @"entity_guid"
 #define kNRMA_CONFIG_KEY @"configuration"
+
+// Session Replay Configuration Keys
+#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"session_replay"
+
+#define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"identifier"
+#define kNRMA_SESSION_REPLAY_CONFIG_NAME_KEY @"name"
+#define kNRMA_SESSION_REPLAY_CONFIG_OPERATOR_KEY @"operator"
+#define kNRMA_SESSION_REPLAY_CONFIG_TYPE_KEY @"type"
+
+#define kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY @"mask"
+#define kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY @"unmask"
+#define kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY @"tag"
+#define kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY @"class"
+
+#define kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY @"enabled"
+#define kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY @"sampling_rate"
+#define kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY @"error_sampling_rate"
+#define kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY @"mode"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY @"mask_application_text"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY @"mask_user_input_text"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY @"mask_all_user_touches"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY @"mask_all_images"
+#define kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY @"custom_masking_rules"
+
+// End Session Replay Configuration Keys
+
 #define kNRMA_LOG_REPORTING_KEY @"logs"
 #define kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY @"sampling_rate"
 #define KNRMA_REQUEST_HEADER_MAP_KEY @"request_headers_map"
@@ -73,11 +100,38 @@
 @property(nonatomic,assign) double    sampling_rate;
 @property(nonatomic,assign) BOOL      has_log_reporting_config;
 @property(nonatomic,assign) NSDictionary* request_header_map;
-@property(nonatomic,assign) double sampleSeed;
+
 
 // CAN BE
 // NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
 @property(nonatomic,assign) NSString* log_reporting_level;
+
+// Session Replay Configuration
+
+@property(nonatomic,assign) BOOL      has_session_replay_config;
+@property(nonatomic,assign) BOOL      session_replay_enabled;
+@property(nonatomic,assign) double    session_replay_sampling_rate;
+@property(nonatomic,assign) double    session_replay_error_sampling_rate;
+@property(nonatomic,assign) NSString*    session_replay_mode;
+
+@property(nonatomic,assign) BOOL      session_replay_maskApplicationText;
+@property(nonatomic,assign) BOOL      session_replay_maskUserInputText;
+@property(nonatomic,assign) BOOL      session_replay_maskAllUserTouches;
+@property(nonatomic,assign) BOOL     session_replay_maskAllImages;
+
+
+// Lists for tracking masked elements in SessionReplay
+@property (nonatomic, strong) NSMutableArray *session_replay_maskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableArray *session_replay_maskedClassNames;
+
+
+// Lists for tracking unmasked elements in SessionReplay
+@property (nonatomic, strong) NSMutableArray *session_replay_unmaskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableArray *session_replay_unmaskedClassNames;
+
+@property (nonatomic, strong) NSMutableArray *session_replay_customRules;
+
+// End Session Replay Configuration
 
 + (id) defaultHarvesterConfiguration;
 - (BOOL) isValid;
@@ -85,6 +139,26 @@
 - (NSUInteger) hash;
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
-- (BOOL) isSampled;
+
+- (void)addMaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addMaskedClassNames:(NSArray *)array;
+- (void)removeMaskedClassName:(NSString *)className;
+- (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addUnmaskedClassNames:(NSArray *)array;
+- (void)removeUnmaskedClassName:(NSString *)className;
 
 @end
+
+
+@interface SessionReplayCustomMaskingRule : NSObject
+@property(nonatomic,assign) NSString*    identifier;
+@property(nonatomic,assign) NSArray*     name;
+@property(nonatomic,assign) NSString*    operatorName;
+@property(nonatomic,assign) NSString*    type;
+- (id) initWithDictionary:(NSDictionary*)dict;
+
+
+@end
+

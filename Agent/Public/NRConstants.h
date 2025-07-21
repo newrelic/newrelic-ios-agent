@@ -64,7 +64,10 @@ enum NRTraceType {
     NRTraceTypeNetwork
 };
 
+typedef NSString * SessionReplayMaskingMode NS_STRING_ENUM;
 
+static SessionReplayMaskingMode const SessionReplayMaskingModeDefault = @"default";
+static SessionReplayMaskingMode const SessionReplayMaskingModeCustom = @"custom";
 
 #define X_APP_LICENSE_KEY_REQUEST_HEADER        @"X-App-License-Key"
 
@@ -169,6 +172,11 @@ typedef NSString NRMetricUnit;
 #define kNRMALoggingMetric kNRAgentHealthPrefix @"/%@/%@/LogReporting"
 #define kNRMALoggingMetricFailedUpload    kNRMALoggingMetric @"/FailedUpload"
 #define kNRMALoggingMetricSuccessfulSize    kNRMALoggingMetric @"/Size/Uncompressed"
+
+// Session Replay
+#define kNRMASessionReplay kNRAgentHealthPrefix @"/%@/%@/SessionReplay"
+#define kNRMASessionReplayMetricFailedUpload    kNRMASessionReplay @"/FailedUpload"
+#define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
 
 #define NRMAHandledRequestKey @"NRMAHandledRequest"
 

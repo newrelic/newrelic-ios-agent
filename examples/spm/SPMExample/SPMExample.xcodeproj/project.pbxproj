@@ -12,10 +12,39 @@
 		2B056E452AB9FF190076A314 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B056E442AB9FF190076A314 /* Assets.xcassets */; };
 		2B056E492AB9FF190076A314 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B056E482AB9FF190076A314 /* Preview Assets.xcassets */; };
 		2B056E502AB9FFDB0076A314 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B056E4F2AB9FFDB0076A314 /* AppDelegate.swift */; };
-		2B056E562ABA08960076A314 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B056E552ABA08960076A314 /* NewRelic */; };
 		2B2253562B4DE74B00EBFFE2 /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2253542B4DE74B00EBFFE2 /* UtilViewModel.swift */; };
 		2B2253572B4DE74B00EBFFE2 /* UtilView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2253552B4DE74B00EBFFE2 /* UtilView.swift */; };
+		347EDF272D838CF800F0B661 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 347EDF262D838CF800F0B661 /* NewRelic.framework */; };
+		347EDF282D838CF800F0B661 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 347EDF262D838CF800F0B661 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		F88073202D81FB0E00C68464 /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073162D81FB0E00C68464 /* ProgressViewsView.swift */; };
+		F88073212D81FB0E00C68464 /* SteppersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F880731C2D81FB0E00C68464 /* SteppersView.swift */; };
+		F88073222D81FB0E00C68464 /* GridsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073132D81FB0E00C68464 /* GridsView.swift */; };
+		F88073232D81FB0E00C68464 /* TextFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F880731D2D81FB0E00C68464 /* TextFieldsView.swift */; };
+		F88073242D81FB0E00C68464 /* PickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073152D81FB0E00C68464 /* PickersView.swift */; };
+		F88073252D81FB0E00C68464 /* SegmentedControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073182D81FB0E00C68464 /* SegmentedControlsView.swift */; };
+		F88073262D81FB0E00C68464 /* DatePickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073122D81FB0E00C68464 /* DatePickersView.swift */; };
+		F88073272D81FB0E00C68464 /* StacksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F880731B2D81FB0E00C68464 /* StacksView.swift */; };
+		F88073282D81FB0E00C68464 /* ShapesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073192D81FB0E00C68464 /* ShapesView.swift */; };
+		F88073292D81FB0E00C68464 /* ButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073112D81FB0E00C68464 /* ButtonsView.swift */; };
+		F880732A2D81FB0E00C68464 /* SlidersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F880731A2D81FB0E00C68464 /* SlidersView.swift */; };
+		F880732B2D81FB0E00C68464 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073142D81FB0E00C68464 /* ListsView.swift */; };
+		F880732C2D81FB0E00C68464 /* TogglesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F880731E2D81FB0E00C68464 /* TogglesView.swift */; };
+		F880732D2D81FB0E00C68464 /* ScrollViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073172D81FB0E00C68464 /* ScrollViewsView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		347EDF292D838CF800F0B661 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				347EDF282D838CF800F0B661 /* NewRelic.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2B056E3D2AB9FF180076A314 /* SPMExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPMExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -27,6 +56,21 @@
 		2B056E4F2AB9FFDB0076A314 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2B2253542B4DE74B00EBFFE2 /* UtilViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UtilViewModel.swift; sourceTree = "<group>"; };
 		2B2253552B4DE74B00EBFFE2 /* UtilView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UtilView.swift; sourceTree = "<group>"; };
+		347EDF262D838CF800F0B661 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F88073112D81FB0E00C68464 /* ButtonsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonsView.swift; sourceTree = "<group>"; };
+		F88073122D81FB0E00C68464 /* DatePickersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickersView.swift; sourceTree = "<group>"; };
+		F88073132D81FB0E00C68464 /* GridsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridsView.swift; sourceTree = "<group>"; };
+		F88073142D81FB0E00C68464 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
+		F88073152D81FB0E00C68464 /* PickersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickersView.swift; sourceTree = "<group>"; };
+		F88073162D81FB0E00C68464 /* ProgressViewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewsView.swift; sourceTree = "<group>"; };
+		F88073172D81FB0E00C68464 /* ScrollViewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewsView.swift; sourceTree = "<group>"; };
+		F88073182D81FB0E00C68464 /* SegmentedControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentedControlsView.swift; sourceTree = "<group>"; };
+		F88073192D81FB0E00C68464 /* ShapesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapesView.swift; sourceTree = "<group>"; };
+		F880731A2D81FB0E00C68464 /* SlidersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlidersView.swift; sourceTree = "<group>"; };
+		F880731B2D81FB0E00C68464 /* StacksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StacksView.swift; sourceTree = "<group>"; };
+		F880731C2D81FB0E00C68464 /* SteppersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppersView.swift; sourceTree = "<group>"; };
+		F880731D2D81FB0E00C68464 /* TextFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldsView.swift; sourceTree = "<group>"; };
+		F880731E2D81FB0E00C68464 /* TogglesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TogglesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -34,7 +78,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2B056E562ABA08960076A314 /* NewRelic in Frameworks */,
+				347EDF272D838CF800F0B661 /* NewRelic.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +90,7 @@
 			children = (
 				2B056E3F2AB9FF180076A314 /* SPMExample */,
 				2B056E3E2AB9FF180076A314 /* Products */,
+				347EDF252D838CF800F0B661 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,11 +105,11 @@
 		2B056E3F2AB9FF180076A314 /* SPMExample */ = {
 			isa = PBXGroup;
 			children = (
+				F880732E2D81FFD500C68464 /* Models */,
+				F880731F2D81FB0E00C68464 /* Views */,
 				2B056E4F2AB9FFDB0076A314 /* AppDelegate.swift */,
 				2B056E402AB9FF180076A314 /* SPMExampleApp.swift */,
 				2B056E422AB9FF180076A314 /* ContentView.swift */,
-				2B2253552B4DE74B00EBFFE2 /* UtilView.swift */,
-				2B2253542B4DE74B00EBFFE2 /* UtilViewModel.swift */,
 				2B056E442AB9FF190076A314 /* Assets.xcassets */,
 				2B056E462AB9FF190076A314 /* SPMExample.entitlements */,
 				2B056E472AB9FF190076A314 /* Preview Content */,
@@ -80,6 +125,44 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		347EDF252D838CF800F0B661 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				347EDF262D838CF800F0B661 /* NewRelic.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F880731F2D81FB0E00C68464 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F88073112D81FB0E00C68464 /* ButtonsView.swift */,
+				F88073122D81FB0E00C68464 /* DatePickersView.swift */,
+				F88073132D81FB0E00C68464 /* GridsView.swift */,
+				F88073142D81FB0E00C68464 /* ListsView.swift */,
+				F88073152D81FB0E00C68464 /* PickersView.swift */,
+				F88073162D81FB0E00C68464 /* ProgressViewsView.swift */,
+				F88073172D81FB0E00C68464 /* ScrollViewsView.swift */,
+				F88073182D81FB0E00C68464 /* SegmentedControlsView.swift */,
+				F88073192D81FB0E00C68464 /* ShapesView.swift */,
+				F880731A2D81FB0E00C68464 /* SlidersView.swift */,
+				F880731B2D81FB0E00C68464 /* StacksView.swift */,
+				F880731C2D81FB0E00C68464 /* SteppersView.swift */,
+				F880731D2D81FB0E00C68464 /* TextFieldsView.swift */,
+				F880731E2D81FB0E00C68464 /* TogglesView.swift */,
+				2B2253552B4DE74B00EBFFE2 /* UtilView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F880732E2D81FFD500C68464 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				2B2253542B4DE74B00EBFFE2 /* UtilViewModel.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -91,6 +174,7 @@
 				2B056E3A2AB9FF180076A314 /* Frameworks */,
 				2B056E3B2AB9FF180076A314 /* Resources */,
 				2B056E5C2ABA0DA90076A314 /* Run New Relic dSYM Upload Tool */,
+				347EDF292D838CF800F0B661 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -98,7 +182,6 @@
 			);
 			name = SPMExample;
 			packageProductDependencies = (
-				2B056E552ABA08960076A314 /* NewRelic */,
 			);
 			productName = SPMExample;
 			productReference = 2B056E3D2AB9FF180076A314 /* SPMExample.app */;
@@ -129,7 +212,6 @@
 			);
 			mainGroup = 2B056E342AB9FF180076A314;
 			packageReferences = (
-				2B056E542ABA08960076A314 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */,
 			);
 			productRefGroup = 2B056E3E2AB9FF180076A314 /* Products */;
 			projectDirPath = "";
@@ -182,6 +264,20 @@
 				2B2253562B4DE74B00EBFFE2 /* UtilViewModel.swift in Sources */,
 				2B056E502AB9FFDB0076A314 /* AppDelegate.swift in Sources */,
 				2B056E432AB9FF180076A314 /* ContentView.swift in Sources */,
+				F88073202D81FB0E00C68464 /* ProgressViewsView.swift in Sources */,
+				F88073212D81FB0E00C68464 /* SteppersView.swift in Sources */,
+				F88073222D81FB0E00C68464 /* GridsView.swift in Sources */,
+				F88073232D81FB0E00C68464 /* TextFieldsView.swift in Sources */,
+				F88073242D81FB0E00C68464 /* PickersView.swift in Sources */,
+				F88073252D81FB0E00C68464 /* SegmentedControlsView.swift in Sources */,
+				F88073262D81FB0E00C68464 /* DatePickersView.swift in Sources */,
+				F88073272D81FB0E00C68464 /* StacksView.swift in Sources */,
+				F88073282D81FB0E00C68464 /* ShapesView.swift in Sources */,
+				F88073292D81FB0E00C68464 /* ButtonsView.swift in Sources */,
+				F880732A2D81FB0E00C68464 /* SlidersView.swift in Sources */,
+				F880732B2D81FB0E00C68464 /* ListsView.swift in Sources */,
+				F880732C2D81FB0E00C68464 /* TogglesView.swift in Sources */,
+				F880732D2D81FB0E00C68464 /* ScrollViewsView.swift in Sources */,
 				2B056E412AB9FF180076A314 /* SPMExampleApp.swift in Sources */,
 				2B2253572B4DE74B00EBFFE2 /* UtilView.swift in Sources */,
 			);
@@ -406,25 +502,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		2B056E542ABA08960076A314 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.4.12;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		2B056E552ABA08960076A314 /* NewRelic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2B056E542ABA08960076A314 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */;
-			productName = NewRelic;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2B056E352AB9FF180076A314 /* Project object */;
 }

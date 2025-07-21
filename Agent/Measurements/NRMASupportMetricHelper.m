@@ -120,6 +120,25 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 
 // End Logging
 
+// Session Replay
++ (void) enqueueSessionReplaySuccessMetric:(long)size {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMASessionReplayMetricSuccessfulSize, nativePlatform, platform]
+                                                    value:[NSNumber numberWithLongLong:size]
+                                                    scope:@""
+                                          produceUnscoped:YES
+                                          additionalValue:nil]];
+}
+
++ (void) enqueueSessionReplayFailedMetric {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricFailedUpload, nativePlatform, platform]
+                                                    value:@1
+                                                    scope:nil]];
+}
+
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {

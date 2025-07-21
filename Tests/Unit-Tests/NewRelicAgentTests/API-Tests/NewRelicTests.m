@@ -8,7 +8,6 @@
 
 #import <XCTest/XCTest.h>
 #import "NRMATraceController.h"
-#import "NewRelic.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMAFLags.h"
 #import "NRMAAgentConfiguration.h"
@@ -473,7 +472,7 @@ static NewRelicAgentInternal* _sharedInstance;
 -(void) testAddHTTPHeaderTrackingDefault {
     [self.mockNewRelicInternals stopMocking];
     XCTAssertNil([NewRelicAgentInternal sharedInstance]);
-//    [NewRelic httpHeadersAddedForTracking]
+//    [NewRelicAgenthttpHeadersAddedForTracking]
     XCTAssertNotNil([NewRelic httpHeadersAddedForTracking]);
     XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-NAME"]);
     XCTAssertTrue([[NewRelic httpHeadersAddedForTracking] containsObject:@"X-APOLLO-OPERATION-TYPE"]);
