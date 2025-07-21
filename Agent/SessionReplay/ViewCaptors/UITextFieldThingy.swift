@@ -106,7 +106,13 @@ class UITextFieldThingy: SessionReplayViewThingy {
         
         return ElementNodeData(id: IDGenerator.shared.getId(),
                                         tagName: .span,
-                                        attributes: ["style": "\(generateBaseCSSStyle())white-space: pre-wrap;"],
+                                        attributes: ["style":   """
+                                                                \(generateBaseCSSStyle())\
+                                                                white-space: pre-wrap;\
+                                                                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+                                                                color: \(textColor.toHexString(includingAlpha: true));
+                                                                """
+                                                    ],
                                         childNodes: [textNode])
     }
     
