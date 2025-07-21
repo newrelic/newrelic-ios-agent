@@ -331,7 +331,6 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         passwordField.borderStyle = .roundedRect
         passwordField.placeholder = "Password (masked)"
         passwordField.isSecureTextEntry = true
-        passwordField.accessibilityIdentifier = "nr-mask"
         fieldsStack.addArrangedSubview(passwordField)
 
         // Credit Card Number TextField
@@ -348,7 +347,6 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         cvvField.placeholder = "CVV (masked)"
         cvvField.keyboardType = .numberPad
         cvvField.isSecureTextEntry = true
-        cvvField.accessibilityIdentifier = "nr-mask"
         fieldsStack.addArrangedSubview(cvvField)
 
         let sectionStack = UIStackView(arrangedSubviews: [sectionLabel, fieldsStack])
