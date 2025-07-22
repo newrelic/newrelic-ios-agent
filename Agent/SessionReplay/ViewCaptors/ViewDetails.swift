@@ -85,7 +85,7 @@ struct ViewDetails {
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
     private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
-        var agent = NewRelicAgentInternal.sharedInstance()
+        let agent = NewRelicAgentInternal.sharedInstance()
         guard let agent = agent else { return true }
 
         // If masking is in default mode we want to use the default value which is determined by the global for it's type.
@@ -94,7 +94,8 @@ struct ViewDetails {
         }
         
         if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId == "nr-mask" || accessibilityId.contains(".nr-mask") {
+           accessibilityId.count > 0,
+           accessibilityId == "nr-mask" || accessibilityId.hasSuffix(".nr-mask") {
             //This view is explicitly marked to not be masked.
             return true
         }
@@ -102,7 +103,7 @@ struct ViewDetails {
         // Handle decision for masking based on accessibility identifier in this section.
         // Check for accessibility identifier in the masking list
         if let accessibilityId = view.accessibilityIdentifier,
-        agent.isAccessibilityIdentifierMasked(accessibilityId) {
+           agent.isAccessibilityIdentifierMasked(accessibilityId) {
             return true
         }
         
@@ -119,7 +120,8 @@ struct ViewDetails {
         }
 
         if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId == "nr-unmask" || accessibilityId.contains(".nr-unmask") {
+           accessibilityId.count > 0,
+           accessibilityId == "nr-unmask" || accessibilityId.hasSuffix(".nr-unmask") {
             return false
         }
         
