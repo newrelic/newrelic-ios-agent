@@ -8,6 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
+		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
+		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
+		2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
+		2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
+		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
+		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -49,6 +55,10 @@
 		F802EED22BE0240A00AB956F /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F802EEAA2BE0218700AB956F /* NewRelic.framework */; };
 		F802EED32BE0240A00AB956F /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F802EEAA2BE0218700AB956F /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F802EED52BE12E5700AB956F /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428472971C661002ABA01 /* UtilViewModel.swift */; };
+		F81061F82E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */; };
+		F81061F92E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */; };
+		F81062182E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */; };
+		F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */; };
 		F824A30229A811E8000886A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F824A30129A811E8000886A6 /* Assets.xcassets */; };
 		F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */; };
 		F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */; };
@@ -73,6 +83,9 @@
 		F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9C2970B3E0003EC291 /* ApodURL.swift */; };
 		F848CDE42AA270E80082052F /* NRTestApp_tvOS_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */; };
 		F848CDE62AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */; };
+		F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
+		F84EEFB62E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
+		F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
 		F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */; };
 		F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428472971C661002ABA01 /* UtilViewModel.swift */; };
 		F864284C2971DFA5002ABA01 /* triggerException.m in Sources */ = {isa = PBXBuildFile; fileRef = F864284B2971DFA5002ABA01 /* triggerException.m */; };
@@ -248,6 +261,8 @@
 /* Begin PBXFileReference section */
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
+		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
+		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
@@ -281,6 +296,8 @@
 		F802EE992BE0218700AB956F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F802EE9C2BE0218700AB956F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F802EEAD2BE021E600AB956F /* WatchAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WatchAppDelegate.swift; sourceTree = "<group>"; };
+		F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableCollectionViewController.swift; sourceTree = "<group>"; };
+		F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteScrollViewController.swift; sourceTree = "<group>"; };
 		F824A30129A811E8000886A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
 		F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageFullScreen.swift; sourceTree = "<group>"; };
@@ -310,6 +327,7 @@
 		F848CDE12AA270E80082052F /* NRTestApp(tvOS)Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp(tvOS)Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_Tests.swift; sourceTree = "<group>"; };
 		F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_TestsLaunchTests.swift; sourceTree = "<group>"; };
+		F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLabel.swift; sourceTree = "<group>"; };
 		F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesViewController.swift; sourceTree = "<group>"; };
 		F86428472971C661002ABA01 /* UtilViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilViewModel.swift; sourceTree = "<group>"; };
 		F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NRTestApp-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -545,8 +563,11 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */,
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
+				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
+				F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
 			);
@@ -556,6 +577,7 @@
 		F8302B8F297078F2003EC291 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */,
 				F8302B8D297078EA003EC291 /* ApodViewModel.swift */,
 				F86428472971C661002ABA01 /* UtilViewModel.swift */,
 				F86428502971EE89002ABA01 /* Services */,
@@ -595,6 +617,7 @@
 			children = (
 				F8302B972970ADA7003EC291 /* Extensions */,
 				F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */,
+				F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */,
 				F8302B95297093FF003EC291 /* Variable.swift */,
 				F8302B9C2970B3E0003EC291 /* ApodURL.swift */,
 				F864286229775023002ABA01 /* plistHelper.swift */,
@@ -1045,12 +1068,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F802EED52BE12E5700AB956F /* UtilViewModel.swift in Sources */,
 				F802EED12BE023E000AB956F /* triggerException.m in Sources */,
+				F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F802EECD2BE023CB00AB956F /* plistHelper.swift in Sources */,
 				F802EECF2BE023D200AB956F /* Variable.swift in Sources */,
 				F802EED02BE023D700AB956F /* Date.swift in Sources */,
 				F802EEAE2BE021E600AB956F /* WatchAppDelegate.swift in Sources */,
+				2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				F802EE982BE0218600AB956F /* ContentView.swift in Sources */,
 				F802EECE2BE023CE00AB956F /* ApodURL.swift in Sources */,
 				F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */,
@@ -1072,13 +1098,18 @@
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
+				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
+				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
+				F81061F82E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
+				2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
+				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
@@ -1108,7 +1139,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
+				2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,
+				F84EEFB62E21B19C000E2A5A /* SecureLabel.swift in Sources */,
+				F81062182E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
+				F81061F92E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				F86429312979CDFA002ABA01 /* Date.swift in Sources */,
 				F86429322979CDFA002ABA01 /* Variable.swift in Sources */,
 				F86429332979CDFA002ABA01 /* ApodURL.swift in Sources */,

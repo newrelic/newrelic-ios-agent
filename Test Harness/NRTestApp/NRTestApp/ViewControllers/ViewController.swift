@@ -15,14 +15,16 @@ class ViewController: UIViewController {
     var options =  [UtilOption]()
     
     var spaceImageView = UIImageView()
-    var spaceLabel = UILabel()
+    var spaceLabel = SecureLabel()
+    var privateHelloLabel = UnsecureLabel()
     var spaceStack = UIStackView()
+    var helloButton = UIButton()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 #if os(iOS)
-        self.view.backgroundColor = .systemBackground
+        self.view.backgroundColor = .orange
 #endif
         setupSpaceStack()
         setupButtonsTable()
@@ -60,9 +62,24 @@ class ViewController: UIViewController {
         
         //Text Label
         spaceLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
-        spaceLabel.text  = ""
+        spaceLabel.text  = "Hello, World"
         spaceLabel.textAlignment = .center
         spaceLabel.numberOfLines = 0
+        spaceLabel.accessibilityIdentifier = "public" // Because this is a SecureLabel this should stay masked.
+        
+        //Text Label
+        privateHelloLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
+        privateHelloLabel.text  = "Secret Hello, World!"
+        privateHelloLabel.textAlignment = .center
+        privateHelloLabel.numberOfLines = 0
+        privateHelloLabel.accessibilityIdentifier = "private" // Even though this is a UnsecureLabel this tag should mark it masked.
+        
+        //Button
+        helloButton.setTitleColor(.green, for: .normal)
+        helloButton.setTitle("Hello", for: .normal)
+        if let helloButtonTitleLabel = helloButton.titleLabel {
+            helloButtonTitleLabel.accessibilityIdentifier = "public"
+        }
         
         //Stack View
         spaceStack.axis = .vertical
@@ -70,8 +87,10 @@ class ViewController: UIViewController {
         spaceStack.alignment = .center
         spaceStack.spacing = 16.0
 
+        spaceStack.addArrangedSubview(privateHelloLabel)
         spaceStack.addArrangedSubview(spaceImageView)
         spaceStack.addArrangedSubview(spaceLabel)
+        spaceStack.addArrangedSubview(helloButton)
         spaceStack.translatesAutoresizingMaskIntoConstraints = false
         
         self.view.addSubview(spaceStack)
@@ -111,6 +130,13 @@ class ViewController: UIViewController {
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
         options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
+
+        options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
+
+        options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
+       
+        options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
@@ -150,6 +176,18 @@ class ViewController: UIViewController {
          }
      }
 
+    func textMaskingAction() {
+        coordinator?.showTextMaskingController()
+    }
+
+    func collectionViewAction() {
+        coordinator?.showCollectionController()
+    }
+    
+    func infiniteViewAction() {
+        coordinator?.showInfiniteScrollController()
+    }
+    
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)

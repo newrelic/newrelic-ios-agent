@@ -129,7 +129,7 @@ static NSString *deviceId = nil;
 //    [NewRelicAgentInternal engageTestMode];
 //    [NewRelicAgentInternal setApplicationName:@"UnitTests" andVersion:@"1.0" andBundleId:TEST_BUNDLE_ID];
 //
-//    [NewRelicAgent startWithApplicationToken:TEST_APPLICATION_TOKEN andCollectorAddress:TEST_COLLECTOR_HOST withSSL:NO];
+//    [NewRelic startWithApplicationToken:TEST_APPLICATION_TOKEN andCollectorAddress:TEST_COLLECTOR_HOST withSSL:NO];
 //    
 //    [[NewRelicAgentInternal sharedInstance] resetMetrics];
 //

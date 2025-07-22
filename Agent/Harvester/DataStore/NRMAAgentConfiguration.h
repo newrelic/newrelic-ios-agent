@@ -32,6 +32,8 @@
 @property(readonly,strong) NSString* crashCollectorHost;
 @property(readonly,strong) NSString* loggingHost;
 @property(readonly,strong) NSString* loggingURL;
+@property(readonly,strong) NSString* sessionReplayURL;
+
 @property(readonly,strong) NRMAAppToken* applicationToken;
 @property(atomic,strong) NSString* sessionIdentifier;
 @property(nonatomic,readonly) BOOL      useSSL;
@@ -53,4 +55,14 @@
 
 + (void) setMaxOfflineStorageSize:(NSUInteger)megabytes;
 + (NSUInteger) getMaxOfflineStorageSize;
+
++ (NSMutableArray*) local_session_replay_maskedClassNames;
++ (NSMutableArray*) local_session_replay_unmaskedClassNames;
++ (NSMutableArray*) local_session_replay_maskedAccessibilityIdentifiers;
++ (NSMutableArray*) local_session_replay_unmaskedAccessibilityIdentifiers;
+
++ (BOOL)addLocalMaskedAccessibilityIdentifier:(NSString *)identifier;
++ (BOOL)addLocalUnmaskedAccessibilityIdentifier:(NSString *)identifier;
++ (BOOL)addLocalMaskedClassName:(NSString *)className;
++ (BOOL)addLocalUnmaskedClassName:(NSString *)className;
 @end

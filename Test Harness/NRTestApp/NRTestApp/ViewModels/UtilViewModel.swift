@@ -22,7 +22,7 @@ class UtilViewModel {
     var goodAttribute = false
     var badAttribute = false
     var attributes = ""
-    var events = 0
+    var events = 0 
 
     var uniqueInteractionTraceIdentifier: String? =  nil
 
@@ -195,7 +195,7 @@ class UtilViewModel {
         for i in 0...100 {
             //triggerException.testNSLog(Int32(i))
             print("TEST swift!!!!! ", i, "\n")
-            if #available(iOS 14.0, *) {
+            if #available(iOS 14.0, tvOS 14.0, *) {
                 os_log("TEST OSLog!!!!!!! \(i)")
                 let logger = Logger()
                 logger.warning("TEST Logger!!!!! \(i)")

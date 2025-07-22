@@ -1,0 +1,13 @@
+//
+//  module.modulemap
+//  Agent_iOS
+//
+//  Created by Steve Malsam on 3/28/25.
+//  Copyright © 2025 New Relic. All rights reserved.
+//
+
+module NewRelicPrivate {
+    header "../APrivateHeader.h"
+
+    export *
+}
