@@ -94,7 +94,7 @@ struct ViewDetails {
         }
         
         if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId == "nr-mask" {
+           accessibilityId == "nr-mask" || accessibilityId.contains(".nr-mask") {
             //This view is explicitly marked to not be masked.
             return true
         }
@@ -118,7 +118,8 @@ struct ViewDetails {
             return true
         }
 
-        if let accessibilityId = view.accessibilityIdentifier, accessibilityId == "nr-unmask" {
+        if let accessibilityId = view.accessibilityIdentifier,
+           accessibilityId == "nr-unmask" || accessibilityId.contains(".nr-unmask") {
             return false
         }
         
