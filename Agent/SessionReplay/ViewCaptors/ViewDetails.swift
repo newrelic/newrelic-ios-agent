@@ -85,8 +85,7 @@ struct ViewDetails {
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
     private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
-        var agent = NewRelicAgentInternal.sharedInstance()
-        guard let agent = agent else { return true }
+        guard let agent = NewRelicAgentInternal.sharedInstance() else { return true }
 
         // If masking is in default mode we want to use the default value which is determined by the global for it's type.
         if NRMAHarvestController.configuration().session_replay_mode as SessionReplayMaskingMode == SessionReplayMaskingMode.default {
@@ -94,7 +93,8 @@ struct ViewDetails {
         }
         
         if let accessibilityId = view.accessibilityIdentifier,
-           accessibilityId == "nr-mask" {
+           accessibilityId.count > 0,
+           accessibilityId == "nr-mask" || accessibilityId.hasSuffix(".nr-mask") {
             //This view is explicitly marked to not be masked.
             return true
         }
@@ -102,7 +102,7 @@ struct ViewDetails {
         // Handle decision for masking based on accessibility identifier in this section.
         // Check for accessibility identifier in the masking list
         if let accessibilityId = view.accessibilityIdentifier,
-        agent.isAccessibilityIdentifierMasked(accessibilityId) {
+           agent.isAccessibilityIdentifierMasked(accessibilityId) {
             return true
         }
         
@@ -118,7 +118,9 @@ struct ViewDetails {
             return true
         }
 
-        if let accessibilityId = view.accessibilityIdentifier, accessibilityId == "nr-unmask" {
+        if let accessibilityId = view.accessibilityIdentifier,
+           accessibilityId.count > 0,
+           accessibilityId == "nr-unmask" || accessibilityId.hasSuffix(".nr-unmask") {
             return false
         }
         
