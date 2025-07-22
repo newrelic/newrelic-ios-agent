@@ -784,7 +784,7 @@ static UIBackgroundTaskIdentifier background_task;
 
     BOOL isSampled = [self isSessionReplaySampled];
 
-    if (isSampled && [self isSessionReplayEnabled]) {
+    if ((isSampled && [self isSessionReplayEnabled]) || _sessionReplay.isRunning) {
 
         [_sessionReplay stop];
     }

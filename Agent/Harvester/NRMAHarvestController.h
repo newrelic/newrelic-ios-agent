@@ -20,7 +20,7 @@
 
 @interface NRMAHarvestController : NSObject
 
-+ (NRMAHarvestController*) harvestController;
++ (NRMAHarvestController* _Nullable) harvestController;
 
 + (void) setPeriod:(long long)period;
 

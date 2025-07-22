@@ -64,7 +64,7 @@ public class SessionReplayManager: NSObject {
         NewRelicAgentInternal.sharedInstance()?.analyticsController.removeSessionAttributeNamed(kNRMA_RA_hasReplay)
     }
 
-    func isRunning() -> Bool {
+    @objc public func isRunning() -> Bool {
         return self.harvestTimer != nil && self.harvestTimer!.isValid
     }
 
