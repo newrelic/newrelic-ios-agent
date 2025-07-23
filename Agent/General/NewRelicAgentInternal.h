@@ -85,9 +85,15 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
 
+- (void) sessionReplayStart;
+
+- (void) sessionReplayDisabled;
+
 - (void) sessionReplayStartNewSession;
 
-- (void) sessionReplayStop;
+- (BOOL) isSessionReplaySampled;
+
+- (BOOL) isSessionReplayEnabled;
 
 // SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
 

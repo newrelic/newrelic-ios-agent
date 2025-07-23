@@ -818,16 +818,21 @@
         if (configuration.session_replay_enabled) {
             
             NRLOG_AGENT_DEBUG(@"config: Has SESSION REPLAY ENABLED");
+            BOOL isSampled = [[NewRelicAgentInternal sharedInstance] isSessionReplaySampled];
 
+            if (isSampled) {
+                [[NewRelicAgentInternal sharedInstance] sessionReplayStart];
+            }
         }
         else {
             NRLOG_AGENT_DEBUG(@"config: SESSION REPLAY DISABLED");
-            [[NewRelicAgentInternal sharedInstance] sessionReplayStop];
+            [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
         }
     }
     // No replay config at all, don't mess with replay
     else {
         NRLOG_AGENT_DEBUG(@"no config: No SESSION REPLAY Config Detected.");
+        [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
     }
 
 }

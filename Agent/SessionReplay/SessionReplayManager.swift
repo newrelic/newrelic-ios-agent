@@ -18,9 +18,12 @@ public class SessionReplayManager: NSObject {
     private let sessionReplayReporter: SessionReplayReporter
 
     public var harvestPeriod: Int64 = 60
-    public var harvestTimer: Timer?
+    private var harvestseconds = 0
+    public var sessionReplayTimer: Timer?
 
     private let url: NSString
+    
+    private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue", attributes: .concurrent)
 
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
         self.url = url
@@ -33,39 +36,48 @@ public class SessionReplayManager: NSObject {
     }
 
     public func start() {
-        DispatchQueue.global(qos: .background).async { [self] in
-            sessionReplay.start()
+        sessionReplayQueue.async { [self] in
+            guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
+            if agent.isSessionReplayEnabled() == false {
+                return
+            }
             guard !isRunning() else {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
             }
+            sessionReplay.start()
+            self.harvestseconds = 0
+
             self.sessionReplay.isFirstChunk = true
 
             NewRelicAgentInternal.sharedInstance()?.analyticsController.setNRSessionAttribute(kNRMA_RA_hasReplay, value: NRMABool(bool: true))
 
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
-            self.harvestTimer = Timer(timeInterval: TimeInterval(self.harvestPeriod), target: self, selector: #selector(self.harvestTick), userInfo: nil, repeats: true)
+            self.sessionReplayTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(self.sessionReplayTick), userInfo: nil, repeats: true)
 
-            RunLoop.current.add(self.harvestTimer!, forMode: .default)
+            RunLoop.current.add(self.sessionReplayTimer!, forMode: .default)
             RunLoop.current.run()
         }
     }
 
     public func stop() {
-        sessionReplay.stop()
-        guard isRunning() else {
-            NRLOG_WARNING("Session replay harvest timer attempting to stop when not running.")
-            return
+        sessionReplayQueue.async { [self] in
+            guard isRunning() else {
+                NRLOG_WARNING("Session replay harvest timer attempting to stop when not running.")
+                return
+            }
+            
+            sessionReplay.stop()
+            
+            sessionReplayTimer?.invalidate()
+            sessionReplayTimer = nil
+            
+            NewRelicAgentInternal.sharedInstance()?.analyticsController.removeSessionAttributeNamed(kNRMA_RA_hasReplay)
         }
-
-        harvestTimer?.invalidate()
-        harvestTimer = nil
-
-        NewRelicAgentInternal.sharedInstance()?.analyticsController.removeSessionAttributeNamed(kNRMA_RA_hasReplay)
     }
 
     @objc public func isRunning() -> Bool {
-        return self.harvestTimer != nil && self.harvestTimer!.isValid
+        return self.sessionReplayTimer != nil && self.sessionReplayTimer!.isValid
     }
 
     // This function is to handle a session change created by a change in userId
@@ -75,57 +87,66 @@ public class SessionReplayManager: NSObject {
         start()
     }
     
-    @objc public func clearFrames() {
-        sessionReplay.clearFrames()
+    @objc public func clearAllData() {
+        sessionReplayQueue.sync { [self] in
+            sessionReplay.clearAllData()
+        }
     }
     
-    @objc func harvestTick() {
-        NRLOG_DEBUG("Session replay harvest timer firing.")
-        harvest()
+    @objc func sessionReplayTick() {
+        harvestseconds += 1
+        sessionReplay.takeFrame()
+        
+        if harvestseconds == harvestPeriod {
+            harvest()
+        }
     }
 
     @objc public func harvest() {
-        // Fetch processed frames and touches
-        let processedFrames = sessionReplay.getSessionReplayFrames()
-        let processedTouches = sessionReplay.getSessionReplayTouches()
-
-        // Early exit if nothing to send
-        if processedFrames.isEmpty && processedTouches.isEmpty {
-            NRLOG_DEBUG("No session replay frames or touches to harvest.")
-            return
+        sessionReplayQueue.sync { [self] in
+            
+            // Fetch processed frames and touches
+            let processedFrames = sessionReplay.getSessionReplayFrames()
+            let processedTouches = sessionReplay.getSessionReplayTouches()
+            
+            // Early exit if nothing to send
+            if processedFrames.isEmpty && processedTouches.isEmpty {
+                NRLOG_DEBUG("No session replay frames or touches to harvest.")
+                return
+            }
+            
+            let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
+            let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
+            
+            // Create meta event data
+            let metaEventData = RRWebMetaData(
+                href: "http://newrelic.com",
+                width: Int(sessionReplay.windowDimensions.width),
+                height: Int(sessionReplay.windowDimensions.height)
+            )
+            let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
+            
+            // Initialize container with meta event
+            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
+            
+            // Process frames and touches
+            container.append(contentsOf: (processedFrames).map {
+                AnyRRWebEvent($0)
+            })
+            container.append(contentsOf: (processedTouches).map {
+                AnyRRWebEvent($0)
+            })
+            
+            guard let upload = createReplayUpload(container: container, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp) else {
+                return
+            }
+            sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+            self.sessionReplay.isFirstChunk = false
+            harvestseconds = 0
         }
-
-        let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
-        let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
-
-        // Create meta event data
-        let metaEventData = RRWebMetaData(
-            href: "http://newrelic.com",
-            width: Int(sessionReplay.windowDimensions.width),
-            height: Int(sessionReplay.windowDimensions.height)
-        )
-        let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
-
-        // Initialize container with meta event
-        var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
-
-        // Process frames and touches
-        container.append(contentsOf: (processedFrames).map {
-            AnyRRWebEvent($0)
-        })
-        container.append(contentsOf: (processedTouches).map {
-            AnyRRWebEvent($0)
-        })
-
-        guard let upload = createReplayUpload(container: container, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp) else {
-            return
-        }
-        sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-        self.sessionReplay.isFirstChunk = false
-
     }
 
-    func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
+    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
 
@@ -161,7 +182,7 @@ public class SessionReplayManager: NSObject {
             NRLOG_ERROR("Failed to construct upload URL for session replay.")
             return nil
         }
-        NRLOG_DEBUG(url.absoluteString ?? "Error constructing URL for session replay upload")
+        NRLOG_DEBUG(url.absoluteString)
 
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
@@ -169,36 +190,37 @@ public class SessionReplayManager: NSObject {
     // REPLAY PERSISTENCE
 
     public func checkForPreviousSessionFiles() {
-        // CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS
-        NRLOG_DEBUG("CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS")
-
-        guard let sessionReplayDirectory = getSessionReplayDirectory() else {
-            NRLOG_DEBUG("Could not access session replay directory")
-            return
-        }
-
-        do {
-            let fileURLs = try FileManager.default.contentsOfDirectory(at: sessionReplayDirectory, includingPropertiesForKeys: nil)
-
-            // Extract unique session IDs from session replay files
-            let sessionIds = Set(fileURLs.compactMap { fileURL -> String? in
-                let fileName = fileURL.lastPathComponent
-                if fileName.hasSuffix("_upload_url.txt") {
-                    return fileName.replacingOccurrences(of: "_upload_url.txt", with: "")
-                }
-                return nil
-            })
-            NRLOG_DEBUG("MSR DIRECTORIES FOUND \(sessionIds)")
-
-            // Process each session
-            for sessionId in sessionIds {
-                processSessionReplayFile(sessionId: sessionId, directory: sessionReplayDirectory)
+        sessionReplayQueue.async { [self] in
+            // CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS
+            NRLOG_DEBUG("CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS")
+            
+            guard let sessionReplayDirectory = getSessionReplayDirectory() else {
+                NRLOG_DEBUG("Could not access session replay directory")
+                return
             }
-
-        } catch {
-            NRLOG_DEBUG("Failed to read session replay directory: \(error)")
+            
+            do {
+                let fileURLs = try FileManager.default.contentsOfDirectory(at: sessionReplayDirectory, includingPropertiesForKeys: nil)
+                
+                // Extract unique session IDs from session replay files
+                let sessionIds = Set(fileURLs.compactMap { fileURL -> String? in
+                    let fileName = fileURL.lastPathComponent
+                    if fileName.hasSuffix("_upload_url.txt") {
+                        return fileName.replacingOccurrences(of: "_upload_url.txt", with: "")
+                    }
+                    return nil
+                })
+                NRLOG_DEBUG("MSR DIRECTORIES FOUND \(sessionIds)")
+                
+                // Process each session
+                for sessionId in sessionIds {
+                    processSessionReplayFile(sessionId: sessionId, directory: sessionReplayDirectory)
+                }
+                
+            } catch {
+                NRLOG_DEBUG("Failed to read session replay directory: \(error)")
+            }
         }
-
     }
 
     private func processSessionReplayFile(sessionId: String, directory: URL) {
