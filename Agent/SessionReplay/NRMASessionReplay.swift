@@ -205,7 +205,7 @@ public class NRMASessionReplay: NSObject {
                     width: Int(currentSize.width),
                     height: Int(currentSize.height)
                 )
-                let metaEvent = MetaEvent(timestamp: frame.date.timeIntervalSince1970 * 1000, data: metaEventData)
+                let metaEvent = MetaEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: metaEventData)
                 processedFrames.append(metaEvent)
             }
             processedFrames.append(sessionReplayFrameProcessor.processFrame(frame))
@@ -238,7 +238,7 @@ public class NRMASessionReplay: NSObject {
         guard let firstFrame = rawFrames.first else {
             return
         }
-        let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000)
+        let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000).rounded()
         let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
 
         var container: [AnyRRWebEvent] = []

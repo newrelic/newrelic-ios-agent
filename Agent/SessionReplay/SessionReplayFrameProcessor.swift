@@ -101,7 +101,7 @@ class SessionReplayFrameProcessor {
         let snapshotData = RRWebFullSnapshotData(node: .document(documentNode),
                                                  initialOffset: RRWebFullSnapshotData.InitialOffset(top: 0, left: 0))
         
-        return RRWebEvent(timestamp: frame.date.timeIntervalSince1970 * 1000, data: snapshotData)
+        return RRWebEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: snapshotData)
     }
     
     
@@ -143,7 +143,7 @@ class SessionReplayFrameProcessor {
         }
         
         let incrementalUpdate: RRWebIncrementalData = .mutation(RRWebMutationData(adds: adds, removes: removes, texts: texts, attributes: attributes))
-        let incrementalEvent = IncrementalEvent(timestamp: newFrame.date.timeIntervalSince1970*1000, data: incrementalUpdate)
+        let incrementalEvent = IncrementalEvent(timestamp: (newFrame.date.timeIntervalSince1970*1000).rounded(), data: incrementalUpdate)
         return incrementalEvent
         
 //         For nodes that have not been added/removed, we should get the difference they've got as a dictionary (that can be turned into JSON
