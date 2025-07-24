@@ -122,6 +122,7 @@ public class NRMASessionReplay: NSObject {
     func takeFrame() {
         Task{
             guard let window = await getWindow() else {
+                NRLOG_ERROR("No key window found while trying to take a frame")
                 return
             }
 
