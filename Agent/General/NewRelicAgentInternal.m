@@ -614,13 +614,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         }];
         [self.gestureFacade recordUserAction:foregroundGesture];
     }
-    
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-    BOOL isSampled = [self isSessionReplaySampled];
-    if (isSampled && [self isSessionReplayEnabled]) {
-        [_sessionReplay start];
-    }
-#endif
 
     // appInstallMetricGenerator will receive the 'new install' notification
     // before the harvester is setup and before the task queue is set up.
@@ -743,6 +736,13 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
+    
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    BOOL isSampled = [self isSessionReplaySampled];
+    if (isSampled && [self isSessionReplayEnabled]) {
+        [_sessionReplay start];
+    }
+#endif
 
     [self onSessionStart];
 }
