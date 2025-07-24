@@ -37,10 +37,6 @@ public class SessionReplayManager: NSObject {
 
     public func start() {
         sessionReplayQueue.async { [self] in
-            guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
-            if agent.isSessionReplayEnabled() == false {
-                return
-            }
             guard !isRunning() else {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
