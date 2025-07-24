@@ -118,6 +118,16 @@ public class NRMASessionReplay: NSObject {
         windowDimensions.height = window.frame.height
         swizzleSendEvent()
     }
+    
+    public func updateWindowSize(){
+        Task { @MainActor in
+            guard let window = getWindow() else {
+                return
+            }
+            windowDimensions.width = window.frame.width
+            windowDimensions.height = window.frame.height
+        }
+    }
 
     func takeFrame() {
         Task{

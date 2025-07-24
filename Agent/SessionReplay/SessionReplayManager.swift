@@ -140,6 +140,7 @@ public class SessionReplayManager: NSObject {
             sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
             self.sessionReplay.isFirstChunk = false
             harvestseconds = 0
+            sessionReplay.updateWindowSize()
         }
     }
 
