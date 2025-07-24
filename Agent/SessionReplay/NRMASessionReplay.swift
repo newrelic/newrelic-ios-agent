@@ -108,9 +108,9 @@ public class NRMASessionReplay: NSObject {
 
     @MainActor
     @objc func didBecomeActive() {
-        NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
+        //NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
         guard let window = getWindow() else {
-            NRLOG_ERROR("No key window found on didBecomeActive")
+            NRLOG_DEBUG("No key window found on didBecomeActive")
             return
         }
         self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
@@ -132,7 +132,7 @@ public class NRMASessionReplay: NSObject {
     func takeFrame() {
         Task{
             guard let window = await getWindow() else {
-                NRLOG_ERROR("No key window found while trying to take a frame")
+                NRLOG_DEBUG("No key window found while trying to take a frame")
                 return
             }
 

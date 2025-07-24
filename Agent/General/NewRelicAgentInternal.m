@@ -638,6 +638,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     BOOL isSampled = [self isSessionReplaySampled];
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay start];
+    } else {
+        [self sessionReplayDisabled];
     }
 #endif
 }
