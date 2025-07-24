@@ -108,7 +108,7 @@ public class NRMASessionReplay: NSObject {
 
     @MainActor
     @objc func didBecomeActive() {
-        //NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
+        NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
         guard let window = getWindow() else {
             NRLOG_ERROR("No key window found on didBecomeActive")
             return
@@ -204,7 +204,11 @@ public class NRMASessionReplay: NSObject {
     }
 
     func getSessionReplayTouches(clear: Bool = true) -> [IncrementalEvent] {
-        let touches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
+        guard let touchCapture = sessionReplayTouchCapture else {
+            NRLOG_DEBUG("sessionReplayTouchCapture is nil in getSessionReplayTouches")
+            return []
+        }
+        let touches = sessionReplayTouchProcessor.processTouches(touchCapture.touchEvents)
         if clear {
             sessionReplayTouchCapture.resetEvents()
         }
