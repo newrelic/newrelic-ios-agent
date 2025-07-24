@@ -121,7 +121,11 @@ public class SessionReplayReporter: NSObject {
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(Int(firstTimestamp)),
             "replay.lastTimestamp": String(Int(lastTimestamp)),
-            "appVersion": appVersion
+            "appVersion": appVersion,
+            "instrumentation.provider": "mobile",
+            "instrumentation.name": NewRelicInternalUtils.osName(),
+            "instrumentation.version": NewRelicInternalUtils.agentVersion(),
+            "collector.name": NewRelicInternalUtils.osName()
         ]
         if isGZipped {
             attributes["content_encoding"] = "gzip"

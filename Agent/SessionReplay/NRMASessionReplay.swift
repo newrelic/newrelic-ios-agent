@@ -21,7 +21,6 @@ public class NRMASessionReplay: NSObject {
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
     private var sessionReplayTouchCapture: SessionReplayTouchCapture!
     private let sessionReplayTouchProcessor = TouchEventProcessor()
-    private var frameTimer: Timer!
     private var rawFrames = [SessionReplayFrame]()
     
     public var isFirstChunk = true
@@ -31,8 +30,6 @@ public class NRMASessionReplay: NSObject {
     private let framesDirectory: URL
 
     public var windowDimensions = CGSize(width: 0, height: 0)
-
-    private let rawFramesQueue = DispatchQueue(label: "com.newrelic.rawFramesQueue", attributes: .concurrent)
 
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
 
@@ -57,38 +54,35 @@ public class NRMASessionReplay: NSObject {
     }
 
     public func start() {
-        if isRunning() {
-            NRLOG_WARNING("Session replay timer attempting to start while already running.")
-            return
-        }
 
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
-
-        self.frameTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(takeFrame), userInfo: nil, repeats: true)
-        RunLoop.current.add(self.frameTimer, forMode: .common)
     }
 
     public func stop() {
-        if (!isRunning()) {
-            NRLOG_WARNING("Session replay timer attempting to stop when not running.")
-            return;
-        }
 
-        self.frameTimer.invalidate()
-        self.frameTimer = nil
     }
     
-    public func clearFrames() {
-        rawFramesQueue.async(flags: .barrier) { [self] in
-            rawFrames.removeAll()
-            sessionReplayTouchCapture.resetEvents()
+    public func clearAllData() {
+        rawFrames.removeAll()
+        sessionReplayTouchCapture.resetEvents()
+        // should remove frames from file system after processing
+
+        // Clear the session replay file after processing
+        DispatchQueue.global(qos: .background).async { [self] in
+            
+            self.frameCounter = 0
+            self.uncompressedDataSize = 0
+            // clear the frames directory
+            guard FileManager.default.fileExists(atPath: self.framesDirectory.path) else {
+                return
+            }
+            do {
+                try FileManager.default.removeItem(at: self.framesDirectory)
+            } catch {
+                NRLOG_ERROR("Failed to clear frames directory: \(error)")
+            }
         }
     }
-
-    func isRunning() -> Bool {
-        return self.frameTimer != nil && self.frameTimer!.isValid
-    }
-
 
     func swizzleSendEvent() {
         DispatchQueue.once(token: "com.newrelic.swizzleSendEvent") {
@@ -137,49 +131,40 @@ public class NRMASessionReplay: NSObject {
     }
 
     func addFrame(_ frame: SessionReplayFrame) {
-        rawFramesQueue.async(flags: .barrier) {
-            self.rawFrames.append(frame)
+        self.rawFrames.append(frame)
 
 
-            // BEGIN PROCESSING FRAME TO FILE
-            // Process frame to file
-            DispatchQueue.global(qos: .background).async { [self] in
+        // BEGIN PROCESSING FRAME TO FILE
+        // Process frame to file
+        DispatchQueue.global(qos: .background).async { [self] in
 
-                self.processFrameToFile(frame)
-            }
-
-            // END PROCESSING FRAME TO FILE
-
+            self.processFrameToFile(frame)
         }
+
+        // END PROCESSING FRAME TO FILE
     }
+    
     func getAndClearFrames(clear: Bool = true) -> [SessionReplayFrame] {
         var frames = [SessionReplayFrame]()
-        rawFramesQueue.sync {
-            frames = self.rawFrames
+        frames = self.rawFrames
+        if clear {
+            self.rawFrames.removeAll()
 
+            // should remove frames from file system after processing
 
-        }
-        rawFramesQueue.async(flags: .barrier) {
-            if clear {
-                self.rawFrames.removeAll()
+            // Clear the session replay file after processing
+            DispatchQueue.global(qos: .background).async { [self] in
 
-                // should remove frames from file system after processing
-
-                // Clear the session replay file after processing
-                DispatchQueue.global(qos: .background).async { [self] in
-
-                    self.frameCounter = 0
-                    self.uncompressedDataSize = 0
-                    // clear the frames directory
-                    do {
-                        try FileManager.default.removeItem(at: self.framesDirectory)
-                        try FileManager.default.createDirectory(at: self.framesDirectory, withIntermediateDirectories: true)
-                    } catch {
-                        NRLOG_ERROR("Failed to clear frames directory: \(error)")
-                    }
+                self.frameCounter = 0
+                self.uncompressedDataSize = 0
+                // clear the frames directory
+                do {
+                    try FileManager.default.removeItem(at: self.framesDirectory)
+                    try FileManager.default.createDirectory(at: self.framesDirectory, withIntermediateDirectories: true)
+                } catch {
+                    NRLOG_ERROR("Failed to clear frames directory: \(error)")
                 }
             }
-
         }
         return frames
     }
