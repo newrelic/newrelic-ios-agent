@@ -68,7 +68,6 @@ public class SessionReplayManager: NSObject {
             sessionReplayTimer?.invalidate()
             sessionReplayTimer = nil
             
-            NewRelicAgentInternal.sharedInstance()?.analyticsController.removeSessionAttributeNamed(kNRMA_RA_hasReplay)
             NRLOG_DEBUG("Session replay has shut down and is no longer running.")
         }
     }

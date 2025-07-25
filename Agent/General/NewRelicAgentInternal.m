@@ -649,6 +649,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if(_sessionReplay != nil){
         [_sessionReplay stop];
         [_sessionReplay clearAllData];
+        [_analyticsController removeSessionAttributeNamed:kNRMA_RA_hasReplay];
     }
 #endif
 }
@@ -738,6 +739,8 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
+
+    [self onSessionStart];
     
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     BOOL isSampled = [self isSessionReplaySampled];
@@ -745,8 +748,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
         [_sessionReplay start];
     }
 #endif
-
-    [self onSessionStart];
 }
 
 #if !TARGET_OS_WATCH
