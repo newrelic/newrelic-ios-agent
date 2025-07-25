@@ -29,8 +29,6 @@ public class NRMASessionReplay: NSObject {
     private var frameCounter: Int = 0
     private let framesDirectory: URL
 
-    public var windowDimensions = CGSize(width: 0, height: 0)
-
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
 
     private let url: NSString
@@ -114,19 +112,7 @@ public class NRMASessionReplay: NSObject {
             return
         }
         self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
-        windowDimensions.width = window.frame.width
-        windowDimensions.height = window.frame.height
         swizzleSendEvent()
-    }
-    
-    public func updateWindowSize(){
-        Task { @MainActor in
-            guard let window = getWindow() else {
-                return
-            }
-            windowDimensions.width = window.frame.width
-            windowDimensions.height = window.frame.height
-        }
     }
 
     func takeFrame() {
@@ -194,7 +180,7 @@ public class NRMASessionReplay: NSObject {
     func getSessionReplayFrames(clear: Bool = true) -> [RRWebEventCommon] {
         var processedFrames: [RRWebEventCommon] = []
 
-        var currentSize = rawFrames.first?.size ?? .zero
+        var currentSize:CGSize = .zero
         let frames = getAndClearFrames(clear: clear)
 
         for frame in frames {

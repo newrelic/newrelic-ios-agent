@@ -114,16 +114,8 @@ public class SessionReplayManager: NSObject {
             let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
             let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
             
-            // Create meta event data
-            let metaEventData = RRWebMetaData(
-                href: "http://newrelic.com",
-                width: Int(sessionReplay.windowDimensions.width),
-                height: Int(sessionReplay.windowDimensions.height)
-            )
-            let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
-            
             // Initialize container with meta event
-            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
+            var container: [AnyRRWebEvent] = []
             
             // Process frames and touches
             container.append(contentsOf: (processedFrames).map {
@@ -139,7 +131,6 @@ public class SessionReplayManager: NSObject {
             sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
             self.sessionReplay.isFirstChunk = false
             harvestseconds = 0
-            sessionReplay.updateWindowSize()
         }
     }
 
