@@ -153,7 +153,7 @@ public class SessionReplayReporter: NSObject {
             URLQueryItem(name: "type", value: "SessionReplay"),
             URLQueryItem(name: "app_id", value: String(config.application_id)),
             URLQueryItem(name: "protocol_version", value: "0"),
-            URLQueryItem(name: "timestamp", value: String(Int64(Date().timeIntervalSince1970 * 1000))),
+            URLQueryItem(name: "timestamp", value: String(Int64((Date().timeIntervalSince1970 * 1000).rounded()))),
             URLQueryItem(name: "attributes", value: attributesString)
         ]
 

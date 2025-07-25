@@ -29,8 +29,6 @@ public class NRMASessionReplay: NSObject {
     private var frameCounter: Int = 0
     private let framesDirectory: URL
 
-    public var windowDimensions = CGSize(width: 0, height: 0)
-
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
 
     private let url: NSString
@@ -110,18 +108,17 @@ public class NRMASessionReplay: NSObject {
     @objc func didBecomeActive() {
         //NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
         guard let window = getWindow() else {
-            NRLOG_ERROR("No key window found on didBecomeActive")
+            NRLOG_DEBUG("No key window found on didBecomeActive")
             return
         }
         self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
-        windowDimensions.width = window.frame.width
-        windowDimensions.height = window.frame.height
         swizzleSendEvent()
     }
 
     func takeFrame() {
         Task{
             guard let window = await getWindow() else {
+                NRLOG_DEBUG("No key window found while trying to take a frame")
                 return
             }
 
@@ -183,7 +180,7 @@ public class NRMASessionReplay: NSObject {
     func getSessionReplayFrames(clear: Bool = true) -> [RRWebEventCommon] {
         var processedFrames: [RRWebEventCommon] = []
 
-        var currentSize = rawFrames.first?.size ?? .zero
+        var currentSize:CGSize = .zero
         let frames = getAndClearFrames(clear: clear)
 
         for frame in frames {
@@ -194,7 +191,7 @@ public class NRMASessionReplay: NSObject {
                     width: Int(currentSize.width),
                     height: Int(currentSize.height)
                 )
-                let metaEvent = MetaEvent(timestamp: frame.date.timeIntervalSince1970 * 1000, data: metaEventData)
+                let metaEvent = MetaEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: metaEventData)
                 processedFrames.append(metaEvent)
             }
             processedFrames.append(sessionReplayFrameProcessor.processFrame(frame))
@@ -204,7 +201,11 @@ public class NRMASessionReplay: NSObject {
     }
 
     func getSessionReplayTouches(clear: Bool = true) -> [IncrementalEvent] {
-        let touches = sessionReplayTouchProcessor.processTouches(sessionReplayTouchCapture.touchEvents)
+        guard let touchCapture = sessionReplayTouchCapture else {
+            NRLOG_DEBUG("sessionReplayTouchCapture is nil in getSessionReplayTouches")
+            return []
+        }
+        let touches = sessionReplayTouchProcessor.processTouches(touchCapture.touchEvents)
         if clear {
             sessionReplayTouchCapture.resetEvents()
         }
@@ -223,7 +224,7 @@ public class NRMASessionReplay: NSObject {
         guard let firstFrame = rawFrames.first else {
             return
         }
-        let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000)
+        let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000).rounded()
         let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
 
         var container: [AnyRRWebEvent] = []

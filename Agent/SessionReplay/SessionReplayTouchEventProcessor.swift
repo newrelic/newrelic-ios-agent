@@ -27,7 +27,7 @@ class TouchEventProcessor {
                                                    x: touchEvent.startTouch.location.x,
                                                    y: touchEvent.startTouch.location.y)
         
-        let startTouch = IncrementalEvent(timestamp: touchEvent.startTouch.date * 1000, data: .mouseInteraction(startTouchData))
+        let startTouch = IncrementalEvent(timestamp: (touchEvent.startTouch.date * 1000).rounded(), data: .mouseInteraction(startTouchData))
         RRWebTouchEvents.append(startTouch)
         
         if !touchEvent.moveTouches.isEmpty,
@@ -39,7 +39,7 @@ class TouchEventProcessor {
                                    timeOffset: ($0.date - lastTimestamp))
             })
             
-            RRWebTouchEvents.append(IncrementalEvent(timestamp: lastTimestamp * 1000, data: .touchMove(touchMoveData)))
+            RRWebTouchEvents.append(IncrementalEvent(timestamp: (lastTimestamp * 1000).rounded(), data: .touchMove(touchMoveData)))
         }
         
         if let endTouch = touchEvent.endTouch {
@@ -47,7 +47,7 @@ class TouchEventProcessor {
                                                          id: touchEvent.id,
                                                          x: endTouch.location.x,
                                                          y: endTouch.location.y)
-            RRWebTouchEvents.append(IncrementalEvent(timestamp: endTouch.date * 1000, data: .mouseInteraction(endTouchData)))
+            RRWebTouchEvents.append(IncrementalEvent(timestamp: (endTouch.date * 1000).rounded(), data: .mouseInteraction(endTouchData)))
         }
         
         return RRWebTouchEvents

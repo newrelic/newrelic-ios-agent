@@ -436,6 +436,13 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
                 resultMap.insert(std::make_pair([key UTF8String], attribute));
             }
+            else if ([NewRelicInternalUtils isBool:number]) {
+                auto baseValue = NewRelic::Value::createValue([number boolValue]);
+
+                auto attribute = std::make_shared<NewRelic::AttributeBase>(NewRelic::AttributeBase([key UTF8String],baseValue));
+
+                resultMap.insert(std::make_pair([key UTF8String], attribute));
+            }
         } else if ([value isKindOfClass:[NSString class]]) {
             auto baseValue = NewRelic::Value::createValue([value UTF8String]);
 

@@ -37,10 +37,6 @@ public class SessionReplayManager: NSObject {
 
     public func start() {
         sessionReplayQueue.async { [self] in
-            guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
-            if agent.isSessionReplayEnabled() == false {
-                return
-            }
             guard !isRunning() else {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
@@ -72,7 +68,7 @@ public class SessionReplayManager: NSObject {
             sessionReplayTimer?.invalidate()
             sessionReplayTimer = nil
             
-            NewRelicAgentInternal.sharedInstance()?.analyticsController.removeSessionAttributeNamed(kNRMA_RA_hasReplay)
+            NRLOG_DEBUG("Session replay has shut down and is no longer running.")
         }
     }
 
@@ -118,16 +114,8 @@ public class SessionReplayManager: NSObject {
             let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
             let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
             
-            // Create meta event data
-            let metaEventData = RRWebMetaData(
-                href: "http://newrelic.com",
-                width: Int(sessionReplay.windowDimensions.width),
-                height: Int(sessionReplay.windowDimensions.height)
-            )
-            let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
-            
             // Initialize container with meta event
-            var container: [AnyRRWebEvent] = [AnyRRWebEvent(metaEvent)]
+            var container: [AnyRRWebEvent] = []
             
             // Process frames and touches
             container.append(contentsOf: (processedFrames).map {
