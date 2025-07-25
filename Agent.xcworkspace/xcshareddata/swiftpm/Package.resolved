@@ -1,0 +1,15 @@
+{
+  "originHash" : "57d1ccda4ded584a1634936170ecf00e7e370643ee361bf9f001b6729408615b",
+  "pins" : [
+    {
+      "identity" : "newrelic-ios-agent",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/newrelic/newrelic-ios-agent.git",
+      "state" : {
+        "revision" : "81d33f56334ccc64b7188e56f79fbf4cd6881483",
+        "version" : "7.5.7-rc.1500"
+      }
+    }
+  ],
+  "version" : 3
+}
