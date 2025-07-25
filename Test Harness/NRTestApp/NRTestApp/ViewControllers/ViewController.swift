@@ -52,6 +52,11 @@ class ViewController: UIViewController {
         }
         
         viewModel.loadApodData()
+        
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(appDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil)
 
         NewRelic.logInfo("ViewController viewDidLoad finished.")
     }
@@ -148,8 +153,15 @@ class ViewController: UIViewController {
 
         timeLabel.text = String(format: "%02d:%02d:%02d  %@", hours, minutes, seconds, currentTime)
     }
+    
+    @objc private func appDidBecomeActive() {
+        appStartDate = Date()
+        timer?.invalidate()
+        startTimer()
+    }
 
     deinit {
+        NotificationCenter.default.removeObserver(self)
         timer?.invalidate()
     }
     
