@@ -822,10 +822,57 @@ extern "C" {
 + (void) recordError:(NSError* _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes;
 
-@end
 
-// Deprecated class name, included for compatibility
-@interface NewRelicAgent : NewRelic
+#pragma mark - Session Replay Masking
+
+/*!
+ * Adds a view class to be masked during session replay.
+ * All instances of the specified class and its subclasses will have their text content masked.
+ * The values added using this function will be added to the ones returned by the server.
+ * <p>
+ * Example: addSessionReplayMaskViewClass("UILabel")
+ *
+ * @param viewClassName The fully qualified class name of the view to mask
+ * @return true if the view class was successfully added to the mask list
+ */
++ (BOOL) addSessionReplayMaskViewClass:(NSString*_Nonnull) viewClassName;
+
+/*!
+ * Adds a view class to be explicitly unmasked during session replay.
+ * This is useful for excluding specific subclasses from a broader masking rule.
+ * The values added using this function will be replaced by the ones returned by the server.
+ * <p>
+ * Example: addSessionReplayUnmaskViewClass("UIButton")
+ *
+ * @param viewClassName The fully qualified class name of the view to unmask
+ * @return true if the view class was successfully added to the unmask list
+ */
++ (BOOL) addSessionReplayUnmaskViewClass:(NSString*_Nonnull) viewClassName;
+
+/*!
+ * Adds an accessibility identifier to be masked during session replay.
+ * All views with the specified accessibility identifier will have their text content masked.
+ * The values added using this function will be added to the ones returned by the server.
+ * <p>
+ * Example: addSessionReplayMaskedAccessibilityIdentifier("private")
+ *
+ * @param viewTag The tag value to mask
+ * @return true if the view tag was successfully added to the mask list
+ */
++ (BOOL) addSessionReplayMaskedAccessibilityIdentifier:(NSString*_Nonnull) identifier;
+
+/*!
+ * Adds an accessibility identifier to be explicitly unmasked during session replay.
+ * This is useful for excluding specific views from a broader masking rule.
+ * The values added using this function will be replaced by the ones returned by the server.
+ * <p>
+ * Example: addSessionReplayUnmaskedAccessibilityIdentifier("public_info")
+ *
+ * @param viewTag The tag value to unmask
+ * @return true if the view tag was successfully added to the unmask list
+ */
++ (BOOL) addSessionReplayUnmaskedAccessibilityIdentifier:(NSString*_Nonnull) identifier;
+
 @end
 
 #ifdef __cplusplus

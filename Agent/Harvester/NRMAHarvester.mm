@@ -56,6 +56,7 @@
         connection = [[NRMAHarvesterConnection alloc] init];
         _harvestData = [[NRMAHarvestData alloc] init];
         self.harvestAwareObjects = [[NSMutableArray alloc] init];
+        configuration = [self fetchHarvestConfiguration];
     }
     return self;
 }
@@ -468,6 +469,7 @@
         configuration.application_token = connection.applicationToken;
 
         [self handleLoggingConfigurationUpdate];
+        [self handleSessionReplayConfigurationUpdate];
 
         [self saveHarvesterConfiguration:configuration];
 
@@ -549,12 +551,13 @@
 {
     NRMAHarvesterConfiguration* config = nil;
     @try {
-        NSError* error = nil;
-        
+        NSError* error = nil;        
+        NSData *dataFromResp = [response.responseBody dataUsingEncoding:NSUTF8StringEncoding];
+
          NRLOG_AGENT_VERBOSE(@"Harvest config: %@", response.responseBody);
 
-        id jsonObject = [NRMAJSON JSONObjectWithData:[response.responseBody dataUsingEncoding:NSUTF8StringEncoding]
-                                             options:0
+        id jsonObject = [NRMAJSON JSONObjectWithData:dataFromResp
+                                               options:0
                                                error:&error];
         if (!error) {
             config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:jsonObject];
@@ -671,7 +674,7 @@
 
 
         BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sampleSeed] <= [configuration sampling_rate];
-        NRLOG_AGENT_VERBOSE(@"config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
+        // NRLOG_AGENT_VERBOSE(@"logging config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
         if (isSampled && [NRMAFlags shouldEnableLogReporting]) {
             // Do log upload
             [NRLogger enqueueLogUpload];
@@ -805,6 +808,30 @@
         // No Log Reporting Config Detected, not automating feature flags or logging config.
          NRLOG_AGENT_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
     }
+}
+
+- (void) handleSessionReplayConfigurationUpdate {
+    // if it was on and now its off stop MSR
+
+    // if it was off and now its on start MSR
+    if (configuration.has_session_replay_config) {
+        if (configuration.session_replay_enabled) {
+            
+            NRLOG_AGENT_DEBUG(@"config: Has SESSION REPLAY ENABLED");
+
+            [[NewRelicAgentInternal sharedInstance] sessionReplayStart];
+        }
+        else {
+            NRLOG_AGENT_DEBUG(@"config: SESSION REPLAY DISABLED");
+            [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
+        }
+    }
+    // No replay config at all, don't mess with replay
+    else {
+        NRLOG_AGENT_DEBUG(@"no config: No SESSION REPLAY Config Detected.");
+        [[NewRelicAgentInternal sharedInstance] sessionReplayDisabled];
+    }
+
 }
 
 @end

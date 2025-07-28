@@ -187,7 +187,7 @@ NSString* currentParentId = @"";
     payload = NewRelic::Connectivity::Facade::getInstance().startTrip();
     
     if(payload == nullptr) {
-        NRLOG_ERROR(@"Not attaching distrubuted tracing because account or application id are missing.");
+        NRLOG_ERROR(@"Not attaching distributed tracing because account or application id are missing.");
         return nil;
     }
     payload->setDistributedTracing(true);
@@ -196,7 +196,7 @@ NSString* currentParentId = @"";
 
 + (NRMAPayload *) startTrip {
     if(!NewRelic::Application::getInstance().isValid()) {
-        NRLOG_ERROR(@"Not attaching distrubuted tracing because account or application id are missing.");
+        NRLOG_ERROR(@"Not attaching distributed tracing because account or application id are missing.");
         return nil;
     }
     

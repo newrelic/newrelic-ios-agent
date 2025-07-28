@@ -119,6 +119,10 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
                 }
             }
         }
+        else {
+            // Clear saved crashed sessions from Mobile Session Replay
+            [self clearSessionReplayFrames];
+        }
         self.handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:_crashReporter];
 #endif
     }
@@ -228,6 +232,23 @@ static const NSString* __memoryUsageLock = @"Lock";
         //NSNotifications are not thread safe so we need to synchronize before we start setting things.
         @synchronized(__memoryUsageLock) {
             NRMA_setMemoryUsage(memoryUsageMB.UTF8String);
+        }
+    }
+}
+
+- (void) clearSessionReplayFrames
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *framesDirectory = [documentsDirectory stringByAppendingPathComponent:@"SessionReplayFrames"];
+
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:framesDirectory]) {
+        NSError *error;
+        if ([fileManager removeItemAtPath:framesDirectory error:&error]) {
+            NRLOG_AGENT_DEBUG(@"Cleared SessionReplayFrames directory");
+        } else {
+            NRLOG_AGENT_DEBUG(@"Failed to clear SessionReplayFrames directory: %@", error.localizedDescription);
         }
     }
 }

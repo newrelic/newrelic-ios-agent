@@ -137,6 +137,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if (dictionary[kNRMA_RA_install]) {
                     [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_install];
                 }
+                if (dictionary[kNRMA_RA_hasReplay]) {
+                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_hasReplay];
+                }
 
                 //session duration is only valid for one session. This metric should be removed
                 //after the persistent attributes are loaded.
@@ -181,6 +184,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 //after the persistent attributes are loaded.
                 if (dictionary[kNRMA_RA_sessionDuration]) {
                     _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
+                }
+                if (dictionary[kNRMA_RA_hasReplay]) {
+                    _analyticsController->removeSessionAttribute([kNRMA_RA_hasReplay UTF8String]);
                 }
             }
         }

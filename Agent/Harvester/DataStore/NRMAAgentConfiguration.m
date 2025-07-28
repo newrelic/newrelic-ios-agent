@@ -66,6 +66,50 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
     return __NRMA__maxOfflineStorageSize;
 }
 
+static NSMutableArray * __NRMA__session_replay_maskedClassNames;
++ (NSMutableArray*) local_session_replay_maskedClassNames
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __NRMA__session_replay_maskedClassNames = [NSMutableArray array];
+    });
+
+    return (__NRMA__session_replay_maskedClassNames);
+}
+
+static NSMutableArray * __NRMA__session_replay_unmaskedClassNames;
++ (NSMutableArray*) local_session_replay_unmaskedClassNames
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __NRMA__session_replay_unmaskedClassNames = [NSMutableArray array];
+    });
+
+    return (__NRMA__session_replay_unmaskedClassNames);
+}
+
+static NSMutableArray * __NRMA__session_replay_maskedAccessibilityIdentifiers;
++ (NSMutableArray*) local_session_replay_maskedAccessibilityIdentifiers
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __NRMA__session_replay_maskedAccessibilityIdentifiers = [NSMutableArray array];
+    });
+
+    return (__NRMA__session_replay_maskedAccessibilityIdentifiers);
+}
+
+static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
++ (NSMutableArray*) local_session_replay_unmaskedAccessibilityIdentifiers
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __NRMA__session_replay_unmaskedAccessibilityIdentifiers = [NSMutableArray array];
+    });
+
+    return (__NRMA__session_replay_unmaskedAccessibilityIdentifiers);
+}
+
 - (id) initWithAppToken:(NRMAAppToken*)token
        collectorAddress:(NSString*)collectorHost
            crashAddress:(NSString*)crashHost {
@@ -148,12 +192,13 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
     else {
         _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
     }
+    _sessionReplayURL = [_loggingURL stringByAppendingFormat:@"/mobile/blobs"];
     _loggingURL = [_loggingURL stringByAppendingFormat:@"/mobile/logs"];
+    // since setLoggingURL is always called we can make the session replay url here.
 
     NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
     
     [NRLogger setLogURL:logURL];
-
     [NRLogger setLogIngestKey:self.applicationToken.value];
 }
 
@@ -206,7 +251,41 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
     return connectionInformation;
 }
 
++ (BOOL)addLocalMaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+        [[NRMAAgentConfiguration local_session_replay_maskedAccessibilityIdentifiers] addObject:identifier];
+        NRLOG_AGENT_VERBOSE(@"Added masked accessibility identifier: %@", identifier);
+        return true;
+    }
+    return false;
+}
 
++ (BOOL)addLocalUnmaskedAccessibilityIdentifier:(NSString *)identifier {
+    if (identifier.length > 0) {
+        [[NRMAAgentConfiguration local_session_replay_unmaskedAccessibilityIdentifiers] addObject:identifier];
+        NRLOG_AGENT_VERBOSE(@"Added unmasked accessibility identifier: %@", identifier);
+        return true;
+    }
+    return false;
+}
+
++ (BOOL)addLocalMaskedClassName:(NSString *)className {
+    if (className.length > 0) {
+        [[NRMAAgentConfiguration local_session_replay_maskedClassNames] addObject:className];
+        NRLOG_AGENT_VERBOSE(@"Added masked class name: %@", className);
+        return true;
+    }
+    return false;
+}
+
++ (BOOL)addLocalUnmaskedClassName:(NSString *)className {
+    if (className.length > 0) {
+        [[NRMAAgentConfiguration local_session_replay_unmaskedClassNames] addObject:className];
+        NRLOG_AGENT_VERBOSE(@"Added unmasked class name: %@", className);
+        return true;
+    }
+    return false;
+}
 
 
 @end
