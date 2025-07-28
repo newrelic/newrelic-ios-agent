@@ -44,6 +44,9 @@
 		2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
+		2BB1E1EB2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
+		2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
+		2BB1E1ED2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -296,6 +299,7 @@
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
+		2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedStringTextMaskingViewController.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
 		2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpServerIO.swift; sourceTree = "<group>"; };
@@ -603,6 +607,7 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */,
 				2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */,
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
@@ -1134,6 +1139,7 @@
 				2B00011C2E34083400543C1B /* triggerException.m in Sources */,
 				2B00011D2E34083400543C1B /* UtilViewModel.swift in Sources */,
 				2B00011E2E34083400543C1B /* ViewController.swift in Sources */,
+				2BB1E1EB2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				2B00011F2E34083400543C1B /* ApodService.swift in Sources */,
 				2B0001202E34083400543C1B /* MainCoordinator.swift in Sources */,
 				2B0001212E34083400543C1B /* ViewControllerProvider.swift in Sources */,
@@ -1214,6 +1220,7 @@
 				F864284C2971DFA5002ABA01 /* triggerException.m in Sources */,
 				F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */,
 				F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */,
+				2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
@@ -1284,6 +1291,7 @@
 				F864293E2979CDFA002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864293F2979CDFA002ABA01 /* WebViewController.swift in Sources */,
 				F86429402979CDFA002ABA01 /* ApodViewModel.swift in Sources */,
+				2BB1E1ED2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,

@@ -194,6 +194,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
 
+        options.append(UtilOption(title: "Attributed String Text Masking", handler: { [self] in attributedStringTextMaskingAction()}))
+
         options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
        
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
@@ -239,6 +241,10 @@ class ViewController: UIViewController {
 
     func textMaskingAction() {
         coordinator?.showTextMaskingController()
+    }
+    
+    func attributedStringTextMaskingAction() {
+        coordinator?.showAttributedStringTextMaskingController()
     }
 
     func collectionViewAction() {

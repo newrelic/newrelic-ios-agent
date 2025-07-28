@@ -31,6 +31,11 @@ enum ViewControllerProvider {
         return viewController
     }
     
+    static var attributedStringTextMaskingViewController: AttributedStringTextMaskingViewController {
+        let viewController = AttributedStringTextMaskingViewController()
+        return viewController
+    }
+    
     static var collectionViewController: ScrollableCollectionViewController {
         let viewController = ScrollableCollectionViewController()
         return viewController
