@@ -44,6 +44,7 @@
 		2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
+		2B6BEC282E37FC3D0054ECF1 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B6BEC272E37FC3D0054ECF1 /* NewRelic */; };
 		2BB1E1EB2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BB1E1ED2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
@@ -385,6 +386,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B00014E2E34089500543C1B /* NewRelic in Frameworks */,
+				2B6BEC282E37FC3D0054ECF1 /* NewRelic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -899,7 +901,7 @@
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
 			packageReferences = (
-				2B00014C2E34089500543C1B /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */,
+				2B6BEC262E37FC3D0054ECF1 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */,
 			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
@@ -2090,8 +2092,16 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent.git";
 			requirement = {
-				kind = exactVersion;
-				version = "7.5.7-rc.1500";
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.5.7;
+			};
+		};
+		2B6BEC262E37FC3D0054ECF1 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.5.7;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -2100,6 +2110,11 @@
 		2B00014D2E34089500543C1B /* NewRelic */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2B00014C2E34089500543C1B /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */;
+			productName = NewRelic;
+		};
+		2B6BEC272E37FC3D0054ECF1 /* NewRelic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B6BEC262E37FC3D0054ECF1 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */;
 			productName = NewRelic;
 		};
 /* End XCSwiftPackageProductDependency section */
