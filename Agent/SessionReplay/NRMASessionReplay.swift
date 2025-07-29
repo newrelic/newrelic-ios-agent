@@ -19,7 +19,7 @@ public class NRMASessionReplay: NSObject {
 
     private let sessionReplayCapture: SessionReplayCapture
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
-    private var sessionReplayTouchCapture: SessionReplayTouchCapture!
+    private var sessionReplayTouchCapture: SessionReplayTouchCapture?
     private let sessionReplayTouchProcessor = TouchEventProcessor()
     private var rawFrames = [SessionReplayFrame]()
     
@@ -62,7 +62,9 @@ public class NRMASessionReplay: NSObject {
     
     public func clearAllData() {
         rawFrames.removeAll()
-        sessionReplayTouchCapture.resetEvents()
+        if let touchCapture = sessionReplayTouchCapture {
+            touchCapture.resetEvents()
+        }
         // should remove frames from file system after processing
 
         // Clear the session replay file after processing
