@@ -185,6 +185,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if (dictionary[kNRMA_RA_sessionDuration]) {
                     _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
                 }
+                if (dictionary[kNRMA_RA_hasReplay]) {
+                    _analyticsController->removeSessionAttribute([kNRMA_RA_hasReplay UTF8String]);
+                }
             }
         }
         // SessionStartTime is passed in as milliseconds. In the agent, when used,
