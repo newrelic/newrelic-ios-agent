@@ -22,6 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number;
 - (BOOL) setUserId:(NSString*)userId;
 - (BOOL) removeSessionAttributeNamed:(NSString*)name;
+- (BOOL) removeNRSessionAttributeNamed:(NSString*)name;
 - (BOOL) removeAllSessionAttributes;
 
 + (NSString*) getLastSessionsAttributes;
