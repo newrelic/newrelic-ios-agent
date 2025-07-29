@@ -94,7 +94,10 @@ public class NRMASessionReplay: NSObject {
             let originalSelector = #selector(UIApplication.sendEvent(_:))
 
             let block: @convention(block)(UIApplication, UIEvent) -> Void = { app, event in
-                self.sessionReplayTouchCapture.captureSendEventTouches(event: event)
+                guard let touchCapture = self.sessionReplayTouchCapture else {
+                    return
+                }
+                touchCapture.captureSendEventTouches(event: event)
                 typealias Func = @convention(c)(AnyObject, Selector, UIEvent) -> Void
                 let function = unsafeBitCast(self.NRMAOriginal__sendEvent, to: Func.self)
                 function(app, originalSelector, event)
@@ -209,7 +212,7 @@ public class NRMASessionReplay: NSObject {
         }
         let touches = sessionReplayTouchProcessor.processTouches(touchCapture.touchEvents)
         if clear {
-            sessionReplayTouchCapture.resetEvents()
+            touchCapture.resetEvents()
         }
         return touches
     }
