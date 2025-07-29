@@ -1307,7 +1307,7 @@ void applicationDidEnterBackgroundCF(void) {
 }
 
 - (BOOL) isSessionReplayEnabled {
-    BOOL isEnabled = true;
+    BOOL isEnabled = NO;
     if ( [NRMAHarvestController configuration] != nil) {
         isEnabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
