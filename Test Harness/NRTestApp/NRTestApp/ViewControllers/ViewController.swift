@@ -15,7 +15,8 @@ class ViewController: UIViewController {
     var options =  [UtilOption]()
     
     var spaceImageView = UIImageView()
-    var spaceLabel = UILabel()
+    var spaceLabel = SecureLabel()
+    var privateHelloLabel = UnsecureLabel()
     var spaceStack = UIStackView()
     var helloButton = UIButton()
     var helloWorldLabel: UILabel?
@@ -65,10 +66,21 @@ class ViewController: UIViewController {
         spaceLabel.text  = "Hello, World"
         spaceLabel.textAlignment = .center
         spaceLabel.numberOfLines = 0
+        spaceLabel.accessibilityIdentifier = "public" // Because this is a SecureLabel this should stay masked.
+        
+        //Text Label
+        privateHelloLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
+        privateHelloLabel.text  = "Secret Hello, World!"
+        privateHelloLabel.textAlignment = .center
+        privateHelloLabel.numberOfLines = 0
+        privateHelloLabel.accessibilityIdentifier = "private" // Even though this is a UnsecureLabel this tag should mark it masked.
         
         //Button
         helloButton.setTitleColor(.green, for: .normal)
         helloButton.setTitle("Hello", for: .normal)
+        if let helloButtonTitleLabel = helloButton.titleLabel {
+            helloButtonTitleLabel.accessibilityIdentifier = "public"
+        }
         
         //Stack View
         spaceStack.axis = .vertical
@@ -76,6 +88,7 @@ class ViewController: UIViewController {
         spaceStack.alignment = .center
         spaceStack.spacing = 16.0
 
+        spaceStack.addArrangedSubview(privateHelloLabel)
         spaceStack.addArrangedSubview(spaceImageView)
         spaceStack.addArrangedSubview(spaceLabel)
         spaceStack.addArrangedSubview(helloButton)

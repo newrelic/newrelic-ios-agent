@@ -138,6 +138,7 @@ class DocumentTypeNodeData: SerializedNodeData {
 enum TagType: String, Codable {
     case style = "style"
     case div = "div"
+    case span = "span"
     case head = "head"
     case body = "body"
     case html = "html"

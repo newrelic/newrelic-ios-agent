@@ -34,22 +34,27 @@
 #define kNRMA_CONFIG_KEY @"configuration"
 
 // Session Replay Configuration Keys
-#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"mobile_session_replay"
+#define kNRMA_SESSION_REPLAY_CONFIG_KEY @"session_replay"
 
-#define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"idemtifier"
+#define kNRMA_SESSION_REPLAY_CONFIG_IDENTIFIER_KEY @"identifier"
 #define kNRMA_SESSION_REPLAY_CONFIG_NAME_KEY @"name"
-#define kNRMA_SESSION_REPLAY_CONFIG_OPERATOR_KEY @"name"
+#define kNRMA_SESSION_REPLAY_CONFIG_OPERATOR_KEY @"operator"
 #define kNRMA_SESSION_REPLAY_CONFIG_TYPE_KEY @"type"
 
+#define kNRMA_SESSION_REPLAY_CONFIG_MASK_KEY @"mask"
+#define kNRMA_SESSION_REPLAY_CONFIG_UNMASK_KEY @"unmask"
+#define kNRMA_SESSION_REPLAY_CONFIG_TAG_KEY @"tag"
+#define kNRMA_SESSION_REPLAY_CONFIG_CLASS_KEY @"class"
+
 #define kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY @"enabled"
-#define kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY @"samplingRate"
-#define kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY @"errorSamplingRate"
+#define kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY @"sampling_rate"
+#define kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY @"error_sampling_rate"
 #define kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY @"mode"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY @"maskApplicationText"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY @"maskUserInputText"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY @"maskAllUserTouches"
-#define kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY @"maskAllImages"
-#define kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY @"customMaskingRules"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskApplicationText_KEY @"mask_application_text"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskUserInputText_KEY @"mask_user_input_text"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY @"mask_all_user_touches"
+#define kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY @"mask_all_images"
+#define kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY @"custom_masking_rules"
 
 // End Session Replay Configuration Keys
 
@@ -114,19 +119,17 @@
 @property(nonatomic,assign) BOOL      session_replay_maskAllUserTouches;
 @property(nonatomic,assign) BOOL     session_replay_maskAllImages;
 
-@property(nonatomic,assign) enum SessionReplayTextMaskingStrategy     session_replay_textMaskingStrategy;
 
 // Lists for tracking masked elements in SessionReplay
-@property (nonatomic, strong) NSMutableSet *session_replay_maskedAccessibilityIdentifiers;
-@property (nonatomic, strong) NSMutableSet *session_replay_maskedClassNames;
+@property (nonatomic, strong) NSMutableArray *session_replay_maskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableArray *session_replay_maskedClassNames;
 
 
 // Lists for tracking unmasked elements in SessionReplay
-@property (nonatomic, strong) NSMutableSet *session_replay_unmaskedAccessibilityIdentifiers;
-@property (nonatomic, strong) NSMutableSet *session_replay_unmaskedClassNames;
+@property (nonatomic, strong) NSMutableArray *session_replay_unmaskedAccessibilityIdentifiers;
+@property (nonatomic, strong) NSMutableArray *session_replay_unmaskedClassNames;
 
-
-@property (nonatomic, strong) NSMutableSet *session_replay_customRules;
+@property (nonatomic, strong) NSMutableArray *session_replay_customRules;
 
 // End Session Replay Configuration
 
@@ -137,12 +140,21 @@
 - (id) initWithDictionary:(NSDictionary*)dict;
 - (NSDictionary*) asDictionary;
 
+- (void)addMaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeMaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addMaskedClassNames:(NSArray *)array;
+- (void)removeMaskedClassName:(NSString *)className;
+- (void)addUnmaskedAccessibilityIdentifiers:(NSArray *)array;
+- (void)removeUnmaskedAccessibilityIdentifier:(NSString *)identifier;
+- (void)addUnmaskedClassNames:(NSArray *)array;
+- (void)removeUnmaskedClassName:(NSString *)className;
+
 @end
 
 
 @interface SessionReplayCustomMaskingRule : NSObject
 @property(nonatomic,assign) NSString*    identifier;
-@property(nonatomic,assign) NSString*    name;
+@property(nonatomic,assign) NSArray*     name;
 @property(nonatomic,assign) NSString*    operatorName;
 @property(nonatomic,assign) NSString*    type;
 - (id) initWithDictionary:(NSDictionary*)dict;

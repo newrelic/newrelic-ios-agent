@@ -760,6 +760,66 @@
 
     [NRMAHarvestController setMaxOfflineStorageSize:megabytes];
 }
+
+#pragma mark - Session Replay Masking
+
+/*
+ * Adds a view class to be masked during session replay.
+ * All instances of the specified class and its subclasses will have their text content masked.
+ * The values added using this function will be added to the ones returned by the server.
+ */
++ (BOOL) addSessionReplayMaskViewClass:(NSString*) viewClassName {
+    if (viewClassName == NULL || viewClassName.length == 0) {
+        NRLOG_ERROR(@"addSessionReplayMaskViewClass: viewClassName must not be null or empty");
+        return false;
+    }
+
+    return [NRMAAgentConfiguration addLocalMaskedClassName: viewClassName];
+
+}
+
+/*
+ * Adds a view class to be explicitly unmasked during session replay.
+ * This is useful for excluding specific subclasses from a broader masking rule.
+ * The values added using this function will be replaced by the ones returned by the server.
+ */
++ (BOOL) addSessionReplayUnmaskViewClass:(NSString*) viewClassName {
+    if (viewClassName == NULL || viewClassName.length == 0) {
+        NRLOG_ERROR(@"addSessionReplayUnmaskViewClass: viewClassName must not be null or empty");
+        return false;
+    }
+
+    return [NRMAAgentConfiguration addLocalUnmaskedClassName: viewClassName];
+}
+
+/*
+ * Adds an identifier to be masked during session replay.
+ * All views with the specified tag will have their text content masked.
+ * The values added using this function will be added to the ones returned by the server.
+ */
++ (BOOL) addSessionReplayMaskedAccessibilityIdentifier:(NSString*) identifier {
+    if (identifier == NULL || identifier.length == 0) {
+        NRLOG_ERROR(@"addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        return false;
+    }
+
+    return [NRMAAgentConfiguration addLocalMaskedAccessibilityIdentifier: identifier];
+}
+
+/*
+ * Adds an identifier to be explicitly unmasked during session replay.
+ * This is useful for excluding specific views from a broader masking rule.
+ * The values added using this function will be replaced by the ones returned by the server.
+ */
++ (BOOL) addSessionReplayUnmaskedAccessibilityIdentifier:(NSString*) identifier {
+    if (identifier == NULL || identifier.length == 0) {
+        NRLOG_ERROR(@"addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        return false;
+    }
+
+    return [NRMAAgentConfiguration addLocalUnmaskedAccessibilityIdentifier: identifier];
+}
+
 #pragma mark - Hidden APIs
 
 

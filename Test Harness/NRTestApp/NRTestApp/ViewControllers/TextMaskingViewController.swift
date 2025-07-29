@@ -19,14 +19,20 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         
         self.title = "Text Masking"
         self.view.backgroundColor = .systemBackground
-        let maskedStack = createSectionStack(title: "Masked Fields", isMasked: true)
-        let unmaskedStack = createSectionStack(title: "Unmasked Fields", isMasked: false)
+
+        let searchAndCredentialsStack = createSearchAndCredentialsSection()
+        let maskedStack = createSectionStack(title: "Masked Fields", isMasked: true, isCustom: false)
+        let unmaskedStack = createSectionStack(title: "Unmasked Fields", isMasked: false, isCustom: false)
+        
+        let customMaskedStack = createSectionStack(title: "Custom Masked Fields", isMasked: true, isCustom: true)
+        let customUnmaskedStack = createSectionStack(title: "Custom Unmasked Fields", isMasked: false, isCustom: true)
+        
         let parentChildStack = createParentChildSection()
 
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
-        let mainStack = UIStackView(arrangedSubviews: [maskedStack, unmaskedStack, parentChildStack, tableViewStack])
+        let mainStack = UIStackView(arrangedSubviews: [searchAndCredentialsStack, maskedStack, unmaskedStack, customMaskedStack, customUnmaskedStack, parentChildStack, tableViewStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack, parentChildStack])
 //        let mainStack = UIStackView(arrangedSubviews: [maskedStack])//, parentChildStack])
 
@@ -35,6 +41,8 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         mainStack.translatesAutoresizingMaskIntoConstraints = false
 
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.showsVerticalScrollIndicator = true
 
         scrollView.addSubview(mainStack)
 
@@ -49,11 +57,13 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             mainStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
             mainStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
             mainStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
-            mainStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor)
+            mainStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
+
+            mainStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
         ])
     }
 
-    private func createSectionStack(title: String, isMasked: Bool) -> UIStackView {
+    private func createSectionStack(title: String, isMasked: Bool, isCustom: Bool) -> UIStackView {
         let sectionLabel = UILabel()
         sectionLabel.text = title
         sectionLabel.font = .boldSystemFont(ofSize: 18)
@@ -66,8 +76,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         for i in 1...4 {
             let label = UILabel()
             label.text = "\(title) UILabel \(i)"
-            label.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
-
+            if isCustom {
+                label.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                label.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             //             label.accessibilityIdentifier = isMasked ? "nr-masked-label-\(i)" : "nr-unmasked-label-\(i)"
 
             fieldsStack.addArrangedSubview(label)
@@ -78,8 +91,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textField.borderStyle = .roundedRect
             textField.placeholder = "\(title) UITextField \(i)"
             //textField.accessibilityIdentifier = isMasked ? "nr-mask-textfield-\(i)" : "nr-unmask-textfield-\(i)"
-            textField.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
-
+            if isCustom {
+                textField.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                textField.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             fieldsStack.addArrangedSubview(textField)
         }
         // UITextViews
@@ -89,7 +105,11 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textView.layer.borderWidth = 1
             textView.layer.borderColor = UIColor.systemGray4.cgColor
             textView.layer.cornerRadius = 6
-            textView.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            if isCustom {
+                textView.accessibilityIdentifier = isMasked ? "private" : "public"
+            } else {
+                textView.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
+            }
             // textView.accessibilityIdentifier = isMasked ? "nr-mask-textview-\(i)" : "nr-unmask-textview-\(i)"
 
             textView.heightAnchor.constraint(equalToConstant: 60).isActive = true
@@ -283,6 +303,57 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         print("Selected row at \(indexPath.row)")
     }
 
+
+    private func createSearchAndCredentialsSection() -> UIStackView {
+        let sectionLabel = UILabel()
+        sectionLabel.text = "Search & Credentials Fields"
+        sectionLabel.font = .boldSystemFont(ofSize: 18)
+
+        let fieldsStack = UIStackView()
+        fieldsStack.axis = .vertical
+        fieldsStack.spacing = 12
+
+        // Search Bar
+        let searchBar = UISearchBar()
+        searchBar.placeholder = "Search query (masked)"
+        searchBar.accessibilityIdentifier = "nr-mask"
+        fieldsStack.addArrangedSubview(searchBar)
+
+        // Username TextField
+        let usernameField = UITextField()
+        usernameField.borderStyle = .roundedRect
+        usernameField.placeholder = "Username (unmasked)"
+        usernameField.accessibilityIdentifier = "nr-unmask"
+        fieldsStack.addArrangedSubview(usernameField)
+
+        // Password TextField
+        let passwordField = UITextField()
+        passwordField.borderStyle = .roundedRect
+        passwordField.placeholder = "Password (masked)"
+        passwordField.isSecureTextEntry = true
+        fieldsStack.addArrangedSubview(passwordField)
+
+        // Credit Card Number TextField
+        let cardNumberField = UITextField()
+        cardNumberField.borderStyle = .roundedRect
+        cardNumberField.placeholder = "Credit Card Number (masked)"
+        cardNumberField.keyboardType = .numberPad
+        cardNumberField.accessibilityIdentifier = "nr-mask"
+        fieldsStack.addArrangedSubview(cardNumberField)
+
+        // CVV TextField
+        let cvvField = UITextField()
+        cvvField.borderStyle = .roundedRect
+        cvvField.placeholder = "CVV (masked)"
+        cvvField.keyboardType = .numberPad
+        cvvField.isSecureTextEntry = true
+        fieldsStack.addArrangedSubview(cvvField)
+
+        let sectionStack = UIStackView(arrangedSubviews: [sectionLabel, fieldsStack])
+        sectionStack.axis = .vertical
+        sectionStack.spacing = 8
+        return sectionStack
+    }
 }
 
 class MaskTestTableViewCell: UITableViewCell {

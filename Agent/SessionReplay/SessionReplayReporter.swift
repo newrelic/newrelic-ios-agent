@@ -19,9 +19,11 @@ public class SessionReplayReporter: NSObject {
     private let uploadQueue = DispatchQueue(label: "com.newrelicagent.sessionreplayqueue")
     private let kNRMAMaxUploadRetry = 3
     private let applicationToken: String
+    private let url: NSString
 
-    @objc public init(applicationToken: String) {
+    @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
+        self.url = url
     }
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
@@ -42,7 +44,7 @@ public class SessionReplayReporter: NSObject {
              let upload = self.sessionReplayFramesUploadArray.first!
              let dataSizeInBytes = upload.sessionReplayFramesData.count
              let dataSizeInMB = Double(dataSizeInBytes) / (1024.0 * 1024.0)
-             NRLOG_DEBUG("Session replay frames data: \(String(format: "%.2f", dataSizeInMB)) MB")
+             NRLOG_DEBUG("Session replay frames compressed data: \(String(format: "%.2f", dataSizeInMB)) MB")
 
              if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
                  NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
@@ -125,7 +127,7 @@ public class SessionReplayReporter: NSObject {
             attributes["content_encoding"] = "gzip"
         }
         do {
-            if let sessionAttributes = NewRelicAgentInternal.sharedInstance().analyticsController.sessionAttributeJSONString(),
+            if let sessionAttributes = NewRelicAgentInternal.sharedInstance()?.analyticsController.sessionAttributeJSONString(),
                !sessionAttributes.isEmpty,
                let data = sessionAttributes.data(using: .utf8),
                let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
@@ -141,7 +143,7 @@ public class SessionReplayReporter: NSObject {
             return "\(key)=\(value)"
         }.joined(separator: "&")
 
-        var urlComponents = URLComponents(string: "https://staging-mobile-collector.newrelic.com/mobile/blobs")
+        var urlComponents = URLComponents(string:"https://\(self.url as String)")
 
         urlComponents?.queryItems = [
             URLQueryItem(name: "type", value: "SessionReplay"),
@@ -151,7 +153,6 @@ public class SessionReplayReporter: NSObject {
             URLQueryItem(name: "attributes", value: attributesString)
         ]
 
-        NRLOG_DEBUG(urlComponents?.url?.absoluteString ?? "Error constructing URL for session replay upload")
         return urlComponents?.url
     }
 }

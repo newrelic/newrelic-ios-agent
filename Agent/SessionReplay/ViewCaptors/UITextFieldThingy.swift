@@ -31,7 +31,10 @@ class UITextFieldThingy: SessionReplayViewThingy {
     init(view: UITextField, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
-        if let isMasked = viewDetails.isMasked {
+        if view.isSecureTextEntry {
+            self.isMasked = true
+        }
+        else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         } else {
             self.isMasked = NRMAHarvestController.configuration().session_replay_maskUserInputText
@@ -91,14 +94,34 @@ class UITextFieldThingy: SessionReplayViewThingy {
     }
 
     func generateRRWebNode() -> ElementNodeData  {
+//        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
+//                                                        isStyle: false,
+//                                                        textContent: labelText,
+//                                                        childNodes: []))
+        
+        return ElementNodeData(id: viewDetails.viewId,
+                                        tagName: .div,
+                                        attributes: ["id":viewDetails.cssSelector],
+                                        childNodes: [])
+    }
+    
+    public func generateRRWebTextNode() -> ElementNodeData?  {
+        guard !labelText.isEmpty else { return nil }
+        
         let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
                                                         isStyle: false,
                                                         textContent: labelText,
                                                         childNodes: []))
         
-        return ElementNodeData(id: viewDetails.viewId,
-                                        tagName: .div,
-                                        attributes: ["id":viewDetails.cssSelector],
+        return ElementNodeData(id: IDGenerator.shared.getId(),
+                                        tagName: .span,
+                                        attributes: ["style":   """
+                                                                \(generateBaseCSSStyle())\
+                                                                white-space: pre-wrap;\
+                                                                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+                                                                color: \(textColor.toHexString(includingAlpha: true));
+                                                                """
+                                                    ],
                                         childNodes: [textNode])
     }
     

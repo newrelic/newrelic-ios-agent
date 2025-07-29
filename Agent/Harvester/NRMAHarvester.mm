@@ -56,6 +56,7 @@
         connection = [[NRMAHarvesterConnection alloc] init];
         _harvestData = [[NRMAHarvestData alloc] init];
         self.harvestAwareObjects = [[NSMutableArray alloc] init];
+        configuration = [self fetchHarvestConfiguration];
     }
     return self;
 }
@@ -468,6 +469,7 @@
         configuration.application_token = connection.applicationToken;
 
         [self handleLoggingConfigurationUpdate];
+        [self handleSessionReplayConfigurationUpdate];
 
         [self saveHarvesterConfiguration:configuration];
 
@@ -549,59 +551,7 @@
 {
     NRMAHarvesterConfiguration* config = nil;
     @try {
-        NSError* error = nil;
-
-//        // TODO: Remove CannedConnect response
-//        NSString *cannedConnect = @"{\n"
-//            @"    \"data_token\": [152067033, 225398769],\n"
-//            @"    \"account_id\": \"10816994\",\n"
-//            @"    \"trusted_account_key\": \"1\",\n"
-//            @"    \"entity_guid\": \"MTA4MTY5OTR8TU9CSUxFfEFQUExJQ0FUSU9OfDE1MjA2NzAzMw\",\n"
-//            @"    \"request_headers_map\": {\n"
-//            @"        \"NR-Session\": \"BhV6ew5PoJFPAKUN4g1vT_EAAAEBLCQoAAAAHQECBAkQW9nIAAAAAWhRvlsDAANERVYAAAAJTlJUZXN0QXBw\",\n"
-//            @"        \"NR-AgentConfiguration\": \"AQAAAZcX8L8Y\"\n"
-//            @"    },\n"
-//            @"    \"configuration\": {\n"
-//            @"        \"logs\": {\n"
-//            @"            \"enabled\": true,\n"
-//            @"            \"level\": \"INFO\",\n"
-//            @"            \"sampling_rate\": 50.0\n"
-//            @"        },\n"
-//            @"        \"application_exit_info\": {\n"
-//            @"            \"enabled\": true\n"
-//            @"        },\n"
-//            @"        \"mobile_session_replay\": {\n"
-//            @"            \"enabled\": true,\n"
-//            @"            \"sampling_rate\": 100.0,\n"
-//            @"            \"error_sampling_rate\": 100.0,\n"
-//            @"            \"mode\": \"custom\",\n"
-//            @"            \"maskApplicationText\": false,\n"
-//            @"            \"maskUserInputText\": true,\n"
-//            @"            \"maskAllUserTouches\": true,\n"
-//            @"            \"maskAllImages\": true,\n"
-//            @"            \"customMaskingRules\": [\n"
-//            @"                {\n"
-//            @"                    \"identifier\": \"accessbilityIdentifier\",\n"
-//            @"                    \"name\": [\"social_security\"],\n"
-//            @"                    \"operator\": \"equals\",\n"
-//            @"                    \"type\": \"mask\"\n"
-//            @"                },\n"
-//            @"                {\n"
-//            @"                    \"identifier\": \"tag\",\n"
-//            @"                    \"name\": [\"dateOfBirth\", \"anotherMod\"],\n"
-//            @"                    \"operator\": \"contains\",\n"
-//            @"                    \"type\": \"unmask\"\n"
-//            @"                }\n"
-//            @"            ]\n"
-//            @"        }\n"
-//            @"    }\n"
-//            @"}";
-//
-//        // Use this line for a cannedConnect response.
-//         NSData *dataFromResp = [cannedConnect dataUsingEncoding:NSUTF8StringEncoding];
-
-        // use this line for the real connect response.
-        
+        NSError* error = nil;        
         NSData *dataFromResp = [response.responseBody dataUsingEncoding:NSUTF8StringEncoding];
 
          NRLOG_AGENT_VERBOSE(@"Harvest config: %@", response.responseBody);
@@ -724,7 +674,7 @@
 
 
         BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sampleSeed] <= [configuration sampling_rate];
-        NRLOG_AGENT_VERBOSE(@"config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
+        // NRLOG_AGENT_VERBOSE(@"logging config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
         if (isSampled && [NRMAFlags shouldEnableLogReporting]) {
             // Do log upload
             [NRLogger enqueueLogUpload];
@@ -858,6 +808,28 @@
         // No Log Reporting Config Detected, not automating feature flags or logging config.
          NRLOG_AGENT_DEBUG(@"no config: No Config Detected, not automating feature flags or logging config.");
     }
+}
+
+- (void) handleSessionReplayConfigurationUpdate {
+    // if it was on and now its off stop MSR
+
+    // if it was off and now its on start MSR
+    if (configuration.has_session_replay_config) {
+        if (configuration.session_replay_enabled) {
+            
+            NRLOG_AGENT_DEBUG(@"config: Has SESSION REPLAY ENABLED");
+
+        }
+        else {
+            NRLOG_AGENT_DEBUG(@"config: SESSION REPLAY DISABLED");
+            [[NewRelicAgentInternal sharedInstance] sessionReplayStop];
+        }
+    }
+    // No replay config at all, don't mess with replay
+    else {
+        NRLOG_AGENT_DEBUG(@"no config: No SESSION REPLAY Config Detected.");
+    }
+
 }
 
 @end
