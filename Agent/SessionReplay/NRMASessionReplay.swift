@@ -66,7 +66,8 @@ public class NRMASessionReplay: NSObject {
         // should remove frames from file system after processing
 
         // Clear the session replay file after processing
-        DispatchQueue.global(qos: .background).async { [self] in
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
             
             self.frameCounter = 0
             self.uncompressedDataSize = 0
@@ -133,7 +134,8 @@ public class NRMASessionReplay: NSObject {
 
         // BEGIN PROCESSING FRAME TO FILE
         // Process frame to file
-        DispatchQueue.global(qos: .background).async { [self] in
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
 
             self.processFrameToFile(frame)
         }
@@ -150,7 +152,8 @@ public class NRMASessionReplay: NSObject {
             // should remove frames from file system after processing
 
             // Clear the session replay file after processing
-            DispatchQueue.global(qos: .background).async { [self] in
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                guard let self = self else { return }
 
                 self.frameCounter = 0
                 self.uncompressedDataSize = 0
