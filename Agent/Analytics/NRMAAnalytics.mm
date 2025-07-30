@@ -125,26 +125,26 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                            options:0
                                                                              error:nil];
                 if (dictionary[kNRMA_RA_upgradeFrom]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_upgradeFrom];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_upgradeFrom];
                 }
                 if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMASecureUDIDIsNilNotification];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMASecureUDIDIsNilNotification];
 
                 }
                 if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMADeviceChangedAttribute];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMADeviceChangedAttribute];
                 }
                 if (dictionary[kNRMA_RA_install]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_install];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_install];
                 }
                 if (dictionary[kNRMA_RA_hasReplay]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_hasReplay];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
                 }
 
                 //session duration is only valid for one session. This metric should be removed
                 //after the persistent attributes are loaded.
                 if (dictionary[kNRMA_RA_sessionDuration]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_sessionDuration];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_sessionDuration];
                 }
             }
         }
@@ -698,6 +698,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
     }
 }
+
+- (BOOL) removeNRSessionAttributeNamed:(NSString*)name {
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager removeNRSessionAttributeNamed:name];
+    }
+    return false;
+}
+
 - (BOOL) removeAllSessionAttributes {
     if([NRMAFlags shouldEnableNewEventSystem]){
         return [_sessionAttributeManager removeAllSessionAttributes];
@@ -1235,7 +1243,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             kNRMA_RA_upgradeFrom,
             kNRMA_RA_platform,
             kNRMA_RA_platformVersion,
-            kNRMA_RA_lastInteraction
+            kNRMA_RA_lastInteraction,
+            kNRMA_RA_hasReplay
         ,nil];
 }
 
