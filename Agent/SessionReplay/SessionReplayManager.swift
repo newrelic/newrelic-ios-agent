@@ -111,8 +111,26 @@ public class SessionReplayManager: NSObject {
                 return
             }
             
-            let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
-            let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
+            var firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
+            var lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
+            
+            
+            // get the first and last timestamp from the touches if they exist
+            if let firstTouch = processedTouches.first {
+                let touchFirstTimestamp = TimeInterval(firstTouch.timestamp)
+                if touchFirstTimestamp < firstTimestamp || processedFrames.isEmpty {
+                    // use the touch timestamp if it's earlier than the first frame timestamp
+                    firstTimestamp = touchFirstTimestamp
+                }
+            }
+            
+            if let lastTouch = processedTouches.last {
+                let touchLastTimestamp = TimeInterval(lastTouch.timestamp)
+                if touchLastTimestamp > lastTimestamp {
+                    // use the touch timestamp if it's later than the last frame timestamp
+                    lastTimestamp = touchLastTimestamp
+                }
+            }
             
             // Initialize container with meta event
             var container: [AnyRRWebEvent] = []
