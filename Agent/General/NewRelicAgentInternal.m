@@ -649,7 +649,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if(_sessionReplay != nil){
         [_sessionReplay stop];
         [_sessionReplay clearAllData];
-        [_analyticsController removeSessionAttributeNamed:kNRMA_RA_hasReplay];
+        [_analyticsController removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
     }
 #endif
 }
