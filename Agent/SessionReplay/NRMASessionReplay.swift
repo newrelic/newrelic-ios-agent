@@ -19,7 +19,7 @@ public class NRMASessionReplay: NSObject {
 
     private let sessionReplayCapture: SessionReplayCapture
     private let sessionReplayFrameProcessor = SessionReplayFrameProcessor()
-    private var sessionReplayTouchCapture: SessionReplayTouchCapture!
+    private var sessionReplayTouchCapture: SessionReplayTouchCapture?
     private let sessionReplayTouchProcessor = TouchEventProcessor()
     private var rawFrames = [SessionReplayFrame]()
     
@@ -62,11 +62,14 @@ public class NRMASessionReplay: NSObject {
     
     public func clearAllData() {
         rawFrames.removeAll()
-        sessionReplayTouchCapture.resetEvents()
+        if let touchCapture = sessionReplayTouchCapture {
+            touchCapture.resetEvents()
+        }
         // should remove frames from file system after processing
 
         // Clear the session replay file after processing
-        DispatchQueue.global(qos: .background).async { [self] in
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
             
             self.frameCounter = 0
             self.uncompressedDataSize = 0
@@ -92,7 +95,10 @@ public class NRMASessionReplay: NSObject {
             let originalSelector = #selector(UIApplication.sendEvent(_:))
 
             let block: @convention(block)(UIApplication, UIEvent) -> Void = { app, event in
-                self.sessionReplayTouchCapture.captureSendEventTouches(event: event)
+                guard let touchCapture = self.sessionReplayTouchCapture else {
+                    return
+                }
+                touchCapture.captureSendEventTouches(event: event)
                 typealias Func = @convention(c)(AnyObject, Selector, UIEvent) -> Void
                 let function = unsafeBitCast(self.NRMAOriginal__sendEvent, to: Func.self)
                 function(app, originalSelector, event)
@@ -133,7 +139,8 @@ public class NRMASessionReplay: NSObject {
 
         // BEGIN PROCESSING FRAME TO FILE
         // Process frame to file
-        DispatchQueue.global(qos: .background).async { [self] in
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
 
             self.processFrameToFile(frame)
         }
@@ -150,7 +157,8 @@ public class NRMASessionReplay: NSObject {
             // should remove frames from file system after processing
 
             // Clear the session replay file after processing
-            DispatchQueue.global(qos: .background).async { [self] in
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                guard let self = self else { return }
 
                 self.frameCounter = 0
                 self.uncompressedDataSize = 0
@@ -207,7 +215,7 @@ public class NRMASessionReplay: NSObject {
         }
         let touches = sessionReplayTouchProcessor.processTouches(touchCapture.touchEvents)
         if clear {
-            sessionReplayTouchCapture.resetEvents()
+            touchCapture.resetEvents()
         }
         return touches
     }

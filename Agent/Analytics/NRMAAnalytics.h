@@ -67,6 +67,7 @@
 
 //private NR attribute settings
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value;
+- (BOOL) removeNRSessionAttributeNamed:(NSString*)name;
 
 - (BOOL) addSessionEndAttribute;
 - (BOOL) addSessionEvent;
