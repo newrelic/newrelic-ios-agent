@@ -89,3 +89,4 @@ fastlane/test_output
 iOSInjectionProject/
 .DS_Store
 .build
+Test Harness/NRTestApp/upload_dsym_results.log
