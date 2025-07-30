@@ -79,7 +79,7 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
         #\(viewDetails.cssSelector) { \
         \(generateBaseCSSStyle()) \
         -webkit-backdrop-filter: blur(\(blurIntensity)px); \
-        box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.3);
+        box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.3);\
         }
         """
     }

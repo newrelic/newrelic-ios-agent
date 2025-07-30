@@ -39,11 +39,17 @@ class SessionReplayCapture {
             for subview in currentView.subviews {
                 if (shouldRecord(view: subview)) {
                     let childThingy = findRecorderForView(view: subview)
-                    currentParentThingy.subviews.append(childThingy)
+                    if childThingy.viewDetails.isVisible {
+                        currentParentThingy.subviews.append(childThingy)
+                    }
                     viewStack.append(ViewPair(view: subview, parentRecorder: childThingy))
                 } else {
                     viewStack.append(ViewPair(view: subview, parentRecorder: currentParentThingy))
                 }
+            }
+            if let textView = currentView as? UITextField {
+                 let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
+                currentParentThingy.subviews.append(textViewThingy)// Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
             }
         }
         
@@ -142,9 +148,8 @@ class SessionReplayCapture {
         
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
-        let isClippedOut = view.frame.intersection(superview.frame).isEmpty
         
-        return !(areFramesTheSame && isClear && isClippedOut)
+        return !(areFramesTheSame && isClear)
     }
 }
 
