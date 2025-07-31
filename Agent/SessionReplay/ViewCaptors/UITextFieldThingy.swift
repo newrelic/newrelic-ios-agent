@@ -105,26 +105,6 @@ class UITextFieldThingy: SessionReplayViewThingy {
                                         childNodes: [])
     }
     
-    public func generateRRWebTextNode() -> ElementNodeData?  {
-        guard !labelText.isEmpty else { return nil }
-        
-        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
-                                                        isStyle: false,
-                                                        textContent: labelText,
-                                                        childNodes: []))
-        
-        return ElementNodeData(id: IDGenerator.shared.getId(),
-                                        tagName: .span,
-                                        attributes: ["style":   """
-                                                                \(generateBaseCSSStyle())\
-                                                                white-space: pre-wrap;\
-                                                                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                                                                color: \(textColor.toHexString(includingAlpha: true));
-                                                                """
-                                                    ],
-                                        childNodes: [textNode])
-    }
-    
     func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
         let elementNode = ElementNodeData(id: viewDetails.viewId,
                                    tagName: .div,
@@ -132,15 +112,15 @@ class UITextFieldThingy: SessionReplayViewThingy {
                                    childNodes: [])
         elementNode.attributes["style"] = inlineCSSDescription()
         
-        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
-                                                        isStyle: false,
-                                                        textContent: labelText,
-                                                        childNodes: []))
-        
+//        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
+//                                                        isStyle: false,
+//                                                        textContent: labelText,
+//                                                        childNodes: []))
+//        
         let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(elementNode))
-        let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
+       // let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
         
-        return [addElementNode, addTextNode]
+        return [addElementNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {

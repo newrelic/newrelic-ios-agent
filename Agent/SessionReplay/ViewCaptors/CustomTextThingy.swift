@@ -80,6 +80,19 @@ class CustomTextThingy: SessionReplayViewThingy {
         return ""
     }
     
+    func inlineCSSDescription() -> String {
+        return """
+                position: fixed; \
+                left: \(String(format: "%.2f", self.viewDetails.frame.origin.x))px; \
+                top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
+                width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
+                height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
+                white-space: pre-wrap;\
+                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+                color: \(textColor.toHexString(includingAlpha: true));
+                """
+    }
+    
     func generateRRWebNode() -> ElementNodeData  {
         let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
                                                         isStyle: false,
@@ -88,18 +101,26 @@ class CustomTextThingy: SessionReplayViewThingy {
         
         return ElementNodeData(id: IDGenerator.shared.getId(),
                                         tagName: .span,
-                                        attributes: ["style":   """
-                                                                position: fixed; \
-                                                                left: \(String(format: "%.2f", self.viewDetails.frame.origin.x))px; \
-                                                                top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
-                                                                width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
-                                                                height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
-                                                                white-space: pre-wrap;\
-                                                                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                                                                color: \(textColor.toHexString(includingAlpha: true));
-                                                                """
-                                                    ],
+                                        attributes: ["style": inlineCSSDescription()],
                                         childNodes: [textNode])
+    }
+    
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let elementNode = ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .div,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        elementNode.attributes["style"] = inlineCSSDescription()
+        
+        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
+                                                        isStyle: false,
+                                                        textContent: labelText,
+                                                        childNodes: []))
+        
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(elementNode))
+        let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
+        
+        return [addElementNode, addTextNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
