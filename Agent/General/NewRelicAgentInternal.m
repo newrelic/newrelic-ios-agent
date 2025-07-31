@@ -633,11 +633,23 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
 }
 
-- (void) sessionReplayStop {
+- (void) sessionReplayStart {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    BOOL isSampled = [self isSessionReplaySampled];
+    if (isSampled && [self isSessionReplayEnabled]) {
+        [_sessionReplay start];
+    } else {
+        [self sessionReplayDisabled];
+    }
+#endif
+}
+
+- (void) sessionReplayDisabled {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if(_sessionReplay != nil){
         [_sessionReplay stop];
-        [_sessionReplay clearFrames];
+        [_sessionReplay clearAllData];
+        [_analyticsController removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
     }
 #endif
 }
@@ -728,13 +740,14 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
 
+    [self onSessionStart];
+    
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     BOOL isSampled = [self isSessionReplaySampled];
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay start];
     }
 #endif
-    [self onSessionStart];
 }
 
 #if !TARGET_OS_WATCH
@@ -784,7 +797,7 @@ static UIBackgroundTaskIdentifier background_task;
 
     BOOL isSampled = [self isSessionReplaySampled];
 
-    if (isSampled && [self isSessionReplayEnabled]) {
+    if ((isSampled && [self isSessionReplayEnabled]) || _sessionReplay.isRunning) {
 
         [_sessionReplay stop];
     }
@@ -1299,9 +1312,9 @@ void applicationDidEnterBackgroundCF(void) {
         isEnabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
     else {
-        NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of false");
+        NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of true");
     }
-    NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %d", isEnabled);
+    NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %@", isEnabled ? @"true" : @"false");
 
     return isEnabled;
 }

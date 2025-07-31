@@ -20,7 +20,11 @@ class ViewController: UIViewController {
     var spaceStack = UIStackView()
     var helloButton = UIButton()
     var helloWorldLabel: UILabel?
-    
+        
+    private var timeLabel = UILabel()
+    private var appStartDate = Date()
+    private var timer: Timer?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -29,6 +33,9 @@ class ViewController: UIViewController {
 #endif
         setupSpaceStack()
         setupButtonsTable()
+        
+        setupTimeLabel()
+        startTimer()
         
         viewModel.error.onUpdate = { [weak self] _ in
             if let error = self?.viewModel.error.value {
@@ -46,6 +53,11 @@ class ViewController: UIViewController {
         }
         
         viewModel.loadApodData()
+        
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(appDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil)
 
         NewRelic.logInfo("ViewController viewDidLoad finished.")
     }
@@ -103,6 +115,55 @@ class ViewController: UIViewController {
         spaceStack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         spaceLabel.leadingAnchor.constraint(equalTo: self.spaceStack.leadingAnchor).isActive = true
         spaceLabel.trailingAnchor.constraint(equalTo: self.spaceStack.trailingAnchor).isActive = true
+    }
+    
+    private func setupTimeLabel() {
+        timeLabel.translatesAutoresizingMaskIntoConstraints = false
+        timeLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium)
+        timeLabel.textColor = .white
+        timeLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        timeLabel.textAlignment = .center
+        timeLabel.layer.cornerRadius = 8
+        timeLabel.layer.masksToBounds = true
+        view.addSubview(timeLabel)
+
+        NSLayoutConstraint.activate([
+            timeLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
+            timeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
+            timeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 165),
+            timeLabel.heightAnchor.constraint(equalToConstant: 28)
+        ])
+    }
+
+    private func startTimer() {
+        updateTimeLabel()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateTimeLabel()
+        }
+    }
+
+    private func updateTimeLabel() {
+        let elapsed = Int(Date().timeIntervalSince(appStartDate))
+        let hours = elapsed / 3600
+        let minutes = (elapsed % 3600) / 60
+        let seconds = elapsed % 60
+
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        let currentTime = formatter.string(from: Date())
+
+        timeLabel.text = String(format: "%02d:%02d:%02d  %@", hours, minutes, seconds, currentTime)
+    }
+    
+    @objc private func appDidBecomeActive() {
+        appStartDate = Date()
+        timer?.invalidate()
+        startTimer()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        timer?.invalidate()
     }
     
     @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)

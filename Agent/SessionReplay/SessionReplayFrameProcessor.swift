@@ -53,18 +53,9 @@ class SessionReplayFrameProcessor {
             var childNodes = [SerializedNode]()
             
             for childThingy in viewThingy.subviews {
-                if childThingy.viewDetails.isVisible {
-                    let childNode = childThingy.generateRRWebNode()
-                    childNodes.append(.element(childNode))
-                    thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
-                } else {
-                   // NRLOG_DEBUG("Skipping hidden view \(childThingy.cssDescription())")
-                }
-            }
-            if let textViewThingy = viewThingy as? UITextFieldThingy {
-                if let childTextNode = textViewThingy.generateRRWebTextNode(){
-                    childNodes.append(.element(childTextNode)) // Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
-                }
+                let childNode = childThingy.generateRRWebNode()
+                childNodes.append(.element(childNode))
+                thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
             }
             
             node.childNodes.append(contentsOf: childNodes)
@@ -104,7 +95,7 @@ class SessionReplayFrameProcessor {
         let snapshotData = RRWebFullSnapshotData(node: .document(documentNode),
                                                  initialOffset: RRWebFullSnapshotData.InitialOffset(top: 0, left: 0))
         
-        return RRWebEvent(timestamp: frame.date.timeIntervalSince1970 * 1000, data: snapshotData)
+        return RRWebEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: snapshotData)
     }
     
     
@@ -146,7 +137,7 @@ class SessionReplayFrameProcessor {
         }
         
         let incrementalUpdate: RRWebIncrementalData = .mutation(RRWebMutationData(adds: adds, removes: removes, texts: texts, attributes: attributes))
-        let incrementalEvent = IncrementalEvent(timestamp: newFrame.date.timeIntervalSince1970*1000, data: incrementalUpdate)
+        let incrementalEvent = IncrementalEvent(timestamp: (newFrame.date.timeIntervalSince1970*1000).rounded(), data: incrementalUpdate)
         return incrementalEvent
         
 //         For nodes that have not been added/removed, we should get the difference they've got as a dictionary (that can be turned into JSON
