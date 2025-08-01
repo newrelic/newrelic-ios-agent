@@ -51,6 +51,11 @@ class SessionReplayCapture {
                  let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
                 currentParentThingy.subviews.append(textViewThingy)// Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
             }
+            var nextId:Int? = nil
+            for var childView in currentParentThingy.subviews.reversed() {
+                childView.viewDetails.nextId = nextId
+                nextId = childView.viewDetails.viewId
+            }
         }
         
         return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, size: rootView.frame.size)

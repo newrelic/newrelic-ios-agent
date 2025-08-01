@@ -19,7 +19,7 @@ class UILabelThingy: SessionReplayViewThingy {
         false
     }
     
-    let viewDetails: ViewDetails
+    var viewDetails: ViewDetails
 
     
     let labelText: String
@@ -70,12 +70,18 @@ class UILabelThingy: SessionReplayViewThingy {
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
+                \(inlineCSSDescription())\
+                }
+                """
+    }
+    
+    func inlineCSSDescription() -> String {
+        return """
                 \(generateBaseCSSStyle())\
                 white-space: pre-wrap;\
                 font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true));\
-                text-align: \(textAlignment);\
-                } 
+                text-align: \(textAlignment);
                 """
     }
     
@@ -89,6 +95,24 @@ class UILabelThingy: SessionReplayViewThingy {
                                         tagName: .div,
                                         attributes: ["id":viewDetails.cssSelector],
                                         childNodes: [textNode])
+    }
+    
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let elementNode = ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .div,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        elementNode.attributes["style"] = inlineCSSDescription()
+        
+        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
+                                                        isStyle: false,
+                                                        textContent: labelText,
+                                                        childNodes: []))
+        
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
+        let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
+
+        return [addElementNode, addTextNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
@@ -108,8 +132,10 @@ class UILabelThingy: SessionReplayViewThingy {
             frameDifferences["text-align"] = typedOther.textAlignment
         }
         
-        let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
-        mutations.append(attributeRecord)
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
+        }
         
         if(self.labelText != typedOther.self.labelText) {
             let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)

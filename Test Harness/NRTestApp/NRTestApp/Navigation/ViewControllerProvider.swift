@@ -40,5 +40,10 @@ enum ViewControllerProvider {
         let viewController = InfiniteScrollTableViewController()
         return viewController
     }
+    
+    static var diffTestViewController: DiffTestViewController {
+        let viewController = DiffTestViewController()
+        return viewController
+    }
 }
 

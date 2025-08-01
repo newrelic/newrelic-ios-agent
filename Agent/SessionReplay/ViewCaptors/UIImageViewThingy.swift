@@ -35,14 +35,29 @@ class UIImageViewThingy: SessionReplayViewThingy {
     }
     
     func cssDescription() -> String {
-        let cssSelector = viewDetails.cssSelector
-        
+        return """
+                #\(viewDetails.cssSelector) { \
+                \(inlineCSSDescription())\
+                }
+                """
+    }
+    
+    func inlineCSSDescription() -> String {
         if let _ = image {
-            return "#\(cssSelector) { \(generateBaseCSSStyle()) }"
+            return generateBaseCSSStyle()
         } else {
             let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
-            return "#\(cssSelector) { \(generateBaseCSSStyle()) \(imagePlaceholderCSS) }"
+            return "\(generateBaseCSSStyle()) \(imagePlaceholderCSS)"
         }
+    }
+    
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let elementNode = generateRRWebNode()
+        elementNode.attributes["style"] = inlineCSSDescription()
+        
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
+
+        return [addElementNode]
     }
     
     func generateRRWebNode() -> ElementNodeData {
@@ -63,11 +78,19 @@ class UIImageViewThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UIImageViewThingy else {
             return []
         }
-        var differences = generateBaseDifferences(from: typedOther)
+        var mutations = [MutationRecord]()
+        var frameDifferences = generateBaseDifferences(from: typedOther)
+
         if let imageData = typedOther.image?.compressImage().pngData() {
-            differences["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+            frameDifferences["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
         }
-        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: differences)]
+        
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
+        }
+        
+        return mutations
     }
 }
 
