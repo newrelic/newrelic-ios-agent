@@ -19,7 +19,7 @@ class UILabelThingy: SessionReplayViewThingy {
         false
     }
     
-    let viewDetails: ViewDetails
+    var viewDetails: ViewDetails
 
     
     let labelText: String
@@ -109,7 +109,7 @@ class UILabelThingy: SessionReplayViewThingy {
                                                         textContent: labelText,
                                                         childNodes: []))
         
-        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(elementNode))
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
         let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
 
         return [addElementNode, addTextNode]
@@ -132,8 +132,10 @@ class UILabelThingy: SessionReplayViewThingy {
             frameDifferences["text-align"] = typedOther.textAlignment
         }
         
-        let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
-        mutations.append(attributeRecord)
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
+        }
         
         if(self.labelText != typedOther.self.labelText) {
             let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)

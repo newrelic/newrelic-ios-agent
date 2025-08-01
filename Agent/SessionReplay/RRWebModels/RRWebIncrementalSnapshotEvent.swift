@@ -72,12 +72,14 @@ struct RRWebMutationData: Codable {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(id, forKey: .id)
             
-            // Create nested container for attributes
-            var attributesContainer = container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
-            
-            // Build style string from attributes dictionary
-            let styleString = attributes.map { "\($0.key): \($0.value);" }.joined(separator: " ")
-            try attributesContainer.encode(styleString, forKey: .style)
+            if !attributes.isEmpty {
+                // Create nested container for attributes
+                var attributesContainer = container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
+                
+                // Build style string from attributes dictionary
+                let styleString = attributes.map { "\($0.key): \($0.value);" }.joined(separator: " ")
+                try attributesContainer.encode(styleString, forKey: .style)
+            }
         }
         
         init(from decoder: Decoder) throws {

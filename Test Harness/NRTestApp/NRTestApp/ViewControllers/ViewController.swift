@@ -196,7 +196,9 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
 
         options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
-       
+        
+        options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
+
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
 #if os(iOS)
@@ -248,6 +250,10 @@ class ViewController: UIViewController {
 
     func collectionViewAction() {
         coordinator?.showCollectionController()
+    }
+    
+    func diffTestViewAction() {
+        coordinator?.showDiffTestController()
     }
     
     func infiniteViewAction() {

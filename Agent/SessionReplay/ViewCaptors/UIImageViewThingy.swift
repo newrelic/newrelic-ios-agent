@@ -55,7 +55,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
         let elementNode = generateRRWebNode()
         elementNode.attributes["style"] = inlineCSSDescription()
         
-        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(elementNode))
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
 
         return [addElementNode]
     }
@@ -78,11 +78,19 @@ class UIImageViewThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UIImageViewThingy else {
             return []
         }
-        var differences = generateBaseDifferences(from: typedOther)
+        var mutations = [MutationRecord]()
+        var frameDifferences = generateBaseDifferences(from: typedOther)
+
         if let imageData = typedOther.image?.compressImage().pngData() {
-            differences["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+            frameDifferences["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
         }
-        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: differences)]
+        
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
+        }
+        
+        return mutations
     }
 }
 

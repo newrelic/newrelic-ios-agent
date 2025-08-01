@@ -190,6 +190,7 @@ public class NRMASessionReplay: NSObject {
 
         var currentSize:CGSize = .zero
         let frames = getAndClearFrames(clear: clear)
+        sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
 
         for frame in frames {
             if currentSize != frame.size {

@@ -18,7 +18,7 @@ class UIViewThingy: SessionReplayViewThingy {
         true
     }
     
-    let viewDetails: ViewDetails
+    var viewDetails: ViewDetails
     
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
@@ -39,7 +39,7 @@ class UIViewThingy: SessionReplayViewThingy {
     func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
         let node = generateRRWebNode()
         node.attributes["style"] = generateBaseCSSStyle()
-        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: nil, node: .element(node))
+        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(node))
         
         return [addNode]
     }
@@ -48,7 +48,14 @@ class UIViewThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UIViewThingy else {
             return []
         }
-        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: generateBaseDifferences(from: typedOther))]
+        var mutations = [MutationRecord]()
+        let frameDifferences = generateBaseDifferences(from: typedOther)
+        
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
+        }
+        return mutations
     }
 }
 

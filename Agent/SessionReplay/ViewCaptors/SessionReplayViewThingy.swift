@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 protocol SessionReplayViewThingy: Hashable {
-    var viewDetails: ViewDetails { get }
+    var viewDetails: ViewDetails { get set }
     var shouldRecordSubviews: Bool { get }
     var isMasked: Bool { get set }
 
@@ -42,7 +42,7 @@ extension SessionReplayViewThingy {
             let borderString = """
             border-radius: \(String(format: "%.2f", self.viewDetails.cornerRadius))px; \
             border: \(String(format: "%.2f", self.viewDetails.borderWidth))px \
-            solid \(borderColor.toHexString(includingAlpha: true))
+            solid \(borderColor.toHexString(includingAlpha: true));
             """
             cssStyle.append(borderString)
         }
@@ -67,8 +67,19 @@ extension SessionReplayViewThingy {
         if let otherBackgroundColor = other.viewDetails.backgroundColor {
             if let backgroundColor = viewDetails.backgroundColor,
                !(backgroundColor == otherBackgroundColor) {
-                styleDifferences["background-color: \(otherBackgroundColor.toHexString(includingAlpha: true))"]
+                styleDifferences["background-color"] = "\(otherBackgroundColor.toHexString(includingAlpha: true))"
             }
+        }
+        
+        // Border differences
+        let borderColorChanged = viewDetails.borderColor != other.viewDetails.borderColor
+        let borderWidthChanged = viewDetails.borderWidth != other.viewDetails.borderWidth
+        let cornerRadiusChanged = viewDetails.cornerRadius != other.viewDetails.cornerRadius
+
+        if borderColorChanged || borderWidthChanged || cornerRadiusChanged {
+            let borderString = "\(String(format: "%.2f", other.viewDetails.borderWidth))px solid \(other.viewDetails.borderColor?.toHexString(includingAlpha: true) ?? "transparent")"
+            styleDifferences["border"] = borderString
+            styleDifferences["border-radius"] = "\(String(format: "%.2f", other.viewDetails.cornerRadius))px"
         }
         
         return styleDifferences
