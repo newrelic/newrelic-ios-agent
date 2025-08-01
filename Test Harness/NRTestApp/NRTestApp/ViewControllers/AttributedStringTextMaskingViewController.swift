@@ -1,34 +1,43 @@
 //
-//  TextMaskingViewController.swift
+//  AttributedStringTextMaskingViewController.swift
 //  NRTestApp
 //
-//  Created by Chris Dillard on 7/25/25
+//  Created by Chris Dillard on 5/30/25
 //
 
 import UIKit
 
-class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class AttributedStringTextMaskingViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     var viewModel = TextMaskingViewModel()
 
     let data = [("Title 1", "Subtitle 1"), ("Title 2", "Subtitle 2"), ("Title 3", "Subtitle 3")]
 
+    // Reusable attributed string generator
+    func featureRichAttributedString(_ string: String) -> NSAttributedString {
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium),
+            .foregroundColor: UIColor.systemIndigo,
+            .backgroundColor: UIColor.systemGray6,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+            .strokeColor: UIColor.systemPink,
+            .strokeWidth: -2.0,
+            .kern: 1.2
+        ]
+        return NSAttributedString(string: string, attributes: attributes)
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
-        self.title = "Text Masking"
+        self.title = "Attributed String Text Masking"
         self.view.backgroundColor = .systemBackground
 
         let searchAndCredentialsStack = createSearchAndCredentialsSection()
         let maskedStack = createSectionStack(title: "Masked Fields", isMasked: true, isCustom: false)
         let unmaskedStack = createSectionStack(title: "Unmasked Fields", isMasked: false, isCustom: false)
-        
         let customMaskedStack = createSectionStack(title: "Custom Masked Fields", isMasked: true, isCustom: true)
         let customUnmaskedStack = createSectionStack(title: "Custom Unmasked Fields", isMasked: false, isCustom: true)
-        
         let parentChildStack = createParentChildSection()
-
         let tableViewStack = createTableViewSection()
 
         let scrollView = UIScrollView()
@@ -65,7 +74,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
     private func createSectionStack(title: String, isMasked: Bool, isCustom: Bool) -> UIStackView {
         let sectionLabel = UILabel()
-        sectionLabel.text = title
+        sectionLabel.attributedText = featureRichAttributedString(title)
         sectionLabel.font = .boldSystemFont(ofSize: 18)
 
         let fieldsStack = UIStackView()
@@ -75,22 +84,19 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         // UILabels
         for i in 1...4 {
             let label = UILabel()
-            label.text = "\(title) UILabel \(i)"
+            label.attributedText = featureRichAttributedString("\(title) UILabel \(i)")
             if isCustom {
                 label.accessibilityIdentifier = isMasked ? "private" : "public"
             } else {
                 label.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
             }
-            //             label.accessibilityIdentifier = isMasked ? "nr-masked-label-\(i)" : "nr-unmasked-label-\(i)"
-
             fieldsStack.addArrangedSubview(label)
         }
         // UITextFields
         for i in 1...4 {
             let textField = UITextField()
             textField.borderStyle = .roundedRect
-            textField.placeholder = "\(title) UITextField \(i)"
-            //textField.accessibilityIdentifier = isMasked ? "nr-mask-textfield-\(i)" : "nr-unmask-textfield-\(i)"
+            textField.attributedPlaceholder = featureRichAttributedString("\(title) UITextField \(i)")
             if isCustom {
                 textField.accessibilityIdentifier = isMasked ? "private" : "public"
             } else {
@@ -101,7 +107,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         // UITextViews
         for i in 1...4 {
             let textView = UITextView()
-            textView.text = "\(title) UITextView \(i)"
+            textView.attributedText = featureRichAttributedString("\(title) UITextView \(i)")
             textView.layer.borderWidth = 1
             textView.layer.borderColor = UIColor.systemGray4.cgColor
             textView.layer.cornerRadius = 6
@@ -110,8 +116,6 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             } else {
                 textView.accessibilityIdentifier = isMasked ? "nr-mask" : "nr-unmask"
             }
-            // textView.accessibilityIdentifier = isMasked ? "nr-mask-textview-\(i)" : "nr-unmask-textview-\(i)"
-
             textView.heightAnchor.constraint(equalToConstant: 60).isActive = true
             fieldsStack.addArrangedSubview(textView)
         }
@@ -124,7 +128,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
     private func createParentChildSection() -> UIStackView {
         let sectionLabel = UILabel()
-        sectionLabel.text = "Parent-Child Relationship"
+        sectionLabel.attributedText = featureRichAttributedString("Parent-Child Relationship")
         sectionLabel.font = .boldSystemFont(ofSize: 18)
 
         // Create parent container views
@@ -132,7 +136,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         let unmaskedParentView = createParentView(isMasked: false)
 
         let descriptionLabel = UILabel()
-        descriptionLabel.text = "Testing masked accessibility identifier propagation to child views"
+        descriptionLabel.attributedText = featureRichAttributedString("Testing masked accessibility identifier propagation to child views")
         descriptionLabel.numberOfLines = 0
         descriptionLabel.font = .systemFont(ofSize: 14)
         descriptionLabel.textColor = .secondaryLabel
@@ -161,7 +165,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
         // Header label for the parent view
         let headerLabel = UILabel()
-        headerLabel.text = isMasked ? "Masked Parent View" : "Unmasked Parent View"
+        headerLabel.attributedText = featureRichAttributedString(isMasked ? "Masked Parent View" : "Unmasked Parent View")
         headerLabel.font = .boldSystemFont(ofSize: 16)
         headerLabel.translatesAutoresizingMaskIntoConstraints = false
 
@@ -173,42 +177,34 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
         // Add various child elements
         for i in 1...3 {
-            // Add a label
             let label = UILabel()
-            label.text = "Child Label \(i)"
+            label.attributedText = featureRichAttributedString("Child Label \(i)")
             label.accessibilityIdentifier = "child-label-\(i)"
             childStack.addArrangedSubview(label)
 
-            // Add a button
             let button = UIButton(type: .system)
-            button.setTitle("Child Button \(i)", for: .normal)
+            button.setAttributedTitle(featureRichAttributedString("Child Button \(i)"), for: .normal)
             button.accessibilityIdentifier = "child-button-\(i)"
             childStack.addArrangedSubview(button)
 
             if i == 2 {
-                // Add a nested container to test deep hierarchy
                 let nestedContainer = UIView()
                 nestedContainer.backgroundColor = .systemGray6
                 nestedContainer.layer.cornerRadius = 4
                 nestedContainer.accessibilityIdentifier = "nested-container-\(i)"
 
                 let nestedLabel = UILabel()
-                nestedLabel.text = "Nested Child Label"
+                nestedLabel.attributedText = featureRichAttributedString("Nested Child Label")
                 nestedLabel.accessibilityIdentifier = "nested-child-label"
                 nestedLabel.translatesAutoresizingMaskIntoConstraints = false
-
                 nestedContainer.addSubview(nestedLabel)
-
                 NSLayoutConstraint.activate([
                     nestedLabel.topAnchor.constraint(equalTo: nestedContainer.topAnchor, constant: 8),
                     nestedLabel.leadingAnchor.constraint(equalTo: nestedContainer.leadingAnchor, constant: 8),
                     nestedLabel.trailingAnchor.constraint(equalTo: nestedContainer.trailingAnchor, constant: -8),
                     nestedLabel.bottomAnchor.constraint(equalTo: nestedContainer.bottomAnchor, constant: -8)
                 ])
-
                 childStack.addArrangedSubview(nestedContainer)
-
-                // Set a height constraint for the nested container
                 nestedContainer.heightAnchor.constraint(equalToConstant: 40).isActive = true
             }
         }
@@ -232,10 +228,9 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         return containerView
     }
 
-
     private func createTableViewSection() -> UIStackView {
         let sectionLabel = UILabel()
-        sectionLabel.text = "TableView Masking Test"
+        sectionLabel.attributedText = featureRichAttributedString("TableView Masking Test")
         sectionLabel.font = .boldSystemFont(ofSize: 18)
 
         // Create a container for the tableview with proper label
@@ -243,7 +238,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         tableViewContainer.translatesAutoresizingMaskIntoConstraints = false
 
         let descriptionLabel = UILabel()
-        descriptionLabel.text = "Testing masking propagation in TableView hierarchy"
+        descriptionLabel.attributedText = featureRichAttributedString("Testing masking propagation in TableView hierarchy")
         descriptionLabel.numberOfLines = 0
         descriptionLabel.font = .systemFont(ofSize: 14)
         descriptionLabel.textColor = .secondaryLabel
@@ -293,8 +288,8 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             return UITableViewCell()
         }
         let (title, subtitle) = data[indexPath.row]
-        cell.titleLabel.text = title
-        cell.subtitleLabel.text = subtitle
+        cell.titleLabel.attributedText = featureRichAttributedString(title)
+        cell.subtitleLabel.attributedText = featureRichAttributedString(subtitle)
         return cell
     }
 
@@ -303,10 +298,9 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         print("Selected row at \(indexPath.row)")
     }
 
-
     private func createSearchAndCredentialsSection() -> UIStackView {
         let sectionLabel = UILabel()
-        sectionLabel.text = "Search & Credentials Fields"
+        sectionLabel.attributedText = featureRichAttributedString("Search & Credentials Fields")
         sectionLabel.font = .boldSystemFont(ofSize: 18)
 
         let fieldsStack = UIStackView()
@@ -315,28 +309,28 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
         // Search Bar
         let searchBar = UISearchBar()
-        searchBar.placeholder = "Search query (masked)"
+        searchBar.searchTextField.attributedPlaceholder = featureRichAttributedString("Search query (masked)")
         searchBar.accessibilityIdentifier = "nr-mask"
         fieldsStack.addArrangedSubview(searchBar)
 
         // Username TextField
         let usernameField = UITextField()
         usernameField.borderStyle = .roundedRect
-        usernameField.placeholder = "Username (unmasked)"
+        usernameField.attributedPlaceholder = featureRichAttributedString("Username (unmasked)")
         usernameField.accessibilityIdentifier = "nr-unmask"
         fieldsStack.addArrangedSubview(usernameField)
 
         // Password TextField
         let passwordField = UITextField()
         passwordField.borderStyle = .roundedRect
-        passwordField.placeholder = "Password (masked)"
+        passwordField.attributedPlaceholder = featureRichAttributedString("Password (masked)")
         passwordField.isSecureTextEntry = true
         fieldsStack.addArrangedSubview(passwordField)
 
         // Credit Card Number TextField
         let cardNumberField = UITextField()
         cardNumberField.borderStyle = .roundedRect
-        cardNumberField.placeholder = "Credit Card Number (masked)"
+        cardNumberField.attributedPlaceholder = featureRichAttributedString("Credit Card Number (masked)")
         cardNumberField.keyboardType = .numberPad
         cardNumberField.accessibilityIdentifier = "nr-mask"
         fieldsStack.addArrangedSubview(cardNumberField)
@@ -344,7 +338,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         // CVV TextField
         let cvvField = UITextField()
         cvvField.borderStyle = .roundedRect
-        cvvField.placeholder = "CVV (masked)"
+        cvvField.attributedPlaceholder = featureRichAttributedString("CVV (masked)")
         cvvField.keyboardType = .numberPad
         cvvField.isSecureTextEntry = true
         fieldsStack.addArrangedSubview(cvvField)
@@ -353,50 +347,5 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         sectionStack.axis = .vertical
         sectionStack.spacing = 8
         return sectionStack
-    }
-}
-
-class MaskTestTableViewCell: UITableViewCell {
-    let titleLabel = UILabel()
-    let subtitleLabel = UILabel()
-    let accessoryButton = UIButton(type: .system)
-
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-
-        // Configure titleLabel
-        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(titleLabel)
-
-        // Configure subtitleLabel
-        subtitleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        subtitleLabel.textColor = .gray
-        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(subtitleLabel)
-
-        // Configure accessoryButton
-        accessoryButton.setTitle("Action", for: .normal)
-        accessoryButton.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(accessoryButton)
-
-        // Add constraints
-        NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: accessoryButton.leadingAnchor, constant: -8),
-
-            subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            subtitleLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
-            subtitleLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8),
-
-            accessoryButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            accessoryButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
-        ])
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
