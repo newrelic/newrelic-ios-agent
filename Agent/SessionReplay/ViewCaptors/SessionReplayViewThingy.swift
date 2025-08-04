@@ -29,7 +29,8 @@ extension SessionReplayViewThingy {
             left: \(String(format: "%.2f", self.viewDetails.frame.origin.x))px; \
             top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
             width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
-            height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px;
+            height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
+            border-radius: \(String(format: "%.2f", self.viewDetails.cornerRadius))px;
             """
         
         if let backgroundColor = self.viewDetails.backgroundColor {
@@ -40,7 +41,6 @@ extension SessionReplayViewThingy {
         if let borderColor = self.viewDetails.borderColor,
            self.viewDetails.borderWidth > 0 {
             let borderString = """
-            border-radius: \(String(format: "%.2f", self.viewDetails.cornerRadius))px; \
             border: \(String(format: "%.2f", self.viewDetails.borderWidth))px \
             solid \(borderColor.toHexString(includingAlpha: true));
             """
@@ -61,25 +61,19 @@ extension SessionReplayViewThingy {
             styleDifferences["top"] = "\(String(format: "%.2f", other.viewDetails.frame.origin.y))px"
             styleDifferences["width"] = "\(String(format: "%.2f", other.viewDetails.frame.size.width))px"
             styleDifferences["height"] = "\(String(format: "%.2f", other.viewDetails.frame.size.height))px"
+            styleDifferences["border-radius"] = "\(String(format: "%.2f", other.viewDetails.cornerRadius))px"
         }
         
         // background color
         if let otherBackgroundColor = other.viewDetails.backgroundColor {
-            if let backgroundColor = viewDetails.backgroundColor,
-               !(backgroundColor == otherBackgroundColor) {
-                styleDifferences["background-color"] = "\(otherBackgroundColor.toHexString(includingAlpha: true))"
-            }
+            styleDifferences["background-color"] = "\(otherBackgroundColor.toHexString(includingAlpha: true))"
         }
         
         // Border differences
-        let borderColorChanged = viewDetails.borderColor != other.viewDetails.borderColor
-        let borderWidthChanged = viewDetails.borderWidth != other.viewDetails.borderWidth
-        let cornerRadiusChanged = viewDetails.cornerRadius != other.viewDetails.cornerRadius
-
-        if borderColorChanged || borderWidthChanged || cornerRadiusChanged {
-            let borderString = "\(String(format: "%.2f", other.viewDetails.borderWidth))px solid \(other.viewDetails.borderColor?.toHexString(includingAlpha: true) ?? "transparent")"
+        if let borderColor = other.viewDetails.borderColor,
+           other.viewDetails.borderWidth > 0 {
+            let borderString = "\(String(format: "%.2f", other.viewDetails.borderWidth))px solid \(borderColor.toHexString(includingAlpha: true))"
             styleDifferences["border"] = borderString
-            styleDifferences["border-radius"] = "\(String(format: "%.2f", other.viewDetails.cornerRadius))px"
         }
         
         return styleDifferences

@@ -208,11 +208,3 @@ internal extension UIView {
         }
     }
 }
-
-extension ViewDetails: Equatable {
-    static func == (lhs: ViewDetails, rhs: ViewDetails) -> Bool {
-        return lhs.frame == rhs.frame &&
-            lhs.backgroundColor == rhs.backgroundColor &&
-            lhs.alpha == rhs.alpha
-    }
-}
