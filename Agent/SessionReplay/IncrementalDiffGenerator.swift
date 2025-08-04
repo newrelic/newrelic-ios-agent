@@ -154,14 +154,8 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
             let oldElement = old[indexInOld]
             
             if (indexInOld - deleteOffset + runningOffset) != index {
-                // If this doesn't get us back to where we currently are, then
-                // the thing was moved
-//                if oldElement.viewDetails.viewId == newElement.viewDetails.viewId { 
-//                    changes.append(.Update(Operation.UpdateChange(oldElement: oldElement, newElement: newElement)))
-//                } else {
-                    changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId)))
-                    changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId, node: newElement)))
-//                }
+                changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId)))
+                changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId, node: newElement)))
             } else if type(of: newElement) == type(of: oldElement) {
                 if newElement.hashValue != oldElement.hashValue {
                     changes.append(.Update(Operation.UpdateChange(oldElement: oldElement, newElement: newElement)))
