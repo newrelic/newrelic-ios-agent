@@ -66,7 +66,10 @@ extension SessionReplayViewThingy {
         
         // background color
         if let otherBackgroundColor = other.viewDetails.backgroundColor {
-            styleDifferences["background-color"] = "\(otherBackgroundColor.toHexString(includingAlpha: true))"
+            if let backgroundColor = viewDetails.backgroundColor,
+               !(backgroundColor == otherBackgroundColor) {
+                styleDifferences["background-color"] = "\(otherBackgroundColor.toHexString(includingAlpha: true))"
+            }
         }
         
         // Border differences
