@@ -1063,7 +1063,6 @@
 		344508DF291AD7C300322DA7 /* Hex.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9291C2912D721001449B6 /* Hex.framework */; };
 		344508E0291AD7C300322DA7 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A9292E2912D72F001449B6 /* JSON.framework */; };
 		344508E1291AD7C300322DA7 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929342912D736001449B6 /* Utilities.framework */; };
-		344E49492D932762008174A1 /* SupportabilityMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E49482D932762008174A1 /* SupportabilityMetrics.swift */; };
 		344E494B2D93288F008174A1 /* APrivateHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 344E494A2D93288F008174A1 /* APrivateHeader.h */; };
 		344E494D2D934CF8008174A1 /* SessionReplayFrameProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */; };
 		344E49502D935072008174A1 /* RRWebEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494F2D935072008174A1 /* RRWebEvent.swift */; };
@@ -2464,7 +2463,6 @@
 		3431DD172BED375E00FF145F /* Agent-watchos-Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Agent-watchos-Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3431DD952BED4F0700FF145F /* Agent-watchOS.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Agent-watchOS.xctestplan"; sourceTree = "<group>"; };
 		343883552834405700B31C2E /* NRMAURLTransformerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLTransformerTests.m; sourceTree = "<group>"; };
-		344E49482D932762008174A1 /* SupportabilityMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportabilityMetrics.swift; sourceTree = "<group>"; };
 		344E494A2D93288F008174A1 /* APrivateHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = APrivateHeader.h; sourceTree = "<group>"; };
 		344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayFrameProcessor.swift; sourceTree = "<group>"; };
 		344E494F2D935072008174A1 /* RRWebEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RRWebEvent.swift; sourceTree = "<group>"; };
@@ -3897,7 +3895,6 @@
 				3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */,
 				3493DF4F2D543C8700BF5BED /* IDGenerator.swift */,
 				34D0401D2D86036D007BE92D /* UIColor+HexString.swift */,
-				344E49482D932762008174A1 /* SupportabilityMetrics.swift */,
 				344E494C2D934CF8008174A1 /* SessionReplayFrameProcessor.swift */,
 				341E84D32D9DDB1B00968D7D /* SessionReplayTouchEventProcessor.swift */,
 				340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */,
@@ -5594,7 +5591,6 @@
 				02FF485E24DC615A00115469 /* NRMALoggerBridge.mm in Sources */,
 				02FF496E24DC629000115469 /* NRMAHarvesterConfiguration.m in Sources */,
 				02FF483F24DC614200115469 /* NRMATraceMachineAgentUserInterface.m in Sources */,
-				344E49492D932762008174A1 /* SupportabilityMetrics.swift in Sources */,
 				02FF488224DC61A100115469 /* NRMANSURLConnectionDelegateBase.m in Sources */,
 				3493DF482D4C4BEE00BF5BED /* SessionReplayFrame.swift in Sources */,
 				3493DF4C2D542D9900BF5BED /* UIViewThingy.swift in Sources */,

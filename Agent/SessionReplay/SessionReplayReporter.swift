@@ -88,6 +88,11 @@ public class SessionReplayReporter: NSObject {
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
            NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
+       } else if errorCodeInt == URL_TOO_LARGE {
+           NRLOG_ERROR("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+           NRMASupportMetricHelper.enqueueSessionReplayURLTooLargeMetric()
+           self.sessionReplayFramesUploadArray.removeFirst()
+           self.failureCount = 0
        } else {
            self.failureCount += 1
        }
