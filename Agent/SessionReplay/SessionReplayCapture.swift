@@ -12,7 +12,7 @@ import UIKit
 
 // potentially remove this annotation once the feature goes to Swift
 @objcMembers
-internal class SessionReplayCapture {
+class SessionReplayCapture {
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
