@@ -47,8 +47,13 @@ class MainCoordinator: Coordinator {
     }
 
     func showTextMaskingController() {
-        let webViewController = ViewControllerProvider.textMaskingViewController
-        navigationController.pushViewController(webViewController, animated: true)
+        let textMaskingViewController = ViewControllerProvider.textMaskingViewController
+        navigationController.pushViewController(textMaskingViewController, animated: true)
+    }
+    
+    func showAttributedStringTextMaskingController() {
+        let attributedStringTextMaskingViewController = ViewControllerProvider.attributedStringTextMaskingViewController
+        navigationController.pushViewController(attributedStringTextMaskingViewController, animated: true)
     }
     
     func showCollectionController() {
