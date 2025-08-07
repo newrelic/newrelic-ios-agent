@@ -139,6 +139,14 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
                                                     scope:nil]];
 }
 
++ (void) enqueueSessionReplayURLTooLargeMetric {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricURLTooLarge, nativePlatform, platform]
+                                                    value:@1
+                                                    scope:nil]];
+}
+
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics
     if ([[NRMAStartTimer sharedInstance] appLaunchDuration] != 0) {
