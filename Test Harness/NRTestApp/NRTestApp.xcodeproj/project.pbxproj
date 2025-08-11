@@ -37,6 +37,20 @@
 		2B00013B2E34083400543C1B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */; };
 		2B00013C2E34083400543C1B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8302B01296F5EFB003EC291 /* Assets.xcassets */; };
 		2B00014E2E34089500543C1B /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B00014D2E34089500543C1B /* NewRelic */; };
+		2B03F6562E450CCF00DBA375 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F6552E450CCF00DBA375 /* NewRelic */; };
+		2B03F6592E452CCA00DBA375 /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F6582E452CCA00DBA375 /* PerformanceSuite */; };
+		2B03F65F2E45335100DBA375 /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F65E2E45335100DBA375 /* MetricsConsumer.swift */; };
+		2B03F6602E45335100DBA375 /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F65E2E45335100DBA375 /* MetricsConsumer.swift */; };
+		2B03F6612E45335100DBA375 /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F65E2E45335100DBA375 /* MetricsConsumer.swift */; };
+		2B03F6632E45338300DBA375 /* UITestsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F6622E45338300DBA375 /* UITestsHelper.swift */; };
+		2B03F6642E45338300DBA375 /* UITestsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F6622E45338300DBA375 /* UITestsHelper.swift */; };
+		2B03F6652E45338300DBA375 /* UITestsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F6622E45338300DBA375 /* UITestsHelper.swift */; };
+		2B03F6692E45338B00DBA375 /* UITestsInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F6662E45338B00DBA375 /* UITestsInterop.swift */; };
+		2B03F66C2E45350900DBA375 /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F66B2E45350900DBA375 /* GCDWebServer */; };
+		2B03F66E2E45352500DBA375 /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */; };
+		2B03F66F2E45352500DBA375 /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */; };
+		2B03F6702E45352500DBA375 /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */; };
+		2B03F6722E4535DE00DBA375 /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F6712E4535DE00DBA375 /* PerformanceSuite */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B3CDF732E3AC43A00EEAC27 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B3CDF722E3AC43A00EEAC27 /* NewRelic */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
@@ -295,6 +309,10 @@
 
 /* Begin PBXFileReference section */
 		2B0001432E34083400543C1B /* NRTestAppAsFramework.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NRTestAppAsFramework.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B03F65E2E45335100DBA375 /* MetricsConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsConsumer.swift; sourceTree = "<group>"; };
+		2B03F6622E45338300DBA375 /* UITestsHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsHelper.swift; sourceTree = "<group>"; };
+		2B03F6662E45338B00DBA375 /* UITestsInterop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsInterop.swift; sourceTree = "<group>"; };
+		2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceScreen.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
 		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
@@ -387,8 +405,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B00014E2E34089500543C1B /* NewRelic in Frameworks */,
+				2B03F6562E450CCF00DBA375 /* NewRelic in Frameworks */,
+				2B03F6592E452CCA00DBA375 /* PerformanceSuite in Frameworks */,
+				2B03F66C2E45350900DBA375 /* GCDWebServer in Frameworks */,
 				2B3CDF732E3AC43A00EEAC27 /* NewRelic in Frameworks */,
 				2B6BEC282E37FC3D0054ECF1 /* NewRelic in Frameworks */,
+				2B03F6722E4535DE00DBA375 /* PerformanceSuite in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -550,6 +572,10 @@
 		F8302AF7296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXGroup;
 			children = (
+				2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */,
+				2B03F6662E45338B00DBA375 /* UITestsInterop.swift */,
+				2B03F6622E45338300DBA375 /* UITestsHelper.swift */,
+				2B03F65E2E45335100DBA375 /* MetricsConsumer.swift */,
 				2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */,
 				F86428492971DF80002ABA01 /* Helpers */,
 				F8302AF8296F5EFA003EC291 /* AppDelegate.swift */,
@@ -903,7 +929,9 @@
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
 			packageReferences = (
-				2B3CDF712E3AC43A00EEAC27 /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */,
+				2B03F6542E450CCF00DBA375 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */,
+				2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
+				2B03F66A2E45350900DBA375 /* XCRemoteSwiftPackageReference "GCDWebServer" */,
 			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
@@ -1143,10 +1171,13 @@
 				2B00011C2E34083400543C1B /* triggerException.m in Sources */,
 				2B00011D2E34083400543C1B /* UtilViewModel.swift in Sources */,
 				2B00011E2E34083400543C1B /* ViewController.swift in Sources */,
+				2B03F6652E45338300DBA375 /* UITestsHelper.swift in Sources */,
 				2BB1E1EB2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				2B00011F2E34083400543C1B /* ApodService.swift in Sources */,
 				2B0001202E34083400543C1B /* MainCoordinator.swift in Sources */,
 				2B0001212E34083400543C1B /* ViewControllerProvider.swift in Sources */,
+				2B03F66F2E45352500DBA375 /* PerformanceScreen.swift in Sources */,
+				2B03F6602E45335100DBA375 /* MetricsConsumer.swift in Sources */,
 				2B0001222E34083400543C1B /* ApodResult.swift in Sources */,
 				2B0001232E34083400543C1B /* Coordinator.swift in Sources */,
 				2B0001242E34083400543C1B /* plistHelper.swift in Sources */,
@@ -1165,6 +1196,7 @@
 				2B0001312E34083400543C1B /* ImageDetailPDFView.swift in Sources */,
 				2B0001322E34083400543C1B /* TextMaskingViewController.swift in Sources */,
 				2B0001332E34083400543C1B /* SceneDelegate.swift in Sources */,
+				2B03F6692E45338B00DBA375 /* UITestsInterop.swift in Sources */,
 				2B0001342E34083400543C1B /* ImageFullScreen.swift in Sources */,
 				2B0001352E34083400543C1B /* Variable.swift in Sources */,
 			);
@@ -1224,11 +1256,14 @@
 				F864284C2971DFA5002ABA01 /* triggerException.m in Sources */,
 				F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */,
 				F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */,
+				2B03F6632E45338300DBA375 /* UITestsHelper.swift in Sources */,
 				2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
+				2B03F6612E45335100DBA375 /* MetricsConsumer.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
+				2B03F6702E45352500DBA375 /* PerformanceScreen.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
@@ -1278,6 +1313,7 @@
 				2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,
 				F84EEFB62E21B19C000E2A5A /* SecureLabel.swift in Sources */,
+				2B03F66E2E45352500DBA375 /* PerformanceScreen.swift in Sources */,
 				F81062182E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
 				F81061F92E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				F86429312979CDFA002ABA01 /* Date.swift in Sources */,
@@ -1289,6 +1325,7 @@
 				F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */,
 				F86429392979CDFA002ABA01 /* SceneDelegate.swift in Sources */,
 				F864293A2979CDFA002ABA01 /* ViewControllerProvider.swift in Sources */,
+				2B03F65F2E45335100DBA375 /* MetricsConsumer.swift in Sources */,
 				F864293B2979CDFA002ABA01 /* Coordinator.swift in Sources */,
 				F864293C2979CDFA002ABA01 /* MainCoordinator.swift in Sources */,
 				F864293D2979CDFA002ABA01 /* ViewController.swift in Sources */,
@@ -1296,6 +1333,7 @@
 				F864293F2979CDFA002ABA01 /* WebViewController.swift in Sources */,
 				F86429402979CDFA002ABA01 /* ApodViewModel.swift in Sources */,
 				2BB1E1ED2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
+				2B03F6642E45338300DBA375 /* UITestsHelper.swift in Sources */,
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
@@ -1399,7 +1437,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1447,7 +1485,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2098,6 +2136,30 @@
 				minimumVersion = 7.5.7;
 			};
 		};
+		2B03F6542E450CCF00DBA375 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.5.8;
+			};
+		};
+		2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/bookingcom/perfsuite-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.1;
+			};
+		};
+		2B03F66A2E45350900DBA375 /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/yene/GCDWebServer";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.5.7;
+			};
+		};
 		2B3CDF712E3AC43A00EEAC27 /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent.git";
@@ -2121,6 +2183,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2B00014C2E34089500543C1B /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */;
 			productName = NewRelic;
+		};
+		2B03F6552E450CCF00DBA375 /* NewRelic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B03F6542E450CCF00DBA375 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */;
+			productName = NewRelic;
+		};
+		2B03F6582E452CCA00DBA375 /* PerformanceSuite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
+			productName = PerformanceSuite;
+		};
+		2B03F66B2E45350900DBA375 /* GCDWebServer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B03F66A2E45350900DBA375 /* XCRemoteSwiftPackageReference "GCDWebServer" */;
+			productName = GCDWebServer;
+		};
+		2B03F6712E4535DE00DBA375 /* PerformanceSuite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
+			productName = PerformanceSuite;
 		};
 		2B3CDF722E3AC43A00EEAC27 /* NewRelic */ = {
 			isa = XCSwiftPackageProductDependency;
