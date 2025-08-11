@@ -19,7 +19,8 @@ class ViewController: UIViewController {
     var privateHelloLabel = UnsecureLabel()
     var spaceStack = UIStackView()
     var helloButton = UIButton()
-    
+    var helloWorldLabel: UILabel?
+        
     private var timeLabel = UILabel()
     private var appStartDate = Date()
     private var timer: Timer?
@@ -197,7 +198,9 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Attributed String Text Masking", handler: { [self] in attributedStringTextMaskingAction()}))
 
         options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
-       
+        
+        options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
+
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
 #if os(iOS)
@@ -210,6 +213,10 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction()}))
 
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
+        
+        // In setupButtonsTable(), add these options:
+        options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
+        options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
     }
     
     func utilitiesAction() {
@@ -251,6 +258,10 @@ class ViewController: UIViewController {
         coordinator?.showCollectionController()
     }
     
+    func diffTestViewAction() {
+        coordinator?.showDiffTestController()
+    }
+    
     func infiniteViewAction() {
         coordinator?.showInfiniteScrollController()
     }
@@ -262,6 +273,23 @@ class ViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         return button
+    }
+    
+    // Add these methods to your ViewController class
+    func addHelloWorldLabel() {
+        guard helloWorldLabel == nil else { return }
+        let label = UILabel()
+        label.text = "Hello world"
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        self.spaceStack.addArrangedSubview(label)
+
+        helloWorldLabel = label
+    }
+
+    func removeHelloWorldLabel() {
+        helloWorldLabel?.removeFromSuperview()
+        helloWorldLabel = nil
     }
 }
 

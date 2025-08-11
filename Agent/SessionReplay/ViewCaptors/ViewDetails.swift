@@ -11,7 +11,7 @@ import UIKit
 @_implementationOnly import NewRelicPrivate
 
 struct ViewDetails {
-    let viewId: Int
+    var viewId: Int
     let frame: CGRect
     var backgroundColor: UIColor?
     let alpha: CGFloat
@@ -20,6 +20,8 @@ struct ViewDetails {
     let borderWidth: CGFloat
     let borderColor: UIColor?
     let viewName: String
+    let parentId: Int?
+    var nextId: Int?
     let clip: CGRect
 
     // Indicates if this view should have its content masked in session replay
@@ -75,6 +77,8 @@ struct ViewDetails {
             viewId = IDGenerator.shared.getId()
             view.sessionReplayIdentifier = viewId
         }
+        
+        self.parentId = view.superview?.sessionReplayIdentifier
 
         if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
             self.isMasked = shouldMask

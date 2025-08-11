@@ -19,7 +19,7 @@ class CustomTextThingy: SessionReplayViewThingy {
         false
     }
     
-    let viewDetails: ViewDetails
+    var viewDetails: ViewDetails
     
     let labelText: String
     let fontSize: CGFloat
@@ -30,7 +30,14 @@ class CustomTextThingy: SessionReplayViewThingy {
     
     init(view: UITextField, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
-
+        
+        if let identifier = view.sessionReplayCustomTextIDKey {
+            self.viewDetails.viewId = identifier
+        } else {
+            self.viewDetails.viewId = IDGenerator.shared.getId()
+            view.sessionReplayCustomTextIDKey = self.viewDetails.viewId
+        }
+        
         if view.isSecureTextEntry {
             self.isMasked = true
         }
@@ -77,7 +84,24 @@ class CustomTextThingy: SessionReplayViewThingy {
     }
 
     func cssDescription() -> String {
-        return ""
+        return """
+                #\(viewDetails.cssSelector) { \
+                \(inlineCSSDescription()) \
+                } 
+                """
+    }
+    
+    func inlineCSSDescription() -> String {
+        return """
+                position: fixed; \
+                left: \(String(format: "%.2f", self.viewDetails.frame.origin.x))px; \
+                top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
+                width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
+                height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
+                white-space: pre-wrap;\
+                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+                color: \(textColor.toHexString(includingAlpha: true));
+                """
     }
     
     func generateRRWebNode() -> ElementNodeData  {
@@ -86,20 +110,28 @@ class CustomTextThingy: SessionReplayViewThingy {
                                                         textContent: labelText,
                                                         childNodes: []))
         
-        return ElementNodeData(id: IDGenerator.shared.getId(),
+        return ElementNodeData(id: viewDetails.viewId,
                                         tagName: .span,
-                                        attributes: ["style":   """
-                                                                position: fixed; \
-                                                                left: \(String(format: "%.2f", self.viewDetails.frame.origin.x))px; \
-                                                                top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
-                                                                width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
-                                                                height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
-                                                                white-space: pre-wrap;\
-                                                                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                                                                color: \(textColor.toHexString(includingAlpha: true));
-                                                                """
-                                                    ],
+                                        attributes: ["id":viewDetails.cssSelector],
                                         childNodes: [textNode])
+    }
+    
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let elementNode = ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .span,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        elementNode.attributes["style"] = inlineCSSDescription()
+
+        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
+                                                        isStyle: false,
+                                                        textContent: labelText,
+                                                        childNodes: []))
+        
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
+        let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
+        
+        return [addElementNode, addTextNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
@@ -115,8 +147,14 @@ class CustomTextThingy: SessionReplayViewThingy {
             frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
         }
         
-        let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
-        mutations.append(attributeRecord)
+        if fontSize != typedOther.fontSize || fontFamily != typedOther.fontFamily {
+            frameDifferences["font"] = "\(String(format: "%.2f", self.fontSize))px \(self.fontFamily)px"
+        }
+        
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
+        }
         
         if(self.labelText != typedOther.self.labelText) {
             let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)
@@ -146,5 +184,23 @@ extension CustomTextThingy: Hashable {
         hasher.combine(fontName)
         hasher.combine(fontFamily)
         hasher.combine(textColor)
+    }
+}
+
+fileprivate var associatedSessionReplayCustomTextIDKey: String = "SessionReplayCustomTextID"
+
+internal extension UIView {
+    var sessionReplayCustomTextIDKey: Int? {
+        set {
+            withUnsafePointer(to: &associatedSessionReplayCustomTextIDKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+        
+        get {
+            withUnsafePointer(to: &associatedSessionReplayCustomTextIDKey) {
+                objc_getAssociatedObject(self, $0) as? Int
+            }
+        }
     }
 }

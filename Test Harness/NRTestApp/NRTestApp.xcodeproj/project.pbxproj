@@ -163,6 +163,8 @@
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 		F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
+		F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
 		F8F5D8232BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */; };
 		F8F5D8252BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */; };
 		F8F5D8312BEBB84D00CDC139 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
@@ -394,6 +396,7 @@
 		F86428F62979CDB0002ABA01 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestApp--tvOS--Info.plist"; path = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
+		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -642,6 +645,7 @@
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
+				F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */,
 				F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
@@ -1260,6 +1264,7 @@
 				2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
+				F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				2B03F6612E45335100DBA375 /* MetricsConsumer.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
@@ -1321,6 +1326,7 @@
 				F86429332979CDFA002ABA01 /* ApodURL.swift in Sources */,
 				F86429342979CDFA002ABA01 /* plistHelper.swift in Sources */,
 				F86429352979CDFA002ABA01 /* triggerException.m in Sources */,
+				F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				F86429382979CDFA002ABA01 /* AppDelegate.swift in Sources */,
 				F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */,
 				F86429392979CDFA002ABA01 /* SceneDelegate.swift in Sources */,

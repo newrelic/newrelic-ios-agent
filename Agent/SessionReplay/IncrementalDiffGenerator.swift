@@ -134,7 +134,7 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
     for(index, entry) in oldArrayEntries.enumerated() {
         deleteOffsets[index] = runningOffset
         if case .symbol = entry {
-            changes.append(.Remove(Operation.RemoveChange(parentId: 0, id: old[index].viewDetails.viewId)))
+            changes.append(.Remove(Operation.RemoveChange(parentId: old[index].viewDetails.parentId ?? 0, id: old[index].viewDetails.viewId)))
             runningOffset += 1
         }
     }
@@ -145,7 +145,7 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
     for(index, entry) in newArrayEntries.enumerated() {
         switch entry {
         case .symbol:
-            changes.append(.Add(Operation.AddChange(parentId: 0, id: new[index].viewDetails.viewId, node: new[index])))
+            changes.append(.Add(Operation.AddChange(parentId: new[index].viewDetails.parentId ?? 0, id: new[index].viewDetails.viewId, node: new[index])))
             runningOffset += 1
             
         case .index(let indexInOld):
@@ -154,10 +154,8 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
             let oldElement = old[indexInOld]
             
             if (indexInOld - deleteOffset + runningOffset) != index {
-                // If this doesn't get us back to where we currently are, then
-                // the thing was moved
-                changes.append(.Remove(Operation.RemoveChange(parentId: 0, id: newElement.viewDetails.viewId)))
-                changes.append(.Add(Operation.AddChange(parentId: 0, id: newElement.viewDetails.viewId, node: newElement)))
+                changes.append(.Remove(Operation.RemoveChange(parentId: oldElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId)))
+                changes.append(.Add(Operation.AddChange(parentId: newElement.viewDetails.parentId ?? 0, id: newElement.viewDetails.viewId, node: newElement)))
             } else if type(of: newElement) == type(of: oldElement) {
                 if newElement.hashValue != oldElement.hashValue {
                     changes.append(.Update(Operation.UpdateChange(oldElement: oldElement, newElement: newElement)))
