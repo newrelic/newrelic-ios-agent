@@ -99,8 +99,10 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
-        sessionReplayQueue.async { [self] in
-            NRLOG_DEBUG("Harvesting session replay frames and touches.")
+        // sync is required here or session replay upload fails.
+        sessionReplayQueue.sync { [weak self] in
+            guard let self = self else { return }
+            
             self.harvestSessionReplayFramesAndTouches()
         }
     }
