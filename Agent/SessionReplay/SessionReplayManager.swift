@@ -99,35 +99,40 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
-        sessionReplayQueue.sync { [self] in
-            let frames = sessionReplay.getSessionReplayFrames()
-            let touches = sessionReplay.getSessionReplayTouches()
-            
-            if frames.isEmpty && touches.isEmpty {
-                NRLOG_DEBUG("No session replay frames or touches to harvest.")
-                return
-            }
-            
-            // Build combined list then sort by timestamp
-            var container = frames.map(AnyRRWebEvent.init)
-            container.append(contentsOf: touches.map(AnyRRWebEvent.init))
-            container.sort { $0.timestamp < $1.timestamp }
-            
-            // Derive first / last from sorted result
-            let firstTimestamp = TimeInterval(container.first?.timestamp ?? 0)
-            let lastTimestamp  = TimeInterval(container.last?.timestamp ?? 0)
-            
-            guard let upload = createReplayUpload(container: container,
-                                                  firstTimestamp: firstTimestamp,
-                                                  lastTimestamp: lastTimestamp) else {
-                return
-            }
-            sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-            self.sessionReplay.isFirstChunk = false
-            harvestseconds = 0
+        sessionReplayQueue.async { [self] in
+            NRLOG_DEBUG("Harvesting session replay frames and touches.")
+            self.harvestSessionReplayFramesAndTouches()
         }
     }
 
+    private func harvestSessionReplayFramesAndTouches() {
+        let frames = self.sessionReplay.getSessionReplayFrames()
+        let touches = self.sessionReplay.getSessionReplayTouches()
+        
+        if frames.isEmpty && touches.isEmpty {
+            NRLOG_DEBUG("No session replay frames or touches to harvest.")
+            return
+        }
+        
+        var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
+        container.append(contentsOf: touches.map(AnyRRWebEvent.init))
+        container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+            lhs.base.timestamp < rhs.base.timestamp
+        }
+        
+        let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
+        let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
+        
+        guard let upload = self.createReplayUpload(container: container,
+                                                   firstTimestamp: firstTimestamp,
+                                                   lastTimestamp: lastTimestamp) else {
+            return
+        }
+        self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        self.sessionReplay.isFirstChunk = false
+        self.harvestseconds = 0
+    }
+    
     private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
