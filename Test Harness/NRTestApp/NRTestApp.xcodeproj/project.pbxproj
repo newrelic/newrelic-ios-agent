@@ -60,6 +60,7 @@
 		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B6BEC282E37FC3D0054ECF1 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B6BEC272E37FC3D0054ECF1 /* NewRelic */; };
+		2B8A46A02E4A880600DEB854 /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
 		2BB1E1EB2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BB1E1ED2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
@@ -1187,6 +1188,7 @@
 				2B0001242E34083400543C1B /* plistHelper.swift in Sources */,
 				2B0001252E34083400543C1B /* UIImageView.swift in Sources */,
 				2B0001262E34083400543C1B /* Date.swift in Sources */,
+				2B8A46A02E4A880600DEB854 /* DiffTestViewController.swift in Sources */,
 				2B0001272E34083400543C1B /* InfiniteScrollViewController.swift in Sources */,
 				2B0001282E34083400543C1B /* ApodURL.swift in Sources */,
 				2B0001292E34083400543C1B /* UtilitiesViewController.swift in Sources */,
