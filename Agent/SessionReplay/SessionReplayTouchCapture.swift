@@ -24,7 +24,6 @@ class SessionReplayTouchCapture: NSObject {
         self.window = window
     }
     
-    @MainActor
     @objc dynamic
     public func captureSendEventTouches(event: UIEvent) {
         // Only handle real touch events
@@ -38,8 +37,7 @@ class SessionReplayTouchCapture: NSObject {
         guard !touches.isEmpty else { return }
 
         for touch in touches {
-            // Prefer the touch's window; fall back to our window
-            guard let win = touch.window ?? self.window else { continue }
+            guard let win = touch.window else { continue }
 
             let location = touch.location(in: win)
             let touchedView = win.hitTest(location, with: nil)

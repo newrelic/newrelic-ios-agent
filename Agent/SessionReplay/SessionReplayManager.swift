@@ -99,41 +99,42 @@ public class SessionReplayManager: NSObject {
     }
 
     @objc public func harvest() {
-        sessionReplayQueue.sync { [self] in
+        // sync is required here or session replay upload fails.
+        sessionReplayQueue.sync { [weak self] in
+            guard let self = self else { return }
             
-            // Fetch processed frames and touches
-            let processedFrames = sessionReplay.getSessionReplayFrames()
-            let processedTouches = sessionReplay.getSessionReplayTouches()
-            
-            // Early exit if nothing to send
-            if processedFrames.isEmpty && processedTouches.isEmpty {
-                NRLOG_DEBUG("No session replay frames or touches to harvest.")
-                return
-            }
-            
-            let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
-            let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
-            
-            // Initialize container with meta event
-            var container: [AnyRRWebEvent] = []
-            
-            // Process frames and touches
-            container.append(contentsOf: (processedFrames).map {
-                AnyRRWebEvent($0)
-            })
-            container.append(contentsOf: (processedTouches).map {
-                AnyRRWebEvent($0)
-            })
-            
-            guard let upload = createReplayUpload(container: container, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp) else {
-                return
-            }
-            sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-            self.sessionReplay.isFirstChunk = false
-            harvestseconds = 0
+            self.harvestSessionReplayFramesAndTouches()
         }
     }
 
+    private func harvestSessionReplayFramesAndTouches() {
+        let frames = self.sessionReplay.getSessionReplayFrames()
+        let touches = self.sessionReplay.getSessionReplayTouches()
+        
+        if frames.isEmpty && touches.isEmpty {
+            NRLOG_DEBUG("No session replay frames or touches to harvest.")
+            return
+        }
+        
+        var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
+        container.append(contentsOf: touches.map(AnyRRWebEvent.init))
+        container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+            lhs.base.timestamp < rhs.base.timestamp
+        }
+        
+        let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
+        let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
+        
+        guard let upload = self.createReplayUpload(container: container,
+                                                   firstTimestamp: firstTimestamp,
+                                                   lastTimestamp: lastTimestamp) else {
+            return
+        }
+        self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        self.sessionReplay.isFirstChunk = false
+        self.harvestseconds = 0
+    }
+    
     private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
