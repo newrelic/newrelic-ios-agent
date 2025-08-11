@@ -95,17 +95,26 @@ public class NRMASessionReplay: NSObject {
             let originalSelector = #selector(UIApplication.sendEvent(_:))
 
             let block: @convention(block)(UIApplication, UIEvent) -> Void = { app, event in
-                guard let touchCapture = self.sessionReplayTouchCapture else {
-                    return
-                }
-                touchCapture.captureSendEventTouches(event: event)
+                // Always call original
                 typealias Func = @convention(c)(AnyObject, Selector, UIEvent) -> Void
                 let function = unsafeBitCast(self.NRMAOriginal__sendEvent, to: Func.self)
-                function(app, originalSelector, event)
+                let callOriginal = { function(app, originalSelector, event) }
+
+                // If we don't have a capture instance, just forward
+                guard let touchCapture = self.sessionReplayTouchCapture else {
+                    callOriginal()
+                    return
+                }
+
+                // Only process actual touch events with touches
+                if event.type == .touches, let touches = event.allTouches, !touches.isEmpty {
+                    touchCapture.captureSendEventTouches(event: event)
+                }
+
+                callOriginal()
             }
 
             let newImp = imp_implementationWithBlock(block)
-
             self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
         }
     }
