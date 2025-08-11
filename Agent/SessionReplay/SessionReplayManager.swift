@@ -100,32 +100,26 @@ public class SessionReplayManager: NSObject {
 
     @objc public func harvest() {
         sessionReplayQueue.sync { [self] in
+            let frames = sessionReplay.getSessionReplayFrames()
+            let touches = sessionReplay.getSessionReplayTouches()
             
-            // Fetch processed frames and touches
-            let processedFrames = sessionReplay.getSessionReplayFrames()
-            let processedTouches = sessionReplay.getSessionReplayTouches()
-            
-            // Early exit if nothing to send
-            if processedFrames.isEmpty && processedTouches.isEmpty {
+            if frames.isEmpty && touches.isEmpty {
                 NRLOG_DEBUG("No session replay frames or touches to harvest.")
                 return
             }
             
-            let firstTimestamp: TimeInterval = TimeInterval(processedFrames.first?.timestamp ?? 0)
-            let lastTimestamp: TimeInterval = TimeInterval(processedFrames.last?.timestamp ?? 0)
+            // Build combined list then sort by timestamp
+            var container = frames.map(AnyRRWebEvent.init)
+            container.append(contentsOf: touches.map(AnyRRWebEvent.init))
+            container.sort { $0.timestamp < $1.timestamp }
             
-            // Initialize container with meta event
-            var container: [AnyRRWebEvent] = []
+            // Derive first / last from sorted result
+            let firstTimestamp = TimeInterval(container.first?.timestamp ?? 0)
+            let lastTimestamp  = TimeInterval(container.last?.timestamp ?? 0)
             
-            // Process frames and touches
-            container.append(contentsOf: (processedFrames).map {
-                AnyRRWebEvent($0)
-            })
-            container.append(contentsOf: (processedTouches).map {
-                AnyRRWebEvent($0)
-            })
-            
-            guard let upload = createReplayUpload(container: container, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp) else {
+            guard let upload = createReplayUpload(container: container,
+                                                  firstTimestamp: firstTimestamp,
+                                                  lastTimestamp: lastTimestamp) else {
                 return
             }
             sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
