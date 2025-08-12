@@ -335,9 +335,9 @@ static long long _accountId;
 
     // Session Replay Default harvester Configuration
 
-    configuration.has_session_replay_config = YES;
+    configuration.has_session_replay_config = NO;
 
-    configuration.session_replay_enabled = YES;
+    configuration.session_replay_enabled = NO;
 
     // handle double
     configuration.session_replay_sampling_rate = 100.0;
