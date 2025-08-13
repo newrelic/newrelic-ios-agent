@@ -95,17 +95,26 @@ public class NRMASessionReplay: NSObject {
             let originalSelector = #selector(UIApplication.sendEvent(_:))
 
             let block: @convention(block)(UIApplication, UIEvent) -> Void = { app, event in
-                guard let touchCapture = self.sessionReplayTouchCapture else {
-                    return
-                }
-                touchCapture.captureSendEventTouches(event: event)
+                // Always call original
                 typealias Func = @convention(c)(AnyObject, Selector, UIEvent) -> Void
                 let function = unsafeBitCast(self.NRMAOriginal__sendEvent, to: Func.self)
-                function(app, originalSelector, event)
+                let callOriginal = { function(app, originalSelector, event) }
+
+                // If we don't have a capture instance, just forward
+                guard let touchCapture = self.sessionReplayTouchCapture else {
+                    callOriginal()
+                    return
+                }
+
+                // Only process actual touch events with touches
+                if event.type == .touches, let touches = event.allTouches, !touches.isEmpty {
+                    touchCapture.captureSendEventTouches(event: event)
+                }
+
+                callOriginal()
             }
 
             let newImp = imp_implementationWithBlock(block)
-
             self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
         }
     }
@@ -229,7 +238,7 @@ public class NRMASessionReplay: NSObject {
         // Fetch processed frame and touches during frame
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getSessionReplayTouches(clear: false)
-
+        
         guard let firstFrame = rawFrames.first else {
             return
         }
@@ -245,12 +254,11 @@ public class NRMASessionReplay: NSObject {
         )
         let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
         container.append(AnyRRWebEvent(metaEvent))
-
         container.append(AnyRRWebEvent(processedFrame))
-
-        container.append(contentsOf: (processedTouches).map {
-            AnyRRWebEvent($0)
-        })
+        container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
+        container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+            lhs.base.timestamp < rhs.base.timestamp
+        }
 
         // Extract URL generation logic from createReplayUpload
         let encoder = JSONEncoder()
