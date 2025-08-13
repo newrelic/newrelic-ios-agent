@@ -10,13 +10,13 @@ import Foundation
 
 class SessionReplayFrameProcessor {
     var lastFullFrame: SessionReplayFrame? = nil
-    var useIncrementalDiffs = false
+    var useIncrementalDiffs = true
 
     var takeFullSnapshotNext = true
     
     
     func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon {
-        guard useIncrementalDiffs else { // If useIncrementalDiffs is fasle, we only take full snapshots
+        guard useIncrementalDiffs else { // If useIncrementalDiffs is false, we only take full snapshots
             return processFullSnapshot(frame)
         }
         
