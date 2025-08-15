@@ -90,6 +90,15 @@ public class SessionReplayManager: NSObject {
     }
     
     @objc func sessionReplayTick() {
+        if isRunning() &&
+            (NewRelicAgentInternal.sharedInstance() != nil &&
+            NewRelicAgentInternal.sharedInstance()?.isSessionReplayEnabled() ?? false == false)
+        {
+            NRLOG_DEBUG("Session replay harvest timer stopping because New Relic agent is not started.")
+            stop()
+            return
+        }
+        
         harvestseconds += 1
         sessionReplay.takeFrame()
         
@@ -143,9 +152,9 @@ public class SessionReplayManager: NSObject {
         var jsonData: Data
         do {
             jsonData = try encoder.encode(container)
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                NRLOG_DEBUG(jsonString)
-            }
+//            if let jsonString = String(data: jsonData, encoding: .utf8) {
+//                NRLOG_DEBUG(jsonString)
+//            }
         } catch {
             NRLOG_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil

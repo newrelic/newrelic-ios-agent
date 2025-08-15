@@ -37,6 +37,8 @@ public class NRMASessionReplay: NSObject {
         self.delegate = delegate
         self.url = url
         self.sessionReplayCapture = SessionReplayCapture()
+        
+        sessionReplayFrameProcessor.useIncrementalDiffs = false // Only take full snapshots, not incremental diffs
 
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         self.framesDirectory = documentsPath.appendingPathComponent("SessionReplayFrames")
@@ -238,7 +240,7 @@ public class NRMASessionReplay: NSObject {
         // Fetch processed frame and touches during frame
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getSessionReplayTouches(clear: false)
-
+        
         guard let firstFrame = rawFrames.first else {
             return
         }
@@ -254,12 +256,11 @@ public class NRMASessionReplay: NSObject {
         )
         let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
         container.append(AnyRRWebEvent(metaEvent))
-
         container.append(AnyRRWebEvent(processedFrame))
-
-        container.append(contentsOf: (processedTouches).map {
-            AnyRRWebEvent($0)
-        })
+        container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
+        container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+            lhs.base.timestamp < rhs.base.timestamp
+        }
 
         // Extract URL generation logic from createReplayUpload
         let encoder = JSONEncoder()
