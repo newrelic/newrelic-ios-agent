@@ -67,6 +67,66 @@ class UILabelThingy: SessionReplayViewThingy {
 
     }
     
+    init(view: UIView, viewDetails: ViewDetails) {
+        self.viewDetails = viewDetails
+
+        var text: String?
+        var font: UIFont = UIFont.systemFont(ofSize: 17.0)
+        var textColor: UIColor = .black
+        
+        if let rctClass = NSClassFromString("RCTParagraphComponentView"),
+                  view.isKind(of: rctClass) {
+            text = view.value(forKey: "text") as? String
+            font = (view.value(forKey: "font") as? UIFont) ?? UIFont.systemFont(ofSize: 17.0)
+            textColor = (view.value(forKey: "textColor") as? UIColor) ?? .black
+        }
+
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        } else {
+            self.isMasked = NRMAHarvestController.configuration().session_replay_maskUserInputText
+        }
+        if self.isMasked {
+            // If the view is masked, we should not record the text.
+            // instead replace it with the number of asterisks as were characters in label
+            self.labelText = String(repeating: "*", count: text?.count ?? 0)
+        }
+        else {
+            self.labelText = text ?? ""
+        }
+        
+        self.fontSize = font.pointSize
+        let fontNameRaw = font.fontName
+        if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
+            self.fontName = String(fontNameRaw.dropFirst())
+        } else {
+            self.fontName = fontNameRaw
+        }
+        
+        let fontFamilyRaw = font.familyName
+        if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
+            self.fontFamily = String(fontFamilyRaw.dropFirst())
+        } else {
+            self.fontFamily = fontFamilyRaw
+        }
+        
+        var textAlignment: String = "left"
+        if let alignmentValue = view.value(forKey: "textAlignment") as? Int,
+           let alignment = NSTextAlignment(rawValue: alignmentValue) {
+            switch alignment {
+            case .left: textAlignment = "left"
+            case .center: textAlignment = "center"
+            case .right: textAlignment = "right"
+            case .justified: textAlignment = "justify"
+            case .natural: textAlignment = "start"
+            @unknown default: textAlignment = "left"
+            }
+        }
+        self.textAlignment = textAlignment
+
+        self.textColor = textColor
+    }
+    
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
