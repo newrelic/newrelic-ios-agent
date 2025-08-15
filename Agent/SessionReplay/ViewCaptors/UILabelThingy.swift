@@ -71,14 +71,32 @@ class UILabelThingy: SessionReplayViewThingy {
         self.viewDetails = viewDetails
 
         var text: String?
+        var textAlignment = "left"
         var font: UIFont = UIFont.systemFont(ofSize: 17.0)
         var textColor: UIColor = .black
         
         if let rctClass = NSClassFromString("RCTParagraphComponentView"),
                   view.isKind(of: rctClass) {
-            text = view.value(forKey: "text") as? String
-            font = (view.value(forKey: "font") as? UIFont) ?? UIFont.systemFont(ofSize: 17.0)
-            textColor = (view.value(forKey: "textColor") as? UIColor) ?? .black
+            if view.responds(to: Selector(("attributedText"))) {
+                if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
+                    text = attributedText.string  // Extract plain text
+                    
+                    // Get font from attributed string
+                    if let attributedFont = attributedText.attribute(.font, at: 0, effectiveRange: nil) as? UIFont {
+                        font = attributedFont
+                    }
+                    
+                    // Get text color from attributed string
+                    if let attributedColor = attributedText.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor {
+                        textColor = attributedColor
+                    }
+                    
+                    // Get text alignment from paragraph style
+                    if let paragraphStyle = attributedText.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
+                        textAlignment = paragraphStyle.alignment.stringValue()
+                    }
+                }
+            }
         }
 
         if let isMasked = viewDetails.isMasked {
@@ -110,18 +128,6 @@ class UILabelThingy: SessionReplayViewThingy {
             self.fontFamily = fontFamilyRaw
         }
         
-        var textAlignment: String = "left"
-        if let alignmentValue = view.value(forKey: "textAlignment") as? Int,
-           let alignment = NSTextAlignment(rawValue: alignmentValue) {
-            switch alignment {
-            case .left: textAlignment = "left"
-            case .center: textAlignment = "center"
-            case .right: textAlignment = "right"
-            case .justified: textAlignment = "justify"
-            case .natural: textAlignment = "start"
-            @unknown default: textAlignment = "left"
-            }
-        }
         self.textAlignment = textAlignment
 
         self.textColor = textColor
@@ -251,3 +257,15 @@ internal extension UILabel {
     }
 }
 
+extension NSTextAlignment {
+    func stringValue() -> String {
+        switch self {
+        case .left: return "left"
+        case .center: return "center"
+        case .right: return "right"
+        case .justified: return "justify"
+        case .natural: return "start"
+        @unknown default: return "left"
+        }
+    }
+}
