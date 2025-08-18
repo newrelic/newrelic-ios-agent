@@ -25,7 +25,8 @@ class CustomTextThingy: SessionReplayViewThingy {
     let fontSize: CGFloat
     let fontName: String
     let fontFamily: String
-    
+    let textAlignment: String
+
     let textColor: UIColor
     
     init(view: UITextField, viewDetails: ViewDetails) {
@@ -37,6 +38,17 @@ class CustomTextThingy: SessionReplayViewThingy {
             self.viewDetails.viewId = IDGenerator.shared.getId()
             view.sessionReplayCustomTextIDKey = self.viewDetails.viewId
         }
+        
+//        if #available(iOS 15.0, *) {
+//            let fragmentFrames = CustomTextThingy.getTextLayoutFragmentFrames(textField: view)
+//            if !fragmentFrames.isEmpty {
+//                // Calculate the union of all fragment frames to get the complete text bounds
+//                let combinedFrame = fragmentFrames.reduce(fragmentFrames[0]) { result, frame in
+//                    result.union(frame)
+//                }
+//                self.viewDetails.frame = combinedFrame
+//            }
+//        }
         
         if view.isSecureTextEntry {
             self.isMasked = true
@@ -80,8 +92,74 @@ class CustomTextThingy: SessionReplayViewThingy {
             // Fallback on earlier versions
             self.textColor = view.textColor ?? UIColor.black
         }
+        
+        self.textAlignment = view.textAlignment.stringValue()
+        
+        if let actualTextBounds = CustomTextThingy.getActualTextBounds(textField: view, text: self.labelText, font: font) {
+            self.viewDetails.frame = actualTextBounds
+        }
 
     }
+    
+    static func getActualTextBounds(textField: UITextField, text: String, font: UIFont) -> CGRect? {
+        // Get the text rect area from the text field
+        let textRect = textField.textRect(forBounds: textField.bounds)
+        
+        // Calculate actual text size
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        let textSize = (text as NSString).size(withAttributes: attributes)
+        
+        // Create bounds that match the actual text size within the text rect
+        var actualTextBounds = CGRect(origin: textRect.origin, size: textSize)
+        
+        // Adjust horizontal position based on text alignment
+        switch textField.textAlignment {
+        case .center:
+            actualTextBounds.origin.x = textRect.origin.x + (textRect.width - textSize.width) / 2
+        case .right:
+            actualTextBounds.origin.x = textRect.origin.x + textRect.width - textSize.width
+        case .left, .natural:
+            // Keep the original x position from textRect
+            break
+        case .justified:
+            // For justified, use left alignment as fallback
+            break
+        @unknown default:
+            break
+        }
+        
+        // Center vertically within the text rect
+        actualTextBounds.origin.y = textRect.origin.y + (textRect.height - textSize.height) / 2
+        
+        // Convert to window coordinates
+        if let window = textField.window {
+            return textField.convert(actualTextBounds, to: window)
+        }
+        
+        return actualTextBounds
+    }
+
+//    private static let fragmentViewClassName = "_UITextLayoutFragmentView"
+//    static func getTextLayoutFragmentFrames(textField: UITextField) -> [CGRect] {
+//        // Early exit if text field has no text
+//        guard let text = textField.text, !text.isEmpty else { return [] }
+//        var fragmentFrames: [CGRect] = []
+//        
+//        // Find UITextLayoutFragmentView subviews
+//        func findTextLayoutFragments(in textField: UIView) {
+//            if let superview = textField.superview, let window = textField.window {
+//                for subview in textField.subviews {
+//                    if String(describing: type(of: subview)) == fragmentViewClassName {
+//                        fragmentFrames.append(superview.convert(subview.frame, to: window))
+//                    }
+//                    findTextLayoutFragments(in: subview)
+//                }
+//            }
+//        }
+//        
+//        findTextLayoutFragments(in: textField)
+//        return fragmentFrames
+//    }
 
     func cssDescription() -> String {
         return """
@@ -98,9 +176,10 @@ class CustomTextThingy: SessionReplayViewThingy {
                 top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
                 width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
                 height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
-                white-space: pre-wrap;\
+                white-space: pre-wrap; \
                 font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                color: \(textColor.toHexString(includingAlpha: true));
+                color: \(textColor.toHexString(includingAlpha: true)); \
+                text-align: \(textAlignment);
                 """
     }
     
