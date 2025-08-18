@@ -122,11 +122,11 @@ class SessionReplayCapture {
                 return UISearchBarThingy(view: textView, viewDetails: ViewDetails(view: textView))
 
             default:
-                let viewDetail = ViewDetails(view: originalView)
-                if viewDetail.viewName == "RCTParagraphComponentView" {
-                    return UILabelThingy(view: originalView, viewDetails: viewDetail)
+                if let rctParagraphClass = NSClassFromString("RCTParagraphComponentView"),
+                   originalView.isKind(of: rctParagraphClass) {
+                    return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
                 } else {
-                    return UIViewThingy(view: originalView, viewDetails: viewDetail)
+                    return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
                 }
             }
         }
@@ -147,7 +147,12 @@ class SessionReplayCapture {
                 return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
                 
             default:
-                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                if let rctParagraphClass = NSClassFromString("RCTParagraphComponentView"),
+                   originalView.isKind(of: rctParagraphClass) {
+                    return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                } else {
+                    return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                }
             }
         }
     }

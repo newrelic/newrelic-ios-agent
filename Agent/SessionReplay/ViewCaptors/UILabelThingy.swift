@@ -75,8 +75,8 @@ class UILabelThingy: SessionReplayViewThingy {
         var font: UIFont = UIFont.systemFont(ofSize: 17.0)
         var textColor: UIColor = .black
         
-        if let rctClass = NSClassFromString("RCTParagraphComponentView"),
-                  view.isKind(of: rctClass) {
+        if let rctParagraphClass = NSClassFromString("RCTParagraphComponentView"),
+                  view.isKind(of: rctParagraphClass) {
             if view.responds(to: Selector(("attributedText"))) {
                 if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
                     text = attributedText.string  // Extract plain text
