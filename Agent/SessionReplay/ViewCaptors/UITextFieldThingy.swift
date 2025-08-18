@@ -19,7 +19,7 @@ class UITextFieldThingy: SessionReplayViewThingy {
         false
     }
     
-    let viewDetails: ViewDetails
+    var viewDetails: ViewDetails
     
     let labelText: String
     let fontSize: CGFloat
@@ -75,18 +75,25 @@ class UITextFieldThingy: SessionReplayViewThingy {
         }
 
     }
-
+    
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
-                \(generateBaseCSSStyle())\
-                white-space: pre-wrap;\
-                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                color: \(textColor.toHexString(includingAlpha: true));\
-                } 
+                \(inlineCSSDescription())\
+                }
                 """
     }
     
+    func inlineCSSDescription() -> String {
+        return generateBaseCSSStyle()
+//                """
+//                \(generateBaseCSSStyle())\
+//                white-space: pre-wrap;\
+//                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+//                color: \(textColor.toHexString(includingAlpha: true));
+//                """
+    }
+
     func generateRRWebNode() -> ElementNodeData  {
 //        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
 //                                                        isStyle: false,
@@ -96,27 +103,25 @@ class UITextFieldThingy: SessionReplayViewThingy {
         return ElementNodeData(id: viewDetails.viewId,
                                         tagName: .div,
                                         attributes: ["id":viewDetails.cssSelector],
-                                        childNodes: [])
+                               childNodes: [])
     }
     
-    public func generateRRWebTextNode() -> ElementNodeData?  {
-        guard !labelText.isEmpty else { return nil }
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let elementNode = ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .div,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        elementNode.attributes["style"] = inlineCSSDescription()
         
-        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
-                                                        isStyle: false,
-                                                        textContent: labelText,
-                                                        childNodes: []))
+//        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
+//                                                        isStyle: false,
+//                                                        textContent: labelText,
+//                                                        childNodes: []))
         
-        return ElementNodeData(id: IDGenerator.shared.getId(),
-                                        tagName: .span,
-                                        attributes: ["style":   """
-                                                                \(generateBaseCSSStyle())\
-                                                                white-space: pre-wrap;\
-                                                                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                                                                color: \(textColor.toHexString(includingAlpha: true));
-                                                                """
-                                                    ],
-                                        childNodes: [textNode])
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
+       // let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
+        
+        return [addElementNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
@@ -125,20 +130,22 @@ class UITextFieldThingy: SessionReplayViewThingy {
         }
         
         var mutations = [MutationRecord]()
-        var frameDifferences = generateBaseDifferences(from: typedOther)
+        let frameDifferences = generateBaseDifferences(from: typedOther)
         
         // get text color difference
-        if textColor != typedOther.textColor {
-            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
+//        if textColor != typedOther.textColor {
+//            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
+//        }
+        
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
         }
         
-        let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
-        mutations.append(attributeRecord)
-        
-        if(self.labelText != typedOther.self.labelText) {
-            let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)
-            mutations.append(textRecord)
-        }
+//        if(self.labelText != typedOther.self.labelText) {
+//            let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)
+//            mutations.append(textRecord)
+//        }
         
         return mutations
     }
@@ -146,12 +153,12 @@ class UITextFieldThingy: SessionReplayViewThingy {
 
 extension UITextFieldThingy: Equatable {
     static func == (lhs: UITextFieldThingy, rhs: UITextFieldThingy) -> Bool {
-        return lhs.viewDetails == rhs.viewDetails &&
-            lhs.labelText == rhs.labelText &&
-            lhs.fontSize == rhs.fontSize &&
-            lhs.fontName == rhs.fontName &&
-            lhs.fontFamily == rhs.fontFamily &&
-            lhs.textColor == rhs.textColor
+        return lhs.viewDetails == rhs.viewDetails
+//            lhs.labelText == rhs.labelText &&
+//            lhs.fontSize == rhs.fontSize &&
+//            lhs.fontName == rhs.fontName &&
+//            lhs.fontFamily == rhs.fontFamily &&
+//            lhs.textColor == rhs.textColor
     }
 }
 

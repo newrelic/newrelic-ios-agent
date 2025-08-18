@@ -1,8 +1,8 @@
 //
-//  UITextViewThingy.swift
-//  Agent_iOS
+//  CustomTextThingy.swift
+//  Agent
 //
-//  Created by Chris Dillard on 6/13/25.
+//  Created by Mike Bruin on 7/29/25.
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 @_implementationOnly import NewRelicPrivate
 
-class UITextViewThingy: SessionReplayViewThingy {
+class CustomTextThingy: SessionReplayViewThingy {
     var isMasked: Bool
     
     var subviews = [any SessionReplayViewThingy]()
@@ -28,9 +28,16 @@ class UITextViewThingy: SessionReplayViewThingy {
     
     let textColor: UIColor
     
-    init(view: UITextView, viewDetails: ViewDetails) {
+    init(view: UITextField, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
-
+        
+        if let identifier = view.sessionReplayCustomTextIDKey {
+            self.viewDetails.viewId = identifier
+        } else {
+            self.viewDetails.viewId = IDGenerator.shared.getId()
+            view.sessionReplayCustomTextIDKey = self.viewDetails.viewId
+        }
+        
         if view.isSecureTextEntry {
             self.isMasked = true
         }
@@ -49,6 +56,7 @@ class UITextViewThingy: SessionReplayViewThingy {
             self.labelText = view.text ?? ""
         }
 
+        // If the view is not a UITextField, we should not be here.
         let font = view.font ?? UIFont.systemFont(ofSize: 17.0)
 
         self.fontSize = font.pointSize
@@ -58,14 +66,14 @@ class UITextViewThingy: SessionReplayViewThingy {
         } else {
             self.fontName = fontNameRaw
         }
-
+        
         let fontFamilyRaw = font.familyName
         if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
             self.fontFamily = String(fontFamilyRaw.dropFirst())
         } else {
             self.fontFamily = fontFamilyRaw
         }
-
+        
         if #available(iOS 13.0, *) {
             self.textColor = view.textColor ?? UIColor.label
         } else {
@@ -74,18 +82,22 @@ class UITextViewThingy: SessionReplayViewThingy {
         }
 
     }
-    
+
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
-                \(inlineCSSDescription())\
-                }
+                \(inlineCSSDescription()) \
+                } 
                 """
     }
     
     func inlineCSSDescription() -> String {
         return """
-                \(generateBaseCSSStyle())\
+                position: fixed; \
+                left: \(String(format: "%.2f", self.viewDetails.frame.origin.x))px; \
+                top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
+                width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
+                height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
                 white-space: pre-wrap;\
                 font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true));
@@ -99,31 +111,31 @@ class UITextViewThingy: SessionReplayViewThingy {
                                                         childNodes: []))
         
         return ElementNodeData(id: viewDetails.viewId,
-                                        tagName: .div,
+                                        tagName: .span,
                                         attributes: ["id":viewDetails.cssSelector],
                                         childNodes: [textNode])
     }
     
     func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
         let elementNode = ElementNodeData(id: viewDetails.viewId,
-                                   tagName: .div,
+                                   tagName: .span,
                                    attributes: ["id":viewDetails.cssSelector],
                                    childNodes: [])
         elementNode.attributes["style"] = inlineCSSDescription()
-        
+
         let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
                                                         isStyle: false,
                                                         textContent: labelText,
                                                         childNodes: []))
         
-        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId,  node: .element(elementNode))
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
         let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
-
+        
         return [addElementNode, addTextNode]
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
-        guard let typedOther = other as? UITextViewThingy else {
+        guard let typedOther = other as? CustomTextThingy else {
             return []
         }
         
@@ -153,8 +165,8 @@ class UITextViewThingy: SessionReplayViewThingy {
     }
 }
 
-extension UITextViewThingy: Equatable {
-    static func == (lhs: UITextViewThingy, rhs: UITextViewThingy) -> Bool {
+extension CustomTextThingy: Equatable {
+    static func == (lhs: CustomTextThingy, rhs: CustomTextThingy) -> Bool {
         return lhs.viewDetails == rhs.viewDetails &&
             lhs.labelText == rhs.labelText &&
             lhs.fontSize == rhs.fontSize &&
@@ -164,7 +176,7 @@ extension UITextViewThingy: Equatable {
     }
 }
 
-extension UITextViewThingy: Hashable {
+extension CustomTextThingy: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(viewDetails)
         hasher.combine(labelText)
@@ -172,5 +184,23 @@ extension UITextViewThingy: Hashable {
         hasher.combine(fontName)
         hasher.combine(fontFamily)
         hasher.combine(textColor)
+    }
+}
+
+fileprivate var associatedSessionReplayCustomTextIDKey: String = "SessionReplayCustomTextID"
+
+internal extension UIView {
+    var sessionReplayCustomTextIDKey: Int? {
+        set {
+            withUnsafePointer(to: &associatedSessionReplayCustomTextIDKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+        
+        get {
+            withUnsafePointer(to: &associatedSessionReplayCustomTextIDKey) {
+                objc_getAssociatedObject(self, $0) as? Int
+            }
+        }
     }
 }
