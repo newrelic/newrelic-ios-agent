@@ -61,7 +61,7 @@ class UILabelThingy: SessionReplayViewThingy {
         } else {
             self.fontFamily = fontFamilyRaw
         }
-        self.textAlignment = view.textAlignmentString()
+        self.textAlignment = view.textAlignment.stringValue()
 
         self.textColor = view.textColor
 
@@ -232,28 +232,6 @@ extension UILabelThingy: Hashable {
         hasher.combine(fontName)
         hasher.combine(fontFamily)
         hasher.combine(textColor)
-    }
-}
-
-internal extension UILabel {
-    
-    func textAlignmentString() -> String {
-        switch self.textAlignment {
-        case .left:
-            return "left"
-        case .center:
-            return "center"
-        case .right:
-            return "right"
-        case .justified:
-            return "justify"
-        case .natural:
-            // In CSS, 'start' is the logical value that aligns to the beginning
-            // of the text flow, respecting LTR/RTL direction, similar to .natural.
-            return "start"
-        @unknown default:
-            return "left"
-        }
     }
 }
 
