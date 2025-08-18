@@ -102,7 +102,7 @@ class UILabelThingy: SessionReplayViewThingy {
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         } else {
-            self.isMasked = NRMAHarvestController.configuration().session_replay_maskUserInputText
+            self.isMasked = NRMAHarvestController.configuration().session_replay_maskApplicationText
         }
         if self.isMasked {
             // If the view is masked, we should not record the text.
