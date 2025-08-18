@@ -76,12 +76,18 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
     
     func cssDescription() -> String {
         return """
-        #\(viewDetails.cssSelector) { \
-        \(generateBaseCSSStyle()) \
-        -webkit-backdrop-filter: blur(\(blurIntensity)px); \
-        box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.3);
-        }
-        """
+                #\(viewDetails.cssSelector) { \
+                \(inlineCSSDescription())\
+                }
+                """
+    }
+    
+    func inlineCSSDescription() -> String {
+        return """
+                \(generateBaseCSSStyle()) \
+                -webkit-backdrop-filter: blur(\(blurIntensity)px); \
+                box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.3);
+                """
     }
     
     func generateRRWebNode() -> ElementNodeData {
@@ -91,22 +97,34 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
                                childNodes: [])
     }
     
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let node = generateRRWebNode()
+        node.attributes["style"] = inlineCSSDescription()
+        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(node))
+        
+        return [addNode]
+    }
+    
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
         guard let typedOther = other as? UIVisualEffectViewThingy else {
             return []
         }
         
-        var attributes = generateBaseDifferences(from: typedOther)
+        var mutations = [MutationRecord]()
+        var frameDifferences = generateBaseDifferences(from: typedOther)
+        
         if self.blurIntensity != typedOther.blurIntensity {
             // Update the style attribute with the new blur intensity
-            attributes["style"] = """
-            \(generateBaseCSSStyle()) \
-            -webkit-backdrop-filter: blur(\(blurIntensity)px); \
-            box-shadow: 0px 0.5px 0px rgba(0, 0, 0, 0.3);
-            """
+            frameDifferences["-webkit-backdrop-filter"] = "blur(\(blurIntensity)px)"
+            frameDifferences["box-shadow"] = "0px 0.5px 0px rgba(0, 0, 0, 0.3)"
         }
         
-        return [RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: attributes)]
+        if !frameDifferences.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+            mutations.append(attributeRecord)
+        }
+        
+        return mutations
     }
 }
 

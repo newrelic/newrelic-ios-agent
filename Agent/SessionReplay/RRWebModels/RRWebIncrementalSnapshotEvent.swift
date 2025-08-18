@@ -45,7 +45,7 @@ protocol MutationRecord {
 struct RRWebMutationData: Codable {
     struct AddRecord: Codable, MutationRecord {
         let parentId: Int
-        let nextId: Int
+        let nextId: Int?
         let node: SerializedNode
     }
     
@@ -62,6 +62,58 @@ struct RRWebMutationData: Codable {
     struct AttributeRecord: Codable, MutationRecord {
         let id: Int
         let attributes: RRWebAttributes
+        
+        init(id: Int, attributes: RRWebAttributes) {
+            self.id = id
+            self.attributes = attributes
+        }
+        
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(id, forKey: .id)
+            
+            if !attributes.isEmpty {
+                // Create nested container for attributes
+                var attributesContainer = container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
+                
+                // Build style string from attributes dictionary
+                let styleString = attributes.map { "\($0.key): \($0.value);" }.joined(separator: " ")
+                try attributesContainer.encode(styleString, forKey: .style)
+            }
+        }
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = try container.decode(Int.self, forKey: .id)
+            
+            // Decode nested attributes container
+            let attributesContainer = try container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
+            let styleString = try attributesContainer.decode(String.self, forKey: .style)
+            
+            // Parse style string into attributes dictionary
+            let pairs = styleString
+                .split(separator: ";")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+            
+            var attributes: RRWebAttributes = [:]
+            for pair in pairs {
+                let parts = pair.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count == 2 {
+                    attributes[String(parts[0])] = String(parts[1])
+                }
+            }
+            self.attributes = attributes
+        }
+        
+        enum CodingKeys: String, CodingKey {
+            case id
+            case attributes
+        }
+        
+        enum AttributeKeys: String, CodingKey {
+            case style
+        }
     }
     let source: RRWebIncrementalSource = .mutation
     

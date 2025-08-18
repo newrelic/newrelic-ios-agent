@@ -630,6 +630,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay newSession];
     }
+    else {
+        
+    }
 #endif
 }
 
@@ -1299,22 +1302,22 @@ void applicationDidEnterBackgroundCF(void) {
         sampleRate = [NRMAHarvestController configuration].session_replay_sampling_rate;
     }
     else {
-        NRLOG_AGENT_DEBUG(@"isSessionReplaySampled using default rate of 100.0");
+       // NRLOG_AGENT_DEBUG(@"isSessionReplaySampled using default rate of 100.0");
     }
-    NRLOG_AGENT_DEBUG(@"isSessionReplaySampled session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplaySampleSeed <= sampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], sampleRate);
+    //NRLOG_AGENT_DEBUG(@"isSessionReplaySampled session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplaySampleSeed <= sampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], sampleRate);
 
     return (self.sessionReplaySampleSeed <= sampleRate);
 }
 
 - (BOOL) isSessionReplayEnabled {
-    BOOL isEnabled = true;
+    BOOL isEnabled = false;
     if ( [NRMAHarvestController configuration] != nil) {
         isEnabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
     else {
-        NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of true");
+        //NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of false");
     }
-    NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %@", isEnabled ? @"true" : @"false");
+    //NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %@", isEnabled ? @"true" : @"false");
 
     return isEnabled;
 }

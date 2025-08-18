@@ -10,24 +10,40 @@ import Foundation
 
 class SessionReplayFrameProcessor {
     var lastFullFrame: SessionReplayFrame? = nil
+    var useIncrementalDiffs = true
+
+    var takeFullSnapshotNext = true
     
     
     func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon {
-        // If we have a full snapshot, compare the rootViewControllerIDs. If they match, just do a partial one
-        // If they don't, or there is no last snapshot, then do a full snapshot.
-        
-        var rrwebCommon: any RRWebEventCommon
-        if frame.rootViewControllerId != lastFullFrame?.rootViewControllerId ||
-            frame.views.viewDetails.viewId != lastFullFrame?.views.viewDetails.viewId {
-            rrwebCommon = processFullSnapshot(frame)
-//        } else if let lastFullFrame = lastFullFrame {
-//            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
-        } else {
-            // We don't have anything, so just do a full snapshot
-            rrwebCommon = processFullSnapshot(frame)
+        guard useIncrementalDiffs else { // If useIncrementalDiffs is false, we only take full snapshots
+            return processFullSnapshot(frame)
         }
         
-        lastFullFrame = frame
+        // If there is no last frame, always take a full snapshot
+        guard let lastFullFrame = lastFullFrame else {
+            takeFullSnapshotNext = false
+            self.lastFullFrame = frame
+            return processFullSnapshot(frame)
+        }
+        
+        var rrwebCommon: any RRWebEventCommon
+        // If a full snapshot is needed or the frame size changed
+        if takeFullSnapshotNext || frame.size != lastFullFrame.size {
+            rrwebCommon = processFullSnapshot(frame)
+            takeFullSnapshotNext = false
+        } else {
+            rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
+            takeFullSnapshotNext = false
+        }
+        // If we have a full snapshot, compare the rootViewControllerIDs. If they match, continue with partial snapshots
+        // If they don't, then do a full snapshot next time.
+        if frame.rootViewControllerId != lastFullFrame.rootViewControllerId ||
+            frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId {
+            takeFullSnapshotNext = true // When the viewController transitions there is a frame where they are combined so take the full snapshot after things have settled.
+        }
+        
+        self.lastFullFrame = frame
         return rrwebCommon
     }
     
@@ -52,18 +68,9 @@ class SessionReplayFrameProcessor {
             var childNodes = [SerializedNode]()
             
             for childThingy in viewThingy.subviews {
-                if childThingy.viewDetails.isVisible {
-                    let childNode = childThingy.generateRRWebNode()
-                    childNodes.append(.element(childNode))
-                    thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
-                } else {
-                   // NRLOG_DEBUG("Skipping hidden view \(childThingy.cssDescription())")
-                }
-            }
-            if let textViewThingy = viewThingy as? UITextFieldThingy {
-                if let childTextNode = textViewThingy.generateRRWebTextNode(){
-                    childNodes.append(.element(childTextNode)) // Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
-                }
+                let childNode = childThingy.generateRRWebNode()
+                childNodes.append(.element(childNode))
+                thingyStack.append(NodePair(viewThingy: childThingy, rrwebNode: childNode))
             }
             
             node.childNodes.append(contentsOf: childNodes)
@@ -95,8 +102,10 @@ class SessionReplayFrameProcessor {
                                               attributes: [:],
                                               childNodes: [.element(headElementNode), .element(bodyElementNode)])
         
+        let documentTypeNode = DocumentTypeNodeData(id: IDGenerator.shared.getId(), name: .html, publicId: "", systemId: "")
+        
         let documentNode = DocumentNodeData(id: IDGenerator.shared.getId(),
-                                            childNodes: [.element(htmlElementNode)])
+                                            childNodes: [.documentType(documentTypeNode), .element(htmlElementNode)])
         
         let snapshotData = RRWebFullSnapshotData(node: .document(documentNode),
                                                  initialOffset: RRWebFullSnapshotData.InitialOffset(top: 0, left: 0))
@@ -124,8 +133,8 @@ class SessionReplayFrameProcessor {
                 removes.append(RRWebMutationData.RemoveRecord(parentId: change.parentId, id: change.id))
                 
             case .Add(let change):
-                let node = change.node.generateRRWebNode()
-                adds.append(RRWebMutationData.AddRecord(parentId: change.parentId, nextId: change.id ?? 0, node: .element(node)))
+                let nodes = change.node.generateRRWebAdditionNode(parentNodeId: change.parentId)
+                adds.append(contentsOf: nodes)
             case .Update(let change):
                 let mutations = change.oldElement.generateDifference(from: change.newElement)
                 for mutation in mutations {

@@ -60,4 +60,9 @@ class MainCoordinator: Coordinator {
         let infiniteViewController = ViewControllerProvider.infiniteViewController
         navigationController.pushViewController(infiniteViewController, animated: true)
     }
+    
+    func showDiffTestController() {
+        let diffTestViewController = ViewControllerProvider.diffTestViewController
+        navigationController.pushViewController(diffTestViewController, animated: true)
+    }
 }
