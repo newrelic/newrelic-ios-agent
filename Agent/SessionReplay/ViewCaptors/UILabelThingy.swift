@@ -235,7 +235,7 @@ extension UILabelThingy: Hashable {
     }
 }
 
-extension NSTextAlignment {
+internal extension NSTextAlignment {
     func stringValue() -> String {
         switch self {
         case .left: return "left"
