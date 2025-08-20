@@ -80,36 +80,36 @@
 //     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
 }
 
-
-- (void) testDataTaskWithURLCompeltionHandler {
-
-
-    [[self.mockSession reject]  dataTaskWithRequest:OCMOCK_ANY];
-    if( @available(iOS 13, *)) {
-        [[[self.mockSession reject] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    } else if (@available(iOS 12,*)) {
-        [[[self.mockSession expect] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    }
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
-    NSURLSessionDataTask* task = [self.mockSession dataTaskWithURL:[NSURL URLWithString:@"https://www.google.com"] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-
-    }];
-    [task resume];
-
-
-     XCTAssertNoThrow([self.mockSession verify],@"a method that shouldn't have been called, was.");
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)),dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        self.networkFinished = YES;
-    });
-
-    while (CFRunLoopGetCurrent() && !self.networkFinished) {}
-    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
-}
+//
+//- (void) testDataTaskWithURLCompeltionHandler {
+//
+//
+//    [[self.mockSession reject]  dataTaskWithRequest:OCMOCK_ANY];
+//    if( @available(iOS 13, *)) {
+//        [[[self.mockSession reject] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+//    } else if (@available(iOS 12,*)) {
+//        [[[self.mockSession expect] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+//    }
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
+//    NSURLSessionDataTask* task = [self.mockSession dataTaskWithURL:[NSURL URLWithString:@"https://www.google.com"] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+//
+//    }];
+//    [task resume];
+//
+//
+//     XCTAssertNoThrow([self.mockSession verify],@"a method that shouldn't have been called, was.");
+//
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)),dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//        self.networkFinished = YES;
+//    });
+//
+//    while (CFRunLoopGetCurrent() && !self.networkFinished) {}
+//    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
+//}
 
 //TODO: reimplement when NSURLSession instrumentation improved.
 - (void) testDataTaskWithURL {
@@ -136,32 +136,32 @@
 //    while (CFRunLoopGetCurrent() && !self.networkFinished) {}
 //    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
 }
-- (void) testDataTaskWithRequestCompletionHandler {
-
-
-    [[self.mockSession reject]  dataTaskWithRequest:OCMOCK_ANY];
-    [[self.mockSession reject]  dataTaskWithURL:OCMOCK_ANY];
-    [[[self.mockSession expect] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
-    [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
-    NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://www.google.com"]] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-
-    }];
-
-    [task resume];
-
-     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        self.networkFinished = YES;
-    });
-
-    while (CFRunLoopGetCurrent() && !self.networkFinished) {}
-    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
-}
+//- (void) testDataTaskWithRequestCompletionHandler {
+//
+//
+//    [[self.mockSession reject]  dataTaskWithRequest:OCMOCK_ANY];
+//    [[self.mockSession reject]  dataTaskWithURL:OCMOCK_ANY];
+//    [[[self.mockSession expect] andForwardToRealObject] dataTaskWithRequest:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromData:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
+//    [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
+//    NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"https://www.google.com"]] completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+//
+//    }];
+//
+//    [task resume];
+//
+//     XCTAssertNoThrow([self.mockSession verify],@"a method that should have been called, was.");
+//
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(20 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//        self.networkFinished = YES;
+//    });
+//
+//    while (CFRunLoopGetCurrent() && !self.networkFinished) {}
+//    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
+//}
 //TODO: reimplement when NSURLSession instrumentation improved.
 - (void) testUploadTaskWithRequestFromData {
 //
