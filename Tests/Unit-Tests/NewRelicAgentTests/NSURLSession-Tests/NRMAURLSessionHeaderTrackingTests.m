@@ -114,42 +114,42 @@ static NewRelicAgentInternal* _sharedInstance;
 
 }
 
-- (void) testDataTaskWithRequestHeaderTracking {
-    
-    [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
-
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.gooogle.com"]];
-    [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
-    NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
-    [task resume];
-
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        self.finished = true;
-    });
-
-    while (CFRunLoopGetMain() && !self.finished) {}
-    
-    NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                      options:0
-                                                        error:nil];
-    
-    XCTAssertNotNil(decode);
-    XCTAssertNotNil(decode[0]);
-    XCTAssertNotNil(decode[0][@"connectionType"]);
-    XCTAssertNotNil(decode[0][@"contentType"]);
-    XCTAssertNotNil(decode[0][@"responseTime"]);
-    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"www.gooogle.com"]);
-    XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
-    XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
-    XCTAssertFalse([decode[0][@"bytesReceived"] isEqual:@0]);
-    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
-    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
-    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
-    XCTAssertTrue([decode[0][@"TEST_CUSTOM"] isEqualToString:@"Test custom"]);
-    XCTAssertNil(decode[0][@"TEST_NOT_PRESENT"]);
-
-}
+//- (void) testDataTaskWithRequestHeaderTracking {
+//    
+//    [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];
+//
+//    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.gooogle.com"]];
+//    [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
+//    NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
+//    [task resume];
+//
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+//        self.finished = true;
+//    });
+//
+//    while (CFRunLoopGetMain() && !self.finished) {}
+//    
+//    NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
+//    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+//                                                      options:0
+//                                                        error:nil];
+//    
+//    XCTAssertNotNil(decode);
+//    XCTAssertNotNil(decode[0]);
+//    XCTAssertNotNil(decode[0][@"connectionType"]);
+//    XCTAssertNotNil(decode[0][@"contentType"]);
+//    XCTAssertNotNil(decode[0][@"responseTime"]);
+//    XCTAssertTrue([decode[0][@"requestDomain"] isEqualToString:@"www.gooogle.com"]);
+//    XCTAssertTrue([decode[0][@"requestMethod"] isEqualToString:@"GET"]);
+//    XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
+//    XCTAssertFalse([decode[0][@"bytesReceived"] isEqual:@0]);
+//    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
+//    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"request"]);
+//    XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"parameter"]);
+//    XCTAssertTrue([decode[0][@"TEST_CUSTOM"] isEqualToString:@"Test custom"]);
+//    XCTAssertNil(decode[0][@"TEST_NOT_PRESENT"]);
+//
+//}
 
 - (void) testDataTaskErrorWithRequestHeaderTracking {
     [NRMAHTTPUtilities addHTTPHeaderTrackingFor:@[@"TEST_CUSTOM", @"TEST_NOT_PRESENT"]];

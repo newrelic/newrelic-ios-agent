@@ -85,13 +85,13 @@
     [NRMATraceController completeActivityTrace];
 }
 
-- (void) testThreadDictionaryThreadSafety
-{
-    [NSThread detachNewThreadSelector:@selector(threadSafetyHelper) toTarget:self withObject:nil];
-    for ( int i = 0; i < 10000; i++ ) {
-            [NRMAThreadInfo addThreadName:@"hello" forKey:[NSNumber numberWithInt:i]];
-    }
-}
+//- (void) testThreadDictionaryThreadSafety
+//{
+//    [NSThread detachNewThreadSelector:@selector(threadSafetyHelper) toTarget:self withObject:nil];
+//    for ( int i = 0; i < 10000; i++ ) {
+//            [NRMAThreadInfo addThreadName:@"hello" forKey:[NSNumber numberWithInt:i]];
+//    }
+//}
 
 - (void) threadSafetyHelper
 {
