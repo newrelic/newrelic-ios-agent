@@ -224,21 +224,20 @@ static long long _accountId;
                 self.session_replay_maskUserInputText = YES;
             }
 
+            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY]) {
+                self.session_replay_maskAllImages =  [innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY] boolValue];
+            }
+            else {
+                self.session_replay_maskAllImages =  YES;
+
+            }
+
             if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY]) {
                 self.session_replay_maskAllUserTouches =  [innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY] boolValue];
 
             }
             else {
                 self.session_replay_maskAllUserTouches =  NO;
-            }
-
-            if ([[innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY] boolValue]) {
-                self.session_replay_maskAllImages =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY];
-
-            }
-            else {
-                self.session_replay_maskAllImages =  YES;
-
             }
             
             //When in default mode, the user does not have the ability to change the booleans, we use the defaults for the boolean

@@ -74,11 +74,26 @@ struct RRWebMutationData: Codable {
             
             if !attributes.isEmpty {
                 // Create nested container for attributes
-                var attributesContainer = container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
+                var attributesContainer = container.nestedContainer(keyedBy: DynamicKeys.self, forKey: .attributes)
                 
-                // Build style string from attributes dictionary
-                let styleString = attributes.map { "\($0.key): \($0.value);" }.joined(separator: " ")
-                try attributesContainer.encode(styleString, forKey: .style)
+                for (key, value) in attributes {
+                    try attributesContainer.encode(value, forKey: DynamicKeys(stringValue: key)!)
+                }
+            }
+        }
+
+        struct DynamicKeys: CodingKey {
+            var stringValue: String
+            var intValue: Int?
+            
+            init?(stringValue: String) {
+                self.stringValue = stringValue
+                self.intValue = nil
+            }
+            
+            init?(intValue: Int) {
+                self.stringValue = String(intValue)
+                self.intValue = intValue
             }
         }
         
@@ -87,32 +102,39 @@ struct RRWebMutationData: Codable {
             id = try container.decode(Int.self, forKey: .id)
             
             // Decode nested attributes container
-            let attributesContainer = try container.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
-            let styleString = try attributesContainer.decode(String.self, forKey: .style)
-            
-            // Parse style string into attributes dictionary
-            let pairs = styleString
-                .split(separator: ";")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-                .filter { !$0.isEmpty }
+            let attributesContainer = try container.nestedContainer(keyedBy: DynamicKeys.self, forKey: .attributes)
             
             var attributes: RRWebAttributes = [:]
-            for pair in pairs {
-                let parts = pair.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
-                if parts.count == 2 {
-                    attributes[String(parts[0])] = String(parts[1])
+            
+            // Get all keys from the attributes container
+            for key in attributesContainer.allKeys {
+                let value = try attributesContainer.decode(String.self, forKey: key)
+                
+                if key.stringValue == "style" {
+                    // Parse style string into individual style properties
+                    let pairs = value
+                        .split(separator: ";")
+                        .map { $0.trimmingCharacters(in: .whitespaces) }
+                        .filter { !$0.isEmpty }
+                    
+                    for pair in pairs {
+                        let parts = pair.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                        if parts.count == 2 {
+                            attributes[String(parts[0])] = String(parts[1])
+                        }
+                    }
+                } else {
+                    // Handle non-style attributes directly
+                    attributes[key.stringValue] = value
                 }
             }
+            
             self.attributes = attributes
         }
         
         enum CodingKeys: String, CodingKey {
             case id
             case attributes
-        }
-        
-        enum AttributeKeys: String, CodingKey {
-            case style
         }
     }
     let source: RRWebIncrementalSource = .mutation
