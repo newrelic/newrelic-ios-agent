@@ -116,14 +116,14 @@ class SessionReplayCapture {
         case let visualEffectView as UIVisualEffectView:
             return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
 
-            default:
-                if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
-                   originalView.isKind(of: rctParagraphClass) {
-                    return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                } else {
-                    return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                }
+        default:
+            if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
+               originalView.isKind(of: rctParagraphClass) {
+                return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            } else {
+                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
             }
+        }
     }
     
     private func shouldRecord(view: UIView) -> Bool {
