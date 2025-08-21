@@ -39,17 +39,6 @@ class CustomTextThingy: SessionReplayViewThingy {
             view.sessionReplayCustomTextIDKey = self.viewDetails.viewId
         }
         
-//        if #available(iOS 15.0, *) {
-//            let fragmentFrames = CustomTextThingy.getTextLayoutFragmentFrames(textField: view)
-//            if !fragmentFrames.isEmpty {
-//                // Calculate the union of all fragment frames to get the complete text bounds
-//                let combinedFrame = fragmentFrames.reduce(fragmentFrames[0]) { result, frame in
-//                    result.union(frame)
-//                }
-//                self.viewDetails.frame = combinedFrame
-//            }
-//        }
-        
         if view.isSecureTextEntry {
             self.isMasked = true
         }
@@ -138,28 +127,6 @@ class CustomTextThingy: SessionReplayViewThingy {
         
         return actualTextBounds
     }
-
-//    private static let fragmentViewClassName = "_UITextLayoutFragmentView"
-//    static func getTextLayoutFragmentFrames(textField: UITextField) -> [CGRect] {
-//        // Early exit if text field has no text
-//        guard let text = textField.text, !text.isEmpty else { return [] }
-//        var fragmentFrames: [CGRect] = []
-//        
-//        // Find UITextLayoutFragmentView subviews
-//        func findTextLayoutFragments(in textField: UIView) {
-//            if let superview = textField.superview, let window = textField.window {
-//                for subview in textField.subviews {
-//                    if String(describing: type(of: subview)) == fragmentViewClassName {
-//                        fragmentFrames.append(superview.convert(subview.frame, to: window))
-//                    }
-//                    findTextLayoutFragments(in: subview)
-//                }
-//            }
-//        }
-//        
-//        findTextLayoutFragments(in: textField)
-//        return fragmentFrames
-//    }
 
     func cssDescription() -> String {
         return """
