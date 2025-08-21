@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 @_implementationOnly import NewRelicPrivate
 
+let RCTParagraphComponentView = "RCTParagraphComponentView"
+
 class UILabelThingy: SessionReplayViewThingy {
     var isMasked: Bool
     
@@ -75,7 +77,7 @@ class UILabelThingy: SessionReplayViewThingy {
         var font: UIFont = UIFont.systemFont(ofSize: 17.0)
         var textColor: UIColor = .black
         
-        if let rctParagraphClass = NSClassFromString("RCTParagraphComponentView"),
+        if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                   view.isKind(of: rctParagraphClass) {
             if view.responds(to: Selector(("attributedText"))) {
                 if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
