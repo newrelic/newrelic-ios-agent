@@ -61,6 +61,11 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(infiniteViewController, animated: true)
     }
     
+    func showInfiniteImageScrollController() {
+        let infiniteViewController = ViewControllerProvider.infiniteImageViewController
+        navigationController.pushViewController(infiniteViewController, animated: true)
+    }
+    
     func showDiffTestController() {
         let diffTestViewController = ViewControllerProvider.diffTestViewController
         navigationController.pushViewController(diffTestViewController, animated: true)

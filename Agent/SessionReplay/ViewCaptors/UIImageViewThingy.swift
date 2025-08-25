@@ -105,13 +105,12 @@ class UIImageViewThingy: SessionReplayViewThingy {
         var mutations = [MutationRecord]()
         var allAttributes = [String: String]()
         
-        if typedOther.isMasked {
-            allAttributes["style"] = typedOther.inlineCSSDescription()
-        } else {
+        allAttributes["style"] = typedOther.inlineCSSDescription()
+
+        if !typedOther.isMasked {
             if !UIImageViewThingy.imagesAreLikelyEqual(self.image, typedOther.image) {
                 if let imageData = typedOther.image?.optimizedPngData() {
                     allAttributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
-                    allAttributes["style"] = typedOther.inlineCSSDescription()
                 }
             }
         }
@@ -155,7 +154,7 @@ internal extension UIImage {
         }
     }
     
-    func optimizedPngData(maxDimension: CGFloat = 50) -> Data? {
+    func optimizedPngData(maxDimension: CGFloat = 25) -> Data? {
         // Return cached data if available
         if let cachedData = cachedOptimizedData {
             return cachedData
