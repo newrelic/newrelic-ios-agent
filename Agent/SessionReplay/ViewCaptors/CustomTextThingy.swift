@@ -96,7 +96,8 @@ class CustomTextThingy: SessionReplayViewThingy {
         
         // Calculate actual text size
         let attributes: [NSAttributedString.Key: Any] = [.font: font]
-        let textSize = (text as NSString).size(withAttributes: attributes)
+        var textSize = (text as NSString).size(withAttributes: attributes)
+        textSize.width = min(textSize.width, textRect.width)
         
         // Create bounds that match the actual text size within the text rect
         var actualTextBounds = CGRect(origin: textRect.origin, size: textSize)
@@ -146,7 +147,9 @@ class CustomTextThingy: SessionReplayViewThingy {
                 white-space: pre-wrap; \
                 font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true)); \
-                text-align: \(textAlignment);
+                text-align: \(textAlignment); \
+                overflow: hidden; \
+                white-space: nowrap;
                 """
     }
     
