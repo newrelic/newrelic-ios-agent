@@ -81,7 +81,7 @@ class SessionReplayTouchCapture: NSObject {
             return maskState
         }
         
-        return NRMAHarvestController.configuration().session_replay_maskAllUserTouches
+        return NRMAHarvestController.configuration()?.session_replay_maskAllUserTouches ?? true
     }
     
     public func resetEvents() {
