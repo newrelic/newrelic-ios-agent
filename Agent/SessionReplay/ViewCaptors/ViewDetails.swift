@@ -12,7 +12,7 @@ import UIKit
 
 struct ViewDetails {
     var viewId: Int
-    let frame: CGRect
+    var frame: CGRect
     var backgroundColor: UIColor?
     let alpha: CGFloat
     let isHidden: Bool
