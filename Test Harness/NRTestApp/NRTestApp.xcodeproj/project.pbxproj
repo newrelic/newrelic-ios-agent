@@ -60,6 +60,8 @@
 		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B6BEC282E37FC3D0054ECF1 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B6BEC272E37FC3D0054ECF1 /* NewRelic */; };
+		2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
+		2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2B8A46A02E4A880600DEB854 /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
 		2BB1E1EB2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
@@ -86,6 +88,7 @@
 		2BD05DEE2ADF326A00C0C972 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
 		2BD05DEF2ADF326A00C0C972 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
 		2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD05DF12ADF32D300C0C972 /* harvestConnector.json */; };
+		2BE225182E60EE3300B300C8 /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
@@ -322,6 +325,7 @@
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
+		2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIViewRepresentableTestView.swift; sourceTree = "<group>"; };
 		2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedStringTextMaskingViewController.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
@@ -641,6 +645,7 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */,
 				2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */,
 				2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */,
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
@@ -1185,6 +1190,7 @@
 				2B03F6602E45335100DBA375 /* MetricsConsumer.swift in Sources */,
 				2B0001222E34083400543C1B /* ApodResult.swift in Sources */,
 				2B0001232E34083400543C1B /* Coordinator.swift in Sources */,
+				2BE225182E60EE3300B300C8 /* SwiftUIViewRepresentableTestView.swift in Sources */,
 				2B0001242E34083400543C1B /* plistHelper.swift in Sources */,
 				2B0001252E34083400543C1B /* UIImageView.swift in Sources */,
 				2B0001262E34083400543C1B /* Date.swift in Sources */,
@@ -1273,6 +1279,7 @@
 				2B03F6702E45352500DBA375 /* PerformanceScreen.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
+				2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
@@ -1344,6 +1351,7 @@
 				2B03F6642E45338300DBA375 /* UITestsHelper.swift in Sources */,
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
+				2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
