@@ -34,7 +34,7 @@ std::unique_ptr<Payload> Facade::newPayload() {
     payload->setAppId(Application::getInstance().getContext().getApplicationId());
     payload->setTrustedAccountKey(Application::getInstance().getContext().getTrustedAccountKey());
     payload->setId(GuidGenerator::newGUID());
-    payload->setTraceId(_currentTraceId);
+    payload->setTraceId(GuidGenerator::newGUID32());
     payload->setParentId(_currentParentId);
     payload->setTimestamp(std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count());
@@ -49,7 +49,6 @@ std::unique_ptr<Payload> Facade::startTrip() {
     }
 
     std::lock_guard<std::recursive_mutex> lock(_writeMutex);
-    _currentTraceId = GuidGenerator::newGUID32();
     _currentParentId = "";
     auto payload = newPayload();
     _currentParentId = payload->getId();

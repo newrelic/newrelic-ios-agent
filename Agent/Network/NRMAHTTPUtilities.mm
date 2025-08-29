@@ -37,7 +37,7 @@ static NSString* _operationType = @"X-APOLLO-OPERATION-TYPE";
 static NSString* _operationId = @"X-APOLLO-OPERATION-ID";
 
 @implementation NRMAHTTPUtilities
-NSString* currentTraceId = @"";
+//NSString* currentTraceId = @"";
 NSString* currentParentId = @"";
 
 + (NSArray*) trackedHeaderFields
@@ -206,7 +206,7 @@ NSString* currentParentId = @"";
         NSString * trustedAccountKey =  @(NewRelic::Application::getInstance().getContext().getTrustedAccountKey().c_str());
         NSTimeInterval currentTimeStamp = [[NSDate date] timeIntervalSince1970];
 
-        currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
+        NSString* currentTraceId = [[[[[NSUUID UUID] UUIDString] componentsSeparatedByString:@"-"] componentsJoinedByString:@""] lowercaseString];
         currentParentId = @"";
         
         NRMAPayload * payload;

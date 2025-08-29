@@ -13,7 +13,7 @@ namespace NewRelic {
 namespace Connectivity {
 class Facade : public IFacade {
 private:
-    std::string _currentTraceId;
+//    std::string _currentTraceId;
     std::string _currentParentId;
     mutable std::recursive_mutex _writeMutex;
 
