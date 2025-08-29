@@ -7,8 +7,10 @@
 
 import UIKit
 import NewRelic
-import PerformanceSuite
+#if DEBUG_IMPORT
 
+import PerformanceSuite
+#endif
 // For more info on installing the New Relic agent go to https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/installation/spm-installation/#configure-using-swift-package-manager
 
 @main
@@ -20,8 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
         
         
-#if os(iOS)
-
+#if DEBUG_IMPORT
         // if use perofrmance sutie
         UITestsHelper.prepareForTestsIfNeeded()
 
@@ -41,6 +42,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NRMAFeatureFlags.NRFeatureFlag_WebViewInstrumentation
         ])
 #endif
+        
+        NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
+
 
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,

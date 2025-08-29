@@ -5,6 +5,8 @@
 //  Created by Gleb Tarasov on 19/12/2023.
 //
 
+#if DEBUG_IMPORT
+
 import Foundation
 
 class UITestsHelper {
@@ -25,3 +27,4 @@ class UITestsHelper {
         UserDefaults.resetStandardUserDefaults()
     }
 }
+#endif
