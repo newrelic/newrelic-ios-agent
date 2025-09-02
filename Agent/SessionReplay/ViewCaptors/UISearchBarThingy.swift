@@ -36,7 +36,7 @@ class UISearchBarThingy: SessionReplayViewThingy {
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         } else {
-            self.isMasked = NRMAHarvestController.configuration().session_replay_maskApplicationText
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
         
         if self.isMasked {
