@@ -196,7 +196,7 @@ static NSTimeInterval shortTimeInterval = 10;
     NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
     NSError *error = nil;
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
-    NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSDictionary class],[NSMutableDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+    NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
     XCTAssertEqual([retrievedDictionary count], 1);
@@ -236,7 +236,7 @@ static NSTimeInterval shortTimeInterval = 10;
         NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
         NSError *error = nil;
         NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
-        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSDictionary class],[NSMutableDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
         if(retrievedDictionary.count == 3) {
             NSLog(@"Initial file found and full");
@@ -290,6 +290,8 @@ static NSTimeInterval shortTimeInterval = 10;
     XCTAssertNotNil(retrievedInteraction);
     XCTAssertEqual(retrievedInteraction.timestamp, interactionEvent.timestamp);
     XCTAssertEqual(retrievedInteraction.sessionElapsedTimeSeconds, interactionEvent.sessionElapsedTimeSeconds);
+    XCTAssertTrue([retrievedInteraction.name isEqualToString: interactionEvent.name]);
+
     XCTAssertEqualObjects(retrievedInteraction.eventType, interactionEvent.eventType);
 }
 
@@ -322,7 +324,7 @@ static NSTimeInterval shortTimeInterval = 10;
         NSError *error = nil;
 
         NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
-        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSDictionary class],[NSMutableDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
         if(retrievedDictionary.count == 3) {
             NSLog(@"Initial file found and full");
