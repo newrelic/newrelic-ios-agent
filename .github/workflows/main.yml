@@ -26,10 +26,10 @@ jobs:
         with:
           xcode-version: "16.4"
 
-      - name: Install lcov
-        run: |
-          curl https://raw.githubusercontent.com/Homebrew/homebrew-core/e92d2ae54954ebf485b484d8522104700b144fee/Formula/lcov.rb > lcov.rb
-          brew install ./lcov.rb
+      # - name: Install lcov
+      #   run: |
+      #     curl https://raw.githubusercontent.com/Homebrew/homebrew-core/e92d2ae54954ebf485b484d8522104700b144fee/Formula/lcov.rb > lcov.rb
+      #     brew install ./lcov.rb
 
       - name: Update gem
         run: bundle update
@@ -54,8 +54,8 @@ jobs:
         with:
           xcode-version: "16.4"
 
-      - name: Install lcov
-        run: brew install lcov
+      # - name: Install lcov
+      #   run: brew install lcov
 
       - name: Update gem
         run: bundle update
@@ -80,8 +80,8 @@ jobs:
         with:
           xcode-version: "16.4"
 
-      - name: Install lcov
-        run: brew install lcov
+      # - name: Install lcov
+      #   run: brew install lcov
 
       - name: Update gem
         run: bundle update
