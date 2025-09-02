@@ -48,16 +48,19 @@ public class NRMASessionReplay: NSObject {
         try? FileManager.default.createDirectory(at: framesDirectory, withIntermediateDirectories: true)
     }
 
-    @MainActor public func start() {
+    public func start() {
 
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
-        
-        guard let window = getWindow() else {
-            NRLOG_DEBUG("No key window found on didBecomeActive")
-            return
+        Task{
+            await MainActor.run {
+                guard let window = getWindow() else {
+                    NRLOG_DEBUG("No key window found on didBecomeActive")
+                    return
+                }
+                self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
+                swizzleSendEvent()
+            }
         }
-        self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
-        swizzleSendEvent()
     }
 
     public func stop() {
