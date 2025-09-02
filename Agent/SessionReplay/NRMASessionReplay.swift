@@ -46,16 +46,21 @@ public class NRMASessionReplay: NSObject {
         super.init()
 
         try? FileManager.default.createDirectory(at: framesDirectory, withIntermediateDirectories: true)
-
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(didBecomeActive),
-                                               name: UIApplication.didBecomeActiveNotification,
-                                               object: nil)
     }
 
     public func start() {
 
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
+        Task{
+            await MainActor.run {
+                guard let window = getWindow() else {
+                    NRLOG_DEBUG("No key window found on didBecomeActive")
+                    return
+                }
+                self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
+                swizzleSendEvent()
+            }
+        }
     }
 
     public func stop() {
@@ -119,17 +124,6 @@ public class NRMASessionReplay: NSObject {
             let newImp = imp_implementationWithBlock(block)
             self.NRMAOriginal__sendEvent = NRMAReplaceInstanceMethod(clazz as? AnyClass, originalSelector, newImp)
         }
-    }
-
-    @MainActor
-    @objc func didBecomeActive() {
-        //NRLOG_DEBUG("[SESSION REPLAY] - App did become active")
-        guard let window = getWindow() else {
-            NRLOG_DEBUG("No key window found on didBecomeActive")
-            return
-        }
-        self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
-        swizzleSendEvent()
     }
 
     func takeFrame() {
