@@ -156,7 +156,8 @@ static NSTimeInterval shortTimeInterval = 10;
         NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
         NSError *error = nil;
         NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
-        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSDictionary class],[NSMutableDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+        unarchiver.requiresSecureCoding = YES;
+        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
         if(retrievedDictionary.count == 1) {
             NSLog(@"Initial file found and full");
             NSDictionary *attributes = ((NRMAMobileEvent *)retrievedDictionary[@"aKey"]).attributes;
@@ -196,6 +197,7 @@ static NSTimeInterval shortTimeInterval = 10;
     NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
     NSError *error = nil;
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
+    unarchiver.requiresSecureCoding = YES;
     NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
@@ -236,6 +238,7 @@ static NSTimeInterval shortTimeInterval = 10;
         NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
         NSError *error = nil;
         NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
+        unarchiver.requiresSecureCoding = YES;
         NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
         if(retrievedDictionary.count == 3) {
@@ -278,21 +281,24 @@ static NSTimeInterval shortTimeInterval = 10;
     XCTAssertNotNil(retrievedCustom);
     XCTAssertEqual(retrievedCustom.timestamp, customEvent.timestamp);
     XCTAssertEqual(retrievedCustom.sessionElapsedTimeSeconds, customEvent.sessionElapsedTimeSeconds);
-    XCTAssertEqualObjects(retrievedCustom.eventType, customEvent.eventType);
+    XCTAssertTrue([retrievedCustom.eventType isEqualToString: retrievedCustom.eventType]);
 
     NRMARequestEvent *retrievedRequest = [anotherOne objectForKey:@"Request Event"];
     XCTAssertNotNil(retrievedRequest);
     XCTAssertEqual(retrievedRequest.timestamp, requestEvent.timestamp);
     XCTAssertEqual(retrievedRequest.sessionElapsedTimeSeconds, requestEvent.sessionElapsedTimeSeconds);
-    XCTAssertEqualObjects(retrievedRequest.eventType, requestEvent.eventType);
+    XCTAssertTrue([retrievedRequest.eventType isEqualToString: requestEvent.eventType]);
     
+    XCTAssertTrue([retrievedRequest.payload isEqual: requestEvent.payload], @"Payloads should match");
+
     NRMAInteractionEvent *retrievedInteraction = [anotherOne objectForKey:@"Interaction Event"];
     XCTAssertNotNil(retrievedInteraction);
     XCTAssertEqual(retrievedInteraction.timestamp, interactionEvent.timestamp);
     XCTAssertEqual(retrievedInteraction.sessionElapsedTimeSeconds, interactionEvent.sessionElapsedTimeSeconds);
     XCTAssertTrue([retrievedInteraction.name isEqualToString: interactionEvent.name]);
+    XCTAssertTrue([retrievedInteraction.category isEqualToString: interactionEvent.category]);
 
-    XCTAssertEqualObjects(retrievedInteraction.eventType, interactionEvent.eventType);
+    XCTAssertTrue([retrievedInteraction.eventType isEqualToString: interactionEvent.eventType]);
 }
 
 - (void)testEventRemoval {
@@ -324,6 +330,7 @@ static NSTimeInterval shortTimeInterval = 10;
         NSError *error = nil;
 
         NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
+        unarchiver.requiresSecureCoding = YES;
         NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
         if(retrievedDictionary.count == 3) {

@@ -152,6 +152,7 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
+    unarchiver.requiresSecureCoding = YES;
     NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
@@ -201,6 +202,7 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
+    unarchiver.requiresSecureCoding = YES;
     NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
@@ -213,7 +215,7 @@
 }
 
 + (NSSet*) classList {
-    NSSet *classList = [[NSSet alloc] initWithArray:@[
+    NSSet *classList = [[NSSet alloc] initWithArray:@[ [NRMAPayload class],
         [NRMAInteractionEvent class],[NRMAMobileEvent class], [NRMASessionEvent class],[NRMACustomEvent class],[NRMARequestEvent class],[NRMANetworkErrorEvent class],
         [NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]];
     return classList;
