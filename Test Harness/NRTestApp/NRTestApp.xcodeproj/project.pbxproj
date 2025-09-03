@@ -8,6 +8,36 @@
 
 /* Begin PBXBuildFile section */
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
+		2B596B302E68F3E900B62256 /* SwiftUIContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B2E2E68F3E900B62256 /* SwiftUIContentView.swift */; };
+		2B596B312E68F3E900B62256 /* PickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B222E68F3E900B62256 /* PickersView.swift */; };
+		2B596B322E68F3E900B62256 /* StacksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B282E68F3E900B62256 /* StacksView.swift */; };
+		2B596B332E68F3E900B62256 /* DatePickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B1F2E68F3E900B62256 /* DatePickersView.swift */; };
+		2B596B342E68F3E900B62256 /* ScrollViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B242E68F3E900B62256 /* ScrollViewsView.swift */; };
+		2B596B352E68F3E900B62256 /* TextFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B2A2E68F3E900B62256 /* TextFieldsView.swift */; };
+		2B596B362E68F3E900B62256 /* TogglesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B2B2E68F3E900B62256 /* TogglesView.swift */; };
+		2B596B372E68F3E900B62256 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B212E68F3E900B62256 /* ListsView.swift */; };
+		2B596B382E68F3E900B62256 /* SteppersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B292E68F3E900B62256 /* SteppersView.swift */; };
+		2B596B3A2E68F3E900B62256 /* GridsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B202E68F3E900B62256 /* GridsView.swift */; };
+		2B596B3B2E68F3E900B62256 /* ShapesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B262E68F3E900B62256 /* ShapesView.swift */; };
+		2B596B3C2E68F3E900B62256 /* ButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B1D2E68F3E900B62256 /* ButtonsView.swift */; };
+		2B596B3D2E68F3E900B62256 /* SegmentedControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B252E68F3E900B62256 /* SegmentedControlsView.swift */; };
+		2B596B3E2E68F3E900B62256 /* SlidersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B272E68F3E900B62256 /* SlidersView.swift */; };
+		2B596B402E68F3E900B62256 /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B232E68F3E900B62256 /* ProgressViewsView.swift */; };
+		2B596B422E68F3E900B62256 /* SwiftUIContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B2E2E68F3E900B62256 /* SwiftUIContentView.swift */; };
+		2B596B432E68F3E900B62256 /* PickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B222E68F3E900B62256 /* PickersView.swift */; };
+		2B596B442E68F3E900B62256 /* StacksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B282E68F3E900B62256 /* StacksView.swift */; };
+		2B596B452E68F3E900B62256 /* DatePickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B1F2E68F3E900B62256 /* DatePickersView.swift */; };
+		2B596B462E68F3E900B62256 /* ScrollViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B242E68F3E900B62256 /* ScrollViewsView.swift */; };
+		2B596B472E68F3E900B62256 /* TextFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B2A2E68F3E900B62256 /* TextFieldsView.swift */; };
+		2B596B482E68F3E900B62256 /* TogglesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B2B2E68F3E900B62256 /* TogglesView.swift */; };
+		2B596B492E68F3E900B62256 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B212E68F3E900B62256 /* ListsView.swift */; };
+		2B596B4A2E68F3E900B62256 /* SteppersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B292E68F3E900B62256 /* SteppersView.swift */; };
+		2B596B4C2E68F3E900B62256 /* GridsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B202E68F3E900B62256 /* GridsView.swift */; };
+		2B596B4D2E68F3E900B62256 /* ShapesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B262E68F3E900B62256 /* ShapesView.swift */; };
+		2B596B4E2E68F3E900B62256 /* ButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B1D2E68F3E900B62256 /* ButtonsView.swift */; };
+		2B596B4F2E68F3E900B62256 /* SegmentedControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B252E68F3E900B62256 /* SegmentedControlsView.swift */; };
+		2B596B502E68F3E900B62256 /* SlidersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B272E68F3E900B62256 /* SlidersView.swift */; };
+		2B596B522E68F3E900B62256 /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B596B232E68F3E900B62256 /* ProgressViewsView.swift */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
@@ -263,6 +293,21 @@
 /* Begin PBXFileReference section */
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
+		2B596B1D2E68F3E900B62256 /* ButtonsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonsView.swift; sourceTree = "<group>"; };
+		2B596B1F2E68F3E900B62256 /* DatePickersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickersView.swift; sourceTree = "<group>"; };
+		2B596B202E68F3E900B62256 /* GridsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridsView.swift; sourceTree = "<group>"; };
+		2B596B212E68F3E900B62256 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
+		2B596B222E68F3E900B62256 /* PickersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickersView.swift; sourceTree = "<group>"; };
+		2B596B232E68F3E900B62256 /* ProgressViewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewsView.swift; sourceTree = "<group>"; };
+		2B596B242E68F3E900B62256 /* ScrollViewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewsView.swift; sourceTree = "<group>"; };
+		2B596B252E68F3E900B62256 /* SegmentedControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentedControlsView.swift; sourceTree = "<group>"; };
+		2B596B262E68F3E900B62256 /* ShapesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapesView.swift; sourceTree = "<group>"; };
+		2B596B272E68F3E900B62256 /* SlidersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlidersView.swift; sourceTree = "<group>"; };
+		2B596B282E68F3E900B62256 /* StacksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StacksView.swift; sourceTree = "<group>"; };
+		2B596B292E68F3E900B62256 /* SteppersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppersView.swift; sourceTree = "<group>"; };
+		2B596B2A2E68F3E900B62256 /* TextFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldsView.swift; sourceTree = "<group>"; };
+		2B596B2B2E68F3E900B62256 /* TogglesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TogglesView.swift; sourceTree = "<group>"; };
+		2B596B2E2E68F3E900B62256 /* SwiftUIContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIContentView.swift; sourceTree = "<group>"; };
 		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
@@ -404,6 +449,36 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2B596B2D2E68F3E900B62256 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2B596B1D2E68F3E900B62256 /* ButtonsView.swift */,
+				2B596B1F2E68F3E900B62256 /* DatePickersView.swift */,
+				2B596B202E68F3E900B62256 /* GridsView.swift */,
+				2B596B212E68F3E900B62256 /* ListsView.swift */,
+				2B596B222E68F3E900B62256 /* PickersView.swift */,
+				2B596B232E68F3E900B62256 /* ProgressViewsView.swift */,
+				2B596B242E68F3E900B62256 /* ScrollViewsView.swift */,
+				2B596B252E68F3E900B62256 /* SegmentedControlsView.swift */,
+				2B596B262E68F3E900B62256 /* ShapesView.swift */,
+				2B596B272E68F3E900B62256 /* SlidersView.swift */,
+				2B596B282E68F3E900B62256 /* StacksView.swift */,
+				2B596B292E68F3E900B62256 /* SteppersView.swift */,
+				2B596B2A2E68F3E900B62256 /* TextFieldsView.swift */,
+				2B596B2B2E68F3E900B62256 /* TogglesView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		2B596B2F2E68F3E900B62256 /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				2B596B2D2E68F3E900B62256 /* Views */,
+				2B596B2E2E68F3E900B62256 /* SwiftUIContentView.swift */,
+			);
+			path = SwiftUI;
+			sourceTree = "<group>";
+		};
 		2BD05D9D2ADF2DF600C0C972 /* Swifter */ = {
 			isa = PBXGroup;
 			children = (
@@ -505,6 +580,7 @@
 		F8302AF7296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXGroup;
 			children = (
+				2B596B2F2E68F3E900B62256 /* SwiftUI */,
 				2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */,
 				F86428492971DF80002ABA01 /* Helpers */,
 				F8302AF8296F5EFA003EC291 /* AppDelegate.swift */,
@@ -1100,6 +1176,21 @@
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
+				2B596B422E68F3E900B62256 /* SwiftUIContentView.swift in Sources */,
+				2B596B432E68F3E900B62256 /* PickersView.swift in Sources */,
+				2B596B442E68F3E900B62256 /* StacksView.swift in Sources */,
+				2B596B452E68F3E900B62256 /* DatePickersView.swift in Sources */,
+				2B596B462E68F3E900B62256 /* ScrollViewsView.swift in Sources */,
+				2B596B472E68F3E900B62256 /* TextFieldsView.swift in Sources */,
+				2B596B482E68F3E900B62256 /* TogglesView.swift in Sources */,
+				2B596B492E68F3E900B62256 /* ListsView.swift in Sources */,
+				2B596B4A2E68F3E900B62256 /* SteppersView.swift in Sources */,
+				2B596B4C2E68F3E900B62256 /* GridsView.swift in Sources */,
+				2B596B4D2E68F3E900B62256 /* ShapesView.swift in Sources */,
+				2B596B4E2E68F3E900B62256 /* ButtonsView.swift in Sources */,
+				2B596B4F2E68F3E900B62256 /* SegmentedControlsView.swift in Sources */,
+				2B596B502E68F3E900B62256 /* SlidersView.swift in Sources */,
+				2B596B522E68F3E900B62256 /* ProgressViewsView.swift in Sources */,
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
@@ -1149,6 +1240,21 @@
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,
 				F84EEFB62E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F81062182E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
+				2B596B302E68F3E900B62256 /* SwiftUIContentView.swift in Sources */,
+				2B596B312E68F3E900B62256 /* PickersView.swift in Sources */,
+				2B596B322E68F3E900B62256 /* StacksView.swift in Sources */,
+				2B596B332E68F3E900B62256 /* DatePickersView.swift in Sources */,
+				2B596B342E68F3E900B62256 /* ScrollViewsView.swift in Sources */,
+				2B596B352E68F3E900B62256 /* TextFieldsView.swift in Sources */,
+				2B596B362E68F3E900B62256 /* TogglesView.swift in Sources */,
+				2B596B372E68F3E900B62256 /* ListsView.swift in Sources */,
+				2B596B382E68F3E900B62256 /* SteppersView.swift in Sources */,
+				2B596B3A2E68F3E900B62256 /* GridsView.swift in Sources */,
+				2B596B3B2E68F3E900B62256 /* ShapesView.swift in Sources */,
+				2B596B3C2E68F3E900B62256 /* ButtonsView.swift in Sources */,
+				2B596B3D2E68F3E900B62256 /* SegmentedControlsView.swift in Sources */,
+				2B596B3E2E68F3E900B62256 /* SlidersView.swift in Sources */,
+				2B596B402E68F3E900B62256 /* ProgressViewsView.swift in Sources */,
 				F81061F92E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				F86429312979CDFA002ABA01 /* Date.swift in Sources */,
 				F86429322979CDFA002ABA01 /* Variable.swift in Sources */,
