@@ -97,14 +97,14 @@ struct ViewDetails {
             return nil
         }
         
+        // Handle decision for masking based on accessibility identifier in this section.
         if let accessibilityId = view.accessibilityIdentifier,
            accessibilityId.count > 0,
            accessibilityId == "nr-mask" || accessibilityId.hasSuffix(".nr-mask") {
-            //This view is explicitly marked to not be masked.
+            //This view is explicitly marked to be masked.
             return true
         }
 
-        // Handle decision for masking based on accessibility identifier in this section.
         // Check for accessibility identifier in the masking list
         if let accessibilityId = view.accessibilityIdentifier,
            agent.isAccessibilityIdentifierMasked(accessibilityId) {
@@ -115,20 +115,16 @@ struct ViewDetails {
         if agent.isClassNameMasked(viewName) {
             return true
         }
-        
-        // Check if parent is masked (propagate masking to children)
-        if let parentView = view.superview,
-           let parentMasked = parentView.sessionReplayMaskState,
-           parentMasked {
-            return true
-        }
 
+        // Handle decision for masking based on accessibility identifier in this section.
         if let accessibilityId = view.accessibilityIdentifier,
            accessibilityId.count > 0,
            accessibilityId == "nr-unmask" || accessibilityId.hasSuffix(".nr-unmask") {
+            //This view is explicitly marked to not be masked.
             return false
         }
         
+        // Check for accessibility identifier in the masking list
         if let accessibilityId = view.accessibilityIdentifier,
            agent.isAccessibilityIdentifierUnmasked(accessibilityId) {
             return false
@@ -137,6 +133,12 @@ struct ViewDetails {
         // Check for class name in the unmasking list
         if agent.isClassNameUnmasked(viewName) {
             return false
+        }
+        
+        // Check if parent is marked as masked or unmasked (propagate masking status to children)
+        if let parentView = view.superview,
+           let parentMasked = parentView.sessionReplayMaskState {
+            return parentMasked
         }
         
         // Return nil if no custom masked setting is found
