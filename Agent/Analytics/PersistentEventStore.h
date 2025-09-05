@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)clearAll;
 
 + (NSDictionary *)getLastSessionEventsFromFilename:(NSString *)filename;
++ (NSSet*) classList;
 @end
 
 NS_ASSUME_NONNULL_END
