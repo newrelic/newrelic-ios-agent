@@ -372,10 +372,7 @@ static NewRelicAgentInternal* _sharedInstance;
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value url: [self->_agentConfiguration sessionReplayURL]];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
 
-        // CHECK FOR MSR FILES FROM PREVIOUSLY CRASHED SESSIONS
-        BOOL isSampled = [self isSessionReplaySampled];
-
-        if (isSampled && [self isSessionReplayEnabled]) {
+        if ([self isSessionReplayEnabled]) {
             [_sessionReplay checkForPreviousSessionFiles];
         }
     }
