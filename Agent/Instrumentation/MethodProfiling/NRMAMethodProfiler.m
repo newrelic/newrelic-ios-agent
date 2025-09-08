@@ -708,6 +708,14 @@ void NRMA__voidParamHandler(id self, SEL selector, NRMAMethodColor methodColor)
 {
     if (self == nil) return;
 
+    // NEW CODE
+    NSString *name = NSStringFromClass([self class]);
+    if ([name isEqualToString:@"UIHostingController"]) {
+        return;
+    }
+    // END NEW CODE
+
+    
     BOOL isTargetColor =  NO;
 
     NRMATrace* trace = nil;
