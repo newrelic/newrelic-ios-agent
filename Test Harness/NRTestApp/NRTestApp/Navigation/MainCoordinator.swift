@@ -66,6 +66,16 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(diffTestViewController, animated: true)
     }
     
+    func showSwiftUIViewRepresentableTestView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            let swiftUIView = SwiftUIViewRepresentableTestView()
+            let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+            navigationController.pushViewController(swiftUIViewController, animated: true)
+        }
+#endif
+    }
+    
     func showSwiftUIContentView() {
 #if os(iOS)
         if #available(iOS 15.0, *) {

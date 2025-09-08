@@ -9,6 +9,11 @@
 #import "PersistentEventStore.h"
 #import "NRLogger.h"
 #import "NRMAMobileEvent.h"
+#import "NRMAInteractionEvent.h"
+#import "NRMASessionEvent.h"
+#import "NRMACustomEvent.h"
+#import "NRMARequestEvent.h"
+#import "NRMANetworkErrorEvent.h"
 
 @interface PersistentEventStore ()
 @property (nonatomic, strong) dispatch_queue_t writeQueue;
@@ -147,7 +152,8 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
-    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+    unarchiver.requiresSecureCoding = YES;
+    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
@@ -196,7 +202,8 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
-    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+    unarchiver.requiresSecureCoding = YES;
+    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
@@ -205,6 +212,13 @@
     }
 
     return storedDictionary;
+}
+
++ (NSSet*) classList {
+    NSSet *classList = [[NSSet alloc] initWithArray:@[ [NRMAPayload class],
+        [NRMAInteractionEvent class],[NRMAMobileEvent class], [NRMASessionEvent class],[NRMACustomEvent class],[NRMARequestEvent class],[NRMANetworkErrorEvent class],
+        [NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]];
+    return classList;
 }
 
 @end

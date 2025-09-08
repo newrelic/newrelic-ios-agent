@@ -49,7 +49,7 @@ static NSString* const kPayloadKey = @"Payload";
 - (nullable instancetype)initWithCoder:(nonnull NSCoder *)coder {
     self = [super initWithCoder:coder];
     if(self) {
-        self.payload = [coder decodeObjectOfClass:[NSString class] forKey:kPayloadKey];
+        self.payload = [coder decodeObjectOfClass:[NRMAPayload class] forKey:kPayloadKey];
     }
     
     return self;

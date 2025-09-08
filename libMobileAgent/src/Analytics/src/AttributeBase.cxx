@@ -10,10 +10,6 @@ namespace NewRelic {
         return _name;
     }
 
-    std::shared_ptr<BaseValue> AttributeBase::getValue() const {
-        return _value;
-    }
-
     void AttributeBase::setPersistent(bool persistence) {
         _isPersistent = persistence;
     }
@@ -22,11 +18,18 @@ namespace NewRelic {
         return _isPersistent;
     }
 
+    std::shared_ptr<BaseValue> AttributeBase::getValue() const {
+        return std::atomic_load(&_value);
+    }
     void AttributeBase::setValue(std::shared_ptr<BaseValue> value) {
-        _value = value;
+        std::atomic_store(&_value, std::move(value));
     }
 
     bool operator==(const AttributeBase& lhs, const AttributeBase& rhs) {
-        return lhs._isPersistent == rhs._isPersistent && lhs._name == rhs._name && *lhs._value == *rhs._value;
+        auto lv = lhs.getValue();
+        auto rv = rhs.getValue();
+        return lhs._isPersistent == rhs._isPersistent &&
+               lhs._name == rhs._name &&
+               ((!lv && !rv) || (lv && rv && *lv == *rv));
     }
 }
