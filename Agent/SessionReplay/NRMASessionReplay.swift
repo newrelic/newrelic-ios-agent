@@ -28,6 +28,9 @@ public class NRMASessionReplay: NSObject {
     
     private var frameCounter: Int = 0
     private let framesDirectory: URL
+    
+    // Track touch IDs that have already been persisted to avoid duplicates
+    private var persistedTouchIDs: Set<Int> = []
 
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
 
@@ -72,6 +75,9 @@ public class NRMASessionReplay: NSObject {
         if let touchCapture = sessionReplayTouchCapture {
             touchCapture.resetEvents()
         }
+        // Clear the set of persisted touch IDs when clearing all data
+        persistedTouchIDs.removeAll()
+        
         // should remove frames from file system after processing
 
         // Clear the session replay file after processing
@@ -222,8 +228,33 @@ public class NRMASessionReplay: NSObject {
         let touches = sessionReplayTouchProcessor.processTouches(touchCapture.touchEvents)
         if clear {
             touchCapture.resetEvents()
+            // Clear the set of persisted touch IDs when clearing all data
+            persistedTouchIDs.removeAll()
         }
         return touches
+    }
+
+    // Get only touches that haven't been persisted yet for file persistence
+    func getUnpersistedTouches() -> [IncrementalEvent] {
+        guard let touchCapture = sessionReplayTouchCapture else {
+            NRLOG_DEBUG("sessionReplayTouchCapture is nil in getUnpersistedTouches")
+            return []
+        }
+        
+        // Filter out touches that have already been persisted
+        let newTouchEvents = touchCapture.touchEvents.filter { touchEvent in
+            !persistedTouchIDs.contains(touchEvent.id)
+        }
+        
+        // Process only the new touches
+        let newProcessedTouches = sessionReplayTouchProcessor.processTouches(newTouchEvents)
+        
+        // Mark these touches as persisted
+        for touchEvent in newTouchEvents {
+            persistedTouchIDs.insert(touchEvent.id)
+        }
+        
+        return newProcessedTouches
     }
 
 
@@ -231,9 +262,10 @@ public class NRMASessionReplay: NSObject {
 
 
     func processFrameToFile(_ frame: SessionReplayFrame) {
-        // Fetch processed frame and touches during frame
+        // Fetch processed frame and only unpersisted touches
+        let lastFrameSize = sessionReplayFrameProcessor.lastFullFrame?.size ?? .zero
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
-        let processedTouches = self.getSessionReplayTouches(clear: false)
+        let processedTouches = self.getUnpersistedTouches()
         
         guard let firstFrame = rawFrames.first else {
             return
@@ -243,13 +275,17 @@ public class NRMASessionReplay: NSObject {
 
         var container: [AnyRRWebEvent] = []
 
-        let metaEventData = RRWebMetaData(
-            href: "http://newrelic.com",
-            width: Int(frame.size.width),
-            height: Int(frame.size.height)
-        )
-        let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
-        container.append(AnyRRWebEvent(metaEvent))
+        // Only add meta event for first frame or when frame size changes
+        if lastFrameSize != frame.size {
+            let metaEventData = RRWebMetaData(
+                href: "http://newrelic.com",
+                width: Int(frame.size.width),
+                height: Int(frame.size.height)
+            )
+            let metaEvent = MetaEvent(timestamp: TimeInterval(lastTimestamp), data: metaEventData)
+            container.append(AnyRRWebEvent(metaEvent))
+        }
+        
         container.append(AnyRRWebEvent(processedFrame))
         container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
@@ -335,4 +371,3 @@ extension DispatchQueue {
         block()
     }
 }
-
