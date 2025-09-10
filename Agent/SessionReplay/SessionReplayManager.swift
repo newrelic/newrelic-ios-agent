@@ -80,7 +80,6 @@ public class SessionReplayManager: NSObject {
     @objc public func newSession() {
         stop()
         harvest()
-        start()
     }
     
     @objc public func clearAllData() {

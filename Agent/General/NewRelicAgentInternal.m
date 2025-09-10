@@ -631,9 +631,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay newSession];
     }
-    else {
-        
-    }
 #endif
 }
 
@@ -746,12 +743,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [self onSessionStart];
     
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-    BOOL isSampled = [self isSessionReplaySampled];
-    if (isSampled && [self isSessionReplayEnabled]) {
-        [_sessionReplay start];
-    }
-#endif
 }
 
 #if !TARGET_OS_WATCH
