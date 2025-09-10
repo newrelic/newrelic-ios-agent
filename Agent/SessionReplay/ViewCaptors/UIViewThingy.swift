@@ -49,12 +49,20 @@ class UIViewThingy: SessionReplayViewThingy {
             return []
         }
         var mutations = [MutationRecord]()
-        let frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        let styleAttributes = generateBaseDifferences(from: typedOther)
+
+        if !styleAttributes.isEmpty {
+            let styleString = styleAttributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
+            allAttributes["style"] = styleString
+        }
+        
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
+        
         return mutations
     }
 }

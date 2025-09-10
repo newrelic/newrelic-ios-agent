@@ -202,6 +202,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
         
         options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
+        
+        options.append(UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction()}))
 
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
@@ -264,6 +266,10 @@ class ViewController: UIViewController {
     
     func infiniteViewAction() {
         coordinator?.showInfiniteScrollController()
+    }
+    
+    func infiniteImagesViewAction() {
+        coordinator?.showInfiniteImageScrollController()
     }
     
     func makeButton(title: String) -> UIButton {
