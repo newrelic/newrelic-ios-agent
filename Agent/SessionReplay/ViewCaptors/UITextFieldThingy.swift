@@ -130,22 +130,19 @@ class UITextFieldThingy: SessionReplayViewThingy {
         }
         
         var mutations = [MutationRecord]()
-        let frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        // get text color difference
-//        if textColor != typedOther.textColor {
-//            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-//        }
-        
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
-            mutations.append(attributeRecord)
+        var styleAttributes = generateBaseDifferences(from: typedOther)
+
+        if !styleAttributes.isEmpty {
+            let styleString = styleAttributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
+            allAttributes["style"] = styleString
         }
         
-//        if(self.labelText != typedOther.self.labelText) {
-//            let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)
-//            mutations.append(textRecord)
-//        }
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
+            mutations.append(attributeRecord)
+        }
         
         return mutations
     }
