@@ -10,6 +10,8 @@ import Foundation
 import UIKit
 @_implementationOnly import NewRelicPrivate
 
+let RCTParagraphComponentView = "RCTParagraphComponentView"
+
 class UILabelThingy: SessionReplayViewThingy {
     var isMasked: Bool
     
@@ -35,7 +37,7 @@ class UILabelThingy: SessionReplayViewThingy {
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         } else {
-            self.isMasked = NRMAHarvestController.configuration().session_replay_maskApplicationText
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
         
         if self.isMasked {
@@ -61,10 +63,76 @@ class UILabelThingy: SessionReplayViewThingy {
         } else {
             self.fontFamily = fontFamilyRaw
         }
-        self.textAlignment = view.textAlignmentString()
+        self.textAlignment = view.textAlignment.stringValue()
 
         self.textColor = view.textColor
 
+    }
+    
+    init(view: UIView, viewDetails: ViewDetails) {
+        self.viewDetails = viewDetails
+
+        var text: String?
+        var textAlignment = "left"
+        var font: UIFont = UIFont.systemFont(ofSize: 17.0)
+        var textColor: UIColor = .black
+        
+        if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
+                  view.isKind(of: rctParagraphClass) {
+            if view.responds(to: Selector(("attributedText"))) {
+                if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
+                    text = attributedText.string  // Extract plain text
+                    
+                    // Get font from attributed string
+                    if let attributedFont = attributedText.attribute(.font, at: 0, effectiveRange: nil) as? UIFont {
+                        font = attributedFont
+                    }
+                    
+                    // Get text color from attributed string
+                    if let attributedColor = attributedText.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor {
+                        textColor = attributedColor
+                    }
+                    
+                    // Get text alignment from paragraph style
+                    if let paragraphStyle = attributedText.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
+                        textAlignment = paragraphStyle.alignment.stringValue()
+                    }
+                }
+            }
+        }
+
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        } else {
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
+        }
+        if self.isMasked {
+            // If the view is masked, we should not record the text.
+            // instead replace it with the number of asterisks as were characters in label
+            self.labelText = String(repeating: "*", count: text?.count ?? 0)
+        }
+        else {
+            self.labelText = text ?? ""
+        }
+        
+        self.fontSize = font.pointSize
+        let fontNameRaw = font.fontName
+        if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
+            self.fontName = String(fontNameRaw.dropFirst())
+        } else {
+            self.fontName = fontNameRaw
+        }
+        
+        let fontFamilyRaw = font.familyName
+        if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
+            self.fontFamily = String(fontFamilyRaw.dropFirst())
+        } else {
+            self.fontFamily = fontFamilyRaw
+        }
+        
+        self.textAlignment = textAlignment
+
+        self.textColor = textColor
     }
     
     func cssDescription() -> String {
@@ -119,21 +187,31 @@ class UILabelThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UILabelThingy else {
             return []
         }
-        
         var mutations = [MutationRecord]()
-        var frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
+        var styleAttributes = generateBaseDifferences(from: typedOther)
+
         // get text color difference
         if textColor != typedOther.textColor {
-            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
+            styleAttributes["color"] = typedOther.textColor.toHexString(includingAlpha: true)
+        }
+        
+        if fontSize != typedOther.fontSize || fontFamily != typedOther.fontFamily {
+            styleAttributes["font"] = "\(String(format: "%.2f", self.fontSize))px \(self.fontFamily)px"
         }
         
         if textAlignment != typedOther.textAlignment {
-            frameDifferences["text-align"] = typedOther.textAlignment
+            styleAttributes["text-align"] = typedOther.textAlignment
         }
         
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        if !styleAttributes.isEmpty {
+            let styleString = styleAttributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
+            allAttributes["style"] = styleString
+        }
+        
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
         
@@ -169,25 +247,15 @@ extension UILabelThingy: Hashable {
     }
 }
 
-internal extension UILabel {
-    
-    func textAlignmentString() -> String {
-        switch self.textAlignment {
-        case .left:
-            return "left"
-        case .center:
-            return "center"
-        case .right:
-            return "right"
-        case .justified:
-            return "justify"
-        case .natural:
-            // In CSS, 'start' is the logical value that aligns to the beginning
-            // of the text flow, respecting LTR/RTL direction, similar to .natural.
-            return "start"
-        @unknown default:
-            return "left"
+internal extension NSTextAlignment {
+    func stringValue() -> String {
+        switch self {
+        case .left: return "left"
+        case .center: return "center"
+        case .right: return "right"
+        case .justified: return "justify"
+        case .natural: return "start"
+        @unknown default: return "left"
         }
     }
 }
-

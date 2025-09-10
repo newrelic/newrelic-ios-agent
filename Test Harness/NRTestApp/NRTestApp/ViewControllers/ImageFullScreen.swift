@@ -12,7 +12,15 @@ struct ImageFullScreen: View {
     let image: UIImage
 
     var body: some View {
-        ImageDetailPDFView(image: image)
-        .NRTrackView(name: "ImageDetailPDFView")
+        // Use a simple SwiftUI Image instead of PDF view to avoid CoreGraphics issues
+        ScrollView([.horizontal, .vertical]) {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .background(Color.black)
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Image")
     }
 }

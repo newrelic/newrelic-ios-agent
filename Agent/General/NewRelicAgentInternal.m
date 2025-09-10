@@ -372,8 +372,9 @@ static NewRelicAgentInternal* _sharedInstance;
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value url: [self->_agentConfiguration sessionReplayURL]];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
 
-        // CHECK FOR MSR FILES FROM PREVIOUSLY CRASHED SESSIONS
-         [_sessionReplay checkForPreviousSessionFiles];
+        if ([self isSessionReplayEnabled]) {
+            [_sessionReplay checkForPreviousSessionFiles];
+        }
     }
 #endif
 }
@@ -630,9 +631,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay newSession];
     }
-    else {
-        
-    }
 #endif
 }
 
@@ -745,12 +743,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [self onSessionStart];
     
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-    BOOL isSampled = [self isSessionReplaySampled];
-    if (isSampled && [self isSessionReplayEnabled]) {
-        [_sessionReplay start];
-    }
-#endif
 }
 
 #if !TARGET_OS_WATCH

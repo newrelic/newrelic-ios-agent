@@ -173,6 +173,10 @@ class ViewController: UIViewController {
         coordinator?.showImageViewController(image:spaceImage)
     }
     
+    func swiftUIViewTapped() {
+        coordinator?.showSwiftUIViewRepresentableTestView()
+    }
+    
     func setupButtonsTable() {
         let tableView = UITableView()
         
@@ -198,6 +202,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
         
         options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
+        
+        options.append(UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction()}))
 
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
@@ -211,6 +217,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction()}))
 
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
+        
+        options.append(UtilOption(title: "SwiftUIViewRepresentableTest", handler: { [self] in swiftUIViewTapped()}))
         
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
@@ -258,6 +266,10 @@ class ViewController: UIViewController {
     
     func infiniteViewAction() {
         coordinator?.showInfiniteScrollController()
+    }
+    
+    func infiniteImagesViewAction() {
+        coordinator?.showInfiniteImageScrollController()
     }
     
     func makeButton(title: String) -> UIButton {

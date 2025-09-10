@@ -44,7 +44,7 @@
 
 #pragma mark - HarvestController interface
 
-+ (NRMAHarvesterConfiguration*) configuration;
++ (NRMAHarvesterConfiguration*_Nullable) configuration;
 
 + (NRMAHarvestData*) harvestData;
 

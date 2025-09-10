@@ -61,8 +61,23 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(infiniteViewController, animated: true)
     }
     
+    func showInfiniteImageScrollController() {
+        let infiniteViewController = ViewControllerProvider.infiniteImageViewController
+        navigationController.pushViewController(infiniteViewController, animated: true)
+    }
+    
     func showDiffTestController() {
         let diffTestViewController = ViewControllerProvider.diffTestViewController
         navigationController.pushViewController(diffTestViewController, animated: true)
+    }
+    
+    func showSwiftUIViewRepresentableTestView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            let swiftUIView = SwiftUIViewRepresentableTestView()
+            let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+            navigationController.pushViewController(swiftUIViewController, animated: true)
+        }
+#endif
     }
 }

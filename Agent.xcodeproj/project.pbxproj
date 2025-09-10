@@ -924,7 +924,6 @@
 		2B706114293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
 		2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
 		2B706116293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
-		2B74FBF82E2AF88D002522DE /* UISearchBarThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B74FBF72E2AF88D002522DE /* UISearchBarThingy.swift */; };
 		2B81E34C28624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */; };
 		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
@@ -2428,7 +2427,6 @@
 		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
 		2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAURLSessionTaskSearch.h; sourceTree = "<group>"; };
 		2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionTaskSearch.m; sourceTree = "<group>"; };
-		2B74FBF72E2AF88D002522DE /* UISearchBarThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISearchBarThingy.swift; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
@@ -3846,7 +3844,6 @@
 		341E84D22D9CB1F000968D7D /* ViewCaptors */ = {
 			isa = PBXGroup;
 			children = (
-				2B74FBF72E2AF88D002522DE /* UISearchBarThingy.swift */,
 				2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */,
 				F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */,
 				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
@@ -5538,7 +5535,6 @@
 				F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */,
 				02FF4A4824DC64D500115469 /* NRMAMeasurement.m in Sources */,
 				02FF4A4E24DC64D500115469 /* NRMAMeasurementException.m in Sources */,
-				2B74FBF82E2AF88D002522DE /* UISearchBarThingy.swift in Sources */,
 				02FF48AA24DC61E900115469 /* NRMAWKWebViewNavigationDelegate.m in Sources */,
 				02FF49DA24DC636100115469 /* NRMAHarvestableArray.m in Sources */,
 				02FF4AAB24DC652E00115469 /* NewRelicInternalUtils.m in Sources */,
@@ -6311,9 +6307,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
@@ -6366,9 +6362,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
@@ -6443,11 +6439,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -6522,11 +6518,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -6570,12 +6566,12 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6599,7 +6595,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.5.9;
+				MARKETING_VERSION = 7.5.10;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -6630,11 +6626,11 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6656,7 +6652,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.5.9;
+				MARKETING_VERSION = 7.5.10;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -6681,9 +6677,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -6740,9 +6736,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -6792,9 +6788,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
@@ -6834,9 +6830,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
@@ -6876,12 +6872,12 @@
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=appletvos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6903,7 +6899,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.5.9;
+				MARKETING_VERSION = 7.5.10;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -6929,11 +6925,11 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6954,7 +6950,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.5.9;
+				MARKETING_VERSION = 7.5.10;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -6980,9 +6976,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7042,9 +7038,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7100,12 +7096,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7128,7 +7124,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.5.9;
+				MARKETING_VERSION = 7.5.10;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";
@@ -7158,12 +7154,12 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.5.9;
+				CURRENT_PROJECT_VERSION = 7.5.10;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.5.9;
+				DYLIB_CURRENT_VERSION = 7.5.10;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7185,7 +7181,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.5.9;
+				MARKETING_VERSION = 7.5.10;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";

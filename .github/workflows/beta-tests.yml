@@ -27,8 +27,8 @@ jobs:
         with:
           xcode-version: ${{ github.event.inputs.xcode_version }}
 
-      - name: Install lcov
-        run: brew install lcov
+      # - name: Install lcov
+      #   run: brew install lcov
 
       - name: Update gem
         run: bundle update
@@ -53,8 +53,8 @@ jobs:
         with:
           xcode-version: ${{ github.event.inputs.xcode_version }}
 
-      - name: Install lcov
-        run: brew install lcov
+      # - name: Install lcov
+      #   run: brew install lcov
 
       - name: Update gem
         run: bundle update
@@ -82,8 +82,8 @@ jobs:
         with:
           xcode-version: ${{ github.event.inputs.xcode_version }}
 
-      - name: Install lcov
-        run: brew install lcov
+      # - name: Install lcov
+      #   run: brew install lcov
 
       - name: Update gem
         run: bundle update
@@ -108,8 +108,8 @@ jobs:
         with:
           xcode-version: ${{ github.event.inputs.xcode_version }}
 
-      - name: Install lcov
-        run: brew install lcov
+      # - name: Install lcov
+      #   run: brew install lcov
 
       - name: Update gem
         run: bundle update

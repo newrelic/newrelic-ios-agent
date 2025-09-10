@@ -14,6 +14,8 @@
 		2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
+		2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
+		2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -81,6 +83,8 @@
 		F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B982970ADC1003EC291 /* UIImageView.swift */; };
 		F8302B9B2970B29D003EC291 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9A2970B29D003EC291 /* Date.swift */; };
 		F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9C2970B3E0003EC291 /* ApodURL.swift */; };
+		F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
+		F832CB0E2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
 		F848CDE42AA270E80082052F /* NRTestApp_tvOS_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */; };
 		F848CDE62AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */; };
 		F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
@@ -267,6 +271,7 @@
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
+		2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIViewRepresentableTestView.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
 		2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpServerIO.swift; sourceTree = "<group>"; };
@@ -326,6 +331,7 @@
 		F8302B982970ADC1003EC291 /* UIImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageView.swift; sourceTree = "<group>"; };
 		F8302B9A2970B29D003EC291 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		F8302B9C2970B3E0003EC291 /* ApodURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApodURL.swift; sourceTree = "<group>"; };
+		F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteImageCollectionViewController.swift; sourceTree = "<group>"; };
 		F848CDE12AA270E80082052F /* NRTestApp(tvOS)Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp(tvOS)Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_Tests.swift; sourceTree = "<group>"; };
 		F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_TestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -566,12 +572,14 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */,
 				2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */,
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
 				F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */,
 				F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */,
+				F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
 			);
@@ -1101,6 +1109,7 @@
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
+				2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
@@ -1113,6 +1122,7 @@
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
 				F81061F82E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
+				F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
@@ -1144,6 +1154,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F832CB0E2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,
@@ -1168,6 +1179,7 @@
 				F86429402979CDFA002ABA01 /* ApodViewModel.swift in Sources */,
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
+				2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
