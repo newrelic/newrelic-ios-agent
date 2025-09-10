@@ -101,58 +101,27 @@ class SessionReplayCapture {
     
     private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
 
-        if #available(iOS 14.0, *) {
-            switch originalView {
-            case let view as UILabel:
-                return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
-                
-            case let imageView as UIImageView:
-                return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
+        switch originalView {
+        case let view as UILabel:
+            return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
+        case let imageView as UIImageView:
+            return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
 
-            case let textField as UITextField:
-                return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
+        case let textField as UITextField:
+            return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
 
-            case let textView as UITextView:
-                return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
+        case let textView as UITextView:
+            return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
 
-            case let visualEffectView as UIVisualEffectView:
-                return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
+        case let visualEffectView as UIVisualEffectView:
+            return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
 
-            case let textView as UISearchBar:
-                return UISearchBarThingy(view: textView, viewDetails: ViewDetails(view: textView))
-
-            default:
-                if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
-                   originalView.isKind(of: rctParagraphClass) {
-                    return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                } else {
-                    return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                }
-            }
-        }
-        else {
-            switch originalView {
-            case let view as UILabel:
-                return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
-            case let imageView as UIImageView:
-                return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
-
-            case let textField as UITextField:
-                return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
-
-            case let textView as UITextView:
-                return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
-
-            case let visualEffectView as UIVisualEffectView:
-                return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
-                
-            default:
-                if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
-                   originalView.isKind(of: rctParagraphClass) {
-                    return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                } else {
-                    return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                }
+        default:
+            if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
+               originalView.isKind(of: rctParagraphClass) {
+                return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            } else {
+                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
             }
         }
     }
