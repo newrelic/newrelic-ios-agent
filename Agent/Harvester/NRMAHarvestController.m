@@ -205,12 +205,6 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
     return [[[NRMAHarvestController harvestController] harvester] harvesterConfiguration];
 }
 
-+ (NRMAHarvesterState) getHarvesterCurrentState
-{
-    return [[[NRMAHarvestController harvestController] harvester] currentState];
-}
-
-
 + (NRMAHarvestData*) harvestData
 {
     return [[[NRMAHarvestController harvestController] harvester] harvestData];

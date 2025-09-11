@@ -46,8 +46,6 @@
 
 + (NRMAHarvesterConfiguration*_Nullable) configuration;
 
-+ (NRMAHarvesterState) getHarvesterCurrentState;
-
 + (NRMAHarvestData*) harvestData;
 
 + (void) addHarvestListener:(id<NRMAHarvestAware>)obj;
