@@ -41,6 +41,11 @@ enum ViewControllerProvider {
         return viewController
     }
     
+    static var infiniteImageViewController: InfiniteImageCollectionViewController {
+        let viewController = InfiniteImageCollectionViewController()
+        return viewController
+    }
+    
     static var diffTestViewController: DiffTestViewController {
         let viewController = DiffTestViewController()
         return viewController
