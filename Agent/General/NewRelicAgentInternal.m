@@ -743,6 +743,15 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [self onSessionStart];
     
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if([NRMAHarvestController getHarvesterCurrentState] == NRMA_HARVEST_CONNECTED) {
+        BOOL isSampled = [self isSessionReplaySampled];
+        if (isSampled && [self isSessionReplayEnabled]) {
+            [_sessionReplay start];
+        }
+    }
+#endif
+    
 }
 
 #if !TARGET_OS_WATCH

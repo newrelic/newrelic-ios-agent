@@ -36,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NewRelicAgentInternal : NSObject
 
 @property (nonatomic, readonly, assign) BOOL enabled;
-@property(atomic, strong) NRMAAnalytics* analyticsController;
+@property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
