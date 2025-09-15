@@ -44,7 +44,7 @@ jobs:
   # The deployProductionSpecs job creates the prod Podspec and Prod Package.swift from template and pushes to cp trunk.
   deployProductionSpecs:
     name: deployProductionSpecs
-    runs-on: macos-15
+    runs-on: macos-14
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     steps:
