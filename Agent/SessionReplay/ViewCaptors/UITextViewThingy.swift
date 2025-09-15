@@ -37,7 +37,7 @@ class UITextViewThingy: SessionReplayViewThingy {
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         } else {
-            self.isMasked = NRMAHarvestController.configuration().session_replay_maskUserInputText
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }
         
         if self.isMasked {
@@ -116,7 +116,7 @@ class UITextViewThingy: SessionReplayViewThingy {
                                                         textContent: labelText,
                                                         childNodes: []))
         
-        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId,  node: .element(elementNode))
+        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
         let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
 
         return [addElementNode, addTextNode]
@@ -126,21 +126,13 @@ class UITextViewThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UITextViewThingy else {
             return []
         }
-        
         var mutations = [MutationRecord]()
-        var frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        // get text color difference
-        if textColor != typedOther.textColor {
-            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
-        if fontSize != typedOther.fontSize || fontFamily != typedOther.fontFamily {
-            frameDifferences["font"] = "\(String(format: "%.2f", self.fontSize))px \(self.fontFamily)px"
-        }
-        
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
         

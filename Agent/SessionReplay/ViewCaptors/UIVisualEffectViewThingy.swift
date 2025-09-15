@@ -109,18 +109,13 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UIVisualEffectViewThingy else {
             return []
         }
-        
         var mutations = [MutationRecord]()
-        var frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        if self.blurIntensity != typedOther.blurIntensity {
-            // Update the style attribute with the new blur intensity
-            frameDifferences["-webkit-backdrop-filter"] = "blur(\(blurIntensity)px)"
-            frameDifferences["box-shadow"] = "0px 0.5px 0px rgba(0, 0, 0, 0.3)"
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
         

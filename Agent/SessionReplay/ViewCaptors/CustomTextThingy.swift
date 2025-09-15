@@ -25,7 +25,8 @@ class CustomTextThingy: SessionReplayViewThingy {
     let fontSize: CGFloat
     let fontName: String
     let fontFamily: String
-    
+    let textAlignment: String
+
     let textColor: UIColor
     
     init(view: UITextField, viewDetails: ViewDetails) {
@@ -44,7 +45,7 @@ class CustomTextThingy: SessionReplayViewThingy {
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         } else {
-            self.isMasked = NRMAHarvestController.configuration().session_replay_maskUserInputText
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }
         
         if self.isMasked {
@@ -80,7 +81,52 @@ class CustomTextThingy: SessionReplayViewThingy {
             // Fallback on earlier versions
             self.textColor = view.textColor ?? UIColor.black
         }
+        
+        self.textAlignment = view.textAlignment.stringValue()
+        
+        if let actualTextBounds = CustomTextThingy.getActualTextBounds(textField: view, text: self.labelText, font: font) {
+            self.viewDetails.frame = actualTextBounds
+        }
 
+    }
+    
+    static func getActualTextBounds(textField: UITextField, text: String, font: UIFont) -> CGRect? {
+        // Get the text rect area from the text field
+        let textRect = textField.textRect(forBounds: textField.bounds)
+        
+        // Calculate actual text size
+        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        var textSize = (text as NSString).size(withAttributes: attributes)
+        textSize.width = min(textSize.width, textRect.width)
+        
+        // Create bounds that match the actual text size within the text rect
+        var actualTextBounds = CGRect(origin: textRect.origin, size: textSize)
+        
+        // Adjust horizontal position based on text alignment
+        switch textField.textAlignment {
+        case .center:
+            actualTextBounds.origin.x = textRect.origin.x + (textRect.width - textSize.width) / 2
+        case .right:
+            actualTextBounds.origin.x = textRect.origin.x + textRect.width - textSize.width
+        case .left, .natural:
+            // Keep the original x position from textRect
+            break
+        case .justified:
+            // For justified, use left alignment as fallback
+            break
+        @unknown default:
+            break
+        }
+        
+        // Center vertically within the text rect
+        actualTextBounds.origin.y = textRect.origin.y + (textRect.height - textSize.height) / 2
+        
+        // Convert to window coordinates
+        if let window = textField.window {
+            return textField.convert(actualTextBounds, to: window)
+        }
+        
+        return actualTextBounds
     }
 
     func cssDescription() -> String {
@@ -98,9 +144,12 @@ class CustomTextThingy: SessionReplayViewThingy {
                 top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
                 width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
                 height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
-                white-space: pre-wrap;\
+                white-space: pre-wrap; \
                 font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                color: \(textColor.toHexString(includingAlpha: true));
+                color: \(textColor.toHexString(includingAlpha: true)); \
+                text-align: \(textAlignment); \
+                overflow: hidden; \
+                white-space: nowrap;
                 """
     }
     
@@ -138,21 +187,13 @@ class CustomTextThingy: SessionReplayViewThingy {
         guard let typedOther = other as? CustomTextThingy else {
             return []
         }
-        
         var mutations = [MutationRecord]()
-        var frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        // get text color difference
-        if textColor != typedOther.textColor {
-            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
-        if fontSize != typedOther.fontSize || fontFamily != typedOther.fontFamily {
-            frameDifferences["font"] = "\(String(format: "%.2f", self.fontSize))px \(self.fontFamily)px"
-        }
-        
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
         

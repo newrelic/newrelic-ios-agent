@@ -1,35 +1,36 @@
-//
-// Created by Bryce Buchanan on 2/22/16.
-//  Copyright © 2023 New Relic. All rights reserved.
-//
-
 #ifndef LIBMOBILEAGENT_WORKQUEUE_HPP
 #define LIBMOBILEAGENT_WORKQUEUE_HPP
 
-#include <future>
+#pragma once
 #include <queue>
+#include <functional>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 
 namespace NewRelic {
-    class WorkQueue {
-    private:
-        std::future<void> worker;
-        std::queue<std::function<void()>> _queue;
-        std::atomic_bool shouldTerminate;
-        std::atomic_bool executing;
-        std::condition_variable taskSignaler;
-        mutable std::recursive_mutex _queueMutex;
-        mutable std::mutex _threadMutex;
-        bool queueReady;
-        void task_thread();
-    public:
-        WorkQueue();
-        void enqueue(std::function<void()> workItem);
-        void terminate();
-        virtual ~WorkQueue();
-        void synchronize();
-        void clearQueue();
-        bool isEmpty();
-    };
-}
+class WorkQueue {
+public:
+    WorkQueue();
+    ~WorkQueue();
 
+    void enqueue(std::function<void()> workItem);
+    void clearQueue();
+    bool isEmpty();
+    void synchronize();          // Wait until all queued work finished
+    void terminate();            // Explicit shutdown
+
+private:
+    void workerLoop();
+
+    std::queue<std::function<void()>> _queue;
+    std::mutex _mutex;
+    std::condition_variable _cv;         // work arrival or termination
+    std::condition_variable _emptyCv;    // queue became empty
+    std::thread _worker;
+    bool _stopping{false};
+    bool _executing{false};
+};
+} // namespace NewRelic
 #endif //LIBMOBILEAGENT_WORKQUEUE_HPP

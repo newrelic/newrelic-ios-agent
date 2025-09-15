@@ -224,21 +224,20 @@ static long long _accountId;
                 self.session_replay_maskUserInputText = YES;
             }
 
+            if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY]) {
+                self.session_replay_maskAllImages =  [innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY] boolValue];
+            }
+            else {
+                self.session_replay_maskAllImages =  YES;
+
+            }
+
             if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY]) {
                 self.session_replay_maskAllUserTouches =  [innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY] boolValue];
 
             }
             else {
                 self.session_replay_maskAllUserTouches =  NO;
-            }
-
-            if ([[innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY] boolValue]) {
-                self.session_replay_maskAllImages =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY];
-
-            }
-            else {
-                self.session_replay_maskAllImages =  YES;
-
             }
             
             //When in default mode, the user does not have the ability to change the booleans, we use the defaults for the boolean
@@ -409,21 +408,22 @@ static long long _accountId;
     if ([self.entity_guid length]) {
         dictionary[kNRMA_ENTITY_GUID_KEY] = self.entity_guid;
     }
-
-    if (self.has_log_reporting_config) {
-        dictionary[kNRMA_CONFIG_KEY] = @{kNRMA_LOG_REPORTING_KEY: @{kNRMA_LOG_REPORTING_ENABLED_KEY: @(self.log_reporting_enabled), kNRMA_LOG_REPORTING_LEVEL_KEY: self.log_reporting_level, kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY: @(self.sampling_rate)}};
-    }
-
+    
     if ([self.request_header_map count]) {
         dictionary[KNRMA_REQUEST_HEADER_MAP_KEY] = self.request_header_map;
-    }
-    else {
+    } else {
         dictionary[KNRMA_REQUEST_HEADER_MAP_KEY] = [NSDictionary dictionary];
     }
 
-
+    // Build config dictionary to include both log reporting and session replay
+    NSMutableDictionary *configDict = [NSMutableDictionary dictionary];
+    
+    if (self.has_log_reporting_config) {
+        configDict[kNRMA_LOG_REPORTING_KEY] = @{kNRMA_LOG_REPORTING_ENABLED_KEY: @(self.log_reporting_enabled), kNRMA_LOG_REPORTING_LEVEL_KEY: self.log_reporting_level, kNRMA_LOG_REPORTING_SAMPLE_RATE_KEY: @(self.sampling_rate)};
+    }
+    
     if (self.has_session_replay_config) {
-        dictionary[kNRMA_CONFIG_KEY] =  @{kNRMA_SESSION_REPLAY_CONFIG_KEY: @{kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY: @(self.session_replay_enabled),
+        configDict[kNRMA_SESSION_REPLAY_CONFIG_KEY] = @{kNRMA_SESSION_REPLAY_CONFIG_ENABLED_KEY: @(self.session_replay_enabled),
                                              kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY: self.session_replay_mode,
                                              kNRMA_SESSION_REPLAY_CONFIG_SAMPLERATE_KEY : @(self.session_replay_sampling_rate),
                                              kNRMA_SESSION_REPLAY_CONFIG_ERRORRATE_KEY : @(self.session_replay_error_sampling_rate),
@@ -432,9 +432,10 @@ static long long _accountId;
                                             kNRMA_SESSION_REPLAY_CONFIG_maskAllUserTouches_KEY: @(self.session_replay_maskAllUserTouches),
                                             kNRMA_SESSION_REPLAY_CONFIG_maskAllImages_KEY: @(self.session_replay_maskAllImages),
                                                                              kNRMA_SESSION_REPLAY_CONFIG_customMaskingRules_KEY: [self serializeSessionReplayCustomRules],
-        }};
+        };
     }
 
+    dictionary[kNRMA_CONFIG_KEY] = configDict;
 
     return dictionary;
 }
