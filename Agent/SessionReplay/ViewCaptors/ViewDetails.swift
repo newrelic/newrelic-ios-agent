@@ -20,7 +20,7 @@ struct ViewDetails {
     let borderWidth: CGFloat
     let borderColor: UIColor?
     let viewName: String
-    let parentId: Int?
+    var parentId: Int?
     var nextId: Int?
     let clip: CGRect
 
@@ -83,6 +83,39 @@ struct ViewDetails {
         if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
             self.isMasked = shouldMask
             view.sessionReplayMaskState = shouldMask
+        }
+    }
+
+    // Specialized initializer for SwiftUI views with unique path-based IDs
+    init(swiftUIPath: String, frame: CGRect, baseView: UIView) {
+        self.frame = frame
+        self.clip = frame
+        self.backgroundColor = baseView.backgroundColor
+        self.alpha = baseView.alpha
+        self.isHidden = false // SwiftUI visible views are not hidden
+        self.cornerRadius = baseView.layer.cornerRadius
+        self.borderWidth = baseView.layer.borderWidth
+
+        if baseView.layer.borderWidth > 0, let borderColor = baseView.layer.borderColor {
+            self.borderColor = UIColor(cgColor: borderColor)
+        } else {
+            self.borderColor = nil
+        }
+
+        // Extract view name from path (e.g., "ROOT/VStack/Text" -> "Text")
+        let pathComponents = swiftUIPath.components(separatedBy: "/")
+        self.viewName = pathComponents.last?.components(separatedBy: "[").first ?? "SwiftUIView"
+
+        // Generate unique ID using IDGenerator
+        self.viewId = IDGenerator.shared.getId()
+
+        // For SwiftUI views, we'll need to determine parent ID during hierarchy construction
+        // since we can't reliably determine it from path alone at creation time
+        self.parentId = nil
+
+        // Default masking check for SwiftUI
+        if let shouldMask = ViewDetails.checkIsMasked(view: baseView, viewName: viewName) {
+            self.isMasked = shouldMask
         }
     }
     

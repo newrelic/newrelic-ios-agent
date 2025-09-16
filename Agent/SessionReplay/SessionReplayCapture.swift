@@ -121,9 +121,8 @@ class SessionReplayCapture {
             let swiftUISubThingies: [any SessionReplayViewThingy] = swiftUIViews
                 .sorted(by: { $0.key < $1.key })
                 .compactMap { (path, decompiledView) in
-                    // Create enhanced ViewDetails with introspected properties
-                    var viewDetails = ViewDetails(view: originalView)
-                    viewDetails.frame = decompiledView.frame
+                    // Create unique ViewDetails using SwiftUI path for unique ID generation
+                    let viewDetails = ViewDetails(swiftUIPath: path, frame: decompiledView.frame, baseView: originalView)
 
                     // Try to get introspected UIKit data for this view
                     let introspectedData = IntrospectedDataManager.shared.getIntrospectedData(for: path)
@@ -172,13 +171,17 @@ class SessionReplayCapture {
                 }
             
             print("Decompiled \(swiftUISubThingies.count) swiftUISubThingies")
-            
+
+            // Establish parent-child relationships using path hierarchy
+            var swiftUISubThingiesWithPaths = Array(zip(swiftUIViews.sorted(by: { $0.key < $1.key }), swiftUISubThingies))
+            establishSwiftUIParentChildRelationships(thingiesWithPaths: &swiftUISubThingiesWithPaths)
+
             for thingy in swiftUISubThingies {
                 // print all info about thingy
                 print("swiftUISubThingy: \(thingy), frame: \(thingy.viewDetails.frame), id: \(thingy.viewDetails.viewId), parentId: \(thingy.viewDetails.parentId ?? -1), nextId: \(thingy.viewDetails.nextId ?? -1), isVisible: \(thingy.viewDetails.isVisible)")
             }
-            
-            
+
+
             let hostingThingy = UIViewThingy(view: originalView,
                                              viewDetails: ViewDetails(view: originalView))
             // print("SwiftUI Subthingies count: \(swiftUISubThingies.count)")
@@ -232,6 +235,29 @@ class SessionReplayCapture {
             responder = current.next
         }
         return nil
+    }
+
+    @MainActor private func establishSwiftUIParentChildRelationships( thingiesWithPaths: inout [((key: String, value: DecompiledView), any SessionReplayViewThingy)]) {
+        // Create a map from path to thingy for fast lookup
+        var pathToThingy: [String: any SessionReplayViewThingy] = [:]
+
+        for ((path, _), thingy) in thingiesWithPaths {
+            pathToThingy[path] = thingy
+        }
+
+        // For each thingy, find its parent and set the parent ID
+        for ((path, _), thingy) in thingiesWithPaths {
+            var thingy = thingy
+            if let parentPath = PathGenerator.shared.getParent(for: path),
+               let parentThingy = pathToThingy[parentPath] {
+                thingy.viewDetails.parentId = parentThingy.viewDetails.viewId
+                print("[ParentChild] \(path) -> parent: \(parentPath), parentId: \(parentThingy.viewDetails.viewId)")
+            } else {
+                // Root level views have no parent
+                thingy.viewDetails.parentId = nil
+                print("[ParentChild] \(path) -> no parent (root level)")
+            }
+        }
     }
 }
 private protocol AnyHostingController {
