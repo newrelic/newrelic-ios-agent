@@ -35,8 +35,11 @@ class InfiniteScrollTableViewController: UIViewController {
         
         tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
+#if !os(tvOS)
+
         // Set the background color
         tableView.backgroundColor = .systemBackground
+        #endif
         
         // Register a standard UITableViewCell
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: reuseIdentifier)
@@ -90,10 +93,13 @@ extension InfiniteScrollTableViewController: UITableViewDataSource {
         // Dequeue a reusable cell
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseIdentifier, for: indexPath)
         
+#if !os(tvOS)
+
         // Configure the cell with the corresponding data
         var content = cell.defaultContentConfiguration()
         content.text = data[indexPath.row]
         cell.contentConfiguration = content
+        #endif
         
         return cell
     }

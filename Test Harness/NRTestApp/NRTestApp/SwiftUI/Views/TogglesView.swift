@@ -22,7 +22,11 @@ struct TogglesView: View {
                 .padding()
 
             Toggle("Another Toggle is \(isAnotherToggleOn ? "On" : "Off")", isOn: $isAnotherToggleOn)
+            //exclude for tvOS
+            #if !os(tvOS)
+                
                 .toggleStyle(SwitchToggleStyle(tint: .blue))
+            #endif
                 .padding()
 
             Text("Toggle State: \(isToggleOn ? "On" : "Off")")

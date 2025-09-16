@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 @_implementationOnly import NewRelicPrivate
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 @objcMembers
 public class SessionReplayManager: NSObject {
 
@@ -335,7 +335,7 @@ public class SessionReplayManager: NSObject {
     }
 }
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 extension SessionReplayManager: NRMASessionReplayDelegate {
     public func generateUploadURL(
         uncompressedDataSize: Int,

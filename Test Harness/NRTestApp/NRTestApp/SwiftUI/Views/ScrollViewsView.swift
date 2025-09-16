@@ -9,12 +9,16 @@ import SwiftUI
 import NewRelic
 
 @available(iOS 14.0, *)
+@available(tvOS 14.0, *)
 struct ScrollViewsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 ForEach(0..<50) { index in
                     Text("Item \(index)")
+                        .pathLeaf()
+                         .trackable()
+                         .decompile()
                         .font(.title)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -26,5 +30,7 @@ struct ScrollViewsView: View {
         }
         .navigationTitle("Scroll Views")
         .NRTrackView(name: "ScrollViewsView")
+        .trackable()
+        .decompile()
     }
 }

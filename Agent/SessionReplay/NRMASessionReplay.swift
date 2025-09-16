@@ -12,7 +12,7 @@ import UIKit
 
 import OSLog
 
-@available(iOS 13.0, *)
+@available(iOS 14.0, *)
 @objcMembers
 public class NRMASessionReplay: NSObject {
     public weak var delegate: NRMASessionReplayDelegate?

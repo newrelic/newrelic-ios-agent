@@ -9,6 +9,8 @@ import SwiftUI
 import NewRelic
 
 @available(iOS 14.0, *)
+@available(tvOS 14.0, *)
+
 struct ProgressViewsView: View {
     @State private var progress = 0.5
     @State private var isLoading = false

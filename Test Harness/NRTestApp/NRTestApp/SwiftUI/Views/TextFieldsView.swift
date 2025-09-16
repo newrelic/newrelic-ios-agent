@@ -9,6 +9,7 @@ import SwiftUI
 import NewRelic
 
 @available(iOS 14.0, *)
+@available(tvOS 14.0, *)
 struct TextFieldsView: View {
     @State private var singleLineText: String = ""
     @State private var multiLineText: String = ""
@@ -19,34 +20,54 @@ struct TextFieldsView: View {
         Form {
             Section(header: Text("Single Line Text Field")) {
                 TextField("Enter single line text", text: $singleLineText)
+#if !os(tvOS)
+                    .pathLeaf()
                     .textFieldStyle(RoundedBorderTextFieldStyle())
+#endif
+#if !os(tvOS)
+                    .trackable()
+                    .decompile()
+                #endif
             }
+#if !os(tvOS)
 
-            Section(header: Text("Multi-Line Text Field")) {
-                TextEditor(text: $multiLineText)
-                    .frame(height: 100)
-                    .border(Color.gray, width: 1)
-                    .padding()
-            }
+            .trackable()
+            .decompile()
+            #endif
 
-            Section(header: Text("Secure Text Field")) {
-                SecureField("Enter secure text", text: $secureText)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-            }
 
-            Section {
-                Button("Validate Input") {
-                    isValid = !singleLineText.isEmpty && !secureText.isEmpty
-                }
-                .alert(isPresented: Binding<Bool>(
-                    get: { !isValid },
-                    set: { _ in isValid = true }
-                )) {
-                    Alert(title: Text("Validation Error"), message: Text("Please fill in all fields."), dismissButton: .default(Text("OK")))
-                }
-            }
+//            Section(header: Text("Multi-Line Text Field")) {
+//                TextEditor(text: $multiLineText)
+//                    .frame(height: 100)
+//                    .border(Color.gray, width: 1)
+//                    .padding()
+//            }
+//
+//            Section(header: Text("Secure Text Field")) {
+//                SecureField("Enter secure text", text: $secureText)
+//                    .textFieldStyle(RoundedBorderTextFieldStyle())
+//            }
+//
+//            Section {
+//                Button("Validate Input") {
+//                    isValid = !singleLineText.isEmpty && !secureText.isEmpty
+//                }
+//                .alert(isPresented: Binding<Bool>(
+//                    get: { !isValid },
+//                    set: { _ in isValid = true }
+//                )) {
+//                    Alert(title: Text("Validation Error"), message: Text("Please fill in all fields."), dismissButton: .default(Text("OK")))
+//                }
+//            }
         }
         .navigationBarTitle("Text Fields")
         .NRTrackView(name: "TextFieldsView")
+        
+#if !os(tvOS)
+
+                    .trackable()
+                    .decompile()
+                #endif
+
     }
 }

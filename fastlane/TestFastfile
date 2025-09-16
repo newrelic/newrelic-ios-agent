@@ -21,7 +21,7 @@ platform :ios do
     
     internalRunIOSTests
 
-    coverage
+    #coverage
   end
   
   lane :internalRunIOSTests do
@@ -30,7 +30,7 @@ platform :ios do
       code_coverage: true,
       scheme: "Agent-iOS",
       device: "iPhone 8",
-      disable_xcpretty: true
+      disable_xcpretty: false
     )
   end
   
@@ -82,7 +82,7 @@ platform :ios do
       code_coverage: true,
       scheme: "Agent-tvOS",
       device: "Apple TV",
-      disable_xcpretty: true
+      disable_xcpretty: false
 
     )
   end
@@ -161,19 +161,19 @@ platform :ios do
     )
   end
 
-  lane :coverage do 
-    Dir.chdir("..") do
-      begin
-        sh("./XcodeCoverage/getcov -s -v -x")
-        # move the XML file to the root of repo
-        sh("source ./XcodeCoverage/env.sh && cp $BUILT_PRODUCTS_DIR/lcov/coverage.xml coverage.xml")
-      rescue => ex
-        # handle error
-      ensure
-        # do something that always run like clean up
-      end
-    end
-  end
+  # lane :coverage do 
+  #   Dir.chdir("..") do
+  #     begin
+  #       sh("./XcodeCoverage/getcov -s -v -x")
+  #       # move the XML file to the root of repo
+  #       sh("source ./XcodeCoverage/env.sh && cp $BUILT_PRODUCTS_DIR/lcov/coverage.xml coverage.xml")
+  #     rescue => ex
+  #       # handle error
+  #     ensure
+  #       # do something that always run like clean up
+  #     end
+  #   end
+  # end
 
   # Note: Please copy your own .dSYM into the 'dylib-ios-agent' root for this test.
   desc "Run dSYM Upload Tools test"

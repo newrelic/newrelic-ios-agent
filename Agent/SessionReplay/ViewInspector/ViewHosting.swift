@@ -427,12 +427,12 @@ private extension UIViewController {
             .first
     }
     
-    var descendants: [UIViewController] {
-        let navChildren = (self as? UINavigationController)?.viewControllers ?? []
-        let tabChildren = (self as? UITabBarController)?.viewControllers ?? []
-        let presented = [presentedViewController].compactMap { $0 }
-        return navChildren + tabChildren + presented + children
-    }
+//    var descendants: [UIViewController] {
+//        let navChildren = (self as? UINavigationController)?.viewControllers ?? []
+//        let tabChildren = (self as? UITabBarController)?.viewControllers ?? []
+//        let presented = [presentedViewController].compactMap { $0 }
+//        return navChildren + tabChildren + presented + children
+//    }
 }
 #endif
 

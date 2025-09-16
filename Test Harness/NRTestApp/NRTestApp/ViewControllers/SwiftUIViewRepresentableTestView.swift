@@ -10,6 +10,8 @@ import SwiftUI
 // Customer provided SwiftUI code that was manifesting an issue with the New Relic iOS agent when using with UIViewControllerRepresentable and NRFeatureFlag_InteractionTracing and NRFeatureFlag_DefaultInteractions enabled.
 
 @available(iOS 15.0, *)
+@available(tvOS 14.0, *)
+
 struct SwiftUIViewRepresentableTestView: View {
     @State var items: [Int] = Array(0..<1000)
     
@@ -37,9 +39,12 @@ struct SwiftUIViewRepresentableTestView: View {
         Color.clear
             .aspectRatio(1, contentMode: .fit) // Force aspect ratio
             .frame(minHeight: 100)
+#if !os(tvOS)
+
             .overlay {
                 OverlayView()
             }
+        #endif
     }
 }
 

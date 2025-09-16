@@ -9,6 +9,8 @@ import SwiftUI
 import NewRelic
 
 @available(iOS 14.0, *)
+@available(tvOS 14.0, *)
+
 struct SegmentedControlsView: View {
     @State private var selectedSegment = 0
     let segments = ["Option 1", "Option 2", "Option 3"]

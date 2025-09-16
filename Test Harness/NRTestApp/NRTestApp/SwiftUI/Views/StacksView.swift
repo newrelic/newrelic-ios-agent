@@ -56,7 +56,10 @@ struct StacksView: View {
                 }
                 .padding()
             }
+#if !os(tvOS)
+
             .navigationBarTitle("Stacks Example", displayMode: .inline)
+            #endif
         }
         .NRTrackView(name: "StacksView")
     }

@@ -18,7 +18,10 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
         
         self.title = "Text Masking"
+#if !os(tvOS)
+
         self.view.backgroundColor = .systemBackground
+        #endif
 
         let searchAndCredentialsStack = createSearchAndCredentialsSection()
         let maskedStack = createSectionStack(title: "Masked Fields", isMasked: true, isCustom: false)
@@ -98,6 +101,8 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             }
             fieldsStack.addArrangedSubview(textField)
         }
+#if !os(tvOS)
+
         // UITextViews
         for i in 1...4 {
             let textView = UITextView()
@@ -115,6 +120,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             textView.heightAnchor.constraint(equalToConstant: 60).isActive = true
             fieldsStack.addArrangedSubview(textView)
         }
+        #endif
 
         let sectionStack = UIStackView(arrangedSubviews: [sectionLabel, fieldsStack])
         sectionStack.axis = .vertical
@@ -185,6 +191,8 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
             button.accessibilityIdentifier = "child-button-\(i)"
             childStack.addArrangedSubview(button)
 
+#if !os(tvOS)
+
             if i == 2 {
                 // Add a nested container to test deep hierarchy
                 let nestedContainer = UIView()
@@ -211,6 +219,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
                 // Set a height constraint for the nested container
                 nestedContainer.heightAnchor.constraint(equalToConstant: 40).isActive = true
             }
+            #endif
         }
 
         containerView.addSubview(headerLabel)
@@ -313,11 +322,14 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
         fieldsStack.axis = .vertical
         fieldsStack.spacing = 12
 
+#if !os(tvOS)
+
         // Search Bar
         let searchBar = UISearchBar()
         searchBar.placeholder = "Search query (masked)"
         searchBar.accessibilityIdentifier = "nr-mask"
         fieldsStack.addArrangedSubview(searchBar)
+        #endif
 
         // Username TextField
         let usernameField = UITextField()

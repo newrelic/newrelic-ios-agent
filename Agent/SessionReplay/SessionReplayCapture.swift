@@ -8,14 +8,18 @@
 
 import Foundation
 import UIKit
+import SwiftUI
 
 
 // potentially remove this annotation once the feature goes to Swift
+
+// available in ioS13 and up
 @objcMembers
+@available(iOS 14.0, *)
 class SessionReplayCapture {
     
     @MainActor
-    public func recordFrom(rootView:UIView) -> SessionReplayFrame {
+    public func recordFrom(rootView:UIView) async -> SessionReplayFrame {
         let effectiveViewController = findRootViewController(rootView: rootView)
         var rootViewControllerID:String?
         if let rootViewController = effectiveViewController {
@@ -28,7 +32,8 @@ class SessionReplayCapture {
         }
         
         var viewStack = ContiguousArray<ViewPair>()
-        let rootThingy = findRecorderForView(view: rootView)
+        
+        let rootThingy = await findRecorderForView(view: rootView)
         
         viewStack.append(ViewPair(view: rootView, parentRecorder: rootThingy))
         
@@ -38,7 +43,7 @@ class SessionReplayCapture {
             
             for subview in currentView.subviews {
                 if (shouldRecord(view: subview)) {
-                    let childThingy = findRecorderForView(view: subview)
+                    let childThingy = await findRecorderForView(view: subview)
                     if childThingy.viewDetails.isVisible {
                         currentParentThingy.subviews.append(childThingy)
                     }
@@ -48,7 +53,7 @@ class SessionReplayCapture {
                 }
             }
             if let textView = currentView as? UITextField {
-                 let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
+                let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
                 currentParentThingy.subviews.append(textViewThingy)// Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
             }
             var nextId:Int? = nil
@@ -70,10 +75,10 @@ class SessionReplayCapture {
         } else if let window = rootView as? UIWindow, let rootViewController = window.rootViewController {
             initialViewController = rootViewController
         }
-
-
+        
+        
         var effectiveViewController = initialViewController
-                
+        
         while true {
             guard let currentViewController = effectiveViewController else {
                 break
@@ -99,53 +104,103 @@ class SessionReplayCapture {
         return effectiveViewController
     }
     
-    private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
+    @MainActor private func findRecorderForView(view originalView: UIView) async -> any SessionReplayViewThingy {
+        
+        let viewType = String(describing: type(of: originalView))
+        //print("Finding recorder for view type: \(viewType)")
+        if viewType.starts(with: "_UIHostingView"),
+           let swiftUIRoot = extractSwiftUIRootView(from: originalView) as? (any View) {
+            
+            // Decompile SwiftUI views with introspection data
+           // let swiftUIViews = [String: DecompiledView]()//SwiftUIViewHierarchyRecorder.decompile(swiftUIRoot: swiftUIRoot)
+            let swiftUIViews = SwiftUIViewHierarchyRecorder.decompile(swiftUIRoot: swiftUIRoot)
 
-        if #available(iOS 14.0, *) {
-            switch originalView {
-            case let view as UILabel:
-                return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
-                
-            case let imageView as UIImageView:
-                return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
+//            print("Decompiled \(swiftUIViews.count) SwiftUI views")
+//            print("SwiftUI Views: \(swiftUIViews)")
+            // Convert SwiftUI metadata -> thingies
+            let swiftUISubThingies: [any SessionReplayViewThingy] = swiftUIViews
+                .sorted(by: { $0.key < $1.key })
+                .compactMap { (path, decompiledView) in
+                    // Create enhanced ViewDetails with introspected properties
+                    var viewDetails = ViewDetails(view: originalView)
+                    viewDetails.frame = decompiledView.frame
 
-            case let textField as UITextField:
-                return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
+                    // Try to get introspected UIKit data for this view
+                    let introspectedData = IntrospectedDataManager.shared.getIntrospectedData(for: path)
 
-            case let textView as UITextView:
-                return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
+                    switch decompiledView.kind {
+                    case .text(let text):
+                        if let introspected = introspectedData,
+                           let font = introspected.properties["font"] as? UIFont,
+                           let textColor = introspected.properties["textColor"] as? UIColor,
+                           let actualText = introspected.properties["text"] as? String {
+                            return UILabelThingy(view: UILabel(),
+                                viewDetails: viewDetails
+                            )
+                        }
+                        else {
+                            return UILabelThingy(view: UILabel(),
+                                viewDetails: viewDetails
+                            )
+                        }
 
-            case let visualEffectView as UIVisualEffectView:
-                return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
+                    case .image:
+                        return UIImageViewThingy(view: UIImageView(), viewDetails: viewDetails)
 
-            case let textView as UISearchBar:
-                return UISearchBarThingy(view: textView, viewDetails: ViewDetails(view: textView))
+                    case .textField:
+                        if let introspected = introspectedData,
+                           let isSecure = introspected.properties["isSecureTextEntry"] as? Bool {
+                            return SwiftUITextFieldThingy(isSecure: isSecure, viewDetails: viewDetails)
+                        } else {
+                            return SwiftUITextFieldThingy(isSecure: false, viewDetails: viewDetails)
+                        }
 
-            default:
-                if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
-                   originalView.isKind(of: rctParagraphClass) {
-                    return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                } else {
-                    return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                    case .button:
+                        if let introspected = introspectedData,
+                           let title = introspected.properties["title"] as? String {
+                            return SwiftUIButtonThingy(title: title, viewDetails: viewDetails)
+                        } else {
+                            return SwiftUIButtonThingy(title: "Button", viewDetails: viewDetails)
+                        }
+
+                    case .list, .scrollView, .toggle, .slider, .stepper, .datePicker, .picker, .table:
+                        return UIViewThingy(view: originalView, viewDetails: viewDetails)
+
+                    case .other(let name):
+                        return UIViewThingy(view: originalView, viewDetails: viewDetails)
+                    }
                 }
+            
+            print("Decompiled \(swiftUISubThingies.count) swiftUISubThingies")
+            
+            for thingy in swiftUISubThingies {
+                // print all info about thingy
+                print("swiftUISubThingy: \(thingy), frame: \(thingy.viewDetails.frame), id: \(thingy.viewDetails.viewId), parentId: \(thingy.viewDetails.parentId ?? -1), nextId: \(thingy.viewDetails.nextId ?? -1), isVisible: \(thingy.viewDetails.isVisible)")
             }
+            
+            
+            let hostingThingy = UIViewThingy(view: originalView,
+                                             viewDetails: ViewDetails(view: originalView))
+            // print("SwiftUI Subthingies count: \(swiftUISubThingies.count)")
+            hostingThingy.subviews.append(contentsOf: swiftUISubThingies)
+            return hostingThingy
         }
         else {
             switch originalView {
             case let view as UILabel:
                 return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
+                
             case let imageView as UIImageView:
                 return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
-
+                
             case let textField as UITextField:
                 return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
-
+                
             case let textView as UITextView:
                 return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
-
+                
             case let visualEffectView as UIVisualEffectView:
                 return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
-                
             default:
                 if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                    originalView.isKind(of: rctParagraphClass) {
@@ -167,6 +222,25 @@ class SessionReplayCapture {
         
         return !(areFramesTheSame && isClear)
     }
+    
+    private func extractSwiftUIRootView(from hostingSubview: UIView) -> Any? {
+        var responder: UIResponder? = hostingSubview
+        while let current = responder {
+            if let hosting = current as? AnyHostingController {
+                return hosting.anyRootView
+            }
+            responder = current.next
+        }
+        return nil
+    }
+}
+private protocol AnyHostingController {
+    var anyRootView: Any { get }
+}
+
+@available(iOS 13.0, *)
+extension UIHostingController: AnyHostingController {
+    var anyRootView: Any { rootView }
 }
 
 extension UIView {

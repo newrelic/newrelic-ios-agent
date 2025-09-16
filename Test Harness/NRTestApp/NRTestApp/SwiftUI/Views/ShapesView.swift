@@ -8,6 +8,7 @@
 import SwiftUI
 import NewRelic
 
+@available(tvOS 14.0, *)
 struct ShapesView: View {
     var body: some View {
         NavigationView {
@@ -48,7 +49,9 @@ struct ShapesView: View {
 
                 Spacer()
             }
-            .navigationBarTitle("Shapes", displayMode: .inline)
+            #if !os(tvOS)
+                .navigationBarTitle("Shapes", displayMode: .inline)
+            #endif
         }
         .NRTrackView(name: "ShapesView")
     }

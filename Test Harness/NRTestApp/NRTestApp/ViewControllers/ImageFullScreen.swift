@@ -14,5 +14,7 @@ struct ImageFullScreen: View {
     var body: some View {
         ImageDetailPDFView(image: image)
         .NRTrackView(name: "ImageDetailPDFView")
+//        .trackable()
+//        .decompile()
     }
 }

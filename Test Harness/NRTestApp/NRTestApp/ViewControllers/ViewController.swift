@@ -173,7 +173,7 @@ class ViewController: UIViewController {
         coordinator?.showImageViewController(image:spaceImage)
     }
     
-    func swiftUIViewTapped() {
+    func swiftUIViewRepresentableTapped() {
         coordinator?.showSwiftUIViewRepresentableTestView()
     }
     
@@ -216,7 +216,7 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
         
-        options.append(UtilOption(title: "SwiftUIViewRepresentableTest", handler: { [self] in swiftUIViewTapped()}))
+        options.append(UtilOption(title: "SwiftUIViewRepresentableTest", handler: { [self] in swiftUIViewRepresentableTapped()}))
         
         options.append(UtilOption(title: "SwiftUI Views", handler: { [self] in swiftUIViewTapped()}))
 

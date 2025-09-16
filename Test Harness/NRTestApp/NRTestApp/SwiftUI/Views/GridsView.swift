@@ -8,7 +8,10 @@
 import SwiftUI
 import NewRelic
 
+// available in tvOS 14 or later
+
 @available(iOS 14.0, *)
+@available(tvOS 14.0, *)
 struct GridsView: View {
     let items = Array(1...30)
 

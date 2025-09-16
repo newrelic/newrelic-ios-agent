@@ -42,7 +42,10 @@ class DiffTestViewController: UIViewController {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         contentView.translatesAutoresizingMaskIntoConstraints = false
         if #available(iOS 17.4, *) {
+#if !os(tvOS)
+
             scrollView.bouncesVertically = true
+            #endif
         }
         
         view.addSubview(scrollView)

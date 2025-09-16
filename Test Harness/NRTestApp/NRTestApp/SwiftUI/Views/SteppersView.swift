@@ -9,6 +9,8 @@ import SwiftUI
 import NewRelic
 
 @available(iOS 14.0, *)
+@available(tvOS 17.0, *)
+
 struct SteppersView: View {
     @State private var stepperValue: Int = 0
 
@@ -17,10 +19,12 @@ struct SteppersView: View {
             Text("Current Value: \(stepperValue)")
                 .font(.largeTitle)
                 .padding()
+#if !os(tvOS)
 
+                   
             Stepper("Value: \(stepperValue)", value: $stepperValue, in: 0...100)
                 .padding()
-
+            #endif
             HStack {
                 Button("Reset") {
                     stepperValue = 0
