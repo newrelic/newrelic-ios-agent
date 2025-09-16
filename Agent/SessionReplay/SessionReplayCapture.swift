@@ -176,10 +176,12 @@ class SessionReplayCapture {
             var swiftUISubThingiesWithPaths = Array(zip(swiftUIViews.sorted(by: { $0.key < $1.key }), swiftUISubThingies))
             establishSwiftUIParentChildRelationships(thingiesWithPaths: &swiftUISubThingiesWithPaths)
 
-            for thingy in swiftUISubThingies {
-                // print all info about thingy
-                print("swiftUISubThingy: \(thingy), frame: \(thingy.viewDetails.frame), id: \(thingy.viewDetails.viewId), parentId: \(thingy.viewDetails.parentId ?? -1), nextId: \(thingy.viewDetails.nextId ?? -1), isVisible: \(thingy.viewDetails.isVisible)")
-            }
+//            for thingy in swiftUISubThingies {
+//                // print all info about thingy
+//                print("swiftUISubThingy: \(thingy), frame: \(thingy.viewDetails.frame), id: \(thingy.viewDetails.viewId), parentId: \(thingy.viewDetails.parentId ?? -1), nextId: \(thingy.viewDetails.nextId ?? -1), isVisible: \(thingy.viewDetails.isVisible)")
+//            }
+
+           // print("Decompiled \(swiftUISubThingiesWithPaths.count) swiftUISubThingies")
 
 
             let hostingThingy = UIViewThingy(view: originalView,
@@ -251,11 +253,11 @@ class SessionReplayCapture {
             if let parentPath = PathGenerator.shared.getParent(for: path),
                let parentThingy = pathToThingy[parentPath] {
                 thingy.viewDetails.parentId = parentThingy.viewDetails.viewId
-                print("[ParentChild] \(path) -> parent: \(parentPath), parentId: \(parentThingy.viewDetails.viewId)")
+//                print("[ParentChild] \(path) -> parent: \(parentPath), parentId: \(parentThingy.viewDetails.viewId)")
             } else {
                 // Root level views have no parent
                 thingy.viewDetails.parentId = nil
-                print("[ParentChild] \(path) -> no parent (root level)")
+//                print("[ParentChild] \(path) -> no parent (root level)")
             }
         }
     }

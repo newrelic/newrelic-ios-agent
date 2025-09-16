@@ -26,43 +26,6 @@ public extension View {
 }
 
 @available(iOS 14.0, *)
-struct GenericLeafModifier: ViewModifier {
-    @Environment(\.decompilerPath) var path
-    let kind: ClassifiedKind
-    init(kind: ClassifiedKind) {
-        self.kind = kind
-    }
-    func body(content: Content) -> some View {
-        content.background(
-            GeometryReader { geometry in
-                Color.clear.preference(key: LeafPathPreferenceKey.self, value: [LeafPath(fullPath: path, classification: kind, frame: geometry.frame(in: .global))])
-            }
-        )
-    }
-}
-
-public struct LeafPath: Identifiable, Hashable {
-    public var id: String { fullPath }
-    public var fullPath: String
-    public var classification: ClassifiedKind
-    public var frame: CGRect
-
-    public init(fullPath: String, classification: ClassifiedKind, frame: CGRect = .zero) {
-        self.fullPath = fullPath
-        self.classification = classification
-        self.frame = frame
-    }
-}
-// remak LeafPath as PreferenceKey
-struct LeafPathPreferenceKey: PreferenceKey {
-    typealias Value = [LeafPath]
-    static var defaultValue: [LeafPath] = []
-    static func reduce(value: inout [LeafPath], nextValue: () -> [LeafPath]) {
-        value.append(contentsOf: nextValue())
-    }
-}
-
-@available(iOS 14.0, *)
 public extension Text {
     @MainActor func pathLeaf() -> some View {
         modifier(GenericLeafModifier(kind: .text("")))
@@ -190,15 +153,12 @@ public extension List {
         // SwiftUI list is diff iOS 13 -> 15
             .introspect(.list, on: .iOS(.v13, .v14, .v15)) {
                 print("Introspected a List table: \($0)")
-                // Introspected a List collection: <SwiftUI.UpdateCoalescingCollectionView: 0x107021600; baseClass = UICollectionView; frame = (0 0; 440 956); clipsToBounds = YES; autoresize = W+H; gestureRecognizers = <NSArray: 0x600000c0de90>; backgroundColor = <UIDynamicSystemColor: 0x60000171a540; name = systemGroupedBackgroundColor>; layer = <CALayer: 0x60000029e800>; contentOffset: {0, -152.33333333333334}; contentSize: {440, 187}; adjustedContentInset: {152.33333333333331, 0, 34.000000000000114, 0}; layout: <UICollectionViewCompositionalLayout: 0x10521b9b0>; dataSource: <_TtGC7SwiftUI31UICollectionViewListCoordinatorGVS_28CollectionViewListDataSourceOs5Never_GOS_19SelectionManagerBoxS2___: 0x105208830>>
+                //TODO: Extract properties from UITableView
                 
             }
             .introspect(.list, on: .iOS(.v16, .v17, .v18, .v26)) {
                 print("Introspected a List collection: \($0)")
-                
-                
-                // Introspected a List collection: <SwiftUI.UpdateCoalescingCollectionView: 0x107021600; baseClass = UICollectionView; frame = (0 0; 440 956); clipsToBounds = YES; autoresize = W+H; gestureRecognizers = <NSArray: 0x600000c0de90>; backgroundColor = <UIDynamicSystemColor: 0x60000171a540; name = systemGroupedBackgroundColor>; layer = <CALayer: 0x60000029e800>; contentOffset: {0, -152.33333333333334}; contentSize: {440, 187}; adjustedContentInset: {152.33333333333331, 0, 34.000000000000114, 0}; layout: <UICollectionViewCompositionalLayout: 0x10521b9b0>; dataSource: <_TtGC7SwiftUI31UICollectionViewListCoordinatorGVS_28CollectionViewListDataSourceOs5Never_GOS_19SelectionManagerBoxS2___: 0x105208830>>
-                
+                    //TODO: Extract properties from UICollectionView
             }
     }
 }

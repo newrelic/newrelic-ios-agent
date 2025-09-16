@@ -15,23 +15,23 @@ struct DecompilerCollector: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onPreferenceChange(EnhancedDecompilerPreferenceKey.self) { allInfo in
-                print("[DecompilerCollector] Received \(allInfo.count) enhanced decompiled views")
+                // print("[DecompilerCollector] Received \(allInfo.count) enhanced decompiled views")
                 var processedInfos: [DecompiledView] = []
 
                 // Group by parent path to calculate sibling indices
                 let groupedByParent = Dictionary(grouping: allInfo, by: { $0.parentPath ?? "ROOT" })
 
-                for (parentPath, siblingInfos) in groupedByParent {
+                for (_, siblingInfos) in groupedByParent {
                     let sortedSiblings = siblingInfos.sorted { $0.path < $1.path }
 
-                    for (index, info) in sortedSiblings.enumerated() {
+                    for (_, info) in sortedSiblings.enumerated() {
                         processedInfos.append(DecompiledView(
                             path: info.path,
                             kind: info.kind,
                             frame: info.frame
                         ))
 
-                        print("[DecompilerCollector] Processed: \(info.path) (parent: \(parentPath), sibling: \(index))")
+                        //print("[DecompilerCollector] Processed: \(info.path) (parent: \(parentPath), sibling: \(index))")
                     }
                 }
 
@@ -41,7 +41,7 @@ struct DecompilerCollector: ViewModifier {
             }
             .onPreferenceChange(DecompilerPreferenceKey.self) { allInfo in
                 // Fallback for legacy DecompilerPreferenceKey
-                print("[DecompilerCollector] Received \(allInfo.count) legacy decompiled views")
+               // print("[DecompilerCollector] Received \(allInfo.count) legacy decompiled views")
                 Task { @MainActor in
                     DecompilerDataManager.shared.update(views: allInfo)
                 }

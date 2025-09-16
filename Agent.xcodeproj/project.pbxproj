@@ -1133,6 +1133,7 @@
 		2BDCA8AB2A8C41160005740D /* NRMASAM.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA8A92A8C41160005740D /* NRMASAM.mm */; };
 		2BDCA8B32A8C43080005740D /* NRMASAMTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA8B02A8C43040005740D /* NRMASAMTest.mm */; };
 		2BDCA8B42A8C43080005740D /* NRMASAMTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA8B02A8C43040005740D /* NRMASAMTest.mm */; };
+		2BE089BE2E7A26C400B15EB6 /* LeafPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE089AA2E7A26AF00B15EB6 /* LeafPath.swift */; };
 		2BF42C6428B80B82006E9C27 /* NRMASysctlBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */; };
 		2BF42C6528B80B82006E9C27 /* NRMASysctlBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */; };
 		2BF42C6628B80B82006E9C27 /* NRMASysctlBinding.c in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */; };
@@ -2826,6 +2827,7 @@
 		2BDCA8A32A8C40D50005740D /* NRMASAM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASAM.h; sourceTree = "<group>"; };
 		2BDCA8A92A8C41160005740D /* NRMASAM.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMASAM.mm; sourceTree = "<group>"; };
 		2BDCA8B02A8C43040005740D /* NRMASAMTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMASAMTest.mm; sourceTree = "<group>"; };
+		2BE089AA2E7A26AF00B15EB6 /* LeafPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeafPath.swift; sourceTree = "<group>"; };
 		2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASysctlBinding.h; sourceTree = "<group>"; };
 		2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NRMASysctlBinding.c; sourceTree = "<group>"; };
 		2BF42C6828B81031006E9C27 /* NRMAStartTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAStartTimer.h; sourceTree = "<group>"; };
@@ -4231,6 +4233,7 @@
 		2B4BC71A2E79A1D900FF7979 /* Modifiers */ = {
 			isa = PBXGroup;
 			children = (
+				2BE089AA2E7A26AF00B15EB6 /* LeafPath.swift */,
 				2B4BC72E2E79EECA00FF7979 /* ContainerDetector.swift */,
 				2B4BC72F2E79EECA00FF7979 /* PathGenerator.swift */,
 				2B4BC7292E79D1A100FF7979 /* IntrospectedDataManager.swift */,
@@ -6363,6 +6366,7 @@
 				2BD5493A2E74BA47009DBE8B /* SecureField2.swift in Sources */,
 				2BD5493B2E74BA47009DBE8B /* SearchField2.swift in Sources */,
 				2BD5493C2E74BA47009DBE8B /* PlatformViewVersion.swift in Sources */,
+				2BE089BE2E7A26C400B15EB6 /* LeafPath.swift in Sources */,
 				2BD5493D2E74BA47009DBE8B /* Toggle2.swift in Sources */,
 				2BD5493E2E74BA47009DBE8B /* Utils.swift in Sources */,
 				2BD5493F2E74BA47009DBE8B /* View2.swift in Sources */,

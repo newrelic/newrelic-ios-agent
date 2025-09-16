@@ -84,13 +84,13 @@ public final class SwiftUIViewHierarchyRecorder {
         let result = DecompilerDataManager.shared.decompiledViews
         print("[SwiftUIViewHierarchyRecorder] Decompilation complete with \(result.count) views")
 
-        // Print parent-child relationships for debugging
-        for path in PathGenerator.shared.getAllPaths() {
-            if let parent = PathGenerator.shared.getParent(for: path) {
-                let children = PathGenerator.shared.getChildren(for: path)
-                print("[PathHierarchy] \(path) -> parent: \(parent), children: [\(children.joined(separator: ", "))]")
-            }
-        }
+//        // Print parent-child relationships for debugging
+//        for path in PathGenerator.shared.getAllPaths() {
+//            if let parent = PathGenerator.shared.getParent(for: path) {
+//                let children = PathGenerator.shared.getChildren(for: path)
+//                print("[PathHierarchy] \(path) -> parent: \(parent), children: [\(children.joined(separator: ", "))]")
+//            }
+//        }
 
         return result
     }
