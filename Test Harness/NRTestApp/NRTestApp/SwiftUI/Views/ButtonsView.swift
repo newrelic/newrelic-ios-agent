@@ -13,17 +13,16 @@ import NewRelic
 struct ButtonsView: View {
     @State private var toggleState = false
     @State private var buttonPressCount = 0
-
+    
     var body: some View {
         VStack(spacing: 20) {
             Text("Buttons Demo")
                 .pathLeaf()
                 .font(.largeTitle)
 #if !os(tvOS)
-
-                    .trackable()
-                    .decompile()
-                #endif
+                .trackable()
+                .decompile()
+#endif
             // Standard Button
             Button(action: {
                 buttonPressCount += 1
@@ -35,26 +34,24 @@ struct ButtonsView: View {
                     .foregroundColor(.white)
                     .cornerRadius(8)
 #if !os(tvOS)
-
                     .trackable()
                     .decompile()
-                #endif
+#endif
             }
             
 #if !os(tvOS)
             .pathLeaf()
-                    .trackable()
-                    .decompile()
-                #endif
-
+            .trackable()
+            .decompile()
+#endif
+            
             Text("Button pressed \(buttonPressCount) times")
 #if !os(tvOS)
                 .pathLeaf()
-
-                    .trackable()
-                    .decompile()
-                #endif
-
+                .trackable()
+                .decompile()
+#endif
+            
             // Toggle Button
             Button(action: {
                 toggleState.toggle()
@@ -66,24 +63,25 @@ struct ButtonsView: View {
                     .foregroundColor(.white)
                     .cornerRadius(8)
 #if !os(tvOS)
-
+                
                     .trackable()
                     .decompile()
-                #endif
+#endif
             }
 #if !os(tvOS)
             .pathLeaf()
-                    .trackable()
-                    .decompile()
-                #endif
-
+            .trackable()
+            .decompile()
+#endif
+            
             // Custom Styled Button
             Button(action: {
                 print("Custom Styled Button Pressed")
             }) {
                 Text("Custom Styled Button")
                     .pathLeaf()
-                    //.fontWeight(.bold)
+                // TODO: Fix this issue with Text.pathLeaf() and fontWeight
+               // .fontWeight(.bold)
                     .padding()
                     .background(Color.purple)
                     .foregroundColor(.white)
@@ -92,15 +90,14 @@ struct ButtonsView: View {
 #if !os(tvOS)
                     .trackable()
                     .decompile()
-                #endif
+#endif
             }
 #if !os(tvOS)
             .pathLeaf()
-
-                    .trackable()
-                    .decompile()
-                #endif
-
+            .trackable()
+            .decompile()
+#endif
+            
             // Button with Image
             Button(action: {
                 print("Button with Image Pressed")
@@ -109,31 +106,28 @@ struct ButtonsView: View {
                     Image(systemName: "star.fill")
                     Text("Star Button")
                         .pathLeaf()
-
                 }
                 .padding()
                 .background(Color.yellow)
                 .foregroundColor(.black)
                 .cornerRadius(8)
 #if !os(tvOS)
-
-                    .trackable()
-                    .decompile()
-                #endif
+                .trackable()
+                .decompile()
+#endif
             }
 #if !os(tvOS)
             .pathLeaf()
-
-                    .trackable()
-                    .decompile()
-                #endif
+            .trackable()
+            .decompile()
+#endif
         }
         .padding()
         .NRTrackView(name: "ButtonsView")
 #if !os(tvOS)
-
-                    .trackable()
-                    .decompile()
-                #endif
+        
+        .trackable()
+        .decompile()
+#endif
     }
 }

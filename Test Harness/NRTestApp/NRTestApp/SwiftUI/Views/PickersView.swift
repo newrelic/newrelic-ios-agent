@@ -31,10 +31,9 @@ struct PickersView: View {
             
             // Date Picker
 #if !os(tvOS)
-
             DatePicker("Select a date", selection: $selectedDate, displayedComponents: .date)
                 .padding()
-            #endif
+#endif
             
             Text("Selected date: \(selectedDate, formatter: dateFormatter)")
             
@@ -45,9 +44,8 @@ struct PickersView: View {
                 }
             }
 #if !os(tvOS)
-
             .pickerStyle(MenuPickerStyle())
-            #endif
+#endif
             .padding()
             
             Text("Custom Picker selection: \(customPickerSelection)")

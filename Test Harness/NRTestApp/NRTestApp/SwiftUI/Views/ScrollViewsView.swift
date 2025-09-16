@@ -25,8 +25,13 @@ struct ScrollViewsView: View {
                         .background(Color.blue.opacity(0.3))
                         .cornerRadius(10)
                 }
+                .trackable()
+                .decompile()
+
             }
             .padding()
+            .trackable()
+            .decompile()
         }
         .navigationTitle("Scroll Views")
         .NRTrackView(name: "ScrollViewsView")

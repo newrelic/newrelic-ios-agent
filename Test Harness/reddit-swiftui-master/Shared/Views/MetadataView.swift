@@ -17,8 +17,11 @@ struct MetadataView: View {
             /// Pinned icon
             if post.stickied {
                 Image(systemName: "pin.fill")
+                    .pathLeaf()
                     .rotationEffect(Angle(degrees: 45))
                     .foregroundColor(Color("stickied"))
+                    .trackable()
+                    .decompile()
             }
             if spaced {
                 Spacer()

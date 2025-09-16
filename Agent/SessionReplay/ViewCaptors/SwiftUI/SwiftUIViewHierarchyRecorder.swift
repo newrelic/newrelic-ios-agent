@@ -30,11 +30,11 @@ public class DecompilerDataManager {
 //        }
         let pathsToAdd = newPaths.subtracting(existingPaths)
         if !pathsToAdd.isEmpty {
-            print("[DecompilerDataManager] Adding \(pathsToAdd.count) new views: \(pathsToAdd)")
+           // print("[DecompilerDataManager] Adding \(pathsToAdd.count) new views: \(pathsToAdd)")
         }
         let pathsToUpdate = newPaths.intersection(existingPaths)
         if !pathsToUpdate.isEmpty {
-            print("[DecompilerDataManager] Updating \(pathsToUpdate.count) existing views: \(pathsToUpdate)")
+            //print("[DecompilerDataManager] Updating \(pathsToUpdate.count) existing views: \(pathsToUpdate)")
         }
         
         // Build complete snapshot
@@ -142,7 +142,7 @@ struct TrackableWrapper<Content: View>: View {
             content
                 .environment(\.decompilerPath, uniquePath)
                 .onAppear {
-                    print("[TrackableWrapper] Container: \(uniquePath)")
+                   // print("[TrackableWrapper] Container: \(uniquePath)")
                 }
 
         } else {
@@ -156,7 +156,7 @@ struct TrackableWrapper<Content: View>: View {
                     siblingIndex: 0 // Will be calculated during collection
                 )))
                 .onAppear {
-                    print("[TrackableWrapper] Leaf: \(uniquePath)")
+                   // print("[TrackableWrapper] Leaf: \(uniquePath)")
                 }
         }
     }

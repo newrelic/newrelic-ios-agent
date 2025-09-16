@@ -1,16 +1,15 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "Request",
-        "repositoryURL": "https://github.com/carson-katri/swift-request",
-        "state": {
-          "branch": null,
-          "revision": "5de85a849f22e56471af6cb0367bd575519b131f",
-          "version": "1.1.1"
-        }
+  "originHash" : "2dc4a243791e3cbdd0b2b3e057f42a5d2c00aed7362e34aad12e6750604631c9",
+  "pins" : [
+    {
+      "identity" : "swift-request",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/carson-katri/swift-request",
+      "state" : {
+        "revision" : "5de85a849f22e56471af6cb0367bd575519b131f",
+        "version" : "1.1.1"
       }
-    ]
-  },
-  "version": 1
+    }
+  ],
+  "version" : 3
 }

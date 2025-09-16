@@ -14,13 +14,13 @@ import NewRelic
 struct SegmentedControlsView: View {
     @State private var selectedSegment = 0
     let segments = ["Option 1", "Option 2", "Option 3"]
-
+    
     var body: some View {
         VStack {
             Text("Selected Segment: \(segments[selectedSegment])")
                 .font(.headline)
                 .padding()
-
+            
             Picker("Select an option", selection: $selectedSegment) {
                 ForEach(0..<segments.count) { index in
                     Text(segments[index]).tag(index)
@@ -28,7 +28,7 @@ struct SegmentedControlsView: View {
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding()
-
+            
             Spacer()
         }
         .navigationTitle("Segmented Controls")

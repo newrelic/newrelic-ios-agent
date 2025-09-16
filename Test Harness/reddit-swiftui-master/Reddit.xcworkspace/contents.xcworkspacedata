@@ -2,9 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "absolute:/Users/cdillard/Documents/Workspace/newrelic-ios-agent/Agent.xcodeproj">
+      location = "group:Reddit.xcodeproj">
    </FileRef>
    <FileRef
-      location = "container:../../../../../Downloads/reddit-swiftui-master/Reddit.xcodeproj">
+      location = "absolute:/Users/cdillard/Documents/Workspace/newrelic-ios-agent/Agent.xcodeproj">
    </FileRef>
 </Workspace>

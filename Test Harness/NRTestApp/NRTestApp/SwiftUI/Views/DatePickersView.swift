@@ -17,30 +17,30 @@ struct DatePickersView: View {
             Text("Select a Date")
                 .font(.headline)
                 .padding()
-
+            
 #if !os(tvOS)
-
+            
             DatePicker("Choose a date:", selection: $selectedDate, displayedComponents: [.date])
                 .datePickerStyle(GraphicalDatePickerStyle())
                 .padding()
-            #endif
-
+#endif
+            
             Text("Selected Date: \(formattedDate(selectedDate))")
                 .padding()
-
+            
 #if !os(tvOS)
-
+            
             DatePicker("Choose a time:", selection: $selectedDate, displayedComponents: [.hourAndMinute])
                 .datePickerStyle(WheelDatePickerStyle())
                 .padding()
-            #endif
+#endif
             Text("Selected Time: \(formattedTime(selectedDate))")
                 .padding()
         }
 #if !os(tvOS)
-
+        
         .navigationTitle("Date Pickers")
-        #endif
+#endif
         .NRTrackView(name: "DatePickersView")
     }
     

@@ -95,4 +95,13 @@ public class IntrospectedDataManager {
         properties["contentMode"] = view.contentMode.rawValue
         return properties
     }
+    
+    public func extractImageViewProperties(from imageView: UIImageView) -> [String: Any] {
+        var properties: [String: Any] = [:]
+        properties["image"] = imageView.image != nil
+        properties["contentMode"] = imageView.contentMode.rawValue
+        properties["isUserInteractionEnabled"] = imageView.isUserInteractionEnabled
+        properties["tintColor"] = imageView.tintColor
+        return properties
+    }
 }

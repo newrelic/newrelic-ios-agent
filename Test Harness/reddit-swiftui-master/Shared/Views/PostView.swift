@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Request
+import NewRelic
 
 struct PostView: View {
     let post: Post
@@ -17,8 +18,11 @@ struct PostView: View {
             VStack(alignment: .leading) {
                 #if os(iOS)
                 Text(post.title)
+                    .pathLeaf()
                     .font(.headline)
                     .lineLimit(1)
+                    .trackable()
+                    .decompile()
                 #elseif os(macOS)
                 Text(post.title)
                     .bold()
@@ -27,8 +31,14 @@ struct PostView: View {
                 Group {
                     if post.url.contains("reddit") {
                         Text(post.selftext != "" ? post.selftext : " ")
+                            .pathLeaf()
+                            .trackable()
+                            .decompile()
                     } else {
                         Text(post.url)
+                            .pathLeaf()
+                            .trackable()
+                            .decompile()
                     }
                 }
                     .font(.caption)
@@ -38,9 +48,15 @@ struct PostView: View {
                 MetadataView(post: post, spaced: false)
                     .font(.caption)
                     .opacity(0.75)
+                    .trackable()
+                    .decompile()
             }
             if post.thumbnail != "self" {
                 Spacer()
+                // TODO: Handle Spacer path
+                  //  .pathLeaf()
+                    .trackable()
+                    .decompile()
                 RequestImage(Url(post.thumbnail))
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 50, height: 50, alignment: .center)

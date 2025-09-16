@@ -24,13 +24,13 @@ struct StacksView: View {
                 .padding()
                 .background(Color.blue.opacity(0.3))
                 .cornerRadius(10)
-
+                
                 Spacer()
-
+                
                 Text("HStack Example")
                     .font(.largeTitle)
                     .padding()
-
+                
                 HStack {
                     Text("Item A")
                     Text("Item B")
@@ -39,13 +39,13 @@ struct StacksView: View {
                 .padding()
                 .background(Color.green.opacity(0.3))
                 .cornerRadius(10)
-
+                
                 Spacer()
-
+                
                 Text("ZStack Example")
                     .font(.largeTitle)
                     .padding()
-
+                
                 ZStack {
                     Rectangle()
                         .fill(Color.red.opacity(0.3))
@@ -57,9 +57,8 @@ struct StacksView: View {
                 .padding()
             }
 #if !os(tvOS)
-
             .navigationBarTitle("Stacks Example", displayMode: .inline)
-            #endif
+#endif
         }
         .NRTrackView(name: "StacksView")
     }

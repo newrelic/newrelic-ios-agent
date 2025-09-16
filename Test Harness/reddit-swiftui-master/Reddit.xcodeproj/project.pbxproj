@@ -20,6 +20,8 @@
 		26C1D7FB22E33FD40057DED1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 26C1D7FA22E33FD40057DED1 /* Assets.xcassets */; };
 		26C1D7FE22E33FD40057DED1 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 26C1D7FD22E33FD40057DED1 /* Preview Assets.xcassets */; };
 		26C1D80122E33FD40057DED1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 26C1D7FF22E33FD40057DED1 /* LaunchScreen.storyboard */; };
+		2B4BC7532E7A1AA700FF7979 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B4BC7522E7A1AA700FF7979 /* NewRelic.framework */; };
+		2B4BC7542E7A1AA700FF7979 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2B4BC7522E7A1AA700FF7979 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B508E10022F8F6F7002C4C76 /* banner.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = B508E0FF22F8F6F7002C4C76 /* banner.jpeg */; };
 		B5145A1F22EFD4E6009237BD /* CommentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26746F0A22ECD4DC00A57918 /* CommentsView.swift */; };
 		B5145A2122EFD557009237BD /* MetadataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60CB522EFD2A000A0075B /* MetadataView.swift */; };
@@ -105,6 +107,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		2B4BC7552E7A1AA800FF7979 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2B4BC7542E7A1AA700FF7979 /* NewRelic.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B5A7598322EF97D9001FD4F1 /* Embed App Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -146,6 +159,7 @@
 		26C1D7FD22E33FD40057DED1 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		26C1D80022E33FD40057DED1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		26C1D80222E33FD40057DED1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2B4BC7522E7A1AA700FF7979 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B508E0FF22F8F6F7002C4C76 /* banner.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = banner.jpeg; sourceTree = "<group>"; };
 		B508E10322F8FA16002C4C76 /* SpinnerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpinnerView.swift; sourceTree = "<group>"; };
 		B508E10422F8FA16002C4C76 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
@@ -199,6 +213,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B5A7594A22EE8EBA001FD4F1 /* Request in Frameworks */,
+				2B4BC7532E7A1AA700FF7979 /* NewRelic.framework in Frameworks */,
 				B5A7594822EE8EBA001FD4F1 /* Json in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -339,6 +354,7 @@
 		B511A2FC22EE8C470062B8D4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2B4BC7522E7A1AA700FF7979 /* NewRelic.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -477,6 +493,7 @@
 				26C1D7ED22E33FD30057DED1 /* Sources */,
 				26C1D7EE22E33FD30057DED1 /* Frameworks */,
 				26C1D7EF22E33FD30057DED1 /* Resources */,
+				2B4BC7552E7A1AA800FF7979 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -918,6 +935,7 @@
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Reddit-iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -943,6 +961,7 @@
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = "Reddit-iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -79,11 +79,11 @@ public struct ContainerDetector {
             name.contains(containerType)
         }
 
-        if isContainer {
-            print("[ContainerDetector] '\(name)' detected as CONTAINER")
-        } else {
-            print("[ContainerDetector] '\(name)' detected as LEAF")
-        }
+//        if isContainer {
+//            print("[ContainerDetector] '\(name)' detected as CONTAINER")
+//        } else {
+//            print("[ContainerDetector] '\(name)' detected as LEAF")
+//        }
 
         return isContainer
     }

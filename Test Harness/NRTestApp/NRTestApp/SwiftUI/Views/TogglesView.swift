@@ -12,23 +12,23 @@ import NewRelic
 struct TogglesView: View {
     @State private var isToggleOn: Bool = false
     @State private var isAnotherToggleOn: Bool = true
-
+    
     var body: some View {
         VStack(spacing: 20) {
             Text("Toggle Example")
                 .font(.largeTitle)
-
+            
             Toggle("Toggle is \(isToggleOn ? "On" : "Off")", isOn: $isToggleOn)
                 .padding()
-
+            
             Toggle("Another Toggle is \(isAnotherToggleOn ? "On" : "Off")", isOn: $isAnotherToggleOn)
             //exclude for tvOS
-            #if !os(tvOS)
-                
+#if !os(tvOS)
+            
                 .toggleStyle(SwitchToggleStyle(tint: .blue))
-            #endif
+#endif
                 .padding()
-
+            
             Text("Toggle State: \(isToggleOn ? "On" : "Off")")
             Text("Another Toggle State: \(isAnotherToggleOn ? "On" : "Off")")
         }

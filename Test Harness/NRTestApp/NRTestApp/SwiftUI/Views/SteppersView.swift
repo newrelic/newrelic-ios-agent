@@ -13,25 +13,25 @@ import NewRelic
 
 struct SteppersView: View {
     @State private var stepperValue: Int = 0
-
+    
     var body: some View {
         VStack {
             Text("Current Value: \(stepperValue)")
                 .font(.largeTitle)
                 .padding()
 #if !os(tvOS)
-
-                   
+            
+            
             Stepper("Value: \(stepperValue)", value: $stepperValue, in: 0...100)
                 .padding()
-            #endif
+#endif
             HStack {
                 Button("Reset") {
                     stepperValue = 0
                 }
                 .padding()
                 .buttonStyle(BorderlessButtonStyle())
-
+                
                 Button("Increase by 10") {
                     stepperValue += 10
                 }

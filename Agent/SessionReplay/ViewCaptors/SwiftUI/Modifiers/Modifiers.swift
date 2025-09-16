@@ -202,3 +202,35 @@ public extension List {
             }
     }
 }
+
+@available(iOS 14.0, *)
+public extension Image {
+    @MainActor func pathLeaf() -> some View {
+        modifier(GenericLeafModifier(kind: .image))
+            .introspect(.view, on:  .iOS(.v13, .v14, .v15, .v16, .v17, .v18, .v26), scope: .receiver) { view in
+                // Find the UIImageView within the view hierarchy
+                if let imageView = findUIImageView(in: view) {
+                    let properties = IntrospectedDataManager.shared.extractImageViewProperties(from: imageView)
+                    let path = "IMAGE_INTROSPECTED_\(ObjectIdentifier(view).hashValue)"
+                    let data = IntrospectedUIKitData(
+                        path: path, kind: .image, frame: imageView.frame,
+                        properties: properties
+                    )
+                    IntrospectedDataManager.shared.addIntrospectedData(data)
+                    print("Introspected UIImageView with image: \(String(describing: imageView.image))")
+                }
+            }
+    }
+
+    private func findUIImageView(in view: UIView) -> UIImageView? {
+        if let imageView = view as? UIImageView {
+            return imageView
+        }
+        for subview in view.subviews {
+            if let imageView = findUIImageView(in: subview) {
+                return imageView
+            }
+        }
+        return nil
+    }
+}

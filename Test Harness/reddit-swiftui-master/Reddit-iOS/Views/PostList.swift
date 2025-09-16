@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Request
+import NewRelic
 
 struct PostList: View {
     let subreddit: String
@@ -23,8 +24,14 @@ struct PostList: View {
             List(listing != nil ? listing!.data.children.map { $0.data } : []) { post in
                 NavigationLink(destination: PostDetailView(post: post)) {
                     PostView(post: post)
+                        .trackable()
+                        .decompile()
                 }
+                .trackable()
+                .decompile()
             }
+            .trackable()
+            .decompile()
             /// Spinner when loading
             SpinnerView()
         }
