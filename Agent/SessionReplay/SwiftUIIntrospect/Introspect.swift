@@ -85,7 +85,7 @@ struct IntrospectModifier<SwiftUIViewType: IntrospectableViewType, PlatformSpeci
                 .background(
                     Group {
                         // box up content for more accurate `.view` introspection
-                        if SwiftUIViewType.self == ViewType.self {
+                        if SwiftUIViewType.self == IntrospectViewType.self {
                             Color.white
                                 .opacity(0)
                                 .accessibility(hidden: true)
