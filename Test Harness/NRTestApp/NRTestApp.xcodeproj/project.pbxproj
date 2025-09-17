@@ -113,6 +113,8 @@
 		F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B982970ADC1003EC291 /* UIImageView.swift */; };
 		F8302B9B2970B29D003EC291 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9A2970B29D003EC291 /* Date.swift */; };
 		F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9C2970B3E0003EC291 /* ApodURL.swift */; };
+		F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
+		F832CB0E2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
 		F848CDE42AA270E80082052F /* NRTestApp_tvOS_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */; };
 		F848CDE62AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */; };
 		F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
@@ -374,6 +376,7 @@
 		F8302B982970ADC1003EC291 /* UIImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageView.swift; sourceTree = "<group>"; };
 		F8302B9A2970B29D003EC291 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		F8302B9C2970B3E0003EC291 /* ApodURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApodURL.swift; sourceTree = "<group>"; };
+		F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteImageCollectionViewController.swift; sourceTree = "<group>"; };
 		F848CDE12AA270E80082052F /* NRTestApp(tvOS)Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp(tvOS)Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_Tests.swift; sourceTree = "<group>"; };
 		F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_TestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -652,6 +655,7 @@
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
 				F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */,
 				F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */,
+				F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
 			);
@@ -1209,6 +1213,7 @@
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
 				F81061F82E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
+				F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
@@ -1240,6 +1245,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F832CB0E2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,

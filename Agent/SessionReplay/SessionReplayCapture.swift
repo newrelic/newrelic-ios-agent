@@ -13,7 +13,6 @@ import SwiftUI
 
 // potentially remove this annotation once the feature goes to Swift
 
-// available in ioS13 and up
 @objcMembers
 @available(iOS 14.0, *)
 class SessionReplayCapture {

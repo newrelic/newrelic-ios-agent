@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import NewRelic
 
 class InfiniteScrollTableViewController: UIViewController {
 
@@ -61,7 +62,7 @@ class InfiniteScrollTableViewController: UIViewController {
         guard !isLoading else { return }
         isLoading = true
         
-        print("Loading page \(currentPage)...")
+        NewRelic.logVerbose("Loading page \(currentPage)...")
         
         // Simulate a network delay
         DispatchQueue.global().asyncAfter(deadline: .now() + 1.5) {
@@ -74,7 +75,7 @@ class InfiniteScrollTableViewController: UIViewController {
                 self.tableView.reloadData()
                 self.currentPage += 1
                 self.isLoading = false
-                print("Data loaded. Total items: \(self.data.count)")
+                NewRelic.logVerbose("Data loaded. Total items: \(self.data.count)")
             }
         }
     }
@@ -121,6 +122,6 @@ extension InfiniteScrollTableViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         // Deselect the row for a cleaner UI experience
         tableView.deselectRow(at: indexPath, animated: true)
-        print("Selected: \(data[indexPath.row])")
+        NewRelic.logVerbose("Selected: \(data[indexPath.row])")
     }
 }

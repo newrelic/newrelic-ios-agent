@@ -932,7 +932,6 @@
 		2B706114293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
 		2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
 		2B706116293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
-		2B74FBF82E2AF88D002522DE /* UISearchBarThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B74FBF72E2AF88D002522DE /* UISearchBarThingy.swift */; };
 		2B81E34C28624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */; };
 		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
@@ -2506,7 +2505,6 @@
 		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
 		2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAURLSessionTaskSearch.h; sourceTree = "<group>"; };
 		2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionTaskSearch.m; sourceTree = "<group>"; };
-		2B74FBF72E2AF88D002522DE /* UISearchBarThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISearchBarThingy.swift; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
@@ -4087,7 +4085,6 @@
 			isa = PBXGroup;
 			children = (
 				2B4BC7062E79A1CE00FF7979 /* SwiftUI */,
-				2B74FBF72E2AF88D002522DE /* UISearchBarThingy.swift */,
 				2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */,
 				F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */,
 				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
@@ -5787,7 +5784,6 @@
 				F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */,
 				02FF4A4824DC64D500115469 /* NRMAMeasurement.m in Sources */,
 				02FF4A4E24DC64D500115469 /* NRMAMeasurementException.m in Sources */,
-				2B74FBF82E2AF88D002522DE /* UISearchBarThingy.swift in Sources */,
 				02FF48AA24DC61E900115469 /* NRMAWKWebViewNavigationDelegate.m in Sources */,
 				02FF49DA24DC636100115469 /* NRMAHarvestableArray.m in Sources */,
 				02FF4AAB24DC652E00115469 /* NewRelicInternalUtils.m in Sources */,

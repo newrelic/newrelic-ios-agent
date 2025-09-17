@@ -7,6 +7,7 @@
 
 
 import UIKit
+import NewRelic
 
 class ScrollableCollectionViewController: UIViewController {
     
@@ -67,7 +68,7 @@ extension ScrollableCollectionViewController: UICollectionViewDataSource {
 // MARK: - UICollectionViewDelegate
 extension ScrollableCollectionViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("Selected item at \(indexPath.item)")
+        NewRelic.logVerbose("Selected item at \(indexPath.item)")
     }
 }
 
