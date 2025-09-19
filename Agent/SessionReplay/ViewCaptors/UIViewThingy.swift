@@ -51,12 +51,7 @@ class UIViewThingy: SessionReplayViewThingy {
         var mutations = [MutationRecord]()
         var allAttributes = [String: String]()
         
-        let styleAttributes = generateBaseDifferences(from: typedOther)
-
-        if !styleAttributes.isEmpty {
-            let styleString = styleAttributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
-            allAttributes["style"] = styleString
-        }
+        allAttributes["style"] = typedOther.generateBaseCSSStyle()
         
         if !allAttributes.isEmpty {
             let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
