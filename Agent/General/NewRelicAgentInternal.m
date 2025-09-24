@@ -42,6 +42,7 @@
 #import "NRMAAppInstallMetricGenerator.h"
 #import "NRMAAnalytics.h"
 #import "Constants.h"
+#import "NRMABool.h"
 #import "NRMAWKWebViewInstrumentation.h"
 #import "NRMAExceptionHandlerStartupManager.h"
 #import "NRMAFlags.h"
@@ -639,6 +640,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     BOOL isSampled = [self isSessionReplaySampled];
     if (isSampled && [self isSessionReplayEnabled]) {
         [_sessionReplay start];
+        @synchronized(kNRMAAnalyticsInitializationLock) {
+            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+        }
     } else {
         [self sessionReplayDisabled];
     }
@@ -650,7 +654,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     if(_sessionReplay != nil){
         [_sessionReplay stop];
         [_sessionReplay clearAllData];
-        [_analyticsController removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
+        @synchronized(kNRMAAnalyticsInitializationLock) {
+            [self.analyticsController removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
+        }
     }
 #endif
 }
@@ -743,6 +749,14 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
 
     [self onSessionStart];
     
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if (@available(iOS 13.0, *)) {
+        BOOL isSampled = [self isSessionReplaySampled];
+        if (isSampled && [self isSessionReplayEnabled]) {
+            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+        }
+    }
+#endif
 }
 
 #if !TARGET_OS_WATCH

@@ -129,21 +129,7 @@ class UITextViewThingy: SessionReplayViewThingy {
         var mutations = [MutationRecord]()
         var allAttributes = [String: String]()
         
-        var styleAttributes = generateBaseDifferences(from: typedOther)
-
-        // get text color difference
-        if textColor != typedOther.textColor {
-            styleAttributes["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-        }
-        
-        if fontSize != typedOther.fontSize || fontFamily != typedOther.fontFamily {
-            styleAttributes["font"] = "\(String(format: "%.2f", self.fontSize))px \(self.fontFamily)px"
-        }
-        
-        if !styleAttributes.isEmpty {
-            let styleString = styleAttributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
-            allAttributes["style"] = styleString
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
         if !allAttributes.isEmpty {
             let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
