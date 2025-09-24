@@ -41,12 +41,11 @@ public class SessionReplayManager: NSObject {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
                 return
             }
+            
             sessionReplay.start()
             self.harvestseconds = 0
 
             self.sessionReplay.isFirstChunk = true
-
-            NewRelicAgentInternal.sharedInstance()?.analyticsController.setNRSessionAttribute(kNRMA_RA_hasReplay, value: NRMABool(bool: true))
 
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
             self.sessionReplayTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(self.sessionReplayTick), userInfo: nil, repeats: true)
