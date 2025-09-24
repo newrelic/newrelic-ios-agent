@@ -218,7 +218,7 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
         
-        options.append(UtilOption(title: "SwiftUIViewRepresentableTest", handler: { [self] in swiftUIViewTapped()}))
+        options.append(UtilOption(title: "SwiftUI", handler: { [self] in swiftUIViewTapped()}))
         
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))

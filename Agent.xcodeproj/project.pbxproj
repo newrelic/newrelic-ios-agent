@@ -1523,6 +1523,10 @@
 		F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F86741072BD30F3F00DAA1A2 /* NRMAExceptionDataCollectionWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */; };
 		F8678AAE2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m in Sources */ = {isa = PBXBuildFile; fileRef = F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */; };
+		F8701EC12E79A6030008D6E1 /* SwiftUIThingyHeuristics.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8701EC02E79A6030008D6E1 /* SwiftUIThingyHeuristics.swift */; };
+		F8701EC32E79A6210008D6E1 /* SwiftUITextThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8701EC22E79A6210008D6E1 /* SwiftUITextThingy.swift */; };
+		F8701EC72E79A6360008D6E1 /* SwiftUIImageThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8701EC42E79A6360008D6E1 /* SwiftUIImageThingy.swift */; };
+		F8701F482E79E0E70008D6E1 /* SessionReplaySwiftUITagging.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8701F472E79E0E70008D6E1 /* SessionReplaySwiftUITagging.swift */; };
 		F8728E412ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
 		F8728E422ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */; };
 		F87925652D441AC300576F5D /* NRMAAttributeValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = F87925642D441AC300576F5D /* NRMAAttributeValidator.m */; };
@@ -2530,6 +2534,10 @@
 		F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayData.swift; sourceTree = "<group>"; };
 		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTests.m; sourceTree = "<group>"; };
 		F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRAutoCollectLogStressTest.m; sourceTree = "<group>"; };
+		F8701EC02E79A6030008D6E1 /* SwiftUIThingyHeuristics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIThingyHeuristics.swift; sourceTree = "<group>"; };
+		F8701EC22E79A6210008D6E1 /* SwiftUITextThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITextThingy.swift; sourceTree = "<group>"; };
+		F8701EC42E79A6360008D6E1 /* SwiftUIImageThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIImageThingy.swift; sourceTree = "<group>"; };
+		F8701F472E79E0E70008D6E1 /* SessionReplaySwiftUITagging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplaySwiftUITagging.swift; sourceTree = "<group>"; };
 		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
 		F8728E562ACC9F840056F641 /* NRMANetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkMonitor.h; sourceTree = "<group>"; };
 		F87925642D441AC300576F5D /* NRMAAttributeValidator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAAttributeValidator.m; sourceTree = "<group>"; };
@@ -3853,6 +3861,7 @@
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
 				341E84BD2D9CAABC00968D7D /* UIImageViewThingy.swift */,
 				3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */,
+				F8701EBE2E79A5C50008D6E1 /* SwiftUI */,
 			);
 			path = ViewCaptors;
 			sourceTree = "<group>";
@@ -4007,6 +4016,17 @@
 				F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */,
 			);
 			path = "Logging Stress Tests";
+			sourceTree = "<group>";
+		};
+		F8701EBE2E79A5C50008D6E1 /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				F8701F472E79E0E70008D6E1 /* SessionReplaySwiftUITagging.swift */,
+				F8701EC42E79A6360008D6E1 /* SwiftUIImageThingy.swift */,
+				F8701EC22E79A6210008D6E1 /* SwiftUITextThingy.swift */,
+				F8701EC02E79A6030008D6E1 /* SwiftUIThingyHeuristics.swift */,
+			);
+			path = SwiftUI;
 			sourceTree = "<group>";
 		};
 		F879257C2D441DBF00576F5D /* AttributeValidator */ = {
@@ -5416,6 +5436,7 @@
 				02FF4AA924DC652E00115469 /* NRMAAppToken.m in Sources */,
 				02FF4AC324DC656900115469 /* NRMAPayloadContainer.mm in Sources */,
 				02FF49BF24DC62B800115469 /* NRMAHarvestableTrace.m in Sources */,
+				F8701EC72E79A6360008D6E1 /* SwiftUIImageThingy.swift in Sources */,
 				02FF494B24DC626E00115469 /* NRMAHarvestController.m in Sources */,
 				02FF4AB624DC653A00115469 /* NRMADEBUG_Reachability.m in Sources */,
 				02FF4A5024DC64D500115469 /* NRMAHTTPTransactionMeasurement.m in Sources */,
@@ -5424,9 +5445,11 @@
 				02FF480224DB56B900115469 /* NRMAExceptionHandlerStartupManager.m in Sources */,
 				02FF4A6924DC64E600115469 /* NRMAHTTPTransactionMeasurementProducer.m in Sources */,
 				02FF4A3124DC64AE00115469 /* NRMAHTTPTransaction.m in Sources */,
+				F8701F482E79E0E70008D6E1 /* SessionReplaySwiftUITagging.swift in Sources */,
 				02FF487F24DC61A100115469 /* NRMANSURLConnectionDelegate.m in Sources */,
 				02FF4A1A24DC648600115469 /* NRMAMeasurementTransmitter.m in Sources */,
 				02FF493824DC625A00115469 /* NRMAExceptionReportAdaptor.mm in Sources */,
+				F8701EC12E79A6030008D6E1 /* SwiftUIThingyHeuristics.swift in Sources */,
 				3493DF002D3844C400BF5BED /* SessionReplayCapture.swift in Sources */,
 				02FF4A5224DC64D500115469 /* NRMAActivityTraceMeasurement.m in Sources */,
 				02FF4A9924DC652E00115469 /* NRLogger.m in Sources */,
@@ -5585,6 +5608,7 @@
 				02FF496A24DC629000115469 /* NRMAHarvestResponse.m in Sources */,
 				02FF4A5524DC64D500115469 /* NRMAMethodSummaryMeasurement.m in Sources */,
 				02FF485E24DC615A00115469 /* NRMALoggerBridge.mm in Sources */,
+				F8701EC32E79A6210008D6E1 /* SwiftUITextThingy.swift in Sources */,
 				02FF496E24DC629000115469 /* NRMAHarvesterConfiguration.m in Sources */,
 				02FF483F24DC614200115469 /* NRMATraceMachineAgentUserInterface.m in Sources */,
 				02FF488224DC61A100115469 /* NRMANSURLConnectionDelegateBase.m in Sources */,
