@@ -36,6 +36,7 @@ enum SwiftUIThingyHeuristics {
     static func isLikelySwiftUIView(_ view: UIView) -> Bool {
         if view is UILabel || view is UIImageView || view is UITextView || view is UITextField || view is UIVisualEffectView { return false }
         let name = NSStringFromClass(type(of: view))
+        if name.contains("UIKitNavigationBar") { return false } // UINavigationBar wrapper
         if name.contains("SwiftUI") { return true }
         if name.hasPrefix("_Tt") && name.contains("SwiftUI") { return true }
         if name.contains("UIHosting") { return true }
@@ -51,28 +52,19 @@ enum SwiftUIThingyHeuristics {
         if let info = textInfoFromTextLayers(of: view.layer) { return info }
 
         // 2) Descendant search for common UIKit text-bearing views
-        //if let info = findDescendantTextInfo(in: view, maxDepth: 3) { return info }
+        if let info = findDescendantTextInfo(in: view, maxDepth: 3) { return info }
 
         // 3) Accessibility fallback on self, then descendants
         if let lbl = nonEmpty(view.accessibilityLabel) ?? nonEmpty(view.accessibilityValue) {
             return buildInfo(text: lbl, font: nil, alignment: nil, color: nil)
         }
-        //if let info = findDescendantAccessibilityText(in: view, maxDepth: 2) { return info }
+        if let info = findDescendantAccessibilityText(in: view, maxDepth: 2) { return info }
 
         return nil
     }
 
     @MainActor
     static func snapshotIfReasonable(view: UIView) -> UIImage? {
-//        let drawingViewClass: AnyClass? = NSClassFromString("SwiftUI.CGDrawingView")
-//        //let graphicsViewClass: AnyClass? = NSClassFromString("SwiftUI._UIGraphicsView")
-//        // Only attempt snapshot for likely drawing-backed SwiftUI views
-//        if let d = drawingViewClass, view.isKind(of: d) == false
-//          // let g = graphicsViewClass, view.isKind(of: g) == false
-//        {
-//            // If both classes resolve and view is neither, skip snapshot.
-//            return nil
-//        }
         let size = view.bounds.size
         guard size.width >= minDimension, size.height >= minDimension else { return nil }
         let area = size.width * size.height * UIScreen.main.scale * UIScreen.main.scale
@@ -80,7 +72,6 @@ enum SwiftUIThingyHeuristics {
 
         let format = UIGraphicsImageRendererFormat()
         format.scale = UIScreen.main.scale
-        format.opaque = view.isOpaque
         let renderer = UIGraphicsImageRenderer(size: size, format: format)
         return renderer.image { ctx in
             view.layer.render(in: ctx.cgContext)
