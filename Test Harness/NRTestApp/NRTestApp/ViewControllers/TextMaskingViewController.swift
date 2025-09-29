@@ -8,6 +8,8 @@
 import UIKit
 import NewRelic
 
+#if os(iOS) || os(tvOS)
+
 class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     var viewModel = TextMaskingViewModel()
 
@@ -401,3 +403,4 @@ class MaskTestTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 }
+#endif

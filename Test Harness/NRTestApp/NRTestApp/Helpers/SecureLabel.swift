@@ -7,6 +7,8 @@
 
 import UIKit
 
+#if os(iOS) || os(tvOS)
+
 class SecureLabel: UILabel {
 
 }
@@ -14,3 +16,5 @@ class SecureLabel: UILabel {
 class UnsecureLabel: UILabel {
 
 }
+
+#endif
