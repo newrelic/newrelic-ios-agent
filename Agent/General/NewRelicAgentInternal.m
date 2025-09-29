@@ -828,9 +828,7 @@ static UIBackgroundTaskIdentifier background_task;
             }
 
             @synchronized (kNRMA_APPLICATION_WILL_TERMINATE) {
-                if(self.appWillTerminate) {
-                    return;
-                }
+
                 NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
 #ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
                 @try {
@@ -850,9 +848,6 @@ static UIBackgroundTaskIdentifier background_task;
 #ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
             @try {
 #endif
-                if(self.appWillTerminate) {
-                    return;
-                }
                 NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
                 [[[NRMAHarvestController harvestController] harvester] execute];
 #ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
