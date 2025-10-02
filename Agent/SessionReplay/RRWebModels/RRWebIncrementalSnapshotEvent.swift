@@ -123,7 +123,8 @@ struct RRWebMutationData: Codable {
                             attributes[String(parts[0])] = String(parts[1])
                         }
                     }
-                } else {
+                }
+                else {
                     // Handle non-style attributes directly
                     attributes[key.stringValue] = value
                 }
