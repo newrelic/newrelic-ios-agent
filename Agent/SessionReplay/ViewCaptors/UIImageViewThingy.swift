@@ -16,6 +16,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
     var viewDetails: ViewDetails
     let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
     var image: UIImage?
+
+    var imageURL: URL?
     var contentMode: [String: String]
     
     var shouldRecordSubviews: Bool {
@@ -33,7 +35,11 @@ class UIImageViewThingy: SessionReplayViewThingy {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
         if !self.isMasked {
-            self.image = (view.image ?? nil)
+            if let url = view.image?.NRSessionReplayImageURL {
+                imageURL = url
+            } else {
+                self.image = (view.image ?? nil)
+            }
         }
         
         self.contentMode = view.contentModeToCSS()
@@ -65,8 +71,12 @@ class UIImageViewThingy: SessionReplayViewThingy {
                                    attributes: ["id":viewDetails.cssSelector],
                                    childNodes: [])
         elementNode.attributes["style"] = inlineCSSDescription()
-        if let imageData = image?.optimizedPngData() {
-            elementNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+        if !isMasked {
+            if let url = imageURL {
+                elementNode.attributes["src"] = url.absoluteString
+            } else if let imageData = image?.optimizedPngData() {
+                elementNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+            }
         }
         
         let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
@@ -75,7 +85,18 @@ class UIImageViewThingy: SessionReplayViewThingy {
     }
     
     func generateRRWebNode() -> ElementNodeData {
-        if let imageData = image?.optimizedPngData() {
+        if isMasked {
+            return ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .image,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        }
+        if let url = imageURL {
+            return ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .image,
+                                   attributes: ["id":viewDetails.cssSelector, "src": url.absoluteString],
+                                   childNodes: [])
+        } else if let imageData = image?.optimizedPngData() {
             return ElementNodeData(id: viewDetails.viewId,
                                    tagName: .image,
                                    attributes: ["id":viewDetails.cssSelector,"src":"data:image/png;base64,\(imageData.base64EncodedString())"],
@@ -88,14 +109,22 @@ class UIImageViewThingy: SessionReplayViewThingy {
         }
     }
     
-    static func imagesAreLikelyEqual(_ img1: UIImage?, _ img2: UIImage?) -> Bool {
-        guard let img1 = img1, let img2 = img2 else { return img1 == nil && img2 == nil }
-
-        // Compare optimized image data
-        let data1 = img1.optimizedPngData()
-        let data2 = img2.optimizedPngData()
-        
-        return data1 == data2
+    // Helper to produce stable src representation
+    private func currentSrcRepresentation() -> String? {
+        guard !isMasked else { return nil }
+        if let url = imageURL { return url.absoluteString }
+        if let data = image?.optimizedPngData() { return "data:image/png;base64,\(data.base64EncodedString())" }
+        return nil
+    }
+    
+    static func imagesOrURLsAreLikelyEqual(lhs: UIImageViewThingy, rhs: UIImageViewThingy) -> Bool {
+        if lhs.isMasked && rhs.isMasked { return true }
+        if lhs.isMasked != rhs.isMasked { return false }
+        if let lURL = lhs.imageURL, let rURL = rhs.imageURL { return lURL == rURL }
+        // Fallback: compare optimized PNG data representations
+        let ld = lhs.image?.optimizedPngData()
+        let rd = rhs.image?.optimizedPngData()
+        return ld == rd
     }
     
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
@@ -108,10 +137,10 @@ class UIImageViewThingy: SessionReplayViewThingy {
         allAttributes["style"] = typedOther.inlineCSSDescription()
 
         if !typedOther.isMasked {
-            if !UIImageViewThingy.imagesAreLikelyEqual(self.image, typedOther.image) {
-                if let imageData = typedOther.image?.optimizedPngData() {
-                    allAttributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
-                }
+            let oldSrc = self.currentSrcRepresentation()
+            let newSrc = typedOther.currentSrcRepresentation()
+            if oldSrc != newSrc, let newSrc = newSrc {
+                allAttributes["src"] = newSrc
             }
         }
             
@@ -126,14 +155,18 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
 extension UIImageViewThingy: Equatable {
     static func == (lhs: UIImageViewThingy, rhs: UIImageViewThingy) -> Bool {
-        return lhs.viewDetails == rhs.viewDetails && UIImageViewThingy.imagesAreLikelyEqual(lhs.image, rhs.image)
+        return lhs.viewDetails == rhs.viewDetails && UIImageViewThingy.imagesOrURLsAreLikelyEqual(lhs: lhs, rhs: rhs)
     }
 }
 
 extension UIImageViewThingy: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(viewDetails)
-        hasher.combine(image?.hashValue ?? 0)
+        if let url = imageURL {
+            hasher.combine(url.absoluteString)
+        } else {
+            hasher.combine(image?.hashValue ?? 0)
+        }
     }
 }
 
@@ -249,5 +282,26 @@ internal extension UIImageView {
         }
         
         return cssProperties
+    }
+}
+
+
+fileprivate var associatedSessionReplayImageURLKey: String = "NRSessionReplayImageURL"
+
+extension UIImage {
+    /// Public hook allowing host apps to supply the original remote image URL so Session Replay can reference
+    /// the URL instead of embedding base64 image data when possible.
+    public var NRSessionReplayImageURL: URL? {
+        set {
+            withUnsafePointer(to: &associatedSessionReplayImageURLKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+        
+        get {
+            withUnsafePointer(to: &associatedSessionReplayImageURLKey) {
+                objc_getAssociatedObject(self, $0) as? URL
+            }
+        }
     }
 }
