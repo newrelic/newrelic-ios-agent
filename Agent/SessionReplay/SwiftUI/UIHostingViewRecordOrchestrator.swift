@@ -28,6 +28,8 @@ final class UIHostingViewRecordOrchestrator {
                                    context: SwiftUIContext,
                                    viewAttributes: SwiftUIViewAttributes,
                                    parentId: Int) -> [any SessionReplayViewThingy] {
+
+
         
         if let cls = _UIGraphicsViewClass, type(of: view).isSubclass(of: cls) { return [] }
         
@@ -53,7 +55,7 @@ final class UIHostingViewRecordOrchestrator {
     }
     
     // Unified traversal for content + effects
-    private static func traverseDisplayList(items: [SwiftUIDisplayList.Item],
+    private static func traverseDisplayList(items: [SwiftUIDisplayList.DisplayListItem],
                                             context: SwiftUIContext,
                                             renderer: SwiftUIDisplayList.ViewRenderer,
                                             viewAttributes: SwiftUIViewAttributes,
@@ -111,7 +113,7 @@ final class UIHostingViewRecordOrchestrator {
     }
     
     // Consolidated content handling
-    private static func buildContentThingy(item: SwiftUIDisplayList.Item,
+    private static func buildContentThingy(item: SwiftUIDisplayList.DisplayListItem,
                                            content: SwiftUIDisplayList.Content,
                                            baseContext: SwiftUIContext,
                                            renderer: SwiftUIDisplayList.ViewRenderer,
@@ -153,36 +155,39 @@ final class UIHostingViewRecordOrchestrator {
                 _ = style.lineBreakMode
             }
 
-            // Extract accessibility identifier via deep reflection on original view
-//            NRLOG_DEBUG("═══════════════════════════════════════════")
-//            NRLOG_DEBUG("🔍 Attempting to extract accessibility info from text view")
-//            SwiftUIDeepReflector.debugPrintTopLevel(of: textView.originalSubject, label: "Text View Original Subject")
-
-            //let accessibilityInfo = SwiftUIDeepReflector.extractAccessibilityInfo(from: textView.originalSubject)
-            //NRLOG_DEBUG("Final result - acc info = \(String(describing: accessibilityInfo))")
-            // TODO: FIx AccessibilityIdentifier getting
-            var accessibilityIdentifier: String? //accessibilityInfo?.identifier
-
+            // Extract masking state from the view using NRMaskingExtractor
             var details = makeDetails()
 
-            // Apply masking based on accessibility identifier
-            if let identifier = accessibilityIdentifier {
-                if identifier == "nr-mask" || identifier.hasSuffix(".nr-mask") {
+            // Try to extract masking state from custom view modifier
+            if let maskingState = NRMaskingExtractor.extractMaskingState(from: textView.originalSubject) {
+                switch maskingState {
+                case .masked:
                     details.isMasked = true
-                } else if identifier == "nr-unmask" || identifier.hasSuffix(".nr-unmask") {
+                case .unmasked:
                     details.isMasked = false
+                case .custom(let identifier):
+                    // Custom identifier: check against global masking lists
+                    details.viewIdentifier = identifier
+                    // TODO: Check against global masking lists
+                    // if let agent = NewRelicAgentInternal.sharedInstance() {
+                    //     if agent.isViewIdentifierMasked(identifier) {
+                    //         details.isMasked = true
+                    //     } else if agent.isViewIdentifierUnmasked(identifier) {
+                    //         details.isMasked = false
+                    //     }
+                    // }
                 }
-                // TODO: Check against global masking lists
-                // else {
-                //     if let agent = NewRelicAgentInternal.sharedInstance() {
-                //         if agent.isAccessibilityIdentifierMasked(identifier) {
-                //             details.isMasked = true
-                //         } else if agent.isAccessibilityIdentifierUnmasked(identifier) {
-                //             details.isMasked = false
-                //         }
-                //     }
-                // }
             }
+
+//            // Fallback: Try accessibility identifier for backward compatibility
+//            if details.isMasked == nil {
+//                let accessibilityInfo = SwiftUIDeepReflector.extractAccessibilityInfo(from: textView.originalSubject)
+//                if let identifier = accessibilityInfo?.identifier {
+//                    if let legacyMaskingState = NRMaskingExtractor.extractMaskingStateFromAccessibilityIdentifier(identifier) {
+//                        details.isMasked = legacyMaskingState.isMasked
+//                    }
+//                }
+//            }
 
             return UILabelThingy(viewDetails: details,
                                  text: storage.string,

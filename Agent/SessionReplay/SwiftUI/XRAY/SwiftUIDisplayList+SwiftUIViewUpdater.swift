@@ -145,7 +145,7 @@ extension SwiftUIDisplayList.Content.Value: XrayConvertible {
     }
 }
 @available(iOS 13.0, tvOS 13.0, *)
-extension SwiftUIDisplayList.Item: XrayConvertible {
+extension SwiftUIDisplayList.DisplayListItem: XrayConvertible {
     init(xray: XrayDecoder) throws {
         identity = try xray.extract(SwiftUIConstants.identityPath)
         value = try xray.extract(SwiftUIConstants.valuePath)
@@ -154,19 +154,19 @@ extension SwiftUIDisplayList.Item: XrayConvertible {
 }
 
 @available(iOS 13.0, tvOS 13.0, *)
-extension SwiftUIDisplayList.Item.Value: XrayConvertible {
+extension SwiftUIDisplayList.DisplayListItem.Value: XrayConvertible {
     init(xray: XrayDecoder) throws {
         switch (xray.displayStyle, xray.childIfPresent(0)) {
         case let (RunTimeTypeInspector.DisplayStyle.enum(SwiftUIConstants.effect.rawValue), tuple as (Any, Any)):
             let p1 = try xray.xray(tuple.0) as SwiftUIDisplayList.Effect
             let p2 = try xray.xray(tuple.1) as SwiftUIDisplayList
-            self = try SwiftUIDisplayList.Item.Value.effect(p1,p2)
+            self = try SwiftUIDisplayList.DisplayListItem.Value.effect(p1,p2)
 
         case let (RunTimeTypeInspector.DisplayStyle.enum(SwiftUIConstants.content.rawValue), value):
-            self = try SwiftUIDisplayList.Item.Value.content(xray.xray(value))
+            self = try SwiftUIDisplayList.DisplayListItem.Value.content(xray.xray(value))
 
         default:
-            self = SwiftUIDisplayList.Item.Value.unknown
+            self = SwiftUIDisplayList.DisplayListItem.Value.unknown
         }
     }
 }

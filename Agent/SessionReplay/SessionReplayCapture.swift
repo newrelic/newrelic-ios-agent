@@ -107,16 +107,49 @@ class SessionReplayCapture {
     }
     
     private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
-        //          let viewType = String(describing: type(of: originalView))
-        //              NRLOG_DEBUG("Finding recorder for view type: \(viewType)")
+//          let viewType = String(describing: type(of: originalView))
+//              print("Finding recorder for view type: \(viewType)")
         
         if let viewController = extractVC(from: originalView),
            ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
-            // NRLOG_DEBUG("Finding recorder for CLASS NAME: \(className)")
+                      let viewType = String(describing: type(of: originalView))
+                        //  print("Finding recorder for view type: \(viewType)")
+            let className = NSStringFromClass(type(of: viewController))
+             //NRLOG_DEBUG("Finding recorder for CLASS NAME: \(className)")
+            
+
+
+            
             
             let hostingThingy = UIViewThingy(view: originalView,
                                              viewDetails: ViewDetails(view: originalView))
             //NRLOG_DEBUG("HOSTING THINGY: \(hostingThingy) frame: \(hostingThingy.viewDetails.frame) viewId: \(hostingThingy.viewDetails.viewId) parentId: \(hostingThingy.viewDetails.parentId ?? -1)")
+            
+            
+            print("--- 🚀 Starting SwiftUI View Inspection ---")
+            if let viewToAnalyze = getSwiftUIView(from: originalView) {
+                
+    
+                let associatedModifiers = DeepReflection.analyze(view: viewToAnalyze)
+                
+                print("\n🔬 Associated Modifiers by View ID:")
+                for (id, modifiers) in associatedModifiers {
+                    print("\n  - ID: '\(id)'")
+                    guard !modifiers.isEmpty else {
+                        print("    (No direct modifiers)")
+                        continue
+                    }
+                    for modifier in modifiers {
+                        print("    - \(type(of: modifier))")
+                    }
+                }
+                print("\n--- ✅ Inspection Complete ---")
+            }
+            else {
+                print("Could not get root view from hosting controller.")
+                return hostingThingy
+
+            }
             
             let viewAttributes = SwiftUIViewAttributes(frame: hostingThingy.viewDetails.frame,
                                                        clip: hostingThingy.viewDetails.clip,

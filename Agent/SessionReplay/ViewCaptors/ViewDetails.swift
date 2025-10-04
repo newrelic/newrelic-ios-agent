@@ -27,6 +27,9 @@ struct ViewDetails {
     // Indicates if this view should have its content masked in session replay
     var isMasked: Bool?
 
+    // Custom identifier for the view (from nrMaskingIdentifier modifier)
+    var viewIdentifier: String?
+
     var cssSelector: String {
         "\(self.viewName)-\(self.viewId)"
     }

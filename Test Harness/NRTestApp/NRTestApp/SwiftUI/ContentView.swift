@@ -6,6 +6,7 @@ struct SwiftUIContentView: View {
             List {
                 NavigationLink(destination: MaskingView()) {
                     Text("Masking")
+                        .accessibilityIdentifier("nr-mask")
                 }
                 NavigationLink(destination: ButtonsView()) {
                     Text("Buttons")

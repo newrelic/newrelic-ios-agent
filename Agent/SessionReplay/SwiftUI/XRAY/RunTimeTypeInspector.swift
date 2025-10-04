@@ -19,6 +19,8 @@ public struct RunTimeTypeInspector {
         case tuple
         case `nil`
         case opaque
+        // IDENTIIFED COLDMINE
+//        case `enum`(case: Any)
     }
     
     // MARK: - Path

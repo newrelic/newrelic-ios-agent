@@ -1,5 +1,5 @@
 //
-//  runTimeTypeInspector.swift
+//  SwiftUIDisplayList.swift
 //  Agent
 //
 //  Created by Chris Dillard on 9/25/25.
@@ -10,7 +10,7 @@ import SwiftUI
 
 @available(iOS 13.0, tvOS 13.0, *)
 internal struct SwiftUIDisplayList {
-    let items: [Item]
+    let items: [DisplayListItem]
 
     internal struct Identity: Hashable {
         let value: UInt32
@@ -78,7 +78,7 @@ internal struct SwiftUIDisplayList {
         let value: Value
     }
 
-    internal struct Item {
+    internal struct DisplayListItem {
         internal enum Value {
             case effect(Effect, SwiftUIDisplayList)
             case content(Content)

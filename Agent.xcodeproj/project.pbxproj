@@ -875,6 +875,7 @@
 		2B03406A2E8753B600182A70 /* SwiftUIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0340692E8753B200182A70 /* SwiftUIConstants.swift */; };
 		2B0340952E8B057000182A70 /* Data+md5Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0340942E8B056B00182A70 /* Data+md5Hex.swift */; };
 		2B0340972E8B0BA200182A70 /* UIImageOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0340962E8B0B9C00182A70 /* UIImageOrientation.swift */; };
+		2B0950EC2E8F4F3E002ED352 /* Reflector2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0950D82E8F4F3A002ED352 /* Reflector2.swift */; };
 		2B0B6BAD2DEA349D0080C3D6 /* UITextFieldThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */; };
 		2B0B6BAE2DEA349D0080C3D6 /* UITextViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -894,6 +895,12 @@
 		2B3493742E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */; };
 		2B3493752E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */; };
 		2B3493772E8EFAD9006DE9D0 /* SwiftUIDeepReflector+Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493762E8EFAD1006DE9D0 /* SwiftUIDeepReflector+Views.swift */; };
+		2B3493852E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
+		2B3493862E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
+		2B3493872E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
+		2B3493892E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */; };
+		2B34938A2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */; };
+		2B34938B2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */; };
 		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
 		2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
@@ -2457,6 +2464,7 @@
 		2B0340692E8753B200182A70 /* SwiftUIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIConstants.swift; sourceTree = "<group>"; };
 		2B0340942E8B056B00182A70 /* Data+md5Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+md5Hex.swift"; sourceTree = "<group>"; };
 		2B0340962E8B0B9C00182A70 /* UIImageOrientation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageOrientation.swift; sourceTree = "<group>"; };
+		2B0950D82E8F4F3A002ED352 /* Reflector2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reflector2.swift; sourceTree = "<group>"; };
 		2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextFieldThingy.swift; sourceTree = "<group>"; };
 		2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextViewThingy.swift; sourceTree = "<group>"; };
 		2B33E5BD2AA9160E00AEB7B4 /* NRMASessionEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASessionEvent.m; sourceTree = "<group>"; };
@@ -2471,6 +2479,8 @@
 		2B3493672E8EE254006DE9D0 /* RandomString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomString.swift; sourceTree = "<group>"; };
 		2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIDeepReflector.swift; sourceTree = "<group>"; };
 		2B3493762E8EFAD1006DE9D0 /* SwiftUIDeepReflector+Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SwiftUIDeepReflector+Views.swift"; sourceTree = "<group>"; };
+		2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMaskingViewModifier.swift; sourceTree = "<group>"; };
+		2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMaskingExtractor.swift; sourceTree = "<group>"; };
 		2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHTTPUtilitiesTests.m; sourceTree = "<group>"; };
 		2B5814382E87163A005D62D4 /* XrayConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XrayConvertible.swift; sourceTree = "<group>"; };
 		2B58144F2E87218F005D62D4 /* SVGStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGStrings.swift; sourceTree = "<group>"; };
@@ -3899,6 +3909,7 @@
 		2B0340642E873D5C00182A70 /* XRAY */ = {
 			isa = PBXGroup;
 			children = (
+				2B0950D82E8F4F3A002ED352 /* Reflector2.swift */,
 				2B3493762E8EFAD1006DE9D0 /* SwiftUIDeepReflector+Views.swift */,
 				2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */,
 				2B5814382E87163A005D62D4 /* XrayConvertible.swift */,
@@ -3932,6 +3943,8 @@
 		2BAE5C632E85EDE7001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */,
+				2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */,
 				2BAE5C4E2E85EA27001D2B88 /* UIHostingViewRecordOrchestrator.swift */,
 				2BDB78D02E8C42B400357BC1 /* SwiftUIViewAttributes.swift */,
 				2B0340692E8753B200182A70 /* SwiftUIConstants.swift */,
@@ -5557,6 +5570,7 @@
 				02FF4A5224DC64D500115469 /* NRMAActivityTraceMeasurement.m in Sources */,
 				02FF4A9924DC652E00115469 /* NRLogger.m in Sources */,
 				02FF480B24DB573E00115469 /* NRMAUserActionBuilder.m in Sources */,
+				2B3493892E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */,
 				2BAE5C762E85F714001D2B88 /* SwiftUIImageRepresentable.swift in Sources */,
 				2BAE5C622E85EA2E001D2B88 /* UIHostingViewRecordOrchestrator.swift in Sources */,
 				02FF49A024DC62B800115469 /* NRMAScopedMeasurements.m in Sources */,
@@ -5722,6 +5736,7 @@
 				F891A6BE2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */,
 				F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */,
 				02FF48D924DC622700115469 /* NRMACrashDataWriter.m in Sources */,
+				2B0950EC2E8F4F3E002ED352 /* Reflector2.swift in Sources */,
 				02FF487224DC618F00115469 /* NRGCDOverride.m in Sources */,
 				F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */,
 				02FF494D24DC626E00115469 /* NRMAHarvesterConnection.m in Sources */,
@@ -5730,6 +5745,7 @@
 				02FF491724DC624400115469 /* NRMACrashReport_Stack.m in Sources */,
 				02FF4A0224DC647200115469 /* NRMAMeasurementType.m in Sources */,
 				02FF493D24DC625A00115469 /* NRMAHandledExceptions.mm in Sources */,
+				2B3493862E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */,
 				02FF4AAE24DC652E00115469 /* NRMABase64.m in Sources */,
 				2B34935C2E8DBF55006DE9D0 /* SwiftUIContext.swift in Sources */,
 				341E85062D9F4B5600968D7D /* SerializedNode.swift in Sources */,
@@ -6028,12 +6044,14 @@
 				02FF4C7324E3201400115469 /* NRMAReachability.m in Sources */,
 				02FF4C7424E3201400115469 /* NRMAMeasurementEngine.m in Sources */,
 				F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */,
+				2B34938B2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */,
 				02FF4C7524E3201400115469 /* NRMAAssociate.m in Sources */,
 				02FF4C7624E3201400115469 /* NRMANetworkFacade.mm in Sources */,
 				02FF4C7724E3201400115469 /* NRMAThreadLocalStore.m in Sources */,
 				02FF4C7824E3201400115469 /* NRMANetworkRequestData.mm in Sources */,
 				02FF4C7924E3201400115469 /* NRMAWebRequestUtil.m in Sources */,
 				02FF4C7A24E3201400115469 /* NRMAThreadInfo.m in Sources */,
+				2B3493872E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */,
 				02FF4C7B24E3201400115469 /* NRMATrace.m in Sources */,
 				02FF4C7C24E3201400115469 /* NRMACrashReport_Thread.m in Sources */,
 				02FF4C7D24E3201400115469 /* NRMAActivityTraces.m in Sources */,
@@ -6196,6 +6214,7 @@
 				3482334C2BC5F2710070FAC3 /* NRMAURLSessionTaskSearch.m in Sources */,
 				348232DA2BC5F2050070FAC3 /* NRMAHarvestableTrace.m in Sources */,
 				3482329B2BC5F1D70070FAC3 /* NRMAMeasurementException.m in Sources */,
+				2B34938A2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */,
 				348233892BC5F3120070FAC3 /* NRMAActivityNameGenerator.m in Sources */,
 				348232EF2BC5F2050070FAC3 /* NRMAApplicationInformation.m in Sources */,
 				3482326A2BC5F1970070FAC3 /* NRMAUUIDStore.m in Sources */,
@@ -6303,6 +6322,7 @@
 				3482324E2BC5F13E0070FAC3 /* NRMAReachability.m in Sources */,
 				348232C52BC5F1FE0070FAC3 /* NRMAHarvestableValue.m in Sources */,
 				3482331D2BC5F21B0070FAC3 /* NRMAExceptionhandlerConstants.m in Sources */,
+				2B3493852E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */,
 				348232A32BC5F1DD0070FAC3 /* NRMAMethodMeasurementProducer.m in Sources */,
 				348233582BC5F2780070FAC3 /* NRMANSURLConnectionDelegateBase.m in Sources */,
 				3482327A2BC5F1A80070FAC3 /* NRMAMeasurementPool.m in Sources */,

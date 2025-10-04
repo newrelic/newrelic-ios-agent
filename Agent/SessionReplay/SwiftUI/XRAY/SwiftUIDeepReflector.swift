@@ -369,68 +369,6 @@ public struct SwiftUIDeepReflector {
 
         return traits
     }
-
-    // MARK: - Debug Helpers
-
-    /// Prints the entire view hierarchy for debugging purposes
-    public static func debugPrintHierarchy(of view: Any, maxDepth: Int = 10) {
-        _debugPrint(subject: view, depth: 0, maxDepth: maxDepth, prefix: "")
-    }
-
-    /// Prints ONLY the top-level structure without recursion (compact view)
-    public static func debugPrintTopLevel(of view: Any, label: String = "Subject") {
-        let inspector = RunTimeTypeInspector(subject: view)
-        let typeName = String(describing: type(of: view))
-
-        NRLOG_DEBUG("═══════════════════════════════════════════")
-        NRLOG_DEBUG("📋 \(label)")
-        NRLOG_DEBUG("Type: \(typeName)")
-        NRLOG_DEBUG("DisplayStyle: \(inspector.displayStyle)")
-        NRLOG_DEBUG("Children: \(inspector.children.count)")
-        NRLOG_DEBUG("───────────────────────────────────────────")
-
-        for (index, child) in inspector.children.enumerated() {
-            let childType = String(describing: type(of: child.value))
-            let childLabel = child.label ?? "<unlabeled-\(index)>"
-            NRLOG_DEBUG("  [\(index)] \(childLabel)")
-            NRLOG_DEBUG("      Type: \(childType)")
-
-            if let stringValue = child.value as? String {
-                NRLOG_DEBUG("      Value: \"\(stringValue)\"")
-            }
-
-            // Show immediate children count if it's a struct/class
-            let childInspector = RunTimeTypeInspector(subject: child.value)
-            if childInspector.children.count > 0 {
-                NRLOG_DEBUG("      Children: \(childInspector.children.count)")
-            }
-        }
-
-        if let superMirror = inspector.superclassMirror {
-            NRLOG_DEBUG("───────────────────────────────────────────")
-            NRLOG_DEBUG("Superclass children: \(superMirror.children.count)")
-        }
-
-        NRLOG_DEBUG("═══════════════════════════════════════════")
-    }
-
-    private static func _debugPrint(subject: Any, depth: Int, maxDepth: Int, prefix: String) {
-        guard depth < maxDepth else { return }
-
-        let inspector = RunTimeTypeInspector(subject: subject)
-        let typeName = String(describing: type(of: subject))
-
-        print("\(prefix)[\(depth)] \(typeName)")
-
-        for child in inspector.children {
-            let label = child.label ?? "<unlabeled>"
-            let childType = String(describing: type(of: child.value))
-            print("\(prefix)  • \(label): \(childType)")
-
-            // Recursively print children
-            _debugPrint(subject: child.value, depth: depth + 1, maxDepth: maxDepth, prefix: prefix + "    ")
-        }
-    }
 }
 
 // MARK: - Convenience Extensions
