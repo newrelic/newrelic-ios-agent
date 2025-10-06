@@ -109,6 +109,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime {
     self = [super init];
     if(self){
+        
+        // Used in New and Old EventSystem.
+        if(__has_feature(cxx_exceptions)) {\
+            LibLogger::setLogger(std::make_shared<NewRelic::NRMALoggerBridge>(NewRelic::NRMALoggerBridge()));
+        }
+
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
             NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
@@ -156,7 +162,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
 
             NSString* documentDirURL = [NewRelicInternalUtils getStorePath];
-            LibLogger::setLogger(std::make_shared<NewRelic::NRMALoggerBridge>(NewRelic::NRMALoggerBridge()));
             _analyticsController = std::make_shared<NewRelic::AnalyticsController>(sessionStartTime,documentDirURL.UTF8String, [NRMAAnalytics eventDupStore], [NRMAAnalytics attributeDupStore]);
             //__kNRMA_RA_upgradeFrom and __kNRMA_RA_install are only valid for one session
             //and will be set shortly after the initialization of NRMAAnalytics.
