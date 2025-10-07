@@ -875,7 +875,6 @@
 		2B03406A2E8753B600182A70 /* SwiftUIConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0340692E8753B200182A70 /* SwiftUIConstants.swift */; };
 		2B0340952E8B057000182A70 /* Data+md5Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0340942E8B056B00182A70 /* Data+md5Hex.swift */; };
 		2B0340972E8B0BA200182A70 /* UIImageOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0340962E8B0B9C00182A70 /* UIImageOrientation.swift */; };
-		2B0950EC2E8F4F3E002ED352 /* Reflector2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0950D82E8F4F3A002ED352 /* Reflector2.swift */; };
 		2B0B6BAD2DEA349D0080C3D6 /* UITextFieldThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */; };
 		2B0B6BAE2DEA349D0080C3D6 /* UITextViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */; };
 		2B30CFBF283BFC05002341DA /* NewRelic.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -891,10 +890,6 @@
 		2B3493642E8E1440006DE9D0 /* XrayDecoder+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */; };
 		2B3493662E8E1F5A006DE9D0 /* SwiftUIStyledTextRes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493652E8E1F56006DE9D0 /* SwiftUIStyledTextRes.swift */; };
 		2B3493682E8EE257006DE9D0 /* RandomString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493672E8EE254006DE9D0 /* RandomString.swift */; };
-		2B3493732E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */; };
-		2B3493742E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */; };
-		2B3493752E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */; };
-		2B3493772E8EFAD9006DE9D0 /* SwiftUIDeepReflector+Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493762E8EFAD1006DE9D0 /* SwiftUIDeepReflector+Views.swift */; };
 		2B3493852E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
 		2B3493862E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
 		2B3493872E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
@@ -948,6 +943,7 @@
 		2B5CCB09287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */; };
 		2B5CCB1D287DE5E300A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
 		2B5CCB1E287DE5E400A88F5C /* NRMASupportMetricHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */; };
+		2B61A5F42E946EDF00CF6497 /* DeepReflector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B61A5F32E946EDC00CF6497 /* DeepReflector.swift */; };
 		2B706113293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
 		2B706114293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h in Headers */ = {isa = PBXBuildFile; fileRef = 2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */; };
 		2B706115293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */; };
@@ -2464,7 +2460,6 @@
 		2B0340692E8753B200182A70 /* SwiftUIConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIConstants.swift; sourceTree = "<group>"; };
 		2B0340942E8B056B00182A70 /* Data+md5Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+md5Hex.swift"; sourceTree = "<group>"; };
 		2B0340962E8B0B9C00182A70 /* UIImageOrientation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageOrientation.swift; sourceTree = "<group>"; };
-		2B0950D82E8F4F3A002ED352 /* Reflector2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reflector2.swift; sourceTree = "<group>"; };
 		2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextFieldThingy.swift; sourceTree = "<group>"; };
 		2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITextViewThingy.swift; sourceTree = "<group>"; };
 		2B33E5BD2AA9160E00AEB7B4 /* NRMASessionEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASessionEvent.m; sourceTree = "<group>"; };
@@ -2477,8 +2472,6 @@
 		2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XrayDecoder+Navigation.swift"; sourceTree = "<group>"; };
 		2B3493652E8E1F56006DE9D0 /* SwiftUIStyledTextRes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIStyledTextRes.swift; sourceTree = "<group>"; };
 		2B3493672E8EE254006DE9D0 /* RandomString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomString.swift; sourceTree = "<group>"; };
-		2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIDeepReflector.swift; sourceTree = "<group>"; };
-		2B3493762E8EFAD1006DE9D0 /* SwiftUIDeepReflector+Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SwiftUIDeepReflector+Views.swift"; sourceTree = "<group>"; };
 		2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMaskingViewModifier.swift; sourceTree = "<group>"; };
 		2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMaskingExtractor.swift; sourceTree = "<group>"; };
 		2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHTTPUtilitiesTests.m; sourceTree = "<group>"; };
@@ -2488,6 +2481,7 @@
 		2B5814532E872A20005D62D4 /* XrayDecoder+Children.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XrayDecoder+Children.swift"; sourceTree = "<group>"; };
 		2B5CCB07287DE5BB00A88F5C /* NRMASupportMetricHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelper.m; sourceTree = "<group>"; };
 		2B5CCB1C287DE5D900A88F5C /* NRMASupportMetricHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelper.h; sourceTree = "<group>"; };
+		2B61A5F32E946EDC00CF6497 /* DeepReflector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepReflector.swift; sourceTree = "<group>"; };
 		2B7060FF293F990D0097BDC4 /* NRMAURLSessionTaskSearch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMAURLSessionTaskSearch.h; sourceTree = "<group>"; };
 		2B706112293F990D0097BDC4 /* NRMAURLSessionTaskSearch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionTaskSearch.m; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
@@ -3909,9 +3903,7 @@
 		2B0340642E873D5C00182A70 /* XRAY */ = {
 			isa = PBXGroup;
 			children = (
-				2B0950D82E8F4F3A002ED352 /* Reflector2.swift */,
-				2B3493762E8EFAD1006DE9D0 /* SwiftUIDeepReflector+Views.swift */,
-				2B3493722E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift */,
+				2B61A5F32E946EDC00CF6497 /* DeepReflector.swift */,
 				2B5814382E87163A005D62D4 /* XrayConvertible.swift */,
 				2BAE5C642E85EDF7001D2B88 /* XrayDecoder.swift */,
 				2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */,
@@ -5532,6 +5524,7 @@
 				02FF49C624DC62B800115469 /* NRMAHarvestableHTTPTransaction.m in Sources */,
 				2B5814502E872194005D62D4 /* SVGStrings.swift in Sources */,
 				2B3493662E8E1F5A006DE9D0 /* SwiftUIStyledTextRes.swift in Sources */,
+				2B61A5F42E946EDF00CF6497 /* DeepReflector.swift in Sources */,
 				2BAE5C6F2E85F599001D2B88 /* SwiftUIColor.swift in Sources */,
 				02FF49B924DC62B800115469 /* NRMAHarvestableActivity.m in Sources */,
 				02FF4AA324DC652E00115469 /* NRMAUUIDStore.m in Sources */,
@@ -5706,7 +5699,6 @@
 				02FF4A0124DC647200115469 /* NRMAMeasurementEngine.m in Sources */,
 				02FF4AC724DC656900115469 /* NRMAAssociate.m in Sources */,
 				02FF4AD224DC657B00115469 /* NRMANetworkFacade.mm in Sources */,
-				2B3493732E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */,
 				02FF484424DC614200115469 /* NRMAThreadLocalStore.m in Sources */,
 				02FF485C24DC615A00115469 /* NRMANetworkRequestData.mm in Sources */,
 				2B0340632E87366900182A70 /* GetViewRendererByKeyPath.swift in Sources */,
@@ -5736,7 +5728,6 @@
 				F891A6BE2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */,
 				F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */,
 				02FF48D924DC622700115469 /* NRMACrashDataWriter.m in Sources */,
-				2B0950EC2E8F4F3E002ED352 /* Reflector2.swift in Sources */,
 				02FF487224DC618F00115469 /* NRGCDOverride.m in Sources */,
 				F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */,
 				02FF494D24DC626E00115469 /* NRMAHarvesterConnection.m in Sources */,
@@ -5758,7 +5749,6 @@
 				02FF483F24DC614200115469 /* NRMATraceMachineAgentUserInterface.m in Sources */,
 				02FF488224DC61A100115469 /* NRMANSURLConnectionDelegateBase.m in Sources */,
 				3493DF482D4C4BEE00BF5BED /* SessionReplayFrame.swift in Sources */,
-				2B3493772E8EFAD9006DE9D0 /* SwiftUIDeepReflector+Views.swift in Sources */,
 				3493DF4C2D542D9900BF5BED /* UIViewThingy.swift in Sources */,
 				02FF4AD124DC657B00115469 /* NRMAHTTPUtilities.mm in Sources */,
 				02FF49DF24DC636100115469 /* NRMATraceSegment.m in Sources */,
@@ -6031,7 +6021,6 @@
 				02FF4C6524E3201400115469 /* NRMAApplicationInstrumentation.m in Sources */,
 				02FF4C6624E3201400115469 /* NRMAInteractionDataStamp.m in Sources */,
 				F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */,
-				2B3493752E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */,
 				02FF4C6724E3201400115469 /* NRMAAnalytics.mm in Sources */,
 				02FF4C6824E3201400115469 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
 				02FF4C6924E3201400115469 /* NRMAMeasurement.m in Sources */,
@@ -6307,7 +6296,6 @@
 				348233272BC5F2270070FAC3 /* NRMACrashReport.m in Sources */,
 				3482332C2BC5F2270070FAC3 /* NRMACrashReport_Thread.m in Sources */,
 				3482325E2BC5F16E0070FAC3 /* NRMAFileCleanup.m in Sources */,
-				2B3493742E8EFA91006DE9D0 /* SwiftUIDeepReflector.swift in Sources */,
 				348233752BC5F3040070FAC3 /* NRMASAM.mm in Sources */,
 				348233302BC5F2270070FAC3 /* NRMACrashReport_Symbol.m in Sources */,
 				348232A82BC5F1E30070FAC3 /* NRCustomMetrics.m in Sources */,

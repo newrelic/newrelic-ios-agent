@@ -110,6 +110,7 @@ class SessionReplayCapture {
 //          let viewType = String(describing: type(of: originalView))
 //              print("Finding recorder for view type: \(viewType)")
         
+        
         if let viewController = extractVC(from: originalView),
            ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
                       let viewType = String(describing: type(of: originalView))
@@ -130,7 +131,7 @@ class SessionReplayCapture {
             if let viewToAnalyze = getSwiftUIView(from: originalView) {
                 
     
-                let associatedModifiers = DeepReflection.analyze(view: viewToAnalyze)
+                let associatedModifiers = DeepReflector.analyze(view: viewToAnalyze)
                 
                 print("\n🔬 Associated Modifiers by View ID:")
                 for (id, modifiers) in associatedModifiers {
@@ -140,7 +141,34 @@ class SessionReplayCapture {
                         continue
                     }
                     for modifier in modifiers {
-                        print("    - \(type(of: modifier))")
+                        let typeName = String(reflecting: type(of: modifier))
+
+                        print("    - \(typeName)")
+                        
+                        switch typeName {
+                            
+                        case "SwiftUI.AccessibilityAttachmentModifier":
+                            print("gottem")
+                            let mirror = Mirror(reflecting: modifier)
+                            let mirrorChildren = Array(mirror.children)
+                            print(mirror)
+                            print(mirrorChildren)
+                            
+                            let desc = mirror.descendant("storage")
+                            print(desc)
+                            
+                            let desc2 = Mirror(reflecting: desc)
+                           print(desc2.children)
+                            let unwrapped2 =  Mirror(reflecting: desc2.children.first)
+                            
+                            print(unwrapped2)
+                            print("unwrap")
+                            // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
+
+
+                        default:
+                            break
+                        }
                     }
                 }
                 print("\n--- ✅ Inspection Complete ---")
@@ -165,7 +193,7 @@ class SessionReplayCapture {
             //logThingys(thingys)
             
             if !thingys.isEmpty {
-                // NRLOG_DEBUG("Adding \(newThingys) SwiftUI thingys to hosting view thingy")
+                 print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
                 hostingThingy.subviews.append(contentsOf: thingys)
             }
             
