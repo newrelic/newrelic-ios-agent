@@ -707,15 +707,6 @@ void NRMA__wht_voidParamHandler(id self, SEL selector)
 void NRMA__voidParamHandler(id self, SEL selector, NRMAMethodColor methodColor)
 {
     if (self == nil) return;
-
-    static Class UIHostingControllerClass;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        UIHostingControllerClass = NSClassFromString(@"UIHostingController");
-    });
-    if (UIHostingControllerClass && [self isKindOfClass:UIHostingControllerClass]) {
-        return;
-    }
     
     BOOL isTargetColor =  NO;
 
@@ -934,7 +925,7 @@ void NRMA__wht_boolParamHandler(id self, SEL selector, BOOL p1)
 void NRMA__boolParamHandler(id self, SEL selector, NRMAMethodColor targetColor, BOOL p1)
 {
     if (self == nil) return;
-
+    
     BOOL isTargetColor = NO;
 
     NRMATrace* trace = nil;
@@ -1013,6 +1004,11 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
         method = NRMA__getMethod(actingClass, originalSelector);
     }
 
+    NSString *class = NSStringFromClass([self class]);
+    if ([class hasPrefix:@"_TtC"] || [class hasPrefix:@"_TtGC"]) {
+        return method_getImplementation(method);
+    }
+    
     // MARK: this is potentially not thread safe, but every method that we currently tag is invoked on the UI thread [JK, 2/21/14]
     if ([[__startTraceDictionary objectForKey:NSStringFromSelector(selector)] boolValue]) {
 
@@ -1073,7 +1069,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
             [NRMAExceptionHandler logException:exception
                                        class:@"NRMATraceMachine"
                                     selector:@"enterMethod:fromObjectNamed:parentTrace:traceCategory:"];
-            [NRMATraceController cleanup];   
+            [NRMATraceController cleanup];
         }
         #endif
     }
