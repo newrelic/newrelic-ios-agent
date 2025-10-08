@@ -21,20 +21,23 @@ struct MaskingView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     TextField("Masked TextField", text: $maskedInput)
                         .textFieldStyle(.roundedBorder)
-                        .accessibilityIdentifier("nr-mask")
+                        //.accessibilityIdentifier("nr-mask")
                         .nrMasked()
+                        .id("nr-mask")
 
                     TextField("Unmasked TextField", text: $unmaskedInput)
                         .textFieldStyle(.roundedBorder)
-                        .accessibilityIdentifier("nr-unmask")
+                        //.accessibilityIdentifier("nr-unmask")
                         .nrUnmasked()
+                        .id("nr-unmask")
 
                     Text("Masked Text")
-                        .accessibilityIdentifier("nr-mask")
+                        //.accessibilityIdentifier("nr-mask")
                         .nrMasked()
+                        .id("nr-mask")
 
                     Text("Unmasked Text")
-                        .accessibilityIdentifier("nr-unmask")
+                       // .accessibilityIdentifier("nr-unmask")
                         .nrUnmasked()
                 }
 
@@ -49,7 +52,7 @@ struct MaskingView: View {
                     .padding()
                     .background(Color.blue.opacity(0.07))
                     .cornerRadius(8)
-                    .accessibilityIdentifier("nr-mask")
+                    //.accessibilityIdentifier("nr-mask")
                     .nrMasked()
                 }
 
@@ -61,23 +64,23 @@ struct MaskingView: View {
                         .nrUnmasked()
                     TextField("Child unmasked override", text: $unmaskedInput)
                         .textFieldStyle(.roundedBorder)
-                        .accessibilityIdentifier("nr-unmask")
+                        //.accessibilityIdentifier("nr-unmask")
                         .nrUnmasked()
                 }
                 .padding()
                 .background(Color.purple.opacity(0.07))
                 .cornerRadius(8)
-                .accessibilityIdentifier("nr-mask")
+                //.accessibilityIdentifier("nr-mask")
                 .nrMasked()
 
                 sectionTitle("Parent Unmasked → Child Explicit Masked")
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Child Masked Explicit")
-                        .accessibilityIdentifier("nr-mask")
+                        //.accessibilityIdentifier("nr-mask")
                         .nrMasked()
                     TextField("Masked inside unmasked parent", text: $deepMasked)
                         .textFieldStyle(.roundedBorder)
-                        .accessibilityIdentifier("nr-mask")
+                        //.accessibilityIdentifier("nr-mask")
                         .nrMasked()
                     Text("Sibling Unmasked (inherits parent)")
                 }
@@ -93,7 +96,7 @@ struct MaskingView: View {
                         Text("Level 2 (no id)")
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Level 3 Explicit Masked")
-                                .accessibilityIdentifier("nr-mask")
+                                //.accessibilityIdentifier("nr-mask")
                                 .nrMasked()
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Level 4 inherits masked ancestor")
@@ -121,7 +124,7 @@ struct MaskingView: View {
                         .padding(8)
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(6)
-                        .accessibilityIdentifier("nr-mask")
+                        //.accessibilityIdentifier("nr-mask")
                         .nrMasked()
                     Text("Unmasked")
                         .padding(8)
@@ -133,7 +136,7 @@ struct MaskingView: View {
                         .padding(8)
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(6)
-                        .accessibilityIdentifier("nr-mask")
+                        //.accessibilityIdentifier("nr-mask")
                         .nrMasked()
                 }
 
@@ -149,6 +152,7 @@ struct MaskingView: View {
                     }
                     .accessibilityIdentifier("inherited-link")
                     .nrMaskingIdentifier("inherited-link")
+                    
                     NavigationLink("Override Unmasked Link") {
                         TextFieldsView()
                     }
@@ -158,7 +162,7 @@ struct MaskingView: View {
                 .padding()
                 .background(Color.green.opacity(0.08))
                 .cornerRadius(8)
-                .accessibilityIdentifier("nr-mask")
+                //.accessibilityIdentifier("nr-mask")
                 .nrMasked()
             }
             .padding()
@@ -190,4 +194,8 @@ private struct MaskableRow: View {
         .accessibilityIdentifier(masked ? "nr-mask" : "nr-unmask")
         .nrMasking(masked)
     }
+}
+
+#Preview {
+    MaskingView()
 }

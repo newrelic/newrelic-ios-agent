@@ -70,7 +70,7 @@ extension EnvironmentValues {
 // MARK: - View Modifier
 
 @available(iOS 13.0, tvOS 13.0, *)
-private struct NRMaskingViewModifier: ViewModifier {
+struct NRMaskingViewModifier: ViewModifier {
     let maskingState: NRMaskingState
 
     func body(content: Content) -> some View {

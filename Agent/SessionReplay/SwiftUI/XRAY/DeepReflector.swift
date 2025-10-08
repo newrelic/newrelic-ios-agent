@@ -1,21 +1,3 @@
-//
-//  Reflector3.swift
-//  Agent
-//
-//  Created by Chris Dillard on 10/6/25.
-//  Copyright © 2025 New Relic. All rights reserved.
-//
-
-//
-//  Reflector2.swift
-//  Agent
-//
-//  Created by Chris Dillard on 10/2/25.
-//  Copyright © 2025 New Relic. All rights reserved.
-//
-
-import SwiftUI
-
 /// 🔬 A framework for deeply reflecting on a SwiftUI View to extract its modifier chain.
 @available(iOS 13.0, tvOS 13.0, *)
 public enum DeepReflector {
@@ -29,6 +11,9 @@ public enum DeepReflector {
         print("\n🔬 [DeepReflection] ========== STARTING ANALYSIS ==========")
         let rootViewType = "\(type(of: view))"
         print("🔬 [DeepReflection] RootView type: \(rootViewType)")
+        
+        
+        //                 ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>
         if rootViewType == "ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>" {
             print("caught")
             return [:]
@@ -51,7 +36,7 @@ public enum DeepReflector {
             print("🔬 [DeepReflection] 📌 ID: '\(id)' -> \(mods.count) modifier(s)")
             for (idx, modifier) in mods.enumerated() {
                 let modType = String(describing: type(of: modifier))
-                print("🔬 [DeepReflection]   [\(idx)] Type: \(modType)")
+                //print("🔬 [DeepReflection]   [\(idx)] Type: \(modType)")
             }
         }
         print("🔬 [DeepReflection] ==========================================\n")
@@ -77,13 +62,14 @@ public enum DeepReflector {
         let indent = String(repeating: "  ", count: depth)
         
         // Prevent infinite recursion, which can happen with complex or cyclical view structures.
-        guard depth < 64 else {
-            print("\(indent)⚠️ Max recursion depth reached. Halting traversal for this branch.")
+        guard depth < 43 else {
+            //print("\(indent)⚠️ Max recursion depth reached. Halting traversal for this branch.")
             return
         }
         
         let viewTypeName = String(describing: type(of: view))
         
+        //print("\(indent) \(viewTypeName)")
         let mirror = Mirror(reflecting:view)
 
         // **Case 2: IDView** - This wrapper assigns an ID.
@@ -101,6 +87,7 @@ public enum DeepReflector {
         }
         
         
+        // viewTypeName    String    "ResettableLazyLayoutRoot<Tree<LazyVGridLayout, ForEach<Array<Int>, Int, ModifiedContent<ModifiedContent<ModifiedContent<ModifiedContent<ModifiedContent<Text, _FlexFrameLayout>, _PaddingLayout>, _BackgroundModifier<Color>>, _EnvironmentKeyWritingModifier<Optional<Color>>>, _ClipEffect<RoundedRectangle>>>>>"
         if let view = view as? any View {
             
             // SwiftUI Internal Wrappers
@@ -121,7 +108,17 @@ public enum DeepReflector {
                 viewTypeName.starts(with: "ForEach<") ||
                 viewTypeName.starts(with: "NavigationView<") ||
                 viewTypeName.starts(with: "List<") ||
-                
+                viewTypeName.starts(with: "AnyViewStorage<") ||
+                viewTypeName.starts(with: "NavigationLink<") ||
+                viewTypeName.starts(with: "ScrollView<") ||
+                viewTypeName.starts(with: "ResolvedPicker<") ||
+                viewTypeName.starts(with: "LazyVGrid<") ||
+                viewTypeName.starts(with: "LazyHGrid<") ||
+                viewTypeName.starts(with: "LazyGrid<") ||
+                viewTypeName.starts(with: "ResettableLazyLayoutRoot<") ||
+                viewTypeName.starts(with: "ClipEffect<") ||
+
+
                 // Leaf views
                 viewTypeName == "Element" ||
                 viewTypeName == "ListStyleContent" ||
@@ -141,6 +138,7 @@ public enum DeepReflector {
                 
                 
             {
+                //
                 // **Case 1: SwftUI Internals or Leaf Views --- ModifiedContent** - The core of modifier extraction.
                 // This is the wrapper for any `.modifier()` call. We peel it off and recurse.
                 if viewTypeName.starts(with: "ModifiedContent") {
@@ -159,13 +157,16 @@ public enum DeepReflector {
                 }
                 
                 if viewTypeName.starts(with: "TupleView<") {
-                    if let childValue =
-                        mirror.children.first?.value {
-                        for child in Mirror(reflecting: childValue).children {
-                            // print("\(indent)  🔍 Traversing \(child.label ?? "(unnamed)")")
-                            traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
-                        }
+                    for child in mirror.children {
+                         let childValue = child.value //{
+                            for child in Mirror(reflecting: childValue).children {
+                                // print("\(indent)  🔍 Traversing \(child.label ?? "(unnamed)")")
+                                traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
+                            }
+                       // }
+
                     }
+                    
                 }
                 else {
                     
@@ -182,26 +183,22 @@ public enum DeepReflector {
                 
             }
             else {
-                // TODO: Use SPI and _makeView
+                // SHOULD WE USE THIS? PROBABLY NOT
 
-                let mirror = Mirror(reflecting:view.body)
-                let mirrorChildren = Array(mirror.children)
-                for child in mirrorChildren  {
-                    foundDirectViews = true
-                    
-                    traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
-                }
+                        let mirror = Mirror(reflecting:view.body)
+
+                        let mirrorChildren = Array(mirror.children)
+                        for child in mirrorChildren  {
+                            
+                            foundDirectViews = true
+                            
+                            traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
+                        }
 
                 return
             }
             
         }
-        // }
-        // Use Swift's Mirror for reflection. It's the standard, safe way to inspect object properties.
-        // let mirror = Mirror(reflecting: view)
-        // **NEW**: Force the lazy collection into a concrete Array here as well.
-        // let concreteChildren = Array(mirror.children)
-        
         
         // **Case 1: ModifiedContent** - The core of modifier extraction.
         // This is the wrapper for any `.modifier()` call. We peel it off and recurse.
@@ -213,85 +210,21 @@ public enum DeepReflector {
             
             // Add the found modifier to the dictionary for the current ID.
             associations[currentID, default: []].append(modifier)
-            print("\(indent)  🔧 Found Modifier: \(type(of: modifier))")
+           // print("\(indent)  🔧 Found Modifier: \(type(of: modifier))")
             
             // Continue traversal into the wrapped content.
             traverse(view: content, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
             return // We've handled this level, so we return.
         }
         
-        
-        
         // **Case 3: AnyView** - A type-erased wrapper. We need to unwrap it.
         if viewTypeName.starts(with: "AnyView") {
             // AnyView's content is internal. We reflect to find its 'storage' and then the 'view' within.
             if let storage = mirror.descendant("storage"), let underlyingView = Mirror(reflecting: storage).descendant("view") {
-                print("\(indent)  🎭 Unwrapped AnyView to \(type(of: underlyingView))")
+                //print("\(indent)  🎭 Unwrapped AnyView to \(type(of: underlyingView))")
                 traverse(view: underlyingView, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
             }
             return
-        }
-        
-        // **Case 3: Internal SwiftUI Collection/List Views**
-        // _ViewList_View, ModifiedElements, and similar internal types that contain collections
-        if viewTypeName.contains("_ViewList_View") ||
-            viewTypeName.contains("ModifiedElements") ||
-            viewTypeName.contains("_ViewList") ||
-            viewTypeName.contains("ForEach") ||
-            viewTypeName.starts(with: "UnaryElements<") {
-            
-            // Use combined reflection to get all possible children
-            let (mirror, inspector, allChildren) = combinedReflect(on: view)
-            
-            print("\(indent)📋 [ListView] ================================================")
-            print("\(indent)📋 [ListView] DETECTED List/Collection View: \(viewTypeName)")
-            print("\(indent)📋 [ListView] ================================================")
-            
-            // Log all top-level properties for debugging
-            print("\(indent)📋 [ListView] Children count: \(allChildren.count)")
-            for (index, child) in allChildren.enumerated() {
-                let label = child.label ?? "<unlabeled>"
-                let childTypeName = String(describing: type(of: child.value))
-                print("\(indent)📋 [ListView]   Property[\(index)]: '\(label)' type=\(childTypeName)")
-            }
-            
-            // After logging, specifically dive into the properties that contain the view data.
-            print("\(indent)📋 [ListView] === Diving into key properties ===")
-            for child in allChildren {
-                let label = child.label ?? "<unlabeled>"
-                
-                // The 'elements' property contains the structural blueprint of the list content.
-                // The 'contentSubgraph' contains the actual rendered view instances from the graph.
-                // We must traverse both to be thorough.
-                if label == "elements" || label == "contentSubgraph" || label == "baseInputs" || label == "body" { //|| label == "base" {
-                    
-                    // Check if the value is an Optional that is nil (e.g., an empty list might have a nil subgraph)
-                    let childMirror = Mirror(reflecting: child.value)
-                    if childMirror.displayStyle == .optional && childMirror.children.isEmpty {
-                        print("\(indent)📋 [ListView]   -> '\(label)' is present but nil. Skipping.")
-                        continue
-                    }
-                    
-                    print("\(indent)📋 [ListView]   -> Diving into '\(label)'...")
-                    // Recursively call traverse on the value of this property. This will continue
-                    // the process of unwrapping wrappers until a real View or another container is found.
-                    traverse(view: child.value,
-                             currentID: currentID,
-                             associations: &associations,
-                             accumulating: &modifiers,
-                             visited: &visited,
-                             depth: depth + 1)
-                }
-            }
-            // We've handled this container, so we must return to prevent the logic from falling through.
-            return
-        }
-        
-        if !foundDirectViews {
-            if let view = view as? any View {
-                
-                deepSearchForViews(in: view, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, searchDepth: depth + 1)
-            }
         }
     }
     

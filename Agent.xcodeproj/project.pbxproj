@@ -893,9 +893,6 @@
 		2B3493852E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
 		2B3493862E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
 		2B3493872E8F46C2006DE9D0 /* NRMaskingViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */; };
-		2B3493892E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */; };
-		2B34938A2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */; };
-		2B34938B2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */; };
 		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
 		2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
@@ -2473,7 +2470,6 @@
 		2B3493652E8E1F56006DE9D0 /* SwiftUIStyledTextRes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIStyledTextRes.swift; sourceTree = "<group>"; };
 		2B3493672E8EE254006DE9D0 /* RandomString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomString.swift; sourceTree = "<group>"; };
 		2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMaskingViewModifier.swift; sourceTree = "<group>"; };
-		2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMaskingExtractor.swift; sourceTree = "<group>"; };
 		2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHTTPUtilitiesTests.m; sourceTree = "<group>"; };
 		2B5814382E87163A005D62D4 /* XrayConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XrayConvertible.swift; sourceTree = "<group>"; };
 		2B58144F2E87218F005D62D4 /* SVGStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGStrings.swift; sourceTree = "<group>"; };
@@ -3935,7 +3931,6 @@
 		2BAE5C632E85EDE7001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
-				2B3493882E8F4712006DE9D0 /* NRMaskingExtractor.swift */,
 				2B3493842E8F46C2006DE9D0 /* NRMaskingViewModifier.swift */,
 				2BAE5C4E2E85EA27001D2B88 /* UIHostingViewRecordOrchestrator.swift */,
 				2BDB78D02E8C42B400357BC1 /* SwiftUIViewAttributes.swift */,
@@ -5563,7 +5558,6 @@
 				02FF4A5224DC64D500115469 /* NRMAActivityTraceMeasurement.m in Sources */,
 				02FF4A9924DC652E00115469 /* NRLogger.m in Sources */,
 				02FF480B24DB573E00115469 /* NRMAUserActionBuilder.m in Sources */,
-				2B3493892E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */,
 				2BAE5C762E85F714001D2B88 /* SwiftUIImageRepresentable.swift in Sources */,
 				2BAE5C622E85EA2E001D2B88 /* UIHostingViewRecordOrchestrator.swift in Sources */,
 				02FF49A024DC62B800115469 /* NRMAScopedMeasurements.m in Sources */,
@@ -6033,7 +6027,6 @@
 				02FF4C7324E3201400115469 /* NRMAReachability.m in Sources */,
 				02FF4C7424E3201400115469 /* NRMAMeasurementEngine.m in Sources */,
 				F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */,
-				2B34938B2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */,
 				02FF4C7524E3201400115469 /* NRMAAssociate.m in Sources */,
 				02FF4C7624E3201400115469 /* NRMANetworkFacade.mm in Sources */,
 				02FF4C7724E3201400115469 /* NRMAThreadLocalStore.m in Sources */,
@@ -6203,7 +6196,6 @@
 				3482334C2BC5F2710070FAC3 /* NRMAURLSessionTaskSearch.m in Sources */,
 				348232DA2BC5F2050070FAC3 /* NRMAHarvestableTrace.m in Sources */,
 				3482329B2BC5F1D70070FAC3 /* NRMAMeasurementException.m in Sources */,
-				2B34938A2E8F4712006DE9D0 /* NRMaskingExtractor.swift in Sources */,
 				348233892BC5F3120070FAC3 /* NRMAActivityNameGenerator.m in Sources */,
 				348232EF2BC5F2050070FAC3 /* NRMAApplicationInformation.m in Sources */,
 				3482326A2BC5F1970070FAC3 /* NRMAUUIDStore.m in Sources */,

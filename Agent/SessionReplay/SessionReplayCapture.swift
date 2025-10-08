@@ -127,13 +127,13 @@ class SessionReplayCapture {
             //NRLOG_DEBUG("HOSTING THINGY: \(hostingThingy) frame: \(hostingThingy.viewDetails.frame) viewId: \(hostingThingy.viewDetails.viewId) parentId: \(hostingThingy.viewDetails.parentId ?? -1)")
             
             
-            print("--- 🚀 Starting SwiftUI View Inspection ---")
             if let viewToAnalyze = getSwiftUIView(from: originalView) {
-                
+                print("--- 🚀 Starting SwiftUI View Inspection ---")
+
     
                 let associatedModifiers = DeepReflector.analyze(view: viewToAnalyze)
                 
-                print("\n🔬 Associated Modifiers by View ID:")
+                print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
                 for (id, modifiers) in associatedModifiers {
                     print("\n  - ID: '\(id)'")
                     guard !modifiers.isEmpty else {
@@ -141,33 +141,29 @@ class SessionReplayCapture {
                         continue
                     }
                     for modifier in modifiers {
-                        let typeName = String(reflecting: type(of: modifier))
-
-                        print("    - \(typeName)")
                         
-                        switch typeName {
-                            
-                        case "SwiftUI.AccessibilityAttachmentModifier":
-                            print("gottem")
-                            let mirror = Mirror(reflecting: modifier)
-                            let mirrorChildren = Array(mirror.children)
-                            print(mirror)
-                            print(mirrorChildren)
-                            
-                            let desc = mirror.descendant("storage")
-                            print(desc)
-                            
-                            let desc2 = Mirror(reflecting: desc)
-                           print(desc2.children)
-                            let unwrapped2 =  Mirror(reflecting: desc2.children.first)
-                            
-                            print(unwrapped2)
-                            print("unwrap")
-                            // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
+                        
+                        // For support of nrMasked and its varoius overrides we have
+                        if let mod = modifier as? NRMaskingViewModifier {
+                           // print("found NRModifier    - \(mod)")
 
-
-                        default:
-                            break
+                        }
+                        else {
+                            // TODO: Handle accessibilty identifier mod
+                            let typeName = String(reflecting: type(of: modifier))
+                            
+                           // print("    - \(typeName)")
+                            
+                            switch typeName {
+                                
+                            case "SwiftUI.AccessibilityAttachmentModifier":
+                                break
+                                // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
+                                
+                                
+                            default:
+                                break
+                            }
                         }
                     }
                 }

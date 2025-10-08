@@ -121,6 +121,7 @@ final class UIHostingViewRecordOrchestrator {
                                            parentId: Int) -> (any SessionReplayViewThingy)? {
         
         let displayListId = Int(SwiftUIDisplayList.Index.ID(identity: item.identity).identity.value)
+        print("encountered displayListId \(displayListId)")
         let frame = baseContext.convert(frame: item.frame)
         let viewName = randomString()
                 
@@ -158,37 +159,12 @@ final class UIHostingViewRecordOrchestrator {
             // Extract masking state from the view using NRMaskingExtractor
             var details = makeDetails()
 
-            // Try to extract masking state from custom view modifier
-            if let maskingState = NRMaskingExtractor.extractMaskingState(from: textView.originalSubject) {
-                switch maskingState {
-                case .masked:
-                    details.isMasked = true
-                case .unmasked:
-                    details.isMasked = false
-                case .custom(let identifier):
-                    // Custom identifier: check against global masking lists
-                    details.viewIdentifier = identifier
-                    // TODO: Check against global masking lists
-                    // if let agent = NewRelicAgentInternal.sharedInstance() {
-                    //     if agent.isViewIdentifierMasked(identifier) {
-                    //         details.isMasked = true
-                    //     } else if agent.isViewIdentifierUnmasked(identifier) {
-                    //         details.isMasked = false
-                    //     }
-                    // }
-                }
-            }
+            print("Text view content:")
 
-//            // Fallback: Try accessibility identifier for backward compatibility
-//            if details.isMasked == nil {
-//                let accessibilityInfo = SwiftUIDeepReflector.extractAccessibilityInfo(from: textView.originalSubject)
-//                if let identifier = accessibilityInfo?.identifier {
-//                    if let legacyMaskingState = NRMaskingExtractor.extractMaskingStateFromAccessibilityIdentifier(identifier) {
-//                        details.isMasked = legacyMaskingState.isMasked
-//                    }
-//                }
-//            }
-
+            print(textView.originalSubject)
+            
+            print("End Text view content.")
+            
             return UILabelThingy(viewDetails: details,
                                  text: storage.string,
                                  textAlignment: alignment.stringValue(),
