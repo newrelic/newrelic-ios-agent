@@ -31,6 +31,9 @@ struct SlidersView: View {
         .padding()
         .navigationBarTitle("Sliders", displayMode: .inline)
         .NRTrackView(name: "SlidersView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

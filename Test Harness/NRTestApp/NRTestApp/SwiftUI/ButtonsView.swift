@@ -13,6 +13,7 @@ struct ButtonsView: View {
     @State private var buttonPressCount = 0
 
     var body: some View {
+
         VStack(spacing: 20) {
             Text("Buttons Demo")
                 .font(.largeTitle)
@@ -70,6 +71,9 @@ struct ButtonsView: View {
         }
         .padding()
         .NRTrackView(name: "ButtonsView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

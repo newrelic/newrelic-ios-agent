@@ -22,5 +22,8 @@ struct ImageFullScreen: View {
         .background(Color.black)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Image")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }

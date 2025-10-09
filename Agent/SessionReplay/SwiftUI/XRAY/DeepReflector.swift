@@ -5,6 +5,50 @@ import UIKit
 @available(iOS 13.0, tvOS 13.0, *)
 public enum DeepReflector {
     
+    
+    // The version that starts w. mirror
+    
+    //    public static func analyze(viewMirror: Mirror) -> [AnyHashable: [any ViewModifier]] {
+    //        // print("\n🔬 [DeepReflection] ========== STARTING ANALYSIS ==========")
+    //        let rootViewType = viewMirror.subjectType//"\(type(of: view))"
+    //          print("🔬 [DeepReflection] RootView type: \(rootViewType)")
+    //
+    //
+    //        //                 ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>
+    //        //        if rootViewType == "ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>" {
+    //        //            //print("caught")
+    //        //            return [:]
+    //        //        }
+    //
+    //        var associations: [AnyHashable: [any ViewModifier]] = [:]
+    //        var modifiers: [any ViewModifier] = []
+    //        // **NEW**: A set to track visited class instances to prevent infinite loops.
+    //        var visited = Set<ObjectIdentifier>()
+    //
+    //        // Start the recursive traversal with the initial view.
+    //        // The default ID of `0` catches any modifiers applied before the first `.id()` is found.
+    //        traverse(view: viewMirror as Any, currentID: AnyHashable(0), associations: &associations, accumulating: &modifiers, visited: &visited, depth: 0)
+    //
+    //        //print("\n🔬 [DeepReflection] ========== ANALYSIS COMPLETE ==========")
+    //        var count = 0
+    //        // Final report logging
+    //        for (id, mods) in associations.sorted(by: { String(describing: $0.key) < String(describing: $1.key) }) {
+    //            // print("🔬 [DeepReflection] 📌 ID: '\(id)' -> \(mods.count) modifier(s)")
+    //            for (idx, modifier) in mods.enumerated() {
+    //                let modType = String(describing: type(of: modifier))
+    //                count += 1
+    //                //print("🔬 [DeepReflection]   [\(idx)] Type: \(modType)")
+    //            }
+    //        }
+    //        print("🔬 [DeepReflection] Total unique IDs found: \(associations.keys.count) unique ID(s) \(count) total modifier(s)")
+    //
+    //        //print("🔬 [DeepReflection] ==========================================\n")
+    //
+    //        return associations
+    //    }
+    
+    
+    
     /// Analyzes an entire view hierarchy, extracting all modifiers and
     /// associating them with the nearest preceding `.id()` tag.
     ///
@@ -13,14 +57,9 @@ public enum DeepReflector {
     public static func analyze(view: any View) -> [AnyHashable: [any ViewModifier]] {
         // print("\n🔬 [DeepReflection] ========== STARTING ANALYSIS ==========")
         let rootViewType = "\(type(of: view))"
-        //  print("🔬 [DeepReflection] RootView type: \(rootViewType)")
-        
-        
-        //                 ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>
-        //        if rootViewType == "ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>" {
-        //            //print("caught")
-        //            return [:]
-        //        }
+       //print("🔬 [DeepReflection] RootView type: \(rootViewType)")
+        print("🔬 [DeepReflection] RootView type: [ROOT_VIEW_TYPE REMOVED]]")
+
         
         var associations: [AnyHashable: [any ViewModifier]] = [:]
         var modifiers: [any ViewModifier] = []
@@ -35,11 +74,11 @@ public enum DeepReflector {
         var count = 0
         // Final report logging
         for (id, mods) in associations.sorted(by: { String(describing: $0.key) < String(describing: $1.key) }) {
-            // print("🔬 [DeepReflection] 📌 ID: '\(id)' -> \(mods.count) modifier(s)")
+             print("🔬 [DeepReflection] 📌 ID: '\(id)' -> \(mods.count) modifier(s)")
             for (idx, modifier) in mods.enumerated() {
                 let modType = String(describing: type(of: modifier))
                 count += 1
-                //print("🔬 [DeepReflection]   [\(idx)] Type: \(modType)")
+                print("🔬 [DeepReflection]   [\(idx)] Type: \(modType)")
             }
         }
         print("🔬 [DeepReflection] Total unique IDs found: \(associations.keys.count) unique ID(s) \(count) total modifier(s)")
@@ -74,35 +113,10 @@ public enum DeepReflector {
         
         let viewTypeName = String(describing: type(of: view))
         
-        print("\(indent) \(viewTypeName)")
+        print("\(indent) \(viewTypeName.prefix(60))")
         
         let mirror = Mirror(reflecting:view)
-        
-        
-        if viewTypeName == "_ViewList_ID" {
-            print("\(indent)_ViewList_ID: %@", "\(view)")
-            print("\(indent) \(view)")
-            /*
-             ▿ _ViewList_ID
-               - _index : 0
-               - implicitID : 0
-               ▿ explicitIDs : 2 elements
-                 ▿ 0 : Explicit
-                   ▿ id : UniqueID(value: 149)
-                     ▿ box : <_AnyHashableBox<UniqueID>: 0x6000002a8ca0>
-                   - reuseID : 4723039232
-                   ▿ owner : #10808
-                     - rawValue : 10808
-                   - isUnary : true
-                 ▿ 1 : Explicit
-                   ▿ id : UniqueID(value: 128)
-                     ▿ box : <_AnyHashableBox<UniqueID>: 0x6000002a8cc0>
-                   - reuseID : 4722980712
-                   ▿ owner : #6352
-                     - rawValue : 6352
-                   - isUnary : false
-             */
-        }
+
         
         // **Case 2: IDView** - This wrapper assigns an ID.
         // We update `currentID` for all subsequent views/modifiers found within its content.
@@ -118,14 +132,23 @@ public enum DeepReflector {
             return
         }
         
+        // **Case 3: AnyView** - A type-erased wrapper. We need to unwrap it.
+        if viewTypeName.starts(with: "AnyView") {
+            // AnyView's content is internal. We reflect to find its 'storage' and then the 'view' within.
+            if let storage = mirror.descendant("storage"), let underlyingView = Mirror(reflecting: storage).descendant("view") {
+                //print("\(indent)  🎭 Unwrapped AnyView to \(type(of: underlyingView))")
+                traverse(view: underlyingView, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
+            }
+            return
+        }
         
-        // viewTypeName    String    "ResettableLazyLayoutRoot<Tree<LazyVGridLayout, ForEach<Array<Int>, Int, ModifiedContent<ModifiedContent<ModifiedContent<ModifiedContent<ModifiedContent<Text, _FlexFrameLayout>, _PaddingLayout>, _BackgroundModifier<Color>>, _EnvironmentKeyWritingModifier<Optional<Color>>>, _ClipEffect<RoundedRectangle>>>>>"
         if let view = view as? any View {
+            // Attempt skip statemful wrappers that cause runtime issues.
             
-            if viewTypeName.starts(with: "Binding<") || viewTypeName.starts(with: "State<") || viewTypeName.starts(with: "Optional<Binding<") || viewTypeName.starts(with: "Array<Binding<"){ return }
-            // Does this avoid the runtime death?
-            if viewTypeName == "TextEditor" || viewTypeName == "TextField" || viewTypeName == "TextField<Text>" || viewTypeName == "State<String>" || viewTypeName == "Optional<Binding<Bool>>" { return }
-                
+//            if viewTypeName.starts(with: "Binding<") || viewTypeName.starts(with: "State<") || viewTypeName.starts(with: "Optional<Binding<") || viewTypeName.starts(with: "Array<Binding<"){ return }
+//            // Does this avoid the runtime death?
+//            if viewTypeName == "TextEditor" || viewTypeName == "TextField" || viewTypeName == "TextField<Text>" || viewTypeName == "State<String>" || viewTypeName == "Optional<Binding<Bool>>" { return }
+            
             
             // SwiftUI Internal Wrappers
             if viewTypeName.starts(with: "ModifiedContent<") ||
@@ -155,7 +178,9 @@ public enum DeepReflector {
                 viewTypeName.starts(with: "ResettableLazyLayoutRoot<") ||
                 viewTypeName.starts(with: "ClipEffect<") ||
                 viewTypeName.starts(with: "ModifiedElements<") ||
-
+                //  viewTypeName.starts(with: "LazyView<") ||
+                
+                
                 
                 // Leaf views
                 viewTypeName == "Element" ||
@@ -176,6 +201,10 @@ public enum DeepReflector {
                 
                 
             {
+                
+                //               if  viewTypeName.starts(with:  "AnyViewStorage<") {
+                //                    print("AnyViewStorage: %@", "\(view)")
+                //                }
                 //
                 // **Case 1: SwftUI Internals or Leaf Views --- ModifiedContent** - The core of modifier extraction.
                 // This is the wrapper for any `.modifier()` call. We peel it off and recurse.
@@ -216,25 +245,30 @@ public enum DeepReflector {
             }
             else {
                 // SHOULD WE USE THIS? PROBABLY NOT ???? We need it? How to get it in a more stable way? that doesn't cause BLUE RUNTIME DEATH WARNINGS
-                let mirror = Mirror(reflecting:view.body)
+                //let mirror = Mirror(reflecting:view.body)
                 let mirror2 = Mirror(reflecting:view)
                 
-                let mirrorChildren = Array(mirror.children)
+                // let mirrorChildren = Array(mirror.children)
                 let mirrorChildren2 = Array(mirror2.children)
-
-                for child in mirrorChildren  {
-                    
-                    foundDirectViews = true
-                    
-                    traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
-                    
-                }
+                
+                //                for child in mirrorChildren  {
+                //
+                //                    foundDirectViews = true
+                //
+                //                    traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
+                //
+                //                }
                 
                 for child in mirrorChildren2  {
                     
                     foundDirectViews = true
-                    
-                    traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
+                    if let childView = child.value as? () -> any View {
+                        traverse(view: childView, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
+                        
+                    }
+                    else {
+                        traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
+                    }
                     
                 }
                 
@@ -258,16 +292,6 @@ public enum DeepReflector {
             // Continue traversal into the wrapped content.
             traverse(view: content, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
             return // We've handled this level, so we return.
-        }
-        
-        // **Case 3: AnyView** - A type-erased wrapper. We need to unwrap it.
-        if viewTypeName.starts(with: "AnyView") {
-            // AnyView's content is internal. We reflect to find its 'storage' and then the 'view' within.
-            if let storage = mirror.descendant("storage"), let underlyingView = Mirror(reflecting: storage).descendant("view") {
-                //print("\(indent)  🎭 Unwrapped AnyView to \(type(of: underlyingView))")
-                traverse(view: underlyingView, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
-            }
-            return
         }
     }
     

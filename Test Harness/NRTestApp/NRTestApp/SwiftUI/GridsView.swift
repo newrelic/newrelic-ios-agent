@@ -30,6 +30,9 @@ struct GridsView: View {
             .padding()
         }
         .NRTrackView(name: "GridsView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

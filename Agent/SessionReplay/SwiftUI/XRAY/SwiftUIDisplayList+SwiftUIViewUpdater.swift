@@ -28,8 +28,8 @@ extension SwiftUIDisplayList.SwiftUIViewUpdater.ViewCache.CacheKey: XrayConverti
 extension SwiftUIDisplayList.Index.ID: XrayConvertible {
     init(xray: XrayDecoder) throws {
         identity = try xray.extract(SwiftUIConstants.identityPath)
-        print("identity extracted")
-        print(identity)
+        //print("identity extracted")
+        //print(identity)
     }
 }
 
@@ -161,6 +161,8 @@ extension SwiftUIDisplayList.DisplayListItem: XrayConvertible {
         identity = try xray.extract(SwiftUIConstants.identityPath)
         value = try xray.extract(SwiftUIConstants.valuePath)
         frame = try xray.extract(SwiftUIConstants.framePath)
+        
+        //print("extracted identity \(identity) in DisplayListItem")
     }
 }
 
