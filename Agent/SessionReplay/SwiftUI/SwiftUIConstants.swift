@@ -42,28 +42,41 @@ enum SwiftUIConstants: String {
     case base = "base"
 
     // MARK: - RunTimeTypeInspector.Path Computed Properties
+    
+    // StyledTextSwiftUIView
     static var textPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(text.rawValue) }
+    // SwiftUIStyledTextRes
     static var storagePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(storage.rawValue) }
+    // ColorView
     static var colorPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(color.rawValue) }
-    static var drawingPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(drawing.rawValue) }
-    static var shapePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(shape.rawValue) }
-    static var imagePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(image.rawValue) }
+    //static var drawingPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(drawing.rawValue) }
+    //static var shapePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(shape.rawValue) }
+    //static var imagePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(image.rawValue) }
     static var platformViewPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(platformView.rawValue) }
+    
+    // SwiftUIDisplayList.SwiftUIViewUpdater.ViewInfo
     static var containerPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(container.rawValue) }
+    static var layerPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(layer.rawValue) }
+    static var viewPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(view.rawValue) }
+
+    // SwiftUIDisplayList.Content paths
     static var valuePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(value.rawValue) }
+    static var seedPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(seed.rawValue) }
+
     static var rendererPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(renderer.rawValue) }
     static var itemsPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(items.rawValue) }
+    // SwiftUIDisplayList.Index.ID
+    // SwiftUIDisplayList.DisplayListItem
     static var identityPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(identity.rawValue) }
     static var framePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(frame.rawValue) }
     static var viewCachePath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(viewCache.rawValue) }
     static var lastListPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(lastList.rawValue) }
-    static var viewPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(view.rawValue) }
-    static var layerPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(layer.rawValue) }
     static var maskColorPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(maskColor.rawValue) }
-    static var seedPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(seed.rawValue) }
     static var effectPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(effect.rawValue) }
     static var contentPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(content.rawValue) }
+    // SwiftUIDisplayList.SwiftUIViewUpdater.ViewCache
     static var mapPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(map.rawValue) }
+    // SwiftUIDisplayList.SwiftUIViewUpdater.ViewCache.CacheKey
     static var idPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(id.rawValue) }
     static var clipPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(clip.rawValue) }
     static var filterPath: RunTimeTypeInspector.Path { RunTimeTypeInspector.Path(filter.rawValue) }

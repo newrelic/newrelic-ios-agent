@@ -28,6 +28,8 @@ extension SwiftUIDisplayList.SwiftUIViewUpdater.ViewCache.CacheKey: XrayConverti
 extension SwiftUIDisplayList.Index.ID: XrayConvertible {
     init(xray: XrayDecoder) throws {
         identity = try xray.extract(SwiftUIConstants.identityPath)
+        print("identity extracted")
+        print(identity)
     }
 }
 
@@ -42,10 +44,19 @@ extension SwiftUIDisplayList.SwiftUIViewUpdater.ViewInfo: XrayConvertible {
             if let hv = hostView {
                 let containerView: UIView = (try? xray.extract(type: UIView.self, SwiftUIConstants.containerPath)) ?? UIView()
                 let rectInHost = containerView.convert(containerView.bounds, to: hv)
+//                print("rectInHost")
+//
+//                print(rectInHost)
                 return (rectInHost, hv.alpha, containerView.intrinsicContentSize)
-            } else {
+            }
+            else {
                 let containerLayer: CALayer = (try? xray.extract(type: CALayer.self, SwiftUIConstants.containerPath)) ?? CALayer()
                 let frameInLayer = containerLayer.convert(containerLayer.bounds, to: baseLayer)
+                
+//                print("frameInLayer")
+//
+//                print(frameInLayer)
+
                 let alpha = CGFloat(containerLayer.opacity)
                 let size = containerLayer.preferredFrameSize()
                 return (frameInLayer, alpha, size)
@@ -88,7 +99,7 @@ extension SwiftUIDisplayList.Content.Value: XrayConvertible {
         case SwiftUIConstants.text.rawValue:
             self = try Self.parseText(xray, child)
         case SwiftUIConstants.platformView.rawValue:
-            self = .platformView
+            self = SwiftUIDisplayList.Content.Value.platformView
         case SwiftUIConstants.image.rawValue:
             self = try Self.parseImage(xray, child)
         case SwiftUIConstants.drawing.rawValue:
@@ -104,7 +115,7 @@ extension SwiftUIDisplayList.Content.Value: XrayConvertible {
         guard let tuple = child as? (SwiftUI.Path, Any, SwiftUI.FillStyle) else {
             return SwiftUIDisplayList.Content.Value.unknown
         }
-        return try .shape(tuple.0, xray.xray(tuple.1), tuple.2)
+        return try SwiftUIDisplayList.Content.Value.shape(tuple.0, xray.xray(tuple.1), tuple.2)
     }
 
     private static func parseText(_ xray: XrayDecoder, _ child: Any?) throws -> Self {

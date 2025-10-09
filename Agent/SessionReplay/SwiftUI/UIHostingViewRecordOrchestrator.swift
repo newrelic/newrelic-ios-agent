@@ -85,6 +85,8 @@ final class UIHostingViewRecordOrchestrator {
                 switch effect {
                 case .platformGroup:
                     let displayListId = SwiftUIDisplayList.Index.ID(identity: item.identity)
+                   // print("encountered displayListId \(displayListId)")
+
                     if let viewInfo = renderer.renderer.viewCache.map[.init(id: displayListId)] {
                         nextContext.convert(to: viewInfo.frame)
                     }
@@ -159,11 +161,11 @@ final class UIHostingViewRecordOrchestrator {
             // Extract masking state from the view using NRMaskingExtractor
             var details = makeDetails()
 
-            print("Text view content:")
-
-            print(textView.originalSubject)
-            
-            print("End Text view content.")
+//            print("Text view content:")
+//
+//            print(textView.originalSubject)
+//            
+//            print("End Text view content.")
             
             return UILabelThingy(viewDetails: details,
                                  text: storage.string,

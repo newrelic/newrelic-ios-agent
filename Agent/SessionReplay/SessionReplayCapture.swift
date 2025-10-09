@@ -128,14 +128,15 @@ class SessionReplayCapture {
             
             
             if let viewToAnalyze = getSwiftUIView(from: originalView) {
-                print("--- 🚀 Starting SwiftUI View Inspection ---")
+               // print("--- 🚀 Starting SwiftUI View Inspection ---")
 
     
                 let associatedModifiers = DeepReflector.analyze(view: viewToAnalyze)
                 
-                print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
+                //print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
                 for (id, modifiers) in associatedModifiers {
-                    print("\n  - ID: '\(id)'")
+                    //print("\n  - ID: '\(id)'")
+                    
                     guard !modifiers.isEmpty else {
                         print("    (No direct modifiers)")
                         continue
@@ -167,7 +168,7 @@ class SessionReplayCapture {
                         }
                     }
                 }
-                print("\n--- ✅ Inspection Complete ---")
+                //print("\n--- ✅ Inspection Complete ---")
             }
             else {
                 print("Could not get root view from hosting controller.")
@@ -189,7 +190,7 @@ class SessionReplayCapture {
             //logThingys(thingys)
             
             if !thingys.isEmpty {
-                 print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
+                // print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
                 hostingThingy.subviews.append(contentsOf: thingys)
             }
             
