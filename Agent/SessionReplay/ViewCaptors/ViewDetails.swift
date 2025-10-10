@@ -27,7 +27,7 @@ struct ViewDetails {
     // Indicates if this view should have its content masked in session replay
     var isMasked: Bool?
 
-    // Custom identifier for the view (from nrMaskingIdentifier modifier)
+    // Custom identifier for the view (from NRMaskingView view)
     var viewIdentifier: String?
 
     var cssSelector: String {
@@ -139,7 +139,7 @@ struct ViewDetails {
         }
     }
     
-    init(frame: CGRect, clip: CGRect, backgroundColor: UIColor, alpha: CGFloat, isHidden: Bool, viewName: String, parentId: Int, cornerRadius: CGFloat, borderWidth: CGFloat, borderColor: UIColor? = nil, viewId: Int?) {
+    init(frame: CGRect, clip: CGRect, backgroundColor: UIColor, alpha: CGFloat, isHidden: Bool, viewName: String, parentId: Int, cornerRadius: CGFloat, borderWidth: CGFloat, borderColor: UIColor? = nil, viewId: Int?, isMasked: Bool = true) {
         
 //        if let superview = view.superview, let window = view.window {
 //            let rawFrame = superview.convert(view.frame, to: window)
@@ -177,7 +177,7 @@ struct ViewDetails {
 
         // TODO: Handle masked
 //        if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
-//            self.isMasked = shouldMask
+            self.isMasked = isMasked
 //            view.sessionReplayMaskState = shouldMask
 //        }
     }

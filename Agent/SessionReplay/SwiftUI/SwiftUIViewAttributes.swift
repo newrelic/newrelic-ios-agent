@@ -28,6 +28,9 @@ public struct SwiftUIViewAttributes: Equatable {
     var isHidden: Bool
     var intrinsicContentSize: CGSize
 
-    // Future masking support
-    var hide: Bool?   // TODO: HANDLE MASKING
+    // masking support
+    var maskApplicationText: Bool?
+    var maskUserInputText: Bool?
+    var maskAllImages: Bool?
+    var maskAllUserTouches: Bool?
 }

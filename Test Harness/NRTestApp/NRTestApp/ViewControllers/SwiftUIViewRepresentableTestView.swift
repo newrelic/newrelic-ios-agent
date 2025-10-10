@@ -22,9 +22,6 @@ struct SwiftUIViewRepresentableTestView: View {
                 }
             }
         }
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
     
     private func itemView(_ index: Int) -> some View {

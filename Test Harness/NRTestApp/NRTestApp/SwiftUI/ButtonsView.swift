@@ -17,7 +17,6 @@ struct ButtonsView: View {
         VStack(spacing: 20) {
             Text("Buttons Demo")
                 .font(.largeTitle)
-                .nrMasked()
 
             // Standard Button
             Button(action: {
@@ -72,9 +71,6 @@ struct ButtonsView: View {
         }
         .padding()
         .NRTrackView(name: "ButtonsView")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
 }
 

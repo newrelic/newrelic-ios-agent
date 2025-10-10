@@ -16,7 +16,6 @@ struct ListsView: View {
             List(items, id: \.self) { item in
                 if item == "Item 3" {
                     Text(item)
-                        .nrMasked()
 
                 }else {
                     Text(item)
@@ -24,9 +23,6 @@ struct ListsView: View {
             }
             .navigationBarTitle("Lists")
             .NRTrackView(name: "ListsView")
-        }
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
         }
     }
 }

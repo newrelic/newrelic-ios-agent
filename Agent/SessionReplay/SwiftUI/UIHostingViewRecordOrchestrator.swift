@@ -137,7 +137,8 @@ final class UIHostingViewRecordOrchestrator {
                         parentId: parentId,
                         cornerRadius: viewAttributes.layerCornerRadius,
                         borderWidth: viewAttributes.layerBorderWidth,
-                        viewId: displayListId)
+                        viewId: displayListId,
+                        isMasked: viewAttributes.maskApplicationText ?? true) // viewAttributes.maskUserInput
         }
         
         switch content.value {
@@ -158,9 +159,16 @@ final class UIHostingViewRecordOrchestrator {
                 _ = style.lineBreakMode
             }
 
-            // Extract masking state from the view using NRMaskingExtractor
+            // Extract masking state from the view
             var details = makeDetails()
-
+            
+            var outputText = ""
+            if details.isMasked ?? true {
+                outputText = String(repeating: "*", count: storage.string.count ?? 0)
+            }
+            else {
+                outputText = storage.string
+            }
             /*
              DECIDE MASKING POLICY FOR textView
              
@@ -170,7 +178,7 @@ final class UIHostingViewRecordOrchestrator {
             
             
             return UILabelThingy(viewDetails: details,
-                                 text: storage.string,
+                                 text: outputText,
                                  textAlignment: alignment.stringValue(),
                                  fontSize: font?.pointSize ?? 10,
                                  fontName: font?.fontName ?? ".SFUI-Bold",

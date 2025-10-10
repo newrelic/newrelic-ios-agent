@@ -109,8 +109,6 @@ class SessionReplayCapture {
     private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
 //          let viewType = String(describing: type(of: originalView))
 //              print("Finding recorder for view type: \(viewType)")
-        
-        
         if let viewController = extractVC(from: originalView),
            ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
                       let viewType = String(describing: type(of: originalView))
@@ -121,74 +119,21 @@ class SessionReplayCapture {
             let hostingThingy = UIViewThingy(view: originalView,
                                              viewDetails: ViewDetails(view: originalView))
             //NRLOG_DEBUG("HOSTING THINGY: \(hostingThingy) frame: \(hostingThingy.viewDetails.frame) viewId: \(hostingThingy.viewDetails.viewId) parentId: \(hostingThingy.viewDetails.parentId ?? -1)")
-            
-            if let viewToAnalyze = getSwiftUIView(from: originalView) {
-//                print("--- 🚀 Starting SwiftUI View Inspection ---")
-
-                // get fully qualified viewToAnalyse type name
-                let fullyQualifiedName = String(reflecting: type(of: viewToAnalyze))
-
-                print("lookup for: \(fullyQualifiedName)")
-                
-                /*
-                 Handle SplitViewcontrollers like Landmarks  app
-                 _UIHostingView<ModifiedContent<AnyView, RootModifier>>
-                */
-                
-                if let bodyContent = ViewBodyTracker.shared.bodyCallsByView[fullyQualifiedName] {
-                    let associatedModifiers = DeepReflector.analyze(view: bodyContent.viewMirror)
-                    
-                    //print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
-                    for (id, modifiers) in associatedModifiers {
-                        //print("\n  - ID: '\(id)'")
                         
-                        guard !modifiers.isEmpty else {
-                            print("    (No direct modifiers)")
-                            continue
-                        }
-                        for modifier in modifiers {
-                            
-                            
-                            // For support of nrMasked and its varoius overrides we have
-                            if let mod = modifier as? NRMaskingViewModifier {
-                                print("found NRModifier    - \(mod)")
-
-                            }
-                            else {
-                                // TODO: Handle accessibilty identifier mod
-                                let typeName = String(reflecting: type(of: modifier))
-                                
-                               // print("    - \(typeName)")
-                                
-                                switch typeName {
-                                    
-                                case "SwiftUI.AccessibilityAttachmentModifier":
-                                    break
-                                    // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
-                                    
-                                    
-                                default:
-                                    break
-                                }
-                            }
-                        }
-                    }
-                    //print("\n--- ✅ Inspection Complete ---")
-
-                }
-            }
-            else {
-                print("Could not get root view from hosting controller.")
-                return hostingThingy
-
-            }
-            
             let viewAttributes = SwiftUIViewAttributes(frame: hostingThingy.viewDetails.frame,
                                                        clip: hostingThingy.viewDetails.clip,
                                                        backgroundColor: originalView.backgroundColor?.cgColor,
                                                        layerBorderColor: originalView.layer.borderColor,
                                                        layerBorderWidth: originalView.layer.borderWidth,
-                                                       layerCornerRadius: originalView.layer.cornerRadius, alpha: originalView.alpha, isHidden: originalView.isHidden, intrinsicContentSize: originalView.intrinsicContentSize)
+                                                       layerCornerRadius: originalView.layer.cornerRadius,
+                                                       alpha: originalView.alpha,
+                                                       isHidden: originalView.isHidden,
+                                                       intrinsicContentSize: originalView.intrinsicContentSize,
+                                                       maskApplicationText: originalView.maskApplicationText,
+                                                       maskUserInputText: originalView.maskUserInputText,
+                                                       maskAllImages: originalView.maskAllImages,
+                                                       maskAllUserTouches: originalView.maskAllUserTouches
+            )
             
             let context = SwiftUIContext(frame: hostingThingy.viewDetails.frame, clip: hostingThingy.viewDetails.clip)
             

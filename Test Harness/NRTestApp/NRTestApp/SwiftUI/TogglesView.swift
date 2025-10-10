@@ -29,9 +29,6 @@ struct TogglesView: View {
         }
         .padding()
         .NRTrackView(name: "TogglesView")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
 }
 
