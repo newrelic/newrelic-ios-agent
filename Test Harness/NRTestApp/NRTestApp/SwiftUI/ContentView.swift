@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SwiftUIContentView: View {
     var body: some View {
-        NRConditionalMaskView {
+        NRConditionalMaskView(sessionReplayIdentifier: "my-secret-id") {
             
             NavigationView {
                 List {

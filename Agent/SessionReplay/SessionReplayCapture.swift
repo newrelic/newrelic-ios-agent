@@ -51,12 +51,12 @@ class SessionReplayCapture {
                 }
             }
             
-            // Check if this is specifically SwiftUI._UIHostingView<SwiftUI.BridgedPresentation.RootView> and reverse subviews if so. This way the captured swiftUI elements are on top of the UIKit ones in playback.
-            let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") && className.contains("RootView") {
-                currentParentThingy.subviews.reverse()
-                rootSwiftUIViewID = currentParentThingy.viewDetails.viewId
-            }
+//            // Check if this is specifically SwiftUI._UIHostingView<SwiftUI.BridgedPresentation.RootView> and reverse subviews if so. This way the captured swiftUI elements are on top of the UIKit ones in playback.
+//            let className = NSStringFromClass(type(of: currentView))
+//            if className.contains("_UIHostingView") && className.contains("RootView") {
+//                currentParentThingy.subviews.reverse()
+//                rootSwiftUIViewID = currentParentThingy.viewDetails.viewId
+//            }
 
             if let textView = currentView as? UITextField {
                 let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))

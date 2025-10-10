@@ -101,8 +101,8 @@ struct MaskingView: View {
                                 Text("Level 2 (no id)")
                             }
                             VStack(alignment: .leading, spacing: 6) {
-                                NRConditionalMaskView(maskApplicationText: true, maskUserInputText: true, maskAllUserTouches: true) {
-                                    
+                                NRConditionalMaskView(sessionReplayIdentifier: "my-masked-id") {
+
                                     Text("Level 3 Explicit Masked")
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Level 4 inherits masked ancestor")
@@ -126,21 +126,21 @@ struct MaskingView: View {
 
                 sectionTitle("Sibling Mix (Explicit IDs on Each)")
                 HStack {
-                    NRConditionalMaskView(sessionReplayIdentifier: "masked-1".hashValue) {
+                    NRConditionalMaskView(sessionReplayIdentifier: "masked-1") {
                         
                         Text("Masked")
                             .padding(8)
                             .background(Color.blue.opacity(0.1))
                             .cornerRadius(6)
                     }
-                    NRConditionalMaskView(sessionReplayIdentifier: "unmaksed-1".hashValue) {
+                    NRConditionalMaskView(sessionReplayIdentifier: "unmasked-1") {
                         
                         Text("Unmasked")
                             .padding(8)
                             .background(Color.gray.opacity(0.15))
                             .cornerRadius(6)
                     }
-                    NRConditionalMaskView(sessionReplayIdentifier: "maksed-1".hashValue) {
+                    NRConditionalMaskView(sessionReplayIdentifier: "masked-2") {
                         
                         Text("Masked 2")
                             .padding(8)
@@ -169,9 +169,11 @@ struct MaskingView: View {
                         NavigationLink("Go To TextFieldsView (inherits parent)") {
                             TextFieldsView()
                         }
-                        
-                        NavigationLink("Override Unmasked Link") {
-                            TextFieldsView()
+                        NRConditionalMaskView(maskApplicationText: false, maskUserInputText: false, maskAllUserTouches: false) {
+                            
+                            NavigationLink("Override Unmasked Link") {
+                                TextFieldsView()
+                            }
                         }
                     }
                     .padding()
@@ -186,10 +188,13 @@ struct MaskingView: View {
     }
 
     private func sectionTitle(_ text: String) -> some View {
-        Text(text)
-            .font(.headline)
-            .accessibilityHidden(true)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        NRConditionalMaskView(maskApplicationText: false, maskAllUserTouches: false) {
+            
+            Text(text)
+                .font(.headline)
+            //            .accessibilityHidden(true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 

@@ -33,4 +33,7 @@ public struct SwiftUIViewAttributes: Equatable {
     var maskUserInputText: Bool?
     var maskAllImages: Bool?
     var maskAllUserTouches: Bool?
+    
+    var sessionReplayIdentifier: String?
+
 }

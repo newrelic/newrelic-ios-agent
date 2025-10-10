@@ -48,7 +48,8 @@ final class UIHostingViewRecordOrchestrator {
                                        context: context,
                                        renderer: viewRenderer,
                                        viewAttributes: viewAttributes,
-                                       parentId: parentId)
+                                       parentId: parentId,
+                                       originalView: view)
         } catch {
             //NRLOG_DEBUG("Error extracting SwiftUI ViewThingys: \(error)")
             return []
@@ -60,7 +61,8 @@ final class UIHostingViewRecordOrchestrator {
                                             context: SwiftUIContext,
                                             renderer: SwiftUIDisplayList.ViewRenderer,
                                             viewAttributes: SwiftUIViewAttributes,
-                                            parentId: Int) -> [any SessionReplayViewThingy] {
+                                            parentId: Int,
+                                            originalView: UIView) -> [any SessionReplayViewThingy] {
         
         guard !items.isEmpty else { return [] }
         
@@ -75,7 +77,8 @@ final class UIHostingViewRecordOrchestrator {
                                                   baseContext: context,
                                                   renderer: renderer,
                                                   viewAttributes: viewAttributes,
-                                                  parentId: parentId) {
+                                                  parentId: parentId,
+                                                  originalView: originalView) {
                     collected.append(built)
                 }
                 
@@ -104,7 +107,8 @@ final class UIHostingViewRecordOrchestrator {
                                                  context: nextContext,
                                                  renderer: renderer,
                                                  viewAttributes: viewAttributes,
-                                                 parentId: parentId)
+                                                 parentId: parentId,
+                                                 originalView: originalView)
                 collected.append(contentsOf: nested)
                 
             case .unknown:
@@ -121,12 +125,13 @@ final class UIHostingViewRecordOrchestrator {
                                            baseContext: SwiftUIContext,
                                            renderer: SwiftUIDisplayList.ViewRenderer,
                                            viewAttributes: SwiftUIViewAttributes,
-                                           parentId: Int) -> (any SessionReplayViewThingy)? {
+                                           parentId: Int,
+                                           originalView: UIView) -> (any SessionReplayViewThingy)? {
         
         let displayListId = Int(SwiftUIDisplayList.Index.ID(identity: item.identity).identity.value)
         let frame = baseContext.convert(frame: item.frame)
-        let viewName = "SwiftUIView"
-                
+        let viewName = randomString()
+
         func makeDetails() -> ViewDetails {
             ViewDetails(frame: frame,
                         clip: viewAttributes.clip,
@@ -137,8 +142,14 @@ final class UIHostingViewRecordOrchestrator {
                         parentId: parentId,
                         cornerRadius: viewAttributes.layerCornerRadius,
                         borderWidth: viewAttributes.layerBorderWidth,
-                        viewId: Int(content.seed.value),
-                        isMasked: viewAttributes.maskApplicationText ?? true) // viewAttributes.maskUserInput
+                        borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),//Int(content.seed.value),
+                        viewId: displayListId,
+                        view: originalView,
+                        maskApplicationText: viewAttributes.maskApplicationText,
+                        maskUserInputText: viewAttributes.maskUserInputText,
+                        maskAllImages: viewAttributes.maskAllImages,
+                        maskAllUserTouches: viewAttributes.maskAllUserTouches,
+                        sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier) // viewAttributes.maskUserInput
         }
         
         switch content.value {
@@ -169,13 +180,6 @@ final class UIHostingViewRecordOrchestrator {
             else {
                 outputText = storage.string
             }
-            /*
-             DECIDE MASKING POLICY FOR textView
-             
-             print current viewAttributes , parentUIView , SwiftUIContext
-             */
-            
-            
             
             return UILabelThingy(viewDetails: details,
                                  text: outputText,

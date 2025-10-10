@@ -11,14 +11,14 @@ import SwiftUI
 @available(iOS 16, *)
 struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
 
-    let maskApplicationText: Bool
-    let maskUserInputText: Bool
-    let maskAllImages: Bool
-    let maskAllUserTouches: Bool
+    let maskApplicationText: Bool?
+    let maskUserInputText: Bool?
+    let maskAllImages: Bool?
+    let maskAllUserTouches: Bool?
     
     let activated: Bool
 
-    let sessionReplayIdentifier: Int?
+    let sessionReplayIdentifier: String?
     
     let content: () -> Content
 
@@ -49,7 +49,7 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
         hostVC.view.maskUserInputText = maskUserInputText
         hostVC.view.maskAllImages = maskAllImages
         hostVC.view.maskAllUserTouches = maskAllUserTouches
-        hostVC.view.sessionReplayIdentifier = sessionReplayIdentifier
+        hostVC.view.swiftUISessionReplayIdentifier = sessionReplayIdentifier
         
         //env forwarding    
 
