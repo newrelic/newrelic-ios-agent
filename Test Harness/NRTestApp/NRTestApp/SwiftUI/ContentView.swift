@@ -100,7 +100,6 @@ struct SwiftUIContentView: View {
             
         }
         .NRTrackView(name: "SwiftUIContentView")
-
         .onAppear {
             let _ = ViewBodyTracker.track(self)  // ← At top level view
         }

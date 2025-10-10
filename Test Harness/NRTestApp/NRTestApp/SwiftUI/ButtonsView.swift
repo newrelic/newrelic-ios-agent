@@ -17,6 +17,7 @@ struct ButtonsView: View {
         VStack(spacing: 20) {
             Text("Buttons Demo")
                 .font(.largeTitle)
+                .nrMasked()
 
             // Standard Button
             Button(action: {

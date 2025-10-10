@@ -14,7 +14,13 @@ struct ListsView: View {
     var body: some View {
         NavigationView {
             List(items, id: \.self) { item in
-                Text(item)
+                if item == "Item 3" {
+                    Text(item)
+                        .nrMasked()
+
+                }else {
+                    Text(item)
+                }
             }
             .navigationBarTitle("Lists")
             .NRTrackView(name: "ListsView")

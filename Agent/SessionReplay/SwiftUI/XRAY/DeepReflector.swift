@@ -4,51 +4,7 @@ import UIKit
 /// 🔬 A framework for deeply reflecting on a SwiftUI View to extract its modifier chain.
 @available(iOS 13.0, tvOS 13.0, *)
 public enum DeepReflector {
-    
-    
-    // The version that starts w. mirror
-    
-    //    public static func analyze(viewMirror: Mirror) -> [AnyHashable: [any ViewModifier]] {
-    //        // print("\n🔬 [DeepReflection] ========== STARTING ANALYSIS ==========")
-    //        let rootViewType = viewMirror.subjectType//"\(type(of: view))"
-    //          print("🔬 [DeepReflection] RootView type: \(rootViewType)")
-    //
-    //
-    //        //                 ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>
-    //        //        if rootViewType == "ModifiedContent<ModifiedContent<Element, NavigationColumnModifier>, StyleContextWriter<SidebarStyleContext>>" {
-    //        //            //print("caught")
-    //        //            return [:]
-    //        //        }
-    //
-    //        var associations: [AnyHashable: [any ViewModifier]] = [:]
-    //        var modifiers: [any ViewModifier] = []
-    //        // **NEW**: A set to track visited class instances to prevent infinite loops.
-    //        var visited = Set<ObjectIdentifier>()
-    //
-    //        // Start the recursive traversal with the initial view.
-    //        // The default ID of `0` catches any modifiers applied before the first `.id()` is found.
-    //        traverse(view: viewMirror as Any, currentID: AnyHashable(0), associations: &associations, accumulating: &modifiers, visited: &visited, depth: 0)
-    //
-    //        //print("\n🔬 [DeepReflection] ========== ANALYSIS COMPLETE ==========")
-    //        var count = 0
-    //        // Final report logging
-    //        for (id, mods) in associations.sorted(by: { String(describing: $0.key) < String(describing: $1.key) }) {
-    //            // print("🔬 [DeepReflection] 📌 ID: '\(id)' -> \(mods.count) modifier(s)")
-    //            for (idx, modifier) in mods.enumerated() {
-    //                let modType = String(describing: type(of: modifier))
-    //                count += 1
-    //                //print("🔬 [DeepReflection]   [\(idx)] Type: \(modType)")
-    //            }
-    //        }
-    //        print("🔬 [DeepReflection] Total unique IDs found: \(associations.keys.count) unique ID(s) \(count) total modifier(s)")
-    //
-    //        //print("🔬 [DeepReflection] ==========================================\n")
-    //
-    //        return associations
-    //    }
-    
-    
-    
+
     /// Analyzes an entire view hierarchy, extracting all modifiers and
     /// associating them with the nearest preceding `.id()` tag.
     ///
@@ -100,8 +56,6 @@ public enum DeepReflector {
         visited: inout Set<ObjectIdentifier>, // Pass the tracker
         depth: Int
     ) {
-        var foundDirectViews = false
-        
         // Create indentation for readable logging.
         let indent = String(repeating: "  ", count: depth)
         
@@ -142,7 +96,7 @@ public enum DeepReflector {
             return
         }
         
-        if let view = view as? any View {
+//        if let view = view as? any View {
             // Attempt skip statemful wrappers that cause runtime issues.
             
 //            if viewTypeName.starts(with: "Binding<") || viewTypeName.starts(with: "State<") || viewTypeName.starts(with: "Optional<Binding<") || viewTypeName.starts(with: "Array<Binding<"){ return }
@@ -236,7 +190,6 @@ public enum DeepReflector {
                     let mirrorChildren = Array(mirror.children)
                     
                     for child in mirrorChildren  {
-                        foundDirectViews = true
                         
                         traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
                     }
@@ -246,36 +199,21 @@ public enum DeepReflector {
             else {
                 // SHOULD WE USE THIS? PROBABLY NOT ???? We need it? How to get it in a more stable way? that doesn't cause BLUE RUNTIME DEATH WARNINGS
                 //let mirror = Mirror(reflecting:view.body)
-                let mirror2 = Mirror(reflecting:view)
+                let mirror = Mirror(reflecting:view)
                 
                 // let mirrorChildren = Array(mirror.children)
-                let mirrorChildren2 = Array(mirror2.children)
+                let mirrorChildren = Array(mirror.children)
                 
-                //                for child in mirrorChildren  {
-                //
-                //                    foundDirectViews = true
-                //
-                //                    traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
-                //
-                //                }
                 
-                for child in mirrorChildren2  {
-                    
-                    foundDirectViews = true
-                    if let childView = child.value as? () -> any View {
-                        traverse(view: childView, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
-                        
-                    }
-                    else {
-                        traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
-                    }
+                for child in mirrorChildren  {
+                    traverse(view: child.value, currentID: currentID, associations: &associations, accumulating: &modifiers, visited: &visited, depth: depth + 1)
                     
                 }
                 
                 return
             }
             
-        }
+//        }
         
         // **Case 1: ModifiedContent** - The core of modifier extraction.
         // This is the wrapper for any `.modifier()` call. We peel it off and recurse.

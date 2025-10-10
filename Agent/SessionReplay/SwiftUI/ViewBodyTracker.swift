@@ -13,43 +13,52 @@ import SwiftUI
 public class ViewBodyTracker {
     static let shared = ViewBodyTracker()
     
-    struct BodyCallInfo {
+    private(set) var bodyCallsByView: [String: BodyCallInfo] = [:]
+    
+    public struct BodyCallInfo {
         let viewType: String
         let timestamp: Date
         let callStack: [String]
         let changed: Bool
-        let viewMirror: any View  // Mirror of the view itself
+        let viewMirror: any View
     }
     
-    private(set) var bodyCalls: [BodyCallInfo] = []
-    private let queue = DispatchQueue(label: "com.viewbodytracker")
+    private init() {}
     
     public static func track<V: View>( _ view: V) {
-        let stack = Thread.callStackSymbols
-        let changed = stack.contains { $0.contains("changed") }
         
-       // print("Tracking body call for \(type(of: view)), changed: \(changed)")
-        
-        shared.bodyCalls.append(BodyCallInfo(
-            viewType: String(describing: type(of: view)),
-            timestamp: Date(),
-            callStack: Array(stack.prefix(10)),
-            changed: changed,
-            viewMirror: view.body,
-        ))
-        
-        for bodyCall in shared.bodyCalls {
-            //print("- \(bodyCall.viewType) at \(bodyCall.timestamp)")
-            //print("  - Call stack:")
-            //bodyCall.callStack.forEach { print("    - \($0)") }
-            //print("  - Changed: \(bodyCall.changed)")
-            
-            let mods = DeepReflector.analyze(view: bodyCall.viewMirror)
-           // print(mods)
+        Task{
+            await MainActor.run {
+                let viewBody = view.body
+                let fullyQualifiedNameOne = String(reflecting: type(of: view))
+
+                let fullyQualifiedName = String(reflecting: type(of: viewBody))
+                let stack = Thread.callStackSymbols
+                let changed = stack.contains { $0.contains("changed")  || $0.contains("run10resultType4body")}
+                
+                    let info = BodyCallInfo(
+                        viewType: fullyQualifiedName,
+                        timestamp: Date(),
+                        callStack: Array(stack.prefix(10)),
+                        changed: changed,
+                        viewMirror: viewBody,
+                    )
+                    
+                shared.bodyCallsByView[fullyQualifiedName] = (info)
+                shared.bodyCallsByView[fullyQualifiedNameOne] = (info)
+                
+                //print("added fullyQualifiedName: \(fullyQualifiedName)")
+            }
         }
     }
 
-
-
+    
+    func getCall(for viewType: String) -> BodyCallInfo? {
+            bodyCallsByView[viewType]
+    }
+    
+    func clear() {
+            self.bodyCallsByView.removeAll()
+    }
     
 }

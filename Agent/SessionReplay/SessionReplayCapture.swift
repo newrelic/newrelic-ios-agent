@@ -118,63 +118,70 @@ class SessionReplayCapture {
             let className = NSStringFromClass(type(of: viewController))
              //NRLOG_DEBUG("Finding recorder for CLASS NAME: \(className)")
             
-
-
-            
-            
             let hostingThingy = UIViewThingy(view: originalView,
                                              viewDetails: ViewDetails(view: originalView))
             //NRLOG_DEBUG("HOSTING THINGY: \(hostingThingy) frame: \(hostingThingy.viewDetails.frame) viewId: \(hostingThingy.viewDetails.viewId) parentId: \(hostingThingy.viewDetails.parentId ?? -1)")
             
-            
-//            if let viewToAnalyze = getSwiftUIView(from: originalView) {
-//               // print("--- 🚀 Starting SwiftUI View Inspection ---")
-//
-//    
-//                let associatedModifiers = DeepReflector.analyze(view: viewToAnalyze)
-//                
-//                //print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
-//                for (id, modifiers) in associatedModifiers {
-//                    //print("\n  - ID: '\(id)'")
-//                    
-//                    guard !modifiers.isEmpty else {
-//                        print("    (No direct modifiers)")
-//                        continue
-//                    }
-//                    for modifier in modifiers {
-//                        
-//                        
-//                        // For support of nrMasked and its varoius overrides we have
-//                        if let mod = modifier as? NRMaskingViewModifier {
-//                           // print("found NRModifier    - \(mod)")
-//
-//                        }
-//                        else {
-//                            // TODO: Handle accessibilty identifier mod
-//                            let typeName = String(reflecting: type(of: modifier))
-//                            
-//                           // print("    - \(typeName)")
-//                            
-//                            switch typeName {
-//                                
-//                            case "SwiftUI.AccessibilityAttachmentModifier":
-//                                break
-//                                // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
-//                                
-//                                
-//                            default:
-//                                break
-//                            }
-//                        }
-//                    }
-//                }
-//                //print("\n--- ✅ Inspection Complete ---")
-//            }
-//            else {
-//                print("Could not get root view from hosting controller.")
-//                return hostingThingy
-//
-//            }
+            if let viewToAnalyze = getSwiftUIView(from: originalView) {
+//                print("--- 🚀 Starting SwiftUI View Inspection ---")
+
+                // get fully qualified viewToAnalyse type name
+                let fullyQualifiedName = String(reflecting: type(of: viewToAnalyze))
+
+                print("lookup for: \(fullyQualifiedName)")
+                
+                /*
+                 Handle SplitViewcontrollers like Landmarks  app
+                 _UIHostingView<ModifiedContent<AnyView, RootModifier>>
+                */
+                
+                if let bodyContent = ViewBodyTracker.shared.bodyCallsByView[fullyQualifiedName] {
+                    let associatedModifiers = DeepReflector.analyze(view: bodyContent.viewMirror)
+                    
+                    //print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
+                    for (id, modifiers) in associatedModifiers {
+                        //print("\n  - ID: '\(id)'")
+                        
+                        guard !modifiers.isEmpty else {
+                            print("    (No direct modifiers)")
+                            continue
+                        }
+                        for modifier in modifiers {
+                            
+                            
+                            // For support of nrMasked and its varoius overrides we have
+                            if let mod = modifier as? NRMaskingViewModifier {
+                                print("found NRModifier    - \(mod)")
+
+                            }
+                            else {
+                                // TODO: Handle accessibilty identifier mod
+                                let typeName = String(reflecting: type(of: modifier))
+                                
+                               // print("    - \(typeName)")
+                                
+                                switch typeName {
+                                    
+                                case "SwiftUI.AccessibilityAttachmentModifier":
+                                    break
+                                    // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
+                                    
+                                    
+                                default:
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    //print("\n--- ✅ Inspection Complete ---")
+
+                }
+            }
+            else {
+                print("Could not get root view from hosting controller.")
+                return hostingThingy
+
+            }
             
             let viewAttributes = SwiftUIViewAttributes(frame: hostingThingy.viewDetails.frame,
                                                        clip: hostingThingy.viewDetails.clip,
@@ -187,10 +194,10 @@ class SessionReplayCapture {
             
             let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(originalView, context: context, viewAttributes: viewAttributes, parentId: hostingThingy.viewDetails.viewId)
             
-            //logThingys(thingys)
+         //   logThingys(thingys)
             
             if !thingys.isEmpty {
-                // print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
+                 print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
                 hostingThingy.subviews.append(contentsOf: thingys)
             }
             
@@ -235,23 +242,23 @@ class SessionReplayCapture {
         return !(areFramesTheSame && isClear)
     }
     
-    //    func logThingys(_ things: [any SessionReplayViewThingy]) {
-    //        var lines: [String] = []
-    //        lines.reserveCapacity(things.count)
-    //
-    //        for thing in things {
-    //            let frame = thing.viewDetails.frame
-    //            let viewId = thing.viewDetails.viewId
-    //            let parentId = thing.viewDetails.parentId ?? -1
-    //            let viewName = thing.viewDetails.viewName ?? "NoName"
-    //            let typeName = String(describing: type(of: thing))
-    //            let line = "\(typeName) - id:\(viewId) parent:\(parentId) name:\(viewName) frame:(\(String(format: "%.2f", frame.origin.x)), \(String(format: "%.2f", frame.origin.y)), \(String(format: "%.2f", frame.size.width)), \(String(format: "%.2f", frame.size.height)))"
-    //            lines.append(line)
-    //        }
-    //        let newLog = lines.joined(separator: "\n")
-    //        //NRLOG_DEBUG("THINGIES for SwiftUI view:")
-    //        //NRLOG_DEBUG(newLog)
-    //        //NRLOG_DEBUG("END Thingys for SwiftUI view:")
-    //    }
+//        func logThingys(_ things: [any SessionReplayViewThingy]) {
+//            var lines: [String] = []
+//            lines.reserveCapacity(things.count)
+//    
+//            for thing in things {
+//                let frame = thing.viewDetails.frame
+//                let viewId = thing.viewDetails.viewId
+//                let parentId = thing.viewDetails.parentId ?? -1
+//                let viewName = thing.viewDetails.viewName ?? "NoName"
+//                let typeName = String(describing: type(of: thing))
+//                let line = "\(typeName) - id:\(viewId) parent:\(parentId) name:\(viewName) frame:(\(String(format: "%.2f", frame.origin.x)), \(String(format: "%.2f", frame.origin.y)), \(String(format: "%.2f", frame.size.width)), \(String(format: "%.2f", frame.size.height)))"
+//                lines.append(line)
+//            }
+//            let newLog = lines.joined(separator: "\n")
+//            //NRLOG_DEBUG("THINGIES for SwiftUI view:")
+//            //NRLOG_DEBUG(newLog)
+//            //NRLOG_DEBUG("END Thingys for SwiftUI view:")
+//        }
 }
 
