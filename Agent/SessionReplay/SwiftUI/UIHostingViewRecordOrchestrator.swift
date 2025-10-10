@@ -23,6 +23,20 @@ final class UIHostingViewRecordOrchestrator {
         return keys
     }()
     
+    static func evaluateViewInfo(renderer: AnyObject) {
+        // descendendant path what we want is
+        // renderer.viewcCache.map[n].value.view which is a
+        // view    SwiftUI.UIKitPlatformViewHost<SwiftUI.PlatformViewControllerRepresentableAdaptor<SwiftUI.MulticolumnSplitViewRepresentable<SwiftUI.ModifiedContent<SwiftUI._VariadicView_Children.Element, SwiftUI.NavigationColumnModifier>, Never, SwiftUI._UnaryViewAdaptor<SwiftUI.EmptyView>>>>    0x0000000106c0f440
+        //
+        /*
+         Printing description of ((SwiftUI.UIKitPlatformViewHost<SwiftUI.PlatformViewControllerRepresentableAdaptor<SwiftUI.MulticolumnSplitViewRepresentable<SwiftUI.ModifiedContent<SwiftUI._VariadicView_Children.Element, SwiftUI.NavigationColumnModifier>, Swift.Never, SwiftUI._UnaryViewAdaptor<SwiftUI.EmptyView>>>>)0x0000000106c0f440):
+         <_TtGC7SwiftUI21UIKitPlatformViewHostGVS_42PlatformViewControllerRepresentableAdaptorGVS_33MulticolumnSplitViewRepresentableGVS_15ModifiedContentVVS_22_VariadicView_Children7ElementVS_24NavigationColumnModifier_Os5NeverGVS_17_UnaryViewAdaptorVS_9EmptyView____: 0x106c0f440; baseClass = _TtGC5UIKit22UICorePlatformViewHostGV7SwiftUI42PlatformViewControllerRepresentableAdaptorGVS1_33MulticolumnSplitViewRepresentableGVS1_15ModifiedContentVVS1_22_VariadicView_Children7ElementVS1_24NavigationColumnModifier_Os5NeverGVS1_17_UnaryViewAdaptorVS1_9EmptyView____; frame = (0 0; 402 874); anchorPoint = (0, 0); tintColor = UIExtendedSRGBColorSpace 0 0.533333 1 1; layer = <CALayer: 0x600000c1ebb0>>
+         */
+        let xray = XrayDecoder(subject: renderer as Any)
+        
+    }
+        
+    
     // Entry point (renamed for clarity; keep old name if externally referenced)
     static func swiftUIViewThingys(_ view: UIView,
                                    context: SwiftUIContext,
@@ -35,6 +49,10 @@ final class UIHostingViewRecordOrchestrator {
         
         do {
             guard let rendererObj = try? getViewRenderer(from: view, keyPath: rendererKeyPath) else { return [] }
+            
+            // evaluate view info
+            evaluateViewInfo(renderer: rendererObj)
+            
             let xray = XrayDecoder(subject: rendererObj as Any)
             let viewRenderer = try SwiftUIDisplayList.ViewRenderer(xray: xray)
             
@@ -123,7 +141,6 @@ final class UIHostingViewRecordOrchestrator {
                                            parentId: Int) -> (any SessionReplayViewThingy)? {
         
         let displayListId = Int(SwiftUIDisplayList.Index.ID(identity: item.identity).identity.value)
-        print("encountered displayListId \(displayListId)")
         let frame = baseContext.convert(frame: item.frame)
         let viewName = "SwiftUIView"
                 

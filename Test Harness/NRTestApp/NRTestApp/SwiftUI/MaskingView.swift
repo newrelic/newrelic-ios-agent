@@ -169,6 +169,9 @@ struct MaskingView: View {
         }
         .navigationTitle("Masking Permutations")
         .NRTrackView(name: "MaskingPermutationsView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 
     private func sectionTitle(_ text: String) -> some View {

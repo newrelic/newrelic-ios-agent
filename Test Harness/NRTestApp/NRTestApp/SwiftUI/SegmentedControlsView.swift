@@ -30,6 +30,9 @@ struct SegmentedControlsView: View {
         }
         .navigationTitle("Segmented Controls")
         .NRTrackView(name: "SegmentedControlsView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

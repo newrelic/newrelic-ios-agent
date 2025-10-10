@@ -37,6 +37,9 @@ struct SteppersView: View {
         .navigationTitle("Steppers")
         .padding()
         .NRTrackView(name: "SteppersView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

@@ -47,6 +47,9 @@ struct TextFieldsView: View {
         }
         .navigationBarTitle("Text Fields")
         .NRTrackView(name: "TextFieldsView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

@@ -25,6 +25,9 @@ struct ScrollViewsView: View {
         }
         .navigationTitle("Scroll Views")
         .NRTrackView(name: "ScrollViewsView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

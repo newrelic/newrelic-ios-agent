@@ -19,6 +19,9 @@ struct ListsView: View {
             .navigationBarTitle("Lists")
             .NRTrackView(name: "ListsView")
         }
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

@@ -56,6 +56,9 @@ struct ProgressViewsView: View {
         }
         .padding()
         .NRTrackView(name: "ProgressViewsView")
+        .onAppear {
+            let _ = ViewBodyTracker.track(self)  // ← At top level view
+        }
     }
 }
 

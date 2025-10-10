@@ -137,54 +137,54 @@ class SessionReplayCapture {
             //NRLOG_DEBUG("HOSTING THINGY: \(hostingThingy) frame: \(hostingThingy.viewDetails.frame) viewId: \(hostingThingy.viewDetails.viewId) parentId: \(hostingThingy.viewDetails.parentId ?? -1)")
             
             
-            if let viewToAnalyze = getSwiftUIView(from: originalView) {
-               // print("--- 🚀 Starting SwiftUI View Inspection ---")
-
-    
-                let associatedModifiers = DeepReflector.analyze(view: viewToAnalyze)
-                
-                //print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
-                for (id, modifiers) in associatedModifiers {
-                    //print("\n  - ID: '\(id)'")
-                    
-                    guard !modifiers.isEmpty else {
-                        print("    (No direct modifiers)")
-                        continue
-                    }
-                    for modifier in modifiers {
-                        
-                        
-                        // For support of nrMasked and its varoius overrides we have
-                        if let mod = modifier as? NRMaskingViewModifier {
-                           // print("found NRModifier    - \(mod)")
-
-                        }
-                        else {
-                            // TODO: Handle accessibilty identifier mod
-                            let typeName = String(reflecting: type(of: modifier))
-                            
-                           // print("    - \(typeName)")
-                            
-                            switch typeName {
-                                
-                            case "SwiftUI.AccessibilityAttachmentModifier":
-                                break
-                                // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
-                                
-                                
-                            default:
-                                break
-                            }
-                        }
-                    }
-                }
-                //print("\n--- ✅ Inspection Complete ---")
-            }
-            else {
-                print("Could not get root view from hosting controller.")
-                return hostingThingy
-
-            }
+//            if let viewToAnalyze = getSwiftUIView(from: originalView) {
+//               // print("--- 🚀 Starting SwiftUI View Inspection ---")
+//
+//    
+//                let associatedModifiers = DeepReflector.analyze(view: viewToAnalyze)
+//                
+//                //print("\n🔬 Associated Modifiers by View ID -- \(associatedModifiers.count) items")
+//                for (id, modifiers) in associatedModifiers {
+//                    //print("\n  - ID: '\(id)'")
+//                    
+//                    guard !modifiers.isEmpty else {
+//                        print("    (No direct modifiers)")
+//                        continue
+//                    }
+//                    for modifier in modifiers {
+//                        
+//                        
+//                        // For support of nrMasked and its varoius overrides we have
+//                        if let mod = modifier as? NRMaskingViewModifier {
+//                           // print("found NRModifier    - \(mod)")
+//
+//                        }
+//                        else {
+//                            // TODO: Handle accessibilty identifier mod
+//                            let typeName = String(reflecting: type(of: modifier))
+//                            
+//                           // print("    - \(typeName)")
+//                            
+//                            switch typeName {
+//                                
+//                            case "SwiftUI.AccessibilityAttachmentModifier":
+//                                break
+//                                // (label: Optional("some"), value: SwiftUI.MutableBox<SwiftUI.AccessibilityAttachment>)
+//                                
+//                                
+//                            default:
+//                                break
+//                            }
+//                        }
+//                    }
+//                }
+//                //print("\n--- ✅ Inspection Complete ---")
+//            }
+//            else {
+//                print("Could not get root view from hosting controller.")
+//                return hostingThingy
+//
+//            }
             
             let viewAttributes = SwiftUIViewAttributes(frame: hostingThingy.viewDetails.frame,
                                                        clip: hostingThingy.viewDetails.clip,
