@@ -7,20 +7,13 @@
 
 import Foundation
 import UIKit
-/*
- hostingController.view.masking.maskApplicationText
- hostingController.view.masking.maskUserInputText
- hostingController.view.masking.maskAllImages
- hostingController.view.masking.maskAllUserTouches
- */
-
 
 internal var associatedMaskApplicationTextKey: UInt8 = 3
 internal var associatedMaskUserInputTextKey: UInt8 = 4
 internal var associatedMaskAllUserTouchesKey: UInt8 = 5
 internal var associatedMaskAllImagesKey: UInt8 = 6
 
-
+#if os(iOS)
 extension UIView {
 
     public var maskApplicationText: Bool? {
@@ -91,3 +84,4 @@ extension UIView {
         }
     }
 }
+#endif
