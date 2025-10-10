@@ -140,6 +140,7 @@ class UILabelThingy: SessionReplayViewThingy {
     
     init(viewDetails: ViewDetails, text: String, textAlignment: String, fontSize: CGFloat, fontName: String, fontFamily: String, textColor: UIColor) {
         self.viewDetails = viewDetails
+        self.viewDetails.backgroundColor = .clear
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
