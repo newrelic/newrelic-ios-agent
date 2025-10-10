@@ -8,7 +8,7 @@
 import UIKit
 import NewRelic
 
-#if os(iOS) || os(tvOS)
+#if os(iOS)
 
 class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     var viewModel = TextMaskingViewModel()
