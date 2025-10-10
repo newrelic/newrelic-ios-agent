@@ -125,7 +125,7 @@ final class UIHostingViewRecordOrchestrator {
         let displayListId = Int(SwiftUIDisplayList.Index.ID(identity: item.identity).identity.value)
         print("encountered displayListId \(displayListId)")
         let frame = baseContext.convert(frame: item.frame)
-        let viewName = randomString()
+        let viewName = "SwiftUIView"
                 
         func makeDetails() -> ViewDetails {
             ViewDetails(frame: frame,
@@ -137,7 +137,7 @@ final class UIHostingViewRecordOrchestrator {
                         parentId: parentId,
                         cornerRadius: viewAttributes.layerCornerRadius,
                         borderWidth: viewAttributes.layerBorderWidth,
-                        viewId: displayListId)
+                        viewId: Int(content.seed.value))
         }
         
         switch content.value {
