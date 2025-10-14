@@ -37,7 +37,6 @@
 		2B00013B2E34083400543C1B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */; };
 		2B00013C2E34083400543C1B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8302B01296F5EFB003EC291 /* Assets.xcassets */; };
 		2B00014E2E34089500543C1B /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B00014D2E34089500543C1B /* NewRelic */; };
-		2B03F6562E450CCF00DBA375 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F6552E450CCF00DBA375 /* NewRelic */; };
 		2B03F6592E452CCA00DBA375 /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F6582E452CCA00DBA375 /* PerformanceSuite */; };
 		2B03F65F2E45335100DBA375 /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F65E2E45335100DBA375 /* MetricsConsumer.swift */; };
 		2B03F6602E45335100DBA375 /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F65E2E45335100DBA375 /* MetricsConsumer.swift */; };
@@ -50,7 +49,6 @@
 		2B03F66E2E45352500DBA375 /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */; };
 		2B03F66F2E45352500DBA375 /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */; };
 		2B03F6702E45352500DBA375 /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */; };
-		2B03F6722E4535DE00DBA375 /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F6712E4535DE00DBA375 /* PerformanceSuite */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
 		2B358B5B2E9DD1B200DFB02F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */; };
@@ -70,14 +68,39 @@
 		2B358B702E9DD27100DFB02F /* DatePickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */; };
 		2B358B712E9DD27100DFB02F /* ButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */; };
 		2B358B722E9DD28A00DFB02F /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
-		2B3CDF732E3AC43A00EEAC27 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B3CDF722E3AC43A00EEAC27 /* NewRelic */; };
+		2B459FDF2E9EF52500CB66F3 /* NRTestAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B0F296F5EFB003EC291 /* NRTestAppTests.swift */; };
+		2B459FE02E9EF52500CB66F3 /* NRTestAppFakeNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */; };
+		2B459FE12E9EF52500CB66F3 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
+		2B459FF52E9EF52F00CB66F3 /* Socket+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAB2ADF2DF600C0C972 /* Socket+File.swift */; };
+		2B459FF62E9EF52F00CB66F3 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
+		2B459FF72E9EF52F00CB66F3 /* String+Misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAD2ADF2DF600C0C972 /* String+Misc.swift */; };
+		2B459FF82E9EF52F00CB66F3 /* String+BASE64.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAC2ADF2DF600C0C972 /* String+BASE64.swift */; };
+		2B459FF92E9EF52F00CB66F3 /* HTTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAF2ADF2DF600C0C972 /* HTTPParser.swift */; };
+		2B459FFA2E9EF52F00CB66F3 /* String+SHA1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA42ADF2DF600C0C972 /* String+SHA1.swift */; };
+		2B459FFB2E9EF52F00CB66F3 /* Errno.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAA2ADF2DF600C0C972 /* Errno.swift */; };
+		2B459FFC2E9EF52F00CB66F3 /* HttpRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA72ADF2DF600C0C972 /* HttpRequest.swift */; };
+		2B459FFD2E9EF52F00CB66F3 /* HttpRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAE2ADF2DF600C0C972 /* HttpRouter.swift */; };
+		2B459FFE2E9EF52F00CB66F3 /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA62ADF2DF600C0C972 /* Files.swift */; };
+		2B459FFF2E9EF52F00CB66F3 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
+		2B45A0002E9EF52F00CB66F3 /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB12ADF2DF600C0C972 /* Socket.swift */; };
+		2B45A0012E9EF52F00CB66F3 /* Socket+Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA32ADF2DF600C0C972 /* Socket+Server.swift */; };
+		2B45A0022E9EF52F00CB66F3 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */; };
+		2B45A0032E9EF52F00CB66F3 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
+		2B45A0042E9EF52F00CB66F3 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
+		2B45A0052E9EF52F00CB66F3 /* HttpServerIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */; };
+		2B45A0062E9EF52F00CB66F3 /* HttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA92ADF2DF600C0C972 /* HttpServer.swift */; };
+		2B45A0072E9EF52F00CB66F3 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
+		2B45A0082E9EF52F00CB66F3 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
+		2B45A0092E9EF52F00CB66F3 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
+		2B45A00C2E9EF52F00CB66F3 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD05DF12ADF32D300C0C972 /* harvestConnector.json */; };
+		2B45A00D2E9EF52F00CB66F3 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
+		2B45A00E2E9EF52F00CB66F3 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E45F2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
-		2B6BEC282E37FC3D0054ECF1 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B6BEC272E37FC3D0054ECF1 /* NewRelic */; };
 		2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2B8A46A02E4A880600DEB854 /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
@@ -124,7 +147,6 @@
 		2BE225182E60EE3300B300C8 /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
@@ -233,12 +255,40 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2B459FDD2E9EF52500CB66F3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2B00011A2E34083400543C1B;
+			remoteInfo = NRTestAppAsFramework;
+		};
+		2B459FF32E9EF52F00CB66F3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2B00011A2E34083400543C1B;
+			remoteInfo = NRTestAppAsFramework;
+		};
 		2B94FC912C3F47B1006B9869 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 3431DD172BED375E00FF145F;
 			remoteInfo = "Agent-watchos-Tests";
+		};
+		2BB91D3C2E9EC56700E1624C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2B00011A2E34083400543C1B;
+			remoteInfo = NRTestAppAsFramework;
+		};
+		2BB91D452E9EC6CB00E1624C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302AED296F5EFA003EC291 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2B00011A2E34083400543C1B;
+			remoteInfo = NRTestAppAsFramework;
 		};
 		2BD05DD72ADF323A00C0C972 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -357,6 +407,10 @@
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
 		2B3493692E8EF15A006DE9D0 /* MaskingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingView.swift; sourceTree = "<group>"; };
+		2B459FE72E9EF52500CB66F3 /* NRTestAppAsFrameworkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NRTestAppAsFrameworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B45A0122E9EF52F00CB66F3 /* NRTestAppAsFrameworkUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NRTestAppAsFrameworkUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2B45A0132E9EF52F00CB66F3 /* NRTestAppAsFrameworkUITests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestAppAsFrameworkUITests-Info.plist"; path = "/Users/cdillard/Documents/Workspace/newrelic-ios-agent-copy/newrelic-ios-agent/Test Harness/NRTestApp/NRTestAppAsFrameworkUITests-Info.plist"; sourceTree = "<absolute>"; };
+		2B45A0142E9EF6EA00CB66F3 /* NRTestAppAsFramework.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = NRTestAppAsFramework.xctestplan; sourceTree = SOURCE_ROOT; };
 		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
@@ -465,12 +519,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				2B00014E2E34089500543C1B /* NewRelic in Frameworks */,
-				2B03F6562E450CCF00DBA375 /* NewRelic in Frameworks */,
 				2B03F6592E452CCA00DBA375 /* PerformanceSuite in Frameworks */,
 				2B03F66C2E45350900DBA375 /* GCDWebServer in Frameworks */,
-				2B3CDF732E3AC43A00EEAC27 /* NewRelic in Frameworks */,
-				2B6BEC282E37FC3D0054ECF1 /* NewRelic in Frameworks */,
-				2B03F6722E4535DE00DBA375 /* PerformanceSuite in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B459FE22E9EF52500CB66F3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B45A00A2E9EF52F00CB66F3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -494,7 +558,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
-				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -582,6 +645,7 @@
 		2BD05DD22ADF323A00C0C972 /* NRTestAppUITests */ = {
 			isa = PBXGroup;
 			children = (
+				2B45A0142E9EF6EA00CB66F3 /* NRTestAppAsFramework.xctestplan */,
 				2B2317DE2ADF442100D521E1 /* Info.plist */,
 				2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */,
 				2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */,
@@ -634,6 +698,7 @@
 				F8F5D8212BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests */,
 				F8302AF6296F5EFA003EC291 /* Products */,
 				F8302B8129705B28003EC291 /* Frameworks */,
+				2B45A0132E9EF52F00CB66F3 /* NRTestAppAsFrameworkUITests-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -648,6 +713,8 @@
 				F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */,
 				F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */,
 				2B0001432E34083400543C1B /* NRTestAppAsFramework.app */,
+				2B459FE72E9EF52500CB66F3 /* NRTestAppAsFrameworkTests.xctest */,
+				2B45A0122E9EF52F00CB66F3 /* NRTestAppAsFrameworkUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -839,6 +906,42 @@
 			productReference = 2B0001432E34083400543C1B /* NRTestAppAsFramework.app */;
 			productType = "com.apple.product-type.application";
 		};
+		2B459FD92E9EF52500CB66F3 /* NRTestAppAsFrameworkTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B459FE42E9EF52500CB66F3 /* Build configuration list for PBXNativeTarget "NRTestAppAsFrameworkTests" */;
+			buildPhases = (
+				2B459FDE2E9EF52500CB66F3 /* Sources */,
+				2B459FE22E9EF52500CB66F3 /* Frameworks */,
+				2B459FE32E9EF52500CB66F3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2B459FDC2E9EF52500CB66F3 /* PBXTargetDependency */,
+			);
+			name = NRTestAppAsFrameworkTests;
+			productName = NRTestAppTests;
+			productReference = 2B459FE72E9EF52500CB66F3 /* NRTestAppAsFrameworkTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		2B459FEF2E9EF52F00CB66F3 /* NRTestAppAsFrameworkUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B45A00F2E9EF52F00CB66F3 /* Build configuration list for PBXNativeTarget "NRTestAppAsFrameworkUITests" */;
+			buildPhases = (
+				2B459FF42E9EF52F00CB66F3 /* Sources */,
+				2B45A00A2E9EF52F00CB66F3 /* Frameworks */,
+				2B45A00B2E9EF52F00CB66F3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2B459FF22E9EF52F00CB66F3 /* PBXTargetDependency */,
+			);
+			name = NRTestAppAsFrameworkUITests;
+			productName = NRTestAppUITests;
+			productReference = 2B45A0122E9EF52F00CB66F3 /* NRTestAppAsFrameworkUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		2BD05DD02ADF323A00C0C972 /* NRTestAppUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2BD05DD92ADF323A00C0C972 /* Build configuration list for PBXNativeTarget "NRTestAppUITests" */;
@@ -851,6 +954,7 @@
 			);
 			dependencies = (
 				2BD05DD82ADF323A00C0C972 /* PBXTargetDependency */,
+				2BB91D462E9EC6CB00E1624C /* PBXTargetDependency */,
 			);
 			name = NRTestAppUITests;
 			productName = NRTestAppUITests;
@@ -907,6 +1011,7 @@
 			);
 			dependencies = (
 				F8302B0D296F5EFB003EC291 /* PBXTargetDependency */,
+				2BB91D3D2E9EC56700E1624C /* PBXTargetDependency */,
 			);
 			name = NRTestAppTests;
 			productName = NRTestAppTests;
@@ -978,6 +1083,12 @@
 				LastSwiftUpdateCheck = 1530;
 				LastUpgradeCheck = 1420;
 				TargetAttributes = {
+					2B459FD92E9EF52500CB66F3 = {
+						TestTargetID = 2B00011A2E34083400543C1B;
+					};
+					2B459FEF2E9EF52F00CB66F3 = {
+						TestTargetID = 2B00011A2E34083400543C1B;
+					};
 					2BD05DD02ADF323A00C0C972 = {
 						CreatedOnToolsVersion = 15.0;
 						TestTargetID = F8302AF4296F5EFA003EC291;
@@ -1018,7 +1129,7 @@
 			packageReferences = (
 				2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
 				2B03F66A2E45350900DBA375 /* XCRemoteSwiftPackageReference "GCDWebServer" */,
-				2B358BB02E9DEAD000DFB02F /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */,
+				2B2271692E9EEBD20091D931 /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */,
 			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
@@ -1038,6 +1149,8 @@
 				2BD05DD02ADF323A00C0C972 /* NRTestAppUITests */,
 				F8F5D81F2BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests */,
 				2B00011A2E34083400543C1B /* NRTestAppAsFramework */,
+				2B459FD92E9EF52500CB66F3 /* NRTestAppAsFrameworkTests */,
+				2B459FEF2E9EF52F00CB66F3 /* NRTestAppAsFrameworkUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -1102,6 +1215,23 @@
 				2B00013A2E34083400543C1B /* NRAPI-Info.plist in Resources */,
 				2B00013B2E34083400543C1B /* LaunchScreen.storyboard in Resources */,
 				2B00013C2E34083400543C1B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B459FE32E9EF52500CB66F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B45A00B2E9EF52F00CB66F3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B45A00C2E9EF52F00CB66F3 /* harvestConnector.json in Resources */,
+				2B45A00D2E9EF52F00CB66F3 /* harvestConnectorWithLogReporting.json in Resources */,
+				2B45A00E2E9EF52F00CB66F3 /* harvestCollector.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1308,6 +1438,44 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2B459FDE2E9EF52500CB66F3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B459FDF2E9EF52500CB66F3 /* NRTestAppTests.swift in Sources */,
+				2B459FE02E9EF52500CB66F3 /* NRTestAppFakeNavigationAction.swift in Sources */,
+				2B459FE12E9EF52500CB66F3 /* NRTestAppNavigationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2B459FF42E9EF52F00CB66F3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2B459FF52E9EF52F00CB66F3 /* Socket+File.swift in Sources */,
+				2B459FF62E9EF52F00CB66F3 /* HttpResponse.swift in Sources */,
+				2B459FF72E9EF52F00CB66F3 /* String+Misc.swift in Sources */,
+				2B459FF82E9EF52F00CB66F3 /* String+BASE64.swift in Sources */,
+				2B459FF92E9EF52F00CB66F3 /* HTTPParser.swift in Sources */,
+				2B459FFA2E9EF52F00CB66F3 /* String+SHA1.swift in Sources */,
+				2B459FFB2E9EF52F00CB66F3 /* Errno.swift in Sources */,
+				2B459FFC2E9EF52F00CB66F3 /* HttpRequest.swift in Sources */,
+				2B459FFD2E9EF52F00CB66F3 /* HttpRouter.swift in Sources */,
+				2B459FFE2E9EF52F00CB66F3 /* Files.swift in Sources */,
+				2B459FFF2E9EF52F00CB66F3 /* WebSockets.swift in Sources */,
+				2B45A0002E9EF52F00CB66F3 /* Socket.swift in Sources */,
+				2B45A0012E9EF52F00CB66F3 /* Socket+Server.swift in Sources */,
+				2B45A0022E9EF52F00CB66F3 /* Scopes.swift in Sources */,
+				2B45A0032E9EF52F00CB66F3 /* String+File.swift in Sources */,
+				2B45A0042E9EF52F00CB66F3 /* MimeTypes.swift in Sources */,
+				2B45A0052E9EF52F00CB66F3 /* HttpServerIO.swift in Sources */,
+				2B45A0062E9EF52F00CB66F3 /* HttpServer.swift in Sources */,
+				2B45A0072E9EF52F00CB66F3 /* NRTestAppUITests.swift in Sources */,
+				2B45A0082E9EF52F00CB66F3 /* HTTPDynamicStubs.swift in Sources */,
+				2B45A0092E9EF52F00CB66F3 /* Process.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2BD05DCD2ADF323A00C0C972 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1501,6 +1669,26 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2B459FDC2E9EF52500CB66F3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2B00011A2E34083400543C1B /* NRTestAppAsFramework */;
+			targetProxy = 2B459FDD2E9EF52500CB66F3 /* PBXContainerItemProxy */;
+		};
+		2B459FF22E9EF52F00CB66F3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2B00011A2E34083400543C1B /* NRTestAppAsFramework */;
+			targetProxy = 2B459FF32E9EF52F00CB66F3 /* PBXContainerItemProxy */;
+		};
+		2BB91D3D2E9EC56700E1624C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2B00011A2E34083400543C1B /* NRTestAppAsFramework */;
+			targetProxy = 2BB91D3C2E9EC56700E1624C /* PBXContainerItemProxy */;
+		};
+		2BB91D462E9EC6CB00E1624C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2B00011A2E34083400543C1B /* NRTestAppAsFramework */;
+			targetProxy = 2BB91D452E9EC6CB00E1624C /* PBXContainerItemProxy */;
+		};
 		2BD05DD82ADF323A00C0C972 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
@@ -1632,6 +1820,105 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "NRTestApp/Helpers/NRTestApp-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2B459FE52E9EF52500CB66F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NRTestAppAsFramework.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NRTestAppAsFramework";
+			};
+			name = Debug;
+		};
+		2B459FE62E9EF52500CB66F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NRTestAppAsFramework.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NRTestAppAsFramework";
+			};
+			name = Release;
+		};
+		2B45A0102E9EF52F00CB66F3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NRTestAppAsFrameworkUITests-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRTestAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NRTestAppAsFramework;
+			};
+			name = Debug;
+		};
+		2B45A0112E9EF52F00CB66F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "NRTestAppAsFrameworkUITests-Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRTestAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = NRTestAppAsFramework;
 			};
 			name = Release;
 		};
@@ -2181,6 +2468,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		2B459FE42E9EF52500CB66F3 /* Build configuration list for PBXNativeTarget "NRTestAppAsFrameworkTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B459FE52E9EF52500CB66F3 /* Debug */,
+				2B459FE62E9EF52500CB66F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2B45A00F2E9EF52F00CB66F3 /* Build configuration list for PBXNativeTarget "NRTestAppAsFrameworkUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B45A0102E9EF52F00CB66F3 /* Debug */,
+				2B45A0112E9EF52F00CB66F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		2BD05DD92ADF323A00C0C972 /* Build configuration list for PBXNativeTarget "NRTestAppUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2264,14 +2569,6 @@
 				minimumVersion = 7.5.7;
 			};
 		};
-		2B03F6542E450CCF00DBA375 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
-			requirement = {
-				branch = "msr-swiftui";
-				kind = branch;
-			};
-		};
 		2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/bookingcom/perfsuite-ios";
@@ -2288,28 +2585,12 @@
 				minimumVersion = 3.5.7;
 			};
 		};
-		2B358BB02E9DEAD000DFB02F /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */ = {
+		2B2271692E9EEBD20091D931 /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent.git";
 			requirement = {
 				branch = "msr-swiftui";
 				kind = branch;
-			};
-		};
-		2B3CDF712E3AC43A00EEAC27 /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent.git";
-			requirement = {
-				kind = exactVersion;
-				version = "7.5.8-rc.1523";
-			};
-		};
-		2B6BEC262E37FC3D0054ECF1 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.5.7;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -2318,11 +2599,6 @@
 		2B00014D2E34089500543C1B /* NewRelic */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2B00014C2E34089500543C1B /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */;
-			productName = NewRelic;
-		};
-		2B03F6552E450CCF00DBA375 /* NewRelic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2B03F6542E450CCF00DBA375 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */;
 			productName = NewRelic;
 		};
 		2B03F6582E452CCA00DBA375 /* PerformanceSuite */ = {
@@ -2334,21 +2610,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2B03F66A2E45350900DBA375 /* XCRemoteSwiftPackageReference "GCDWebServer" */;
 			productName = GCDWebServer;
-		};
-		2B03F6712E4535DE00DBA375 /* PerformanceSuite */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
-			productName = PerformanceSuite;
-		};
-		2B3CDF722E3AC43A00EEAC27 /* NewRelic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2B3CDF712E3AC43A00EEAC27 /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */;
-			productName = NewRelic;
-		};
-		2B6BEC272E37FC3D0054ECF1 /* NewRelic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2B6BEC262E37FC3D0054ECF1 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */;
-			productName = NewRelic;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

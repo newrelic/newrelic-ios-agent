@@ -115,7 +115,7 @@
       "location" : "https://github.com/newrelic/newrelic-ios-agent.git",
       "state" : {
         "branch" : "msr-swiftui",
-        "revision" : "04939610777837ec8c4714d83e24845614cb1c49"
+        "revision" : "a9d6d439f7735e80f6322d233bc257003a086df5"
       }
     },
     {

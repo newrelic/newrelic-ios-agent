@@ -102,7 +102,7 @@ struct MaskingView: View {
                                 Text("Level 2 (no id)")
                             }
                             VStack(alignment: .leading, spacing: 6) {
-                                NRConditionalMaskView(sessionReplayIdentifier: "my-masked-id") {
+                                NRConditionalMaskView(sessionReplayIdentifier: "msr-swiftui-text-1") {
 
                                     Text("Level 3 Explicit Masked")
                                     VStack(alignment: .leading, spacing: 4) {
