@@ -171,11 +171,11 @@ final class UIHostingViewRecordOrchestrator {
             }
 
             // Extract masking state from the view
-            var details = makeDetails()
+            let details = makeDetails()
             
             var outputText = ""
-            if details.isMasked ?? true {
-                outputText = String(repeating: "*", count: storage.string.count ?? 0)
+            if details.isMasked ?? false {
+                outputText = String(repeating: "*", count: storage.string.count)
             }
             else {
                 outputText = storage.string

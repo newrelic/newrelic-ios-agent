@@ -50,11 +50,6 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
         hostVC.view.maskAllImages = maskAllImages
         hostVC.view.maskAllUserTouches = maskAllUserTouches
         hostVC.view.swiftUISessionReplayIdentifier = sessionReplayIdentifier
-        
-        //env forwarding    
-
-        hostVC.rootView = MaskedContainerView(context.environment,
-                                                         inputContent: content)
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiViewController: UIHostingController<MaskedContainerView<Content>>, context: Context) -> CGSize? {
