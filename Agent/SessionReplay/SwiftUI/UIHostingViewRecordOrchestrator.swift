@@ -22,21 +22,7 @@ final class UIHostingViewRecordOrchestrator {
         if #available(iOS 26, tvOS 26, *) { keys.insert("viewGraph", at: keys.count - 1) }
         return keys
     }()
-    
-    static func evaluateViewInfo(renderer: AnyObject) {
-        // descendendant path what we want is
-        // renderer.viewcCache.map[n].value.view which is a
-        // view    SwiftUI.UIKitPlatformViewHost<SwiftUI.PlatformViewControllerRepresentableAdaptor<SwiftUI.MulticolumnSplitViewRepresentable<SwiftUI.ModifiedContent<SwiftUI._VariadicView_Children.Element, SwiftUI.NavigationColumnModifier>, Never, SwiftUI._UnaryViewAdaptor<SwiftUI.EmptyView>>>>    0x0000000106c0f440
-        //
-        /*
-         Printing description of ((SwiftUI.UIKitPlatformViewHost<SwiftUI.PlatformViewControllerRepresentableAdaptor<SwiftUI.MulticolumnSplitViewRepresentable<SwiftUI.ModifiedContent<SwiftUI._VariadicView_Children.Element, SwiftUI.NavigationColumnModifier>, Swift.Never, SwiftUI._UnaryViewAdaptor<SwiftUI.EmptyView>>>>)0x0000000106c0f440):
-         <_TtGC7SwiftUI21UIKitPlatformViewHostGVS_42PlatformViewControllerRepresentableAdaptorGVS_33MulticolumnSplitViewRepresentableGVS_15ModifiedContentVVS_22_VariadicView_Children7ElementVS_24NavigationColumnModifier_Os5NeverGVS_17_UnaryViewAdaptorVS_9EmptyView____: 0x106c0f440; baseClass = _TtGC5UIKit22UICorePlatformViewHostGV7SwiftUI42PlatformViewControllerRepresentableAdaptorGVS1_33MulticolumnSplitViewRepresentableGVS1_15ModifiedContentVVS1_22_VariadicView_Children7ElementVS1_24NavigationColumnModifier_Os5NeverGVS1_17_UnaryViewAdaptorVS1_9EmptyView____; frame = (0 0; 402 874); anchorPoint = (0, 0); tintColor = UIExtendedSRGBColorSpace 0 0.533333 1 1; layer = <CALayer: 0x600000c1ebb0>>
-         */
-        let xray = XrayDecoder(subject: renderer as Any)
         
-    }
-        
-    
     // Entry point (renamed for clarity; keep old name if externally referenced)
     static func swiftUIViewThingys(_ view: UIView,
                                    context: SwiftUIContext,
@@ -49,10 +35,7 @@ final class UIHostingViewRecordOrchestrator {
         
         do {
             guard let rendererObj = try? getViewRenderer(from: view, keyPath: rendererKeyPath) else { return [] }
-            
-            // evaluate view info
-            evaluateViewInfo(renderer: rendererObj)
-            
+                        
             let xray = XrayDecoder(subject: rendererObj as Any)
             let viewRenderer = try SwiftUIDisplayList.ViewRenderer(xray: xray)
             
@@ -65,7 +48,8 @@ final class UIHostingViewRecordOrchestrator {
                                        context: context,
                                        renderer: viewRenderer,
                                        viewAttributes: viewAttributes,
-                                       parentId: parentId)
+                                       parentId: parentId,
+                                       originalView: view)
         } catch {
             //NRLOG_DEBUG("Error extracting SwiftUI ViewThingys: \(error)")
             return []
@@ -77,7 +61,8 @@ final class UIHostingViewRecordOrchestrator {
                                             context: SwiftUIContext,
                                             renderer: SwiftUIDisplayList.ViewRenderer,
                                             viewAttributes: SwiftUIViewAttributes,
-                                            parentId: Int) -> [any SessionReplayViewThingy] {
+                                            parentId: Int,
+                                            originalView: UIView) -> [any SessionReplayViewThingy] {
         
         guard !items.isEmpty else { return [] }
         
@@ -92,7 +77,8 @@ final class UIHostingViewRecordOrchestrator {
                                                   baseContext: context,
                                                   renderer: renderer,
                                                   viewAttributes: viewAttributes,
-                                                  parentId: parentId) {
+                                                  parentId: parentId,
+                                                  originalView: originalView) {
                     collected.append(built)
                 }
                 
@@ -121,7 +107,8 @@ final class UIHostingViewRecordOrchestrator {
                                                  context: nextContext,
                                                  renderer: renderer,
                                                  viewAttributes: viewAttributes,
-                                                 parentId: parentId)
+                                                 parentId: parentId,
+                                                 originalView: originalView)
                 collected.append(contentsOf: nested)
                 
             case .unknown:
@@ -138,12 +125,13 @@ final class UIHostingViewRecordOrchestrator {
                                            baseContext: SwiftUIContext,
                                            renderer: SwiftUIDisplayList.ViewRenderer,
                                            viewAttributes: SwiftUIViewAttributes,
-                                           parentId: Int) -> (any SessionReplayViewThingy)? {
+                                           parentId: Int,
+                                           originalView: UIView) -> (any SessionReplayViewThingy)? {
         
         let displayListId = Int(SwiftUIDisplayList.Index.ID(identity: item.identity).identity.value)
         let frame = baseContext.convert(frame: item.frame)
         let viewName = "SwiftUIView"
-                
+
         func makeDetails() -> ViewDetails {
             ViewDetails(frame: frame,
                         clip: viewAttributes.clip,
@@ -154,7 +142,14 @@ final class UIHostingViewRecordOrchestrator {
                         parentId: parentId,
                         cornerRadius: viewAttributes.layerCornerRadius,
                         borderWidth: viewAttributes.layerBorderWidth,
+                        borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),//Int(content.seed.value),
                         viewId: Int(content.seed.value))
+                        view: originalView,
+                        maskApplicationText: viewAttributes.maskApplicationText,
+                        maskUserInputText: viewAttributes.maskUserInputText,
+                        maskAllImages: viewAttributes.maskAllImages,
+                        maskAllUserTouches: viewAttributes.maskAllUserTouches,
+                        sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier) // viewAttributes.maskUserInput
         }
         
         switch content.value {
@@ -175,17 +170,19 @@ final class UIHostingViewRecordOrchestrator {
                 _ = style.lineBreakMode
             }
 
-            // Extract masking state from the view using NRMaskingExtractor
+            // Extract masking state from the view
             var details = makeDetails()
-
-//            print("Text view content:")
-//
-//            print(textView.originalSubject)
-//            
-//            print("End Text view content.")
+            
+            var outputText = ""
+            if details.isMasked ?? true {
+                outputText = String(repeating: "*", count: storage.string.count ?? 0)
+            }
+            else {
+                outputText = storage.string
+            }
             
             return UILabelThingy(viewDetails: details,
-                                 text: storage.string,
+                                 text: outputText,
                                  textAlignment: alignment.stringValue(),
                                  fontSize: font?.pointSize ?? 10,
                                  fontName: font?.fontName ?? ".SFUI-Bold",

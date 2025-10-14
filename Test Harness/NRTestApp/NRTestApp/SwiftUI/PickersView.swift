@@ -47,9 +47,6 @@ struct PickersView: View {
         }
         .navigationBarTitle("Pickers Example")
         .NRTrackView(name: "PickersView")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
     
     private var dateFormatter: DateFormatter {

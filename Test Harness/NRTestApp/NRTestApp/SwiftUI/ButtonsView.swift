@@ -71,9 +71,6 @@ struct ButtonsView: View {
         }
         .padding()
         .NRTrackView(name: "ButtonsView")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
 }
 

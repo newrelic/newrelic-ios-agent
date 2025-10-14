@@ -59,9 +59,6 @@ struct StacksView: View {
             .navigationBarTitle("Stacks Example", displayMode: .inline)
         }
         .NRTrackView(name: "StacksView")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
 }
 

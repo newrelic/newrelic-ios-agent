@@ -18,12 +18,10 @@ struct ImageFullScreen: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .id("theImage")
         }
         .background(Color.black)
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Image")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
 }

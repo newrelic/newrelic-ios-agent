@@ -51,9 +51,6 @@ struct ShapesView: View {
             .navigationBarTitle("Shapes", displayMode: .inline)
         }
         .NRTrackView(name: "ShapesView")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
 }
 

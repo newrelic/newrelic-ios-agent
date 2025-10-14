@@ -2,107 +2,75 @@ import SwiftUI
 
 struct SwiftUIContentView: View {
     var body: some View {
-
-        NavigationView {
-            List {
-                NavigationLink(destination: MaskingView()) {
-                    Text("Masking")
-                        .nrMasked()
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: ButtonsView()) {
-                    Text("Buttons")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                }
-                NavigationLink(destination: TextFieldsView()) {
-                    Text("Text Fields")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: PickersView()) {
-                    Text("Pickers")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: TogglesView()) {
-                    Text("Toggles")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: SlidersView()) {
-                    Text("Sliders")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: SteppersView()) {
-                    Text("Steppers")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: DatePickersView()) {
-                    Text("Date Pickers")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: ProgressViewsView()) {
-                    Text("Progress Views")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: SegmentedControlsView()) {
-                    Text("Segmented Controls")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: ListsView()) {
-                    Text("Lists")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: ScrollViewsView()) {
-                    Text("Scroll Views")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: StacksView()) {
-                    Text("Stacks")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: GridsView()) {
-                    Text("Grids")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-                NavigationLink(destination: ShapesView()) {
-                    Text("Shapes")
-                    //.accessibilityIdentifier("nr-mask")
-                        .id(UUID())
-                    
-                }
-            }
-            .navigationBarTitle("SwiftUI Elements")
+        NRConditionalMaskView(sessionReplayIdentifier: "my-secret-id") {
             
-        }
-        .NRTrackView(name: "SwiftUIContentView")
-
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
+            NavigationView {
+                List {
+                    NavigationLink(destination: MaskingView()) {
+                        NRConditionalMaskView(maskApplicationText: false) {
+                            Text("Masking")
+                        }
+                    }
+                    NavigationLink(destination: ButtonsView()) {
+                        Text("Buttons")
+                    }
+                    NavigationLink(destination: TextFieldsView()) {
+                        Text("Text Fields")
+                        
+                    }
+                    NavigationLink(destination: PickersView()) {
+                        Text("Pickers")
+                        
+                    }
+                    NavigationLink(destination: TogglesView()) {
+                        Text("Toggles")
+                        
+                    }
+                    NavigationLink(destination: SlidersView()) {
+                        Text("Sliders")
+                        
+                    }
+                    NavigationLink(destination: SteppersView()) {
+                        Text("Steppers")
+                        
+                    }
+                    NavigationLink(destination: DatePickersView()) {
+                        Text("Date Pickers")
+                        
+                    }
+                    NavigationLink(destination: ProgressViewsView()) {
+                        Text("Progress Views")
+                        
+                    }
+                    NavigationLink(destination: SegmentedControlsView()) {
+                        Text("Segmented Controls")
+                        
+                    }
+                    NavigationLink(destination: ListsView()) {
+                        Text("Lists")
+                        
+                    }
+                    NavigationLink(destination: ScrollViewsView()) {
+                        Text("Scroll Views")
+                        
+                    }
+                    NavigationLink(destination: StacksView()) {
+                        Text("Stacks")
+                        
+                    }
+                    NavigationLink(destination: GridsView()) {
+                        Text("Grids")
+                        
+                    }
+                    NavigationLink(destination: ShapesView()) {
+                        Text("Shapes")
+                        
+                    }
+                }
+                .navigationBarTitle("SwiftUI Elements")
+                
+            }
+            .NRTrackView(name: "SwiftUIContentView")
         }
     }
 }

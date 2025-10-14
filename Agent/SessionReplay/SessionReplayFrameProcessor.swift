@@ -41,6 +41,7 @@ class SessionReplayFrameProcessor {
         if frame.rootViewControllerId != lastFullFrame.rootViewControllerId ||
             frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId ||
             frame.rootSwiftUIViewId != lastFullFrame.rootSwiftUIViewId {
+
             takeFullSnapshotNext = true // When the viewController transitions there is a frame where they are combined so take the full snapshot after things have settled.
         }
         

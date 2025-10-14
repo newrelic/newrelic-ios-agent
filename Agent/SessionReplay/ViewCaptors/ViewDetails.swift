@@ -27,7 +27,7 @@ struct ViewDetails {
     // Indicates if this view should have its content masked in session replay
     var isMasked: Bool?
 
-    // Custom identifier for the view (from nrMaskingIdentifier modifier)
+    // Custom identifier for the view (from NRMaskingView view)
     var viewIdentifier: String?
 
     var cssSelector: String {
@@ -139,18 +139,13 @@ struct ViewDetails {
         }
     }
     
-    init(frame: CGRect, clip: CGRect, backgroundColor: UIColor, alpha: CGFloat, isHidden: Bool, viewName: String, parentId: Int, cornerRadius: CGFloat, borderWidth: CGFloat, borderColor: UIColor? = nil, viewId: Int?) {
-        
-//        if let superview = view.superview, let window = view.window {
-//            let rawFrame = superview.convert(view.frame, to: window)
-//            let clippingRect = ViewDetails.getClippingRect(for: view, in: window)
-//            
-//            let visibleFrame = rawFrame.intersection(clippingRect)
-//            
-//            self.frame = visibleFrame.isNull ? .zero : visibleFrame
-//            self.clip = clippingRect
-
-        // TODO: Clip/Frame handling
+    init(frame: CGRect, clip: CGRect, backgroundColor: UIColor, alpha: CGFloat, isHidden: Bool, viewName: String, parentId: Int, cornerRadius: CGFloat, borderWidth: CGFloat, borderColor: UIColor? = nil, viewId: Int?, view: UIView? = nil,
+    
+          maskApplicationText: Bool?,
+          maskUserInputText: Bool?,
+          maskAllImages: Bool?,
+          maskAllUserTouches: Bool?,
+          sessionReplayIdentifier: String?) {
         
         self.frame = frame
         self.clip = clip
@@ -169,22 +164,19 @@ struct ViewDetails {
         }
         else {
             self.viewId = IDGenerator.shared.getId()
-
         }
 
-        
         self.parentId = parentId
 
-        // TODO: Handle masked
-//        if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
-//            self.isMasked = shouldMask
-//            view.sessionReplayMaskState = shouldMask
-//        }
+        if let view = view, let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName, maskApplicationText:maskApplicationText,maskUserInputText:maskUserInputText,maskAllImages:maskAllImages,maskAllUserTouches:maskAllUserTouches,sessionReplayIdentifier:sessionReplayIdentifier) {
+            self.isMasked = shouldMask
+            view.sessionReplayMaskState = shouldMask
+        }
     }
 
     
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
-    private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
+    private static func checkIsMasked(view: UIView, viewName: String, maskApplicationText: Bool? = nil, maskUserInputText: Bool? = nil, maskAllImages: Bool? = nil, maskAllUserTouches: Bool? = nil, sessionReplayIdentifier: String? = nil) -> Bool? {
         // Determine if this view should be masked
         guard let agent = NewRelicAgentInternal.sharedInstance() else { return true }
         guard let config = NRMAHarvestController.configuration() else { return true }
@@ -232,10 +224,36 @@ struct ViewDetails {
             return false
         }
         
-        // Check if parent is marked as masked or unmasked (propagate masking status to children)
-        if let parentView = view.superview,
-           let parentMasked = parentView.sessionReplayMaskState {
-            return parentMasked
+        if let maskApplicationText = maskApplicationText, !maskApplicationText {
+            return false
+        }
+        else if let maskApplicationText = maskApplicationText, maskApplicationText {
+            return true
+        }
+        
+        if let maskUserInputText = maskUserInputText, !maskUserInputText {
+            return false
+        }
+        else if let maskUserInputText = maskUserInputText, maskUserInputText {
+            return true
+        }
+        
+//        // Check if parent is marked as masked or unmasked (propagate masking status to children)
+//        if let parentView = view.superview,
+//           let parentMasked = parentView.sessionReplayMaskState {
+//            return parentMasked
+//        }
+  
+        if let sessionReplayIdentifier {
+            // Check for accessibility identifier in the masking list
+            if agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier) {
+                return true
+            }
+
+            // Check for accessibility identifier in the masking list
+            if agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
+                return false
+            }
         }
         
         // Return nil if no custom masked setting is found
@@ -277,6 +295,7 @@ extension ViewDetails: Hashable {
 
 fileprivate var associatedSessionReplayViewIDKey: String = "SessionReplayID"
 fileprivate var associatedSessionReplayMaskStateKey: String = "SessionReplayMasked"
+fileprivate var associatedSwiftUISessionReplayIdentifierKey: String = "SessionReplayIdentifier"
 
 internal extension UIView {
     var sessionReplayIdentifier: Int? {
@@ -303,6 +322,20 @@ internal extension UIView {
         get {
             withUnsafePointer(to: &associatedSessionReplayMaskStateKey) {
                 objc_getAssociatedObject(self, $0) as? Bool
+            }
+        }
+    }
+    
+    var swiftUISessionReplayIdentifier: String? {
+        set {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+
+        get {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_getAssociatedObject(self, $0) as? String
             }
         }
     }

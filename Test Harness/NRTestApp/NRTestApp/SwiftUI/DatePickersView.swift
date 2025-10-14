@@ -33,9 +33,6 @@ struct DatePickersView: View {
         }
         .navigationTitle("Date Pickers")
         .NRTrackView(name: "DatePickersView")
-        .onAppear {
-            let _ = ViewBodyTracker.track(self)  // ← At top level view
-        }
     }
     
     private func formattedDate(_ date: Date) -> String {
