@@ -34,7 +34,8 @@ class CustomTextThingy: SessionReplayViewThingy {
         
         if let identifier = view.sessionReplayCustomTextIDKey {
             self.viewDetails.viewId = identifier
-        } else {
+        }
+        else {
             self.viewDetails.viewId = IDGenerator.shared.getId()
             view.sessionReplayCustomTextIDKey = self.viewDetails.viewId
         }
@@ -44,7 +45,8 @@ class CustomTextThingy: SessionReplayViewThingy {
         }
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
-        } else {
+        }
+        else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }
         
@@ -64,20 +66,23 @@ class CustomTextThingy: SessionReplayViewThingy {
         let fontNameRaw = font.fontName
         if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontName = fontNameRaw
         }
         
         let fontFamilyRaw = font.familyName
         if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
             self.fontFamily = String(fontFamilyRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontFamily = fontFamilyRaw
         }
         
         if #available(iOS 13.0, *) {
             self.textColor = view.textColor ?? UIColor.label
-        } else {
+        }
+        else {
             // Fallback on earlier versions
             self.textColor = view.textColor ?? UIColor.black
         }
@@ -187,21 +192,13 @@ class CustomTextThingy: SessionReplayViewThingy {
         guard let typedOther = other as? CustomTextThingy else {
             return []
         }
-        
         var mutations = [MutationRecord]()
-        var frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        // get text color difference
-        if textColor != typedOther.textColor {
-            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
-        if fontSize != typedOther.fontSize || fontFamily != typedOther.fontFamily {
-            frameDifferences["font"] = "\(String(format: "%.2f", self.fontSize))px \(self.fontFamily)px"
-        }
-        
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
         

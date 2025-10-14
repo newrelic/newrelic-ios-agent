@@ -429,6 +429,7 @@
     if (configuration.isValid && [configuration.application_token isEqualToString:_agentConfiguration.applicationToken.value]) {
         [NRMAMeasurements recordSessionStartMetric];
         [NRMASupportMetricHelper processDeferredMetrics];
+        [self handleSessionReplayConfigurationUpdate];
 
         [self transitionToConnected:configuration];
         return;

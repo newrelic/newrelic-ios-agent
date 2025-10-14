@@ -36,7 +36,8 @@ class UITextFieldThingy: SessionReplayViewThingy {
         }
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
-        } else {
+        }
+        else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }
         
@@ -56,20 +57,23 @@ class UITextFieldThingy: SessionReplayViewThingy {
         let fontNameRaw = font.fontName
         if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontName = fontNameRaw
         }
         
         let fontFamilyRaw = font.familyName
         if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
             self.fontFamily = String(fontFamilyRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontFamily = fontFamilyRaw
         }
         
         if #available(iOS 13.0, *) {
             self.textColor = view.textColor ?? UIColor.label
-        } else {
+        }
+        else {
             // Fallback on earlier versions
             self.textColor = view.textColor ?? UIColor.black
         }
@@ -130,22 +134,14 @@ class UITextFieldThingy: SessionReplayViewThingy {
         }
         
         var mutations = [MutationRecord]()
-        let frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        // get text color difference
-//        if textColor != typedOther.textColor {
-//            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-//        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
-        
-//        if(self.labelText != typedOther.self.labelText) {
-//            let textRecord = RRWebMutationData.TextRecord(id: viewDetails.viewId, value: typedOther.labelText)
-//            mutations.append(textRecord)
-//        }
         
         return mutations
     }

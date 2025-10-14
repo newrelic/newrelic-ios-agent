@@ -11,11 +11,11 @@ import SwiftUI
 // Using the coordinator pattern for navigation
 class MainCoordinator: Coordinator {
     var navigationController: UINavigationController
-
+    
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
-
+    
     // Called at the start of the application
     func start() {
         let vc = ViewControllerProvider.viewController
@@ -45,7 +45,7 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(webViewController, animated: true)
 #endif
     }
-
+    
     func showTextMaskingController() {
         let textMaskingViewController = ViewControllerProvider.textMaskingViewController
         navigationController.pushViewController(textMaskingViewController, animated: true)
@@ -66,9 +66,24 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(infiniteViewController, animated: true)
     }
     
+    func showInfiniteImageScrollController() {
+        let infiniteViewController = ViewControllerProvider.infiniteImageViewController
+        navigationController.pushViewController(infiniteViewController, animated: true)
+    }
+    
     func showDiffTestController() {
         let diffTestViewController = ViewControllerProvider.diffTestViewController
         navigationController.pushViewController(diffTestViewController, animated: true)
+    }
+    
+    func showSwiftUITestView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            let swiftUIView = SwiftUIContentView()
+            let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+            navigationController.pushViewController(swiftUIViewController, animated: true)
+        }
+#endif
     }
     
     func showSwiftUIViewRepresentableTestView() {

@@ -6,6 +6,9 @@
 //
 
 import UIKit
+import NewRelic
+
+#if os(iOS)
 
 class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     var viewModel = TextMaskingViewModel()
@@ -300,7 +303,7 @@ class TextMaskingViewController: UIViewController, UITableViewDelegate, UITableV
 
     // UITableViewDelegate Methods
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("Selected row at \(indexPath.row)")
+        NewRelic.logVerbose("Selected row at \(indexPath.row)")
     }
 
 
@@ -400,3 +403,4 @@ class MaskTestTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 }
+#endif

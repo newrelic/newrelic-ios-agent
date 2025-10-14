@@ -36,7 +36,8 @@ class UILabelThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
-        } else {
+        }
+        else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
         
@@ -53,14 +54,16 @@ class UILabelThingy: SessionReplayViewThingy {
         let fontNameRaw = view.font.fontName
         if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontName = fontNameRaw
         }
         
         let fontFamilyRaw = view.font.familyName
         if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
             self.fontFamily = String(fontFamilyRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontFamily = fontFamilyRaw
         }
         self.textAlignment = view.textAlignment.stringValue()
@@ -135,6 +138,35 @@ class UILabelThingy: SessionReplayViewThingy {
         self.textColor = textColor
     }
     
+    init(viewDetails: ViewDetails, text: String, textAlignment: String, fontSize: CGFloat, fontName: String, fontFamily: String, textColor: UIColor) {
+        self.viewDetails = viewDetails
+        self.viewDetails.backgroundColor = .clear
+
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        }
+        else {
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
+        }
+        
+        if self.isMasked {
+            // If the view is masked, we should not record the text.
+            // instead replace it with the number of asterisks as were characters in label
+            self.labelText = String(repeating: "*", count: text.count)
+        }
+        else {
+            self.labelText = text //view.text ?? ""
+        }
+
+        // TODO: Handle FONTNAME/FONTFAMILY FOR SWIFTUI
+        
+        self.fontSize = fontSize
+        self.fontName = fontName //".SFUI-Bold"
+        self.fontFamily = fontFamily
+        self.textAlignment = textAlignment
+        self.textColor = textColor
+    }
+    
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
@@ -187,21 +219,13 @@ class UILabelThingy: SessionReplayViewThingy {
         guard let typedOther = other as? UILabelThingy else {
             return []
         }
-        
         var mutations = [MutationRecord]()
-        var frameDifferences = generateBaseDifferences(from: typedOther)
+        var allAttributes = [String: String]()
         
-        // get text color difference
-        if textColor != typedOther.textColor {
-            frameDifferences["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
-        if textAlignment != typedOther.textAlignment {
-            frameDifferences["text-align"] = typedOther.textAlignment
-        }
-        
-        if !frameDifferences.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: frameDifferences)
+        if !allAttributes.isEmpty {
+            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
             mutations.append(attributeRecord)
         }
         

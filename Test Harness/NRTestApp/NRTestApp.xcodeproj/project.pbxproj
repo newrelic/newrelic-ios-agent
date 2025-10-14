@@ -52,6 +52,24 @@
 		2B03F6702E45352500DBA375 /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */; };
 		2B03F6722E4535DE00DBA375 /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = 2B03F6712E4535DE00DBA375 /* PerformanceSuite */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
+		2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
+		2B358B5B2E9DD1B200DFB02F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */; };
+		2B358B632E9DD27100DFB02F /* SlidersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C872E860C7D001D2B88 /* SlidersView.swift */; };
+		2B358B642E9DD27100DFB02F /* ScrollViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C842E860C7D001D2B88 /* ScrollViewsView.swift */; };
+		2B358B652E9DD27100DFB02F /* TextFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */; };
+		2B358B662E9DD27100DFB02F /* PickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C822E860C7D001D2B88 /* PickersView.swift */; };
+		2B358B672E9DD27100DFB02F /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C832E860C7D001D2B88 /* ProgressViewsView.swift */; };
+		2B358B682E9DD27100DFB02F /* SegmentedControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C852E860C7D001D2B88 /* SegmentedControlsView.swift */; };
+		2B358B692E9DD27100DFB02F /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
+		2B358B6A2E9DD27100DFB02F /* StacksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C882E860C7D001D2B88 /* StacksView.swift */; };
+		2B358B6B2E9DD27100DFB02F /* GridsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C802E860C7D001D2B88 /* GridsView.swift */; };
+		2B358B6C2E9DD27100DFB02F /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C812E860C7D001D2B88 /* ListsView.swift */; };
+		2B358B6D2E9DD27100DFB02F /* SteppersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C892E860C7D001D2B88 /* SteppersView.swift */; };
+		2B358B6E2E9DD27100DFB02F /* ShapesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C862E860C7D001D2B88 /* ShapesView.swift */; };
+		2B358B6F2E9DD27100DFB02F /* TogglesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */; };
+		2B358B702E9DD27100DFB02F /* DatePickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */; };
+		2B358B712E9DD27100DFB02F /* ButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */; };
+		2B358B722E9DD28A00DFB02F /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
 		2B3CDF732E3AC43A00EEAC27 /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B3CDF722E3AC43A00EEAC27 /* NewRelic */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
@@ -63,6 +81,21 @@
 		2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2B8A46A02E4A880600DEB854 /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
+		2BAE5C8E2E860C7D001D2B88 /* StacksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C882E860C7D001D2B88 /* StacksView.swift */; };
+		2BAE5C8F2E860C7D001D2B88 /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C832E860C7D001D2B88 /* ProgressViewsView.swift */; };
+		2BAE5C902E860C7D001D2B88 /* ShapesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C862E860C7D001D2B88 /* ShapesView.swift */; };
+		2BAE5C912E860C7D001D2B88 /* TogglesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */; };
+		2BAE5C922E860C7D001D2B88 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C812E860C7D001D2B88 /* ListsView.swift */; };
+		2BAE5C932E860C7D001D2B88 /* PickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C822E860C7D001D2B88 /* PickersView.swift */; };
+		2BAE5C942E860C7D001D2B88 /* SegmentedControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C852E860C7D001D2B88 /* SegmentedControlsView.swift */; };
+		2BAE5C952E860C7D001D2B88 /* GridsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C802E860C7D001D2B88 /* GridsView.swift */; };
+		2BAE5C962E860C7D001D2B88 /* TextFieldsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */; };
+		2BAE5C972E860C7D001D2B88 /* DatePickersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */; };
+		2BAE5C982E860C7D001D2B88 /* ButtonsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */; };
+		2BAE5C992E860C7D001D2B88 /* SteppersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C892E860C7D001D2B88 /* SteppersView.swift */; };
+		2BAE5C9A2E860C7D001D2B88 /* ScrollViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C842E860C7D001D2B88 /* ScrollViewsView.swift */; };
+		2BAE5C9B2E860C7D001D2B88 /* SlidersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C872E860C7D001D2B88 /* SlidersView.swift */; };
+		2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */; };
 		2BB1E1EB2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
 		2BB1E1ED2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */; };
@@ -134,6 +167,8 @@
 		F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B982970ADC1003EC291 /* UIImageView.swift */; };
 		F8302B9B2970B29D003EC291 /* Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9A2970B29D003EC291 /* Date.swift */; };
 		F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9C2970B3E0003EC291 /* ApodURL.swift */; };
+		F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
+		F832CB0E2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */; };
 		F848CDE42AA270E80082052F /* NRTestApp_tvOS_Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */; };
 		F848CDE62AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */; };
 		F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
@@ -321,11 +356,27 @@
 		2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceScreen.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
+		2B3493692E8EF15A006DE9D0 /* MaskingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingView.swift; sourceTree = "<group>"; };
 		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
 		2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIViewRepresentableTestView.swift; sourceTree = "<group>"; };
+		2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonsView.swift; sourceTree = "<group>"; };
+		2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickersView.swift; sourceTree = "<group>"; };
+		2BAE5C802E860C7D001D2B88 /* GridsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridsView.swift; sourceTree = "<group>"; };
+		2BAE5C812E860C7D001D2B88 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
+		2BAE5C822E860C7D001D2B88 /* PickersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickersView.swift; sourceTree = "<group>"; };
+		2BAE5C832E860C7D001D2B88 /* ProgressViewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewsView.swift; sourceTree = "<group>"; };
+		2BAE5C842E860C7D001D2B88 /* ScrollViewsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewsView.swift; sourceTree = "<group>"; };
+		2BAE5C852E860C7D001D2B88 /* SegmentedControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentedControlsView.swift; sourceTree = "<group>"; };
+		2BAE5C862E860C7D001D2B88 /* ShapesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapesView.swift; sourceTree = "<group>"; };
+		2BAE5C872E860C7D001D2B88 /* SlidersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlidersView.swift; sourceTree = "<group>"; };
+		2BAE5C882E860C7D001D2B88 /* StacksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StacksView.swift; sourceTree = "<group>"; };
+		2BAE5C892E860C7D001D2B88 /* SteppersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppersView.swift; sourceTree = "<group>"; };
+		2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldsView.swift; sourceTree = "<group>"; };
+		2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TogglesView.swift; sourceTree = "<group>"; };
 		2BB1E1EA2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedStringTextMaskingViewController.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
@@ -386,6 +437,7 @@
 		F8302B982970ADC1003EC291 /* UIImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageView.swift; sourceTree = "<group>"; };
 		F8302B9A2970B29D003EC291 /* Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Date.swift; sourceTree = "<group>"; };
 		F8302B9C2970B3E0003EC291 /* ApodURL.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApodURL.swift; sourceTree = "<group>"; };
+		F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteImageCollectionViewController.swift; sourceTree = "<group>"; };
 		F848CDE12AA270E80082052F /* NRTestApp(tvOS)Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp(tvOS)Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_Tests.swift; sourceTree = "<group>"; };
 		F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_TestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -478,6 +530,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
+				2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */,
+				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
+				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
+				2BAE5C802E860C7D001D2B88 /* GridsView.swift */,
+				2BAE5C812E860C7D001D2B88 /* ListsView.swift */,
+				2BAE5C822E860C7D001D2B88 /* PickersView.swift */,
+				2BAE5C832E860C7D001D2B88 /* ProgressViewsView.swift */,
+				2BAE5C842E860C7D001D2B88 /* ScrollViewsView.swift */,
+				2BAE5C852E860C7D001D2B88 /* SegmentedControlsView.swift */,
+				2BAE5C862E860C7D001D2B88 /* ShapesView.swift */,
+				2BAE5C872E860C7D001D2B88 /* SlidersView.swift */,
+				2BAE5C882E860C7D001D2B88 /* StacksView.swift */,
+				2BAE5C892E860C7D001D2B88 /* SteppersView.swift */,
+				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
+				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
+			);
+			path = SwiftUI;
+			sourceTree = "<group>";
+		};
 		2BD05D9D2ADF2DF600C0C972 /* Swifter */ = {
 			isa = PBXGroup;
 			children = (
@@ -580,6 +655,7 @@
 		F8302AF7296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXGroup;
 			children = (
+				2BAE5C8D2E860C7D001D2B88 /* SwiftUI */,
 				2B03F66D2E45352500DBA375 /* PerformanceScreen.swift */,
 				2B03F6662E45338B00DBA375 /* UITestsInterop.swift */,
 				2B03F6622E45338300DBA375 /* UITestsHelper.swift */,
@@ -653,6 +729,7 @@
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
 				F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */,
 				F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */,
+				F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
 			);
@@ -939,9 +1016,9 @@
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
 			packageReferences = (
-				2B03F6542E450CCF00DBA375 /* XCRemoteSwiftPackageReference "newrelic-ios-agent-spm" */,
 				2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
 				2B03F66A2E45350900DBA375 /* XCRemoteSwiftPackageReference "GCDWebServer" */,
+				2B358BB02E9DEAD000DFB02F /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */,
 			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
@@ -1202,6 +1279,23 @@
 				2B00012B2E34083400543C1B /* SecureLabel.swift in Sources */,
 				2B00012C2E34083400543C1B /* AppDelegate.swift in Sources */,
 				2B00012D2E34083400543C1B /* AppDelegate+UITest.swift in Sources */,
+				2B358B5B2E9DD1B200DFB02F /* ContentView.swift in Sources */,
+				2B358B632E9DD27100DFB02F /* SlidersView.swift in Sources */,
+				2B358B642E9DD27100DFB02F /* ScrollViewsView.swift in Sources */,
+				2B358B652E9DD27100DFB02F /* TextFieldsView.swift in Sources */,
+				2B358B722E9DD28A00DFB02F /* InfiniteImageCollectionViewController.swift in Sources */,
+				2B358B662E9DD27100DFB02F /* PickersView.swift in Sources */,
+				2B358B672E9DD27100DFB02F /* ProgressViewsView.swift in Sources */,
+				2B358B682E9DD27100DFB02F /* SegmentedControlsView.swift in Sources */,
+				2B358B692E9DD27100DFB02F /* MaskingView.swift in Sources */,
+				2B358B6A2E9DD27100DFB02F /* StacksView.swift in Sources */,
+				2B358B6B2E9DD27100DFB02F /* GridsView.swift in Sources */,
+				2B358B6C2E9DD27100DFB02F /* ListsView.swift in Sources */,
+				2B358B6D2E9DD27100DFB02F /* SteppersView.swift in Sources */,
+				2B358B6E2E9DD27100DFB02F /* ShapesView.swift in Sources */,
+				2B358B6F2E9DD27100DFB02F /* TogglesView.swift in Sources */,
+				2B358B702E9DD27100DFB02F /* DatePickersView.swift in Sources */,
+				2B358B712E9DD27100DFB02F /* ButtonsView.swift in Sources */,
 				2B00012E2E34083400543C1B /* ApodViewModel.swift in Sources */,
 				2B00012F2E34083400543C1B /* ScrollableCollectionViewController.swift in Sources */,
 				2B0001302E34083400543C1B /* TextMaskingViewModel.swift in Sources */,
@@ -1272,6 +1366,21 @@
 				2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
+				2BAE5C8E2E860C7D001D2B88 /* StacksView.swift in Sources */,
+				2BAE5C8F2E860C7D001D2B88 /* ProgressViewsView.swift in Sources */,
+				2BAE5C902E860C7D001D2B88 /* ShapesView.swift in Sources */,
+				2BAE5C912E860C7D001D2B88 /* TogglesView.swift in Sources */,
+				2BAE5C922E860C7D001D2B88 /* ListsView.swift in Sources */,
+				2BAE5C932E860C7D001D2B88 /* PickersView.swift in Sources */,
+				2BAE5C942E860C7D001D2B88 /* SegmentedControlsView.swift in Sources */,
+				2BAE5C952E860C7D001D2B88 /* GridsView.swift in Sources */,
+				2BAE5C962E860C7D001D2B88 /* TextFieldsView.swift in Sources */,
+				2BAE5C972E860C7D001D2B88 /* DatePickersView.swift in Sources */,
+				2BAE5C982E860C7D001D2B88 /* ButtonsView.swift in Sources */,
+				2BAE5C992E860C7D001D2B88 /* SteppersView.swift in Sources */,
+				2BAE5C9A2E860C7D001D2B88 /* ScrollViewsView.swift in Sources */,
+				2BAE5C9B2E860C7D001D2B88 /* SlidersView.swift in Sources */,
+				2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */,
 				F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				2B03F6612E45335100DBA375 /* MetricsConsumer.swift in Sources */,
@@ -1284,6 +1393,7 @@
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
+				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
@@ -1292,6 +1402,7 @@
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
 				F81061F82E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
+				F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
@@ -1323,6 +1434,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F832CB0E2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
 				2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F86429302979CDFA002ABA01 /* UIImageView.swift in Sources */,
@@ -1453,7 +1565,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1501,7 +1613,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1790,7 +1902,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1838,7 +1950,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1971,7 +2083,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "NRTestApp/Helpers/NRTestApp-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 13.0;
+				TVOS_DEPLOYMENT_TARGET = 16;
 			};
 			name = Debug;
 		};
@@ -2006,7 +2118,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "NRTestApp/Helpers/NRTestApp-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 13.0;
+				TVOS_DEPLOYMENT_TARGET = 16;
 			};
 			name = Release;
 		};
@@ -2156,8 +2268,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent-spm.git";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.5.8;
+				branch = "msr-swiftui";
+				kind = branch;
 			};
 		};
 		2B03F6572E452CCA00DBA375 /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
@@ -2174,6 +2286,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 3.5.7;
+			};
+		};
+		2B358BB02E9DEAD000DFB02F /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent.git";
+			requirement = {
+				branch = "msr-swiftui";
+				kind = branch;
 			};
 		};
 		2B3CDF712E3AC43A00EEAC27 /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */ = {

@@ -298,10 +298,6 @@ public class NRMASessionReplay: NSObject {
             // Save/update URL separately
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
 
-            if frameCounter % 10 == 0 {
-                NRLOG_DEBUG("SessionReplay - Frame \(frameCounter) processed and written to \(frameURL.path)")
-            }
-
             frameCounter += 1
         } catch {
             NRLOG_ERROR("Failed to append frame to filesystem: \(error)")
