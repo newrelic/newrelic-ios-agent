@@ -143,7 +143,7 @@ final class UIHostingViewRecordOrchestrator {
                         cornerRadius: viewAttributes.layerCornerRadius,
                         borderWidth: viewAttributes.layerBorderWidth,
                         borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),//Int(content.seed.value),
-                        viewId: Int(content.seed.value))
+                        viewId: Int(content.seed.value),
                         view: originalView,
                         maskApplicationText: viewAttributes.maskApplicationText,
                         maskUserInputText: viewAttributes.maskUserInputText,
