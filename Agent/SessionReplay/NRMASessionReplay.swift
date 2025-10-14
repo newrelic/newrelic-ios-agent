@@ -38,7 +38,7 @@ public class NRMASessionReplay: NSObject {
         self.url = url
         self.sessionReplayCapture = SessionReplayCapture()
         
-        sessionReplayFrameProcessor.useIncrementalDiffs = false // Only take full snapshots, not incremental diffs
+       // sessionReplayFrameProcessor.useIncrementalDiffs = false // Only take full snapshots, not incremental diffs
 
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         self.framesDirectory = documentsPath.appendingPathComponent("SessionReplayFrames")
