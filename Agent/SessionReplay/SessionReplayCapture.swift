@@ -151,7 +151,7 @@ class SessionReplayCapture {
          //   logThingys(thingys)
             
             if !thingys.isEmpty {
-                 print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
+                // print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
                 hostingThingy.subviews.append(contentsOf: thingys)
             }
             
