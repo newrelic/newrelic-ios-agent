@@ -39,7 +39,9 @@ class SessionReplayFrameProcessor {
         // If we have a full snapshot, compare the rootViewControllerIDs. If they match, continue with partial snapshots
         // If they don't, then do a full snapshot next time.
         if frame.rootViewControllerId != lastFullFrame.rootViewControllerId ||
-            frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId {
+            frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId ||
+            frame.rootSwiftUIViewId != lastFullFrame.rootSwiftUIViewId {
+
             takeFullSnapshotNext = true // When the viewController transitions there is a frame where they are combined so take the full snapshot after things have settled.
         }
         

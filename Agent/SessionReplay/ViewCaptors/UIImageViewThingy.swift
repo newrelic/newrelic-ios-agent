@@ -29,7 +29,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
-        } else {
+        }
+        else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
         if !self.isMasked {
@@ -37,6 +38,27 @@ class UIImageViewThingy: SessionReplayViewThingy {
         }
         
         self.contentMode = view.contentModeToCSS()
+    }
+    
+    init(viewDetails: ViewDetails, image: UIImage?, contentMode: UIView.ContentMode) {
+        self.viewDetails = viewDetails
+
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        }
+        else {
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
+        }
+        if !self.isMasked {
+            self.image = image
+        }
+        
+        // TODO: Properly handle contentMode for this overrode UIImageViewThingy
+        var cssProperties = [String: String]()
+        cssProperties["object-fit"] = "contain"
+        cssProperties["object-position"] = "center"
+        
+        self.contentMode = cssProperties//UIView.ContentMode.scaleAspectFit.contentModeToCSS() //view.contentModeToCSS()
     }
     
     func cssDescription() -> String {
@@ -50,7 +72,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
     func inlineCSSDescription() -> String {
         if isMasked {
             return "\(generateBaseCSSStyle()) \(imagePlaceholderCSS)"
-        } else {
+        }
+        else {
             return  """
                     \(generateBaseCSSStyle()) \
                     object-fit: \(contentMode["object-fit"] ?? "contain"); \
