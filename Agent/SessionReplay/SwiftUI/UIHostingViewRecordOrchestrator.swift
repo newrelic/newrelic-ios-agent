@@ -293,14 +293,53 @@ final class UIHostingViewRecordOrchestrator {
             
         case SwiftUIDisplayList.Content.Value.color:
             return nil // TODO: Colors
-        case let SwiftUIDisplayList.Content.Value.image(resolved):  // TODO: Images
-            return UIViewThingy(viewDetails: makeDetails())
+        case let SwiftUIDisplayList.Content.Value.image(swiftUIImage):
+            let details = makeDetails()
+            
+            // Extract UIImage from SwiftUIGraphicsImage
+            let uiImage: UIImage?
+            switch swiftUIImage.contents {
+            case .cgImage(let cgImage):
+                uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
+            case .unknown:
+                uiImage = nil
+            }
+            
+            return UIImageViewThingy(viewDetails: details,
+                                   image: uiImage,
+                                   contentMode: .scaleAspectFit)
         case SwiftUIDisplayList.Content.Value.drawing:
             return nil // TODO: Drawings
         case SwiftUIDisplayList.Content.Value.platformView:
             return UIViewThingy(viewDetails: makeDetails())
         case SwiftUIDisplayList.Content.Value.unknown:
             return UIViewThingy(viewDetails: makeDetails())
+        }
+    }
+}
+
+@available(iOS 13.0, *)
+extension SwiftUI.Image.Orientation {
+    func toUIImageOrientation() -> UIImage.Orientation {
+        switch self {
+        case .up:
+            return .up
+        case .upMirrored:
+            return .upMirrored
+        case .down:
+            return .down
+        case .downMirrored:
+            return .downMirrored
+        case .left:
+            return .left
+        case .leftMirrored:
+            return .leftMirrored
+        case .right:
+            return .right
+        case .rightMirrored:
+            return .rightMirrored
+        @unknown default:
+            return .up
         }
     }
 }

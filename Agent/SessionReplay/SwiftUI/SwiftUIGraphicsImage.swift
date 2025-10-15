@@ -33,7 +33,13 @@ extension SwiftUIGraphicsImage: XrayConvertible {
         // Core properties.
         scale       = try grab("scale")
         orientation = try grab("orientation")
-        contents    = try grab("contents")
+        
+        // Handle optional contents - if nil, default to unknown
+        if let contentsXray = xray.childIfPresent("contents") {
+            contents = try Contents(xray: XrayDecoder(subject: contentsXray))
+        } else {
+            contents = .unknown
+        }
 
         // Defer mask resolution into a closure for clearer branching.
         maskClr = {
