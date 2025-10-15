@@ -16,9 +16,28 @@ final class UIHostingViewRecordOrchestrator {
     // Original static metadata
     static let _UIGraphicsViewClass: AnyClass? = NSClassFromString(SwiftUIConstants.UIGraphicsView.rawValue)
     
-    // Cache for consistent SwiftUI content IDs
-    private static var contentIdCache: [ContentCacheKey: Int] = [:]
-    private static let cacheQueue = DispatchQueue(label: "swiftui.content.cache", attributes: .concurrent)
+    // Cache for consistent SwiftUI content IDs with access tracking
+    private static var contentIdCache: [ContentCacheKey: CacheEntry] = [:]
+    private static let cacheQueue = DispatchQueue(label: "swiftui.contentid.cache", attributes: .concurrent)
+    
+    // Cache configuration
+    private static let cacheCleanupInterval: TimeInterval = 60.0 // Check every 60 seconds
+    private static let cacheEntryTTL: TimeInterval = 300.0 // Remove entries not accessed for 5 minutes
+    private static var lastCleanupTime: Date = Date()
+    
+    private struct CacheEntry {
+        let contentId: Int
+        var lastAccessTime: Date
+        
+        init(contentId: Int) {
+            self.contentId = contentId
+            self.lastAccessTime = Date()
+        }
+        
+        mutating func updateAccessTime() {
+            self.lastAccessTime = Date()
+        }
+    }
     
     private struct ContentCacheKey: Hashable {
         let seed: UInt16
@@ -53,15 +72,47 @@ final class UIHostingViewRecordOrchestrator {
         let cacheKey = ContentCacheKey(content: content, identity: identity)
         
         return cacheQueue.sync {
-            if let existingId = contentIdCache[cacheKey] {
-                return existingId
+            // Check if cleanup is needed
+            let now = Date()
+            if now.timeIntervalSince(lastCleanupTime) > cacheCleanupInterval {
+                cacheQueue.async(flags: .barrier) {
+                    performCacheCleanup()
+                }
+            }
+            
+            if var existingEntry = contentIdCache[cacheKey] {
+                // Update access time and return existing ID
+                existingEntry.updateAccessTime()
+                cacheQueue.async(flags: .barrier) {
+                    contentIdCache[cacheKey] = existingEntry
+                }
+                return existingEntry.contentId
             } else {
                 let newId = IDGenerator.shared.getId()
+                let newEntry = CacheEntry(contentId: newId)
                 cacheQueue.async(flags: .barrier) {
-                    contentIdCache[cacheKey] = newId
+                    contentIdCache[cacheKey] = newEntry
                 }
                 return newId
             }
+        }
+    }
+    
+    /// Performs automatic cleanup of cache entries that haven't been accessed recently
+    private static func performCacheCleanup() {
+        let now = Date()
+        let expiredKeys = contentIdCache.compactMap { (key, entry) in
+            now.timeIntervalSince(entry.lastAccessTime) > cacheEntryTTL ? key : nil
+        }
+        
+        for key in expiredKeys {
+            contentIdCache.removeValue(forKey: key)
+        }
+        
+        lastCleanupTime = now
+        
+        if !expiredKeys.isEmpty {
+            NRLOG_DEBUG("SwiftUI cache cleanup: removed \(expiredKeys.count) expired entries, \(contentIdCache.count) entries remaining")
         }
     }
 
