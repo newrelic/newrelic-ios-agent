@@ -16,6 +16,106 @@ final class UIHostingViewRecordOrchestrator {
     // Original static metadata
     static let _UIGraphicsViewClass: AnyClass? = NSClassFromString(SwiftUIConstants.UIGraphicsView.rawValue)
     
+    // Cache for consistent SwiftUI content IDs with access tracking
+    private static var contentIdCache: [ContentCacheKey: CacheEntry] = [:]
+    private static let cacheQueue = DispatchQueue(label: "swiftui.contentid.cache", attributes: .concurrent)
+    
+    // Cache configuration
+    private static let cacheCleanupInterval: TimeInterval = 60.0 // Check every 60 seconds
+    private static let cacheEntryTTL: TimeInterval = 300.0 // Remove entries not accessed for 5 minutes
+    private static var lastCleanupTime: Date = Date()
+    
+    private struct CacheEntry {
+        let contentId: Int
+        var lastAccessTime: Date
+        
+        init(contentId: Int) {
+            self.contentId = contentId
+            self.lastAccessTime = Date()
+        }
+        
+        mutating func updateAccessTime() {
+            self.lastAccessTime = Date()
+        }
+    }
+    
+    private struct ContentCacheKey: Hashable {
+        let seed: UInt16
+        let identity: UInt32
+        let contentType: String
+        
+        init(content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity) {
+            self.seed = content.seed.value
+            self.identity = identity.value
+            
+            // Create a type identifier based on the content value
+            switch content.value {
+            case .text(_, _):
+                self.contentType = "text"
+            case .image:
+                self.contentType = "image"
+            case .drawing:
+                self.contentType = "drawing"
+            case .shape( _, _, _):
+                self.contentType = "shape"
+            case .platformView:
+                self.contentType = "platformView"
+            case .color:
+                self.contentType = "color"
+            case .unknown:
+                self.contentType = "unknown"
+            }
+        }
+    }
+    
+    private static func getContentId(for content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity) -> Int {
+        let cacheKey = ContentCacheKey(content: content, identity: identity)
+        
+        return cacheQueue.sync {
+            // Check if cleanup is needed
+            let now = Date()
+            if now.timeIntervalSince(lastCleanupTime) > cacheCleanupInterval {
+                cacheQueue.async(flags: .barrier) {
+                    performCacheCleanup()
+                }
+            }
+            
+            if var existingEntry = contentIdCache[cacheKey] {
+                // Update access time and return existing ID
+                existingEntry.updateAccessTime()
+                cacheQueue.async(flags: .barrier) {
+                    contentIdCache[cacheKey] = existingEntry
+                }
+                return existingEntry.contentId
+            } else {
+                let newId = IDGenerator.shared.getId()
+                let newEntry = CacheEntry(contentId: newId)
+                cacheQueue.async(flags: .barrier) {
+                    contentIdCache[cacheKey] = newEntry
+                }
+                return newId
+            }
+        }
+    }
+    
+    /// Performs automatic cleanup of cache entries that haven't been accessed recently
+    private static func performCacheCleanup() {
+        let now = Date()
+        let expiredKeys = contentIdCache.compactMap { (key, entry) in
+            now.timeIntervalSince(entry.lastAccessTime) > cacheEntryTTL ? key : nil
+        }
+        
+        for key in expiredKeys {
+            contentIdCache.removeValue(forKey: key)
+        }
+        
+        lastCleanupTime = now
+        
+        if !expiredKeys.isEmpty {
+            NRLOG_DEBUG("SwiftUI cache cleanup: removed \(expiredKeys.count) expired entries, \(contentIdCache.count) entries remaining")
+        }
+    }
+
     private static let rendererKeyPath: [String] = {
         var keys = ["renderer"]
         if #available(iOS 18.1, tvOS 18.1, *) { keys.insert("_base", at: 0) }
@@ -34,7 +134,7 @@ final class UIHostingViewRecordOrchestrator {
         if let cls = _UIGraphicsViewClass, type(of: view).isSubclass(of: cls) { return [] }
         
         do {
-            guard let rendererObj = try? getViewRenderer(from: view, keyPath: rendererKeyPath) else { return [] }
+            guard let rendererObj = getViewRenderer(from: view, keyPath: rendererKeyPath) else { return [] }
                         
             let xray = XrayDecoder(subject: rendererObj as Any)
             let viewRenderer = try SwiftUIDisplayList.ViewRenderer(xray: xray)
@@ -128,9 +228,11 @@ final class UIHostingViewRecordOrchestrator {
                                            parentId: Int,
                                            originalView: UIView) -> (any SessionReplayViewThingy)? {
         
-        let displayListId = Int(SwiftUIDisplayList.Index.ID(identity: item.identity).identity.value)
+        // Use the hash-based cache to get a consistent ID for this content
+        let contentId = getContentId(for: content, identity: item.identity)
+        
         let frame = baseContext.convert(frame: item.frame)
-        let viewName = randomString()
+        let viewName = "SwiftUIView"
 
         func makeDetails() -> ViewDetails {
             ViewDetails(frame: frame,
@@ -143,7 +245,7 @@ final class UIHostingViewRecordOrchestrator {
                         cornerRadius: viewAttributes.layerCornerRadius,
                         borderWidth: viewAttributes.layerBorderWidth,
                         borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),//Int(content.seed.value),
-                        viewId: displayListId,
+                        viewId: contentId,
                         view: originalView,
                         maskApplicationText: viewAttributes.maskApplicationText,
                         maskUserInputText: viewAttributes.maskUserInputText,
