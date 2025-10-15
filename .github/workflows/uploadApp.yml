@@ -61,50 +61,21 @@ jobs:
           cd ~
           cd ../..
           ls -al
-          # cd /Users/runner/Library/Developer/Xcode/DerivedData/mainagenttestapp-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/
+          # cd /Users/runner/Library/Developer/Xcode/DerivedData/Agent-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/
           # ls
           # zip -r mainagenttestapp-ios.zip mainagenttestapp.app
 
       - name: Upload iOS app
         uses: actions/upload-artifact@v4
         with:
-          name: mainagenttestapp-ios
-          path: /Users/runner/Library/Developer/Xcode/DerivedData/mainagenttestapp-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/mainagenttestapp-ios.zip
+          name: nrtestapp-ios
+          path: /Users/runner/Library/Developer/Xcode/DerivedData/Agent-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/mainagenttestapp-ios.zip
           compression-level: 0
-          retention-days: 1
-
-  build-android:
-    name: Build Android app
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set Up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: "zulu" # See 'Supported distributions' for available options
-          java-version: "17"
-          cache: "gradle"
-
-      - name: Install dependencies, clean & build
-        run: |
-          npm install
-          cd android
-          ./gradlew clean
-          ./gradlew assembleRelease
-
-      - name: Upload android app
-        uses: actions/upload-artifact@v4
-        with:
-          name: mainagenttestapp-android
-          path: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 1
 
   upload-apps:
     name: Upload main agent test apps to LT
-    needs: [build-ios, build-android]
+    needs: [build-ios]
     runs-on: ubuntu-latest
     env:
       LT_USERNAME: ${{ secrets.APP_EXP_LAMBDA_USERNAME }}
@@ -118,41 +89,35 @@ jobs:
       - name: Download iOS artifact
         uses: actions/download-artifact@v4
         with:
-          name: mainagenttestapp-ios
-          path: ${{ github.workspace }}/builds
-
-      - name: Download android artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mainagenttestapp-android
+          name: nrtestapp-ios
           path: ${{ github.workspace }}/builds
 
       - name: Run upload script
-        run: node lambdaTest/uploadAppToLambdaTest.mjs
+        run: node LambdaTest/uploadAppToLambdaTest.mjs
 
       - name: Log success
         if: ${{ success() }}
         run: echo "[ RUNNER ] - successfully uploaded apps to LambdaTest"
 
-      - name: Notify success
-        if: ${{ success() }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v
-        with:
-          webhook-type: incoming-webhook
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          payload: |
-            blocks:
-              - type: "header"
-                text:
-                  type: "plain_text"
-                  text: ":frog-wow-scroll: LambdaTest Upload Successful"
-              - type: "divider"
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: Congrats! We survived another month to claim victory over LambdaTest's retention policy. The main-agent-test-apps have been successfully uploaded and are ready for testing.
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # - name: Notify success
+      #   if: ${{ success() }}
+      #   uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v
+      #   with:
+      #     webhook-type: incoming-webhook
+      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     payload: |
+      #       blocks:
+      #         - type: "header"
+      #           text:
+      #             type: "plain_text"
+      #             text: ":frog-wow-scroll: LambdaTest Upload Successful"
+      #         - type: "divider"
+      #         - type: "section"
+      #           text:
+      #             type: "mrkdwn"
+      #             text: Congrats! We survived another month to claim victory over LambdaTest's retention policy. The main-agent-test-apps have been successfully uploaded and are ready for testing.
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Log failure
         if: ${{ failure() || cancelled() }}
