@@ -21,6 +21,34 @@
                ReferencedContainer = "container:NRTestApp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2B459FEF2E9EF52F00CB66F3"
+               BuildableName = "NRTestAppAsFrameworkUITests.xctest"
+               BlueprintName = "NRTestAppAsFrameworkUITests"
+               ReferencedContainer = "container:NRTestApp.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2B459FD92E9EF52500CB66F3"
+               BuildableName = "NRTestAppAsFrameworkTests.xctest"
+               BlueprintName = "NRTestAppAsFrameworkTests"
+               ReferencedContainer = "container:NRTestApp.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

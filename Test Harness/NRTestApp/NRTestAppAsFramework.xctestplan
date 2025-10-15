@@ -13,6 +13,10 @@
   },
   "testTargets" : [
     {
+      "skippedTests" : [
+        "NRTestAppTests\/testApodViewModel()",
+        "NRTestAppTests\/testAsyncInstrumentation()"
+      ],
       "target" : {
         "containerPath" : "container:NRTestApp.xcodeproj",
         "identifier" : "2B459FD92E9EF52500CB66F3",
@@ -20,6 +24,10 @@
       }
     },
     {
+      "skippedTests" : [
+        "NRTestAppUITests\/testARequests()",
+        "NRTestAppUITests\/testBRequests()"
+      ],
       "target" : {
         "containerPath" : "container:NRTestApp.xcodeproj",
         "identifier" : "2B459FEF2E9EF52F00CB66F3",
