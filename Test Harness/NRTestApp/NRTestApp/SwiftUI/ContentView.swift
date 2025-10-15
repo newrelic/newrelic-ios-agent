@@ -66,6 +66,10 @@ struct SwiftUIContentView: View {
                         Text("Shapes")
                         
                     }
+                    NavigationLink(destination: InfiniteImageCollectionView()) {
+                        Text("Infinite Images")
+                        
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
                 
