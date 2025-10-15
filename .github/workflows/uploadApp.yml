@@ -11,13 +11,13 @@ on:
  # enables option for workflow to be manually executed in Github UI
  workflow_dispatch:
 
- push:
-   branches:
-     - main
+#  push:
+#    branches:
+#      - main
 
- # Runs on the 1st of every month
- schedule:
-   - cron: "0 0 1 * *"
+#  # Runs on the 1st of every month
+#  schedule:
+#    - cron: "0 0 1 * *"
 
 jobs:
 
@@ -44,14 +44,14 @@ jobs:
       - name: Clean iOS app
         run: |
           cd ios
-          xcodebuild clean -workspace mainagenttestapp.xcworkspace -scheme mainagenttestapp
+          xcodebuild clean -workspace Agent.xcworkspace -scheme NRTestApp
           pod update
 
       - name: Build iOS app
         run: |
           cd ios
           xcodebuild build \
-            -workspace mainagenttestapp.xcworkspace -scheme mainagenttestapp \
+            -workspace Agent.xcworkspace -scheme NRTestApp \
             -configuration Release \
             -sdk iphonesimulator \
             build
@@ -60,9 +60,10 @@ jobs:
         run: |
           cd ~
           cd ../..
-          cd /Users/runner/Library/Developer/Xcode/DerivedData/mainagenttestapp-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/
-          ls
-          zip -r mainagenttestapp-ios.zip mainagenttestapp.app
+          ls -al
+          # cd /Users/runner/Library/Developer/Xcode/DerivedData/mainagenttestapp-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/
+          # ls
+          # zip -r mainagenttestapp-ios.zip mainagenttestapp.app
 
       - name: Upload iOS app
         uses: actions/upload-artifact@v4
