@@ -287,33 +287,32 @@ final class UIHostingViewRecordOrchestrator {
                                  text: outputText,
                                  textAlignment: alignment.stringValue(),
                                  fontSize: font?.pointSize ?? 10,
-                                 fontName: font?.fontName ?? ".SFUI-Bold",
-                                 fontFamily: font?.familyName ?? ".AppleSystemUIFont",
+                                 fontName: font?.fontName ?? "SFUI-Bold",
+                                 fontFamily: font?.familyName ?? "AppleSystemUIFont",
                                  textColor: foregroundColor)
             
         case SwiftUIDisplayList.Content.Value.color:
             return nil // TODO: Colors
         case let SwiftUIDisplayList.Content.Value.image(swiftUIImage):
-            let details = makeDetails()
-            
-            // Extract UIImage from SwiftUIGraphicsImage
-            let uiImage: UIImage?
-            switch swiftUIImage.contents {
-            case .cgImage(let cgImage):
-                uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
-            case .unknown:
-                uiImage = nil
+            var details = makeDetails()
+            if details.isMasked == nil {
+                details.isMasked = viewAttributes.maskAllImages
             }
+            details.backgroundColor = .clear // Images should not have a bg color by default
             
             return UIImageViewThingy(viewDetails: details,
-                                   image: uiImage,
-                                   contentMode: .scaleAspectFit)
+                                     swiftUIImage: swiftUIImage,
+                                     contentMode: .scaleAspectFit)
         case SwiftUIDisplayList.Content.Value.drawing:
             return nil // TODO: Drawings
         case SwiftUIDisplayList.Content.Value.platformView:
-            return UIViewThingy(viewDetails: makeDetails())
+            var details = makeDetails()
+            details.backgroundColor = .clear
+            return UIViewThingy(viewDetails: details)
         case SwiftUIDisplayList.Content.Value.unknown:
-            return UIViewThingy(viewDetails: makeDetails())
+            var details = makeDetails()
+            details.backgroundColor = .clear
+            return UIViewThingy(viewDetails: details)
         }
     }
 }

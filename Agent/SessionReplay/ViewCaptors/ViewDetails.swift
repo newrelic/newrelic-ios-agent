@@ -31,7 +31,48 @@ struct ViewDetails {
     var viewIdentifier: String?
 
     var cssSelector: String {
-        "\(self.viewName)-\(self.viewId)"
+        return "\(self.viewName)-\(self.viewId)"
+    }
+    
+    static private func sanitizeViewNameForCSS(_ viewName: String) -> String {
+        // First, simplify common SwiftUI and framework prefixes
+        var sanitized = viewName
+            .replacingOccurrences(of: "SwiftUI.", with: "")
+            .replacingOccurrences(of: "NewRelic.", with: "NR")
+            .replacingOccurrences(of: "UIKit.", with: "UI")
+        
+        // Use regex to replace all invalid CSS identifier characters with underscores
+        // Valid CSS identifiers can contain: letters, digits, hyphens, underscores
+        // But cannot start with a digit or hyphen
+        sanitized = sanitized.replacingOccurrences(
+            of: "[^a-zA-Z0-9_-]",
+            with: "_",
+            options: .regularExpression
+        )
+        
+        // Remove consecutive underscores and hyphens
+        sanitized = sanitized.replacingOccurrences(
+            of: "[_-]+",
+            with: "_",
+            options: .regularExpression
+        )
+        
+        // Trim leading/trailing underscores and hyphens
+        sanitized = sanitized.trimmingCharacters(in: CharacterSet(charactersIn: "_-"))
+        
+        // Ensure it doesn't start with a number or hyphen (invalid CSS identifier)
+        if sanitized.isEmpty || sanitized.first?.isNumber == true || sanitized.hasPrefix("-") {
+            sanitized = "view_\(sanitized)"
+        }
+        
+        // Limit length to prevent extremely long IDs that could cause performance issues
+        let maxLength = 50
+        if sanitized.count > maxLength {
+            sanitized = String(sanitized.prefix(maxLength))
+        }
+        
+        // Fallback if somehow we end up with empty string
+        return sanitized.isEmpty ? "view" : sanitized
     }
 
     var isVisible: Bool {
@@ -74,7 +115,8 @@ struct ViewDetails {
             self.borderColor = nil
         }
 
-        viewName = String(describing: type(of: view))
+        let sanitizedViewName = ViewDetails.sanitizeViewNameForCSS(String(describing: type(of: view)))
+        viewName = sanitizedViewName
 
         if let identifier = view.sessionReplayIdentifier {
             viewId = identifier

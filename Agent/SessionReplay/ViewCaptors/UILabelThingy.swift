@@ -157,12 +157,22 @@ class UILabelThingy: SessionReplayViewThingy {
         else {
             self.labelText = text //view.text ?? ""
         }
-
-        // TODO: Handle FONTNAME/FONTFAMILY FOR SWIFTUI
         
         self.fontSize = fontSize
-        self.fontName = fontName //".SFUI-Bold"
-        self.fontFamily = fontFamily
+        
+        let fontNameRaw = fontName
+        if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
+            self.fontName = String(fontNameRaw.dropFirst())
+        } else {
+            self.fontName = fontNameRaw
+        }
+        
+        let fontFamilyRaw = fontFamily
+        if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
+            self.fontFamily = String(fontFamilyRaw.dropFirst())
+        } else {
+            self.fontFamily = fontFamilyRaw
+        }
         self.textAlignment = textAlignment
         self.textColor = textColor
     }

@@ -9,10 +9,10 @@
 import UIKit
 
 internal struct SwiftUIBridgeUIImageResource {
-    let image: UIImage
+    let image: CGImage
     let tintColor: UIColor?
     
-    internal init(image: UIImage, tintColor: UIColor?) {
+    internal init(image: CGImage, tintColor: UIColor?) {
         self.image = image
         self.tintColor = tintColor
     }
