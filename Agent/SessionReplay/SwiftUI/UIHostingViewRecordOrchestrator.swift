@@ -179,7 +179,9 @@ final class UIHostingViewRecordOrchestrator {
                                                   viewAttributes: viewAttributes,
                                                   parentId: parentId,
                                                   originalView: originalView) {
-                    collected.append(built)
+                    if built.viewDetails.isVisible {
+                        collected.append(built)
+                    }
                 }
                 
             case .effect(let effect, let nestedList):
@@ -229,7 +231,7 @@ final class UIHostingViewRecordOrchestrator {
                                            originalView: UIView) -> (any SessionReplayViewThingy)? {
         
         // Use the hash-based cache to get a consistent ID for this content
-        let contentId = getContentId(for: content, identity: item.identity)
+        var contentId: Int?
         
         let frame = baseContext.convert(frame: item.frame)
         let viewName = "SwiftUIView"
@@ -271,7 +273,8 @@ final class UIHostingViewRecordOrchestrator {
                 _ = style.lineSpacing
                 _ = style.lineBreakMode
             }
-
+            
+            contentId = getContentId(for: content, identity: item.identity)
             // Extract masking state from the view
             let details = makeDetails()
             
@@ -294,6 +297,22 @@ final class UIHostingViewRecordOrchestrator {
         case SwiftUIDisplayList.Content.Value.color:
             return nil // TODO: Colors
         case let SwiftUIDisplayList.Content.Value.image(swiftUIImage):
+            // Extract UIImage from SwiftUIGraphicsImage
+            var image: CGImage?
+            switch swiftUIImage.contents {
+            case .cgImage(let cgImage):
+                image = cgImage
+            case .unknown:
+                break
+            }
+            
+            if let id = image?.swiftUISessionReplayIdentifier {
+                contentId = id
+            } else {
+                contentId = IDGenerator.shared.getId()
+                image?.swiftUISessionReplayIdentifier = contentId
+            }
+            
             var details = makeDetails()
             if details.isMasked == nil {
                 details.isMasked = viewAttributes.maskAllImages
@@ -301,18 +320,39 @@ final class UIHostingViewRecordOrchestrator {
             details.backgroundColor = .clear // Images should not have a bg color by default
             
             return UIImageViewThingy(viewDetails: details,
+                                     cgImage: image,
                                      swiftUIImage: swiftUIImage,
-                                     contentMode: .scaleAspectFit)
+                                     contentMode: .scaleToFill)
         case SwiftUIDisplayList.Content.Value.drawing:
             return nil // TODO: Drawings
         case SwiftUIDisplayList.Content.Value.platformView:
+            contentId = getContentId(for: content, identity: item.identity)
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)
         case SwiftUIDisplayList.Content.Value.unknown:
+            contentId = getContentId(for: content, identity: item.identity)
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)
+        }
+    }
+}
+
+fileprivate var associatedSwiftUISessionReplayIdentifierKey: String = "SessionReplayIdentifier"
+
+extension CGImage {
+    var swiftUISessionReplayIdentifier: Int? {
+        set {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+
+        get {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_getAssociatedObject(self, $0) as? Int
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     
     var viewDetails: ViewDetails
     let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
-    var image: CGImage?
+    var image: UIImage?
     var contentMode: [String: String]
     
     var shouldRecordSubviews: Bool {
@@ -34,13 +34,13 @@ class UIImageViewThingy: SessionReplayViewThingy {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
         if !self.isMasked {
-            self.image = view.image?.cgImage
+            self.image = view.image
         }
         
         self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: view.contentMode)
     }
     
-    init(viewDetails: ViewDetails, swiftUIImage: SwiftUIGraphicsImage, contentMode: UIView.ContentMode) {
+    init(viewDetails: ViewDetails, cgImage: CGImage?, swiftUIImage: SwiftUIGraphicsImage, contentMode: UIView.ContentMode) {
         self.viewDetails = viewDetails
 
         if let isMasked = viewDetails.isMasked {
@@ -50,12 +50,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
         if !self.isMasked {
-            // Extract UIImage from SwiftUIGraphicsImage
-            switch swiftUIImage.contents {
-            case .cgImage(let cgImage):
-                self.image = cgImage
-            case .unknown:
-                break
+            if let cgImage = cgImage {
+                let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
+                    self.image = uiImage
             }
         }
         
@@ -129,7 +126,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
                                childNodes: [.element(imgNode)])
     }
     
-    static func imagesAreLikelyEqual(_ img1: CGImage?, _ img2: CGImage?) -> Bool {
+    static func imagesAreLikelyEqual(_ img1: UIImage?, _ img2: UIImage?) -> Bool {
         guard let img1 = img1, let img2 = img2 else { return img1 == nil && img2 == nil }
 
         // Compare optimized image data
@@ -251,7 +248,7 @@ extension UIImageViewThingy {
 
 fileprivate var associatedOptimizedImageDataKey: String = "SessionReplayOptimizedImageData"
 
-internal extension CGImage {
+internal extension UIImage {
     private var cachedOptimizedData: Data? {
         set {
             withUnsafePointer(to: &associatedOptimizedImageDataKey) {
@@ -278,7 +275,7 @@ internal extension CGImage {
     }
     
     private func generateOptimizedPngData(maxDimension: CGFloat) -> Data? {
-        let originalSize = self.height > 0 && self.width > 0 ? CGSize(width: self.width, height: self.height) : CGSize(width: 1, height: 1)
+        let originalSize = self.size
         
         // Calculate new size maintaining aspect ratio
         let scale: CGFloat
@@ -294,13 +291,7 @@ internal extension CGImage {
         UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
         defer { UIGraphicsEndImageContext() }
         
-        guard let context = UIGraphicsGetCurrentContext() else {
-            return nil
-        }
-        
-        // Draw the CGImage into the context
-        context.draw(self, in: CGRect(origin: .zero, size: newSize))
-        
+        draw(in: CGRect(origin: .zero, size: newSize))
         guard let resizedImage = UIGraphicsGetImageFromCurrentImageContext() else {
             return nil
         }
@@ -308,4 +299,5 @@ internal extension CGImage {
         return resizedImage.pngData()
     }
 }
+
 

@@ -189,8 +189,11 @@ struct ViewDetails {
           maskAllUserTouches: Bool?,
           sessionReplayIdentifier: String?) {
         
-        self.frame = frame
+        let visibleFrame = frame.intersection(clip)
+        
+        self.frame = visibleFrame.isNull ? .zero : visibleFrame
         self.clip = clip
+        
         self.backgroundColor = backgroundColor
         self.alpha = alpha
         self.isHidden = isHidden
