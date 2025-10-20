@@ -234,7 +234,7 @@ final class UIHostingViewRecordOrchestrator {
         var contentId: Int?
         
         let frame = baseContext.convert(frame: item.frame)
-        let viewName = "SwiftUIView"
+        var viewName = "SwiftUIView"
 
         func makeDetails() -> ViewDetails {
             ViewDetails(frame: frame,
@@ -276,6 +276,7 @@ final class UIHostingViewRecordOrchestrator {
             
             contentId = getContentId(for: content, identity: item.identity)
             // Extract masking state from the view
+            viewName = "SwiftUITextView"
             let details = makeDetails()
             
             var outputText = ""
@@ -313,10 +314,8 @@ final class UIHostingViewRecordOrchestrator {
                 image?.swiftUISessionReplayIdentifier = contentId
             }
             
+            viewName = "SwiftUIImageView"
             var details = makeDetails()
-            if details.isMasked == nil {
-                details.isMasked = viewAttributes.maskAllImages
-            }
             details.backgroundColor = .clear // Images should not have a bg color by default
             
             return UIImageViewThingy(viewDetails: details,
@@ -327,6 +326,7 @@ final class UIHostingViewRecordOrchestrator {
             return nil // TODO: Drawings
         case SwiftUIDisplayList.Content.Value.platformView:
             contentId = getContentId(for: content, identity: item.identity)
+            viewName = "SwiftUIPlatformView"
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)

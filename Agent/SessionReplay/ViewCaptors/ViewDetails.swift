@@ -26,6 +26,12 @@ struct ViewDetails {
 
     // Indicates if this view should have its content masked in session replay
     var isMasked: Bool?
+    
+    // swiftUI masking support
+    var maskApplicationText: Bool?
+    var maskUserInputText: Bool?
+    var maskAllImages: Bool?
+    var maskAllUserTouches: Bool?
 
     // Custom identifier for the view (from NRMaskingView view)
     var viewIdentifier: String?
@@ -127,53 +133,26 @@ struct ViewDetails {
         }
         
         self.parentId = view.superview?.sessionReplayIdentifier
-
-        if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
-            self.isMasked = shouldMask
-            view.sessionReplayMaskState = shouldMask
-        }
-    }
-    
-    init(view: UIView, parentId: Int) {
-        if let superview = view.superview, let window = view.window {
-            let rawFrame = superview.convert(view.frame, to: window)
-            let clippingRect = ViewDetails.getClippingRect(for: view, in: window)
-            
-            let visibleFrame = rawFrame.intersection(clippingRect)
-            
-            self.frame = visibleFrame.isNull ? .zero : visibleFrame
-            self.clip = clippingRect
-        }
-        else {
-            self.frame = view.frame
-            self.clip = view.bounds
-        }
-        backgroundColor = view.backgroundColor
-        alpha = view.alpha
-        isHidden = view.isHidden
-        cornerRadius = view.layer.cornerRadius
-        borderWidth = view.layer.borderWidth
-
-        // Checking if we have a border, because asking for the layer's
-        // border color will always give us something
-        if view.layer.borderWidth > 0, let borderColor = view.layer.borderColor {
-            self.borderColor = UIColor(cgColor: borderColor)
-        }
-        else {
-            self.borderColor = nil
+        
+        if let maskApplicationText = ViewDetails.checkMaskApplicationText(view: view) {
+            self.maskApplicationText = maskApplicationText
+            view.maskApplicationText = maskApplicationText
         }
 
-        viewName = String(describing: type(of: view))
-
-        if let identifier = view.sessionReplayIdentifier {
-            viewId = identifier
-        }
-        else {
-            viewId = IDGenerator.shared.getId()
-            view.sessionReplayIdentifier = viewId
+        if let maskUserInputText = ViewDetails.checkMaskUserInputText(view: view) {
+            self.maskUserInputText = maskUserInputText
+            view.maskUserInputText = maskUserInputText
         }
         
-        self.parentId = parentId
+        if let maskAllImages = ViewDetails.checkMaskAllImages(view: view) {
+            self.maskAllImages = maskAllImages
+            view.maskAllImages = maskAllImages
+        }
+        
+        if let maskAllUserTouches = ViewDetails.checkMaskAllUserTouches(view: view) {
+            self.maskAllUserTouches = maskAllUserTouches
+            view.maskAllUserTouches = maskAllUserTouches
+        }
 
         if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
             self.isMasked = shouldMask
@@ -212,16 +191,29 @@ struct ViewDetails {
         }
 
         self.parentId = parentId
+        
+        self.maskApplicationText = maskApplicationText
+        self.maskUserInputText = maskUserInputText
+        self.maskAllImages = maskAllImages
+        self.maskAllUserTouches = maskAllUserTouches
+        
+        if let sessionReplayIdentifier = sessionReplayIdentifier {
+            guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
+            // Check for accessibility identifier in the masking list
+            if agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier) {
+                self.isMasked = true
+            }
 
-        if let view = view, let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName, maskApplicationText:maskApplicationText,maskUserInputText:maskUserInputText,maskAllImages:maskAllImages,maskAllUserTouches:maskAllUserTouches,sessionReplayIdentifier:sessionReplayIdentifier) {
-            self.isMasked = shouldMask
-            view.sessionReplayMaskState = shouldMask
+            // Check for accessibility identifier in the masking list
+            if agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
+                self.isMasked = false
+            }
         }
     }
 
     
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
-    private static func checkIsMasked(view: UIView, viewName: String, maskApplicationText: Bool? = nil, maskUserInputText: Bool? = nil, maskAllImages: Bool? = nil, maskAllUserTouches: Bool? = nil, sessionReplayIdentifier: String? = nil) -> Bool? {
+    private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
         guard let agent = NewRelicAgentInternal.sharedInstance() else { return true }
         guard let config = NRMAHarvestController.configuration() else { return true }
@@ -269,39 +261,69 @@ struct ViewDetails {
             return false
         }
         
-        if let maskApplicationText = maskApplicationText, !maskApplicationText {
-            return false
-        }
-        else if let maskApplicationText = maskApplicationText, maskApplicationText {
-            return true
-        }
-        
-        if let maskUserInputText = maskUserInputText, !maskUserInputText {
-            return false
-        }
-        else if let maskUserInputText = maskUserInputText, maskUserInputText {
-            return true
-        }
-        
-//        // Check if parent is marked as masked or unmasked (propagate masking status to children)
-//        if let parentView = view.superview,
-//           let parentMasked = parentView.sessionReplayMaskState {
-//            return parentMasked
-//        }
-  
-        if let sessionReplayIdentifier {
-            // Check for accessibility identifier in the masking list
-            if agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier) {
-                return true
-            }
-
-            // Check for accessibility identifier in the masking list
-            if agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
-                return false
-            }
+        // Check if parent is marked as masked or unmasked (propagate masking status to children)
+        if let parentView = view.superview,
+           let parentMasked = parentView.sessionReplayMaskState {
+            return parentMasked
         }
         
         // Return nil if no custom masked setting is found
+        return nil
+    }
+    
+    private static func checkMaskApplicationText(view: UIView) -> Bool? {
+        
+        if let maskApplicationText = view.maskApplicationText {
+            return maskApplicationText
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskApplicationText {
+            return parentMasked
+        }
+        
+        return nil
+    }
+    
+    private static func checkMaskUserInputText(view: UIView) -> Bool? {
+        
+        if let maskUserInputText = view.maskUserInputText {
+            return maskUserInputText
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskUserInputText {
+            return parentMasked
+        }
+        
+        return nil
+    }
+    
+    private static func checkMaskAllImages(view: UIView) -> Bool? {
+        
+        if let maskAllImages = view.maskAllImages {
+            return maskAllImages
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskAllImages {
+            return parentMasked
+        }
+        
+        return nil
+    }
+    
+    private static func checkMaskAllUserTouches(view: UIView) -> Bool? {
+        
+        if let maskAllUserTouches = view.maskAllUserTouches{
+            return maskAllUserTouches
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskAllUserTouches {
+            return parentMasked
+        }
+        
         return nil
     }
     

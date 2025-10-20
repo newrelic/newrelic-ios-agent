@@ -51,9 +51,9 @@ class SessionReplayCapture {
                 }
             }
             
-            // Check if this is specifically SwiftUI._UIHostingView<SwiftUI.BridgedPresentation.RootView> and handle z-ordering correctly
             if let viewController = extractVC(from: currentView),
                ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
+                // Check if this is specifically SwiftUI._UIHostingView<SwiftUI.BridgedPresentation.RootView>
                 let className = NSStringFromClass(type(of: currentView))
                 if className.contains("_UIHostingView") && className.contains("RootView") {
                     rootSwiftUIViewID = currentParentThingy.viewDetails.viewId
@@ -71,7 +71,8 @@ class SessionReplayCapture {
                                                            maskApplicationText: currentView.maskApplicationText,
                                                            maskUserInputText: currentView.maskUserInputText,
                                                            maskAllImages: currentView.maskAllImages,
-                                                           maskAllUserTouches: currentView.maskAllUserTouches
+                                                           maskAllUserTouches: currentView.maskAllUserTouches,
+                                                           sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
                 )
                 
                 let context = SwiftUIContext(frame: currentParentThingy.viewDetails.frame, clip: currentParentThingy.viewDetails.clip)

@@ -30,6 +30,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
+        else if let maskAllImages = viewDetails.maskAllImages {
+            self.isMasked = maskAllImages
+        }
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
@@ -45,6 +48,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
+        }
+        else if let maskAllImages = viewDetails.maskAllImages {
+            self.isMasked = maskAllImages
         }
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true

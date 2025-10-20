@@ -37,6 +37,9 @@ class UILabelThingy: SessionReplayViewThingy {
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
+        else if let maskApplicationText = viewDetails.maskApplicationText {
+            self.isMasked = maskApplicationText
+        }
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
@@ -106,6 +109,8 @@ class UILabelThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
+        } else if let maskApplicationText = viewDetails.maskApplicationText {
+            self.isMasked = maskApplicationText
         } else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
@@ -144,6 +149,9 @@ class UILabelThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
+        }
+        else if let maskApplicationText = viewDetails.maskApplicationText {
+            self.isMasked = maskApplicationText
         }
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
