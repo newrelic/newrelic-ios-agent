@@ -65,11 +65,13 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
             if #available(iOS 12.0, *) {
                 if view.traitCollection.userInterfaceStyle == .dark {
                     self.viewDetails.backgroundColor = UIColor(red: 8.0/255.0, green: 8.0/255.0, blue: 8.0/255.0, alpha: 0.85)
-                } else {
+                }
+                else {
                     self.viewDetails.backgroundColor = UIColor(red: 248.0/255.0, green: 248.0/255.0, blue: 248.0/255.0, alpha: 0.85)
                 }
             }
-        } else {
+        }
+        else {
             self.viewDetails.backgroundColor = backgroundColor
         }
     }
@@ -112,18 +114,7 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
         var mutations = [MutationRecord]()
         var allAttributes = [String: String]()
         
-        var styleAttributes = generateBaseDifferences(from: typedOther)
-
-        if self.blurIntensity != typedOther.blurIntensity {
-            // Update the style attribute with the new blur intensity
-            styleAttributes["-webkit-backdrop-filter"] = "blur(\(blurIntensity)px)"
-            styleAttributes["box-shadow"] = "0px 0.5px 0px rgba(0, 0, 0, 0.3)"
-        }
-        
-        if !styleAttributes.isEmpty {
-            let styleString = styleAttributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
-            allAttributes["style"] = styleString
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
         if !allAttributes.isEmpty {
             let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)

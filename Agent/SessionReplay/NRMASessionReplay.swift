@@ -41,7 +41,7 @@ public class NRMASessionReplay: NSObject {
         self.url = url
         self.sessionReplayCapture = SessionReplayCapture()
         
-        //sessionReplayFrameProcessor.useIncrementalDiffs = false // Only take full snapshots, not incremental diffs
+       // sessionReplayFrameProcessor.useIncrementalDiffs = false // Only take full snapshots, not incremental diffs
 
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         self.framesDirectory = documentsPath.appendingPathComponent("SessionReplayFrames")
@@ -333,10 +333,6 @@ public class NRMASessionReplay: NSObject {
 
             // Save/update URL separately
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
-
-            if frameCounter % 10 == 0 {
-                NRLOG_DEBUG("SessionReplay - Frame \(frameCounter) processed and written to \(frameURL.path)")
-            }
 
             frameCounter += 1
         } catch {

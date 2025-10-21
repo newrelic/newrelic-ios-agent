@@ -36,7 +36,11 @@ class UILabelThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
-        } else {
+        }
+        else if let maskApplicationText = viewDetails.maskApplicationText {
+            self.isMasked = maskApplicationText
+        }
+        else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
         
@@ -53,14 +57,16 @@ class UILabelThingy: SessionReplayViewThingy {
         let fontNameRaw = view.font.fontName
         if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontName = fontNameRaw
         }
         
         let fontFamilyRaw = view.font.familyName
         if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
             self.fontFamily = String(fontFamilyRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontFamily = fontFamilyRaw
         }
         self.textAlignment = view.textAlignment.stringValue()
@@ -103,6 +109,8 @@ class UILabelThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
+        } else if let maskApplicationText = viewDetails.maskApplicationText {
+            self.isMasked = maskApplicationText
         } else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
@@ -132,6 +140,48 @@ class UILabelThingy: SessionReplayViewThingy {
         
         self.textAlignment = textAlignment
 
+        self.textColor = textColor
+    }
+    
+    init(viewDetails: ViewDetails, text: String, textAlignment: String, fontSize: CGFloat, fontName: String, fontFamily: String, textColor: UIColor) {
+        self.viewDetails = viewDetails
+        self.viewDetails.backgroundColor = .clear
+
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        }
+        else if let maskApplicationText = viewDetails.maskApplicationText {
+            self.isMasked = maskApplicationText
+        }
+        else {
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
+        }
+        
+        if self.isMasked {
+            // If the view is masked, we should not record the text.
+            // instead replace it with the number of asterisks as were characters in label
+            self.labelText = String(repeating: "*", count: text.count)
+        }
+        else {
+            self.labelText = text //view.text ?? ""
+        }
+        
+        self.fontSize = fontSize
+        
+        let fontNameRaw = fontName
+        if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
+            self.fontName = String(fontNameRaw.dropFirst())
+        } else {
+            self.fontName = fontNameRaw
+        }
+        
+        let fontFamilyRaw = fontFamily
+        if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
+            self.fontFamily = String(fontFamilyRaw.dropFirst())
+        } else {
+            self.fontFamily = fontFamilyRaw
+        }
+        self.textAlignment = textAlignment
         self.textColor = textColor
     }
     
@@ -190,25 +240,7 @@ class UILabelThingy: SessionReplayViewThingy {
         var mutations = [MutationRecord]()
         var allAttributes = [String: String]()
         
-        var styleAttributes = generateBaseDifferences(from: typedOther)
-
-        // get text color difference
-        if textColor != typedOther.textColor {
-            styleAttributes["color"] = typedOther.textColor.toHexString(includingAlpha: true)
-        }
-        
-        if fontSize != typedOther.fontSize || fontFamily != typedOther.fontFamily {
-            styleAttributes["font"] = "\(String(format: "%.2f", self.fontSize))px \(self.fontFamily)px"
-        }
-        
-        if textAlignment != typedOther.textAlignment {
-            styleAttributes["text-align"] = typedOther.textAlignment
-        }
-        
-        if !styleAttributes.isEmpty {
-            let styleString = styleAttributes.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
-            allAttributes["style"] = styleString
-        }
+        allAttributes["style"] = typedOther.inlineCSSDescription()
         
         if !allAttributes.isEmpty {
             let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
