@@ -46,6 +46,9 @@ class CustomTextThingy: SessionReplayViewThingy {
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
+        else if let maskUserInputText = viewDetails.maskUserInputText {
+            self.isMasked = maskUserInputText
+        }
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }

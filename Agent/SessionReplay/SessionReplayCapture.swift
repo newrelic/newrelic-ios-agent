@@ -51,12 +51,40 @@ class SessionReplayCapture {
                 }
             }
             
-            // Check if this is specifically SwiftUI._UIHostingView<SwiftUI.BridgedPresentation.RootView> and reverse subviews if so. This way the captured swiftUI elements are on top of the UIKit ones in playback.
-            let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") && className.contains("RootView") {
-                rootSwiftUIViewID = currentParentThingy.viewDetails.viewId
+            if let viewController = extractVC(from: currentView),
+               ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
+                // Check if this is specifically SwiftUI._UIHostingView<SwiftUI.BridgedPresentation.RootView>
+                let className = NSStringFromClass(type(of: currentView))
+                if className.contains("_UIHostingView") && className.contains("RootView") {
+                    rootSwiftUIViewID = currentParentThingy.viewDetails.viewId
+                }
+                
+                let viewAttributes = SwiftUIViewAttributes(frame: currentParentThingy.viewDetails.frame,
+                                                           clip: currentParentThingy.viewDetails.clip,
+                                                           backgroundColor: currentView.backgroundColor?.cgColor,
+                                                           layerBorderColor: currentView.layer.borderColor,
+                                                           layerBorderWidth: currentView.layer.borderWidth,
+                                                           layerCornerRadius: currentView.layer.cornerRadius,
+                                                           alpha: currentView.alpha,
+                                                           isHidden: currentView.isHidden,
+                                                           intrinsicContentSize: currentView.intrinsicContentSize,
+                                                           maskApplicationText: currentView.maskApplicationText,
+                                                           maskUserInputText: currentView.maskUserInputText,
+                                                           maskAllImages: currentView.maskAllImages,
+                                                           maskAllUserTouches: currentView.maskAllUserTouches,
+                                                           sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
+                )
+                
+                let context = SwiftUIContext(frame: currentParentThingy.viewDetails.frame, clip: currentParentThingy.viewDetails.clip)
+                
+                let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: currentParentThingy.viewDetails.viewId)
+                
+                
+                if !thingys.isEmpty {
+                    currentParentThingy.subviews.append(contentsOf: thingys)
+                }
             }
-
+            
             if let textView = currentView as? UITextField {
                 let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
                 currentParentThingy.subviews.append(textViewThingy) // Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
@@ -116,71 +144,27 @@ class SessionReplayCapture {
     }
     
     private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
-//          let viewType = String(describing: type(of: originalView))
-//              print("Finding recorder for view type: \(viewType)")
-        if let viewController = extractVC(from: originalView),
-           ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
-                      let viewType = String(describing: type(of: originalView))
-                        //  print("Finding recorder for view type: \(viewType)")
-            let className = NSStringFromClass(type(of: viewController))
-             //NRLOG_DEBUG("Finding recorder for CLASS NAME: \(className)")
+        switch originalView {
+        case let view as UILabel:
+            return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
+        case let imageView as UIImageView:
+            return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
             
-            let hostingThingy = UIViewThingy(view: originalView,
-                                             viewDetails: ViewDetails(view: originalView))
-            //NRLOG_DEBUG("HOSTING THINGY: \(hostingThingy) frame: \(hostingThingy.viewDetails.frame) viewId: \(hostingThingy.viewDetails.viewId) parentId: \(hostingThingy.viewDetails.parentId ?? -1)")
-                        
-            let viewAttributes = SwiftUIViewAttributes(frame: hostingThingy.viewDetails.frame,
-                                                       clip: hostingThingy.viewDetails.clip,
-                                                       backgroundColor: originalView.backgroundColor?.cgColor,
-                                                       layerBorderColor: originalView.layer.borderColor,
-                                                       layerBorderWidth: originalView.layer.borderWidth,
-                                                       layerCornerRadius: originalView.layer.cornerRadius,
-                                                       alpha: originalView.alpha,
-                                                       isHidden: originalView.isHidden,
-                                                       intrinsicContentSize: originalView.intrinsicContentSize,
-                                                       maskApplicationText: originalView.maskApplicationText,
-                                                       maskUserInputText: originalView.maskUserInputText,
-                                                       maskAllImages: originalView.maskAllImages,
-                                                       maskAllUserTouches: originalView.maskAllUserTouches
-            )
+        case let textField as UITextField:
+            return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
             
-            let context = SwiftUIContext(frame: hostingThingy.viewDetails.frame, clip: hostingThingy.viewDetails.clip)
+        case let textView as UITextView:
+            return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
             
-            let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(originalView, context: context, viewAttributes: viewAttributes, parentId: hostingThingy.viewDetails.viewId)
+        case let visualEffectView as UIVisualEffectView:
+            return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
             
-         //   logThingys(thingys)
-            
-            if !thingys.isEmpty {
-                // print("Adding \(thingys) SwiftUI thingys to hosting view thingy")
-                hostingThingy.subviews.append(contentsOf: thingys)
-            }
-            
-            return hostingThingy
-        }
-        else {
-            
-            switch originalView {
-            case let view as UILabel:
-                return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
-            case let imageView as UIImageView:
-                return UIImageViewThingy(view: imageView, viewDetails: ViewDetails(view: imageView))
-                
-            case let textField as UITextField:
-                return UITextFieldThingy(view: textField, viewDetails: ViewDetails(view: textField))
-                
-            case let textView as UITextView:
-                return UITextViewThingy(view: textView, viewDetails: ViewDetails(view: textView))
-                
-            case let visualEffectView as UIVisualEffectView:
-                return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
-                
-            default:
-                if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
-                   originalView.isKind(of: rctParagraphClass) {
-                    return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                } else {
-                    return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
-                }
+        default:
+            if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
+               originalView.isKind(of: rctParagraphClass) {
+                return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+            } else {
+                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
             }
         }
     }

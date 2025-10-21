@@ -9,16 +9,18 @@ struct InfiniteImageCollectionView: View {
     ]
     
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(viewModel.images.indices, id: \.self) { index in
-                    AsyncImageView(imageURL: viewModel.images[index])
-                        .frame(width: 150, height: 150)
-                        .onAppear {
-                            if index == viewModel.images.count - 5 {
-                                viewModel.loadMoreImages()
+        NRConditionalMaskView(maskAllImages: false) {
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(viewModel.images.indices, id: \.self) { index in
+                        AsyncImageView(imageURL: viewModel.images[index])
+                            .frame(width: 150, height: 150)
+                            .onAppear {
+                                if index == viewModel.images.count - 5 {
+                                    viewModel.loadMoreImages()
+                                }
                             }
-                        }
+                    }
                 }
                 
                 if viewModel.isLoading {

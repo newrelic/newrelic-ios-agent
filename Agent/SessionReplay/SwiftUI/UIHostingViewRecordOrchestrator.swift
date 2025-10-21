@@ -179,7 +179,9 @@ final class UIHostingViewRecordOrchestrator {
                                                   viewAttributes: viewAttributes,
                                                   parentId: parentId,
                                                   originalView: originalView) {
-                    collected.append(built)
+                    if built.viewDetails.isVisible {
+                        collected.append(built)
+                    }
                 }
                 
             case .effect(let effect, let nestedList):
@@ -229,10 +231,10 @@ final class UIHostingViewRecordOrchestrator {
                                            originalView: UIView) -> (any SessionReplayViewThingy)? {
         
         // Use the hash-based cache to get a consistent ID for this content
-        let contentId = getContentId(for: content, identity: item.identity)
+        var contentId: Int?
         
         let frame = baseContext.convert(frame: item.frame)
-        let viewName = "SwiftUIView"
+        var viewName = "SwiftUIView"
 
         func makeDetails() -> ViewDetails {
             ViewDetails(frame: frame,
@@ -271,8 +273,10 @@ final class UIHostingViewRecordOrchestrator {
                 _ = style.lineSpacing
                 _ = style.lineBreakMode
             }
-
+            
+            contentId = getContentId(for: content, identity: item.identity)
             // Extract masking state from the view
+            viewName = "SwiftUITextView"
             let details = makeDetails()
             
             var outputText = ""
@@ -287,33 +291,68 @@ final class UIHostingViewRecordOrchestrator {
                                  text: outputText,
                                  textAlignment: alignment.stringValue(),
                                  fontSize: font?.pointSize ?? 10,
-                                 fontName: font?.fontName ?? ".SFUI-Bold",
-                                 fontFamily: font?.familyName ?? ".AppleSystemUIFont",
+                                 fontName: font?.fontName ?? "SFUI-Bold",
+                                 fontFamily: font?.familyName ?? "AppleSystemUIFont",
                                  textColor: foregroundColor)
             
         case SwiftUIDisplayList.Content.Value.color:
             return nil // TODO: Colors
         case let SwiftUIDisplayList.Content.Value.image(swiftUIImage):
-            let details = makeDetails()
-            
             // Extract UIImage from SwiftUIGraphicsImage
-            let uiImage: UIImage?
+            var image: CGImage?
             switch swiftUIImage.contents {
             case .cgImage(let cgImage):
-                uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
+                image = cgImage
             case .unknown:
-                uiImage = nil
+                break
             }
             
+            if let id = image?.swiftUISessionReplayIdentifier {
+                contentId = id
+            } else {
+                contentId = IDGenerator.shared.getId()
+                image?.swiftUISessionReplayIdentifier = contentId
+            }
+            
+            viewName = "SwiftUIImageView"
+            var details = makeDetails()
+            details.backgroundColor = .clear // Images should not have a bg color by default
+            
             return UIImageViewThingy(viewDetails: details,
-                                   image: uiImage,
-                                   contentMode: .scaleAspectFit)
+                                     cgImage: image,
+                                     swiftUIImage: swiftUIImage,
+                                     contentMode: .scaleToFill)
         case SwiftUIDisplayList.Content.Value.drawing:
             return nil // TODO: Drawings
         case SwiftUIDisplayList.Content.Value.platformView:
-            return UIViewThingy(viewDetails: makeDetails())
+            contentId = getContentId(for: content, identity: item.identity)
+            viewName = "SwiftUIPlatformView"
+            var details = makeDetails()
+            details.backgroundColor = .clear
+            return UIViewThingy(viewDetails: details)
         case SwiftUIDisplayList.Content.Value.unknown:
-            return UIViewThingy(viewDetails: makeDetails())
+            contentId = getContentId(for: content, identity: item.identity)
+            var details = makeDetails()
+            details.backgroundColor = .clear
+            return UIViewThingy(viewDetails: details)
+        }
+    }
+}
+
+fileprivate var associatedSwiftUISessionReplayIdentifierKey: String = "SessionReplayIdentifier"
+
+extension CGImage {
+    var swiftUISessionReplayIdentifier: Int? {
+        set {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+
+        get {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_getAssociatedObject(self, $0) as? Int
+            }
         }
     }
 }
