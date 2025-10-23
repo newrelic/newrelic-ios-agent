@@ -265,7 +265,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
             [traceMach invalidateTimers]; //invalidate any timers that might be running.
 
             NRMAActivityTrace *activityTrace = traceMach.activityTrace;
-            NRLOG_AGENT_VERBOSE(@"\"%@\" Activity Completed.", activityTrace.name);
+            // NRLOG_AGENT_VERBOSE(@"\"%@\" Activity Completed.", activityTrace.name);
 
 
             [traceMach.tracePool removeMeasurementConsumer:activityTrace.rootTrace];

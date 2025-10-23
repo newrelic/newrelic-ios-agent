@@ -72,7 +72,8 @@ func generateDiff(old:[any SessionReplayViewThingy], new:[any SessionReplayViewT
         if table[item.viewDetails.viewId] == nil {
             entry = Symbol(inNew: false, indexInOld: index)
             table[item.viewDetails.viewId] = entry
-        } else {
+        }
+        else {
             table[item.viewDetails.viewId]?.indexInOld = index
             entry = table[item.viewDetails.viewId]
         }
