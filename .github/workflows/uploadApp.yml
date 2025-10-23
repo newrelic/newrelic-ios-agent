@@ -1,11 +1,11 @@
-# This purpose of this GitHub action is to automate uploading the main agent test app to LamdbaTest. LambdaTest has a retention policy of 60 days. This automation ensures that the app is always available for testing without manual intervention and will always be providing data to the following entities without interruption:
+# This purpose of this GitHub action is to automate uploading a version of NRTestApp to LamdbaTest. LambdaTest has a retention policy of 60 days. This automation ensures that the app is always available for testing without manual intervention and will always be providing data to the following entities without interruption:
 
-# main-agent-test-app-ios: https://staging.onenr.io/07jbMl8KnRy
+# nrtestapp-ios: [INSERT STAGING NR ONE LINK]
 
 # This action triggers a node.js function that uploads the app to LambdaTest.
 # The function uses a `custom_id` to identify that app with a specific name rather than the default names provided upon upload, which will change per upload.
 
-name: Upload iOS and Android apps to LambdaTest
+name: Upload iOS NRTestApp to LambdaTest
 
 on:
  # enables option for workflow to be manually executed in Github UI
@@ -39,42 +39,37 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
-          cd ios && pod install
 
       - name: Clean iOS app
         run: |
-          cd ios
-          xcodebuild clean -workspace Agent.xcworkspace -scheme NRTestApp
-          pod update
+          xcodebuild clean -workspace Agent.xcworkspace -scheme NRTestApp -derivedDataPath "derived_build"
 
       - name: Build iOS app
         run: |
-          cd ios
           xcodebuild build \
             -workspace Agent.xcworkspace -scheme NRTestApp \
             -configuration Release \
             -sdk iphonesimulator \
+            -derivedDataPath "derived_build" \
             build
     
       - name: Compress iOS app
         run: |
-          cd ~
-          cd ../..
           ls -al
-          # cd /Users/runner/Library/Developer/Xcode/DerivedData/Agent-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/
-          # ls
-          # zip -r mainagenttestapp-ios.zip mainagenttestapp.app
+          cd ./derived_build/Build/Products/Release-iphonesimulator/
+          ls
+          zip -r nrtestapp-ios.zip NRTestApp.app
 
       - name: Upload iOS app
         uses: actions/upload-artifact@v4
         with:
           name: nrtestapp-ios
-          path: /Users/runner/Library/Developer/Xcode/DerivedData/Agent-aiutyigxigajkbcjspvvdvuiqmit/Build/Products/Release-iphonesimulator/mainagenttestapp-ios.zip
+          path: ./derived_build//Build/Products/Release-iphonesimulator/nrtestapp-ios.zip
           compression-level: 0
           retention-days: 1
 
   upload-apps:
-    name: Upload main agent test apps to LT
+    name: Upload NRTestApp app to LT
     needs: [build-ios]
     runs-on: ubuntu-latest
     env:
@@ -139,7 +134,7 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "Something went wrong while uploading the main-agent-test-apps to LambdaTest. Please check the logs for more details." 
+                  text: "Something went wrong while uploading the NRTestApp to LambdaTest. Please check the logs for more details." 
                 accessory:
                   type: "button"
                   text:

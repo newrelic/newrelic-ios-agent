@@ -13,7 +13,8 @@
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAUncaughtExceptionHandler.h"
 #import "NRMACrashReportFileManager.h"
-#if !TARGET_OS_WATCH
+#if TARGET_OS_WATCH
+#else
 #import "PLCrashNamespace.h"
 #import "PLCrashReporter.h"
 #endif

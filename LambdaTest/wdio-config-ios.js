@@ -29,7 +29,7 @@ exports.config = {
         deviceName: "iPhone 15",
         appiumVersion: "1.22.3",
         platformVersion: "17.0",
-        app: "NRTESTAPP", // custom_id was IOSAPP
+        app: "com.newrelic.NRApp.bitcode", // custom_id was IOSAPP
       },
     },
   ],

@@ -31,23 +31,18 @@ function uploadFileToLambdaTest(name, path, customId) {
 }
 Promise.all([
   uploadFileToLambdaTest(
-    "main-agent-test-app-iOS",
-    `${targetDir}/mainagenttestapp-ios.zip`,
-    "IOSAPP"
+    "nrtestapp-iOS",
+    `${targetDir}/nrtestapp-ios.zip`,
+    "com.newrelic.NRApp.bitcode"
   ),
-//   uploadFileToLambdaTest(
-//     "main-agent-test-app-Android",
-//     `${targetDir}/app-release.apk`,
-//     "ANDROIDAPP"
-//   ),
 ])
-  .then(([iosResponse, androidResponse]) =>
+  .then(([iosResponse]) => //androidResponse]) =>
     Promise.all([iosResponse.json()])
   )
   .then(([iosResponse]) => {
     if (iosResponse.err) {
       throw new Error(
-        `Error uploading apps: iOS: ${iosResponse.err}`
+        `Error uploading apps: iOS: ${JSON.stringify(iosResponse.err, null, 2)}`
       );
     } else {
       console.log("Uploaded ios assets");

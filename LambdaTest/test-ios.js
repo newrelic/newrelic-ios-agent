@@ -1,4 +1,4 @@
-describe("main agent test app - ios", () => {
+describe("Run NRTestApp - ios", () => {
   it("Opens app", async () => {
     // wait for the app to load
     await driver.setTimeouts(5000);
