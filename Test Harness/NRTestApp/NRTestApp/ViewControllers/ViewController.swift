@@ -174,6 +174,10 @@ class ViewController: UIViewController {
     }
     
     func swiftUIViewTapped() {
+        coordinator?.showSwiftUITestView()
+    }
+    
+    func swiftUIViewRepresentableTapped() {
         coordinator?.showSwiftUIViewRepresentableTestView()
     }
     
@@ -195,6 +199,8 @@ class ViewController: UIViewController {
         tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
+        options.append(UtilOption(title: "SwiftUI", handler: { [self] in swiftUIViewTapped()}))
+
         options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
 
         options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
@@ -218,7 +224,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
         
-        options.append(UtilOption(title: "SwiftUIViewRepresentableTest", handler: { [self] in swiftUIViewTapped()}))
+        options.append(UtilOption(title: "SwiftUIViewRepresentable", handler: { [self] in swiftUIViewRepresentableTapped()}))
+
         
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))

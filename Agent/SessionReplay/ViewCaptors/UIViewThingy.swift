@@ -25,6 +25,11 @@ class UIViewThingy: SessionReplayViewThingy {
         self.isMasked = viewDetails.isMasked ?? false
     }
     
+    init(viewDetails: ViewDetails) {
+        self.viewDetails = viewDetails
+        self.isMasked = viewDetails.isMasked ?? false
+    }
+    
     func cssDescription() -> String {
         return "#\(viewDetails.cssSelector) {\(generateBaseCSSStyle())} "
     }
