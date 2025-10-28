@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
   # enables scheduled execution every 30 minutes
-  schedule:
-    - cron: "*/30 * * * *"
+  # schedule:
+  #   - cron: "*/30 * * * *"
 
 jobs:
   ios-data:
