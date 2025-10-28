@@ -36,12 +36,12 @@ describe("SwiftUI Text Fields Screen", () => {
 
   it("Should navigate back to SwiftUI screen", async () => {
     // Navigate back
-        await driver.back();
+    await driver.back();
 
     await driver.setTimeouts(2000);
     await driver.activateApp('com.apple.Preferences');
 
-            await driver.setTimeouts(5000);
+    await driver.setTimeouts(5000);
 
     });
 });

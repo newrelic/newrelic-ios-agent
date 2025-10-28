@@ -166,11 +166,11 @@ describe("SwiftUI Masking Screen", () => {
 
   it("Should navigate back to MainScreen", async () => {
 
-        await driver.back();
+    await driver.back();
 
     await driver.setTimeouts(2000);
 
-        await driver.back();
+    await driver.back();
 
     await driver.setTimeouts(2000);
 
@@ -181,7 +181,7 @@ describe("SwiftUI Masking Screen", () => {
 
     // put app in background by tapping home button
     await driver.activateApp('com.apple.Preferences');
-            await driver.setTimeouts(5000);
+    await driver.setTimeouts(5000);
 
     });
 });
