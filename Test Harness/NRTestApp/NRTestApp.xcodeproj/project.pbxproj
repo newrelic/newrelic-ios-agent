@@ -167,6 +167,27 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		2B6588122EA9957600A5AC8C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 021A15B924C9EEE700E8DFD5;
+			remoteInfo = Agent_iOS;
+		};
+		2B65881F2EA995B600A5AC8C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 02FF4B1824E3201400115469;
+			remoteInfo = Agent_tvos;
+		};
+		2B6588212EA995BB00A5AC8C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 348232212BC5EEE60070FAC3;
+			remoteInfo = "Agent-watchOS";
+		};
 		2B94FC912C3F47B1006B9869 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
@@ -764,6 +785,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2B6588222EA995BB00A5AC8C /* PBXTargetDependency */,
 			);
 			name = "NRTestApp (watchOS) Watch App";
 			productName = "NRTestApp (watchOS) Watch App";
@@ -783,6 +805,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2B6588132EA9957600A5AC8C /* PBXTargetDependency */,
 			);
 			name = NRTestApp;
 			productName = NRTestApp;
@@ -838,6 +861,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2B6588202EA995B600A5AC8C /* PBXTargetDependency */,
 			);
 			name = "NRTestApp (tvOS)";
 			productName = "NRTestApp (tvOS)";
@@ -1297,6 +1321,21 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2B6588132EA9957600A5AC8C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Agent_iOS;
+			targetProxy = 2B6588122EA9957600A5AC8C /* PBXContainerItemProxy */;
+		};
+		2B6588202EA995B600A5AC8C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Agent_tvos;
+			targetProxy = 2B65881F2EA995B600A5AC8C /* PBXContainerItemProxy */;
+		};
+		2B6588222EA995BB00A5AC8C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Agent-watchOS";
+			targetProxy = 2B6588212EA995BB00A5AC8C /* PBXContainerItemProxy */;
+		};
 		2BD05DD82ADF323A00C0C972 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F8302AF4296F5EFA003EC291 /* NRTestApp */;
@@ -1351,7 +1390,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestAppUITests/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.6;
 				MARKETING_VERSION = 1.0;
@@ -1379,7 +1418,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestAppUITests/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.6;
 				MARKETING_VERSION = 1.0;
@@ -1606,7 +1645,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1654,7 +1693,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1686,7 +1725,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestAppTests;
@@ -1708,7 +1747,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = newrelic.NRTestAppTests;
