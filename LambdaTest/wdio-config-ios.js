@@ -16,7 +16,8 @@ exports.config = {
   specs: ["./tests/*.test.js"],
   exclude: [],
 
-  maxInstances: 5,
+  // Enable parallel execution with 10 instances
+  maxInstances: 10,
   capabilities: [
     {
       "lt:options": {
@@ -30,17 +31,18 @@ exports.config = {
         appiumVersion: "1.22.3",
         platformVersion: "17.0",
         app: "com.newrelic.NRApp.bitcode", // custom_id was IOSAPP
+        idleTimeout: 300, // Reduced idle timeout
       },
     },
   ],
 
-  logLevel: "info",
+  logLevel: "info", // Reduced logging for performance
   coloredLogs: true,
   screenshotPath: "./errorShots/",
   baseUrl: "",
-  waitforTimeout: 10000,
-  connectionRetryTimeout: 90000,
-  connectionRetryCount: 3,
+  waitforTimeout: 5000, // Reduced from 10000ms to 5000ms
+  connectionRetryTimeout: 60000, // Reduced from 90000ms
+  connectionRetryCount: 2, // Reduced from 3
   path: "/wd/hub",
   hostname: "mobile-hub.lambdatest.com",
   port: 443,
@@ -49,7 +51,7 @@ exports.config = {
   framework: "mocha",
   mochaOpts: {
     ui: "bdd",
-    timeout: 100000,
+    timeout: 60000, // Reduced from 100000ms to 60000ms
   },
 };
   
