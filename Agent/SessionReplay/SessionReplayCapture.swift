@@ -39,15 +39,6 @@ class SessionReplayCapture {
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
-        let viewName = parentThingy.viewDetails.viewName
-        
-        // Count UILayoutContainerViews if we're inside a UIPanelControllerContentView
-        if let parentView = currentView.superview {
-            let parentClassName = NSStringFromClass(type(of: parentView))
-            if parentClassName.contains("UIPanelControllerContentView") && viewName.contains("UILayoutContainerView") {
-                layoutContainerViewCount += 1
-            }
-        }
         
         // Process UIKit subviews
         for subview in currentView.subviews {
@@ -98,6 +89,13 @@ class SessionReplayCapture {
         if let textView = currentView as? UITextField {
             let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
             parentThingy.subviews.append(textViewThingy)
+        }
+        // Count UILayoutContainerViews if we're inside a UIPanelControllerContentView
+        if let parentView = currentView.superview {
+            let parentClassName = NSStringFromClass(type(of: parentView))
+            if parentClassName.contains("UIPanelControllerContentView") && parentThingy.viewDetails.viewName.contains("UILayoutContainerView") {
+                layoutContainerViewCount += 1
+            }
         }
     }
     
