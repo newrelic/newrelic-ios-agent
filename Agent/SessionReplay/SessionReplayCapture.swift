@@ -13,6 +13,7 @@ import SwiftUI
 @available(iOS 13.0, *)
 @objcMembers
 class SessionReplayCapture {
+    private var layoutContainerViewCount: Int = 0
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
@@ -25,16 +26,29 @@ class SessionReplayCapture {
         var rootSwiftUIViewID: Int? = nil
         var rootThingy = findRecorderForView(view: rootView)
         
+        // Reset counter for this frame capture
+        layoutContainerViewCount = 0
+        
         // Build tree using recursive approach to properly handle value semantics
         buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
         
         // Set nextId for all views after tree is built
         setNextIdRecursively(for: &rootThingy)
         
-        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size:  rootView.frame.size)
+        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size:  rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount)
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
+        let viewName = parentThingy.viewDetails.viewName
+        
+        // Count UILayoutContainerViews if we're inside a UIPanelControllerContentView
+        if let parentView = currentView.superview {
+            let parentClassName = NSStringFromClass(type(of: parentView))
+            if parentClassName.contains("UIPanelControllerContentView") && viewName.contains("UILayoutContainerView") {
+                layoutContainerViewCount += 1
+            }
+        }
+        
         // Process UIKit subviews
         for subview in currentView.subviews {
             if shouldRecord(view: subview) {
