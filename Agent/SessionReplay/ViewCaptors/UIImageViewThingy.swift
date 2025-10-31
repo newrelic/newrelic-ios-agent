@@ -29,14 +29,40 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
-        } else {
+        }
+        else if let maskAllImages = viewDetails.maskAllImages {
+            self.isMasked = maskAllImages
+        }
+        else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
         if !self.isMasked {
-            self.image = (view.image ?? nil)
+            self.image = view.image
         }
         
-        self.contentMode = view.contentModeToCSS()
+        self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: view.contentMode)
+    }
+    
+    init(viewDetails: ViewDetails, cgImage: CGImage?, swiftUIImage: SwiftUIGraphicsImage, contentMode: UIView.ContentMode) {
+        self.viewDetails = viewDetails
+
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        }
+        else if let maskAllImages = viewDetails.maskAllImages {
+            self.isMasked = maskAllImages
+        }
+        else {
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
+        }
+        if !self.isMasked {
+            if let cgImage = cgImage {
+                let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
+                    self.image = uiImage
+            }
+        }
+        
+        self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: contentMode)
     }
     
     func cssDescription() -> String {
@@ -48,9 +74,14 @@ class UIImageViewThingy: SessionReplayViewThingy {
     }
     
     func inlineCSSDescription() -> String {
+        return "\(generateBaseCSSStyle()) display: block;"
+    }
+    
+    func imageInlineCSSDescription() -> String {
         if isMasked {
             return "\(generateBaseCSSStyle()) \(imagePlaceholderCSS)"
-        } else {
+        }
+        else {
             return  """
                     \(generateBaseCSSStyle()) \
                     object-fit: \(contentMode["object-fit"] ?? "contain"); \
@@ -60,32 +91,45 @@ class UIImageViewThingy: SessionReplayViewThingy {
     }
     
     func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        let elementNode = ElementNodeData(id: viewDetails.viewId,
-                                          tagName: .image,
-                                   attributes: ["id":viewDetails.cssSelector],
-                                   childNodes: [])
-        elementNode.attributes["style"] = inlineCSSDescription()
+        // Create the img element
+        let imgNode = ElementNodeData(id: viewDetails.viewId + 1000000, // Use offset to avoid ID conflicts
+                                      tagName: .image,
+                                      attributes: [:],
+                                      childNodes: [])
+        imgNode.attributes["style"] = imageInlineCSSDescription()
         if let imageData = image?.optimizedPngData() {
-            elementNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+            imgNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
         }
         
-        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
+        // Create the container div element
+        let containerNode = ElementNodeData(id: viewDetails.viewId,
+                                            tagName: .div,
+                                            attributes: ["id": viewDetails.cssSelector],
+                                            childNodes: [])
+        containerNode.attributes["style"] = inlineCSSDescription()
+        
+        let addDivNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(containerNode))
+        let addImgNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: .element(imgNode))
 
-        return [addElementNode]
+        return [addDivNode, addImgNode]
     }
     
     func generateRRWebNode() -> ElementNodeData {
+        // Create the img element
+        let imgNode = ElementNodeData(id: viewDetails.viewId + 1000000, // Use offset to avoid ID conflicts
+                                      tagName: .image,
+                                      attributes: [:],
+                                      childNodes: [])
+        imgNode.attributes["style"] = imageInlineCSSDescription()
         if let imageData = image?.optimizedPngData() {
-            return ElementNodeData(id: viewDetails.viewId,
-                                   tagName: .image,
-                                   attributes: ["id":viewDetails.cssSelector,"src":"data:image/png;base64,\(imageData.base64EncodedString())"],
-                                   childNodes: [])
-        } else {
-            return ElementNodeData(id: viewDetails.viewId,
-                                   tagName: .image,
-                                   attributes: ["id":viewDetails.cssSelector],
-                                   childNodes: [])
+            imgNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
         }
+
+        // Create and return the container div
+        return ElementNodeData(id: viewDetails.viewId,
+                               tagName: .div,
+                               attributes: ["id": viewDetails.cssSelector],
+                               childNodes: [.element(imgNode)])
     }
     
     static func imagesAreLikelyEqual(_ img1: UIImage?, _ img2: UIImage?) -> Bool {
@@ -103,21 +147,31 @@ class UIImageViewThingy: SessionReplayViewThingy {
             return []
         }
         var mutations = [MutationRecord]()
-        var allAttributes = [String: String]()
         
-        allAttributes["style"] = typedOther.inlineCSSDescription()
+        // Update container div attributes if needed
+        var containerAttributes = [String: String]()
+        containerAttributes["style"] = typedOther.inlineCSSDescription()
+        
+        if !containerAttributes.isEmpty {
+            let containerAttributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: containerAttributes)
+            mutations.append(containerAttributeRecord)
+        }
+        
+        // Update img element attributes if needed
+        var imgAttributes = [String: String]()
+        imgAttributes["style"] = typedOther.imageInlineCSSDescription()
 
         if !typedOther.isMasked {
             if !UIImageViewThingy.imagesAreLikelyEqual(self.image, typedOther.image) {
                 if let imageData = typedOther.image?.optimizedPngData() {
-                    allAttributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+                    imgAttributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
                 }
             }
         }
             
-        if !allAttributes.isEmpty {
-            let attributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId, attributes: allAttributes)
-            mutations.append(attributeRecord)
+        if !imgAttributes.isEmpty {
+            let imgAttributeRecord = RRWebMutationData.AttributeRecord(id: viewDetails.viewId + 1000000, attributes: imgAttributes)
+            mutations.append(imgAttributeRecord)
         }
         
         return mutations
@@ -137,62 +191,8 @@ extension UIImageViewThingy: Hashable {
     }
 }
 
-fileprivate var associatedOptimizedImageDataKey: String = "SessionReplayOptimizedImageData"
-
-internal extension UIImage {
-    private var cachedOptimizedData: Data? {
-        set {
-            withUnsafePointer(to: &associatedOptimizedImageDataKey) {
-                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-            }
-        }
-        
-        get {
-            withUnsafePointer(to: &associatedOptimizedImageDataKey) {
-                objc_getAssociatedObject(self, $0) as? Data
-            }
-        }
-    }
-    
-    func optimizedPngData(maxDimension: CGFloat = 25) -> Data? {
-        // Return cached data if available
-        if let cachedData = cachedOptimizedData {
-            return cachedData
-        }
-        
-        let optimizedData = generateOptimizedPngData(maxDimension: maxDimension)
-        cachedOptimizedData = optimizedData
-        return optimizedData
-    }
-    
-    private func generateOptimizedPngData(maxDimension: CGFloat) -> Data? {
-        let originalSize = self.size
-        
-        // Calculate new size maintaining aspect ratio
-        let scale: CGFloat
-        if originalSize.width > originalSize.height {
-            scale = min(1.0, maxDimension / originalSize.width)
-        } else {
-            scale = min(1.0, maxDimension / originalSize.height)
-        }
-        
-        let newSize = CGSize(width: originalSize.width * scale, height: originalSize.height * scale)
-        
-        // Create graphics context and resize image
-        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
-        defer { UIGraphicsEndImageContext() }
-        
-        draw(in: CGRect(origin: .zero, size: newSize))
-        guard let resizedImage = UIGraphicsGetImageFromCurrentImageContext() else {
-            return nil
-        }
-        
-        return resizedImage.pngData()
-    }
-}
-
-internal extension UIImageView {
-    func contentModeToCSS() -> [String: String] {
+extension UIImageViewThingy {
+    private static func contentModeToCSS(contentMode: UIView.ContentMode) -> [String: String] {
         var cssProperties = [String: String]()
         
         switch contentMode {
@@ -251,3 +251,59 @@ internal extension UIImageView {
         return cssProperties
     }
 }
+
+fileprivate var associatedOptimizedImageDataKey: String = "SessionReplayOptimizedImageData"
+
+internal extension UIImage {
+    private var cachedOptimizedData: Data? {
+        set {
+            withUnsafePointer(to: &associatedOptimizedImageDataKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+        
+        get {
+            withUnsafePointer(to: &associatedOptimizedImageDataKey) {
+                objc_getAssociatedObject(self, $0) as? Data
+            }
+        }
+    }
+    
+    func optimizedPngData(maxDimension: CGFloat = 25) -> Data? {
+        // Return cached data if available
+        if let cachedData = cachedOptimizedData {
+            return cachedData
+        }
+        
+        let optimizedData = generateOptimizedPngData(maxDimension: maxDimension)
+        cachedOptimizedData = optimizedData
+        return optimizedData
+    }
+    
+    private func generateOptimizedPngData(maxDimension: CGFloat) -> Data? {
+        let originalSize = self.size
+        
+        // Calculate new size maintaining aspect ratio
+        let scale: CGFloat
+        if originalSize.width > originalSize.height {
+            scale = min(1.0, maxDimension / originalSize.width)
+        } else {
+            scale = min(1.0, maxDimension / originalSize.height)
+        }
+        
+        let newSize = CGSize(width: originalSize.width * scale, height: originalSize.height * scale)
+        
+        // Create graphics context and resize image
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+        defer { UIGraphicsEndImageContext() }
+        
+        draw(in: CGRect(origin: .zero, size: newSize))
+        guard let resizedImage = UIGraphicsGetImageFromCurrentImageContext() else {
+            return nil
+        }
+        
+        return resizedImage.pngData()
+    }
+}
+
+

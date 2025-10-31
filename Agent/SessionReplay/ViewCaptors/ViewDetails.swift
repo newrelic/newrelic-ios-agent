@@ -26,9 +26,59 @@ struct ViewDetails {
 
     // Indicates if this view should have its content masked in session replay
     var isMasked: Bool?
+    
+    // swiftUI masking support
+    var maskApplicationText: Bool?
+    var maskUserInputText: Bool?
+    var maskAllImages: Bool?
+    var maskAllUserTouches: Bool?
+
+    // Custom identifier for the view (from NRMaskingView view)
+    var viewIdentifier: String?
 
     var cssSelector: String {
-        "\(self.viewName)-\(self.viewId)"
+        return "\(self.viewName)-\(self.viewId)"
+    }
+    
+    static private func sanitizeViewNameForCSS(_ viewName: String) -> String {
+        // First, simplify common SwiftUI and framework prefixes
+        var sanitized = viewName
+            .replacingOccurrences(of: "SwiftUI.", with: "")
+            .replacingOccurrences(of: "NewRelic.", with: "NR")
+            .replacingOccurrences(of: "UIKit.", with: "UI")
+        
+        // Use regex to replace all invalid CSS identifier characters with underscores
+        // Valid CSS identifiers can contain: letters, digits, hyphens, underscores
+        // But cannot start with a digit or hyphen
+        sanitized = sanitized.replacingOccurrences(
+            of: "[^a-zA-Z0-9_-]",
+            with: "_",
+            options: .regularExpression
+        )
+        
+        // Remove consecutive underscores and hyphens
+        sanitized = sanitized.replacingOccurrences(
+            of: "[_-]+",
+            with: "_",
+            options: .regularExpression
+        )
+        
+        // Trim leading/trailing underscores and hyphens
+        sanitized = sanitized.trimmingCharacters(in: CharacterSet(charactersIn: "_-"))
+        
+        // Ensure it doesn't start with a number or hyphen (invalid CSS identifier)
+        if sanitized.isEmpty || sanitized.first?.isNumber == true || sanitized.hasPrefix("-") {
+            sanitized = "view_\(sanitized)"
+        }
+        
+        // Limit length to prevent extremely long IDs that could cause performance issues
+        let maxLength = 50
+        if sanitized.count > maxLength {
+            sanitized = String(sanitized.prefix(maxLength))
+        }
+        
+        // Fallback if somehow we end up with empty string
+        return sanitized.isEmpty ? "view" : sanitized
     }
 
     var isVisible: Bool {
@@ -51,7 +101,8 @@ struct ViewDetails {
             
             self.frame = visibleFrame.isNull ? .zero : visibleFrame
             self.clip = clippingRect
-        } else {
+        }
+        else {
             self.frame = view.frame
             self.clip = view.bounds
         }
@@ -65,26 +116,101 @@ struct ViewDetails {
         // border color will always give us something
         if view.layer.borderWidth > 0, let borderColor = view.layer.borderColor {
             self.borderColor = UIColor(cgColor: borderColor)
-        } else {
+        }
+        else {
             self.borderColor = nil
         }
 
-        viewName = String(describing: type(of: view))
+        let sanitizedViewName = ViewDetails.sanitizeViewNameForCSS(String(describing: type(of: view)))
+        viewName = sanitizedViewName
 
         if let identifier = view.sessionReplayIdentifier {
             viewId = identifier
-        } else {
+        }
+        else {
             viewId = IDGenerator.shared.getId()
             view.sessionReplayIdentifier = viewId
         }
         
         self.parentId = view.superview?.sessionReplayIdentifier
+        
+        if let maskApplicationText = ViewDetails.checkMaskApplicationText(view: view) {
+            self.maskApplicationText = maskApplicationText
+            view.maskApplicationText = maskApplicationText
+        }
+
+        if let maskUserInputText = ViewDetails.checkMaskUserInputText(view: view) {
+            self.maskUserInputText = maskUserInputText
+            view.maskUserInputText = maskUserInputText
+        }
+        
+        if let maskAllImages = ViewDetails.checkMaskAllImages(view: view) {
+            self.maskAllImages = maskAllImages
+            view.maskAllImages = maskAllImages
+        }
+        
+        if let maskAllUserTouches = ViewDetails.checkMaskAllUserTouches(view: view) {
+            self.maskAllUserTouches = maskAllUserTouches
+            view.maskAllUserTouches = maskAllUserTouches
+        }
 
         if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
             self.isMasked = shouldMask
             view.sessionReplayMaskState = shouldMask
         }
     }
+    
+    init(frame: CGRect, clip: CGRect, backgroundColor: UIColor, alpha: CGFloat, isHidden: Bool, viewName: String, parentId: Int, cornerRadius: CGFloat, borderWidth: CGFloat, borderColor: UIColor? = nil, viewId: Int?, view: UIView? = nil,
+    
+          maskApplicationText: Bool?,
+          maskUserInputText: Bool?,
+          maskAllImages: Bool?,
+          maskAllUserTouches: Bool?,
+          sessionReplayIdentifier: String?) {
+        
+        let visibleFrame = frame.intersection(clip)
+        
+        self.frame = visibleFrame.isNull ? .zero : visibleFrame
+        self.clip = clip
+        
+        self.backgroundColor = backgroundColor
+        self.alpha = alpha
+        self.isHidden = isHidden
+        self.cornerRadius = cornerRadius
+        self.borderWidth = borderWidth
+
+        self.borderColor = borderColor
+
+        self.viewName = viewName
+
+        if let identifier = viewId {
+            self.viewId = identifier
+        }
+        else {
+            self.viewId = IDGenerator.shared.getId()
+        }
+
+        self.parentId = parentId
+        
+        self.maskApplicationText = maskApplicationText
+        self.maskUserInputText = maskUserInputText
+        self.maskAllImages = maskAllImages
+        self.maskAllUserTouches = maskAllUserTouches
+        
+        if let sessionReplayIdentifier = sessionReplayIdentifier {
+            guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
+            // Check for accessibility identifier in the masking list
+            if agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier) {
+                self.isMasked = true
+            }
+
+            // Check for accessibility identifier in the masking list
+            if agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
+                self.isMasked = false
+            }
+        }
+    }
+
     
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
     private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
@@ -145,6 +271,62 @@ struct ViewDetails {
         return nil
     }
     
+    private static func checkMaskApplicationText(view: UIView) -> Bool? {
+        
+        if let maskApplicationText = view.maskApplicationText {
+            return maskApplicationText
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskApplicationText {
+            return parentMasked
+        }
+        
+        return nil
+    }
+    
+    private static func checkMaskUserInputText(view: UIView) -> Bool? {
+        
+        if let maskUserInputText = view.maskUserInputText {
+            return maskUserInputText
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskUserInputText {
+            return parentMasked
+        }
+        
+        return nil
+    }
+    
+    private static func checkMaskAllImages(view: UIView) -> Bool? {
+        
+        if let maskAllImages = view.maskAllImages {
+            return maskAllImages
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskAllImages {
+            return parentMasked
+        }
+        
+        return nil
+    }
+    
+    private static func checkMaskAllUserTouches(view: UIView) -> Bool? {
+        
+        if let maskAllUserTouches = view.maskAllUserTouches{
+            return maskAllUserTouches
+        }
+        
+        if let parentView = view.superview,
+           let parentMasked = parentView.maskAllUserTouches {
+            return parentMasked
+        }
+        
+        return nil
+    }
+    
     private static func getClippingRect(for view: UIView, in window: UIWindow) -> CGRect {
         var clippingView: UIView? = view.superview
         while clippingView != nil {
@@ -180,6 +362,7 @@ extension ViewDetails: Hashable {
 
 fileprivate var associatedSessionReplayViewIDKey: String = "SessionReplayID"
 fileprivate var associatedSessionReplayMaskStateKey: String = "SessionReplayMasked"
+fileprivate var associatedSwiftUISessionReplayIdentifierKey: String = "SessionReplayIdentifier"
 
 internal extension UIView {
     var sessionReplayIdentifier: Int? {
@@ -206,6 +389,20 @@ internal extension UIView {
         get {
             withUnsafePointer(to: &associatedSessionReplayMaskStateKey) {
                 objc_getAssociatedObject(self, $0) as? Bool
+            }
+        }
+    }
+    
+    var swiftUISessionReplayIdentifier: String? {
+        set {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+
+        get {
+            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
+                objc_getAssociatedObject(self, $0) as? String
             }
         }
     }
