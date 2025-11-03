@@ -41,6 +41,14 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
+      # before building iOS app, please set the main server, the crash server, and the app token secret
+      # the plist to be modified is located at ./Test Harness/NRTestApp/NRTestApp-Info.plist
+      # the secret mapping is as follows secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS , secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS, secrets.NRTESTAPP_APP_TOKEN
+      - name: Set plist secrets 
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" ./Test Harness/NRTestApp/NRTestApp-Info.plist
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" ./Test Harness/NRTestApp/NRTestApp-Info.plist
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${NRTESTAPP_APP_TOKEN}" ./Test Harness/NRTestApp/NRTestApp-Info.plist
 
       - name: Clean iOS app
         run: |
