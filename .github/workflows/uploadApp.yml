@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+        with:
+          submodules: true
 
       - name: Setup environment
         uses: ./.github/actions/env-setup
