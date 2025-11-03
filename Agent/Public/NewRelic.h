@@ -856,7 +856,7 @@ extern "C" {
  * <p>
  * Example: addSessionReplayMaskedAccessibilityIdentifier("private")
  *
- * @param viewTag The tag value to mask
+ * @param identifier The tag value to mask
  * @return true if the view tag was successfully added to the mask list
  */
 + (BOOL) addSessionReplayMaskedAccessibilityIdentifier:(NSString*_Nonnull) identifier;
@@ -868,7 +868,7 @@ extern "C" {
  * <p>
  * Example: addSessionReplayUnmaskedAccessibilityIdentifier("public_info")
  *
- * @param viewTag The tag value to unmask
+ * @param identifier The tag value to unmask
  * @return true if the view tag was successfully added to the unmask list
  */
 + (BOOL) addSessionReplayUnmaskedAccessibilityIdentifier:(NSString*_Nonnull) identifier;
