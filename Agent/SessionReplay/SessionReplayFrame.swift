@@ -14,4 +14,5 @@ struct SessionReplayFrame {
     let rootViewControllerId: String?
     let rootSwiftUIViewId: Int?
     let size: CGSize
+    let layoutContainerViewCount: Int
 }

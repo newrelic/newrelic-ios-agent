@@ -29,8 +29,8 @@ class SessionReplayFrameProcessor {
         }
         
         var rrwebCommon: any RRWebEventCommon
-        // If a full snapshot is needed or the frame size changed
-        if takeFullSnapshotNext || frame.size != lastFullFrame.size {
+        // If a full snapshot is needed, frame size changed, or UILayoutContainerView count increased
+        if takeFullSnapshotNext || frame.size != lastFullFrame.size || (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) {
             rrwebCommon = processFullSnapshot(frame)
             takeFullSnapshotNext = false
         } else {
