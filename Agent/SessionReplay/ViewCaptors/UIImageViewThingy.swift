@@ -39,7 +39,11 @@ class UIImageViewThingy: SessionReplayViewThingy {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
         if !self.isMasked {
-            self.image = view.image
+            if let url = view.image?.NRSessionReplayImageURL {
+                imageURL = url
+            } else {
+                self.image = view.image
+            }
         }
         
         self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: view.contentMode)
@@ -58,13 +62,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
         if !self.isMasked {
-            if let url = view.image?.NRSessionReplayImageURL {
-                imageURL = url
-            } else {
-              if let cgImage = cgImage {
-                  let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
-                      self.image = uiImage
-              }
+            if let cgImage = cgImage {
+                let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
+                    self.image = uiImage
             }
         }
         
@@ -137,11 +137,11 @@ class UIImageViewThingy: SessionReplayViewThingy {
                                       childNodes: [])
         imgNode.attributes["style"] = imageInlineCSSDescription()
         if let url = imageURL {
-            imgNode.attributes["src"] = ["id":viewDetails.cssSelector, "src": url.absoluteString]
+            imgNode.attributes["src"] = url.absoluteString
         } else {
-          if let imageData = image?.optimizedPngData() {
-              imgNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
-          }
+            if let imageData = image?.optimizedPngData() {
+               imgNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
+            }
         }
 
         // Create and return the container div
@@ -192,7 +192,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
             let oldSrc = self.currentSrcRepresentation()
             let newSrc = typedOther.currentSrcRepresentation()
             if oldSrc != newSrc, let newSrc = newSrc {
-                allAttributes["src"] = newSrc
+                imgAttributes["src"] = newSrc
             }
         }
             
