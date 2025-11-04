@@ -72,6 +72,18 @@ exports.config = {
 
     // Small pause to ensure cleanup is complete
     await driver.pause(1000);
+
+    try {
+      console.log(`Attempting to reinstall app: ${appId}`);
+      await driver.installApp(appId);
+      console.log(`✓ Successfully reinstalled app: ${appId}`);
+    } catch (error) {
+      console.error(`✗ Failed to reinstall app: ${error.message}`);
+      throw error;
+    }
+
+    // Small pause to ensure app is ready
+    await driver.pause(2000);
   },
 };
   
