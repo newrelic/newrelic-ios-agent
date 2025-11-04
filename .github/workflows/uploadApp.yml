@@ -47,9 +47,9 @@ jobs:
       - name: Set plist secrets
         run: |
           PLIST_PATH="./Test Harness/NRTestApp/NRAPI-Info.plist"
-          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress string ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
-          /usr/libexec/PlistBuddy -c "Set :collectorAddress string ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
-          /usr/libexec/PlistBuddy -c "Set :NRAPIKey string ${NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress string ${secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress string ${secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey string ${secrets.NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
 
       - name: Clean iOS app
         run: |
