@@ -12,7 +12,7 @@ exports.config = {
   user: process.env.LT_USERNAME || "YOUR_USERNAME",
   key: process.env.LT_ACCESSKEY || "YOUR_ACCESS_KEY",
 
-  updateJob: false,
+  updateJob: true,
   specs: ["./tests/*.test.js"],
   exclude: [],
 
@@ -52,38 +52,6 @@ exports.config = {
   mochaOpts: {
     ui: "bdd",
     timeout: 60000, // Reduced from 100000ms to 60000ms
-  },
-
-  /**
-   * Gets executed before test execution begins. At this point you can access to all global
-   * variables like `browser`. It is the perfect place to uninstall and reinstall the app.
-   */
-  before: async function () {
-    const bundleId = "com.newrelic.NRApp.bitcode";
-    const appId = "com.newrelic.NRApp.bitcode"; // LambdaTest app ID
-
-    try {
-      console.log(`Attempting to uninstall app with bundle ID: ${bundleId}`);
-      await driver.removeApp(bundleId);
-      console.log(`✓ Successfully uninstalled app: ${bundleId}`);
-    } catch (error) {
-      console.log(`Note: App may not have been installed previously: ${error.message}`);
-    }
-
-    // Small pause to ensure cleanup is complete
-    await driver.pause(1000);
-
-    try {
-      console.log(`Attempting to reinstall app: ${appId}`);
-      await driver.installApp(appId);
-      console.log(`✓ Successfully reinstalled app: ${appId}`);
-    } catch (error) {
-      console.error(`✗ Failed to reinstall app: ${error.message}`);
-      throw error;
-    }
-
-    // Small pause to ensure app is ready
-    await driver.pause(2000);
   },
 };
   
