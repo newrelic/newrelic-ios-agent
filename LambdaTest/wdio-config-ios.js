@@ -56,10 +56,11 @@ exports.config = {
 
   /**
    * Gets executed before test execution begins. At this point you can access to all global
-   * variables like `browser`. It is the perfect place to uninstall the app.
+   * variables like `browser`. It is the perfect place to uninstall and reinstall the app.
    */
   before: async function () {
     const bundleId = "com.newrelic.NRApp.bitcode";
+    const appId = "com.newrelic.NRApp.bitcode"; // LambdaTest app ID
 
     try {
       console.log(`Attempting to uninstall app with bundle ID: ${bundleId}`);
