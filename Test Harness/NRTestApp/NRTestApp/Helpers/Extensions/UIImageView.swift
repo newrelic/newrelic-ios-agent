@@ -6,8 +6,8 @@
 //
 
 import UIKit
-import NewRelic
 
+import NewRelic
 extension UIImageView {
     
     func loadImage(withUrl urlString : String) {

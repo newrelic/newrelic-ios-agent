@@ -36,7 +36,11 @@ class UITextViewThingy: SessionReplayViewThingy {
         }
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
-        } else {
+        }
+        else if let maskUserInputText = viewDetails.maskUserInputText {
+            self.isMasked = maskUserInputText
+        }
+        else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }
         
@@ -55,20 +59,18 @@ class UITextViewThingy: SessionReplayViewThingy {
         let fontNameRaw = font.fontName
         if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
-        } else {
+        }
+        else {
             self.fontName = fontNameRaw
         }
-
-        let fontFamilyRaw = font.familyName
-        if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
-            self.fontFamily = String(fontFamilyRaw.dropFirst())
-        } else {
-            self.fontFamily = fontFamilyRaw
-        }
+        
+        // Convert Apple font to CSS-compatible font family
+        self.fontFamily = font.toCSSFontFamily()
 
         if #available(iOS 13.0, *) {
             self.textColor = view.textColor ?? UIColor.label
-        } else {
+        }
+        else {
             // Fallback on earlier versions
             self.textColor = view.textColor ?? UIColor.black
         }
