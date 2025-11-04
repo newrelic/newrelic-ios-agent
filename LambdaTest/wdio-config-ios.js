@@ -53,5 +53,24 @@ exports.config = {
     ui: "bdd",
     timeout: 60000, // Reduced from 100000ms to 60000ms
   },
+
+  /**
+   * Gets executed before test execution begins. At this point you can access to all global
+   * variables like `browser`. It is the perfect place to uninstall the app.
+   */
+  before: async function () {
+    const bundleId = "com.newrelic.NRApp.bitcode";
+
+    try {
+      console.log(`Attempting to uninstall app with bundle ID: ${bundleId}`);
+      await driver.removeApp(bundleId);
+      console.log(`✓ Successfully uninstalled app: ${bundleId}`);
+    } catch (error) {
+      console.log(`Note: App may not have been installed previously: ${error.message}`);
+    }
+
+    // Small pause to ensure cleanup is complete
+    await driver.pause(1000);
+  },
 };
   
