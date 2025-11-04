@@ -46,9 +46,10 @@ jobs:
       # the secret mapping is as follows secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS , secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS, secrets.NRTESTAPP_APP_TOKEN
       - name: Set plist secrets 
         run: |
-          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" ./Test Harness/NRTestApp/NRTestApp-Info.plist
-          /usr/libexec/PlistBuddy -c "Set :collectorAddress ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" ./Test Harness/NRTestApp/NRTestApp-Info.plist
-          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${NRTESTAPP_APP_TOKEN}" ./Test Harness/NRTestApp/NRTestApp-Info.plist
+          PLIST_PATH="./Test Harness/NRTestApp/NRTestApp-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress string ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress string ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey string ${NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
 
       - name: Clean iOS app
         run: |
