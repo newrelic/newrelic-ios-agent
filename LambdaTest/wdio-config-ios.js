@@ -21,7 +21,7 @@ exports.config = {
     {
       "lt:options": {
         build: generateDynamicBuildName(),
-        network: false,
+        network: true,
         devicelog: true,
         visual: true,
         w3c: true,
