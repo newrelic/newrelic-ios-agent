@@ -7,6 +7,12 @@ dotenv.config();
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const targetDir = path.resolve(__dirname, "../builds");
+
+// Generate a unique custom_id with timestamp to avoid caching
+function generateCustomId() {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  return `com.newrelic.NRApp.bitcode.${timestamp}`;
+}
  
 function uploadFileToLambdaTest(name, path, customId) {
   const file = fs.readFileSync(path);
@@ -29,11 +35,14 @@ function uploadFileToLambdaTest(name, path, customId) {
     body: form,
   });
 }
+const customId = generateCustomId();
+console.log(`Using custom_id: ${customId}`);
+
 Promise.all([
   uploadFileToLambdaTest(
     "nrtestapp-iOS",
     `${targetDir}/nrtestapp-ios.zip`,
-    "com.newrelic.NRApp.bitcode"
+    customId
   ),
 ])
   .then(([iosResponse]) => //androidResponse]) =>
@@ -46,6 +55,15 @@ Promise.all([
       );
     } else {
       console.log("Uploaded ios assets");
+      console.log(`App custom_id for tests: ${customId}`);
+      console.log('\nTo run tests with this app, use:');
+      console.log(`export LT_APP_ID=${customId}`);
+      console.log('or');
+      console.log(`LT_APP_ID=${customId} npx wdio wdio-config-ios.js`);
+
+      // Save the custom_id to a file for easy reuse
+      fs.writeFileSync(path.join(__dirname, '.last-app-id'), customId);
+      console.log('\nApp ID saved to .last-app-id');
     }
   })
   .catch((errorMessage) => {

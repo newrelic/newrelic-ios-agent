@@ -30,7 +30,8 @@ exports.config = {
         deviceName: "iPhone 15",
         appiumVersion: "1.22.3",
         platformVersion: "17.0",
-        app: "com.newrelic.NRApp.bitcode", // custom_id was IOSAPP
+        // Use environment variable for custom_id or fallback to static value
+        app: process.env.LT_APP_ID || "com.newrelic.NRApp.bitcode",
         idleTimeout: 300, // Reduced idle timeout
       },
     },

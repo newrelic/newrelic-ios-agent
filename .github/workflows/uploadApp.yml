@@ -105,6 +105,14 @@ jobs:
       - name: Run upload script
         run: node LambdaTest/uploadAppToLambdaTest.mjs
 
+      - name: Upload custom_id artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambdatest-app-id
+          path: LambdaTest/.last-app-id
+          retention-days: 1
+
       - name: Log success
         if: ${{ success() }}
         run: echo "[ RUNNER ] - successfully uploaded apps to LambdaTest"
