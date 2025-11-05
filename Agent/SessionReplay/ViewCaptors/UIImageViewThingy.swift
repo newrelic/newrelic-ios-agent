@@ -63,8 +63,12 @@ class UIImageViewThingy: SessionReplayViewThingy {
         }
         if !self.isMasked {
             if let cgImage = cgImage {
-                let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
+                if let url = cgImage.NRSessionReplayImageURL {
+                    imageURL = url
+                } else {
+                    let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())
                     self.image = uiImage
+                }
             }
         }
         
@@ -289,7 +293,25 @@ fileprivate var associatedSessionReplayImageURLKey: String = "NRSessionReplayIma
 extension UIImage {
     /// Public hook allowing host apps to supply the original remote image URL so Session Replay can reference
     /// the URL instead of embedding base64 image data when possible.
-    public var NRSessionReplayImageURL: URL? {
+    @objc public var NRSessionReplayImageURL: URL? {
+        set {
+            withUnsafePointer(to: &associatedSessionReplayImageURLKey) {
+                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+            self.cgImage?.NRSessionReplayImageURL = newValue
+        }
+        
+        get {
+            withUnsafePointer(to: &associatedSessionReplayImageURLKey) {
+                objc_getAssociatedObject(self, $0) as? URL
+            }
+        }
+    }
+}
+
+extension CGImage {
+    
+    var NRSessionReplayImageURL: URL? {
         set {
             withUnsafePointer(to: &associatedSessionReplayImageURLKey) {
                 objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)

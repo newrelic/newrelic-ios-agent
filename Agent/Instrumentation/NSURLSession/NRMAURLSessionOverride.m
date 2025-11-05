@@ -20,6 +20,7 @@
 #import "NRMAAssociate.h"
 #import "NRMAURLSessionTaskSearch.h"
 #import "NRMAFlags.h"
+#import "NRMAUIImageOverride.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
 
@@ -295,7 +296,8 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
         }
         
         // NRLOG_AGENT_VERBOSE(@"NRMA__recordTask called from NRMAOverride__dataTaskWithRequest_completionHandler");
-
+        [NRMAUIImageOverride registerURL:response.URL forData:data];
+        
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);

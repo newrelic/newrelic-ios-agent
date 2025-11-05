@@ -163,7 +163,7 @@ class ImageCollectionViewCell: UICollectionViewCell {
                 self?.activityIndicator.stopAnimating()
                 
                 guard let data = data, let image = UIImage(data: data) else { return }
-                image.NRSessionReplayImageURL = url
+                //image.NRSessionReplayImageURL = url
                 cache.setObject(image, forKey: cacheKey)
                 self?.imageView.image = image
             }
