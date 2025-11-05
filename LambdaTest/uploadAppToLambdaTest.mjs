@@ -62,7 +62,7 @@ Promise.all([
       console.log(`LT_APP_ID=${customId} npx wdio wdio-config-ios.js`);
 
       // Save the custom_id to a file for easy reuse
-      fs.writeFileSync(path.join(__dirname, '.last-app-id'), customId);
+      fs.writeFileSync(path.join(__dirname, 'LambdaTest/.last-app-id'), customId);
       console.log('\nApp ID saved to .last-app-id');
     }
   })
