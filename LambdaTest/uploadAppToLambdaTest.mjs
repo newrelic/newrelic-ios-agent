@@ -19,7 +19,7 @@ function uploadFileToLambdaTest(name, path, customId) {
 
   //Create body for the fetch
   const form = new FormData();
-  form.append("name", name);
+  form.append("name", customId);
   form.append("appFile", new File([file], path));
   form.append("visibility", "team");
   form.append("custom_id", customId);
