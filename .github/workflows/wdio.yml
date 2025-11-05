@@ -69,7 +69,7 @@ jobs:
 
       - name: Download LambdaTest app ID artifact (from manual run)
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: lambdatest-app-id
           path: ${{ github.workspace }}/LambdaTest
