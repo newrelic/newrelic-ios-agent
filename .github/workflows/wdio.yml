@@ -78,8 +78,8 @@ jobs:
       - name: Set LT_APP_ID environment variable
         run: |
           if [ -f LambdaTest/.last-app-id ]; then
-            echo "LT_APP_ID=$(cat LambdaTest/.last-app-id)" >> $GITHUB_ENV
-            echo "Using app ID: $(cat LambdaTest/.last-app-id)"
+            echo "LT_APP_ID=$(tr -d '\n' < LambdaTest/.last-app-id)" >> $GITHUB_ENV
+            echo "Using app ID: $(tr -d '\n' < LambdaTest/.last-app-id)"
           else
             echo "No app ID artifact found, tests will use default app ID from config"
           fi
