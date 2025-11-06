@@ -11,6 +11,7 @@
 #import <objc/runtime.h>
 #import "NRTimer.h"
 #import <WebKit/WKNavigationDelegate.h>
+#import "NRMAWebViewSupportability.h"
 
 #define kNRWKTimerAssocObject @"com.NewRelic.WKNavigation.Timer"
 #define kNRWKURLAssocObject @"com.NewRelic.WKNavigation.URL"
@@ -59,7 +60,9 @@ didStartProvisionalNavigation:(WKNavigation*)navigation {
 - (void)    webView:(WKWebView*)webView
 didFinishNavigation:(WKNavigation*)navigation
 {
-
+    // send support metric if this is hit once
+    NRMAWebViewSupportabilityRecordPageFinished();
+    
     //record network details
 
     NRTimer* timer = [NRWKNavigationDelegateBase navigationTimer:navigation];
