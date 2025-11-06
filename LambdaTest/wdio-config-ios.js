@@ -26,6 +26,7 @@ exports.config = {
         devicelog: true,
         visual: true,
         w3c: true,
+        noReset: false,
         platformName: "ios",
         deviceName: "iPhone 15",
         appiumVersion: "1.22.3",
