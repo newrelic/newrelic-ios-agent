@@ -61,7 +61,7 @@ didStartProvisionalNavigation:(WKNavigation*)navigation {
 didFinishNavigation:(WKNavigation*)navigation
 {
     // send support metric if this is hit once
-    NRMAWebViewSupportabilityRecordPageFinished();
+    [NRMAWebViewSupportability recordPageFinished];
     
     //record network details
 

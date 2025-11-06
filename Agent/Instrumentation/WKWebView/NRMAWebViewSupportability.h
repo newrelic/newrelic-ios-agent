@@ -6,5 +6,11 @@
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
-void NRMAWebViewSupportabilityRecordPageFinished(void);
+#import <Foundation/Foundation.h>
+
+@interface NRMAWebViewSupportability : NSObject
+
++ (void)recordPageFinished;
+
+@end
 

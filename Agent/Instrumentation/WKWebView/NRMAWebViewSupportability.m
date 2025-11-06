@@ -6,16 +6,21 @@
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
+#import "NRMAWebViewSupportability.h"
 #import "NRMAMeasurements.h"
 #import "NRConstants.h"
 
-void NRMAWebViewSupportabilityRecordPageFinished(void) {
+@implementation NRMAWebViewSupportability
+
++ (void)recordPageFinished {
     static dispatch_once_t token;
-    NRMARecordWebViewSupportMetric(kNRSupportabilityPrefix@"/WKWebView/PageFinished", &token);
+    [self recordWebViewSupportMetric:kNRSupportabilityPrefix@"/WebView/LoadUrl" withToken:&token];
 }
 
-static void NRMARecordWebViewSupportMetric(NSString *name, dispatch_once_t *token) {
++ (void)recordWebViewSupportMetric:(NSString *)name withToken:(dispatch_once_t *)token {
     dispatch_once(token, ^{
         [NRMAMeasurements recordAndScopeMetricNamed:name value:@1];
     });
 }
+
+@end
