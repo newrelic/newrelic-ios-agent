@@ -7,7 +7,7 @@
 
 import XCTest
 import WebKit
-@testable import NRTestApp
+@testable import NRTestAppAsFramework
 
 final class FakeNavigationAction: WKNavigationAction {
     let urlRequest: URLRequest

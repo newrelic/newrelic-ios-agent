@@ -27,7 +27,7 @@ void HexAuditor::audit(uint8_t* buf) {
     }
     indentations--;
     printStringWithIndentation("]", indentations);
-    LLOG_AUDIT("%s", ss.str().c_str());
+    // LLOG_AUDIT("%s", ss.str().c_str());
 }
 
 

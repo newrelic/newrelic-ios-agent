@@ -11,18 +11,18 @@ import CoreGraphics
 import UIKit
 
 // Swift
-public struct SwiftUIViewAttributes: Equatable {
+struct SwiftUIViewAttributes: Equatable {
 
     // Core geometry
-    public internal(set) var frame: CGRect
-    public internal(set) var clip: CGRect
+    internal(set) var frame: CGRect
+    internal(set) var clip: CGRect
 
     // Visual appearance
-    public internal(set) var backgroundColor: CGColor?
-    public internal(set) var layerBorderColor: CGColor?
-    public internal(set) var layerBorderWidth: CGFloat
-    public internal(set) var layerCornerRadius: CGFloat
-    public internal(set) var alpha: CGFloat
+    internal(set) var backgroundColor: CGColor?
+    internal(set) var layerBorderColor: CGColor?
+    internal(set) var layerBorderWidth: CGFloat
+    internal(set) var layerCornerRadius: CGFloat
+    internal(set) var alpha: CGFloat
 
     // Visibility & layout
     var isHidden: Bool

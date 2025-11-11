@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import NRTestApp
+@testable import NRTestAppAsFramework
 
 final class NRTestAppUITests: XCTestCase {
     
