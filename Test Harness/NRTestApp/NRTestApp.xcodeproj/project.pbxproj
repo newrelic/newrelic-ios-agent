@@ -148,6 +148,8 @@
 		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
+		2BEE33442EC3D364007F2B75 /* SimpleScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8672A552EAA69820055FA51 /* SimpleScrollView.swift */; };
+		2BEE33492EC3D384007F2B75 /* InfiniteImageCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8ACFA282EA019BF00E6692B /* InfiniteImageCollectionView.swift */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
@@ -222,6 +224,8 @@
 		F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302B9329708027003EC291 /* ApodResult.swift */; };
 		F86429442979CE31002ABA01 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; };
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		F8672A562EAA69820055FA51 /* SimpleScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8672A552EAA69820055FA51 /* SimpleScrollView.swift */; };
+		F8ACFA292EA019BF00E6692B /* InfiniteImageCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8ACFA282EA019BF00E6692B /* InfiniteImageCollectionView.swift */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 		F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
@@ -268,6 +272,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2B00011A2E34083400543C1B;
 			remoteInfo = NRTestAppAsFramework;
+		};
+		2B6588122EA9957600A5AC8C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 021A15B924C9EEE700E8DFD5;
+			remoteInfo = Agent_iOS;
+		};
+		2B65881F2EA995B600A5AC8C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 02FF4B1824E3201400115469;
+			remoteInfo = Agent_tvos;
+		};
+		2B6588212EA995BB00A5AC8C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 348232212BC5EEE60070FAC3;
+			remoteInfo = "Agent-watchOS";
 		};
 		2B94FC912C3F47B1006B9869 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -506,6 +531,8 @@
 		F86428EA2979CDAF002ABA01 /* NRTestApp (tvOS).app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (tvOS).app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F86428F62979CDB0002ABA01 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestApp--tvOS--Info.plist"; path = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
+		F8672A552EAA69820055FA51 /* SimpleScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleScrollView.swift; sourceTree = "<group>"; };
+		F8ACFA282EA019BF00E6692B /* InfiniteImageCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteImageCollectionView.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -600,7 +627,9 @@
 				2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
+				F8672A552EAA69820055FA51 /* SimpleScrollView.swift */,
 				2BAE5C802E860C7D001D2B88 /* GridsView.swift */,
+				F8ACFA282EA019BF00E6692B /* InfiniteImageCollectionView.swift */,
 				2BAE5C812E860C7D001D2B88 /* ListsView.swift */,
 				2BAE5C822E860C7D001D2B88 /* PickersView.swift */,
 				2BAE5C832E860C7D001D2B88 /* ProgressViewsView.swift */,
@@ -974,6 +1003,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2B6588222EA995BB00A5AC8C /* PBXTargetDependency */,
 			);
 			name = "NRTestApp (watchOS) Watch App";
 			productName = "NRTestApp (watchOS) Watch App";
@@ -993,6 +1023,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2B6588132EA9957600A5AC8C /* PBXTargetDependency */,
 			);
 			name = NRTestApp;
 			productName = NRTestApp;
@@ -1049,6 +1080,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2B6588202EA995B600A5AC8C /* PBXTargetDependency */,
 			);
 			name = "NRTestApp (tvOS)";
 			productName = "NRTestApp (tvOS)";
@@ -1408,6 +1440,8 @@
 				2B00012A2E34083400543C1B /* WebViewController.swift in Sources */,
 				2B00012B2E34083400543C1B /* SecureLabel.swift in Sources */,
 				2B00012C2E34083400543C1B /* AppDelegate.swift in Sources */,
+				2BEE33442EC3D364007F2B75 /* SimpleScrollView.swift in Sources */,
+				2BEE33492EC3D384007F2B75 /* InfiniteImageCollectionView.swift in Sources */,
 				2B00012D2E34083400543C1B /* AppDelegate+UITest.swift in Sources */,
 				2B358B5B2E9DD1B200DFB02F /* ContentView.swift in Sources */,
 				2B358B632E9DD27100DFB02F /* SlidersView.swift in Sources */,
@@ -1529,11 +1563,13 @@
 			files = (
 				F864284C2971DFA5002ABA01 /* triggerException.m in Sources */,
 				F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */,
+				F8ACFA292EA019BF00E6692B /* InfiniteImageCollectionView.swift in Sources */,
 				F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */,
 				2B03F6632E45338300DBA375 /* UITestsHelper.swift in Sources */,
 				2BB1E1EC2E342D2000BC36A6 /* AttributedStringTextMaskingViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
+				F8672A562EAA69820055FA51 /* SimpleScrollView.swift in Sources */,
 				2BAE5C8E2E860C7D001D2B88 /* StacksView.swift in Sources */,
 				2BAE5C8F2E860C7D001D2B88 /* ProgressViewsView.swift in Sources */,
 				2BAE5C902E860C7D001D2B88 /* ShapesView.swift in Sources */,
@@ -1678,6 +1714,21 @@
 			isa = PBXTargetDependency;
 			target = 2B00011A2E34083400543C1B /* NRTestAppAsFramework */;
 			targetProxy = 2B459FF32E9EF52F00CB66F3 /* PBXContainerItemProxy */;
+		};
+		2B6588132EA9957600A5AC8C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Agent_iOS;
+			targetProxy = 2B6588122EA9957600A5AC8C /* PBXContainerItemProxy */;
+		};
+		2B6588202EA995B600A5AC8C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Agent_tvos;
+			targetProxy = 2B65881F2EA995B600A5AC8C /* PBXContainerItemProxy */;
+		};
+		2B6588222EA995BB00A5AC8C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "Agent-watchOS";
+			targetProxy = 2B6588212EA995BB00A5AC8C /* PBXContainerItemProxy */;
 		};
 		2BB91D3D2E9EC56700E1624C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2189,7 +2240,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2237,7 +2288,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 16;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2589,7 +2640,7 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent.git";
 			requirement = {
-				branch = "msr-swiftui";
+				branch = main;
 				kind = branch;
 			};
 		};

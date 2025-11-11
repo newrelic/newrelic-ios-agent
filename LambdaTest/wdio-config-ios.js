@@ -13,10 +13,10 @@ exports.config = {
   key: process.env.LT_ACCESSKEY || "YOUR_ACCESS_KEY",
 
   updateJob: false,
-  specs: ["./test-ios.js"],
+  specs: ["./tests/*.test.js"],
   exclude: [],
 
-  maxInstances: 10,
+  maxInstances: 5,
   capabilities: [
     {
       "lt:options": {
@@ -29,7 +29,7 @@ exports.config = {
         deviceName: "iPhone 15",
         appiumVersion: "1.22.3",
         platformVersion: "17.0",
-        app: "NRTESTAPP", // custom_id was IOSAPP
+        app: "com.newrelic.NRApp.bitcode", // custom_id was IOSAPP
       },
     },
   ],

@@ -57,8 +57,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")
         
+        NewRelic.addSessionReplayMaskedAccessibilityIdentifier("my-secret-id")
+        NewRelic.addSessionReplayMaskedAccessibilityIdentifier("masked-1")
+        NewRelic.addSessionReplayMaskedAccessibilityIdentifier("masked-2")
+        NewRelic.addSessionReplayMaskedAccessibilityIdentifier("my-masked-id")
         NewRelic.addSessionReplayMaskedAccessibilityIdentifier("private")
+        
         NewRelic.addSessionReplayUnmaskedAccessibilityIdentifier("public")
+        NewRelic.addSessionReplayUnmaskedAccessibilityIdentifier("unmasked-1")
+
         NewRelic.addSessionReplayMaskViewClass("SecureLabel")
         NewRelic.addSessionReplayUnmaskViewClass("UnsecureLabel")
 

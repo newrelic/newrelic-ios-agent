@@ -46,6 +46,9 @@ class CustomTextThingy: SessionReplayViewThingy {
         else if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
+        else if let maskUserInputText = viewDetails.maskUserInputText {
+            self.isMasked = maskUserInputText
+        }
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }
@@ -71,13 +74,7 @@ class CustomTextThingy: SessionReplayViewThingy {
             self.fontName = fontNameRaw
         }
         
-        let fontFamilyRaw = font.familyName
-        if(fontFamilyRaw.hasPrefix(".") && fontFamilyRaw.count > 1) {
-            self.fontFamily = String(fontFamilyRaw.dropFirst())
-        }
-        else {
-            self.fontFamily = fontFamilyRaw
-        }
+        self.fontFamily = font.toCSSFontFamily()
         
         if #available(iOS 13.0, *) {
             self.textColor = view.textColor ?? UIColor.label

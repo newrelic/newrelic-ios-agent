@@ -1,5 +1,5 @@
 {
-  "originHash" : "fcd09acbb3048c32af13cfed7c6d122ff7cc5482cd95d1c3283c1e330c2bdcc6",
+  "originHash" : "3f9307b0200d00557b078bb8bcbc32df1db2b415f8448a4231539c315bd6cfc6",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -114,8 +114,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/newrelic/newrelic-ios-agent.git",
       "state" : {
-        "branch" : "msr-swiftui",
-        "revision" : "a9d6d439f7735e80f6322d233bc257003a086df5"
+        "branch" : "main",
+        "revision" : "e07a355a3ad373652a05ed3bc056ef41381c773d"
       }
     },
     {

@@ -28,8 +28,8 @@ class SessionReplayFrameProcessor {
         }
         
         var rrwebCommon: any RRWebEventCommon
-        // If a full snapshot is needed or the frame size changed
-        if takeFullSnapshotNext || frame.size != lastFullFrame.size {
+        // If a full snapshot is needed, frame size changed, or UILayoutContainerView count increased
+        if takeFullSnapshotNext || frame.size != lastFullFrame.size || (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) {
             rrwebCommon = processFullSnapshot(frame)
             takeFullSnapshotNext = false
         } else {
@@ -39,8 +39,9 @@ class SessionReplayFrameProcessor {
         // If we have a full snapshot, compare the rootViewControllerIDs. If they match, continue with partial snapshots
         // If they don't, then do a full snapshot next time.
         if frame.rootViewControllerId != lastFullFrame.rootViewControllerId ||
-            frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId {//||
-//            frame.rootSwiftUIViewId != lastFullFrame.rootSwiftUIViewId {
+            frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId ||
+            frame.rootSwiftUIViewId != lastFullFrame.rootSwiftUIViewId {
+
             takeFullSnapshotNext = true // When the viewController transitions there is a frame where they are combined so take the full snapshot after things have settled.
         }
         
@@ -116,18 +117,28 @@ class SessionReplayFrameProcessor {
     
     
     private func processIncrementalSnapshot(newFrame: SessionReplayFrame, oldFrame: SessionReplayFrame) -> any RRWebEventCommon {
+        // Validate input parameters
+        guard newFrame.date >= oldFrame.date else {
+            // If frames are out of order, fall back to full snapshot
+            return processFullSnapshot(newFrame)
+        }
         
         let oldFlattenedThingies = flattenTree(rootThingy: oldFrame.views)
         let newFlattenedThingies = flattenTree(rootThingy: newFrame.views)
         
         let operations = generateDiff(old: oldFlattenedThingies, new: newFlattenedThingies)
-
         
+        // Pre-allocate arrays with estimated capacity for better performance
+        let operationCount = operations.count
         var adds = [RRWebMutationData.AddRecord]()
         var removes = [RRWebMutationData.RemoveRecord]()
         var texts = [RRWebMutationData.TextRecord]()
         var attributes = [RRWebMutationData.AttributeRecord]()
         
+        adds.reserveCapacity(operationCount)
+        removes.reserveCapacity(operationCount)
+        
+        // Process operations in a single pass with improved type safety
         for operation in operations {
             switch operation {
             case .Remove(let change):
@@ -137,23 +148,15 @@ class SessionReplayFrameProcessor {
                 let nodes = change.node.generateRRWebAdditionNode(parentNodeId: change.parentId)
                 adds.append(contentsOf: nodes)
             case .Update(let change):
-                let mutations = change.oldElement.generateDifference(from: change.newElement)
-                for mutation in mutations {
-                    switch mutation {
-                    case let mutation as RRWebMutationData.AttributeRecord:
-                        attributes.append(mutation)
-                    case let mutation as RRWebMutationData.TextRecord:
-                        texts.append(mutation)
-                    default:
-                        // ignore it.
-                        continue
-                    }
-                }
+                processMutationUpdates(oldElement: change.oldElement,
+                                     newElement: change.newElement,
+                                     texts: &texts,
+                                     attributes: &attributes)
             }
         }
         
         let incrementalUpdate: RRWebIncrementalData = .mutation(RRWebMutationData(adds: adds, removes: removes, texts: texts, attributes: attributes))
-        let incrementalEvent = IncrementalEvent(timestamp: (newFrame.date.timeIntervalSince1970*1000).rounded(), data: incrementalUpdate)
+        let incrementalEvent = IncrementalEvent(timestamp: (newFrame.date.timeIntervalSince1970 * 1000).rounded(), data: incrementalUpdate)
         return incrementalEvent
         
 //         For nodes that have not been added/removed, we should get the difference they've got as a dictionary (that can be turned into JSON
@@ -235,6 +238,22 @@ class SessionReplayFrameProcessor {
         // Texts are the id of the text node, and the content to change it to.
         
 
+    }
+    
+    /// Helper function to process mutation updates with improved type safety
+    private func processMutationUpdates(oldElement: any SessionReplayViewThingy,
+                                      newElement: any SessionReplayViewThingy,
+                                      texts: inout [RRWebMutationData.TextRecord],
+                                      attributes: inout [RRWebMutationData.AttributeRecord]) {
+        let mutations = oldElement.generateDifference(from: newElement)
+        
+        for mutation in mutations {
+            if let attributeRecord = mutation as? RRWebMutationData.AttributeRecord {
+                attributes.append(attributeRecord)
+            } else if let textRecord = mutation as? RRWebMutationData.TextRecord {
+                texts.append(textRecord)
+            }
+        }
     }
     
     private func flattenTree(rootThingy: any SessionReplayViewThingy) -> [any SessionReplayViewThingy] {

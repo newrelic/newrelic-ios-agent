@@ -36,9 +36,9 @@ void HexReportContext::finalize() {
             // Clear the builder for the next report
             getBuilder()->Clear();
         } catch (std::invalid_argument& e) {
-            LLOG_AUDIT("Hex report not finalized: %s", e.what());
+            // LLOG_AUDIT("Hex report not finalized: %s", e.what());
         } catch (...) {
-            LLOG_AUDIT("Hex report not finalized:");
+            // LLOG_AUDIT("Hex report not finalized:");
         }
     }
 }

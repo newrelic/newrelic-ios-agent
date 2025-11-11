@@ -53,7 +53,7 @@ extension SwiftUI.Color._ResFoundColor: XrayConvertible {
         (linearRed, linearGreen, linearBlue, opacity) = try (
             r.get(SwiftUIConstants.linearRedPath,r),
             r.get(SwiftUIConstants.linearGreenPath,r),
-            r.get(SwiftUIConstants.linearRedPath,r),
+            r.get(SwiftUIConstants.linearBluePath,r),
             r.get(SwiftUIConstants.opacityPath,r)
         )
     }

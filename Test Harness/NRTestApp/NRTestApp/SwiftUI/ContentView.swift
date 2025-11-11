@@ -19,6 +19,10 @@ struct SwiftUIContentView: View {
                         Text("Text Fields")
                         
                     }
+                    NavigationLink(destination: SimpleScrollView()) {
+                        Text("Diff Scroll View")
+                        
+                    }
                     NavigationLink(destination: PickersView()) {
                         Text("Pickers")
                         
@@ -65,6 +69,10 @@ struct SwiftUIContentView: View {
                     }
                     NavigationLink(destination: ShapesView()) {
                         Text("Shapes")
+                        
+                    }
+                    NavigationLink(destination: InfiniteImageCollectionView()) {
+                        Text("Infinite Images")
                         
                     }
                 }

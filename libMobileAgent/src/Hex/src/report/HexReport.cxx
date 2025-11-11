@@ -68,8 +68,8 @@ void HexReport::setAttributeNoValidation(const char* key,
             _longAttributes->add(std::string(key), value);
        // }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%d': %s", key, value,
-                   e.what());
+        //LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%d': %s", key, value,
+        //           e.what());
     }
 }
 
@@ -80,8 +80,8 @@ void HexReport::setAttributeNoValidation(const char* key,
             _doubleAttributes->add(std::string(key), value);
       //  }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%f': %s", key, value,
-                   e.what());
+        //LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%f': %s", key, value,
+        //           e.what());
     }
 }
 void HexReport::setAttributeNoValidation(const char* key,
@@ -92,8 +92,8 @@ void HexReport::setAttributeNoValidation(const char* key,
             _stringAttributes->add(std::string(key), std::string(value));
        // }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key, value,
-                   e.what());
+        //LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key, value,
+        //           e.what());
     }
 }
 
@@ -104,8 +104,8 @@ void HexReport::setAttributeNoValidation(const char* key,
             _booleanAttributes->add(std::string(key), value);
        // }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key,
-                   value ? "true" : "false", e.what());
+        //LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key,
+        //           value ? "true" : "false", e.what());
     }
 }
 
@@ -117,8 +117,8 @@ void HexReport::setAttribute(const char* key,
             _longAttributes->add(std::string(key), value);
         }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%d': %s", key, value,
-                   e.what());
+        //LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%d': %s", key, value,
+        //           e.what());
     }
 }
 void HexReport::setAttribute(const char* key,
@@ -128,8 +128,8 @@ void HexReport::setAttribute(const char* key,
             _doubleAttributes->add(std::string(key), value);
         }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%f': %s", key, value,
-                   e.what());
+        //LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%f': %s", key, value,
+        //           e.what());
     }
 }
 
@@ -141,8 +141,8 @@ void HexReport::setAttribute(const char* key,
             _stringAttributes->add(std::string(key), std::string(value));
         }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key, value,
-                   e.what());
+       // LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key, value,
+       //            e.what());
     }
 }
 
@@ -153,8 +153,8 @@ void HexReport::setAttribute(const char* key,
             _booleanAttributes->add(std::string(key), value);
         }
     } catch (std::exception& e) {
-        LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key,
-                   value ? "true" : "false", e.what());
+        // LLOG_ERROR("Handled Exception: Failed to insert attribute key, '%s', and value, '%s': %s", key,
+        //           value ? "true" : "false", e.what());
     }
 }
 
