@@ -18,6 +18,10 @@ struct SwiftUIContentView: View {
                         Text("Text Fields")
                         
                     }
+                    NavigationLink(destination: SimpleScrollView()) {
+                        Text("Diff Scroll View")
+                        
+                    }
                     NavigationLink(destination: PickersView()) {
                         Text("Pickers")
                         

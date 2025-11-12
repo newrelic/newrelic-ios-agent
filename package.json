@@ -1,0 +1,19 @@
+{
+  "name": "nrtestapp",
+  "version": "1.0.0",
+  "dependencies": {
+    "wdio-lambdatest-service": "^4.0.0",
+    "@wdio/cli": "^9.12.7",
+    "@wdio/local-runner": "^9.12.7",
+    "@wdio/mocha-framework": "^9.12.6",
+    "appium": "^3.1.0",
+    "dayjs": "^1.11.13"
+  },
+  "scripts": {
+    "test:wdio-ios": "./node_modules/.bin/wdio LambdaTest/wdio-config-ios.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "webdriverio": "^9.12.2"
+}
+}

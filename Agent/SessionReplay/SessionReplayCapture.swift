@@ -13,6 +13,7 @@ import SwiftUI
 @available(iOS 13.0, *)
 @objcMembers
 class SessionReplayCapture {
+    private var layoutContainerViewCount: Int = 0
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
@@ -22,81 +23,80 @@ class SessionReplayCapture {
             rootViewControllerID = String(describing: type(of: rootViewController))
         }
         
-        struct ViewPair {
-            let view:UIView
-            let parentRecorder:any SessionReplayViewThingy
-        }
-        
         var rootSwiftUIViewID: Int? = nil
+        var rootThingy = findRecorderForView(view: rootView)
         
-        var viewStack = ContiguousArray<ViewPair>()
-        let rootThingy = findRecorderForView(view: rootView)
+        // Reset counter for this frame capture
+        layoutContainerViewCount = 0
         
-        viewStack.append(ViewPair(view: rootView, parentRecorder: rootThingy))
+        // Build tree using recursive approach to properly handle value semantics
+        buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
         
-        while let pair = viewStack.popLast() {
-            let currentView = pair.view
-            var currentParentThingy = pair.parentRecorder
-            
-            for subview in currentView.subviews {
-                if (shouldRecord(view: subview)) {
-                    let childThingy = findRecorderForView(view: subview)
-                    if childThingy.viewDetails.isVisible {
-                        currentParentThingy.subviews.append(childThingy)
-                    }
-                    viewStack.append(ViewPair(view: subview, parentRecorder: childThingy))
+        // Set nextId for all views after tree is built
+        setNextIdRecursively(for: &rootThingy)
+        
+        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size:  rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount)
+    }
+    
+    private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
+        
+        // Process UIKit subviews
+        for subview in currentView.subviews {
+            if shouldRecord(view: subview) {
+                var childThingy = findRecorderForView(view: subview)
+                if childThingy.viewDetails.isVisible {
+                    buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+                    parentThingy.subviews.append(childThingy)
                 }
-                else {
-                    viewStack.append(ViewPair(view: subview, parentRecorder: currentParentThingy))
-                }
-            }
-            
-            if let viewController = extractVC(from: currentView),
-               ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
-                // Check if this is specifically SwiftUI._UIHostingView<SwiftUI.BridgedPresentation.RootView>
-                let className = NSStringFromClass(type(of: currentView))
-                if className.contains("_UIHostingView") && className.contains("RootView") {
-                    rootSwiftUIViewID = currentParentThingy.viewDetails.viewId
-                }
-                
-                let viewAttributes = SwiftUIViewAttributes(frame: currentParentThingy.viewDetails.frame,
-                                                           clip: currentParentThingy.viewDetails.clip,
-                                                           backgroundColor: currentView.backgroundColor?.cgColor,
-                                                           layerBorderColor: currentView.layer.borderColor,
-                                                           layerBorderWidth: currentView.layer.borderWidth,
-                                                           layerCornerRadius: currentView.layer.cornerRadius,
-                                                           alpha: currentView.alpha,
-                                                           isHidden: currentView.isHidden,
-                                                           intrinsicContentSize: currentView.intrinsicContentSize,
-                                                           maskApplicationText: currentView.maskApplicationText,
-                                                           maskUserInputText: currentView.maskUserInputText,
-                                                           maskAllImages: currentView.maskAllImages,
-                                                           maskAllUserTouches: currentView.maskAllUserTouches,
-                                                           sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
-                )
-                
-                let context = SwiftUIContext(frame: currentParentThingy.viewDetails.frame, clip: currentParentThingy.viewDetails.clip)
-                
-                let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: currentParentThingy.viewDetails.viewId)
-                
-                
-                if !thingys.isEmpty {
-                    currentParentThingy.subviews.append(contentsOf: thingys)
-                }
-            }
-            
-            if let textView = currentView as? UITextField {
-                let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
-                currentParentThingy.subviews.append(textViewThingy) // Adding text to the bottom of a UITextFieldThingy because the _UITextFieldRoundedRectBackgroundViewNeue covers it.
-            }
-            var nextId:Int? = nil
-            for var childView in currentParentThingy.subviews.reversed() {
-                childView.viewDetails.nextId = nextId
-                nextId = childView.viewDetails.viewId
+            } else {
+                buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
             }
         }
         
-        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size:  rootView.frame.size)
+        // Handle SwiftUI hosting views
+        if let viewController = extractVC(from: currentView),
+           ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
+            let className = NSStringFromClass(type(of: currentView))
+            if className.contains("_UIHostingView") && className.contains("RootView") {
+                rootSwiftUIViewID = parentThingy.viewDetails.viewId
+            }
+            
+            let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
+                                                       clip: parentThingy.viewDetails.clip,
+                                                       backgroundColor: currentView.backgroundColor?.cgColor,
+                                                       layerBorderColor: currentView.layer.borderColor,
+                                                       layerBorderWidth: currentView.layer.borderWidth,
+                                                       layerCornerRadius: currentView.layer.cornerRadius,
+                                                       alpha: currentView.alpha,
+                                                       isHidden: currentView.isHidden,
+                                                       intrinsicContentSize: currentView.intrinsicContentSize,
+                                                       maskApplicationText: currentView.maskApplicationText,
+                                                       maskUserInputText: currentView.maskUserInputText,
+                                                       maskAllImages: currentView.maskAllImages,
+                                                       maskAllUserTouches: currentView.maskAllUserTouches,
+                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
+            )
+            
+            let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
+            let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
+            
+            if !thingys.isEmpty {
+                parentThingy.subviews.append(contentsOf: thingys)
+            }
+        }
+        
+        // Handle UITextField custom text overlay
+        if let textView = currentView as? UITextField {
+            let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
+            parentThingy.subviews.append(textViewThingy)
+        }
+        // Count UILayoutContainerViews if we're inside a UIPanelControllerContentView
+        if let parentView = currentView.superview {
+            let parentClassName = NSStringFromClass(type(of: parentView))
+            if parentClassName.contains("UIPanelControllerContentView") && parentThingy.viewDetails.viewName.contains("UILayoutContainerView") {
+                layoutContainerViewCount += 1
+            }
+        }
     }
     
     private func findRootViewController(rootView: UIView) -> UIViewController? {
@@ -180,10 +180,23 @@ class SessionReplayCapture {
         return !(areFramesTheSame && isClear)
     }
     
+    private func setNextIdRecursively(for thingy: inout any SessionReplayViewThingy) {
+        // Process children in reverse order to build the nextId linked list
+        var nextId: Int? = nil
+        for i in stride(from: thingy.subviews.count - 1, through: 0, by: -1) {
+            // Recursively process this child's subviews first
+            setNextIdRecursively(for: &thingy.subviews[i])
+            
+            // Then set this child's nextId
+            thingy.subviews[i].viewDetails.nextId = nextId
+            nextId = thingy.subviews[i].viewDetails.viewId
+        }
+    }
+    
 //        func logThingys(_ things: [any SessionReplayViewThingy]) {
 //            var lines: [String] = []
 //            lines.reserveCapacity(things.count)
-//    
+//
 //            for thing in things {
 //                let frame = thing.viewDetails.frame
 //                let viewId = thing.viewDetails.viewId

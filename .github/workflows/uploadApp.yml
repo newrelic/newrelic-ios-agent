@@ -1,0 +1,164 @@
+# This purpose of this GitHub action is to automate uploading a version of NRTestApp to LamdbaTest. LambdaTest has a retention policy of 60 days. This automation ensures that the app is always available for testing without manual intervention and will always be providing data to the following entities without interruption:
+
+# nrtestapp-ios: [INSERT STAGING NR ONE LINK]
+
+# This action triggers a node.js function that uploads the app to LambdaTest.
+# The function uses a `custom_id` to identify that app with a specific name rather than the default names provided upon upload, which will change per upload.
+
+name: Upload iOS NRTestApp to LambdaTest
+
+on:
+ # enables option for workflow to be manually executed in Github UI
+ workflow_dispatch:
+
+#  push:
+#    branches:
+#      - main
+
+#  # Runs on the 1st of every month
+#  schedule:
+#    - cron: "0 0 1 * *"
+
+jobs:
+
+  build-ios:
+    name: Build iOS app
+    runs-on: macos-15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+        with:
+          submodules: true
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+    
+      - name: Select Xcode 16.4
+        run: |
+          sudo xcode-select -switch /Applications/Xcode_16.4.app
+
+      - name: Install dependencies
+        run: |
+          npm install
+      # before building iOS app, please set the main server, the crash server, and the app token secret
+      # the plist to be modified is located at ./Test Harness/NRTestApp/NRAPI-Info.plist
+      # the secret mapping is as follows secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS , secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS, secrets.NRTESTAPP_APP_TOKEN
+      - name: Set plist secrets
+        env:
+          NRTESTAPP_CRASH_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS }}
+          NRTESTAPP_MAIN_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS }}
+          NRTESTAPP_APP_TOKEN: ${{ secrets.NRTESTAPP_APP_TOKEN }}
+        run: |
+          PLIST_PATH="./Test Harness/NRTestApp/NRAPI-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress string ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress string ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey string ${NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
+
+      - name: Clean iOS app
+        run: |
+          xcodebuild clean -workspace Agent.xcworkspace -scheme NRTestApp -derivedDataPath "derived_build"
+
+      - name: Build iOS app
+        run: |
+          xcodebuild build \
+            -workspace Agent.xcworkspace -scheme NRTestApp \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath "derived_build" \
+            build
+    
+      - name: Compress iOS app
+        run: |
+          ls -al
+          cd ./derived_build/Build/Products/Release-iphonesimulator/
+          ls
+          zip -r nrtestapp-ios.zip NRTestApp.app
+
+      - name: Upload iOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: nrtestapp-ios
+          path: ./derived_build//Build/Products/Release-iphonesimulator/nrtestapp-ios.zip
+          compression-level: 0
+          retention-days: 1
+
+  upload-apps:
+    name: Upload NRTestApp app to LT
+    needs: [build-ios]
+    runs-on: ubuntu-latest
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Download iOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nrtestapp-ios
+          path: ${{ github.workspace }}/builds
+
+      - name: Run upload script
+        run: node LambdaTest/uploadAppToLambdaTest.mjs
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully uploaded apps to LambdaTest"
+
+      # - name: Notify success
+      #   if: ${{ success() }}
+      #   uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v
+      #   with:
+      #     webhook-type: incoming-webhook
+      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     payload: |
+      #       blocks:
+      #         - type: "header"
+      #           text:
+      #             type: "plain_text"
+      #             text: ":frog-wow-scroll: LambdaTest Upload Successful"
+      #         - type: "divider"
+      #         - type: "section"
+      #           text:
+      #             type: "mrkdwn"
+      #             text: Congrats! We survived another month to claim victory over LambdaTest's retention policy. The main-agent-test-apps have been successfully uploaded and are ready for testing.
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to upload apps to LambdaTest"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":crying-sunglasses-cowboy: LambdaTest Upload Failed"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "Something went wrong while uploading the NRTestApp to LambdaTest. Please check the logs for more details." 
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          

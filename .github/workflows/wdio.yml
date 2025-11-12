@@ -1,0 +1,68 @@
+# The purpose of this GitHub action is to have a constant stream of data reporting to the following entities:
+# NRTestApp-Auto: TBAdded
+
+# This is accomplished by triggering npm scripts that execute a suite of tests in parallel
+# The tests spin up simulated iOS and Android devices on LambdaTest that are instrumented with the Mobile agent
+
+name: "WDIO: automate iOS tests"
+
+on:
+  # enables option for workflow to be manually executed in Github UI
+  workflow_dispatch:
+
+  # enables scheduled execution every 30 minutes
+  # schedule:
+  #   - cron: "*/30 * * * *"
+
+jobs:
+  ios-data:
+    name: Generate iOS data
+    runs-on: ubuntu-latest
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Execute iOS tests
+        run: for i in {1..1}; do echo "test run $i"; npm run test:wdio-ios; done
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully executed iOS tests"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to execute iOS tests"
+
+      # - name: Notify failure
+      #   if: ${{ failure() || cancelled() }}
+      #   uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+      #   with:
+      #     webhook-type: incoming-webhook
+      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     payload: |
+      #       blocks:
+      #         - type: "header"
+      #           text:
+      #             type: "plain_text"
+      #             text: ":rotating_light: GitHub Workflow Failure"
+      #         - type: "divider"
+      #         - type: "section"
+      #           text:
+      #             type: "mrkdwn"
+      #             text: ":apple: Failed to generate *main-agent-test-app-iOS* data"
+      #           accessory:
+      #             type: "button"
+      #             text:
+      #               type: "plain_text"
+      #               text: "View logs"
+      #               emoji: true
+      #             value: "view_logs"
+      #             url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      #             action_id: "button-action"
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
