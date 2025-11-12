@@ -34,6 +34,7 @@ extension UIImageView {
                     activityIndicator.removeFromSuperview()
                     
                     guard let image = UIImage(data: data) else { return }
+                    image.NRSessionReplayImageURL = url // Manually associate the URL with the UIImage for Session Replay
                     self.image = image
                     
                     // Stop the timer to record the stop time, and the difference can be passed in as a value in a custom metric
