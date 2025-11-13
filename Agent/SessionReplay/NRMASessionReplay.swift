@@ -28,9 +28,6 @@ public class NRMASessionReplay: NSObject {
     
     private var frameCounter: Int = 0
     private let framesDirectory: URL
-    
-    // Track touch IDs that have already been persisted to avoid duplicates
-    private var persistedTouchIDs: Set<Int> = []
 
     private var NRMAOriginal__sendEvent: UnsafeMutableRawPointer?
 
@@ -75,9 +72,6 @@ public class NRMASessionReplay: NSObject {
         if let touchCapture = sessionReplayTouchCapture {
             touchCapture.resetEvents()
         }
-        // Clear the set of persisted touch IDs when clearing all data
-        persistedTouchIDs.removeAll()
-        
         // should remove frames from file system after processing
 
         // Clear the session replay file after processing
@@ -228,8 +222,6 @@ public class NRMASessionReplay: NSObject {
         let touches = sessionReplayTouchProcessor.processTouches(touchCapture.touchEvents)
         if clear {
             touchCapture.resetEvents()
-            // Clear the set of persisted touch IDs when clearing all data
-            persistedTouchIDs.removeAll()
         }
         return touches
     }
@@ -241,22 +233,17 @@ public class NRMASessionReplay: NSObject {
             return []
         }
         
-        // Filter out touches that have already been persisted
-        let newTouchEvents = touchCapture.touchEvents.filter { touchEvent in
-            !persistedTouchIDs.contains(touchEvent.id)
-        }
+        // Filter to only unpersisted touches
+        let unpersistedTouchEvents = touchCapture.touchEvents.filter { !$0.isPersisted }
         
-        // Process only the new touches
-        let newProcessedTouches = sessionReplayTouchProcessor.processTouches(newTouchEvents)
+        // Process only the unpersisted touches
+        let processedTouches = sessionReplayTouchProcessor.processTouches(unpersistedTouchEvents)
         
         // Mark these touches as persisted
-        for touchEvent in newTouchEvents {
-            persistedTouchIDs.insert(touchEvent.id)
-        }
+        unpersistedTouchEvents.forEach { $0.isPersisted = true }
         
-        return newProcessedTouches
+        return processedTouches
     }
-
 
     /// REPLAY PERSISTENCE
 
