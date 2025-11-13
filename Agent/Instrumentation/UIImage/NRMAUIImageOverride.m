@@ -66,6 +66,12 @@ NSString* NRMA_HashForData(NSData* data);
 + (void)registerURL:(NSURL*)url forData:(NSData*)data {
     if (url == nil || data == nil) return;
     
+    // Check if data is actually an image before storing it
+    if (![self isImageData:data]) {
+        //NRLOG_AGENT_DEBUG(@"NRMAUIImageOverride - Skipping non-image data for URL: %@", url);
+        return;
+    }
+    
     NSString *hash = NRMA_HashForData(data);
     [registryLock lock];
     
@@ -73,7 +79,32 @@ NSString* NRMA_HashForData(NSData* data);
     
     [registryLock unlock];
     
-    NRLOG_AGENT_DEBUG(@"NRMAUIImageOverride map size: %lu", (unsigned long)dataHashToURLMap.count);
+    NRLOG_AGENT_DEBUG(@"NRMAUIImageOverride - Registered image URL for replay: %@ (map size: %lu)", url, (unsigned long)dataHashToURLMap.count);
+}
+
+// Helper method to check if NSData contains image data
++ (BOOL)isImageData:(NSData*)data {
+    if (data == nil || data.length < 12) {
+        return NO;
+    }
+    
+    // Check common image format signatures (magic numbers)
+    const unsigned char *bytes = (const unsigned char *)data.bytes;
+    
+    // PNG: 89 50 4E 47 0D 0A 1A 0A
+    if (data.length >= 8 &&
+        bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47 &&
+        bytes[4] == 0x0D && bytes[5] == 0x0A && bytes[6] == 0x1A && bytes[7] == 0x0A) {
+        return YES;
+    }
+    
+    // JPEG: FF D8 FF
+    if (data.length >= 3 &&
+        bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) {
+        return YES;
+    }
+    
+    return NO;
 }
 
 + (void)deinstrument {
