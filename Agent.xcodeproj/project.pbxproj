@@ -968,6 +968,9 @@
 		2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */; };
 		2BCA57B42B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
 		2BCA57B52B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
+		2BD073892EB0386A00E3556B /* NRMAWebViewSupportability.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */; };
+		2BD0738A2EB0387600E3556B /* NRMAWebViewSupportability.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */; };
+		2BD0738C2EB038B600E3556B /* NRMAWebViewSupportability.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */; };
 		2BDB78D12E8C42B900357BC1 /* SwiftUIViewAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDB78D02E8C42B400357BC1 /* SwiftUIViewAttributes.swift */; };
 		2BDCA8A42A8C40D50005740D /* NRMASAM.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BDCA8A32A8C40D50005740D /* NRMASAM.h */; };
 		2BDCA8A52A8C40D50005740D /* NRMASAM.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BDCA8A32A8C40D50005740D /* NRMASAM.h */; };
@@ -2507,6 +2510,8 @@
 		2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SessionReplayTest.m; sourceTree = "<group>"; };
 		2BCA579F2B7E85AD00991C5E /* NRLoggerTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRLoggerTests.h; sourceTree = "<group>"; };
 		2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRLoggerTests.m; sourceTree = "<group>"; };
+		2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWebViewSupportability.h; sourceTree = "<group>"; };
+		2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWebViewSupportability.m; sourceTree = "<group>"; };
 		2BDB78D02E8C42B400357BC1 /* SwiftUIViewAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIViewAttributes.swift; sourceTree = "<group>"; };
 		2BDCA8A32A8C40D50005740D /* NRMASAM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASAM.h; sourceTree = "<group>"; };
 		2BDCA8A92A8C41160005740D /* NRMASAM.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = NRMASAM.mm; sourceTree = "<group>"; };
@@ -3423,6 +3428,8 @@
 		02FF48A124DC61DC00115469 /* WKWebView */ = {
 			isa = PBXGroup;
 			children = (
+				2BD073752EB0386000E3556B /* NRMAWebViewSupportability.h */,
+				2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */,
 				02FF48A724DC61E900115469 /* NRMAWKWebViewDelegateBase_Private.h */,
 				02FF48A324DC61E800115469 /* NRMAWKWebViewInstrumentation.h */,
 				02FF48A524DC61E800115469 /* NRMAWKWebViewInstrumentation.m */,
@@ -4307,6 +4314,7 @@
 				02FF493724DC625A00115469 /* NRMAExceptionReportAdaptor.h in Headers */,
 				02FF49B424DC62B800115469 /* NRMAHarvestableTrace.h in Headers */,
 				02FF49CC24DC62B800115469 /* NRMAScopedMeasurement.h in Headers */,
+				2BD073892EB0386A00E3556B /* NRMAWebViewSupportability.h in Headers */,
 				02FF4AA524DC652E00115469 /* NRMAJSON.h in Headers */,
 				02FF484524DC614200115469 /* NRMALastActivityTraceController.h in Headers */,
 				02FF49E724DC644900115469 /* NRMAKeyAttributes.h in Headers */,
@@ -4478,6 +4486,7 @@
 				02FF4B6524E3201400115469 /* NRMACrashDataUploader.h in Headers */,
 				02FF4B6624E3201400115469 /* NRMAUserActionBuilder.h in Headers */,
 				F6E79C7E25A65347006277FB /* W3CTraceParent.h in Headers */,
+				2BD0738A2EB0387600E3556B /* NRMAWebViewSupportability.h in Headers */,
 				02FF4B6724E3201400115469 /* NRMAScopedHTTPTransactionMeasurement.h in Headers */,
 				02FF4B6824E3201400115469 /* NRMAURLSessionTaskDelegateBase_Private.h in Headers */,
 				02FF4B6924E3201400115469 /* NRMAActivityTraceMeasurement.h in Headers */,
@@ -5608,6 +5617,7 @@
 				34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
 				02FF4A7B24DC64FC00115469 /* NRMACustomTrace.m in Sources */,
 				2B0340972E8B0BA200182A70 /* UIImageOrientation.swift in Sources */,
+				2BD0738C2EB038B600E3556B /* NRMAWebViewSupportability.m in Sources */,
 				02FF496524DC629000115469 /* NRMATraceConfigurations.m in Sources */,
 				3493DEFE2D359F2500BF5BED /* SessionReplayTouchCapture.swift in Sources */,
 				02FF4A0324DC647200115469 /* NRMAMeasurements.m in Sources */,
