@@ -75,9 +75,13 @@ static NSString* _name;
         [dirs enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             NSString *filename = (NSString *)obj;
             NSData * data = [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@",[self offlineDirectoryPath],filename]];
-            NRLOG_AGENT_VERBOSE(@"Offline storage to be uploaded from %@", filename);
             
-            [combinedPosts addObject:data];
+            if (data) {
+                NRLOG_AGENT_DEBUG(@"Offline storage to be uploaded from %@", filename);
+                [combinedPosts addObject:data];
+            } else {
+                NRLOG_AGENT_DEBUG(@"Failed to read offline storage file: %@", filename);
+            }
         }];
         
         if(clear){
