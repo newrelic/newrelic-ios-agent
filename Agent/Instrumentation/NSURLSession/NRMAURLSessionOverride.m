@@ -20,6 +20,8 @@
 #import "NRMAAssociate.h"
 #import "NRMAURLSessionTaskSearch.h"
 #import "NRMAFlags.h"
+#import "NRMAUIImageOverride.h"
+#import "NewRelicAgentInternal.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
 
@@ -295,7 +297,12 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
         }
         
         // NRLOG_AGENT_VERBOSE(@"NRMA__recordTask called from NRMAOverride__dataTaskWithRequest_completionHandler");
-
+#if TARGET_OS_IOS
+        if ([[NewRelicAgentInternal sharedInstance] isSessionReplayEnabled] && [[NewRelicAgentInternal sharedInstance] isSessionReplaySampled]) {
+            [NRMAUIImageOverride registerURL:response.URL forData:data];
+        }
+#endif
+        
         NRMA__recordTask(task,data,response,error);
 
         completionHandler(data,response,error);

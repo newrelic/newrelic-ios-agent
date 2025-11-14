@@ -163,7 +163,7 @@ class ImageCollectionViewCell: UICollectionViewCell {
                 self?.activityIndicator.stopAnimating()
                 
                 guard let data = data, let image = UIImage(data: data) else { return }
-                
+
                 cache.setObject(image, forKey: cacheKey)
                 self?.imageView.image = image
             }

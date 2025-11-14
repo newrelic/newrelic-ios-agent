@@ -1579,6 +1579,8 @@
 		F8A455492AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A455472AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m */; };
 		F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
 		F8AC3E942938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */; };
+		F8CCE8752EBBA6560042C230 /* NRMAUIImageOverride.m in Sources */ = {isa = PBXBuildFile; fileRef = F8CCE8732EBBA6560042C230 /* NRMAUIImageOverride.m */; };
+		F8CCE8762EBBA6560042C230 /* NRMAUIImageOverride.h in Headers */ = {isa = PBXBuildFile; fileRef = F8CCE8722EBBA6560042C230 /* NRMAUIImageOverride.h */; };
 		F8E17C542DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C552DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C562DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
@@ -2618,6 +2620,8 @@
 		F8A455472AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTestsOldEventSystem.m; sourceTree = "<group>"; };
 		F8AC3E922938FD6C002B4AA8 /* NRMAFakeDataHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAFakeDataHelper.m; sourceTree = "<group>"; };
 		F8AC3EA72938FDDB002B4AA8 /* NRMAFakeDataHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAFakeDataHelper.h; sourceTree = "<group>"; };
+		F8CCE8722EBBA6560042C230 /* NRMAUIImageOverride.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUIImageOverride.h; sourceTree = "<group>"; };
+		F8CCE8732EBBA6560042C230 /* NRMAUIImageOverride.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUIImageOverride.m; sourceTree = "<group>"; };
 		F8E17C532DB681820098C3CB /* NRLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRLogger.swift; sourceTree = "<group>"; };
 		F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAOfflineStorage.m; sourceTree = "<group>"; };
 		F8E202F32B07BA6E008E0B7B /* NRMAOfflineStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAOfflineStorage.h; sourceTree = "<group>"; };
@@ -3375,6 +3379,7 @@
 				02FF486C24DC618F00115469 /* NRMAThread.h */,
 				02FF486E24DC618F00115469 /* NRMAThread.m */,
 				02FF486B24DC618F00115469 /* NRMAThreadTransition.h */,
+				F8CCE8742EBBA6560042C230 /* UIImage */,
 				02FF486A24DC618F00115469 /* NRMAThreadTransition.m */,
 			);
 			path = Instrumentation;
@@ -4159,6 +4164,15 @@
 			path = AttributeValidator;
 			sourceTree = "<group>";
 		};
+		F8CCE8742EBBA6560042C230 /* UIImage */ = {
+			isa = PBXGroup;
+			children = (
+				F8CCE8722EBBA6560042C230 /* NRMAUIImageOverride.h */,
+				F8CCE8732EBBA6560042C230 /* NRMAUIImageOverride.m */,
+			);
+			path = UIImage;
+			sourceTree = "<group>";
+		};
 		F8FBFA3C2A71A32400CDC8C5 /* Events */ = {
 			isa = PBXGroup;
 			children = (
@@ -4356,6 +4370,7 @@
 				02FF493924DC625A00115469 /* NRMAHexUploader.h in Headers */,
 				02FF48EA24DC622700115469 /* NRMATimestampContainer.h in Headers */,
 				02FF4A6D24DC64E600115469 /* NRMAActivityTraceMeasurementProducer.h in Headers */,
+				F8CCE8762EBBA6560042C230 /* NRMAUIImageOverride.h in Headers */,
 				02FF49F024DC645B00115469 /* NRMAAppUpgradeMetricGenerator.h in Headers */,
 				02FF484124DC614200115469 /* NRMATraceMachineAgentUserInterface.h in Headers */,
 				2B496B1C2C530A7800A0459E /* reflection_generated.h in Headers */,
@@ -5691,6 +5706,7 @@
 				2BAE5C782E85FA62001D2B88 /* SwiftUIDrawingThingy.swift in Sources */,
 				02FF49CB24DC62B800115469 /* NRMAHarvestableMetric.m in Sources */,
 				02FF489A24DC61D200115469 /* NRMAURLSessionTaskDelegate.m in Sources */,
+				F8CCE8752EBBA6560042C230 /* NRMAUIImageOverride.m in Sources */,
 				02FF482224DB5B8100115469 /* NRMATableViewIntrumentation.m in Sources */,
 				02FF482124DB5B8100115469 /* NRMAApplicationInstrumentation.m in Sources */,
 				2B81C3442E996304002F5593 /* MaskedContainerView.swift in Sources */,
