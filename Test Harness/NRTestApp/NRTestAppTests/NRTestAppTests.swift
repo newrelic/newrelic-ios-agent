@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import NRTestApp
+@testable import NRTestAppAsFramework
 
 final class NRTestAppTests: XCTestCase, URLAuthenticationChallengeSender {
     func use(_ credential: URLCredential, for challenge: URLAuthenticationChallenge) {}

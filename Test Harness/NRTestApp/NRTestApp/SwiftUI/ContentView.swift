@@ -1,4 +1,5 @@
 import SwiftUI
+import NewRelic
 
 struct SwiftUIContentView: View {
     var body: some View {

@@ -27,7 +27,7 @@ std::string HexPublisher::writeBytesToStore(uint8_t* bytes,
     auto filename = generateFilename();
     FILE* file = fopen(filename.c_str(), "wb");
     if (file == nullptr) {
-        LLOG_VERBOSE("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
+        // LLOG_VERBOSE("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
         return std::string("");
     }
 
@@ -35,7 +35,7 @@ std::string HexPublisher::writeBytesToStore(uint8_t* bytes,
 
     if (size < length) {
         if (ferror(file)) {
-            LLOG_VERBOSE("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
+            // LLOG_VERBOSE("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
             fclose(file);
             remove(filename.c_str());
         }

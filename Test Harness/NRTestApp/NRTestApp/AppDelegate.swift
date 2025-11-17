@@ -7,7 +7,10 @@
 
 import UIKit
 import NewRelic
+#if DEBUG_IMPORT
 
+import PerformanceSuite
+#endif
 // For more info on installing the New Relic agent go to https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/installation/spm-installation/#configure-using-swift-package-manager
 
 @main
@@ -17,6 +20,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #if DEBUG
         // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
         NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
+        
+        
+#if DEBUG_IMPORT
+        // if use perofrmance sutie
+        UITestsHelper.prepareForTestsIfNeeded()
+
+        let metricsConsumer = MetricsConsumer()
+        do {
+            try PerformanceMonitoring.enable(config: .all(receiver: metricsConsumer), didCrashPreviously: false)
+        } catch {
+            preconditionFailure("Couldn't initialize PerformanceSuite: \(error)")
+        }
+        #endif
 #endif
         NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
 
@@ -27,6 +43,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             NRMAFeatureFlags.NRFeatureFlag_WebViewInstrumentation
         ])
 #endif
+        
+        NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
+
 
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
