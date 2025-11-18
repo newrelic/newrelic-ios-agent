@@ -168,7 +168,7 @@ class ElementNodeData: SerializedNodeData {
         self.id = try container.decode(Int.self, forKey: .id)
         self.tagName = try container.decode(TagType.self, forKey: .tagName)
         self.attributes = try container.decode(RRWebAttributes.self, forKey: .attributes)
-        self.childNodes = try container.decode([SerializedNode].self, forKey: .childNodes)
+        self.childNodes = try container.decodeIfPresent([SerializedNode].self, forKey: .childNodes) ?? []
     }
     
     func encode(to encoder: Encoder) throws {
@@ -188,11 +188,23 @@ class TextNodeData: SerializedNodeData {
     let textContent: String
     var childNodes: [SerializedNode] = []
     
+    enum CodingKeys: CodingKey {
+        case type, id, isStyle, textContent, childNodes
+    }
+    
     init(id: Int, isStyle: Bool, textContent: String, childNodes: [SerializedNode]) {
         self.id = id
         self.isStyle = isStyle
         self.textContent = textContent
         self.childNodes = childNodes
+    }
+    
+    required init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(Int.self, forKey: .id)
+        self.isStyle = try container.decode(Bool.self, forKey: .isStyle)
+        self.textContent = try container.decode(String.self, forKey: .textContent)
+        self.childNodes = try container.decodeIfPresent([SerializedNode].self, forKey: .childNodes) ?? []
     }
     
     func encode(to encoder: any Encoder) throws {

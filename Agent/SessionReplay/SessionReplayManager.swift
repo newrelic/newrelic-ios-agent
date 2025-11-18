@@ -132,55 +132,149 @@ public class SessionReplayManager: NSObject {
         let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
         let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
         
-        guard let upload = self.createReplayUpload(container: container,
-                                                   firstTimestamp: firstTimestamp,
-                                                   lastTimestamp: lastTimestamp) else {
+        let uploads = self.createReplayUpload(container: container,
+                                              firstTimestamp: firstTimestamp,
+                                              lastTimestamp: lastTimestamp)
+        
+        if uploads.isEmpty {
+            NRLOG_DEBUG("No uploads created from session replay data")
+            self.harvestseconds = 0
             return
         }
-        self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        
+        NRLOG_DEBUG("Enqueueing \(uploads.count) session replay upload(s)")
+        for upload in uploads {
+            self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        }
+        
         self.sessionReplay.isFirstChunk = false
         self.harvestseconds = 0
     }
     
-    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
+    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> [SessionReplayData] {
+        return chunkAndCreateUploads(
+            container: container,
+            isFirstChunkInBatch: self.sessionReplay.isFirstChunk,
+            urlComponents: nil
+        )
+    }
+    
+    // Shared chunking logic used by both createReplayUpload and processSessionReplayFile
+    private func chunkAndCreateUploads(
+        container: [AnyRRWebEvent],
+        isFirstChunkInBatch: Bool,
+        urlComponents: URLComponents?
+    ) -> [SessionReplayData] {
+        let maxCompressedSize = Int(kNRMAMaxPayloadSizeLimit)
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
 
-        // Encode container to JSON
-        var jsonData: Data
-        do {
-            jsonData = try encoder.encode(container)
-//            if let jsonString = String(data: jsonData, encoding: .utf8) {
-//                NRLOG_DEBUG(jsonString)
-//            }
-        } catch {
-            NRLOG_DEBUG("Failed to encode session replay events to JSON: \(error)")
-            return nil
+        var uploads: [SessionReplayData] = []
+        var currentIndex = 0
+        var isFirstChunk = isFirstChunkInBatch
+        
+        while currentIndex < container.count {
+            // Binary search for optimal chunk size
+            let bestChunkSize = findOptimalChunkSize(
+                container: container,
+                startIndex: currentIndex,
+                maxCompressedSize: maxCompressedSize,
+                encoder: encoder
+            )
+            
+            // Create chunk with best size
+            let chunkEnd = currentIndex + bestChunkSize
+            let chunk = Array(container[currentIndex..<chunkEnd])
+            
+            guard let jsonData = try? encoder.encode(chunk) else {
+                NRLOG_DEBUG("Failed to encode chunk")
+                currentIndex += bestChunkSize
+                continue
+            }
+            
+            let uncompressedDataSize = jsonData.count
+            var finalData = jsonData
+            
+            do {
+                let gzippedData = try jsonData.gzipped()
+                finalData = gzippedData
+            } catch {
+                NRLOG_DEBUG("Failed to gzip chunk: \(error.localizedDescription)")
+            }
+            
+            let chunkFirstTimestamp = TimeInterval(chunk.first?.base.timestamp ?? 0)
+            let chunkLastTimestamp = TimeInterval(chunk.last?.base.timestamp ?? 0)
+            
+            // Create URL based on whether we're modifying an existing URL or creating a new one
+            let url: URL?
+            if let urlComponents = urlComponents {
+                url = updateURLForChunk(
+                    urlComponents: urlComponents,
+                    uncompressedDataSize: uncompressedDataSize,
+                    firstTimestamp: chunkFirstTimestamp,
+                    lastTimestamp: chunkLastTimestamp,
+                    isFirstChunk: isFirstChunk,
+                    isGZipped: finalData.isGzipped
+                )
+            } else {
+                url = sessionReplayReporter.uploadURL(
+                    uncompressedDataSize: uncompressedDataSize,
+                    firstTimestamp: chunkFirstTimestamp,
+                    lastTimestamp: chunkLastTimestamp,
+                    isFirstChunk: isFirstChunk,
+                    isGZipped: finalData.isGzipped
+                )
+            }
+            
+            guard let validURL = url else {
+                NRLOG_ERROR("Failed to construct upload URL")
+                currentIndex += bestChunkSize
+                continue
+            }
+            
+            let dataSizeInMB = Double(finalData.count) / (1024.0 * 1024.0)
+            NRLOG_DEBUG("Created chunk with \(chunk.count) events, compressed size: \(String(format: "%.2f", dataSizeInMB)) MB")
+            NRLOG_DEBUG(validURL.absoluteString)
+            
+            uploads.append(SessionReplayData(sessionReplayFramesData: finalData, url: validURL))
+            isFirstChunk = false
+            currentIndex += bestChunkSize
         }
 
-        let uncompressedDataSize = jsonData.count
-
-        do {
-            let gzippedData = try jsonData.gzipped()
-            jsonData = gzippedData
-        } catch {
-            NRLOG_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
+        return uploads
+    }
+    
+    // Binary search to find optimal chunk size that fits within maxCompressedSize
+    private func findOptimalChunkSize(
+        container: [AnyRRWebEvent],
+        startIndex: Int,
+        maxCompressedSize: Int,
+        encoder: JSONEncoder
+    ) -> Int {
+        var low = 1
+        var high = container.count - startIndex
+        var bestChunkSize = 1
+        
+        while low <= high {
+            let mid = (low + high) / 2
+            let chunkEnd = startIndex + mid
+            let chunk = Array(container[startIndex..<chunkEnd])
+            
+            guard let jsonData = try? encoder.encode(chunk),
+                  let gzippedData = try? jsonData.gzipped() else {
+                high = mid - 1
+                continue
+            }
+            
+            if gzippedData.count <= maxCompressedSize {
+                bestChunkSize = mid
+                low = mid + 1
+            } else {
+                high = mid - 1
+            }
         }
-
-        // Construct upload URL
-        guard let url = sessionReplayReporter.uploadURL(
-            uncompressedDataSize: uncompressedDataSize,
-            firstTimestamp: firstTimestamp,
-            lastTimestamp: lastTimestamp,
-            isFirstChunk: self.sessionReplay.isFirstChunk,
-            isGZipped: jsonData.isGzipped
-        ) else {
-            NRLOG_ERROR("Failed to construct upload URL for session replay.")
-            return nil
-        }
-        NRLOG_DEBUG(url.absoluteString)
-
-        return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
+        
+        return bestChunkSize
     }
 
     // REPLAY PERSISTENCE
@@ -298,23 +392,55 @@ public class SessionReplayManager: NSObject {
                 NRLOG_ERROR("Failed to convert JSON string to data for session ID: \(sessionId)")
                 return
             }
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                NRLOG_DEBUG(jsonString)
-            }
 
             // END DATA CONSTRUCTION
 
-            var finalData = jsonData
-            do {
-                let gzippedData = try jsonData.gzipped()
-                finalData = gzippedData
-            } catch {
-                NRLOG_DEBUG("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
+            // Try to decode JSON into events for chunking
+            let decoder = JSONDecoder()
+            let container = try? decoder.decode([AnyRRWebEvent].self, from: jsonData)
+            
+            let uploads: [SessionReplayData]
+            
+            if let container = container,
+               let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+                // Extract isFirstChunk from the persisted URL
+                let isFirstChunkInBatch = extractIsFirstChunkFromURL(urlComponents: urlComponents)
+                
+                // Successfully decoded - use chunking logic with URL components from persisted file
+                uploads = chunkAndCreateUploads(
+                    container: container,
+                    isFirstChunkInBatch: isFirstChunkInBatch,
+                    urlComponents: urlComponents
+                )
+            } else {
+                // Failed to decode or parse URL - upload raw data as-is
+                NRLOG_DEBUG("Failed to decode or parse URL for session ID: \(sessionId), uploading raw data")
+                
+                // Compress the raw JSON data
+                var finalData = jsonData
+                do {
+                    let gzippedData = try jsonData.gzipped()
+                    finalData = gzippedData
+                } catch {
+                    NRLOG_DEBUG("Failed to gzip raw data: \(error.localizedDescription)")
+                }
+                
+                // Create single upload with raw data
+                let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
+                uploads = [upload]
             }
-
-            let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
-            sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-            NRLOG_DEBUG("Enqueued previous session replay for session ID: \(sessionId)")
+            
+            if uploads.isEmpty {
+                NRLOG_DEBUG("No uploads created from previous session replay for session ID: \(sessionId)")
+                try FileManager.default.removeItem(at: sessionDirectory)
+                try? FileManager.default.removeItem(at: urlFile)
+                return
+            }
+            
+            NRLOG_DEBUG("Enqueueing \(uploads.count) previous session replay upload(s) for session ID: \(sessionId)")
+            for upload in uploads {
+                sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+            }
 
             // Remove processed files
             try FileManager.default.removeItem(at: sessionDirectory)
@@ -330,6 +456,80 @@ public class SessionReplayManager: NSObject {
             return nil
         }
         return documentsDirectory.appendingPathComponent("SessionReplayFrames")
+    }
+    
+    // Helper method to extract isFirstChunk from URL
+    private func extractIsFirstChunkFromURL(urlComponents: URLComponents) -> Bool {
+        // Find the attributes query item and extract isFirstChunk
+        if let queryItems = urlComponents.queryItems,
+           let attributesItem = queryItems.first(where: { $0.name == "attributes" }),
+           let attributesValue = attributesItem.value {
+            
+            // Parse attributes
+            let pairs = attributesValue.components(separatedBy: "&")
+            for pair in pairs {
+                let keyValue = pair.components(separatedBy: "=")
+                if keyValue.count == 2 && keyValue[0] == "isFirstChunk" {
+                    return keyValue[1].lowercased() == "true"
+                }
+            }
+        }
+        
+        // Default to true if not found
+        return true
+    }
+    
+    // Helper method to update URL with chunk-specific parameters
+    private func updateURLForChunk(
+        urlComponents: URLComponents,
+        uncompressedDataSize: Int,
+        firstTimestamp: TimeInterval,
+        lastTimestamp: TimeInterval,
+        isFirstChunk: Bool,
+        isGZipped: Bool
+    ) -> URL? {
+        var components = urlComponents
+        
+        // Find the attributes query item and update it
+        if let queryItems = components.queryItems,
+           let attributesIndex = queryItems.firstIndex(where: { $0.name == "attributes" }),
+           let attributesValue = queryItems[attributesIndex].value {
+            
+            // Parse existing attributes
+            var attributesDict: [String: String] = [:]
+            let pairs = attributesValue.components(separatedBy: "&")
+            for pair in pairs {
+                let keyValue = pair.components(separatedBy: "=")
+                if keyValue.count == 2 {
+                    attributesDict[keyValue[0]] = keyValue[1]
+                }
+            }
+            
+            // Update chunk-specific attributes
+            attributesDict["isFirstChunk"] = String(isFirstChunk)
+            attributesDict["decompressedBytes"] = String(uncompressedDataSize)
+            attributesDict["replay.firstTimestamp"] = String(Int(firstTimestamp))
+            attributesDict["replay.lastTimestamp"] = String(Int(lastTimestamp))
+            
+            // Update or remove content_encoding based on isGZipped
+            if isGZipped {
+                attributesDict["content_encoding"] = "gzip"
+            } else {
+                attributesDict.removeValue(forKey: "content_encoding")
+            }
+            
+            // Reconstruct attributes string
+            let newAttributesString = attributesDict.map { key, value in
+                return "\(key)=\(value)"
+            }.joined(separator: "&")
+            
+            // Update the query items
+            var newQueryItems = queryItems
+            newQueryItems[attributesIndex] = URLQueryItem(name: "attributes", value: newAttributesString)
+            components.queryItems = newQueryItems
+        }
+        
+        return components.url
     }
 }
 
