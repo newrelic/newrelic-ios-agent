@@ -205,7 +205,7 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
             }
 
             [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:deferredMetricName
-                                                            value:[NSNumber numberWithLongLong:1]
+                                                            value:metric.value
                                                             scope:@""
                                                   produceUnscoped:YES
                                                   additionalValue:nil]];

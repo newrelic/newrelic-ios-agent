@@ -153,6 +153,7 @@
 
     XCTAssertThrows([mockUploader verify]);
 
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
 
     NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
@@ -178,6 +179,7 @@
     NSData *fakeData = [NRMAFakeDataHelper makeDataDictionary:21000];
     XCTAssertNoThrow([(NRMAHexUploader*)mockUploader sendData:fakeData]);
     
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];
