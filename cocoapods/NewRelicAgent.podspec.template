@@ -7,8 +7,8 @@ Pod::Spec.new do |s|
   s.license                = { :type => "Commercial", :file => "LICENSE" }
   s.author                 = { "New Relic, Inc." => "support@newrelic.com" }
   s.source                 = { :http => "https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agent_X.XX.zip" }
-  s.ios.deployment_target  = '9.0'
-  s.tvos.deployment_target = '9.0'
+  s.ios.deployment_target  = '16.0'
+  s.tvos.deployment_target = '16.0'
   s.watchos.deployment_target = '10.0'
   s.vendored_frameworks    = "NewRelic.xcframework"
   s.preserve_paths         = "*.xcframework"

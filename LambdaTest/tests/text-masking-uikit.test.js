@@ -13,357 +13,232 @@
  */
 
 describe("Text Masking (UIKit) Screen", () => {
-  it("Should navigate to Text Masking screen and verify title", async () => {
-    // Wait for the app to load on MainScreen
-    await driver.setTimeouts(5000);
-
-    // Wait for MainScreen to be visible
-    const helloWorldText = await $("~public");
-    await helloWorldText.waitForExist({ timeout: 30000 });
-    await driver.setTimeouts(2000);
-
+  it("Should navigate to Text Masking screen and test all fields with text input", async () => {
     // Navigate to Text Masking screen
+    const helloWorldText = await $("~public");
+    await helloWorldText.waitForExist({ timeout: 10000 });
+
     const textMaskingButton = await $("~Text Masking");
-    await textMaskingButton.waitForExist({ timeout: 30000 });
+    await textMaskingButton.waitForExist({ timeout: 3000 });
     await textMaskingButton.click();
-    await driver.setTimeouts(3000);
 
-    // Verify we're on Text Masking screen by checking navigation bar title
+    // Verify we're on Text Masking screen
     const textMaskingTitle = await $("~Text Masking");
-    await textMaskingTitle.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
-  });
+    await textMaskingTitle.waitForExist({ timeout: 3000 });
 
-  it("Should verify search and credentials fields section", async () => {
-    // Verify section header
+
+    // Test Search & Credentials Fields section with text input
     const sectionHeader = await $("~Search & Credentials Fields");
-    await sectionHeader.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await sectionHeader.waitForExist({ timeout: 3000 });
 
-    // Test Search Field (masked)
+    // Enter text in Search Field (masked)
     const searchField = await $('//XCUIElementTypeSearchField[@name="Search query (masked)"]');
-    await searchField.waitForExist({ timeout: 10000 });
+    await searchField.waitForExist({ timeout: 3000 });
     await searchField.click();
-    await driver.setTimeouts(500);
-    // Dismiss keyboard
+    await searchField.setValue("confidential search query");
     await sectionHeader.click();
-    await driver.setTimeouts(500);
 
-    // Test Username Field (unmasked)
+    // Enter text in Username Field (unmasked)
     const usernameField = await $('//XCUIElementTypeTextField[@value="Username (unmasked)"]');
-    await usernameField.waitForExist({ timeout: 10000 });
+    await usernameField.waitForExist({ timeout: 3000 });
     await usernameField.click();
-    await driver.setTimeouts(500);
+    await usernameField.setValue("john.doe@example.com");
     await sectionHeader.click();
-    await driver.setTimeouts(500);
 
-    // Test Password Field (masked)
+    // Enter text in Password Field (masked)
     const passwordField = await $('//XCUIElementTypeSecureTextField[@value="Password (masked)"]');
-    await passwordField.waitForExist({ timeout: 10000 });
+    await passwordField.waitForExist({ timeout: 3000 });
     await passwordField.click();
-    await driver.setTimeouts(500);
+    await passwordField.setValue("SecureP@ssw0rd123");
     await sectionHeader.click();
-    await driver.setTimeouts(500);
 
-    // Test Credit Card Field (masked)
+    // Enter text in Credit Card Field (masked)
     const creditCardField = await $('//XCUIElementTypeTextField[@value="Credit Card Number (masked)"]');
-    await creditCardField.waitForExist({ timeout: 10000 });
+    await creditCardField.waitForExist({ timeout: 3000 });
     await creditCardField.click();
-    await driver.setTimeouts(500);
+    await creditCardField.setValue("4532-1234-5678-9012");
     await sectionHeader.click();
-    await driver.setTimeouts(500);
 
-    // Test CVV Field (masked)
+    // Enter text in CVV Field (masked)
     const cvvField = await $('//XCUIElementTypeSecureTextField[@value="CVV (masked)"]');
-    await cvvField.waitForExist({ timeout: 10000 });
+    await cvvField.waitForExist({ timeout: 3000 });
     await cvvField.click();
-    await driver.setTimeouts(500);
+    await cvvField.setValue("987");
     await sectionHeader.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should verify masked fields section with labels", async () => {
-    // Verify section header
+
+    // Test Masked Fields section with text input
     const maskedFieldsHeader = await $("~Masked Fields");
-    await maskedFieldsHeader.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await maskedFieldsHeader.waitForExist({ timeout: 3000 });
 
-    // Verify Masked UILabels (1-4)
-    const maskedLabel1 = await $("~Masked Fields UILabel 1");
-    await maskedLabel1.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    // Verify Masked UILabels exist (1-4)
+    await $("~Masked Fields UILabel 1").waitForExist({ timeout: 3000 });
+    await $("~Masked Fields UILabel 2").waitForExist({ timeout: 3000 });
+    await $("~Masked Fields UILabel 3").waitForExist({ timeout: 3000 });
+    await $("~Masked Fields UILabel 4").waitForExist({ timeout: 3000 });
 
-    const maskedLabel2 = await $("~Masked Fields UILabel 2");
-    await maskedLabel2.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-
-    const maskedLabel3 = await $("~Masked Fields UILabel 3");
-    await maskedLabel3.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-
-    const maskedLabel4 = await $("~Masked Fields UILabel 4");
-    await maskedLabel4.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-  });
-
-  it("Should verify masked fields section with text fields", async () => {
-    // Test Masked UITextFields (1-4)
+    // Enter text in all Masked UITextFields (1-4)
     const maskedTextField1 = await $('//XCUIElementTypeTextField[@value="Masked Fields UITextField 1"]');
-    await maskedTextField1.waitForExist({ timeout: 10000 });
+    await maskedTextField1.waitForExist({ timeout: 3000 });
     await maskedTextField1.click();
-    await driver.setTimeouts(500);
-
-    const maskedFieldsHeader = await $("~Masked Fields");
+    await maskedTextField1.setValue("Private data field 1");
     await maskedFieldsHeader.click();
-    await driver.setTimeouts(500);
 
     const maskedTextField2 = await $('//XCUIElementTypeTextField[@value="Masked Fields UITextField 2"]');
-    await maskedTextField2.waitForExist({ timeout: 10000 });
+    await maskedTextField2.waitForExist({ timeout: 3000 });
     await maskedTextField2.click();
-    await driver.setTimeouts(500);
+    await maskedTextField2.setValue("SSN: 123-45-6789");
     await maskedFieldsHeader.click();
-    await driver.setTimeouts(500);
 
     const maskedTextField3 = await $('//XCUIElementTypeTextField[@value="Masked Fields UITextField 3"]');
-    await maskedTextField3.waitForExist({ timeout: 10000 });
+    await maskedTextField3.waitForExist({ timeout: 3000 });
     await maskedTextField3.click();
-    await driver.setTimeouts(500);
+    await maskedTextField3.setValue("API Key: sk_live_abc123xyz");
     await maskedFieldsHeader.click();
-    await driver.setTimeouts(500);
 
     const maskedTextField4 = await $('//XCUIElementTypeTextField[@value="Masked Fields UITextField 4"]');
-    await maskedTextField4.waitForExist({ timeout: 10000 });
+    await maskedTextField4.waitForExist({ timeout: 3000 });
     await maskedTextField4.click();
-    await driver.setTimeouts(500);
+    await maskedTextField4.setValue("Bank Account: 987654321");
     await maskedFieldsHeader.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should verify masked fields section with text views", async () => {
-    // Test Masked UITextViews (1-2 visible)
+    // Enter text in Masked UITextViews (1-2)
     const maskedTextView1 = await $('//XCUIElementTypeTextView[@value="Masked Fields UITextView 1"]');
-    await maskedTextView1.waitForExist({ timeout: 10000 });
+    await maskedTextView1.waitForExist({ timeout: 3000 });
     await maskedTextView1.click();
-    await driver.setTimeouts(500);
-
-    const maskedFieldsHeader = await $("~Masked Fields");
+    await maskedTextView1.setValue("Confidential multiline text with sensitive information line 1\nLine 2 contains secret data");
     await maskedFieldsHeader.click();
-    await driver.setTimeouts(500);
 
     const maskedTextView2 = await $('//XCUIElementTypeTextView[@value="Masked Fields UITextView 2"]');
-    await maskedTextView2.waitForExist({ timeout: 10000 });
+    await maskedTextView2.waitForExist({ timeout: 3000 });
     await maskedTextView2.click();
-    await driver.setTimeouts(500);
+    await maskedTextView2.setValue("Private notes:\nMeeting at 3pm\nDiscuss Q4 financials");
     await maskedFieldsHeader.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should scroll down and verify unmasked fields section", async () => {
-    // Scroll down to access unmasked fields
+
+    // Scroll down to test Unmasked Fields section
     await driver.execute('mobile: scroll', { direction: 'down' });
-    await driver.setTimeouts(2000);
 
-    // Verify section header
     const unmaskedFieldsHeader = await $("~Unmasked Fields");
-    await unmaskedFieldsHeader.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await unmaskedFieldsHeader.waitForExist({ timeout: 3000 });
 
-    // Verify Unmasked UILabels (1-4)
-    const unmaskedLabel1 = await $("~Unmasked Fields UILabel 1");
-    await unmaskedLabel1.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    // Verify Unmasked UILabels exist (1-4)
+    await $("~Unmasked Fields UILabel 1").waitForExist({ timeout: 3000 });
+    await $("~Unmasked Fields UILabel 2").waitForExist({ timeout: 3000 });
+    await $("~Unmasked Fields UILabel 3").waitForExist({ timeout: 3000 });
+    await $("~Unmasked Fields UILabel 4").waitForExist({ timeout: 3000 });
 
-    const unmaskedLabel2 = await $("~Unmasked Fields UILabel 2");
-    await unmaskedLabel2.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-
-    const unmaskedLabel3 = await $("~Unmasked Fields UILabel 3");
-    await unmaskedLabel3.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-
-    const unmaskedLabel4 = await $("~Unmasked Fields UILabel 4");
-    await unmaskedLabel4.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-  });
-
-  it("Should verify unmasked text fields", async () => {
-    // Test Unmasked UITextFields
+    // Enter text in Unmasked UITextFields
     const unmaskedTextField1 = await $('//XCUIElementTypeTextField[@value="Unmasked Fields UITextField 1"]');
-    await unmaskedTextField1.waitForExist({ timeout: 10000 });
+    await unmaskedTextField1.waitForExist({ timeout: 3000 });
     await unmaskedTextField1.click();
-    await driver.setTimeouts(500);
-
-    const unmaskedFieldsHeader = await $("~Unmasked Fields");
+    await unmaskedTextField1.setValue("Public information field 1");
     await unmaskedFieldsHeader.click();
-    await driver.setTimeouts(500);
 
     const unmaskedTextField2 = await $('//XCUIElementTypeTextField[@value="Unmasked Fields UITextField 2"]');
-    await unmaskedTextField2.waitForExist({ timeout: 10000 });
+    await unmaskedTextField2.waitForExist({ timeout: 3000 });
     await unmaskedTextField2.click();
-    await driver.setTimeouts(500);
+    await unmaskedTextField2.setValue("Company: Acme Corp");
     await unmaskedFieldsHeader.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should scroll down and verify custom masked fields section", async () => {
-    // Scroll down more
+
+    // Scroll down to test Custom Masked Fields section
     await driver.execute('mobile: scroll', { direction: 'down' });
-    await driver.setTimeouts(2000);
 
-    // Verify section header
     const customMaskedHeader = await $("~Custom Masked Fields");
-    await customMaskedHeader.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await customMaskedHeader.waitForExist({ timeout: 3000 });
 
     // Verify Custom Masked UILabels (with 'private' accessibility ID)
-    const customMaskedLabel1 = await $("~Custom Masked Fields UILabel 1");
-    await customMaskedLabel1.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await $("~Custom Masked Fields UILabel 1").waitForExist({ timeout: 3000 });
+    await $("~Custom Masked Fields UILabel 2").waitForExist({ timeout: 3000 });
 
-    const customMaskedLabel2 = await $("~Custom Masked Fields UILabel 2");
-    await customMaskedLabel2.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-
-    // Test Custom Masked TextField
+    // Enter text in Custom Masked TextField
     const customMaskedTextField1 = await $('//XCUIElementTypeTextField[@value="Custom Masked Fields UITextField 1"]');
-    await customMaskedTextField1.waitForExist({ timeout: 10000 });
+    await customMaskedTextField1.waitForExist({ timeout: 3000 });
     await customMaskedTextField1.click();
-    await driver.setTimeouts(500);
+    await customMaskedTextField1.setValue("Custom private ID: xyz-789");
     await customMaskedHeader.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should scroll down and verify custom unmasked fields section", async () => {
-    // Scroll down more
+    // Scroll down to test Custom Unmasked Fields section
     await driver.execute('mobile: scroll', { direction: 'down' });
-    await driver.setTimeouts(2000);
 
-    // Verify section header
     const customUnmaskedHeader = await $("~Custom Unmasked Fields");
-    await customUnmaskedHeader.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await customUnmaskedHeader.waitForExist({ timeout: 3000 });
 
     // Verify Custom Unmasked UILabels (with 'public' accessibility ID)
-    const customUnmaskedLabel1 = await $("~Custom Unmasked Fields UILabel 1");
-    await customUnmaskedLabel1.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await $("~Custom Unmasked Fields UILabel 1").waitForExist({ timeout: 3000 });
+    await $("~Custom Unmasked Fields UILabel 2").waitForExist({ timeout: 3000 });
 
-    const customUnmaskedLabel2 = await $("~Custom Unmasked Fields UILabel 2");
-    await customUnmaskedLabel2.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-
-    // Test Custom Unmasked TextField
+    // Enter text in Custom Unmasked TextField
     const customUnmaskedTextField1 = await $('//XCUIElementTypeTextField[@value="Custom Unmasked Fields UITextField 1"]');
-    await customUnmaskedTextField1.waitForExist({ timeout: 10000 });
+    await customUnmaskedTextField1.waitForExist({ timeout: 3000 });
     await customUnmaskedTextField1.click();
-    await driver.setTimeouts(500);
+    await customUnmaskedTextField1.setValue("Custom public reference: REF-456");
     await customUnmaskedHeader.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should scroll down and verify parent-child relationship section", async () => {
-    // Scroll down more
+
+    // Scroll down to test Parent-Child Relationship section
     await driver.execute('mobile: scroll', { direction: 'down' });
-    await driver.setTimeouts(2000);
 
-    // Verify section header
     const parentChildHeader = await $("~Parent-Child Relationship");
-    await parentChildHeader.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await parentChildHeader.waitForExist({ timeout: 3000 });
 
-    // Verify description text
-    const descriptionText = await $("~Testing masked accessibility identifier propagation to child views");
-    await descriptionText.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await $("~Testing masked accessibility identifier propagation to child views").waitForExist({ timeout: 3000 });
 
-    // Verify Masked Parent View
+    // Test Masked Parent View
     const maskedParentView = await $("~Masked Parent View");
-    await maskedParentView.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await maskedParentView.waitForExist({ timeout: 3000 });
 
-    // Verify child elements within masked parent
-    const childLabel1 = await $("~child-label-1");
-    await childLabel1.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await $("~child-label-1").waitForExist({ timeout: 3000 });
 
     const childButton1 = await $("~child-button-1");
-    await childButton1.waitForExist({ timeout: 10000 });
+    await childButton1.waitForExist({ timeout: 3000 });
     await childButton1.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should verify unmasked parent view in parent-child section", async () => {
-    // Scroll down a bit more
+    // Scroll down to test Unmasked Parent View
     await driver.execute('mobile: scroll', { direction: 'down' });
-    await driver.setTimeouts(2000);
 
-    // Verify Unmasked Parent View
     const unmaskedParentView = await $("~Unmasked Parent View");
-    await unmaskedParentView.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await unmaskedParentView.waitForExist({ timeout: 3000 });
 
-    // Verify child elements within unmasked parent (same selectors, different context)
-    const childLabel2 = await $("~child-label-2");
-    await childLabel2.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await $("~child-label-2").waitForExist({ timeout: 3000 });
 
     const childButton2 = await $("~child-button-2");
-    await childButton2.waitForExist({ timeout: 10000 });
+    await childButton2.waitForExist({ timeout: 3000 });
     await childButton2.click();
-    await driver.setTimeouts(500);
-  });
 
-  it("Should scroll down and verify table view masking test", async () => {
-    // Scroll down more
+    // Scroll down to test TableView Masking
     await driver.execute('mobile: scroll', { direction: 'down' });
-    await driver.setTimeouts(2000);
 
-    // Verify section header
     const tableViewHeader = await $("~TableView Masking Test");
-    await tableViewHeader.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await tableViewHeader.waitForExist({ timeout: 3000 });
 
-    // Verify description
-    const tableViewDescription = await $("~Testing masking propagation in TableView hierarchy");
-    await tableViewDescription.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    await $("~Testing masking propagation in TableView hierarchy").waitForExist({ timeout: 3000 });
 
-    // Verify table cell elements
-    const title1 = await $("~Title 1");
-    await title1.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
+    // Verify and interact with table cell elements
+    await $("~Title 1").waitForExist({ timeout: 3000 });
+    await $("~Subtitle 1").waitForExist({ timeout: 3000 });
 
-    const subtitle1 = await $("~Subtitle 1");
-    await subtitle1.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(500);
-
-    // Test Action button in first cell
     const actionButton = await $("~Action");
-    await actionButton.waitForExist({ timeout: 10000 });
+    await actionButton.waitForExist({ timeout: 3000 });
     await actionButton.click();
-    await driver.setTimeouts(500);
   });
 
   it("Should navigate back to MainScreen", async () => {
-    // Scroll back to top
+    // Scroll back to top quickly
     await driver.execute('mobile: scroll', { direction: 'up' });
-    await driver.setTimeouts(1000);
     await driver.execute('mobile: scroll', { direction: 'up' });
-    await driver.setTimeouts(1000);
     await driver.execute('mobile: scroll', { direction: 'up' });
-    await driver.setTimeouts(1000);
 
-    // // Navigate back using back button
+    // Navigate back
     await driver.back();
-    await driver.setTimeouts(2000);
 
     // Verify we're back on MainScreen
     const helloWorldText = await $("~public");
-    await helloWorldText.waitForExist({ timeout: 10000 });
-    await driver.setTimeouts(1000);
+    await helloWorldText.waitForExist({ timeout: 3000 });
 
     // Put app in background to trigger any pending events
     await driver.activateApp('com.apple.Preferences');
-    await driver.setTimeouts(5000);
+    await driver.pause(1000);
   });
 });
