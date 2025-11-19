@@ -100,7 +100,7 @@ public class SessionReplayManager: NSObject {
         harvestseconds += 1
         sessionReplay.takeFrame()
         
-        if harvestseconds == harvestPeriod {
+        if harvestseconds >= harvestPeriod {
             harvest()
         }
     }
@@ -314,141 +314,97 @@ public class SessionReplayManager: NSObject {
     }
 
     private func processSessionReplayFile(sessionId: String, directory: URL) {
-        let urlFile = directory.appendingPathComponent("\(sessionId)_upload_url.txt")
-
         do {
             NRLOG_DEBUG("Processing session replay for session ID: \(sessionId)")
-
-            // BEGIN URL CONSTRUCTION
-
-            guard let urlString = try? String(contentsOf: urlFile),
-                  let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-                NRLOG_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
-                return
-            }
-            NRLOG_DEBUG(url.absoluteString)
-
-            // END URL CONSTRUCTION
-
-            // BEGIN DATA CONSTRUCTION
-
-            // Find all frame files for this session
-            let sessionDirectory = directory.appendingPathComponent(sessionId)
-            guard FileManager.default.fileExists(atPath: sessionDirectory.path) else {
-                NRLOG_DEBUG("Session directory not found for session ID: \(sessionId)")
-                return
-            }
-
-            let frameFiles = try FileManager.default.contentsOfDirectory(at: sessionDirectory, includingPropertiesForKeys: nil)
-                .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("frame_") }
-                .sorted { (url1, url2) -> Bool in
-                    let name1 = url1.deletingPathExtension().lastPathComponent
-                    let name2 = url2.deletingPathExtension().lastPathComponent
-
-                    let number1 = Int(name1.replacingOccurrences(of: "frame_", with: "")) ?? 0
-                    let number2 = Int(name2.replacingOccurrences(of: "frame_", with: "")) ?? 0
-
-                    return number1 < number2
-                }
-
-            if frameFiles.isEmpty {
-                NRLOG_DEBUG("No frame files found for session ID: \(sessionId)")
-                try? FileManager.default.removeItem(at: urlFile)
-                try? FileManager.default.removeItem(at: sessionDirectory)
-                return
-            }
-
-            // Read and combine all frame files
-            var frameContents: [String] = []
-            for frameFile in frameFiles {
-                do {
-                    // remove outer [] from frameFile if they exist
-                    let frameContent = try String(contentsOf: frameFile).trimmingCharacters(in: .whitespacesAndNewlines)
-
-                    var frameContentWithOuterBracketsRemoved = frameContent
-                    if frameContent.hasPrefix("[") && frameContent.hasSuffix("]") {
-                        frameContentWithOuterBracketsRemoved = String(frameContent.dropFirst().dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
-                    }
-                    if !frameContentWithOuterBracketsRemoved.isEmpty {
-                        frameContents.append(frameContentWithOuterBracketsRemoved)
-                    }
-                } catch {
-                    NRLOG_DEBUG("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
-                }
-            }
-
-            if frameContents.isEmpty {
-                NRLOG_DEBUG("No valid frame content found for session ID: \(sessionId)")
-                try FileManager.default.removeItem(at: sessionDirectory)
-                try? FileManager.default.removeItem(at: urlFile)
-                return
-            }
-
-            // Construct JSON array from frame contents
-
-            let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
-
-            guard let jsonData = jsonArrayString.data(using: .utf8) else {
-                NRLOG_ERROR("Failed to convert JSON string to data for session ID: \(sessionId)")
-                return
-            }
-
-            // END DATA CONSTRUCTION
-
-            // Try to decode JSON into events for chunking
-            let decoder = JSONDecoder()
-            let container = try? decoder.decode([AnyRRWebEvent].self, from: jsonData)
             
-            let uploads: [SessionReplayData]
-            
-            if let container = container,
-               let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) {
-                // Extract isFirstChunk from the persisted URL
-                let isFirstChunkInBatch = extractIsFirstChunkFromURL(urlComponents: urlComponents)
-                
-                // Successfully decoded - use chunking logic with URL components from persisted file
-                uploads = chunkAndCreateUploads(
-                    container: container,
-                    isFirstChunkInBatch: isFirstChunkInBatch,
-                    urlComponents: urlComponents
-                )
-            } else {
-                // Failed to decode or parse URL - upload raw data as-is
-                NRLOG_DEBUG("Failed to decode or parse URL for session ID: \(sessionId), uploading raw data")
-                
-                // Compress the raw JSON data
-                var finalData = jsonData
-                do {
-                    let gzippedData = try jsonData.gzipped()
-                    finalData = gzippedData
-                } catch {
-                    NRLOG_DEBUG("Failed to gzip raw data: \(error.localizedDescription)")
-                }
-                
-                // Create single upload with raw data
-                let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
-                uploads = [upload]
-            }
-            
-            if uploads.isEmpty {
-                NRLOG_DEBUG("No uploads created from previous session replay for session ID: \(sessionId)")
-                try FileManager.default.removeItem(at: sessionDirectory)
-                try? FileManager.default.removeItem(at: urlFile)
+            // Load URL and events
+            guard let url = try loadSessionURL(sessionId: sessionId, directory: directory),
+                  let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+                NRLOG_DEBUG("No valid URL found for session ID: \(sessionId)")
+                cleanupSessionFiles(sessionId: sessionId, directory: directory)
                 return
             }
             
-            NRLOG_DEBUG("Enqueueing \(uploads.count) previous session replay upload(s) for session ID: \(sessionId)")
-            for upload in uploads {
-                sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+            let container = try loadSessionEvents(sessionId: sessionId, directory: directory)
+            
+            guard !container.isEmpty else {
+                NRLOG_DEBUG("No valid events found for session ID: \(sessionId)")
+                cleanupSessionFiles(sessionId: sessionId, directory: directory)
+                return
             }
-
-            // Remove processed files
-            try FileManager.default.removeItem(at: sessionDirectory)
-            try? FileManager.default.removeItem(at: urlFile)
-
+            
+            // Create uploads with existing chunking logic
+            let isFirstChunkInBatch = extractIsFirstChunkFromURL(urlComponents: urlComponents)
+            let uploads = chunkAndCreateUploads(
+                container: container,
+                isFirstChunkInBatch: isFirstChunkInBatch,
+                urlComponents: urlComponents
+            )
+            
+            guard !uploads.isEmpty else {
+                NRLOG_DEBUG("No uploads created for session ID: \(sessionId)")
+                cleanupSessionFiles(sessionId: sessionId, directory: directory)
+                return
+            }
+            
+            // Enqueue and cleanup
+            NRLOG_DEBUG("Enqueueing \(uploads.count) previous session replay upload(s)")
+            uploads.forEach { sessionReplayReporter.enqueueSessionReplayUpload(upload: $0) }
+            
+            cleanupSessionFiles(sessionId: sessionId, directory: directory)
+            
         } catch {
-            NRLOG_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
+            NRLOG_DEBUG("Failed to process session replay for \(sessionId): \(error)")
         }
+    }
+
+    private func loadSessionURL(sessionId: String, directory: URL) throws -> URL? {
+        let urlFile = directory.appendingPathComponent("\(sessionId)_upload_url.txt")
+        guard let urlString = try? String(contentsOf: urlFile),
+              let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return nil
+        }
+        return url
+    }
+
+    private func loadSessionEvents(sessionId: String, directory: URL) throws -> [AnyRRWebEvent] {
+        let sessionDirectory = directory.appendingPathComponent(sessionId)
+        
+        let frameFiles = try FileManager.default.contentsOfDirectory(
+            at: sessionDirectory,
+            includingPropertiesForKeys: nil
+        )
+        .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("frame_") }
+        .sorted { extractFrameNumber($0) < extractFrameNumber($1) }
+        
+        // Decode each frame file directly and combine
+        let decoder = JSONDecoder()
+        var allEvents: [AnyRRWebEvent] = []
+        
+        for frameFile in frameFiles {
+            do {
+                let data = try Data(contentsOf: frameFile)
+                let events = try decoder.decode([AnyRRWebEvent].self, from: data)
+                allEvents.append(contentsOf: events)
+            } catch {
+                NRLOG_DEBUG("Skipping invalid frame file \(frameFile.lastPathComponent): \(error)")
+            }
+        }
+        
+        return allEvents
+    }
+
+    private func extractFrameNumber(_ url: URL) -> Int {
+        let name = url.deletingPathExtension().lastPathComponent
+        return Int(name.replacingOccurrences(of: "frame_", with: "")) ?? 0
+    }
+
+    private func cleanupSessionFiles(sessionId: String, directory: URL) {
+        let sessionDirectory = directory.appendingPathComponent(sessionId)
+        let urlFile = directory.appendingPathComponent("\(sessionId)_upload_url.txt")
+        
+        try? FileManager.default.removeItem(at: sessionDirectory)
+        try? FileManager.default.removeItem(at: urlFile)
     }
     
     private func getSessionReplayDirectory() -> URL? {
