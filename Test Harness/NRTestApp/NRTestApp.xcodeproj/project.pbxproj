@@ -106,6 +106,7 @@
 		F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
 		F84EEFB62E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
 		F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
+		F85CEDDF2ECE1DBE004A314F /* SocialMediaFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */; };
 		F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */; };
 		F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428472971C661002ABA01 /* UtilViewModel.swift */; };
 		F864284C2971DFA5002ABA01 /* triggerException.m in Sources */ = {isa = PBXBuildFile; fileRef = F864284B2971DFA5002ABA01 /* triggerException.m */; };
@@ -391,6 +392,7 @@
 		F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_Tests.swift; sourceTree = "<group>"; };
 		F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_TestsLaunchTests.swift; sourceTree = "<group>"; };
 		F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLabel.swift; sourceTree = "<group>"; };
+		F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialMediaFeedView.swift; sourceTree = "<group>"; };
 		F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesViewController.swift; sourceTree = "<group>"; };
 		F86428472971C661002ABA01 /* UtilViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilViewModel.swift; sourceTree = "<group>"; };
 		F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NRTestApp-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -472,6 +474,7 @@
 			children = (
 				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
 				2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */,
+				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
 				F8672A552EAA69820055FA51 /* SimpleScrollView.swift */,
@@ -1199,6 +1202,7 @@
 				2BAE5C922E860C7D001D2B88 /* ListsView.swift in Sources */,
 				2BAE5C932E860C7D001D2B88 /* PickersView.swift in Sources */,
 				2BAE5C942E860C7D001D2B88 /* SegmentedControlsView.swift in Sources */,
+				F85CEDDF2ECE1DBE004A314F /* SocialMediaFeedView.swift in Sources */,
 				2BAE5C952E860C7D001D2B88 /* GridsView.swift in Sources */,
 				2BAE5C962E860C7D001D2B88 /* TextFieldsView.swift in Sources */,
 				2BAE5C972E860C7D001D2B88 /* DatePickersView.swift in Sources */,
