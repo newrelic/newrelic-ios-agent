@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "NewRelic",
     platforms: [
-        .iOS(.v12), .macOS(.v10_14), .tvOS(.v12), .watchOS(.v10)
+        .iOS(.v16), .macOS(.v10_14), .tvOS(.v16), .watchOS(.v10)
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
