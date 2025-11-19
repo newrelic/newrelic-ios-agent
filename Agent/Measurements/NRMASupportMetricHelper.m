@@ -208,7 +208,7 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
                                                             value:metric.value
                                                             scope:@""
                                                   produceUnscoped:YES
-                                                  additionalValue:nil]];
+                                                  additionalValue:metric.additionalValue]];
         }
 
         [deferredMetrics removeAllObjects];
