@@ -15,6 +15,7 @@
 #import "NRMATaskQueue.h"
 #import "NRMAMeasurementEngine.h"
 #import "NRMAFakeDataHelper.h"
+#import "NRMASupportMetricHelper.h"
 
 @implementation NRMAHarvesterConnectionTests
 
@@ -29,6 +30,9 @@
     connection = [[NRMAHarvesterConnection alloc] init];
     connection.applicationToken = @"app token";
     connection.connectionInformation = [NRMAAgentConfiguration connectionInformation];
+    
+    [NRMASupportMetricHelper processDeferredMetrics];
+
 }
 
 - (void) tearDown {
@@ -118,6 +122,7 @@
     XCTAssertNotNil(response, @"");
     XCTAssertEqual(ENTITY_TOO_LARGE,response.statusCode, @"");
     
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];
@@ -159,6 +164,7 @@
     XCTAssertNotNil(response, @"");
     XCTAssertEqual(ENTITY_TOO_LARGE, response.statusCode, @"");
     
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];
@@ -304,6 +310,7 @@
 
     [connection sendData: [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native]];
 
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
 
     XCTAssertTrue([helper.result isKindOfClass:[NRMANamedValueMeasurement class]], @"The result is not a named value.");

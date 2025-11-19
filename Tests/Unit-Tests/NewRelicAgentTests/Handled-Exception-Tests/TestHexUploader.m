@@ -18,6 +18,7 @@
 #import "NRMAMeasurements.h"
 #import "NewRelicInternalUtils.h"
 #import "NewRelic.h"
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAHexUploader ()
 - (void) handledErroredRequest:(NSURLRequest*)request;
@@ -43,6 +44,8 @@
     helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:helper];
+    
+    [NRMASupportMetricHelper processDeferredMetrics];
 }
 
 - (void)tearDown {
