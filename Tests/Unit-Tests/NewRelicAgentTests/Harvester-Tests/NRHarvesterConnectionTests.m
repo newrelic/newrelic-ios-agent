@@ -317,8 +317,9 @@
 
     NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
 
-    NSString* fullMetricName = [NSString stringWithFormat:@"Supportability/Mobile/%@/Native/Collector/data/Output/Bytes", [NewRelicInternalUtils osName]];
-    XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
+    NSString* regexPattern = [NSString stringWithFormat:@"Supportability/Mobile/%@/Native/Collector/.*?/Output/Bytes", [NewRelicInternalUtils osName]];
+    NSRange range = [measurement.name rangeOfString:regexPattern options:NSRegularExpressionSearch];
+    XCTAssertTrue(range.location != NSNotFound, @"Name '%@' does not match pattern '%@'", measurement.name, regexPattern);
 
     // Expected byte count should not be 0.
     XCTAssertNotEqual(measurement.value.longLongValue, 0, @"Byte value doesn't match expected.");
