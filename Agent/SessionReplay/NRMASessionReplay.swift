@@ -226,14 +226,33 @@ public class NRMASessionReplay: NSObject {
         return touches
     }
 
+    // Get only touches that haven't been persisted yet for file persistence
+    func getUnpersistedTouches() -> [IncrementalEvent] {
+        guard let touchCapture = sessionReplayTouchCapture else {
+            NRLOG_DEBUG("sessionReplayTouchCapture is nil in getUnpersistedTouches")
+            return []
+        }
+        
+        // Filter to only unpersisted touches
+        let unpersistedTouchEvents = touchCapture.touchEvents.filter { !$0.isPersisted }
+        
+        // Process only the unpersisted touches
+        let processedTouches = sessionReplayTouchProcessor.processTouches(unpersistedTouchEvents)
+        
+        // Mark these touches as persisted
+        unpersistedTouchEvents.forEach { $0.isPersisted = true }
+        
+        return processedTouches
+    }
 
     /// REPLAY PERSISTENCE
 
 
     func processFrameToFile(_ frame: SessionReplayFrame) {
-        // Fetch processed frame and touches during frame
+        // Fetch processed frame and only unpersisted touches
+        let lastFrameSize = sessionReplayFrameProcessor.lastFullFrame?.size ?? .zero
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
-        let processedTouches = self.getSessionReplayTouches(clear: false)
+        let processedTouches = self.getUnpersistedTouches()
         
         guard let firstFrame = rawFrames.first else {
             return
@@ -243,13 +262,17 @@ public class NRMASessionReplay: NSObject {
 
         var container: [AnyRRWebEvent] = []
 
-        let metaEventData = RRWebMetaData(
-            href: "http://newrelic.com",
-            width: Int(frame.size.width),
-            height: Int(frame.size.height)
-        )
-        let metaEvent = MetaEvent(timestamp: TimeInterval(firstTimestamp), data: metaEventData)
-        container.append(AnyRRWebEvent(metaEvent))
+        // Only add meta event for first frame or when frame size changes
+        if lastFrameSize != frame.size {
+            let metaEventData = RRWebMetaData(
+                href: "http://newrelic.com",
+                width: Int(frame.size.width),
+                height: Int(frame.size.height)
+            )
+            let metaEvent = MetaEvent(timestamp: TimeInterval(lastTimestamp), data: metaEventData)
+            container.append(AnyRRWebEvent(metaEvent))
+        }
+        
         container.append(AnyRRWebEvent(processedFrame))
         container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
@@ -331,4 +354,3 @@ extension DispatchQueue {
         block()
     }
 }
-

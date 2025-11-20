@@ -17,6 +17,7 @@ class SessionReplayFrameProcessor {
     
     func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon {
         guard useIncrementalDiffs else { // If useIncrementalDiffs is false, we only take full snapshots
+            self.lastFullFrame = frame
             return processFullSnapshot(frame)
         }
         

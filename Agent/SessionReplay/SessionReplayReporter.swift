@@ -20,6 +20,8 @@ public class SessionReplayReporter: NSObject {
     private let kNRMAMaxUploadRetry = 3
     private let applicationToken: String
     private let url: NSString
+    private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
+    private var pendingUploads = 0
 
     @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
@@ -29,9 +31,31 @@ public class SessionReplayReporter: NSObject {
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
         uploadQueue.async {
             self.sessionReplayFramesUploadArray.append(upload)
+            self.pendingUploads += 1
+            self.beginBackgroundTaskIfNeeded()
             self.processNextUploadTask()
         }
    }
+    
+    private func beginBackgroundTaskIfNeeded() {
+        guard backgroundTaskId == .invalid else { return }
+        
+        DispatchQueue.main.async {
+            self.backgroundTaskId = UIApplication.shared.beginBackgroundTask { [weak self] in
+                NRLOG_WARNING("Session replay background task expiring")
+                self?.endBackgroundTaskIfNeeded()
+            }
+        }
+    }
+    
+    private func endBackgroundTaskIfNeeded() {
+        guard backgroundTaskId != .invalid else { return }
+        
+        DispatchQueue.main.async {
+            UIApplication.shared.endBackgroundTask(self.backgroundTaskId)
+            self.backgroundTaskId = .invalid
+        }
+    }
 
     private func processNextUploadTask() {
          uploadQueue.async { [weak self] in
@@ -51,6 +75,12 @@ public class SessionReplayReporter: NSObject {
                  self.isUploading = false
                  NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("SessionReplay")
                  self.sessionReplayFramesUploadArray.removeFirst()
+                 self.pendingUploads -= 1
+                 
+                 // Check if we should end the background task
+                 if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+                     self.endBackgroundTaskIfNeeded()
+                 }
                  return
              }
 
@@ -87,12 +117,14 @@ public class SessionReplayReporter: NSObject {
            NRLOG_DEBUG("Session replay frames uploaded successfully.")
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
+           self.pendingUploads -= 1
            NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
        } else if errorCodeInt == URL_TOO_LARGE {
            NRLOG_ERROR("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
            NRMASupportMetricHelper.enqueueSessionReplayURLTooLargeMetric()
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
+           self.pendingUploads -= 1
        } else {
            self.failureCount += 1
        }
@@ -102,10 +134,16 @@ public class SessionReplayReporter: NSObject {
            NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
+           self.pendingUploads -= 1
        }
 
        self.isUploading = false
        self.processNextUploadTask()
+       
+       // End background task when all uploads are complete
+       if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+           self.endBackgroundTaskIfNeeded()
+       }
    }
     
     func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {

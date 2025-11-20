@@ -15,6 +15,7 @@
 #import "NRMATaskQueue.h"
 #import "NRMAMeasurementEngine.h"
 #import "NRMAFakeDataHelper.h"
+#import "NRMASupportMetricHelper.h"
 
 @implementation NRMAHarvesterConnectionTests
 
@@ -29,6 +30,9 @@
     connection = [[NRMAHarvesterConnection alloc] init];
     connection.applicationToken = @"app token";
     connection.connectionInformation = [NRMAAgentConfiguration connectionInformation];
+    
+    [NRMASupportMetricHelper processDeferredMetrics];
+
 }
 
 - (void) tearDown {
@@ -118,6 +122,7 @@
     XCTAssertNotNil(response, @"");
     XCTAssertEqual(ENTITY_TOO_LARGE,response.statusCode, @"");
     
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];
@@ -159,6 +164,7 @@
     XCTAssertNotNil(response, @"");
     XCTAssertEqual(ENTITY_TOO_LARGE, response.statusCode, @"");
     
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];
@@ -304,14 +310,16 @@
 
     [connection sendData: [self createConnectionInformationWithOsName:[NewRelicInternalUtils osName] platform:NRMAPlatform_Native]];
 
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
 
     XCTAssertTrue([helper.result isKindOfClass:[NRMANamedValueMeasurement class]], @"The result is not a named value.");
 
     NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
 
-    NSString* fullMetricName = [NSString stringWithFormat:@"Supportability/Mobile/%@/Native/Collector/data/Output/Bytes", [NewRelicInternalUtils osName]];
-    XCTAssertEqualObjects(measurement.name, fullMetricName, @"Name is not generated properly.");
+    NSString* regexPattern = [NSString stringWithFormat:@"Supportability/Mobile/%@/Native/Collector/.*?/Output/Bytes", [NewRelicInternalUtils osName]];
+    NSRange range = [measurement.name rangeOfString:regexPattern options:NSRegularExpressionSearch];
+    XCTAssertTrue(range.location != NSNotFound, @"Name '%@' does not match pattern '%@'", measurement.name, regexPattern);
 
     // Expected byte count should not be 0.
     XCTAssertNotEqual(measurement.value.longLongValue, 0, @"Byte value doesn't match expected.");

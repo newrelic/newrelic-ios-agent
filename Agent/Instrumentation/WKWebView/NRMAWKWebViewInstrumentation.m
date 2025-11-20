@@ -7,7 +7,6 @@
 #import "NRMAWKWebViewNavigationDelegate.h"
 #import <UIKit/UIKit.h>
 
-
 //NOTE: this files has ARC disabled.
 
 static id initWithFrame_configuration(id self, SEL _cmd, CGRect frame, id configuration);
@@ -75,7 +74,7 @@ void (*NRMA__WKWebView_dealloc)(id self, SEL _cmd);
                                                                                         setNavigationDelegateSelector,
                                                                                         (IMP)setNavigationDelegate,
                                                                                         method_getTypeEncoding(setNavigationDelegateMethod));
-
+        
         SEL deallocSelector = @selector(dealloc);
         Method deallocMethod = class_getInstanceMethod(clazz, deallocSelector);
         NRMA__WKWebView_dealloc = (void(*)(id,SEL))class_replaceMethod(clazz,
@@ -105,6 +104,7 @@ void (*NRMA__WKWebView_dealloc)(id self, SEL _cmd);
 
         SEL setNavigationDelegateSelector = @selector(setNavigationDelegate:);
         method_setImplementation(class_getInstanceMethod(clazz, setNavigationDelegateSelector), (IMP)NRMA__WKWebView_setNavigationDelegate);
+
     }
 #endif
 }
