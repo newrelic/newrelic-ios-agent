@@ -213,6 +213,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
+        options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
@@ -279,6 +281,9 @@ class ViewController: UIViewController {
         coordinator?.showInfiniteImageScrollController()
     }
     
+    func performanceContentView() {
+        coordinator?.showPerformanceContentView()
+    }
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
