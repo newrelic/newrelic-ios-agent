@@ -24,6 +24,14 @@ public class SessionReplayManager: NSObject {
     private let url: NSString
     
     private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue", attributes: .concurrent)
+    
+    private let sharedEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        return encoder
+    }()
+    private let sharedDecoder = JSONDecoder()
+
 
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
         self.url = url
@@ -166,116 +174,82 @@ public class SessionReplayManager: NSObject {
         urlComponents: URLComponents?
     ) -> [SessionReplayData] {
         let maxCompressedSize = Int(kNRMAMaxPayloadSizeLimit)
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .withoutEscapingSlashes
-
         var uploads: [SessionReplayData] = []
-        var currentIndex = 0
         var isFirstChunk = isFirstChunkInBatch
         
-        while currentIndex < container.count {
-            // Binary search for optimal chunk size
-            let bestChunkSize = findOptimalChunkSize(
-                container: container,
-                startIndex: currentIndex,
-                maxCompressedSize: maxCompressedSize,
-                encoder: encoder
-            )
-            
-            // Create chunk with best size
-            let chunkEnd = currentIndex + bestChunkSize
-            let chunk = Array(container[currentIndex..<chunkEnd])
-            
-            guard let jsonData = try? encoder.encode(chunk) else {
-                NRLOG_DEBUG("Failed to encode chunk")
-                currentIndex += bestChunkSize
-                continue
-            }
-            
-            let uncompressedDataSize = jsonData.count
-            var finalData = jsonData
+        func processChunk(_ events: [AnyRRWebEvent]) {
+            guard !events.isEmpty else { return }
             
             do {
-                let gzippedData = try jsonData.gzipped()
-                finalData = gzippedData
+                // Encode events
+                let jsonData = try sharedEncoder.encode(events)
+                
+                // Compress data
+                guard let compressedData = try? jsonData.gzipped() else {
+                    NRLOG_DEBUG("Failed to compress session replay data")
+                    return
+                }
+                
+                // Check if compressed size exceeds limit
+                if compressedData.count > maxCompressedSize {
+                    // Split in half and try again
+                    let midpoint = events.count / 2
+                    guard midpoint > 0 else {
+                        NRLOG_DEBUG("Single event exceeds size limit, skipping")
+                        return
+                    }
+                    
+                    let firstHalf = Array(events[..<midpoint])
+                    let secondHalf = Array(events[midpoint...])
+                    
+                    processChunk(firstHalf)
+                    processChunk(secondHalf)
+                    return
+                }
+                
+                // Create upload data
+                let firstTimestamp = TimeInterval(events.first?.base.timestamp ?? 0)
+                let lastTimestamp = TimeInterval(events.last?.base.timestamp ?? 0)
+                
+                let uploadURL: URL?
+                if let urlComponents = urlComponents {
+                    uploadURL = updateURLForChunk(
+                        urlComponents: urlComponents,
+                        uncompressedDataSize: jsonData.count,
+                        firstTimestamp: firstTimestamp,
+                        lastTimestamp: lastTimestamp,
+                        isFirstChunk: isFirstChunk,
+                        isGZipped: true
+                    )
+                } else {
+                    uploadURL = generateUploadURL(
+                        uncompressedDataSize: jsonData.count,
+                        firstTimestamp: firstTimestamp,
+                        lastTimestamp: lastTimestamp,
+                        isFirstChunk: isFirstChunk,
+                        isGZipped: true
+                    )
+                }
+                
+                guard let url = uploadURL else {
+                    NRLOG_DEBUG("Failed to generate upload URL")
+                    return
+                }
+                
+                let upload = SessionReplayData(sessionReplayFramesData: compressedData, url: url)
+                
+                uploads.append(upload)
+                isFirstChunk = false
+                
             } catch {
-                NRLOG_DEBUG("Failed to gzip chunk: \(error.localizedDescription)")
+                NRLOG_DEBUG("Failed to encode session replay events: \(error)")
             }
-            
-            let chunkFirstTimestamp = TimeInterval(chunk.first?.base.timestamp ?? 0)
-            let chunkLastTimestamp = TimeInterval(chunk.last?.base.timestamp ?? 0)
-            
-            // Create URL based on whether we're modifying an existing URL or creating a new one
-            let url: URL?
-            if let urlComponents = urlComponents {
-                url = updateURLForChunk(
-                    urlComponents: urlComponents,
-                    uncompressedDataSize: uncompressedDataSize,
-                    firstTimestamp: chunkFirstTimestamp,
-                    lastTimestamp: chunkLastTimestamp,
-                    isFirstChunk: isFirstChunk,
-                    isGZipped: finalData.isGzipped
-                )
-            } else {
-                url = sessionReplayReporter.uploadURL(
-                    uncompressedDataSize: uncompressedDataSize,
-                    firstTimestamp: chunkFirstTimestamp,
-                    lastTimestamp: chunkLastTimestamp,
-                    isFirstChunk: isFirstChunk,
-                    isGZipped: finalData.isGzipped
-                )
-            }
-            
-            guard let validURL = url else {
-                NRLOG_ERROR("Failed to construct upload URL")
-                currentIndex += bestChunkSize
-                continue
-            }
-            
-            let dataSizeInMB = Double(finalData.count) / (1024.0 * 1024.0)
-            NRLOG_DEBUG("Created chunk with \(chunk.count) events, compressed size: \(String(format: "%.2f", dataSizeInMB)) MB")
-            NRLOG_DEBUG(validURL.absoluteString)
-            
-            uploads.append(SessionReplayData(sessionReplayFramesData: finalData, url: validURL))
-            isFirstChunk = false
-            currentIndex += bestChunkSize
         }
-
+        
+        processChunk(container)
         return uploads
     }
-    
-    // Binary search to find optimal chunk size that fits within maxCompressedSize
-    private func findOptimalChunkSize(
-        container: [AnyRRWebEvent],
-        startIndex: Int,
-        maxCompressedSize: Int,
-        encoder: JSONEncoder
-    ) -> Int {
-        var low = 1
-        var high = container.count - startIndex
-        var bestChunkSize = 1
-        
-        while low <= high {
-            let mid = (low + high) / 2
-            let chunkEnd = startIndex + mid
-            let chunk = Array(container[startIndex..<chunkEnd])
-            
-            guard let jsonData = try? encoder.encode(chunk),
-                  let gzippedData = try? jsonData.gzipped() else {
-                high = mid - 1
-                continue
-            }
-            
-            if gzippedData.count <= maxCompressedSize {
-                bestChunkSize = mid
-                low = mid + 1
-            } else {
-                high = mid - 1
-            }
-        }
-        
-        return bestChunkSize
-    }
+
 
     // REPLAY PERSISTENCE
 
@@ -378,13 +352,12 @@ public class SessionReplayManager: NSObject {
         .sorted { extractFrameNumber($0) < extractFrameNumber($1) }
         
         // Decode each frame file directly and combine
-        let decoder = JSONDecoder()
         var allEvents: [AnyRRWebEvent] = []
         
         for frameFile in frameFiles {
             do {
                 let data = try Data(contentsOf: frameFile)
-                let events = try decoder.decode([AnyRRWebEvent].self, from: data)
+                let events = try sharedDecoder.decode([AnyRRWebEvent].self, from: data)
                 allEvents.append(contentsOf: events)
             } catch {
                 NRLOG_DEBUG("Skipping invalid frame file \(frameFile.lastPathComponent): \(error)")
@@ -416,23 +389,16 @@ public class SessionReplayManager: NSObject {
     
     // Helper method to extract isFirstChunk from URL
     private func extractIsFirstChunkFromURL(urlComponents: URLComponents) -> Bool {
-        // Find the attributes query item and extract isFirstChunk
-        if let queryItems = urlComponents.queryItems,
-           let attributesItem = queryItems.first(where: { $0.name == "attributes" }),
-           let attributesValue = attributesItem.value {
-            
-            // Parse attributes
-            let pairs = attributesValue.components(separatedBy: "&")
-            for pair in pairs {
-                let keyValue = pair.components(separatedBy: "=")
-                if keyValue.count == 2 && keyValue[0] == "isFirstChunk" {
-                    return keyValue[1].lowercased() == "true"
-                }
-            }
+        // Cache parsed attributes
+        guard let queryItems = urlComponents.queryItems,
+              let attributesItem = queryItems.first(where: { $0.name == "attributes" }),
+              let attributesValue = attributesItem.value else {
+            return true
         }
         
-        // Default to true if not found
-        return true
+        // Use faster string searching instead of split-based parsing
+        let searchString = "isFirstChunk=true"
+        return attributesValue.range(of: searchString, options: .caseInsensitive) != nil
     }
     
     // Helper method to update URL with chunk-specific parameters

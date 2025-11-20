@@ -38,10 +38,10 @@ public class SessionReplayReporter: NSObject {
    }
     
     private func beginBackgroundTaskIfNeeded() {
-        guard backgroundTaskId == .invalid else { return }
-        
-        DispatchQueue.main.async {
-            self.backgroundTaskId = UIApplication.shared.beginBackgroundTask { [weak self] in
+        DispatchQueue.main.async { [weak self] in
+            guard self?.backgroundTaskId == .invalid else { return }
+
+            self?.backgroundTaskId = UIApplication.shared.beginBackgroundTask { [weak self] in
                 NRLOG_WARNING("Session replay background task expiring")
                 self?.endBackgroundTaskIfNeeded()
             }
