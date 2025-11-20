@@ -73,7 +73,9 @@ struct SwiftUIContentView: View {
                     }
                     NavigationLink(destination: InfiniteImageCollectionView()) {
                         Text("Infinite Images")
-                        
+                    }
+                    NavigationLink(destination: SocialMediaFeedView()) {
+                        Text("Social Media Feed")
                     }
                 }
                 .navigationBarTitle("SwiftUI Elements")
