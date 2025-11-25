@@ -57,6 +57,8 @@ class UtilViewModel {
             Task { await noticeNetworkRequestWithParams() }
         }))
 
+        options.append(UtilOption(title: "Start Replay", handler: { [self] in testStartReplay()}))
+        options.append(UtilOption(title: "Pause Replay", handler: { [self] in testPauseReplay()}))
 
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
         options.append(UtilOption(title: "Test Log Error", handler: { [self] in testLogError()}))
@@ -219,8 +221,15 @@ class UtilViewModel {
             "additionalAttribute2": "attribute2"
         ])
     }
+    
+    func testStartReplay() {
+        NewRelic.recordReplay()
+    }
 
-
+    func testPauseReplay() {
+        NewRelic.pauseReplay()
+    }
+    
     func noticeNWRequest() {
         NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
                                       statusCode: 200, bytesSent: 1000, bytesReceived: 1000, responseData: Data(), traceHeaders: nil, andParams: nil)

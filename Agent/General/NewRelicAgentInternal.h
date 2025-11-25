@@ -116,6 +116,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 // END SESSION REPLAY SECTION End Methods to manage masked elements for SessionReplay
 
+
+// SESSION REPLAY SECTION Methods to start and pause SessionReplay
+
+// Start a session replay recording
+- (BOOL) recordReplay;
+
+// Pause a session replay recording
+- (BOOL) pauseReplay;
+
+// END SESSION REPLAY SECTION Methods to start and pause SessionReplay
+
 @end
 
 /*

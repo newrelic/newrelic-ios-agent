@@ -820,6 +820,31 @@
     return [NRMAAgentConfiguration addLocalUnmaskedAccessibilityIdentifier: identifier];
 }
 
+#pragma mark - Session Replay Manual
+
+/*
+ * Manually start session replay recording.
+ *
+ * When called, if session replay is enabled through the remote config, session replay
+ * will begin recording regardless of sampling. Manual mode takes precedence over
+ * automatic replay triggering. Recording will continue until pauseReplay is called or the
+ * session ends. If called while already recording, this call is ignored.
+ */
++ (BOOL) recordReplay {
+    return [[NewRelicAgentInternal sharedInstance] recordReplay];
+}
+
+/*
+ * Manually pause session replay recording.
+ *
+ * Stops the current recording session and harvests recorded data. If called while
+ * not recording, this call is ignored.
+ */
++ (BOOL) pauseReplay {
+    return [[NewRelicAgentInternal sharedInstance] pauseReplay];
+}
+
+
 #pragma mark - Hidden APIs
 
 

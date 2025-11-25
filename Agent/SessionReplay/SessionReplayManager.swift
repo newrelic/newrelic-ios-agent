@@ -25,6 +25,8 @@ public class SessionReplayManager: NSObject {
     
     private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue", attributes: .concurrent)
 
+    private var isManuallyRecording: Bool = false
+    
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
         self.url = url
         self.sessionReplay = NRMASessionReplay(url: self.url)
@@ -35,7 +37,7 @@ public class SessionReplayManager: NSObject {
 
     }
 
-    public func start() {
+    public func start(fromManual: Bool = false) {
         sessionReplayQueue.async { [self] in
             guard !isRunning() else {
                 NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
@@ -46,6 +48,7 @@ public class SessionReplayManager: NSObject {
             self.harvestseconds = 0
 
             self.sessionReplay.isFirstChunk = true
+            self.isManuallyRecording = fromManual
 
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
             self.sessionReplayTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(self.sessionReplayTick), userInfo: nil, repeats: true)
@@ -76,9 +79,48 @@ public class SessionReplayManager: NSObject {
     }
 
     // This function is to handle a session change created by a change in userId
-    @objc public func newSession() {
+    @objc public func endSession(harvest: Bool = true) {
+        isManuallyRecording = false
         stop()
-        harvest()
+        if harvest {
+            self.harvest()
+        }
+    }
+    
+    @objc public func manualRecordReplay() -> Bool {
+        return sessionReplayQueue.sync {
+                        
+            if isRunning() {
+                NRLOG_DEBUG("Session replay already recording")
+                return false
+            }
+            
+            start(fromManual: true)
+
+            NRLOG_DEBUG("Session replay started via manual recordReplay() API")
+            return true
+        }
+    }
+
+    @objc public func manualPauseReplay() -> Bool {
+        return sessionReplayQueue.sync {
+            
+            isManuallyRecording = false
+            
+            if !isRunning() {
+                NRLOG_DEBUG("Session replay is not currently recording")
+                return false
+            }
+            
+            stop()
+            harvest()
+            NRLOG_DEBUG("Session replay paused via manual pauseReplay() API")
+            return true
+        }
+    }
+    
+    public func isManuallyActive() -> Bool {
+        return sessionReplayQueue.sync { isManuallyRecording }
     }
     
     @objc public func clearAllData() {
