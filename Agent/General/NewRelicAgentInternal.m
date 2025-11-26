@@ -667,6 +667,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRLOG_AGENT_WARNING(@"Agent is not initialized");
     return false;
 #endif
+    return false;
 }
 
 - (BOOL) pauseReplay {
@@ -681,6 +682,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     NRLOG_AGENT_WARNING(@"Agent is not initialized");
     return false;
 #endif
+    return false;
 }
 
 static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
