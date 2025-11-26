@@ -47,7 +47,6 @@ public class SessionReplayManager: NSObject {
             sessionReplay.start()
             self.harvestseconds = 0
 
-            self.sessionReplay.isFirstChunk = true
             self.isManuallyRecording = fromManual
 
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
@@ -80,18 +79,22 @@ public class SessionReplayManager: NSObject {
 
     // This function is to handle a session change created by a change in userId
     @objc public func endSession(harvest: Bool = true) {
-        isManuallyRecording = false
         stop()
         if harvest {
             self.harvest()
         }
+        // Reset isManuallyRecording for new session
+        isManuallyRecording = false
+
+        // Reset the isFirstChunk for new session
+        self.sessionReplay.isFirstChunk = true
     }
     
     @objc public func manualRecordReplay() -> Bool {
         return sessionReplayQueue.sync {
                         
             if isRunning() {
-                NRLOG_DEBUG("Session replay already recording")
+                NRLOG_DEBUG("Attempted to manually start session replay but it is already recording")
                 return false
             }
             
@@ -108,7 +111,7 @@ public class SessionReplayManager: NSObject {
             isManuallyRecording = false
             
             if !isRunning() {
-                NRLOG_DEBUG("Session replay is not currently recording")
+                NRLOG_DEBUG("Attempted to pause session replay but it is not currently recording")
                 return false
             }
             

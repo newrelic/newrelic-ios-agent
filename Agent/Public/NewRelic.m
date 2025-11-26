@@ -650,7 +650,7 @@
     if (newSession) {
         [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
         
-        [[NewRelicAgentInternal sharedInstance] sessionReplayStartNewSession];
+        [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
 
         // Perform harvest
         [self harvestNow];

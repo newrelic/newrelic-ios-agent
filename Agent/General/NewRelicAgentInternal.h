@@ -89,7 +89,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayDisabled;
 
-- (void) sessionReplayStartNewSession;
+- (void) sessionReplayEndSession;
 
 - (BOOL) isSessionReplaySampled;
 
