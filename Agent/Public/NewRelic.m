@@ -136,6 +136,8 @@
     NSString * errorDesc = error.localizedDescription;
 
     [self logError:[NSString stringWithFormat:@"Error encountered: %@", errorDesc]];
+  
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) crashNow:(NSString*)message
@@ -173,6 +175,8 @@
     }
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordHandledException:(NSException*)exception
@@ -184,6 +188,9 @@
     }
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
                                                                                     attributes:attributes];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
+
 }
 
 + (void)recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
@@ -194,6 +201,8 @@
     }
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
 }
 
@@ -206,6 +215,8 @@
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:nil];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordError:(NSError* _Nonnull)error
@@ -218,6 +229,8 @@
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:attributes];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) setPlatform:(NRMAApplicationPlatform)platform {

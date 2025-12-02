@@ -23,6 +23,8 @@ public class NRMASessionReplay: NSObject {
     private let sessionReplayTouchProcessor = TouchEventProcessor()
     private var rawFrames = [SessionReplayFrame]()
     
+    public var currentMode: SessionReplayMode = .OFF
+    
     public var isFirstChunk = true
     var uncompressedDataSize: Int = 0
     
@@ -151,6 +153,18 @@ public class NRMASessionReplay: NSObject {
         }
 
         // END PROCESSING FRAME TO FILE
+        
+        if currentMode == .ERROR {
+            pruneRawFrames()
+        }
+    }
+    
+    private func pruneRawFrames() {
+        let now = Date()
+        let maxBufferTime: TimeInterval = 15.0
+        rawFrames.removeAll { frame in
+            return now.timeIntervalSince(frame.date) > maxBufferTime
+        }
     }
     
     func getAndClearFrames(clear: Bool = true) -> [SessionReplayFrame] {
@@ -320,12 +334,47 @@ public class NRMASessionReplay: NSObject {
 
             // Save/update URL separately
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
+            
+            // In Error mode, we need to track the file creation time for pruning
+            if currentMode == .ERROR {
+                let attributes = [FileAttributeKey.creationDate: Date()]
+                try FileManager.default.setAttributes(attributes, ofItemAtPath: frameURL.path)
+                
+                // Prune old files if in ERROR mode
+                pruneBufferedFiles(in: frameFolder)
+            }
 
             frameCounter += 1
         } catch {
             NRLOG_ERROR("Failed to append frame to filesystem: \(error)")
         }
     }
+    
+    private func pruneBufferedFiles(in folder: URL) {
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.creationDateKey], options: .skipsHiddenFiles)
+            
+            let now = Date()
+            let maxBufferTime: TimeInterval = 15.0 // 15 seconds buffer
+            
+            for fileURL in fileURLs {
+                if let creationDate = try fileURL.resourceValues(forKeys: [.creationDateKey]).creationDate {
+                    if now.timeIntervalSince(creationDate) > maxBufferTime {
+                        try FileManager.default.removeItem(at: fileURL)
+                        NRLOG_DEBUG("Pruned old session replay file: \(fileURL.lastPathComponent)")
+                    }
+                }
+            }
+        } catch {
+            NRLOG_ERROR("Failed to prune buffered files: \(error)")
+        }
+    }
+}
+
+@objc public enum SessionReplayMode: Int {
+    case OFF
+    case ERROR
+    case FULL
 }
 
 @available(iOS 13.0, *)

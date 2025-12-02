@@ -685,11 +685,20 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     return false;
 }
 
-static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
-static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWillTerm";
+- (void)sessionReplayOnError:(NSError *_Nullable)error {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if (_sessionReplay != nil) {
+        [_sessionReplay onError:error];
+    }
+#endif
+}
 
-- (void) applicationWillEnterForeground {
+static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
+static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
+@"com.newrelic.appWillTerm";
 
+- (void)applicationWillEnterForeground {
+    
     if (_isShutdown) {
         return;
     }

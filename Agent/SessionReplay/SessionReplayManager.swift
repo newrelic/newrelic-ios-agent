@@ -27,6 +27,12 @@ public class SessionReplayManager: NSObject {
 
     private var isManuallyRecording: Bool = false
     
+    public var sessionReplayMode: SessionReplayMode = .OFF {
+        didSet {
+            sessionReplay.currentMode = sessionReplayMode
+        }
+    }
+    
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
         self.url = url
         self.sessionReplay = NRMASessionReplay(url: self.url)
@@ -34,7 +40,30 @@ public class SessionReplayManager: NSObject {
         super.init()
         
         self.sessionReplay.delegate = self
-
+        
+        // Listen for error notifications
+        NotificationCenter.default.addObserver(self, selector: #selector(handleErrorNotification), name: Notification.Name("NRMAErrorNotification"), object: nil)
+    }
+    
+    @objc public func onError(_ error: Error?) {
+        sessionReplayQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            if self.sessionReplayMode == .ERROR {
+                NRLOG_DEBUG("Session Replay transitioning from ERROR to FULL mode due to error.")
+                self.sessionReplayMode = .FULL
+                // In a real implementation, we might want to trigger an immediate harvest or ensure the buffered data is marked for upload.
+                // The current implementation of processFrameToFile writes to disk.
+                // If we switch to FULL, subsequent frames will just be written.
+                // We might need to ensure the existing buffered frames are not pruned anymore.
+                // Since pruneBufferedFiles checks for age, they won't be pruned immediately, but we should probably stop pruning.
+                // The currentMode update to .FULL will stop the pruning in processFrameToFile.
+            }
+        }
+    }
+    
+    @objc private func handleErrorNotification(_ notification: Notification) {
+        onError(nil)
     }
 
     public func start(fromManual: Bool = false) {
@@ -160,6 +189,11 @@ public class SessionReplayManager: NSObject {
     }
 
     private func harvestSessionReplayFramesAndTouches() {
+        if sessionReplayMode == .ERROR {
+            NRLOG_DEBUG("Skipping harvest in ERROR mode.")
+            return
+        }
+        
         let frames = self.sessionReplay.getSessionReplayFrames()
         let touches = self.sessionReplay.getSessionReplayTouches()
         

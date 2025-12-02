@@ -124,6 +124,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Pause a session replay recording
 - (BOOL) pauseReplay;
+// Notify Session Replay of an error
+- (void)sessionReplayOnError:(NSError *_Nullable)error;
 
 // END SESSION REPLAY SECTION Methods to start and pause SessionReplay
 
