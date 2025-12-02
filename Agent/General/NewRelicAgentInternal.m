@@ -947,12 +947,7 @@ static UIBackgroundTaskIdentifier background_task;
                     [[[NRMAHarvestController harvestController] harvester] execute];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-                    BOOL isSampled = [self isSessionReplaySampled];
-                    BOOL isEnabled = [self isSessionReplayEnabled];
-
-                    if ((isSampled && isEnabled) || (self->_sessionReplay.isManuallyActive && isEnabled) || self->_sessionReplay.isRunning) {
-                        [self->_sessionReplay endSessionWithHarvest:isEnabled];
-                    }
+                    [self sessionReplayEndSession];
 #endif
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
