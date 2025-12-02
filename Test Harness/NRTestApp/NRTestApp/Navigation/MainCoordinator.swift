@@ -71,6 +71,22 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(diffTestViewController, animated: true)
     }
     
+    func showPerformanceContentView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            if #available(iOS 17.0, *) {
+                let swiftUIView = PerformanceContentView()
+                let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+                navigationController.pushViewController(swiftUIViewController, animated: true)
+
+            } else {
+                // Fallback on earlier versions
+            }
+        }
+#endif
+
+    }
+    
     func showSwiftUITestView() {
 #if os(iOS)
         if #available(iOS 15.0, *) {

@@ -32,6 +32,8 @@
 		2BAE5C9A2E860C7D001D2B88 /* ScrollViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C842E860C7D001D2B88 /* ScrollViewsView.swift */; };
 		2BAE5C9B2E860C7D001D2B88 /* SlidersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C872E860C7D001D2B88 /* SlidersView.swift */; };
 		2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */; };
+		2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */; };
+		2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -106,6 +108,7 @@
 		F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
 		F84EEFB62E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
 		F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */; };
+		F85CEDDF2ECE1DBE004A314F /* SocialMediaFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */; };
 		F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */; };
 		F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86428472971C661002ABA01 /* UtilViewModel.swift */; };
 		F864284C2971DFA5002ABA01 /* triggerException.m in Sources */ = {isa = PBXBuildFile; fileRef = F864284B2971DFA5002ABA01 /* triggerException.m */; };
@@ -327,6 +330,8 @@
 		2BAE5C892E860C7D001D2B88 /* SteppersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SteppersView.swift; sourceTree = "<group>"; };
 		2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldsView.swift; sourceTree = "<group>"; };
 		2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TogglesView.swift; sourceTree = "<group>"; };
+		2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalReproView.swift; sourceTree = "<group>"; };
+		2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceContentView.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
 		2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HttpServerIO.swift; sourceTree = "<group>"; };
@@ -391,6 +396,7 @@
 		F848CDE32AA270E80082052F /* NRTestApp_tvOS_Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_Tests.swift; sourceTree = "<group>"; };
 		F848CDE52AA270E80082052F /* NRTestApp_tvOS_TestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp_tvOS_TestsLaunchTests.swift; sourceTree = "<group>"; };
 		F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureLabel.swift; sourceTree = "<group>"; };
+		F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialMediaFeedView.swift; sourceTree = "<group>"; };
 		F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesViewController.swift; sourceTree = "<group>"; };
 		F86428472971C661002ABA01 /* UtilViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilViewModel.swift; sourceTree = "<group>"; };
 		F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NRTestApp-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -470,8 +476,11 @@
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
+				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
 				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
 				2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */,
+				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
 				F8672A552EAA69820055FA51 /* SimpleScrollView.swift */,
@@ -1199,6 +1208,7 @@
 				2BAE5C922E860C7D001D2B88 /* ListsView.swift in Sources */,
 				2BAE5C932E860C7D001D2B88 /* PickersView.swift in Sources */,
 				2BAE5C942E860C7D001D2B88 /* SegmentedControlsView.swift in Sources */,
+				F85CEDDF2ECE1DBE004A314F /* SocialMediaFeedView.swift in Sources */,
 				2BAE5C952E860C7D001D2B88 /* GridsView.swift in Sources */,
 				2BAE5C962E860C7D001D2B88 /* TextFieldsView.swift in Sources */,
 				2BAE5C972E860C7D001D2B88 /* DatePickersView.swift in Sources */,
@@ -1208,6 +1218,8 @@
 				2BAE5C9B2E860C7D001D2B88 /* SlidersView.swift in Sources */,
 				2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */,
 				F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
+				2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */,
+				2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
