@@ -208,7 +208,8 @@ static NewRelicAgentInternal* _sharedInstance;
         self->_lifetimeRequestCount = 0;
         self->_lifetimeErrorCount = 0;
         self.appSessionStartDate = [NSDate date];
-
+        // Update session manager with new start time
+        [[NRMASessionManager shared] startNewSessionWithStartTime:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
         self->_isShutdown = false;
         self->_enabled = ![self isDisabled];
         if (self->_enabled) {
@@ -560,6 +561,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
     [self initializeAnalytics];
+    
+    // Update session manager with new start time
+    [[NRMASessionManager shared] startNewSessionWithStartTime:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
     NRMAReachability* r = [NewRelicInternalUtils reachability];
     NRMANetworkStatus status;
     @synchronized(r) {
@@ -674,6 +678,12 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                     return;
                 }
                 didFireEnterForeground = YES;
+
+                // Check if session should end due to inactivity or duration before proceeding
+                if ([[NRMASessionManager shared] shouldEndSession]) {
+                    NRLOG_AGENT_VERBOSE(@"Session ended due to timeout, starting new session");
+                    [[NRMASessionManager shared] endSessionAndStartNew];
+                }
 
                 if([NRMAFlags shouldEnableBackgroundReporting] && didFireEnterBackground) {
                     [self.analyticsController addCustomEvent:@"Return Harvest" withAttributes:nil];
@@ -834,7 +844,8 @@ static UIBackgroundTaskIdentifier background_task;
                 @try {
 #endif
                     self.gestureFacade = nil;
-                    [self.analyticsController sessionWillEnd];
+                    // Note: Session does not automatically end on background anymore
+                    // It will be managed by NRMASessionManager based on duration/inactivity
                     [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:@"Session/Duration"
                                                                     value:[NSNumber numberWithDouble:sessionLength] scope:nil]];
 #ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -898,7 +909,8 @@ static UIBackgroundTaskIdentifier background_task;
                     @try {
 #endif
                         self.gestureFacade = nil;
-                        [self.analyticsController sessionWillEnd];
+                        // Note: Session does not automatically end on background anymore
+                        // It will be managed by NRMASessionManager based on duration/inactivity
                         [NRMATaskQueue queue:[[NRMAMetric alloc]        initWithName:@"Session/Duration"
                                                                                value:[NSNumber numberWithDouble:sessionLength]
                                                                                scope:nil]];
