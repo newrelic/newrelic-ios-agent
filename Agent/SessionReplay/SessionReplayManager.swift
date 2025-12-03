@@ -24,6 +24,7 @@ public class SessionReplayManager: NSObject {
     private let url: NSString
     
     private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue", attributes: .concurrent)
+    private static let queueKey = DispatchSpecificKey<String>()
 
     private var isManuallyRecording: Bool = false
     
@@ -31,6 +32,7 @@ public class SessionReplayManager: NSObject {
         self.url = url
         self.sessionReplay = NRMASessionReplay(url: self.url)
         self.sessionReplayReporter = reporter
+        sessionReplayQueue.setSpecific(key: SessionReplayManager.queueKey, value: "com.newrelic.sessionReplayQueue")
         super.init()
         
         self.sessionReplay.delegate = self
@@ -58,18 +60,25 @@ public class SessionReplayManager: NSObject {
     }
 
     public func stop() {
-        sessionReplayQueue.async { [self] in
+        let stopBlock = { [self] in
             guard isRunning() else {
                 NRLOG_WARNING("Session replay harvest timer attempting to stop when not running.")
                 return
             }
             
             sessionReplay.stop()
-            
             sessionReplayTimer?.invalidate()
             sessionReplayTimer = nil
             
             NRLOG_DEBUG("Session replay has shut down and is no longer running.")
+        }
+        
+        // If we're already on the sessionReplayQueue, execute immediately
+        // Otherwise, sync to the queue
+        if DispatchQueue.getSpecific(key: SessionReplayManager.queueKey) != nil {
+            stopBlock()
+        } else {
+            sessionReplayQueue.sync(execute: stopBlock)
         }
     }
 
