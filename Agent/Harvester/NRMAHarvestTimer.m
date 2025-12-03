@@ -10,7 +10,7 @@
 #import "NRMAHarvestController.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
-static long long NR_DEFAULT_HARVEST_PERIOD = 60; //milliseconds
+static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 #define NR_NEVER_TICKED -1
 
 @implementation NRMAHarvestTimer

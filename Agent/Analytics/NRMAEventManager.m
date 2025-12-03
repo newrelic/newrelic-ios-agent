@@ -49,10 +49,6 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 
 - (void)setMaxEventBufferSize:(NSUInteger)size {
     maxBufferSize = size;
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxEventPoolSize"
-                                                    value:@1
-                                                    scope:nil]];
-
 }
 
 - (NSUInteger)getMaxEventBufferSize {
@@ -67,9 +63,6 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         NRLOG_AGENT_WARNING(@"Buffer Time should not be longer than %lu seconds", (unsigned long)kDefaultBufferTimeSeconds);
         maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
     }
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxBufferTime"
-                                                    value:@1
-                                                    scope:nil]];
     maxBufferTimeSeconds = seconds;
 }
 

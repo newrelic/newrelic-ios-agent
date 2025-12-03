@@ -51,8 +51,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.addSessionReplayMaskViewClass("SecureLabel")
         NewRelic.addSessionReplayUnmaskViewClass("UnsecureLabel")
 
-        NewRelic.setMaxEventPoolSize(5000)
-        NewRelic.setMaxEventBufferTime(60)
+        //NewRelic.setMaxEventPoolSize(5000)
+        //NewRelic.setMaxEventBufferTime(60)
 
 //        if ProcessInfo.processInfo.environment["UITesting"] != nil {
 //            if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
@@ -82,8 +82,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
      //   }
         
-        NewRelic.setMaxEventPoolSize(5000)
-        NewRelic.setMaxEventBufferTime(60)
+        //NewRelic.setMaxEventPoolSize(5000)
+        //NewRelic.setMaxEventBufferTime(60)
 
         NewRelic.logVerbose("NewRelic.start was called.")
         return true

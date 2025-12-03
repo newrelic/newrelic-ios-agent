@@ -32,9 +32,7 @@ bool EventManager::didReachMaxQueueTime(unsigned long long currentTimestamp_ms) 
 
 void EventManager::setMaxBufferSize(unsigned int size) {
     EventBufferConfig::getInstance().setMaxEventBufferSize(size);
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxEventPoolSize"
-                                                    value:@1
-                                                    scope:nil]];
+
 }
 
 void EventManager::empty() {
@@ -110,9 +108,6 @@ int EventManager::getRemovalIndex() {
 
 void EventManager::setMaxBufferTime(unsigned int seconds) {
     EventBufferConfig::getInstance().setMaxEventBufferTime(seconds);
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxBufferTime"
-                                                    value:@1
-                                                    scope:nil]];
 }
 
 std::shared_ptr<AnalyticEvent> EventManager::newEvent(std::istream& is) {

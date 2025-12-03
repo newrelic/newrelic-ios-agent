@@ -739,15 +739,17 @@
  * harvest cycle.
  */
 + (void) setMaxEventBufferTime:(unsigned int)seconds {
-    [[NewRelicAgentInternal sharedInstance].analyticsController setMaxEventBufferTime:seconds];
+    [[NewRelicAgentInternal sharedInstance] setMaxEventBufferTime:seconds];
+
 }
+
 /*
  * this method sets the maximum number of events buffered by the agent.
  * this means: once this many events have been recorded, new events have a statistical chance of overwriting
  * previously recorded events in the buffer.
  */
 + (void) setMaxEventPoolSize:(unsigned int)size {
-    [[NewRelicAgentInternal sharedInstance].analyticsController setMaxEventBufferSize:size];
+    [[NewRelicAgentInternal sharedInstance] setMaxEventPoolSize:size];
 }
 
 /*

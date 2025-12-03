@@ -148,7 +148,18 @@ static NewRelicAgentInternal* _sharedInstance;
 + (NRMAURLTransformer *)getURLTransformer {
     return urlTransformer;
 }
-
+- (void) setMaxEventBufferTime:(unsigned int)seconds {
+    [self.analyticsController setMaxEventBufferTime:seconds];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxBufferTime"
+                                                    value:@1
+                                                    scope:nil]];
+}
+- (void) setMaxEventPoolSize:(unsigned int)size {
+    [self.analyticsController setMaxEventBufferSize:size];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxEventPoolSize"
+                                                    value:@1
+                                                    scope:nil]];
+}
 - (void) dealloc {
     NSLog(@"NewRelicAgentInternal -dealloc");
 }

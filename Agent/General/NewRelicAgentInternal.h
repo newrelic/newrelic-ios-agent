@@ -70,6 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSDate*) getAppSessionStartDate;
 - (NSString* _Nullable) getUserId;
+- (void) setMaxEventBufferTime:(unsigned int)seconds;
+- (void) setMaxEventPoolSize:(unsigned int)size;
 
 - (void) applicationWillEnterForeground;
 - (void) sessionStartInitialization;
