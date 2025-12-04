@@ -873,6 +873,28 @@ extern "C" {
  */
 + (BOOL) addSessionReplayUnmaskedAccessibilityIdentifier:(NSString*_Nonnull) identifier;
 
+/*!
+ * Manually start session replay recording.
+ *
+ * When called, session replay will begin recording regardless of remote configuration.
+ * Manual mode takes precedence over automatic replay triggering. Recording will
+ * continue until pauseReplay is called or the session ends. If called while already
+ * recording in manual mode, this call is ignored.
+ *
+ * @return YES if recording was started, NO if already recording or replay is unavailable
+ */
++ (BOOL) recordReplay;
+
+/*!
+ * Manually pause session replay recording.
+ *
+ * Stops the current recording session and harvests recorded data. If called while
+ * not recording in manual mode, this call is ignored.
+ *
+ * @return YES if recording was paused, NO if not recording or replay is unavailable
+ */
++ (BOOL) pauseReplay;
+
 @end
 
 #ifdef __cplusplus
