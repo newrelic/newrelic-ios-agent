@@ -614,12 +614,13 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [NRMAHarvestController addHarvestListener:self.appUpgradeMetricGenerator];
 }
 
-- (void) sessionReplayStartNewSession {
+- (void) sessionReplayEndSession {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     BOOL isSampled = [self isSessionReplaySampled];
+    BOOL isEnabled = [self isSessionReplayEnabled];
 
-    if (isSampled && [self isSessionReplayEnabled]) {
-        [_sessionReplay newSession];
+    if ((isSampled && isEnabled) || (_sessionReplay.isManuallyActive && isEnabled) || self->_sessionReplay.isRunning) {
+        [_sessionReplay endSessionWithHarvest:isEnabled];
     }
 #endif
 }
@@ -628,12 +629,10 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     BOOL isSampled = [self isSessionReplaySampled];
     if (isSampled && [self isSessionReplayEnabled]) {
-        [_sessionReplay start];
+        [_sessionReplay startFromManual:FALSE];
         @synchronized(kNRMAAnalyticsInitializationLock) {
             [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
         }
-    } else {
-        [self sessionReplayDisabled];
     }
 #endif
 }
@@ -648,6 +647,42 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         }
     }
 #endif
+}
+
+- (BOOL) recordReplay {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if(![self isSessionReplayEnabled]){
+        NRLOG_AGENT_WARNING(@"Session replay is not enabled in the remote config.");
+        return false;
+    }
+    if(_sessionReplay != nil){
+        BOOL success = [_sessionReplay manualRecordReplay];
+        if(success){
+            @synchronized(kNRMAAnalyticsInitializationLock) {
+                [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+            }
+        }
+        return success;
+    }
+    NRLOG_AGENT_WARNING(@"Agent is not initialized");
+    return false;
+#endif
+    return false;
+}
+
+- (BOOL) pauseReplay {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if(![self isSessionReplayEnabled]){
+        NRLOG_AGENT_WARNING(@"Session replay is not enabled in the remote config.");
+        return false;
+    }
+    if(_sessionReplay != nil){
+        return [_sessionReplay manualPauseReplay];
+    }
+    NRLOG_AGENT_WARNING(@"Agent is not initialized");
+    return false;
+#endif
+    return false;
 }
 
 static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
@@ -774,15 +809,6 @@ static UIBackgroundTaskIdentifier background_task;
 #endif
     [[NRMAHarvestController harvestController].harvestTimer stop];
 
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-
-    BOOL isSampled = [self isSessionReplaySampled];
-
-    if ((isSampled && [self isSessionReplayEnabled]) || _sessionReplay.isRunning) {
-
-        [_sessionReplay stop];
-    }
-#endif
 
     // Disable observers.
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -921,11 +947,7 @@ static UIBackgroundTaskIdentifier background_task;
                     [[[NRMAHarvestController harvestController] harvester] execute];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-                    BOOL isSampled = [self isSessionReplaySampled];
-
-                    if (isSampled && [self isSessionReplayEnabled]) {
-                        [self->_sessionReplay harvest];
-                    }
+                    [self sessionReplayEndSession];
 #endif
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {

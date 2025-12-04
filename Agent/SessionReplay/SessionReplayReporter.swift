@@ -179,7 +179,22 @@ public class SessionReplayReporter: NSObject {
                let data = sessionAttributes.data(using: .utf8),
                let dictionary = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                 for (key, value) in dictionary {
-                    attributes[key] = value as? String
+                    // Convert different types to strings
+                    if let stringValue = value as? String {
+                        attributes[key] = stringValue
+                    } else if let boolValue = value as? Bool {
+                        attributes[key] = boolValue ? "true" : "false"
+                    } else if let numberValue = value as? NSNumber {
+                        // Check if it's a boolean wrapped as NSNumber
+                        if CFGetTypeID(numberValue as CFTypeRef) == CFBooleanGetTypeID() {
+                            attributes[key] = numberValue.boolValue ? "true" : "false"
+                        } else {
+                            attributes[key] = numberValue.stringValue
+                        }
+                    } else {
+                        // For any other type, use string description
+                        attributes[key] = String(describing: value)
+                    }
                 }
             }
         } catch {
