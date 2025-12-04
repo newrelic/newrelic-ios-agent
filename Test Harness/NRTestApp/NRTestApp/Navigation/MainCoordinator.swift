@@ -85,6 +85,9 @@ class MainCoordinator: Coordinator {
         }
 #endif
 
+    func showConfidentialController() {
+        let confidentialViewController = ViewControllerProvider.confidentialViewController
+        navigationController.pushViewController(confidentialViewController, animated: true)
     }
     
     func showSwiftUITestView() {
