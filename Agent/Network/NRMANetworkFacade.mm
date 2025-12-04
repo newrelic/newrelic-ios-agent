@@ -151,13 +151,57 @@
         // Failure case
         if ([NRMANetworkFacade statusCode:response] >= NRMA_HTTP_STATUS_CODE_ERROR_THRESHOLD) {
             if([NRMAFlags shouldEnableNewEventSystem]){
+                
+                
+                if(traceHeaders) {
+                    if(retrievedPayload == nil) {
+                        retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
+                    }
+                    NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                    NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                    // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
+                    if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
+                        
+                        retrievedPayload.traceId = traceParentComponents[1];
+                        retrievedPayload.parentId = @"0";
+                        retrievedPayload.id = traceParentComponents[2];
+                        retrievedPayload.dtEnabled = true;
+                    }
+                    else {
+                        NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                    }
+                }
+                
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
                                                                                    withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
                                                                                 withNRMAPayload:retrievedPayload];
             } else {
+                
+                std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
+
+                if(traceHeaders) {
+                    if(retrievedPayload == nullptr) {
+                        retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+                    }
+                    
+                    NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                    NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                    // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
+                    if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
+                        
+                        retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
+                        retrievedPayload->setParentId(@"0".UTF8String);
+                        retrievedPayload->setId(traceParentComponents[2].UTF8String);
+                        retrievedPayload->setDistributedTracing(true);
+                    }
+                    else {
+                        NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                    }
+                }
+                
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
                                                                                    withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
-                                                                                    withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+                                                                                    withPayload:std::move(retrievedPayload)];
             }
         // Success case
         } else {
@@ -244,6 +288,7 @@
         return;
     }
 
+    __block NRMAPayload* retrievedPayload;
     __block NRMAThreadInfo* threadInfo = [NRMAThreadInfo new];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^() {
 #if TARGET_OS_TV
@@ -266,23 +311,73 @@
                                                                                              bytesSent:0];
         [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
 
+        NSDictionary<NSString*,NSString*>*  traceHeaders;
+        
+        if([NRMAFlags shouldEnableNewEventSystem]){
+            traceHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:[NRMAHTTPUtilities generateNRMAPayload]];
+        } else {
+            traceHeaders =  [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
+        }
+        
 
         if([NRMAFlags shouldEnableNewEventSystem]){
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData 
-                                                                              withResponse:[[NRMANetworkResponseData alloc]
-                                                                                            initWithNetworkError:error.code
-                                                                                            bytesReceived:0
-                                                                                            responseTime:timer.timeElapsedInSeconds
-                                                                                            networkErrorMessage:error.localizedDescription]
-                                                                           withNRMAPayload:[NRMAHTTPUtilities retrieveNRMAPayload:request]];
-        }else{
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData 
-                                                                              withResponse:[[NRMANetworkResponseData alloc]
-                                                                                            initWithNetworkError:error.code
-                                                                                            bytesReceived:0
-                                                                                            responseTime:timer.timeElapsedInSeconds
-                                                                                            networkErrorMessage:error.localizedDescription]
-                                                                               withPayload:[NRMAHTTPUtilities retrievePayload:request]];
+            if(traceHeaders) {
+                if(retrievedPayload == nil) {
+                    retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
+                }
+                NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
+                if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
+                    
+                    retrievedPayload.traceId = traceParentComponents[1];
+                    retrievedPayload.parentId = @"0";
+                    retrievedPayload.id = traceParentComponents[2];
+                    retrievedPayload.dtEnabled = true;
+                }
+                else {
+                    NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                }
+            }
+            
+            [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData
+                                                                                  withResponse:[[NRMANetworkResponseData alloc]
+                                                                                                initWithNetworkError:error.code
+                                                                                                bytesReceived:0
+                                                                                                responseTime:timer.timeElapsedInSeconds
+                                                                                                networkErrorMessage:error.localizedDescription]
+                                                                               withNRMAPayload:[NRMAHTTPUtilities retrieveNRMAPayload:request]];
+        }
+        else {
+            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
+            if(traceHeaders) {
+                if(retrievedPayload == nullptr) {
+                    retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+                }
+                
+                NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+                NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
+                // The expected format for the parent key is "x-x-x". The result of the above operation must produce an array with greater than 2 elements.
+                if ([traceParentComponents count] > 2 && retrievedPayload != nullptr) {
+                    
+                    retrievedPayload->setTraceId(traceParentComponents[1].UTF8String);
+                    retrievedPayload->setParentId(@"0".UTF8String);
+                    retrievedPayload->setId(traceParentComponents[2].UTF8String);
+                    retrievedPayload->setDistributedTracing(true);
+                }
+                else {
+                    NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
+                }
+            }
+            
+            
+            [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData
+                                                                                  withResponse:[[NRMANetworkResponseData alloc]
+                                                                                                initWithNetworkError:error.code
+                                                                                                bytesReceived:0
+                                                                                                responseTime:timer.timeElapsedInSeconds
+                                                                                                networkErrorMessage:error.localizedDescription]
+                                                                                   withPayload:std::move(retrievedPayload)];
         }
 
          // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags
