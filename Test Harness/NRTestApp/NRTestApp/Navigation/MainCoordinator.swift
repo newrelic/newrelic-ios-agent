@@ -78,12 +78,13 @@ class MainCoordinator: Coordinator {
                 let swiftUIView = PerformanceContentView()
                 let swiftUIViewController = UIHostingController(rootView: swiftUIView)
                 navigationController.pushViewController(swiftUIViewController, animated: true)
-
+                
             } else {
                 // Fallback on earlier versions
             }
         }
 #endif
+    }
 
     func showConfidentialController() {
         let confidentialViewController = ViewControllerProvider.confidentialViewController
@@ -109,4 +110,5 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
+        
 }
