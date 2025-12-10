@@ -287,7 +287,8 @@ internal extension UIImage {
         let scale: CGFloat
         if originalSize.width > originalSize.height {
             scale = min(1.0, maxDimension / originalSize.width)
-        } else {
+        }
+        else {
             scale = min(1.0, maxDimension / originalSize.height)
         }
         

@@ -948,6 +948,10 @@
 		2B81C3502E99800F002F5593 /* UIVIewAssociations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B81C34E2E99800F002F5593 /* UIVIewAssociations.swift */; };
 		2B81C3512E99800F002F5593 /* UIVIewAssociations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B81C34E2E99800F002F5593 /* UIVIewAssociations.swift */; };
 		2B81E34C28624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */; };
+		2B8FF6242EE2324200D86577 /* SessionReplayRecordingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */; };
+		2B8FF6262EE347C500D86577 /* SessionReplayErrorListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6252EE347C500D86577 /* SessionReplayErrorListener.swift */; };
+		2B8FF6272EE347C500D86577 /* SessionReplayErrorListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6252EE347C500D86577 /* SessionReplayErrorListener.swift */; };
+		2B8FF6282EE347C500D86577 /* SessionReplayErrorListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6252EE347C500D86577 /* SessionReplayErrorListener.swift */; };
 		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA45280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */; };
@@ -2491,6 +2495,8 @@
 		2B81C3432E996300002F5593 /* MaskedContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskedContainerView.swift; sourceTree = "<group>"; };
 		2B81C34E2E99800F002F5593 /* UIVIewAssociations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVIewAssociations.swift; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
+		2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayRecordingMode.swift; sourceTree = "<group>"; };
+		2B8FF6252EE347C500D86577 /* SessionReplayErrorListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayErrorListener.swift; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
 		2BAE5C4E2E85EA27001D2B88 /* UIHostingViewRecordOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHostingViewRecordOrchestrator.swift; sourceTree = "<group>"; };
@@ -4021,6 +4027,8 @@
 		348713D32B8D39C1005A264C /* SessionReplay */ = {
 			isa = PBXGroup;
 			children = (
+				2B8FF6252EE347C500D86577 /* SessionReplayErrorListener.swift */,
+				2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */,
 				2BAE5C632E85EDE7001D2B88 /* SwiftUI */,
 				341E84D22D9CB1F000968D7D /* ViewCaptors */,
 				344E494E2D934D44008174A1 /* RRWebModels */,
@@ -5547,6 +5555,7 @@
 				02FF49B924DC62B800115469 /* NRMAHarvestableActivity.m in Sources */,
 				02FF4AA324DC652E00115469 /* NRMAUUIDStore.m in Sources */,
 				02FF48DB24DC622700115469 /* NRMACrashReportFileManager.m in Sources */,
+				2B8FF6262EE347C500D86577 /* SessionReplayErrorListener.swift in Sources */,
 				02FF484D24DC614200115469 /* NRMATraceMachine.m in Sources */,
 				02FF48AB24DC61E900115469 /* NRMAWKWebViewInstrumentation.m in Sources */,
 				02FF493524DC625A00115469 /* HexUploadPublisher.mm in Sources */,
@@ -5662,6 +5671,7 @@
 				02FF4A4A24DC64D500115469 /* NRMANamedValueMeasurement.m in Sources */,
 				02FF4A7024DC64E600115469 /* NRMAMeasurementProducer.m in Sources */,
 				F8FBFB1F2A83CEBD00CDC8C5 /* Constants.m in Sources */,
+				2B8FF6242EE2324200D86577 /* SessionReplayRecordingMode.swift in Sources */,
 				2B5CCB08287DE5BB00A88F5C /* NRMASupportMetricHelper.m in Sources */,
 				02FF49B824DC62B800115469 /* NRMADataToken.m in Sources */,
 				02FF482024DB5B8100115469 /* NRMAGestureProcessor.m in Sources */,
@@ -6028,6 +6038,7 @@
 				02FF4C5324E3201400115469 /* NRMAUDIDManager.m in Sources */,
 				02FF4C5424E3201400115469 /* NRMACrashDataUploader.m in Sources */,
 				02FF4C5524E3201400115469 /* NRMAKeyAttributes.m in Sources */,
+				2B8FF6282EE347C500D86577 /* SessionReplayErrorListener.swift in Sources */,
 				02FF4C5624E3201400115469 /* NRMAAppInstallMetricGenerator.m in Sources */,
 				02FF4C5724E3201400115469 /* NRTimer.m in Sources */,
 				02FF4C5824E3201400115469 /* NRMALastActivityTraceController.m in Sources */,
@@ -6317,6 +6328,7 @@
 				348233272BC5F2270070FAC3 /* NRMACrashReport.m in Sources */,
 				3482332C2BC5F2270070FAC3 /* NRMACrashReport_Thread.m in Sources */,
 				3482325E2BC5F16E0070FAC3 /* NRMAFileCleanup.m in Sources */,
+				2B8FF6272EE347C500D86577 /* SessionReplayErrorListener.swift in Sources */,
 				348233752BC5F3040070FAC3 /* NRMASAM.mm in Sources */,
 				348233302BC5F2270070FAC3 /* NRMACrashReport_Symbol.m in Sources */,
 				348232A82BC5F1E30070FAC3 /* NRCustomMetrics.m in Sources */,

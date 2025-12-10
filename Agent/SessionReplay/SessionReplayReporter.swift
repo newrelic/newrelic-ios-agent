@@ -42,7 +42,7 @@ public class SessionReplayReporter: NSObject {
         
         DispatchQueue.main.async {
             self.backgroundTaskId = UIApplication.shared.beginBackgroundTask { [weak self] in
-                NRLOG_WARNING("Session replay background task expiring")
+                NRLOG_DEBUG("Session replay background task expiring")
                 self?.endBackgroundTaskIfNeeded()
             }
         }
@@ -71,7 +71,7 @@ public class SessionReplayReporter: NSObject {
              NRLOG_DEBUG("Session replay frames compressed data: \(String(format: "%.2f", dataSizeInMB)) MB")
 
              if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
-                 NRLOG_WARNING("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
+                 NRLOG_DEBUG("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
                  self.isUploading = false
                  NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("SessionReplay")
                  self.sessionReplayFramesUploadArray.removeFirst()
@@ -120,7 +120,7 @@ public class SessionReplayReporter: NSObject {
            self.pendingUploads -= 1
            NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
        } else if errorCodeInt == URL_TOO_LARGE {
-           NRLOG_ERROR("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+           NRLOG_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
            NRMASupportMetricHelper.enqueueSessionReplayURLTooLargeMetric()
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
@@ -130,7 +130,7 @@ public class SessionReplayReporter: NSObject {
        }
 
        if self.failureCount > self.kNRMAMaxUploadRetry {
-           NRLOG_ERROR("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+           NRLOG_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
            NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
@@ -148,11 +148,11 @@ public class SessionReplayReporter: NSObject {
     
     func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {
-            NRLOG_ERROR("Error accessing harvester configuration information")
+            NRLOG_DEBUG("Error accessing harvester configuration information")
             return nil
         }
         guard let cStringAppVersion: UnsafePointer<CChar> = NRMA_getAppVersion(), let appVersion = String(validatingUTF8: cStringAppVersion) else {
-            NRLOG_ERROR("Error accessing app version information")
+            NRLOG_DEBUG("Error accessing app version information")
             return nil
         }
         var attributes: [String: String] = [
@@ -197,8 +197,9 @@ public class SessionReplayReporter: NSObject {
                     }
                 }
             }
-        } catch {
-            NRLOG_ERROR("Failed to retrieve session attributes: \(error)")
+        }
+        catch {
+            NRLOG_DEBUG("Failed to retrieve session attributes: \(error)")
         }
         
         let attributesString = attributes.map { key, value in

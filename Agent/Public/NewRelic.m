@@ -783,7 +783,7 @@
  */
 + (BOOL) addSessionReplayMaskViewClass:(NSString*) viewClassName {
     if (viewClassName == NULL || viewClassName.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayMaskViewClass: viewClassName must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayMaskViewClass: viewClassName must not be null or empty");
         return false;
     }
 
@@ -798,7 +798,7 @@
  */
 + (BOOL) addSessionReplayUnmaskViewClass:(NSString*) viewClassName {
     if (viewClassName == NULL || viewClassName.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayUnmaskViewClass: viewClassName must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayUnmaskViewClass: viewClassName must not be null or empty");
         return false;
     }
 
@@ -812,7 +812,7 @@
  */
 + (BOOL) addSessionReplayMaskedAccessibilityIdentifier:(NSString*) identifier {
     if (identifier == NULL || identifier.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
         return false;
     }
 
@@ -826,7 +826,7 @@
  */
 + (BOOL) addSessionReplayUnmaskedAccessibilityIdentifier:(NSString*) identifier {
     if (identifier == NULL || identifier.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
         return false;
     }
 

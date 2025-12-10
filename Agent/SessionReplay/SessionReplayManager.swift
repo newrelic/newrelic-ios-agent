@@ -28,9 +28,9 @@ public class SessionReplayManager: NSObject {
 
     private var isManuallyRecording: Bool = false
     
-    public var sessionReplayMode: SessionReplayMode = .OFF {
+    public var sessionReplayMode: SessionReplayRecordingMode = .off {
         didSet {
-            sessionReplay.currentMode = sessionReplayMode
+            sessionReplay.recordingMode = sessionReplayMode
         }
     }
     
@@ -47,14 +47,45 @@ public class SessionReplayManager: NSObject {
         NotificationCenter.default.addObserver(self, selector: #selector(handleErrorNotification), name: Notification.Name("NRMAErrorNotification"), object: nil)
     }
     
+    // ERROR MODE
+    
+    // MARK: - Error Sampling Mode Management
+
+    /// Sets the recording mode for session replay
+    /// - Parameter mode: The recording mode to use
+    @objc public func setRecordingMode(_ mode: SessionReplayRecordingMode) {
+        sessionReplayQueue.async { [self] in
+            sessionReplay.transistionToRecordingMode(mode)
+        }
+    }
+
+    /// Called when an error is detected (handled exception, network error, etc.)
+    /// Transitions from error mode to full mode, including the 15-second buffer
+    @objc public func onErrorDetected() {
+        sessionReplayQueue.async { [self] in
+            NRLOG_DEBUG("Error detected - transitioning session replay to full mode")
+            sessionReplay.transitionToFullModeOnError()
+
+            // Immediately harvest to ensure error context is captured
+            self.harvest()
+        }
+    }
+
+    /// Gets the current recording mode
+    /// - Returns: The current recording mode
+    @objc public func getCurrentRecordingMode() -> SessionReplayRecordingMode {
+        return sessionReplay.recordingMode
+    }
+    
+    
     @objc public func onError(_ error: Error?) {
         sessionReplayQueue.async { [weak self] in
             guard let self = self else { return }
             
-            if self.sessionReplayMode == .ERROR {
+            if self.sessionReplayMode == .off {
                 NRLOG_DEBUG("Session Replay transitioning from ERROR to FULL mode due to error.")
-                self.sessionReplayMode = .FULL
-                // In a real implementation, we might want to trigger an immediate harvest or ensure the buffered data is marked for upload.
+                self.sessionReplayMode = .full
+                // ensure the buffered data is marked for upload.
                 // The current implementation of processFrameToFile writes to disk.
                 // If we switch to FULL, subsequent frames will just be written.
                 // We might need to ensure the existing buffered frames are not pruned anymore.
@@ -67,11 +98,21 @@ public class SessionReplayManager: NSObject {
     @objc private func handleErrorNotification(_ notification: Notification) {
         onError(nil)
     }
+    // END ERROR MODE
 
-    public func start(fromManual: Bool = false) {
+    public func start(fromManual: Bool = false, with newMode: SessionReplayRecordingMode) {
         sessionReplayQueue.async { [self] in
+            
+            
+            // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+            
+            self.setRecordingMode(newMode)
+
+            // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+
+        
             guard !isRunning() else {
-                NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
+                NRLOG_DEBUG("Session replay harvest timer attempting to start while already running.")
                 return
             }
             
@@ -91,7 +132,7 @@ public class SessionReplayManager: NSObject {
     public func stop() {
         let stopBlock = { [self] in
             guard isRunning() else {
-                NRLOG_WARNING("Session replay harvest timer attempting to stop when not running.")
+                NRLOG_DEBUG("Session replay harvest timer attempting to stop when not running.")
                 return
             }
             
@@ -136,7 +177,7 @@ public class SessionReplayManager: NSObject {
                 return false
             }
             
-            start(fromManual: true)
+            start(fromManual: true, with: .full)
 
             NRLOG_DEBUG("Session replay started via manual recordReplay() API")
             return true
@@ -198,7 +239,7 @@ public class SessionReplayManager: NSObject {
     }
 
     private func harvestSessionReplayFramesAndTouches() {
-        if sessionReplayMode == .ERROR {
+        if sessionReplayMode == .error {
             NRLOG_DEBUG("Skipping harvest in ERROR mode.")
             return
         }
@@ -263,10 +304,11 @@ public class SessionReplayManager: NSObject {
             isFirstChunk: self.sessionReplay.isFirstChunk,
             isGZipped: jsonData.isGzipped
         ) else {
-            NRLOG_ERROR("Failed to construct upload URL for session replay.")
+            NRLOG_DEBUG("Failed to construct upload URL for session replay.")
             return nil
         }
-        NRLOG_DEBUG(url.absoluteString)
+       
+        // NRLOG_DEBUG(url.absoluteString)
 
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
@@ -301,7 +343,8 @@ public class SessionReplayManager: NSObject {
                     processSessionReplayFile(sessionId: sessionId, directory: sessionReplayDirectory)
                 }
                 
-            } catch {
+            }
+            catch {
                 NRLOG_DEBUG("Failed to read session replay directory: \(error)")
             }
         }
@@ -320,7 +363,7 @@ public class SessionReplayManager: NSObject {
                 NRLOG_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
                 return
             }
-            NRLOG_DEBUG(url.absoluteString)
+            //NRLOG_AGENT_DEBUG(url.absoluteString)
 
             // END URL CONSTRUCTION
 
@@ -383,7 +426,7 @@ public class SessionReplayManager: NSObject {
             let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
 
             guard let jsonData = jsonArrayString.data(using: .utf8) else {
-                NRLOG_ERROR("Failed to convert JSON string to data for session ID: \(sessionId)")
+                NRLOG_DEBUG("Failed to convert JSON string to data for session ID: \(sessionId)")
                 return
             }
             if let jsonString = String(data: jsonData, encoding: .utf8) {

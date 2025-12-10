@@ -23,7 +23,19 @@ public class NRMASessionReplay: NSObject {
     private let sessionReplayTouchProcessor = TouchEventProcessor()
     private var rawFrames = [SessionReplayFrame]()
     
-    public var currentMode: SessionReplayMode = .OFF
+    public var recordingMode: SessionReplayRecordingMode = .off
+    /// Circular buffer for error mode - stores last 15 seconds of frames
+    private var errorModeBuffer: [BufferedReplayFrame] = []
+
+    /// Maximum duration of frames to keep in error mode buffer (15 seconds)
+    private let errorModeBufferDuration: TimeInterval = 15.0
+
+    /// Lock for thread-safe access to the buffer
+    private let bufferLock = NSLock()
+
+    /// Tracks the last time a full snapshot was forced (for 15-second full snapshot requirement)
+    private var lastFullSnapshotTime: Date?
+    
     
     public var isFirstChunk = true
     var uncompressedDataSize: Int = 0
@@ -89,7 +101,7 @@ public class NRMASessionReplay: NSObject {
             do {
                 try FileManager.default.removeItem(at: self.framesDirectory)
             } catch {
-                NRLOG_ERROR("Failed to clear frames directory: \(error)")
+                NRLOG_DEBUG("Failed to clear frames directory: \(error)")
             }
         }
     }
@@ -97,7 +109,7 @@ public class NRMASessionReplay: NSObject {
     func swizzleSendEvent() {
         DispatchQueue.once(token: "com.newrelic.swizzleSendEvent") {
             guard let clazz = objc_getClass("UIApplication") else {
-                NRLOG_ERROR("ERROR: Unable to swizzle send event. Not able to track touches")
+                NRLOG_DEBUG("ERROR: Unable to swizzle send event. Not able to track touches")
                 return
             }
 
@@ -141,6 +153,13 @@ public class NRMASessionReplay: NSObject {
     }
 
     func addFrame(_ frame: SessionReplayFrame) {
+        
+        bufferLock.lock()
+        defer { bufferLock.unlock() }
+
+        // Check if we need to force a full snapshot every 15 seconds
+        checkAndForceFullSnapshot(for: frame)
+        
         self.rawFrames.append(frame)
 
 
@@ -154,7 +173,7 @@ public class NRMASessionReplay: NSObject {
 
         // END PROCESSING FRAME TO FILE
         
-        if currentMode == .ERROR {
+        if recordingMode == .error {
             pruneRawFrames()
         }
     }
@@ -186,7 +205,7 @@ public class NRMASessionReplay: NSObject {
                     try FileManager.default.removeItem(at: self.framesDirectory)
                     try FileManager.default.createDirectory(at: self.framesDirectory, withIntermediateDirectories: true)
                 } catch {
-                    NRLOG_ERROR("Failed to clear frames directory: \(error)")
+                    NRLOG_DEBUG("Failed to clear frames directory: \(error)")
                 }
             }
         }
@@ -299,7 +318,7 @@ public class NRMASessionReplay: NSObject {
 
         // Encode container to get data size for URL generation
         guard let jsonData = try? encoder.encode(container) else {
-            NRLOG_ERROR("Failed to encode events for URL generation")
+            NRLOG_DEBUG("Failed to encode events for URL generation")
             return
         }
 
@@ -314,7 +333,7 @@ public class NRMASessionReplay: NSObject {
             isFirstChunk: isFirstChunk,
             isGZipped: true
         ) else {
-            NRLOG_ERROR("Failed to construct upload URL for session replay.")
+            NRLOG_DEBUG("Failed to construct upload URL for session replay.")
             return
         }
         // END URL GENERATION
@@ -336,7 +355,7 @@ public class NRMASessionReplay: NSObject {
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
             
             // In Error mode, we need to track the file creation time for pruning
-            if currentMode == .ERROR {
+            if recordingMode == .error {
                 let attributes = [FileAttributeKey.creationDate: Date()]
                 try FileManager.default.setAttributes(attributes, ofItemAtPath: frameURL.path)
                 
@@ -346,9 +365,96 @@ public class NRMASessionReplay: NSObject {
 
             frameCounter += 1
         } catch {
-            NRLOG_ERROR("Failed to append frame to filesystem: \(error)")
+            NRLOG_DEBUG("Failed to append frame to filesystem: \(error)")
         }
     }
+    
+    // MARK: - Error Sampling Mode Management
+
+    /// Sets the recording mode for session replay
+    /// - Parameter mode: The new recording mode to use
+    public func transistionToRecordingMode(_ mode: SessionReplayRecordingMode) {
+        bufferLock.lock()
+        defer { bufferLock.unlock() }
+
+        let oldMode = recordingMode
+        recordingMode = mode
+
+        NRLOG_DEBUG("Session Replay recording mode changed from \(oldMode) to \(mode)")
+
+        // Clear buffers when transitioning modes
+        if mode == .off {
+            errorModeBuffer.removeAll()
+            lastFullSnapshotTime = nil
+        }
+        else if mode == .error {
+            // When entering error mode, clear any existing frames
+            lastFullSnapshotTime = Date()
+        }
+    }
+
+    /// Transitions from error mode to full mode when an error is detected
+    /// This flushes the 15-second error buffer to the main frame buffer
+    public func transitionToFullModeOnError() {
+        bufferLock.lock()
+        defer { bufferLock.unlock() }
+
+        guard recordingMode == .error else {
+            NRLOG_DEBUG("transitionToFullModeOnError called but not in error mode")
+            return
+        }
+
+        NRLOG_DEBUG("Session Replay transitioning to full mode due to error detection")
+
+        // Flush the error buffer to the main frame buffer
+        for bufferedFrame in errorModeBuffer {
+            rawFrames.append(bufferedFrame.frame)
+
+            // Process buffered frames to file for persistence
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                guard let self = self else { return }
+                self.processFrameToFile(bufferedFrame.frame)
+            }
+        }
+
+        // Clear the error buffer as it's been flushed
+        errorModeBuffer.removeAll()
+
+        // Transition to full mode
+        recordingMode = .full
+
+        // Force next frame to be a full snapshot for clean transition
+        sessionReplayFrameProcessor.takeFullSnapshotNext = true
+    }
+
+    /// Adds a frame to the error mode circular buffer, maintaining only the last 15 seconds
+    private func addFrameToErrorBuffer(_ frame: SessionReplayFrame) {
+        let bufferedFrame = BufferedReplayFrame(frame: frame, timestamp: frame.date)
+        errorModeBuffer.append(bufferedFrame)
+
+        // Remove frames older than 15 seconds
+        let cutoffTime = frame.date.addingTimeInterval(-errorModeBufferDuration)
+        errorModeBuffer.removeAll { $0.timestamp < cutoffTime }
+
+        NRLOG_DEBUG("Error mode buffer: \(errorModeBuffer.count) frames (last \(errorModeBufferDuration)s)")
+    }
+
+    /// Checks if a full snapshot should be forced (every 15 seconds)
+    private func checkAndForceFullSnapshot(for frame: SessionReplayFrame) {
+        guard let lastSnapshot = lastFullSnapshotTime else {
+            lastFullSnapshotTime = frame.date
+            sessionReplayFrameProcessor.takeFullSnapshotNext = true
+            return
+        }
+
+        let timeSinceLastSnapshot = frame.date.timeIntervalSince(lastSnapshot)
+        if timeSinceLastSnapshot >= 15.0 {
+            NRLOG_DEBUG("Forcing full snapshot after 15 seconds")
+            sessionReplayFrameProcessor.takeFullSnapshotNext = true
+            lastFullSnapshotTime = frame.date
+        }
+    }
+
     
     private func pruneBufferedFiles(in folder: URL) {
         do {
@@ -365,16 +471,13 @@ public class NRMASessionReplay: NSObject {
                     }
                 }
             }
-        } catch {
-            NRLOG_ERROR("Failed to prune buffered files: \(error)")
+        }
+        catch {
+            NRLOG_DEBUG("Failed to prune buffered files: \(error)")
         }
     }
-}
-
-@objc public enum SessionReplayMode: Int {
-    case OFF
-    case ERROR
-    case FULL
+    
+    // END Error Sampling Mode Management
 }
 
 @available(iOS 13.0, *)
