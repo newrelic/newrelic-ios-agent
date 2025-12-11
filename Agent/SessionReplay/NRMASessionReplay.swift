@@ -448,7 +448,7 @@ public class NRMASessionReplay: NSObject {
         }
 
         let timeSinceLastSnapshot = frame.date.timeIntervalSince(lastSnapshot)
-        if timeSinceLastSnapshot >= 15.0 {
+        if timeSinceLastSnapshot >= errorModeBufferDuration {
             NRLOG_DEBUG("Forcing full snapshot after 15 seconds")
             sessionReplayFrameProcessor.takeFullSnapshotNext = true
             lastFullSnapshotTime = frame.date
