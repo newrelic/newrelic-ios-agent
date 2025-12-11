@@ -296,19 +296,17 @@
         [NRMAHTTPUtilities addTrackedHeaders:request.allHTTPHeaderFields to:networkRequestData];
 
         NSDictionary<NSString*,NSString*>*  traceHeaders;
-        
-        if([NRMAFlags shouldEnableNewEventSystem]){
-            traceHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:[NRMAHTTPUtilities generateNRMAPayload]];
-        } else {
-            traceHeaders =  [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
-        }
+    
         
 
         if([NRMAFlags shouldEnableNewEventSystem]){
+            if(retrievedPayload == nil) {
+                retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
+            }
+            traceHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithNRMAPayload:retrievedPayload];
+            
             if(traceHeaders) {
-                if(retrievedPayload == nil) {
-                    retrievedPayload = [NRMAHTTPUtilities generateNRMAPayload];
-                }
+
                 [NRMANetworkFacade configureNRMAPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
             }
 
@@ -321,12 +319,14 @@
                                                                                withNRMAPayload:retrievedPayload];
         }
         else {
-            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
+            std::unique_ptr<NewRelic::Connectivity::Payload> retrievedCppPayload = [NRMAHTTPUtilities retrievePayload:request];
+            if(retrievedCppPayload == nullptr) {
+                retrievedCppPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
+            }
+            traceHeaders = [NRMAHTTPUtilities generateConnectivityHeadersWithPayload:[NRMAHTTPUtilities generatePayload]];
+
             if(traceHeaders) {
-                if(retrievedPayload == nullptr) {
-                    retrievedPayload = NewRelic::Connectivity::Facade::getInstance().newPayload();
-                }
-                [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
+                [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedCppPayload traceHeaders:traceHeaders];
             }
 
             [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkErrorEvent:networkRequestData
@@ -335,7 +335,7 @@
                                                                                                 bytesReceived:0
                                                                                                 responseTime:timer.timeElapsedInSeconds
                                                                                                 networkErrorMessage:error.localizedDescription]
-                                                                                   withPayload:std::move(retrievedPayload)];
+                                                                                   withPayload:std::move(retrievedCppPayload)];
         }
 
          // getCurrentWanType shouldn't be called on the main thread because it calls a blocking method to get connection flags
