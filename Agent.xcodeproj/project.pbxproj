@@ -1547,6 +1547,8 @@
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */; };
+		F81E70682EC7A75C00698BF8 /* UIColorHexStringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E70672EC7A75C00698BF8 /* UIColorHexStringTests.swift */; };
+		F81E707C2EC7AB4800698BF8 /* UIColor+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D0401D2D86036D007BE92D /* UIColor+HexString.swift */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
 		F825FAE329C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m in Sources */ = {isa = PBXBuildFile; fileRef = F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */; };
@@ -2597,6 +2599,7 @@
 		F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayManager.swift; sourceTree = "<group>"; };
 		F80C1D692DA07691007C0F52 /* ViewDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewDetails.swift; sourceTree = "<group>"; };
 		F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVisualEffectViewThingy.swift; sourceTree = "<group>"; };
+		F81E70672EC7A75C00698BF8 /* UIColorHexStringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIColorHexStringTests.swift; sourceTree = "<group>"; };
 		F824A43029AEAD63000886A6 /* NRViewModifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRViewModifier.swift; sourceTree = "<group>"; };
 		F825FAE229C8F52800E1C1DC /* NRMAWKFakeNavigationAction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAWKFakeNavigationAction.m; sourceTree = "<group>"; };
 		F825FAF729C8F5BA00E1C1DC /* NRMAWKFakeNavigationAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAWKFakeNavigationAction.h; sourceTree = "<group>"; };
@@ -3010,6 +3013,7 @@
 				0209ACA924E7394400E45C90 /* NRMAWebRequestUtilTest.m */,
 				0209ACA824E7394400E45C90 /* ZZZCodeCoverageTest.m */,
 				0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */,
+				F81E70672EC7A75C00698BF8 /* UIColorHexStringTests.swift */,
 				0209ACA524E7393C00E45C90 /* SwizzleTests.h */,
 				0209ACA324E7393B00E45C90 /* SwizzleTests.m */,
 				0209AC8424E7393200E45C90 /* NewRelicAgentTVOSTests-Bridging-Header.h */,
@@ -5454,6 +5458,7 @@
 				0209AC4924E7078C00E45C90 /* NRMATimestampContainerTest.m in Sources */,
 				0209ABEF24E706FA00E45C90 /* NRMAInteractionDataStampTests.m in Sources */,
 				C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */,
+				F81E70682EC7A75C00698BF8 /* UIColorHexStringTests.swift in Sources */,
 				2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */,
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
@@ -5478,6 +5483,7 @@
 				0209AC9924E7393300E45C90 /* NSURLConnectionTests.m in Sources */,
 				0209ABFE24E7070900E45C90 /* NRURLSessionDelegateTests.m in Sources */,
 				0209AC6624E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m in Sources */,
+				F81E707C2EC7AB4800698BF8 /* UIColor+HexString.swift in Sources */,
 				0209AC3024E7073800E45C90 /* NRMAHarvestableEventsTest.m in Sources */,
 				34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */,
 				0209AC0F24E7071500E45C90 /* NewRelicAPITest.m in Sources */,
