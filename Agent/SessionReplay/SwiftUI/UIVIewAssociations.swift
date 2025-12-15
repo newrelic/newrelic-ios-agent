@@ -13,7 +13,7 @@ internal var associatedMaskUserInputTextKey: UInt8 = 4
 internal var associatedMaskAllUserTouchesKey: UInt8 = 5
 internal var associatedMaskAllImagesKey: UInt8 = 6
 
-#if os(iOS)
+//#if os(iOS)
 extension UIView {
 
     public var maskApplicationText: Bool? {
@@ -84,4 +84,4 @@ extension UIView {
         }
     }
 }
-#endif
+//#endif
