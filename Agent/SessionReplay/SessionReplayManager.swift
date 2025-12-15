@@ -42,6 +42,7 @@ public class SessionReplayManager: NSObject {
         super.init()
         
         self.sessionReplay.delegate = self
+        self.sessionReplayMode = .off
         
         // Listen for error notifications
         NotificationCenter.default.addObserver(self, selector: #selector(handleErrorNotification), name: Notification.Name("NRMAErrorNotification"), object: nil)
@@ -55,6 +56,7 @@ public class SessionReplayManager: NSObject {
     /// - Parameter mode: The recording mode to use
     @objc public func setRecordingMode(_ mode: SessionReplayRecordingMode) {
         sessionReplayQueue.async { [self] in
+            self.sessionReplayMode = mode
             sessionReplay.transistionToRecordingMode(mode)
         }
     }

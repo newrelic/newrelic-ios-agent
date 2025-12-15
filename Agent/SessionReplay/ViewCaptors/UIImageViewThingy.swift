@@ -269,17 +269,6 @@ internal extension UIImage {
         }
     }
     
-    func optimizedPngData(maxDimension: CGFloat = 25) -> Data? {
-        // Return cached data if available
-        if let cachedData = cachedOptimizedData {
-            return cachedData
-        }
-        
-        let optimizedData = generateOptimizedPngData(maxDimension: maxDimension)
-        cachedOptimizedData = optimizedData
-        return optimizedData
-    }
-    
     private func generateOptimizedPngData(maxDimension: CGFloat) -> Data? {
         let originalSize = self.size
         

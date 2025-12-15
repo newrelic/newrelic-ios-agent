@@ -1343,7 +1343,7 @@ void applicationDidEnterBackgroundCF(void) {
     else {
         NRLOG_AGENT_DEBUG(@"isSessionReplaErrorSampled using default rate of 100.0");
     }
-    NRLOG_AGENT_DEBUG(@"isSessionReplaErrorSampled session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplayErrorSampleSeed <= errorSampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplayErrorSampleSeed], errorSampleRate);
+    NRLOG_AGENT_DEBUG(@"isSessionReplaErrorSampled session replay config: ERROR Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplayErrorSampleSeed <= errorSampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplayErrorSampleSeed], errorSampleRate);
 
     return (self.sessionReplayErrorSampleSeed <= errorSampleRate);
 }
