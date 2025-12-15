@@ -84,7 +84,7 @@ public class SessionReplayManager: NSObject {
         sessionReplayQueue.async { [weak self] in
             guard let self = self else { return }
             
-            if self.sessionReplayMode == .off {
+            if self.sessionReplayMode == .error {
                 NRLOG_DEBUG("Session Replay transitioning from ERROR to FULL mode due to error.")
                 self.sessionReplayMode = .full
                 // ensure the buffered data is marked for upload.
