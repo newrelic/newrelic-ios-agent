@@ -892,6 +892,7 @@
 		2B3493682E8EE257006DE9D0 /* RandomString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493672E8EE254006DE9D0 /* RandomString.swift */; };
 		2B3BA83D2EF1C47E007B798A /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
 		2B3BA8512EF1C56D007B798A /* SessionReplayRecordingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */; };
+		2B3BA8522EF1C7B0007B798A /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
 		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
 		2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
@@ -6472,6 +6473,7 @@
 				348233142BC5F21B0070FAC3 /* NRMAUncaughtExceptionHandler.m in Sources */,
 				3482330A2BC5F2140070FAC3 /* (null) in Sources */,
 				348233622BC5F2DD0070FAC3 /* NRMANetworkErrorEvent.m in Sources */,
+				2B3BA8522EF1C7B0007B798A /* SessionReplayFrame.swift in Sources */,
 				348232972BC5F1D70070FAC3 /* NRMAMethodSummaryMeasurement.m in Sources */,
 				348233602BC5F2DD0070FAC3 /* NRMAInteractionEvent.m in Sources */,
 				3482326C2BC5F1970070FAC3 /* NRMANetworkMonitor.m in Sources */,
