@@ -14,6 +14,8 @@ import UIKit
 @objcMembers
 public class SessionReplayManager: NSObject {
 
+#if os(iOS) || os(tvOS)
+
     private let sessionReplay: NRMASessionReplay
     private let sessionReplayReporter: SessionReplayReporter
 
@@ -464,7 +466,11 @@ public class SessionReplayManager: NSObject {
         }
         return documentsDirectory.appendingPathComponent("SessionReplayFrames")
     }
+    
+    #endif
 }
+
+#if os(iOS) || os(tvOS)
 
 @available(iOS 13.0, *)
 extension SessionReplayManager: NRMASessionReplayDelegate {
@@ -478,3 +484,4 @@ extension SessionReplayManager: NRMASessionReplayDelegate {
         return self.sessionReplayReporter.uploadURL(uncompressedDataSize: uncompressedDataSize, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp, isFirstChunk: isFirstChunk, isGZipped: isGZipped)
     }
 }
+#endif

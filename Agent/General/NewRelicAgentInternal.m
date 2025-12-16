@@ -1354,9 +1354,9 @@ void applicationDidEnterBackgroundCF(void) {
         isEnabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
     else {
-        NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of false");
+        // NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of false");
     }
-    NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %@", isEnabled ? @"true" : @"false");
+    // NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %@", isEnabled ? @"true" : @"false");
 
     return isEnabled;
 }

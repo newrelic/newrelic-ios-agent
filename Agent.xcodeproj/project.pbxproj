@@ -890,6 +890,8 @@
 		2B3493642E8E1440006DE9D0 /* XrayDecoder+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */; };
 		2B3493662E8E1F5A006DE9D0 /* SwiftUIStyledTextRes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493652E8E1F56006DE9D0 /* SwiftUIStyledTextRes.swift */; };
 		2B3493682E8EE257006DE9D0 /* RandomString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493672E8EE254006DE9D0 /* RandomString.swift */; };
+		2B3BA83D2EF1C47E007B798A /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
+		2B3BA8512EF1C56D007B798A /* SessionReplayRecordingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */; };
 		2B40F4FF28BEB95E00EAD248 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2B4226FA29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
 		2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */; };
@@ -6325,6 +6327,7 @@
 				348232722BC5F1A80070FAC3 /* NRMAMeasurements.m in Sources */,
 				348233362BC5F2270070FAC3 /* NRMAExceptionMetaDataStore.m in Sources */,
 				348233632BC5F2DD0070FAC3 /* NRMAMobileEvent.m in Sources */,
+				2B3BA83D2EF1C47E007B798A /* SessionReplayManager.swift in Sources */,
 				348232662BC5F16E0070FAC3 /* NRMAExceptionHandler.m in Sources */,
 				348233612BC5F2DD0070FAC3 /* NRMARequestEvent.m in Sources */,
 				348232AA2BC5F1E30070FAC3 /* NRMACustomTrace.m in Sources */,
@@ -6363,6 +6366,7 @@
 				3482335C2BC5F2780070FAC3 /* NRMANSURLConnectionSupport.m in Sources */,
 				3482336A2BC5F3040070FAC3 /* NRMAAnalytics.mm in Sources */,
 				348232AB2BC5F1E30070FAC3 /* NRTimer.m in Sources */,
+				2B3BA8512EF1C56D007B798A /* SessionReplayRecordingMode.swift in Sources */,
 				348233042BC5F2140070FAC3 /* NRMAHexUploader.m in Sources */,
 				348233332BC5F2270070FAC3 /* NRMACrashReport_DeviceInfo.m in Sources */,
 				348233512BC5F2740070FAC3 /* NRMAWebRequestUtil.m in Sources */,

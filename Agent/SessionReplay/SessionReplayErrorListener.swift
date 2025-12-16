@@ -76,6 +76,7 @@ public class SessionReplayErrorListener: NSObject {
             NRLOG_DEBUG("No SessionReplayManager registered")
             return
         }
+#if os(iOS) || os(tvOS)
 
         let currentMode = manager.getCurrentRecordingMode()
         if currentMode == .error {
@@ -83,6 +84,7 @@ public class SessionReplayErrorListener: NSObject {
             errorTriggered = true
             manager.onErrorDetected()
         }
+        #endif
     }
 
     /// Called when an NSError is recorded
@@ -102,6 +104,7 @@ public class SessionReplayErrorListener: NSObject {
             NRLOG_DEBUG("No SessionReplayManager registered")
             return
         }
+#if os(iOS) || os(tvOS)
 
         let currentMode = manager.getCurrentRecordingMode()
         if currentMode == .error {
@@ -109,6 +112,7 @@ public class SessionReplayErrorListener: NSObject {
             errorTriggered = true
             manager.onErrorDetected()
         }
+        #endif
     }
 
     //NOT DOING NETWORK ERRORS
@@ -171,6 +175,7 @@ public class SessionReplayErrorListener: NSObject {
             NRLOG_DEBUG("No SessionReplayManager registered")
             return
         }
+#if os(iOS) || os(tvOS)
 
         let currentMode = manager.getCurrentRecordingMode()
         if currentMode == .error {
@@ -178,5 +183,6 @@ public class SessionReplayErrorListener: NSObject {
             errorTriggered = true
             manager.onErrorDetected()
         }
+        #endif
     }
 }
