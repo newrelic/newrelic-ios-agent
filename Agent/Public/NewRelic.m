@@ -44,6 +44,8 @@
 
 + (void) logError:(NSString* __nonnull) message {
     NRLOG_ERROR(@"%@", message);
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) logVerbose:(NSString* __nonnull) message {
