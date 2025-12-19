@@ -34,7 +34,7 @@
 - (NSString*) sessionAttributeJSONString;
 
 - (void) sessionWillEnd;
-- (void) newSession;
+- (void) newSessionWithEndTimestamp:(NSDate *)endTimestamp;
 - (void) newSessionWithStartTime:(long long) sessionStartTime;
 
 //value is either a NSString or NSNumber;

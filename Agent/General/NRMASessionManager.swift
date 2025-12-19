@@ -11,7 +11,6 @@ import Foundation
 /// Manages mobile session lifecycle including:
 /// - 4-hour maximum session duration
 /// - 30-minute inactivity timeout
-/// - User ID change detection
 @objc public class NRMASessionManager: NSObject {
     
     // MARK: - Singleton
@@ -22,8 +21,7 @@ import Foundation
     // MARK: - Constants
     
     private static let defaultMaxSessionDuration: TimeInterval = 4 * 60 * 60 // 4 hours in seconds
-    private static let defaultInactivityTimeout: TimeInterval = 30 * 60      // 30 minutes in seconds
-    private static let sessionValidationInterval: TimeInterval = 60          // Check every 60 seconds
+    private static let defaultInactivityTimeout: TimeInterval = 30 * 60   // 30 minutes in seconds
     
     // MARK: - Properties
     
@@ -32,6 +30,8 @@ import Foundation
     
     /// The timestamp of the last recorded user activity (in milliseconds since epoch)
     @objc public private(set) var lastActivityTimeMS: Int64 = 0
+    
+    @objc public private(set) var lastBackgroundTimeMS: Int64 = 0
     
     /// Maximum session duration in seconds (default: 4 hours = 14400 seconds)
     @objc public var maxSessionDuration: TimeInterval = defaultMaxSessionDuration
@@ -54,16 +54,25 @@ import Foundation
         sessionQueue.sync {
             self.sessionStartTimeMS = startTimeMS
             self.lastActivityTimeMS = startTimeMS
+            self.lastBackgroundTimeMS = 0
             
             NRLOG_DEBUG("New session started at: \(startTimeMS)")
         }
     }
     
-    /// Record user activity to reset the inactivity timer
+    /// Record user activity
     @objc public func recordActivity() {
         sessionQueue.async {
             self.lastActivityTimeMS = NRMASessionManager.currentTimeMillis()
             NRLOG_DEBUG("Activity recorded at: \(self.lastActivityTimeMS)")
+        }
+    }
+    
+    /// Record last background timestamp
+    @objc public func recordBackgroundTimestamp() {
+        sessionQueue.async {
+            self.lastBackgroundTimeMS = NRMASessionManager.currentTimeMillis()
+            NRLOG_DEBUG("Background timestamp recorded at: \(self.lastBackgroundTimeMS)")
         }
     }
     
@@ -74,7 +83,17 @@ import Foundation
     @objc public func shouldEndSession() -> Bool {
         var shouldEnd = false
         sessionQueue.sync {
-            shouldEnd = hasExceededMaxDuration() || hasExceededInactivityTimeout()
+            shouldEnd = hasExceededMaxDuration() // || hasExceededInactivityTimeout()
+        }
+        return shouldEnd
+    }
+    
+    /// Check if the current session should end due to background timeout
+    /// - Returns: true if session should end, false otherwise
+    @objc public func shouldEndSessionFromBackground() -> Bool {
+        var shouldEnd = false
+        sessionQueue.sync {
+            shouldEnd = hasExceededBackgroundTimeout()
         }
         return shouldEnd
     }
@@ -109,21 +128,22 @@ import Foundation
         return exceeded
     }
     
-    /// End the current session and start a new one
-    @objc public func endSessionAndStartNew() {
-        NRLOG_DEBUG("Ending current session and starting new session")
-        
-        // Reset session timing
-        startNewSession()
-    }
-    
-    @objc private func validateSession() {
-        NRLOG_DEBUG("Validating session...")
-        
-        if shouldEndSession() {
-            NRLOG_DEBUG("Session validation triggered session end")
-            endSessionAndStartNew()
+    /// Check if session has exceeded background timeout
+    /// - Returns: true if background exceeded, false otherwise
+    @objc public func hasExceededBackgroundTimeout() -> Bool {
+        if lastBackgroundTimeMS == 0 {
+            return true
         }
+        let currentTime = NRMASessionManager.currentTimeMillis()
+        let backgroundDurationMS = currentTime - lastBackgroundTimeMS
+        let backgroundDurationSeconds = TimeInterval(backgroundDurationMS) / 1000.0
+        
+        let exceeded = backgroundDurationSeconds >= inactivityTimeout
+        if exceeded {
+            NRLOG_DEBUG(String(format: "Session exceeded background timeout: %.2f seconds (limit: %.2f seconds)",
+                               backgroundDurationSeconds, inactivityTimeout))
+        }
+        return exceeded
     }
     
     // MARK: - Utility Methods

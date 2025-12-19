@@ -10,6 +10,9 @@
 #import "NRMAHarvestController.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
+#import "NewRelicAgentInternal.h"
+#import "NewRelic/NewRelic-Swift.h"
+
 static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 #define NR_NEVER_TICKED -1
 
@@ -79,6 +82,14 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
     long long delta = (long long)(NRMAMillisecondTimestamp() - tick);
     NRLOG_AGENT_VERBOSE(@"HarvestTimer tick took %lld ms",delta);
     [self updateTimer];
+    
+    if([[NRMASessionManager shared] shouldEndSession]){
+        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSessionWithEndTimestamp:[NSDate date]];
+        
+        [[NewRelicAgentInternal sharedInstance] sessionReplayStartNewSession];
+
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+    }
 }
 
 - (void) updateTimer

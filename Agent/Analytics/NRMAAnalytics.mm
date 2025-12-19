@@ -1132,12 +1132,11 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         [[NewRelicAgentInternal sharedInstance].gestureFacade recordUserAction:backgroundGesture];
     }
 
-    [self endSessionReusable];
 }
 
-- (void) newSession {
+- (void) newSessionWithEndTimestamp:(NSDate *)endTimestamp {
     _newSession = YES;
-    [self endSessionReusable];
+    [self endSessionReusableWithEndTimestamp:endTimestamp];
 }
 
 - (void) newSessionWithStartTime:(long long)sessionStartTime {
@@ -1145,25 +1144,25 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if(!([NRMAFlags shouldEnableNewEventSystem])) {
         _analyticsController->newSessionWithStartTime(sessionStartTime);
     }
-    [self newSession];
+    [self newSessionWithEndTimestamp:[NSDate date]];
 }
 
-- (void) endSessionReusable {
+- (void)endSessionReusableWithEndTimestamp:(NSDate *)endTimestamp {
     if([NRMAFlags shouldEnableNewEventSystem]){
-        if(![self addSessionEndAttribute]) { //has exception handling within
+        if(![self addSessionEndAttributeWithEndTimestamp:endTimestamp]) { //has exception handling within
             NRLOG_AGENT_ERROR(@"failed to add session end attribute.");
         }
 
-        if(![self addSessionEvent]) { //has exception handling within
+        if(![self addSessionEventWithEndTimestamp:endTimestamp]) { //has exception handling within
             NRLOG_AGENT_ERROR(@"failed to add a session event");
         }
     }
     else {
-        if(!_analyticsController->addSessionEndAttribute()) { //has exception handling within
+        if(!_analyticsController->addSessionEndAttribute([endTimestamp timeIntervalSince1970] * 1000)) {
             NRLOG_AGENT_ERROR(@"failed to add session end attribute.");
         }
 
-        if(!_analyticsController->addSessionEvent()) { //has exception handling within
+        if(!_analyticsController->addSessionEvent([endTimestamp timeIntervalSince1970] * 1000)) {
             NRLOG_AGENT_ERROR(@"failed to add a session event");
         }
     }
@@ -1192,7 +1191,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     [harvestableAnalytics release];
 }
 
-- (BOOL) addSessionEndAttribute {
+- (BOOL) addSessionEndAttributeWithEndTimestamp:(NSDate *)endTimestamp {
 
     NSTimeInterval elapsed = [[NSDate date] timeIntervalSinceDate:_sessionStartTime];
 
@@ -1204,7 +1203,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return YES;
 }
 
-- (BOOL) addSessionEvent {
+- (BOOL) addSessionEventWithEndTimestamp:(NSDate *)endTimestamp {
     NRMASessionEvent *event = [[NRMASessionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
                                               sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                                  category:@"Session" withAttributeValidator:_attributeValidator];

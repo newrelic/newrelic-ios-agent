@@ -81,6 +81,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
 
+- (void) endSessionWithTime:(NSTimeInterval) endTimestampSeconds;
+
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
