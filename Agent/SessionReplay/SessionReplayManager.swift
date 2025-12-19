@@ -63,38 +63,26 @@ public class SessionReplayManager: NSObject {
         }
     }
 
-    /// Called when an error is detected (handled exception, network error, etc.)
-    /// Transitions from error mode to full mode, including the 15-second buffer
-    @objc public func onErrorDetected() {
-        sessionReplayQueue.async { [self] in
-            NRLOG_DEBUG("Error detected - transitioning session replay to full mode")
-            sessionReplay.transitionToFullModeOnError()
-
-            // Immediately harvest to ensure error context is captured
-            self.harvest()
-        }
-    }
-
     /// Gets the current recording mode
     /// - Returns: The current recording mode
     @objc public func getCurrentRecordingMode() -> SessionReplayRecordingMode {
         return sessionReplay.recordingMode
     }
     
-    
+    /// Transitions from error mode to full mode, including the 15-second buffer
     @objc public func onError(_ error: Error?) {
         sessionReplayQueue.async { [weak self] in
             guard let self = self else { return }
             
             if self.sessionReplayMode == .error {
-                NRLOG_DEBUG("Session Replay transitioning from ERROR to FULL mode due to error.")
-                self.sessionReplayMode = .full
+
                 // ensure the buffered data is marked for upload.
                 // The current implementation of processFrameToFile writes to disk.
                 // If we switch to FULL, subsequent frames will just be written.
-                // We might need to ensure the existing buffered frames are not pruned anymore.
-                // Since pruneBufferedFiles checks for age, they won't be pruned immediately, but we should probably stop pruning.
                 // The currentMode update to .FULL will stop the pruning in processFrameToFile.
+                
+                NRLOG_DEBUG("Error detected - transitioning session replay to full mode")
+                sessionReplay.transitionToFullModeOnError()
             }
         }
     }
