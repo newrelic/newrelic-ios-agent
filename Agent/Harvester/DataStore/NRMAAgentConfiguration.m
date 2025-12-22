@@ -20,8 +20,8 @@ static NSString* __NRMA__customAppBuildString = nil;
 static NRMAApplicationPlatform __NRMA__applicationPlatform = NRMAPlatform_Native;
 static NSString* __NRMA__applicationPlatformVersion = nil;
 
-// Default max event buffer time is 10 minutes (600 seconds).
-static NSUInteger __NRMA__maxEventBufferTime = 600;
+// Default max event buffer time is 1 minute (60 seconds).
+static NSUInteger __NRMA__maxEventBufferTime = 60;
 static NSUInteger __NRMA__maxEventBufferSize = 1000;
 static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
 
@@ -46,6 +46,7 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
 
 + (void) setMaxEventBufferTime:(NSUInteger)seconds {
     __NRMA__maxEventBufferTime = seconds;
+    
 }
 + (NSUInteger) getMaxEventBufferTime {
     return __NRMA__maxEventBufferTime;

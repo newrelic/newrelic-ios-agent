@@ -108,8 +108,31 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
-// Logging
++ (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
 
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"Supportability/Mobile/%@/API/setMaxBufferTime", nativePlatform]
+                                                              value:[NSNumber numberWithUnsignedInt:seconds]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
++ (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"Supportability/Mobile/%@/API/setMaxEventPoolSize", nativePlatform]
+                                                              value:[NSNumber numberWithUnsignedInt:size]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
+// Logging
 + (void) enqueueLogSuccessMetric:(long)size {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];

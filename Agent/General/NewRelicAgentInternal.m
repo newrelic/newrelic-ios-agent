@@ -149,16 +149,17 @@ static NewRelicAgentInternal* _sharedInstance;
     return urlTransformer;
 }
 - (void) setMaxEventBufferTime:(unsigned int)seconds {
-    [self.analyticsController setMaxEventBufferTime:seconds];
     [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxBufferTime"
                                                     value:@1
-                                                    scope:nil]];
+                                                    scope:@""]];
+    [NRMASupportMetricHelper enqueueMaxBufferTimeConfiguration:seconds];
+    [self.analyticsController setMaxEventBufferTime:seconds];
 }
 - (void) setMaxEventPoolSize:(unsigned int)size {
+    [NRMASupportMetricHelper enqueueBufferPoolSizeConfiguration:size];
+    // TODO clean up references to poolsize/buffersize. Lets pick one and stick with it throughout our code.
+    // Note: the name for the metric representing "PoolSize" will change throught the code. Occasianally referenced as 'PoolSize' or 'BufferSize'
     [self.analyticsController setMaxEventBufferSize:size];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/API/setMaxEventPoolSize"
-                                                    value:@1
-                                                    scope:nil]];
 }
 - (void) dealloc {
     NSLog(@"NewRelicAgentInternal -dealloc");
@@ -1112,6 +1113,7 @@ void applicationDidEnterBackgroundCF(void) {
         // If the agent is connected, it should have no problem performing an adhoc harvest right now containing Shutdown support metric.
         [NRMASupportMetricHelper enqueueStopAgentMetric];
 
+        
         [NRMAHarvestController harvestNow];
 
         // * ACTUAL SHUT DOWN *//
