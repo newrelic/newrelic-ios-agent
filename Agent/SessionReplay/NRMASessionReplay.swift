@@ -214,26 +214,18 @@ public class NRMASessionReplay: NSObject {
         
         self.rawFrames.append(frame)
         
-        // Log buffer statistics after adding
-        let afterCount = rawFrames.count
-        if let oldestFrame = rawFrames.first, let newestFrame = rawFrames.last {
-            let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
-            //NRLOG_DEBUG("📹 [addFrame] Buffer size after: \(afterCount), Time span: \(String(format: "%.2f", bufferSpan))s")
-            //NRLOG_DEBUG("📹 [addFrame] Oldest frame: \(oldestFrame.date), Newest: \(newestFrame.date)")
-        }
-        
         // BEGIN PROCESSING FRAME TO FILE
         // Process frame to file
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else { return }
             
             self.processFrameToFile(frame)
+            
+            // END PROCESSING FRAME TO FILE
         }
         
-        // END PROCESSING FRAME TO FILE
-        
-        if recordingMode == .error {
-            pruneRawFrames()
+        if self.recordingMode == .error {
+            self.pruneRawFrames()
         }
     }
     
@@ -242,13 +234,6 @@ public class NRMASessionReplay: NSObject {
     private func pruneRawFrames() {
         let beforeCount = rawFrames.count
         NRLOG_DEBUG("🔄 [pruneRawFrames] Starting prune - Buffer count: \(beforeCount), Max allowed: \(maxBufferFrames)")
-        
-        // Keep only the most recent maxBufferFrames frames (circular buffer)
-        if rawFrames.count > maxBufferFrames {
-            let framesToRemove = rawFrames.count - maxBufferFrames
-            NRLOG_DEBUG("🔄 [pruneRawFrames] Circular buffer overflow - Removing \(framesToRemove) oldest frames")
-            rawFrames.removeFirst(framesToRemove)
-        }
         
         // Also ensure we don't keep frames older than the buffer duration
         let now = Date()
@@ -387,8 +372,8 @@ public class NRMASessionReplay: NSObject {
     
     
     func processFrameToFile(_ frame: SessionReplayFrame) {
-        //        NRLOG_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
-        //        NRLOG_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
+                NRLOG_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
+                NRLOG_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
         
         // Fetch processed frame and only unpersisted touches
         let lastFrameSize = sessionReplayFrameProcessor.lastFullFrame?.size ?? .zero
@@ -396,7 +381,7 @@ public class NRMASessionReplay: NSObject {
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getUnpersistedTouches()
         
-        //        NRLOG_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
+                NRLOG_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
         //        NRLOG_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
         
         guard let firstFrame = rawFrames.first else {
@@ -559,10 +544,6 @@ public class NRMASessionReplay: NSObject {
         bufferLock.lock()
         defer { bufferLock.unlock() }
         
-        //        guard recordingMode == .error else {
-        //            NRLOG_DEBUG("⚠️ [transitionToFullModeOnError] Called but not in error mode (current: \(recordingMode))")
-        //            return
-        //        }
         
         let bufferCount = rawFrames.count
         NRLOG_DEBUG("🚨 [transitionToFullModeOnError] ==================== ERROR DETECTED ====================")
@@ -668,13 +649,6 @@ public class NRMASessionReplay: NSObject {
             // Sort by frame index (oldest first)
             fileInfos.sort { $0.frameIndex < $1.frameIndex }
             
-            //            // Log file information
-            //            for fileInfo in fileInfos {
-            //                let fileAge = now.timeIntervalSince(fileInfo.creationDate)
-            //                let snapshotType = fileInfo.isFullSnapshot ? "FULL" : "inc"
-            //                //NRLOG_DEBUG("🗑️ [pruneBufferedFiles]   frame_\(fileInfo.frameIndex) - age: \(String(format: "%.1f", fileAge))s, \(snapshotType)")
-            //            }
-            
             // Find the cutoff point: keep 14-15 frames starting from a full snapshot
             let targetFrameCount = 15
             let minFrameCount = 14
@@ -685,7 +659,7 @@ public class NRMASessionReplay: NSObject {
             if fileInfos.count <= minFrameCount {
                 // Not enough files to prune, keep all
                 filesToKeep = fileInfos
-                // NRLOG_DEBUG("🗑️ [pruneBufferedFiles] Only \(fileInfos.count) files - keeping all")
+                 NRLOG_DEBUG("🗑️ [pruneBufferedFiles] Only \(fileInfos.count) files - keeping all")
             }
             else {
                 // Find the most recent full snapshot that allows keeping 14-15 frames
@@ -715,12 +689,13 @@ public class NRMASessionReplay: NSObject {
                     filesToKeep = Array(fileInfos[snapshotIndex...])
                     filesToDelete = Array(fileInfos[0..<snapshotIndex])
                     NRLOG_DEBUG("🗑️ [pruneBufferedFiles] Full snapshot at frame_\(fileInfos[snapshotIndex].frameIndex) - keeping \(filesToKeep.count) frames")
-                } else {
+                }
+                else {
                     // No full snapshot found - keep most recent 14 frames
                     let keepStartIndex = max(0, fileInfos.count - minFrameCount)
                     filesToKeep = Array(fileInfos[keepStartIndex...])
                     filesToDelete = Array(fileInfos[0..<keepStartIndex])
-                    // NRLOG_DEBUG("🗑️ [pruneBufferedFiles] ⚠️ No full snapshot - keeping \(filesToKeep.count) most recent frames")
+                     NRLOG_DEBUG("🗑️ [pruneBufferedFiles] ⚠️ No full snapshot - keeping \(filesToKeep.count) most recent frames")
                 }
             }
             
