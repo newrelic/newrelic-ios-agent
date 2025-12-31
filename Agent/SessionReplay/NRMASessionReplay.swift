@@ -47,7 +47,7 @@ public class NRMASessionReplay: NSObject {
     private var lastPruneTime: Date?
     
     /// Maximum number of frames to keep in circular buffer (30 seconds at ~1fps = 30 frames)
-    private let maxBufferFrames: Int = 30
+    private let maxBufferFrames: Int = 32
     
     /// Tracks which frame counter values contain full snapshots
     private var fullSnapshotFrameIndices: Set<Int> = []
@@ -394,7 +394,7 @@ public class NRMASessionReplay: NSObject {
         var container: [AnyRRWebEvent] = []
         
         // Only add meta event for first frame or when frame size changes
-        if lastFrameSize != frame.size {
+        if lastFrameSize != frame.size || isFullSnapshot {
             NRLOG_DEBUG("💾 [processFrameToFile] Size change detected - Adding meta event")
             let metaEventData = RRWebMetaData(
                 href: "http://newrelic.com",
@@ -650,8 +650,8 @@ public class NRMASessionReplay: NSObject {
             fileInfos.sort { $0.frameIndex < $1.frameIndex }
             
             // Find the cutoff point: keep 14-15 frames starting from a full snapshot
-            let targetFrameCount = 15
-            let minFrameCount = 14
+            let targetFrameCount = 16
+            let minFrameCount = 16
             
             var filesToKeep: [FileInfo] = []
             var filesToDelete: [FileInfo] = []

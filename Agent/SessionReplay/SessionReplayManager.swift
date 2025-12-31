@@ -410,7 +410,10 @@ public class SessionReplayManager: NSObject {
                                 // Check if any frame in this file is a full snapshot (type = 2)
                                 let hasFullFrame = jsonArray.contains { frame in
                                     if let type = frame["type"] as? Int {
-                                        return type == 4 // meta OR fullSnapshot
+                                        //NRLOG_DEBUG("Frame type found: \(type) in file \(frameFile.lastPathComponent)")
+                                        
+                                        return type == 2 //  fullSnapshot
+
                                     }
                                     return false
                                 }
