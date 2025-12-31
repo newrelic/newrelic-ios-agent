@@ -387,19 +387,47 @@ public class SessionReplayManager: NSObject {
                 return
             }
             
-            // Read and combine all frame files
+            // Read and combine all frame files, starting from the first full frame
             var frameContents: [String] = []
+            var foundFirstFullFrame = false
+
             for frameFile in frameFiles {
                 do {
                     // remove outer [] from frameFile if they exist
                     let frameContent = try String(contentsOf: frameFile).trimmingCharacters(in: .whitespacesAndNewlines)
-                    
+
                     var frameContentWithOuterBracketsRemoved = frameContent
                     if frameContent.hasPrefix("[") && frameContent.hasSuffix("]") {
                         frameContentWithOuterBracketsRemoved = String(frameContent.dropFirst().dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
                     }
+
                     if !frameContentWithOuterBracketsRemoved.isEmpty {
-                        frameContents.append(frameContentWithOuterBracketsRemoved)
+                        // Check if this is a full frame (type = 2) if we haven't found one yet
+                        if !foundFirstFullFrame {
+                            // Parse the original content (with brackets) to check for full frames
+                            if let data = frameContent.data(using: .utf8),
+                               let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                                // Check if any frame in this file is a full snapshot (type = 2)
+                                let hasFullFrame = jsonArray.contains { frame in
+                                    if let type = frame["type"] as? Int {
+                                        return type == 4 // meta OR fullSnapshot
+                                    }
+                                    return false
+                                }
+
+                                if hasFullFrame {
+                                    foundFirstFullFrame = true
+                                    frameContents.append(frameContentWithOuterBracketsRemoved)
+                                } else {
+                                    NRLOG_DEBUG("Skipping frame file \(frameFile.lastPathComponent) - no full snapshot found yet")
+                                }
+                            } else {
+                                NRLOG_DEBUG("Failed to parse frame file \(frameFile.lastPathComponent) to check type")
+                            }
+                        } else {
+                            // We've found a full frame, include all subsequent frames
+                            frameContents.append(frameContentWithOuterBracketsRemoved)
+                        }
                     }
                 } catch {
                     NRLOG_DEBUG("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
@@ -407,7 +435,11 @@ public class SessionReplayManager: NSObject {
             }
             
             if frameContents.isEmpty {
-                NRLOG_DEBUG("No valid frame content found for session ID: \(sessionId)")
+                if !foundFirstFullFrame {
+                    NRLOG_DEBUG("No full snapshot frame found for session ID: \(sessionId)")
+                } else {
+                    NRLOG_DEBUG("No valid frame content found for session ID: \(sessionId)")
+                }
                 try FileManager.default.removeItem(at: sessionDirectory)
                 try? FileManager.default.removeItem(at: urlFile)
                 return
