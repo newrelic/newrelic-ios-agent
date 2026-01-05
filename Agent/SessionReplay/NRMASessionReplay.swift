@@ -199,19 +199,6 @@ public class NRMASessionReplay: NSObject {
     
     func addFrame(_ frame: SessionReplayFrame) {
         
-        bufferLock.lock()
-        defer { bufferLock.unlock() }
-        
-        let beforeCount = rawFrames.count
-        
-        //NRLOG_DEBUG("📹 [addFrame] Adding frame - Mode: \(recordingMode), Buffer size before: \(beforeCount)")
-        //NRLOG_DEBUG("📹 [addFrame] Frame timestamp: \(frame.date), Size: \(frame.size)")
-        
-        // Check if we need to force a full snapshot every 15 seconds
-        if recordingMode == .error {
-            checkAndForceFullSnapshot(for: frame)
-        }
-        
         self.rawFrames.append(frame)
         
         // BEGIN PROCESSING FRAME TO FILE
@@ -224,8 +211,8 @@ public class NRMASessionReplay: NSObject {
             // END PROCESSING FRAME TO FILE
         }
         
-        if self.recordingMode == .error {
-            self.pruneRawFrames()
+        if recordingMode == .error {
+            pruneRawFrames()
         }
     }
     
@@ -372,8 +359,20 @@ public class NRMASessionReplay: NSObject {
     
     
     func processFrameToFile(_ frame: SessionReplayFrame) {
-                NRLOG_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
-                NRLOG_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
+        
+        
+        let beforeCount = rawFrames.count
+        
+        //NRLOG_DEBUG("📹 [addFrame] Adding frame - Mode: \(recordingMode), Buffer size before: \(beforeCount)")
+        //NRLOG_DEBUG("📹 [addFrame] Frame timestamp: \(frame.date), Size: \(frame.size)")
+        
+        // Check if we need to force a full snapshot every 15 seconds
+        if recordingMode == .error {
+            checkAndForceFullSnapshot(for: frame)
+        }
+        
+        NRLOG_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
+        NRLOG_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
         
         // Fetch processed frame and only unpersisted touches
         let lastFrameSize = sessionReplayFrameProcessor.lastFullFrame?.size ?? .zero
@@ -569,6 +568,10 @@ public class NRMASessionReplay: NSObject {
     /// Checks if a full snapshot should be forced (every 15 seconds)
     /// This ensures a full snapshot is always available within the buffer
     private func checkAndForceFullSnapshot(for frame: SessionReplayFrame) {
+        
+        bufferLock.lock()
+        defer { bufferLock.unlock() }
+        
         guard let lastSnapshot = lastFullSnapshotTime else {
             NRLOG_DEBUG("📸 [checkAndForceFullSnapshot] First snapshot - forcing full snapshot")
             lastFullSnapshotTime = frame.date
@@ -702,7 +705,6 @@ public class NRMASessionReplay: NSObject {
             // Delete old files and clean up tracking set
             var prunedCount = 0
             var prunedSize = 0
-            var totalSize = fileInfos.reduce(0) { $0 + $1.size }
             
             for fileInfo in filesToDelete {
                 try FileManager.default.removeItem(at: fileInfo.url)
@@ -711,9 +713,6 @@ public class NRMASessionReplay: NSObject {
                 prunedSize += fileInfo.size
                 NRLOG_DEBUG("🗑️ [pruneBufferedFiles]   ❌ Removed frame_\(fileInfo.frameIndex)")
             }
-            
-            // let remainingFiles = filesToKeep.count
-            // let remainingSize = totalSize - prunedSize
         }
         catch {
             NRLOG_DEBUG("🗑️ [pruneBufferedFiles] ❌ Failed to prune buffered files: \(error)")
