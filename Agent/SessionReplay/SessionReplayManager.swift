@@ -231,6 +231,11 @@ public class SessionReplayManager: NSObject {
     }
     
     private func harvestSessionReplayFramesAndTouches() {
+        
+        defer {
+            self.harvestseconds = 0
+        }
+        
         if sessionReplayMode == .error {
             NRLOG_DEBUG("Skipping harvest in ERROR mode.")
             return
@@ -259,8 +264,9 @@ public class SessionReplayManager: NSObject {
             return
         }
         self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        
         self.sessionReplay.isFirstChunk = false
-        self.harvestseconds = 0
+
     }
     
     private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {

@@ -199,7 +199,7 @@ public class NRMASessionReplay: NSObject {
     
     func addFrame(_ frame: SessionReplayFrame) {
         
-        self.rawFrames.append(frame)
+        rawFrames.append(frame)
         
         // BEGIN PROCESSING FRAME TO FILE
         // Process frame to file
