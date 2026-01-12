@@ -151,7 +151,7 @@ final class UIHostingViewRecordOrchestrator {
                                        parentId: parentId,
                                        originalView: view)
         } catch {
-            //NRLOG_DEBUG("Error extracting SwiftUI ViewThingys: \(error)")
+            //NRLOG_AGENT_DEBUG("Error extracting SwiftUI ViewThingys: \(error)")
             return []
         }
     }
