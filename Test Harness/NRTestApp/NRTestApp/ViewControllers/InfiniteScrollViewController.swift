@@ -37,7 +37,9 @@ class InfiniteScrollTableViewController: UIViewController {
         tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
         // Set the background color
+        #if os(iOS)
         tableView.backgroundColor = .systemBackground
+        #endif
         
         // Register a standard UITableViewCell
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: reuseIdentifier)

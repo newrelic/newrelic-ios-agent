@@ -47,15 +47,19 @@ class MainCoordinator: Coordinator {
     }
     
     func showTextMaskingController() {
-        let textMaskingViewController = ViewControllerProvider.textMaskingViewController
-        navigationController.pushViewController(textMaskingViewController, animated: true)
+#if os(iOS)
+
+        let webViewController = ViewControllerProvider.textMaskingViewController
+        navigationController.pushViewController(webViewController, animated: true)
+        #endif
     }
-    
-    func showAttributedStringTextMaskingController() {
-        let attributedStringTextMaskingViewController = ViewControllerProvider.attributedStringTextMaskingViewController
-        navigationController.pushViewController(attributedStringTextMaskingViewController, animated: true)
-    }
-    
+
+
+   func showAttributedStringTextMaskingController() {
+      let attributedStringTextMaskingViewController = ViewControllerProvider.attributedStringTextMaskingViewController
+      navigationController.pushViewController(attributedStringTextMaskingViewController, animated: true)
+   }
+
     func showCollectionController() {
         let collectionViewController = ViewControllerProvider.collectionViewController
         navigationController.pushViewController(collectionViewController, animated: true)
@@ -74,6 +78,26 @@ class MainCoordinator: Coordinator {
     func showDiffTestController() {
         let diffTestViewController = ViewControllerProvider.diffTestViewController
         navigationController.pushViewController(diffTestViewController, animated: true)
+    }
+    
+    func showPerformanceContentView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            if #available(iOS 17.0, *) {
+                let swiftUIView = PerformanceContentView()
+                let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+                navigationController.pushViewController(swiftUIViewController, animated: true)
+                
+            } else {
+                // Fallback on earlier versions
+            }
+        }
+#endif
+    }
+
+    func showConfidentialController() {
+        let confidentialViewController = ViewControllerProvider.confidentialViewController
+        navigationController.pushViewController(confidentialViewController, animated: true)
     }
     
     func showSwiftUITestView() {
@@ -95,4 +119,5 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
+        
 }

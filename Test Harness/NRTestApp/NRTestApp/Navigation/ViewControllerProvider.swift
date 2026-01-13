@@ -25,17 +25,20 @@ enum ViewControllerProvider {
         return viewController
     }
 #endif
-
+#if os(iOS)
     static var textMaskingViewController: TextMaskingViewController {
         let viewController = TextMaskingViewController()
         return viewController
     }
-    
-    static var attributedStringTextMaskingViewController: AttributedStringTextMaskingViewController {
-        let viewController = AttributedStringTextMaskingViewController()
-        return viewController
-    }
-    
+#endif
+#if os(iOS)
+
+static var attributedStringTextMaskingViewController: AttributedStringTextMaskingViewController {
+let viewController = AttributedStringTextMaskingViewController()
+return viewController
+}
+#endif
+
     static var collectionViewController: ScrollableCollectionViewController {
         let viewController = ScrollableCollectionViewController()
         return viewController
@@ -53,6 +56,11 @@ enum ViewControllerProvider {
     
     static var diffTestViewController: DiffTestViewController {
         let viewController = DiffTestViewController()
+        return viewController
+    }
+    
+    static var confidentialViewController: ConfidentialViewController {
+        let viewController = ConfidentialViewController()
         return viewController
     }
 }
