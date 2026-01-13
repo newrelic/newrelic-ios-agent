@@ -1618,6 +1618,19 @@
 		F85558532DE7C4F6008B6EDD /* SessionReplayData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */; };
 		F858F3602AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
 		F858F3612AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */; };
+		F85ABB492F1557150098A2CF /* UILabelThingyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */; };
+		F85ABB5D2F15575B0098A2CF /* UILabelThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF4D2D54310900BF5BED /* UILabelThingy.swift */; };
+		F85ABB5E2F1557B40098A2CF /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
+		F85ABB5F2F1557DD0098A2CF /* SessionReplayViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF492D4C4E6000BF5BED /* SessionReplayViewThingy.swift */; };
+		F85ABB602F1557EA0098A2CF /* SerializedNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E85052D9F4B5600968D7D /* SerializedNode.swift */; };
+		F85ABB612F1557FD0098A2CF /* RRWebIncrementalSnapshotEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341E851C2DA0500E00968D7D /* RRWebIncrementalSnapshotEvent.swift */; };
+		F85ABB622F1558240098A2CF /* UIColor+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D0401D2D86036D007BE92D /* UIColor+HexString.swift */; };
+		F85ABB632F155B4B0098A2CF /* RRWebEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344E494F2D935072008174A1 /* RRWebEvent.swift */; };
+		F85ABB642F155B6E0098A2CF /* IDGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF4F2D543C8700BF5BED /* IDGenerator.swift */; };
+		F85ABB652F155B780098A2CF /* UIFont+CSSConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8672AB42EB11B2C0055FA51 /* UIFont+CSSConversion.swift */; };
+		F85CEE052ED0BD4D004A314F /* NRMASessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85CEE042ED0BD4D004A314F /* NRMASessionManager.swift */; };
+		F85CEE062ED0BD4D004A314F /* NRMASessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85CEE042ED0BD4D004A314F /* NRMASessionManager.swift */; };
+		F85CEE072ED0BD4D004A314F /* NRMASessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85CEE042ED0BD4D004A314F /* NRMASessionManager.swift */; };
 		F8672AB52EB11B2C0055FA51 /* UIFont+CSSConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8672AB42EB11B2C0055FA51 /* UIFont+CSSConversion.swift */; };
 		F86741072BD30F3F00DAA1A2 /* NRMAExceptionDataCollectionWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48D024DC622400115469 /* NRMAExceptionDataCollectionWrapper.m */; };
 		F8678AAE2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m in Sources */ = {isa = PBXBuildFile; fileRef = F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */; };
@@ -2668,6 +2681,8 @@
 		F848CDD52AA133FB0082052F /* NRMAInteractionEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAInteractionEvent.h; sourceTree = "<group>"; };
 		F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayData.swift; sourceTree = "<group>"; };
 		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTests.m; sourceTree = "<group>"; };
+		F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UILabelThingyTests.swift; sourceTree = "<group>"; };
+		F85CEE042ED0BD4D004A314F /* NRMASessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMASessionManager.swift; sourceTree = "<group>"; };
 		F8672AB42EB11B2C0055FA51 /* UIFont+CSSConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+CSSConversion.swift"; sourceTree = "<group>"; };
 		F8678AAC2CDBC62B008FD2A2 /* NRAutoCollectLogStressTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRAutoCollectLogStressTest.m; sourceTree = "<group>"; };
 		F8728E402ACC9D5A0056F641 /* NRMANetworkMonitor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMANetworkMonitor.m; sourceTree = "<group>"; };
@@ -3067,6 +3082,7 @@
 			children = (
 				2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */,
 				0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */,
+				F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */,
 				0209ACB424E747FA00E45C90 /* NewRelicAgentTests.m */,
 				0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */,
 				0209ACAA24E7394400E45C90 /* NRMAInstallMetricGeneratorTest.m */,
@@ -5482,6 +5498,7 @@
 				0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */,
 				0209AC4424E7078000E45C90 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
 				0209AC0024E7070900E45C90 /* NSURLSessionOverrideTest.m in Sources */,
+				F85ABB5D2F15575B0098A2CF /* UILabelThingy.swift in Sources */,
 				0209ABF224E706FA00E45C90 /* NRActivityTracesTest.m in Sources */,
 				F6E79D1B25A78689006277FB /* TestW3CTraceParent.mm in Sources */,
 				0209AC2224E7071F00E45C90 /* NRMeasurementTest.m in Sources */,
@@ -5497,20 +5514,27 @@
 				0209AC4F24E7079400E45C90 /* NRMARequestEvents.mm in Sources */,
 				0209ACA024E7393300E45C90 /* NRMemoryVitalsTest.m in Sources */,
 				0209ABFF24E7070900E45C90 /* NRMASessionExclusivityWithoutDelegateTests.m in Sources */,
+				F85ABB492F1557150098A2CF /* UILabelThingyTests.swift in Sources */,
 				0209ACB024E7394500E45C90 /* NRMAUDIDManagerTest.m in Sources */,
 				0209ACB124E7394500E45C90 /* NRMAUUIDStoreTests.m in Sources */,
 				0209ABF024E706FA00E45C90 /* NRTraceMachineTests.m in Sources */,
+				F85ABB612F1557FD0098A2CF /* RRWebIncrementalSnapshotEvent.swift in Sources */,
 				0209ACAF24E7394500E45C90 /* NRMAInstallMetricGeneratorTest.m in Sources */,
+				F85ABB5E2F1557B40098A2CF /* ViewDetails.swift in Sources */,
 				0209AC0124E7070900E45C90 /* NRURLSessionTaskOverrideTests.m in Sources */,
 				0209AC1024E7071500E45C90 /* NRMAAppTokenTest.m in Sources */,
 				C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */,
+				F85ABB602F1557EA0098A2CF /* SerializedNode.swift in Sources */,
 				0209ABDC24E706AE00E45C90 /* TestContextAdapter.mm in Sources */,
 				0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */,
+				F85ABB632F155B4B0098A2CF /* RRWebEvent.swift in Sources */,
 				0209ABF124E706FA00E45C90 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0209AC0E24E7071500E45C90 /* APINetworkNoticeTest.m in Sources */,
 				0209AC3124E7073800E45C90 /* NRMADeviceInformationTests.m in Sources */,
+				F85ABB622F1558240098A2CF /* UIColor+HexString.swift in Sources */,
 				0209ABE324E706E600E45C90 /* TestUICollectionViewInstrumentation.m in Sources */,
 				0209AC9724E7393300E45C90 /* NRNSURLConnectionSupportTests.m in Sources */,
+				F85ABB652F155B780098A2CF /* UIFont+CSSConversion.swift in Sources */,
 				F8A455482AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m in Sources */,
 				343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0209AC0C24E7071500E45C90 /* APIMethodTraceTest.m in Sources */,
@@ -5540,6 +5564,7 @@
 				0209AC9D24E7393300E45C90 /* NRMAUpgradeMetricGeneratorTest.m in Sources */,
 				0209AC4024E7075200E45C90 /* NRHarvesterConnectionTests.m in Sources */,
 				2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */,
+				F85ABB642F155B6E0098A2CF /* IDGenerator.swift in Sources */,
 				0209AC9B24E7393300E45C90 /* NRCPUVitalsTest.m in Sources */,
 				0209AC1224E7071500E45C90 /* NRMAAPIHelperTests.m in Sources */,
 				0209AC4524E7078000E45C90 /* NRMAFeatureFlagsTests.m in Sources */,
@@ -5558,6 +5583,7 @@
 				0209AC0D24E7071500E45C90 /* NewRelicTests.m in Sources */,
 				0209ABF324E706FA00E45C90 /* NRTraceTest.m in Sources */,
 				0209AC0224E7070900E45C90 /* NRURLSessionTaskOverrideWithDelegateTest.m in Sources */,
+				F85ABB5F2F1557DD0098A2CF /* SessionReplayViewThingy.swift in Sources */,
 				0209ABD924E706AE00E45C90 /* TestHandledExceptionController.mm in Sources */,
 				F8AC3E932938FD6C002B4AA8 /* NRMAFakeDataHelper.m in Sources */,
 				0209AC4E24E7079400E45C90 /* NRMAAnalyticsTest.mm in Sources */,
