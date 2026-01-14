@@ -106,7 +106,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     return [_eventManager getMaxEventBufferTimeInSeconds];
 }
 
-- (id) initWithSessionStartTimeMS:(long long) sessionStartTime {
+- (id) initWithSessionStartTimeMS:(long long) sessionStartTime newSession:(BOOL) newSession {
     self = [super init];
     if(self){
         
@@ -125,32 +125,34 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             _attributeValidator = [[NRMAAttributeValidator alloc] init];
             _sessionAttributeManager = [[NRMASAM alloc] initWithAttributeValidator:_attributeValidator];
 
-            NSString* attributes = [self sessionAttributeJSONString];
-            if (attributes != nil && [attributes length] > 0) {
-                NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                                           options:0
-                                                                             error:nil];
-                if (dictionary[kNRMA_RA_upgradeFrom]) {
-                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_upgradeFrom];
-                }
-                if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
-                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMASecureUDIDIsNilNotification];
-
-                }
-                if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
-                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMADeviceChangedAttribute];
-                }
-                if (dictionary[kNRMA_RA_install]) {
-                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_install];
-                }
-                if (dictionary[kNRMA_RA_hasReplay]) {
-                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
-                }
-
-                //session duration is only valid for one session. This metric should be removed
-                //after the persistent attributes are loaded.
-                if (dictionary[kNRMA_RA_sessionDuration]) {
-                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_sessionDuration];
+            if (newSession == TRUE) {
+                NSString* attributes = [self sessionAttributeJSONString];
+                if (attributes != nil && [attributes length] > 0) {
+                    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                               options:0
+                                                                                 error:nil];
+                    if (dictionary[kNRMA_RA_upgradeFrom]) {
+                        [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_upgradeFrom];
+                    }
+                    if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
+                        [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMASecureUDIDIsNilNotification];
+                        
+                    }
+                    if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
+                        [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMADeviceChangedAttribute];
+                    }
+                    if (dictionary[kNRMA_RA_install]) {
+                        [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_install];
+                    }
+                    if (dictionary[kNRMA_RA_hasReplay]) {
+                        [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
+                    }
+                    
+                    //session duration is only valid for one session. This metric should be removed
+                    //after the persistent attributes are loaded.
+                    if (dictionary[kNRMA_RA_sessionDuration]) {
+                        [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_sessionDuration];
+                    }
                 }
             }
         }
@@ -167,31 +169,33 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             //and will be set shortly after the initialization of NRMAAnalytics.
             //They can be removed now and it shouldn't interfere with the generation
             //of these attributes if it should occur.
-            NSString* attributes = [self sessionAttributeJSONString];
-            if (attributes != nil && [attributes length] > 0) {
-                NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
-                                                                           options:0
-                                                                             error:nil];
-                if (dictionary[kNRMA_RA_upgradeFrom]) {
-                    _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
-                }
-                if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
-                    _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
-                }
-                if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
-                    _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
-                }
-                if (dictionary[kNRMA_RA_install]) {
-                    _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
-                }
-
-                //session duration is only valid for one session. This metric should be removed
-                //after the persistent attributes are loaded.
-                if (dictionary[kNRMA_RA_sessionDuration]) {
-                    _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
-                }
-                if (dictionary[kNRMA_RA_hasReplay]) {
-                    _analyticsController->removeSessionAttribute([kNRMA_RA_hasReplay UTF8String]);
+            if (newSession == TRUE) {
+                NSString* attributes = [self sessionAttributeJSONString];
+                if (attributes != nil && [attributes length] > 0) {
+                    NSDictionary* dictionary = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
+                                                                               options:0
+                                                                                 error:nil];
+                    if (dictionary[kNRMA_RA_upgradeFrom]) {
+                        _analyticsController->removeSessionAttribute([kNRMA_RA_upgradeFrom UTF8String]);
+                    }
+                    if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
+                        _analyticsController->removeSessionAttribute(kNRMASecureUDIDIsNilNotification.UTF8String);
+                    }
+                    if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
+                        _analyticsController->removeSessionAttribute(kNRMADeviceChangedAttribute.UTF8String);
+                    }
+                    if (dictionary[kNRMA_RA_install]) {
+                        _analyticsController->removeSessionAttribute([kNRMA_RA_install UTF8String]);
+                    }
+                    
+                    //session duration is only valid for one session. This metric should be removed
+                    //after the persistent attributes are loaded.
+                    if (dictionary[kNRMA_RA_sessionDuration]) {
+                        _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
+                    }
+                    if (dictionary[kNRMA_RA_hasReplay]) {
+                        _analyticsController->removeSessionAttribute([kNRMA_RA_hasReplay UTF8String]);
+                    }
                 }
             }
         }

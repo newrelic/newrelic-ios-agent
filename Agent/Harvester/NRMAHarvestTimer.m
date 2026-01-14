@@ -86,7 +86,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
     if([[NRMASessionManager shared] shouldEndSession]){
         [[NewRelicAgentInternal sharedInstance] endSessionWithTime:[[NSDate date] timeIntervalSince1970]];
 
-        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization:TRUE];
     }
 }
 

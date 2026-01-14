@@ -265,7 +265,7 @@ static NewRelicAgentInternal* _sharedInstance;
                 NRMA_setTempDir(NSTemporaryDirectory().UTF8String);
             }
             [self initialize];
-            [self onSessionStart];
+            [self onSessionStart:TRUE];
             
             if ([NRMAFlags shouldEnableCrashReporting]) {
                 NRMACrashReporterRecorder* crashReportRecorder = [[NRMACrashReporterRecorder alloc] init];
@@ -451,11 +451,11 @@ static NewRelicAgentInternal* _sharedInstance;
 
 static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLock";
 
-- (void) initializeAnalytics {
+- (void) initializeAnalytics:(BOOL) newSession {
     @synchronized(kNRMAAnalyticsInitializationLock) {
         // [NRMAAnalytics clearDuplicationStores];
         if(!self.analyticsController) {
-            self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
+            self.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000) newSession: newSession];
         } else if(didFireEnterForeground && didFireEnterBackground) {
             // We are coming back to the foreground after having a background stint
             [self.analyticsController newSessionWithStartTime:(long long)([self.appSessionStartDate timeIntervalSince1970] * 1000)];
@@ -533,17 +533,18 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     return [self agentConfiguration].sessionIdentifier;
 }
 
-- (void) onSessionStart {
-    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-    NSString* uuid_String = (__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault,
-                                                                            uuid);
-    self->_agentConfiguration.sessionIdentifier = uuid_String;
-
-    CFRelease(uuid);
-    if (self->_agentConfiguration.sessionIdentifier.length > 0) {
-        NRMA_setSessionId([self->_agentConfiguration.sessionIdentifier UTF8String]);
+- (void) onSessionStart:(BOOL) newSession {
+    if (newSession == TRUE) {
+        CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+        NSString* uuid_String = (__bridge_transfer NSString*)CFUUIDCreateString(kCFAllocatorDefault,
+                                                                                uuid);
+        self->_agentConfiguration.sessionIdentifier = uuid_String;
+        
+        CFRelease(uuid);
+        if (self->_agentConfiguration.sessionIdentifier.length > 0) {
+            NRMA_setSessionId([self->_agentConfiguration.sessionIdentifier UTF8String]);
+        }
     }
-
     NSString* backupStorePath = [NSString stringWithFormat:@"%@",[NewRelicInternalUtils getStorePath]];
     NSError* error = nil;
 
@@ -556,7 +557,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 
     // Initializing analytics take a while. Take care executing time sensitive code after this point the since initializeAnalytics method will delay its execution.
-    [self initializeAnalytics];
+    [self initializeAnalytics:newSession];
     
     NRMAReachability* r = [NewRelicInternalUtils reachability];
     NRMANetworkStatus status;
@@ -685,19 +686,6 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                     return;
                 }
                 didFireEnterForeground = YES;
-                
-                if ([[NRMASessionManager shared] lastBackgroundTimeMS] != 0){
-                    if ([[NRMASessionManager shared] shouldEndSessionFromBackground]) {
-                        NRLOG_AGENT_VERBOSE(@"Session ended due to background timeout, starting new session");
-                        [self endSessionWithTime:[[NRMASessionManager shared] lastBackgroundTimeMS] / 1000.0];
-                        [self sessionStartInitialization];
-                    } else {
-                        NRLOG_AGENT_DEBUG(@"Continuing existing session after returning from background within 30 minutes.");
-                    }
-                } else {
-                    // Cold launch so start the first session
-                    [self sessionStartInitialization];
-                }
 
                 if([NRMAFlags shouldEnableBackgroundReporting] && didFireEnterBackground) {
                     [self.analyticsController addCustomEvent:@"Return Harvest" withAttributes:nil];
@@ -732,6 +720,21 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                  * harvester start, but after harvester
                  * initialization.
                  */
+                
+                if ([[NRMASessionManager shared] lastBackgroundTimeMS] != 0){
+                    if ([[NRMASessionManager shared] shouldEndSessionFromBackground]) {
+                        NRLOG_AGENT_VERBOSE(@"Session ended due to background timeout, starting new session");
+                        [self endSessionWithTime:[[NRMASessionManager shared] lastBackgroundTimeMS] / 1000.0];
+                        [self sessionStartInitialization:TRUE];
+                    } else {
+                        NRLOG_AGENT_DEBUG(@"Continuing existing session after returning from background within 30 minutes.");
+                        [self sessionStartInitialization:FALSE];
+                    }
+                } else {
+                    // Cold launch so start the first session
+                    [self sessionStartInitialization:TRUE];
+                }
+                
                 didFireEnterBackground = NO;
             }
         }
@@ -754,14 +757,14 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
                               (long long)_startTime_ms].UTF8String);
 }
 
-- (void) sessionStartInitialization {
-
-    [self makeSampleSeeds];
+- (void) sessionStartInitialization:(BOOL) newSession {
+    if (newSession == TRUE){
+        [self makeSampleSeeds];
     
-    [self updateSessionStartTime];
+        [self updateSessionStartTime];
     
-    [NRMACPUVitals setAppStartCPUTime];
-
+        [NRMACPUVitals setAppStartCPUTime];
+    }
     [NRMAMeasurements shutdown];
     [NRMAHarvestController stop];
 
@@ -770,7 +773,7 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
 
-    [self onSessionStart];
+    [self onSessionStart:newSession];
     
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (@available(iOS 13.0, *)) {
@@ -809,17 +812,17 @@ static UIBackgroundTaskIdentifier background_task;
 #endif
     
     // Definition Not sure if it's better to still stop the timers.
-//    [[NRMAHarvestController harvestController].harvestTimer stop];
-//
-//#if !TARGET_OS_TV && !TARGET_OS_WATCH
-//
-//    BOOL isSampled = [self isSessionReplaySampled];
-//
-//    if ((isSampled && [self isSessionReplayEnabled]) || _sessionReplay.isRunning) {
-//
-//        [_sessionReplay stop];
-//    }
-//#endif
+    [[NRMAHarvestController harvestController].harvestTimer stop];
+
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+
+    BOOL isSampled = [self isSessionReplaySampled];
+
+    if ((isSampled && [self isSessionReplayEnabled]) || _sessionReplay.isRunning) {
+
+        [_sessionReplay stop];
+    }
+#endif
 
     // Disable observers.
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -970,7 +973,7 @@ static UIBackgroundTaskIdentifier background_task;
                     if ([NRMAFlags shouldEnableBackgroundReporting]) {
                         NRLOG_AGENT_VERBOSE(@"Not calling agentShutdown since BackgroundInstrumentation is enabled.");
                     } else {
-                        //[self agentShutdown];
+                        [self agentShutdown];
                     }
                 }
 #endif

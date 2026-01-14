@@ -650,7 +650,7 @@
     if (newSession) {
         [[NewRelicAgentInternal sharedInstance] endSessionWithTime:[[NSDate date] timeIntervalSince1970]];
 
-        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization:TRUE];
     }
     
     // Update in memory userId.
