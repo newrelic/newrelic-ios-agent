@@ -69,8 +69,8 @@
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value;
 - (BOOL) removeNRSessionAttributeNamed:(NSString*)name;
 
-- (BOOL) addSessionEndAttribute;
-- (BOOL) addSessionEvent;
+- (BOOL) addSessionEndAttributeWithEndTimestamp:(NSDate *)endTimestamp;
+- (BOOL) addSessionEventWithEndTimestamp:(NSDate *)endTimestamp;
 
 - (id<AttributeValidatorProtocol>) getAttributeValidator;
 

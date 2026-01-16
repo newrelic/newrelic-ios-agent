@@ -1549,13 +1549,13 @@
 - (void) testSendSessionEndAttrib {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
-   XCTAssertTrue([analytics addSessionEndAttribute], @"failed to successfully add session end attrib");
+   XCTAssertTrue([analytics addSessionEndAttributeWithEndTimestamp:[NSDate now]], @"failed to successfully add session end attrib");
 }
 
 - (void) testSendSessionEvent {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
-   XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
+   XCTAssertTrue([analytics addSessionEventWithEndTimestamp:[NSDate now]], @"failed to successfully add session event");
 
 }
 
