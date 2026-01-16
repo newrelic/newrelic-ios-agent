@@ -112,6 +112,7 @@
 @property(nonatomic,assign) BOOL      session_replay_enabled;
 @property(nonatomic,assign) double    session_replay_sampling_rate;
 @property(nonatomic,assign) double    session_replay_error_sampling_rate;
+// MASKING MODE
 @property(nonatomic,assign) NSString*    session_replay_mode;
 
 @property(nonatomic,assign) BOOL      session_replay_maskApplicationText;

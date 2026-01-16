@@ -359,6 +359,7 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 #endif
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
+    // SESSION REPLAY INITIALIZATION
     if (@available(iOS 13.0, *)) {
         SessionReplayReporter *reporter = [[SessionReplayReporter alloc] initWithApplicationToken:_agentConfiguration.applicationToken.value url: [self->_agentConfiguration sessionReplayURL]];
         _sessionReplay = [[SessionReplayManager alloc] initWithReporter:reporter url: [self->_agentConfiguration sessionReplayURL]];
@@ -367,6 +368,9 @@ static NewRelicAgentInternal* _sharedInstance;
             [_sessionReplay checkForPreviousSessionFiles];
         }
     }
+    
+    // END SESSION REPLAY INITIALIZATION
+
 #endif
 }
 
@@ -613,26 +617,42 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     [NRMAHarvestController addHarvestListener:self.appUpgradeMetricGenerator];
 }
 
-- (void) sessionReplayStartNewSession {
+- (void) sessionReplayEndSession {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    BOOL isSampled = [self isSessionReplaySampled];
+    // ERROR MODE
+   // BOOL isSampled = [self isSessionReplaySampled];
+    BOOL isEnabled = [self isSessionReplayEnabled];
 
-    if (isSampled && [self isSessionReplayEnabled]) {
-        [_sessionReplay newSession];
+    if ((isEnabled) || (_sessionReplay.isManuallyActive && isEnabled) || self->_sessionReplay.isRunning) {
+
+        // ERROR MODE
+   // if ((isSampled && isEnabled) || (_sessionReplay.isManuallyActive && isEnabled) || self->_sessionReplay.isRunning) {
+        [_sessionReplay endSessionWithHarvest:isEnabled];
     }
 #endif
 }
 
 - (void) sessionReplayStart {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
+    // START ERROR MODE CHANGE
+    
+    // should isSampled matter when deciding to start or not in every case?
+    
     BOOL isSampled = [self isSessionReplaySampled];
-    if (isSampled && [self isSessionReplayEnabled]) {
-        [_sessionReplay start];
-        @synchronized(kNRMAAnalyticsInitializationLock) {
-            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+    // always start session replay if its error or full
+    // ERROR MODE
+    if ([self isSessionReplayEnabled]) {
+        SessionReplayRecordingMode m = [self determineRecordingMode];
+        
+        NRLOG_AGENT_DEBUG(@"Starting session replay with mode: %@", (m == SessionReplayRecordingModeFull) ? @"Full" : (m == SessionReplayRecordingModeError) ? @"Error" : @"Off");
+        
+        if (m != SessionReplayRecordingModeOff) {
+            
+            [_sessionReplay startFromManual:FALSE with:m];
+            @synchronized(kNRMAAnalyticsInitializationLock) {
+                [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+            }
         }
-    } else {
-        [self sessionReplayDisabled];
     }
 #endif
 }
@@ -662,11 +682,56 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
 }
 
-static const NSString* kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
-static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWillTerm";
+- (BOOL) recordReplay {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if(![self isSessionReplayEnabled]){
+        NRLOG_AGENT_WARNING(@"Session replay is not enabled in the remote config.");
+        return false;
+    }
+    if(_sessionReplay != nil){
+        BOOL success = [_sessionReplay manualRecordReplay];
+        if(success){
+            @synchronized(kNRMAAnalyticsInitializationLock) {
+                [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+            }
+        }
+        return success;
+    }
+    NRLOG_AGENT_WARNING(@"Agent is not initialized");
+    return false;
+#endif
+    return false;
+}
 
-- (void) applicationWillEnterForeground {
+- (BOOL) pauseReplay {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if(![self isSessionReplayEnabled]){
+        NRLOG_AGENT_WARNING(@"Session replay is not enabled in the remote config.");
+        return false;
+    }
+    if(_sessionReplay != nil){
+        return [_sessionReplay manualPauseReplay];
+    }
+    NRLOG_AGENT_WARNING(@"Agent is not initialized");
+    return false;
+#endif
+    return false;
+}
 
+- (void)sessionReplayOnError:(NSError *_Nullable)error {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if (_sessionReplay != nil) {
+        [_sessionReplay onError:error];
+    }
+#endif
+}
+
+static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
+static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
+@"com.newrelic.appWillTerm";
+
+- (void)applicationWillEnterForeground {
+    
     if (_isShutdown) {
         return;
     }
@@ -777,8 +842,11 @@ static const NSString* kNRMA_APPLICATION_WILL_TERMINATE = @"com.newrelic.appWill
     
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (@available(iOS 13.0, *)) {
-        BOOL isSampled = [self isSessionReplaySampled];
-        if (isSampled && [self isSessionReplayEnabled]) {
+       // ERROR MODE
+        // BOOL isSampled = [self isSessionReplaySampled];
+        if ([self isSessionReplayEnabled]) {
+
+        //if (isSampled && [self isSessionReplayEnabled]) {
             [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
         }
     }
@@ -814,15 +882,6 @@ static UIBackgroundTaskIdentifier background_task;
     // Definition Not sure if it's better to still stop the timers.
     [[NRMAHarvestController harvestController].harvestTimer stop];
 
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-
-    BOOL isSampled = [self isSessionReplaySampled];
-
-    if ((isSampled && [self isSessionReplayEnabled]) || _sessionReplay.isRunning) {
-
-        [_sessionReplay stop];
-    }
-#endif
 
     // Disable observers.
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -957,11 +1016,7 @@ static UIBackgroundTaskIdentifier background_task;
                     [[[NRMAHarvestController harvestController] harvester] execute];
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-                    BOOL isSampled = [self isSessionReplaySampled];
-
-                    if (isSampled && [self isSessionReplayEnabled]) {
-                        [self->_sessionReplay harvest];
-                    }
+                    [self sessionReplayEndSession];
 #endif
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                 } @catch (NSException* exception) {
@@ -1303,6 +1358,8 @@ void applicationDidEnterBackgroundCF(void) {
     [[[NRMAHarvestController harvestController] harvester] execute];
 }
 
+// SANPLING AND ERRORED SESSION SESSION REPLAY
+
 - (void) makeSampleSeeds {
     NRLOG_AGENT_DEBUG(@"config: RESEEDING");
 
@@ -1322,11 +1379,24 @@ void applicationDidEnterBackgroundCF(void) {
         sampleRate = [NRMAHarvestController configuration].session_replay_sampling_rate;
     }
     else {
-       // NRLOG_AGENT_DEBUG(@"isSessionReplaySampled using default rate of 100.0");
+        NRLOG_AGENT_DEBUG(@"isSessionReplaySampled using default rate of 100.0");
     }
-    //NRLOG_AGENT_DEBUG(@"isSessionReplaySampled session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplaySampleSeed <= sampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], sampleRate);
+    NRLOG_AGENT_DEBUG(@"isSessionReplaySampled session replay config: Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplaySampleSeed <= sampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplaySampleSeed], sampleRate);
 
     return (self.sessionReplaySampleSeed <= sampleRate);
+}
+
+- (BOOL) isSessionReplayErrorSampled {
+    double errorSampleRate = 0.0;
+    if ( [NRMAHarvestController configuration] != nil) {
+        errorSampleRate = [NRMAHarvestController configuration].session_replay_error_sampling_rate;
+    }
+    else {
+        NRLOG_AGENT_DEBUG(@"isSessionReplaErrorSampled using default rate of 100.0");
+    }
+    NRLOG_AGENT_DEBUG(@"isSessionReplaErrorSampled session replay config: ERROR Sampling decision: %d, because seed <= rate: %f <= %f", (self.sessionReplayErrorSampleSeed <= errorSampleRate), [[NewRelicAgentInternal sharedInstance] sessionReplayErrorSampleSeed], errorSampleRate);
+
+    return (self.sessionReplayErrorSampleSeed <= errorSampleRate);
 }
 
 - (BOOL) isSessionReplayEnabled {
@@ -1335,11 +1405,36 @@ void applicationDidEnterBackgroundCF(void) {
         isEnabled = [NRMAHarvestController configuration].session_replay_enabled;
     }
     else {
-        //NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of false");
+        // NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using default value of false");
     }
-    //NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %@", isEnabled ? @"true" : @"false");
+    // NRLOG_AGENT_DEBUG(@"isSessionReplayEnabled using value: %@", isEnabled ? @"true" : @"false");
 
     return isEnabled;
 }
+
+/**
+ * Determines the appropriate SessionReplay recording mode based on the sampling configuration.
+ *
+ * Logic:
+ * - If isSampled() is true: use FULL mode (continuous recording and sending)
+ * - Else if isErrorSampled() is true: use ERROR mode (buffering only, send on error)
+ * - Otherwise: use OFF mode (no recording)
+ *
+ * @param config The SessionReplayConfiguration with sampling rates
+ * @return The determined SessionReplayMode
+ */
+- (SessionReplayRecordingMode) determineRecordingMode {
+    if ([self isSessionReplaySampled]) {
+        return SessionReplayRecordingModeFull;
+    }
+    else if ([self isSessionReplayErrorSampled]) {
+        return SessionReplayRecordingModeError;
+    }
+    else {
+        return SessionReplayRecordingModeOff;
+    }
+}
+
+// END SAMPLING AND ERRORED SESSION SESSION REPLAY
 
 @end

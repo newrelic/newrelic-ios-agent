@@ -47,8 +47,11 @@ class MainCoordinator: Coordinator {
     }
     
     func showTextMaskingController() {
+#if os(iOS)
+
         let webViewController = ViewControllerProvider.textMaskingViewController
         navigationController.pushViewController(webViewController, animated: true)
+        #endif
     }
     
     func showCollectionController() {
@@ -71,6 +74,26 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(diffTestViewController, animated: true)
     }
     
+    func showPerformanceContentView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            if #available(iOS 17.0, *) {
+                let swiftUIView = PerformanceContentView()
+                let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+                navigationController.pushViewController(swiftUIViewController, animated: true)
+                
+            } else {
+                // Fallback on earlier versions
+            }
+        }
+#endif
+    }
+
+    func showConfidentialController() {
+        let confidentialViewController = ViewControllerProvider.confidentialViewController
+        navigationController.pushViewController(confidentialViewController, animated: true)
+    }
+    
     func showSwiftUITestView() {
 #if os(iOS)
         if #available(iOS 15.0, *) {
@@ -90,4 +113,5 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
+        
 }

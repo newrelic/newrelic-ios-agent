@@ -1005,7 +1005,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
     }
 
     NSString *class = NSStringFromClass([self class]);
-    if ([class hasPrefix:@"_TtC"] || [class hasPrefix:@"_TtGC"]) {
+    if ([class hasPrefix:@"_TtC"] || [class hasPrefix:@"_TtGC"] || [class hasPrefix:@"SwiftUI."]) {
         return method_getImplementation(method);
     }
     
