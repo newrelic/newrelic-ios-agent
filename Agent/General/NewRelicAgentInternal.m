@@ -1352,7 +1352,7 @@ void applicationDidEnterBackgroundCF(void) {
     NSTimeInterval sessionLength = [endTimestamp timeIntervalSinceDate:_appSessionStartDate];
     [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:@"Session/Duration" value:[NSNumber numberWithDouble:sessionLength] scope:nil]];
 
-    [[NewRelicAgentInternal sharedInstance] sessionReplayStop];
+    [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
 
     // Perform harvest
     [[[NRMAHarvestController harvestController] harvester] execute];

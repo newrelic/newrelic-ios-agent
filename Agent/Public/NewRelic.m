@@ -664,10 +664,7 @@
 
     if (newSession) {
         [[NewRelicAgentInternal sharedInstance] endSessionWithTime:[[NSDate date] timeIntervalSince1970]];
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
         
-        [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
-
         [[NewRelicAgentInternal sharedInstance] sessionStartInitialization:TRUE];
     }
     
