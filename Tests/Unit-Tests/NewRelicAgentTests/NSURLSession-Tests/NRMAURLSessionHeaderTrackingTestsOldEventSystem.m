@@ -40,7 +40,7 @@ static NewRelicAgentInternal* _sharedInstance;
     [NRMAURLSessionOverride beginInstrumentation];
     self.mockNewRelicInternals = [OCMockObject mockForClass:[NewRelicAgentInternal class]];
     _sharedInstance = [[NewRelicAgentInternal alloc] init];
-    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
+    _sharedInstance.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0 newSession: true];
     [[[[self.mockNewRelicInternals stub] classMethod] andReturn:_sharedInstance] sharedInstance];
 
     self.queue = [[NSOperationQueue alloc] init];

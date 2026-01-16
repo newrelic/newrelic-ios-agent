@@ -45,7 +45,7 @@
 - (void)setUp {
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
-    _analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    _analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     [_analytics removeAllSessionAttributes];
     _appLicense = new NewRelic::Hex::Report::ApplicationLicense("appToken");
     auto appInfo = std::make_shared<NewRelic::Hex::Report::AppInfo>(_appLicense,fbs::Platform_iOS);

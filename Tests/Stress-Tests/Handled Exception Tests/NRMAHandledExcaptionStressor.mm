@@ -40,7 +40,7 @@ void NR__OVERRIDE_NRMAHexUploader_sendData(id self, SEL _cmd, id data) {
     [self replaceNetCalls];
     NRMAAgentConfiguration* _agentConfiguration = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"APP_TOKEN"] collectorAddress:TEST_COLLECTOR_HOST crashAddress:nil];
 
-    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     self.handled = [[NRMAHandledExceptions alloc] initWithAnalyticsController:_analytics
                                                              sessionStartTime:[NSDate date]
                                                            agentConfiguration:_agentConfiguration

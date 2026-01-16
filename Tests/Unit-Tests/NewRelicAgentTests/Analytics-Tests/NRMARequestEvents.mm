@@ -46,7 +46,7 @@ static NRMAFeatureFlags __originalFlags;
 
     NRTimer* timer = [NRTimer new];
     [NRMAFlags disableFeatures:NRFeatureFlag_RequestErrorEvents];
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     
     NSURL* url = [[NSURL alloc] initWithString:@"https://rpm.newrelic.com"];
     NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
@@ -72,7 +72,7 @@ static NRMAFeatureFlags __originalFlags;
 
     NRTimer* timer = [NRTimer new];
     [NRMAFlags disableFeatures:NRFeatureFlag_RequestErrorEvents];
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     
     NSURL* url = [[NSURL alloc] initWithString:@"https://rpm.newrelic.com"];
     NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url

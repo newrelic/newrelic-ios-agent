@@ -58,7 +58,7 @@
 // new, integrated event manager. The second is the legacy version
 // which worked with the older, libMobileAgent version.
 - (void) testLargeNumbers {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
                                 withAttributes:@{@"bigInt": @(LLONG_MAX),
@@ -80,7 +80,7 @@
 
 - (void) testCustomEventOffline {
     BOOL retValue = YES;
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     id mockObject = [OCMockObject partialMockForObject:analytics];
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
 
@@ -99,7 +99,7 @@
     
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile?request=parameter";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -150,7 +150,7 @@
     BOOL retValue = YES;
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NRTimer* timer = [NRTimer new];
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     id mockObject = [OCMockObject partialMockForObject:analytics];
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
 
@@ -179,7 +179,7 @@
 - (void) testRequestEventHTTPError {
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -236,7 +236,7 @@
     BOOL retValue = YES;
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     id mockObject = [OCMockObject partialMockForObject:analytics];
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
@@ -270,7 +270,7 @@
 }
 
 - (void) testSetLastInteraction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     XCTAssertTrue([analytics setLastInteraction:@"Display Banana"]);
 
     NSString* json = [analytics sessionAttributeJSONString];
@@ -285,7 +285,7 @@
 - (void) testRequestEventNetworkError {
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -330,7 +330,7 @@
     BOOL retValue = YES;
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     id mockObject = [OCMockObject partialMockForObject:analytics];
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
@@ -356,7 +356,7 @@
 }
 
 - (void) testCustomEvent {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     BOOL didAddCustomEvent = [analytics addCustomEvent:@"newEventBlah"
                                         withAttributes:@{
@@ -379,7 +379,7 @@
 }
 
 - (void) testInteractionEvent {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
 
@@ -399,7 +399,7 @@
 
 - (void) testInteractionEventOffline {
     BOOL retValue = YES;
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     id mockObject = [OCMockObject partialMockForObject:analytics];
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
     
@@ -411,14 +411,14 @@
 }
 
 - (void ) testCustomEventUnicode {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     XCTAssertTrue([analytics addCustomEvent:@"我々は思い出にわならないさ"
                              withAttributes:@{}]);
 }
 
 - (void ) testBadAttributes {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     XCTAssertTrue([analytics addCustomEvent:@"我々は思い出にわならないさ"
                              withAttributes:@{@"badAttribute":[NSNull new]}]);
@@ -432,7 +432,7 @@
 
 - (void) testBreadcrumb {
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     XCTAssertFalse([analytics addBreadcrumb:@""
                              withAttributes:nil]);
@@ -458,7 +458,7 @@
 
 - (void) testBreadcrumbOffline {
     BOOL retValue = YES;
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     id mockObject = [OCMockObject partialMockForObject:analytics];
     [[[mockObject stub] andReturnValue:[NSValue value:&retValue withObjCType:@encode(BOOL)]] checkOfflineStatus];
     
@@ -472,7 +472,7 @@
 
 
 - (void) testBooleanSessionAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     [analytics setSessionAttribute:@"aBoolValue" value:[[NRMABool alloc] initWithBOOL:YES]];
     NSString* json = [analytics analyticsJSONString];
     json = [analytics sessionAttributeJSONString];
@@ -495,7 +495,7 @@
 }
 
 - (void) testRawBoolSessionAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     [analytics setSessionAttribute:@"aBoolValue2" value:@YES];
 
     NSString* json = [analytics analyticsJSONString];
@@ -521,7 +521,7 @@
 }
 
 - (void)testBooleanEventAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     [analytics addEventNamed:@"BooleanAttributes" withAttributes:@{@"thisIsTrue":@(YES),
                                                                    @"thisIsFalse":@(NO)}];
     NSString* json = [analytics analyticsJSONString];
@@ -534,7 +534,7 @@
 }
 
 - (void) testRemoveAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
@@ -558,7 +558,7 @@
 }
 
 - (void) testRemoveAllAttributes {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
@@ -582,7 +582,7 @@
 }
 
 - (void) testJSONInputs {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     BOOL result = NO;
     NSString* json = @"{\"hello\":\"world\"}";
     NSDictionary* dictionary = @{@"{\"hello\":\"world\"}":@"{\"blahblah\":\"asdasdf\"}"};
@@ -597,7 +597,7 @@
 }
 
 - (void) testJSONEscapeCharacters {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     BOOL result = NO;
     NSString* name = @"pewpew\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
     NSDictionary* dictionary = @{@"blah\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F":@"w\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F"};
@@ -664,7 +664,7 @@
 }
 
 - (void) testMaxEventBufferTime {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setMaxEventBufferTime:60];
 
@@ -682,7 +682,7 @@
 }
 
 - (void) testMaxEventBufferTimeNotReached {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setMaxEventBufferTime:120];
 
@@ -701,7 +701,7 @@
 }
 
 - (void) testBadInput {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     BOOL result;
     //- (BOOL) addInteractionEvent:(NSString*)name interactionDuration:(double)duration_secs;
     XCTAssertNoThrow(result = [analytics addInteractionEvent:nil interactionDuration:-100],@"shouldn't throw ");
@@ -866,7 +866,7 @@
 // new, integrated event manager. The second is the legacy version
 // which worked with the older, libMobileAgent version.
 - (void) testLargeNumbers {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     bool accepted  = [analytics addCustomEvent:@"myCustomEvent"
                                 withAttributes:@{@"bigInt": @(LLONG_MAX),
@@ -891,7 +891,7 @@
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile?request=parameter";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -941,7 +941,7 @@
 - (void) testRequestEventHTTPError {
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -1000,7 +1000,7 @@
 }
 
 - (void) testSetLastInteraction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     XCTAssertTrue([analytics setLastInteraction:@"Display Banana"]);
 
     NSString* json = [analytics sessionAttributeJSONString];
@@ -1015,7 +1015,7 @@
 - (void) testRequestEventNetworkError {
     NRTimer* timer = [NRTimer new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     NSString* urlString = @"https://api.newrelic.com/api/v1/mobile";
     NSURL* url = [NSURL URLWithString:urlString];
     [timer stopTimer];
@@ -1056,7 +1056,7 @@
 }
 
 - (void) testCustomEvent {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     BOOL didAddCustomEvent = [analytics addCustomEvent:@"newEventBlah"
                                         withAttributes:@{
@@ -1078,7 +1078,7 @@
 }
 
 - (void) testInteractionEvent {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics addInteractionEvent:@"newEventBlah" interactionDuration:1.0];
 
@@ -1096,14 +1096,14 @@
 }
 
 - (void ) testCustomEventUnicode {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     XCTAssertTrue([analytics addCustomEvent:@"我々は思い出にわならないさ"
                              withAttributes:@{}]);
 }
 
 - (void ) testBadAttributes {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     XCTAssertTrue([analytics addCustomEvent:@"我々は思い出にわならないさ"
                              withAttributes:@{@"badAttribute":[NSNull new]}]);
@@ -1117,7 +1117,7 @@
 
 - (void) testBreadcrumb {
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     XCTAssertFalse([analytics addBreadcrumb:@""
                              withAttributes:nil]);
@@ -1141,7 +1141,7 @@
 }
 
 - (void) testRecordUserAction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {
             [builder withActionType:@"Tap"];
@@ -1183,7 +1183,7 @@
 }
 
 - (void) testRecordEmptyUserAction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     NRMAUserAction* uiGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder* builder) {}];
     
@@ -1191,14 +1191,14 @@
 }
 
 - (void) testRecordNilUserAction {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     
     XCTAssertFalse([analytics recordUserAction:nil]);
 }
 
 
 - (void) testBooleanSessionAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     [analytics setSessionAttribute:@"aBoolValue" value:[[NRMABool alloc] initWithBOOL:YES]];
     NSString* json = [analytics analyticsJSONString];
     json = [analytics sessionAttributeJSONString];
@@ -1211,7 +1211,7 @@
 }
 
 - (void)testBooleanEventAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     [analytics addEventNamed:@"BooleanAttributes" withAttributes:@{@"thisIsTrue":@(YES),
                                                                    @"thisIsFalse":@(NO)}];
     NSString* json = [analytics analyticsJSONString];
@@ -1224,7 +1224,7 @@
 }
 
 - (void) testRemoveAttribute {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
@@ -1248,7 +1248,7 @@
 }
 
 - (void) testRemoveAllAttributes {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setSessionAttribute:@"a" value:@4];
     [analytics setSessionAttribute:@"b" value:@6];
@@ -1272,7 +1272,7 @@
 }
 
 - (void) testJSONInputs {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     BOOL result = NO;
     NSString* json = @"{\"hello\":\"world\"}";
     NSDictionary* dictionary = @{@"{\"hello\":\"world\"}":@"{\"blahblah\":\"asdasdf\"}"};
@@ -1287,7 +1287,7 @@
 }
 
 - (void) testJSONEscapeCharacters {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     BOOL result = NO;
     NSString* name = @"pewpew\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
     NSDictionary* dictionary = @{@"blah\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F":@"w\r\n\v\a\b\r\t\x01\x02\x03\x04\x05\x06\x07\x0B\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F"};
@@ -1356,29 +1356,29 @@
 }
 
 -(void)testSetMaxEventBufferSize {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setMaxEventBufferSize:2000];
     
     XCTAssertEqual([analytics getMaxEventBufferSize], 2000);
     
-    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     XCTAssertEqual([analytics getMaxEventBufferSize], 2000);
 }
 
 -(void)testSetMaxEventBufferTime {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setMaxEventBufferTime:2000];
     
     XCTAssertEqual([analytics getMaxEventBufferTime], 2000);
     
-    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     XCTAssertEqual([analytics getMaxEventBufferTime], 2000);
 }
 
 - (void) testMaxEventBufferTime {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setMaxEventBufferTime:60];
 
@@ -1395,7 +1395,7 @@
 }
 
 - (void) testMaxEventBufferTimeNotReached {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
     [analytics setMaxEventBufferTime:120];
 
@@ -1415,7 +1415,7 @@
 
 
 - (void) testBadInput {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     BOOL result;
     //- (BOOL) addInteractionEvent:(NSString*)name interactionDuration:(double)duration_secs;
     XCTAssertNoThrow(result = [analytics addInteractionEvent:nil interactionDuration:-100],@"shouldn't throw ");
@@ -1547,13 +1547,13 @@
 }
 
 - (void) testSendSessionEndAttrib {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
    XCTAssertTrue([analytics addSessionEndAttribute], @"failed to successfully add session end attrib");
 }
 
 - (void) testSendSessionEvent {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
 
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 

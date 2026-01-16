@@ -74,7 +74,7 @@
                                                         object:nil
                                                       userInfo:@{@"UDID" : @"blah"}];
     
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 
@@ -111,7 +111,7 @@
     __block BOOL sessionAttributeAdded = NO;
     NRMAAppInstallMetricGenerator* metricGenerator = [NRMAAppInstallMetricGenerator new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 
@@ -153,7 +153,7 @@
     __block BOOL sessionAttributeAdded = NO;
     NRMAAppInstallMetricGenerator* metricGenerator = [NRMAAppInstallMetricGenerator new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 
@@ -197,7 +197,7 @@
                                                         object:nil
                                                       userInfo:nil];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 

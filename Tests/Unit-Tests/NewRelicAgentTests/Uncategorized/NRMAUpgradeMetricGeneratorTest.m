@@ -79,7 +79,7 @@
                                                       userInfo:@{kNRMALastVersionKey : lastVersion,
                                                                  kNRMACurrentVersionKey: @"5.1"}];
     
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 
@@ -117,7 +117,7 @@
     __block BOOL sessionAttributeAdded = NO;
     NRMAAppUpgradeMetricGenerator* metricGenerator = [NRMAAppUpgradeMetricGenerator new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 
@@ -162,7 +162,7 @@
     __block BOOL sessionAttributeAdded = NO;
     NRMAAppUpgradeMetricGenerator* metricGenerator = [NRMAAppUpgradeMetricGenerator new];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 
@@ -210,7 +210,7 @@
                                                         object:nil
                                                       userInfo:nil];
 
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate]];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:[NSDate timeIntervalSinceReferenceDate] newSession: true];
 
     id mockAnalytics = [OCMockObject partialMockForObject:analytics];
 
