@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>crashCollectorAddress</key>
-	<string>staging-mobile-crash.newrelic.com</string>
+	<string></string>
 	<key>collectorAddress</key>
-	<string>staging-mobile-collector.newrelic.com</string>
+	<string></string>
 	<key>NRAPIKey</key>
-	<string>AA17fe6658e601c9f10eefc8f808c0763461b532d2-NRMA</string>
+	<string></string>
 </dict>
 </plist>
