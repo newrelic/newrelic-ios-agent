@@ -39,7 +39,10 @@ class InfiniteImageCollectionViewController: UIViewController {
         layout.sectionInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: layout)
+#if os(iOS)
+
         collectionView.backgroundColor = .systemBackground
+        #endif
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.register(ImageCollectionViewCell.self, forCellWithReuseIdentifier: "ImageCell")
@@ -123,7 +126,10 @@ class ImageCollectionViewCell: UICollectionViewCell {
         
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
+#if os(iOS)
+
         imageView.backgroundColor = .systemGray6
+        #endif
         imageView.layer.cornerRadius = 8
         
         imageView.translatesAutoresizingMaskIntoConstraints = false

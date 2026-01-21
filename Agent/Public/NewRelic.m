@@ -44,6 +44,8 @@
 
 + (void) logError:(NSString* __nonnull) message {
     NRLOG_ERROR(@"%@", message);
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) logVerbose:(NSString* __nonnull) message {
@@ -136,6 +138,8 @@
     NSString * errorDesc = error.localizedDescription;
 
     [self logError:[NSString stringWithFormat:@"Error encountered: %@", errorDesc]];
+  
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) crashNow:(NSString*)message
@@ -173,6 +177,8 @@
     }
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordHandledException:(NSException*)exception
@@ -184,6 +190,9 @@
     }
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
                                                                                     attributes:attributes];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
+
 }
 
 + (void)recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
@@ -194,6 +203,8 @@
     }
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
 }
 
@@ -206,6 +217,8 @@
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:nil];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordError:(NSError* _Nonnull)error
@@ -218,6 +231,8 @@
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:attributes];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) setPlatform:(NRMAApplicationPlatform)platform {
@@ -772,7 +787,7 @@
  */
 + (BOOL) addSessionReplayMaskViewClass:(NSString*) viewClassName {
     if (viewClassName == NULL || viewClassName.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayMaskViewClass: viewClassName must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayMaskViewClass: viewClassName must not be null or empty");
         return false;
     }
 
@@ -787,7 +802,7 @@
  */
 + (BOOL) addSessionReplayUnmaskViewClass:(NSString*) viewClassName {
     if (viewClassName == NULL || viewClassName.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayUnmaskViewClass: viewClassName must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayUnmaskViewClass: viewClassName must not be null or empty");
         return false;
     }
 
@@ -801,7 +816,7 @@
  */
 + (BOOL) addSessionReplayMaskedAccessibilityIdentifier:(NSString*) identifier {
     if (identifier == NULL || identifier.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
         return false;
     }
 
@@ -815,7 +830,7 @@
  */
 + (BOOL) addSessionReplayUnmaskedAccessibilityIdentifier:(NSString*) identifier {
     if (identifier == NULL || identifier.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
         return false;
     }
 

@@ -19,8 +19,9 @@ class ConfidentialViewController: UIViewController {
         super.viewDidLoad()
         
         self.title = "Confidential View"
+        #if os(iOS)
         self.view.backgroundColor = .systemBackground
-        
+        #endif
         setupUI()
     }
     
@@ -86,7 +87,10 @@ class ConfidentialViewController: UIViewController {
     
     private func createConfidentialContentSection() -> UIStackView {
         let containerView = UIView()
+#if os(iOS)
+
         containerView.backgroundColor = .systemGray6
+        #endif
         containerView.layer.cornerRadius = 12
         containerView.layer.borderWidth = 2
         containerView.layer.borderColor = UIColor.systemRed.cgColor

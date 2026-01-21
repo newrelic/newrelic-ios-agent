@@ -13,20 +13,30 @@ import UIKit
 @available(iOS 13.0, *)
 @objcMembers
 public class SessionReplayManager: NSObject {
-
+    
+#if os(iOS) || os(tvOS)
+    
     private let sessionReplay: NRMASessionReplay
     private let sessionReplayReporter: SessionReplayReporter
-
+    
     public var harvestPeriod: Int64 = 60
     private var harvestseconds = 0
     public var sessionReplayTimer: Timer?
-
+    
     private let url: NSString
     
     private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue", attributes: .concurrent)
     private static let queueKey = DispatchSpecificKey<String>()
-
+    
     private var isManuallyRecording: Bool = false
+    
+    
+    // TWO SESSION REPLAY MODEs
+    public var sessionReplayMode: SessionReplayRecordingMode = .off {
+        didSet {
+            sessionReplay.recordingMode = sessionReplayMode
+        }
+    }
     
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
         self.url = url
@@ -36,33 +46,85 @@ public class SessionReplayManager: NSObject {
         super.init()
         
         self.sessionReplay.delegate = self
-
+        self.sessionReplayMode = .off
     }
-
-    public func start(fromManual: Bool = false) {
+    
+    // ERROR MODE
+    
+    // MARK: - Error Sampling Mode Management
+    
+    /// Sets the recording mode for session replay
+    /// - Parameter mode: The recording mode to use
+    @objc public func setRecordingMode(_ mode: SessionReplayRecordingMode) {
         sessionReplayQueue.async { [self] in
+            self.sessionReplayMode = mode
+            sessionReplay.transistionToRecordingMode(mode)
+        }
+    }
+    
+    /// Gets the current recording mode
+    /// - Returns: The current recording mode
+    @objc public func getCurrentRecordingMode() -> SessionReplayRecordingMode {
+        return sessionReplay.recordingMode
+    }
+    
+    /// Transitions from error mode to full mode, including the 15-second buffer
+    @objc public func onError(_ error: Error?) {
+        sessionReplayQueue.async { [weak self] in
+            guard let self = self else { return }
+            
+            if self.sessionReplayMode == .error {
+                
+                // ensure the buffered data is marked for upload.
+                // The current implementation of processFrameToFile writes to disk.
+                // If we switch to FULL, subsequent frames will just be written.
+                // The currentMode update to .FULL will stop the pruning in processFrameToFile.
+                self.sessionReplayMode = .full
+                
+                NRLOG_DEBUG("Error detected - transitioning session replay to full mode")
+                sessionReplay.transitionToFullModeOnError()
+            }
+        }
+    }
+    
+    @objc private func handleErrorNotification(_ notification: Notification) {
+        onError(nil)
+    }
+    // END ERROR MODE
+    
+    public func start(fromManual: Bool = false, with newMode: SessionReplayRecordingMode) {
+        sessionReplayQueue.async { [self] in
+            
+            
+            // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+            
+            self.setRecordingMode(newMode)
+            
+            // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
+            
+            
             guard !isRunning() else {
-                NRLOG_WARNING("Session replay harvest timer attempting to start while already running.")
+                NRLOG_DEBUG("Session replay harvest timer attempting to start while already running.")
                 return
             }
             
             sessionReplay.start()
             self.harvestseconds = 0
-
+            
             self.isManuallyRecording = fromManual
-
+            
             NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
             self.sessionReplayTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(self.sessionReplayTick), userInfo: nil, repeats: true)
-
+            
             RunLoop.current.add(self.sessionReplayTimer!, forMode: .default)
             RunLoop.current.run()
         }
     }
-
+    
     public func stop() {
         let stopBlock = { [self] in
             guard isRunning() else {
-                NRLOG_WARNING("Session replay harvest timer attempting to stop when not running.")
+                NRLOG_DEBUG("Session replay harvest timer attempting to stop when not running.")
                 return
             }
             
@@ -81,11 +143,11 @@ public class SessionReplayManager: NSObject {
             sessionReplayQueue.sync(execute: stopBlock)
         }
     }
-
+    
     @objc public func isRunning() -> Bool {
         return self.sessionReplayTimer != nil && self.sessionReplayTimer!.isValid
     }
-
+    
     // This function is to handle a session change created by a change in userId
     @objc public func endSession(harvest: Bool = true) {
         stop()
@@ -94,26 +156,26 @@ public class SessionReplayManager: NSObject {
         }
         // Reset isManuallyRecording for new session
         isManuallyRecording = false
-
+        
         // Reset the isFirstChunk for new session
         self.sessionReplay.isFirstChunk = true
     }
     
     @objc public func manualRecordReplay() -> Bool {
         return sessionReplayQueue.sync {
-                        
+            
             if isRunning() {
                 NRLOG_DEBUG("Attempted to manually start session replay but it is already recording")
                 return false
             }
             
-            start(fromManual: true)
-
+            start(fromManual: true, with: .full)
+            
             NRLOG_DEBUG("Session replay started via manual recordReplay() API")
             return true
         }
     }
-
+    
     @objc public func manualPauseReplay() -> Bool {
         return sessionReplayQueue.sync {
             
@@ -144,7 +206,7 @@ public class SessionReplayManager: NSObject {
     @objc func sessionReplayTick() {
         if isRunning() &&
             (NewRelicAgentInternal.sharedInstance() != nil &&
-            NewRelicAgentInternal.sharedInstance()?.isSessionReplayEnabled() ?? false == false)
+             NewRelicAgentInternal.sharedInstance()?.isSessionReplayEnabled() ?? false == false)
         {
             NRLOG_DEBUG("Session replay harvest timer stopping because New Relic agent is not started.")
             stop()
@@ -158,7 +220,7 @@ public class SessionReplayManager: NSObject {
             harvest()
         }
     }
-
+    
     @objc public func harvest() {
         // sync is required here or session replay upload fails.
         sessionReplayQueue.sync { [weak self] in
@@ -167,8 +229,18 @@ public class SessionReplayManager: NSObject {
             self.harvestSessionReplayFramesAndTouches()
         }
     }
-
+    
     private func harvestSessionReplayFramesAndTouches() {
+        
+        defer {
+            self.harvestseconds = 0
+        }
+        
+        if sessionReplayMode == .error {
+            NRLOG_DEBUG("Skipping harvest in ERROR mode.")
+            return
+        }
+        
         let frames = self.sessionReplay.getSessionReplayFrames()
         let touches = self.sessionReplay.getSessionReplayTouches()
         
@@ -192,35 +264,36 @@ public class SessionReplayManager: NSObject {
             return
         }
         self.sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+        
         self.sessionReplay.isFirstChunk = false
-        self.harvestseconds = 0
+
     }
     
     private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
-
+        
         // Encode container to JSON
         var jsonData: Data
         do {
             jsonData = try encoder.encode(container)
-//            if let jsonString = String(data: jsonData, encoding: .utf8) {
-//                NRLOG_DEBUG(jsonString)
-//            }
+            //            if let jsonString = String(data: jsonData, encoding: .utf8) {
+            //                NRLOG_DEBUG(jsonString)
+            //            }
         } catch {
             NRLOG_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil
         }
-
+        
         let uncompressedDataSize = jsonData.count
-
+        
         do {
             let gzippedData = try jsonData.gzipped()
             jsonData = gzippedData
         } catch {
             NRLOG_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
         }
-
+        
         // Construct upload URL
         guard let url = sessionReplayReporter.uploadURL(
             uncompressedDataSize: uncompressedDataSize,
@@ -229,16 +302,17 @@ public class SessionReplayManager: NSObject {
             isFirstChunk: self.sessionReplay.isFirstChunk,
             isGZipped: jsonData.isGzipped
         ) else {
-            NRLOG_ERROR("Failed to construct upload URL for session replay.")
+            NRLOG_DEBUG("Failed to construct upload URL for session replay.")
             return nil
         }
-        NRLOG_DEBUG(url.absoluteString)
-
+        
+        // NRLOG_DEBUG(url.absoluteString)
+        
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
-
+    
     // REPLAY PERSISTENCE
-
+    
     public func checkForPreviousSessionFiles() {
         sessionReplayQueue.async { [self] in
             // CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS
@@ -267,59 +341,62 @@ public class SessionReplayManager: NSObject {
                     processSessionReplayFile(sessionId: sessionId, directory: sessionReplayDirectory)
                 }
                 
-            } catch {
+            }
+            catch {
                 NRLOG_DEBUG("Failed to read session replay directory: \(error)")
             }
         }
     }
-
+    
     private func processSessionReplayFile(sessionId: String, directory: URL) {
         let urlFile = directory.appendingPathComponent("\(sessionId)_upload_url.txt")
-
+        
         do {
             NRLOG_DEBUG("Processing session replay for session ID: \(sessionId)")
-
+            
             // BEGIN URL CONSTRUCTION
-
+            
             guard let urlString = try? String(contentsOf: urlFile),
                   let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
                 NRLOG_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
                 return
             }
-            NRLOG_DEBUG(url.absoluteString)
-
+            //NRLOG_AGENT_DEBUG(url.absoluteString)
+            
             // END URL CONSTRUCTION
-
+            
             // BEGIN DATA CONSTRUCTION
-
+            
             // Find all frame files for this session
             let sessionDirectory = directory.appendingPathComponent(sessionId)
             guard FileManager.default.fileExists(atPath: sessionDirectory.path) else {
                 NRLOG_DEBUG("Session directory not found for session ID: \(sessionId)")
                 return
             }
-
+            
             let frameFiles = try FileManager.default.contentsOfDirectory(at: sessionDirectory, includingPropertiesForKeys: nil)
                 .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("frame_") }
                 .sorted { (url1, url2) -> Bool in
                     let name1 = url1.deletingPathExtension().lastPathComponent
                     let name2 = url2.deletingPathExtension().lastPathComponent
-
+                    
                     let number1 = Int(name1.replacingOccurrences(of: "frame_", with: "")) ?? 0
                     let number2 = Int(name2.replacingOccurrences(of: "frame_", with: "")) ?? 0
-
+                    
                     return number1 < number2
                 }
-
+            
             if frameFiles.isEmpty {
                 NRLOG_DEBUG("No frame files found for session ID: \(sessionId)")
                 try? FileManager.default.removeItem(at: urlFile)
                 try? FileManager.default.removeItem(at: sessionDirectory)
                 return
             }
-
-            // Read and combine all frame files
+            
+            // Read and combine all frame files, starting from the first full frame
             var frameContents: [String] = []
+            var foundFirstFullFrame = false
+
             for frameFile in frameFiles {
                 do {
                     // remove outer [] from frameFile if they exist
@@ -329,35 +406,69 @@ public class SessionReplayManager: NSObject {
                     if frameContent.hasPrefix("[") && frameContent.hasSuffix("]") {
                         frameContentWithOuterBracketsRemoved = String(frameContent.dropFirst().dropLast()).trimmingCharacters(in: .whitespacesAndNewlines)
                     }
+
                     if !frameContentWithOuterBracketsRemoved.isEmpty {
-                        frameContents.append(frameContentWithOuterBracketsRemoved)
+                        // Check if this is a full frame (type = 2) if we haven't found one yet
+                        if !foundFirstFullFrame {
+                            // Parse the original content (with brackets) to check for full frames
+                            if let data = frameContent.data(using: .utf8),
+                               let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                                // Check if any frame in this file is a full snapshot (type = 2)
+                                let hasFullFrame = jsonArray.contains { frame in
+                                    if let type = frame["type"] as? Int {
+                                        //NRLOG_DEBUG("Frame type found: \(type) in file \(frameFile.lastPathComponent)")
+                                        
+                                        return type == 2 //  fullSnapshot
+
+                                    }
+                                    return false
+                                }
+
+                                if hasFullFrame {
+                                    foundFirstFullFrame = true
+                                    frameContents.append(frameContentWithOuterBracketsRemoved)
+                                } else {
+                                    NRLOG_DEBUG("Skipping frame file \(frameFile.lastPathComponent) - no full snapshot found yet")
+                                }
+                            } else {
+                                NRLOG_DEBUG("Failed to parse frame file \(frameFile.lastPathComponent) to check type")
+                            }
+                        } else {
+                            // We've found a full frame, include all subsequent frames
+                            frameContents.append(frameContentWithOuterBracketsRemoved)
+                        }
                     }
                 } catch {
                     NRLOG_DEBUG("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
                 }
             }
-
+            
             if frameContents.isEmpty {
-                NRLOG_DEBUG("No valid frame content found for session ID: \(sessionId)")
+                if !foundFirstFullFrame {
+                    NRLOG_DEBUG("No full snapshot frame found for session ID: \(sessionId)")
+                } else {
+                    NRLOG_DEBUG("No valid frame content found for session ID: \(sessionId)")
+                }
                 try FileManager.default.removeItem(at: sessionDirectory)
                 try? FileManager.default.removeItem(at: urlFile)
                 return
             }
-
+            
             // Construct JSON array from frame contents
-
+            
             let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
-
+            
             guard let jsonData = jsonArrayString.data(using: .utf8) else {
-                NRLOG_ERROR("Failed to convert JSON string to data for session ID: \(sessionId)")
+                NRLOG_DEBUG("Failed to convert JSON string to data for session ID: \(sessionId)")
                 return
             }
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                NRLOG_DEBUG(jsonString)
-            }
-
+            //if let jsonString = String(data: jsonData, encoding: .utf8) {
+            //    NRLOG_DEBUG(jsonString)
+            //\
+            //}
+            
             // END DATA CONSTRUCTION
-
+            
             var finalData = jsonData
             do {
                 let gzippedData = try jsonData.gzipped()
@@ -365,15 +476,15 @@ public class SessionReplayManager: NSObject {
             } catch {
                 NRLOG_DEBUG("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
             }
-
+            
             let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
             sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
             NRLOG_DEBUG("Enqueued previous session replay for session ID: \(sessionId)")
-
+            
             // Remove processed files
             try FileManager.default.removeItem(at: sessionDirectory)
             try? FileManager.default.removeItem(at: urlFile)
-
+            
         } catch {
             NRLOG_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
         }
@@ -385,7 +496,11 @@ public class SessionReplayManager: NSObject {
         }
         return documentsDirectory.appendingPathComponent("SessionReplayFrames")
     }
+    
+#endif
 }
+
+#if os(iOS) || os(tvOS)
 
 @available(iOS 13.0, *)
 extension SessionReplayManager: NRMASessionReplayDelegate {
@@ -399,3 +514,4 @@ extension SessionReplayManager: NRMASessionReplayDelegate {
         return self.sessionReplayReporter.uploadURL(uncompressedDataSize: uncompressedDataSize, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp, isFirstChunk: isFirstChunk, isGZipped: isGZipped)
     }
 }
+#endif

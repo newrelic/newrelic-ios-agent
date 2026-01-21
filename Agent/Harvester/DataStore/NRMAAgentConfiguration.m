@@ -122,7 +122,10 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
         [self setCollectorHost:collectorHost];
         [self setCrashCollectorHost:crashHost];
         [self setLoggingURL];
-
+        
+        // Default mode
+        _sessionReplayMode = @"OFF";
+        
         if ([[NSProcessInfo processInfo] environment][@"UITesting"]) {
             _useSSL = NO;
         } else {
