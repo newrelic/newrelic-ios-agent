@@ -74,7 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) setMaxEventPoolSize:(unsigned int)size;
 
 - (void) applicationWillEnterForeground;
-- (void) sessionStartInitialization;
+- (void) sessionStartInitialization:(BOOL) newSession;
 + (NewRelicAgentInternal* _Nullable) sharedInstance;
 
 - (NSString*) currentSessionId;
@@ -82,6 +82,8 @@ NS_ASSUME_NONNULL_BEGIN
 // Returns whether or not we should be collecting HTTP errors. Exposed for ASI support.
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
+
+- (void) endSessionWithTime:(NSTimeInterval) endTimestampSeconds;
 
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;

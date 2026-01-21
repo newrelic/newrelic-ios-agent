@@ -663,14 +663,9 @@
     NRLOG_AGENT_VERBOSE(@"setUserId: %@ and previousUserId: %@ and will start newSession=%d", userId, previousUserId, newSession);
 
     if (newSession) {
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
+        [[NewRelicAgentInternal sharedInstance] endSessionWithTime:[[NSDate date] timeIntervalSince1970]];
         
-        [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
-
-        // Perform harvest
-        [self harvestNow];
-
-        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization:TRUE];
     }
     
     // Update in memory userId.

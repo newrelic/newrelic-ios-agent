@@ -20,7 +20,7 @@
 - (void) setMaxEventBufferSize:(unsigned int) size;
 - (NSUInteger) getMaxEventBufferTime;
 
-- (id) initWithSessionStartTimeMS:(long long) sessionStartTime;
+- (id) initWithSessionStartTimeMS:(long long) sessionStartTime newSession:(BOOL) newSession;
 
 - (BOOL) addEventNamed:(NSString*)name withAttributes:(NSDictionary*)attributes;
 
@@ -34,7 +34,7 @@
 - (NSString*) sessionAttributeJSONString;
 
 - (void) sessionWillEnd;
-- (void) newSession;
+- (void) newSessionWithEndTimestamp:(NSDate *)endTimestamp;
 - (void) newSessionWithStartTime:(long long) sessionStartTime;
 
 //value is either a NSString or NSNumber;
@@ -69,8 +69,8 @@
 - (BOOL) setNRSessionAttribute:(NSString*)name value:(id)value;
 - (BOOL) removeNRSessionAttributeNamed:(NSString*)name;
 
-- (BOOL) addSessionEndAttribute;
-- (BOOL) addSessionEvent;
+- (BOOL) addSessionEndAttributeWithEndTimestamp:(NSDate *)endTimestamp;
+- (BOOL) addSessionEventWithEndTimestamp:(NSDate *)endTimestamp;
 
 - (id<AttributeValidatorProtocol>) getAttributeValidator;
 

@@ -162,14 +162,13 @@ namespace NewRelic {
         return _eventManager.didReachMaxQueueTime(getCurrentTime_ms()); //throws std::logic_error
     }
 
-    bool AnalyticsController::addSessionEndAttribute() {
+    bool AnalyticsController::addSessionEndAttribute(int64_t endTimestampMs) {
         try {
-            unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms(); //throws std::logic_error
             auto attribute = Attribute<double>::createAttribute("sessionDuration",
                                                                 [](const char *) {
                                                                     return true;
                                                                 },
-                                                                ((current_time_ms / 1000.0) -
+                                                                ((endTimestampMs / 1000.0) -
                                                                  (_session_start_time_ms / 1000.0)),
                                                                 [](double) {
                                                                     return true;
@@ -295,11 +294,10 @@ namespace NewRelic {
         }
     }
 
-    bool AnalyticsController::addSessionEvent() {
+    bool AnalyticsController::addSessionEvent(int64_t endTimestampMs) {
         try {
-            auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
-            auto sessionDuration_sec = getCurrentSessionDuration_sec(currentTime_ms);
-            auto event = EventManager::newSessionAnalyticEvent(currentTime_ms,
+            auto sessionDuration_sec = getCurrentSessionDuration_sec(endTimestampMs);
+            auto event = EventManager::newSessionAnalyticEvent(endTimestampMs,
                                                                sessionDuration_sec,
                                                                _attributeValidator);
 

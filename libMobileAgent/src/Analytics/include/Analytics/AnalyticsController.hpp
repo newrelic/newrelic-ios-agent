@@ -99,8 +99,8 @@ namespace NewRelic {
 
         const AttributeValidator &getAttributeValidator() const;
 
-        bool addSessionEndAttribute();
-        
+        bool addSessionEndAttribute(int64_t endTimestampMs);
+
         void newSessionWithStartTime(unsigned long long sessionStartTime_ms);
 
         AnalyticsController(unsigned long long sessionStartTime_ms, const char *sharedPath,
@@ -122,7 +122,7 @@ namespace NewRelic {
 
         std::shared_ptr <BreadcrumbEvent> newBreadcrumbEvent();
 
-        bool addSessionEvent();
+        bool addSessionEvent(int64_t endTimestampMs);
 
         bool addEvent(std::shared_ptr <AnalyticEvent> event);
 

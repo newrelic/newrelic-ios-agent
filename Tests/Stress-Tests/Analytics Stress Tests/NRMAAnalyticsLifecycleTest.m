@@ -22,7 +22,7 @@
 
 - (void)setUp {
     [super setUp];
-    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
     NSUInteger procCount = [[NSProcessInfo processInfo] processorCount];
     self.semaphore = dispatch_semaphore_create(procCount * kNRMASemaphoreMultiplier);
 }
@@ -82,7 +82,7 @@ static NSString* mutex=@"mutex";
                 break;
             case 1:
                 @synchronized(mutex) {
-                    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+                    self.analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0 newSession: true];
                 }
                 break;
             case 2:
