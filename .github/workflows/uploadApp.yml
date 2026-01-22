@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+        with:
+          submodules: true
 
       - name: Setup environment
         uses: ./.github/actions/env-setup
@@ -39,6 +41,19 @@ jobs:
       - name: Install dependencies
         run: |
           npm install
+      # before building iOS app, please set the main server, the crash server, and the app token secret
+      # the plist to be modified is located at ./Test Harness/NRTestApp/NRAPI-Info.plist
+      # the secret mapping is as follows secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS , secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS, secrets.NRTESTAPP_APP_TOKEN
+      - name: Set plist secrets
+        env:
+          NRTESTAPP_CRASH_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS }}
+          NRTESTAPP_MAIN_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS }}
+          NRTESTAPP_APP_TOKEN: ${{ secrets.NRTESTAPP_APP_TOKEN }}
+        run: |
+          PLIST_PATH="./Test Harness/NRTestApp/NRAPI-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
 
       - name: Clean iOS app
         run: |
@@ -73,8 +88,8 @@ jobs:
     needs: [build-ios]
     runs-on: ubuntu-latest
     env:
-      LT_USERNAME: ${{ secrets.APP_EXP_LAMBDA_USERNAME }}
-      LT_ACCESSKEY: ${{ secrets.APP_EXP_LAMBDA_ACCESS_KEY }}
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
 
@@ -82,13 +97,21 @@ jobs:
         uses: ./.github/actions/env-setup
 
       - name: Download iOS artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: nrtestapp-ios
           path: ${{ github.workspace }}/builds
 
       - name: Run upload script
         run: node LambdaTest/uploadAppToLambdaTest.mjs
+
+      - name: Upload custom_id artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambdatest-app-id
+          path: LambdaTest/last-app-id
+          retention-days: 1
 
       - name: Log success
         if: ${{ success() }}

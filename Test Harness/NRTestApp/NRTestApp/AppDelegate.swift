@@ -18,6 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
         NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
 #endif
+        NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
 
         // To enable or disable feature flags in New Relic iOS Agent.
 #if DISABLE_FEATURES
@@ -29,7 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
-                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
+//                                 NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
                                  NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
@@ -53,16 +54,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
 
-        if ProcessInfo.processInfo.environment["UITesting"] != nil {
-            if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
-                clearConnectUserDefaults()
-            }
-
-            NewRelic.start(withApplicationToken: "APP-TOKEN-NRMA",
-                           andCollectorAddress: "localhost:8080",
-                           andCrashCollectorAddress: "localhost:8080")
-        }
-        else {
+//        if ProcessInfo.processInfo.environment["UITesting"] != nil {
+//            if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
+//                clearConnectUserDefaults()
+//            }
+//
+//            NewRelic.start(withApplicationToken: "APP-TOKEN-NRMA",
+//                           andCollectorAddress: "localhost:8080",
+//                           andCrashCollectorAddress: "localhost:8080")
+//        }
+//        else {
             // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
             guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
 
@@ -79,7 +80,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                andCollectorAddress: collectorAddress,
                                andCrashCollectorAddress: crashCollectorAddress)
             }
-        }
+     //   }
         
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)

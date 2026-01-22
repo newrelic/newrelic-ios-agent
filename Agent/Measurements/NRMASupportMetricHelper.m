@@ -25,11 +25,15 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 + (void) enqueueDataUseMetric:(NSString*)subDestination size:(long)size received:(long)received {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMABytesOutSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, subDestination]
-                                                    value:[NSNumber numberWithLongLong:size]
-                                                    scope:@""
-                                          produceUnscoped:YES
-                                          additionalValue:[NSNumber numberWithLongLong:received]]];
+    
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMABytesOutSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, subDestination]
+                                                             value:[NSNumber numberWithLongLong:size]
+                                                             scope:@""
+                                                   produceUnscoped:YES
+                                                   additionalValue:[NSNumber numberWithLongLong:received]]];
+    }
+
 }
 
 + (void) enqueueFeatureFlagMetric:(BOOL)enabled features:(NRMAFeatureFlags)features {
@@ -58,17 +62,24 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 + (void) enqueueMaxPayloadSizeLimitMetric:(NSString*)endpoint {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, endpoint]
-                                                    value:@1
-                                                    scope:nil]];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMAMaxPayloadSizeLimitSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest, endpoint]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+
 }
 
 + (void) enqueueOfflinePayloadMetric:(long)size {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMAOfflineSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest]
-                                                    value:[NSNumber numberWithLongLong:size]
-                                                    scope:nil]];
+    
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMAOfflineSupportabilityFormatString, nativePlatform, platform, kNRMACollectorDest]
+                                                              value:[NSNumber numberWithLongLong:size]
+                                                              scope:nil]];
+    }
 }
 
 + (void) enqueueUpgradeMetric {
@@ -97,25 +108,54 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
-// Logging
++ (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
 
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"Supportability/Mobile/%@/API/setMaxBufferTime", nativePlatform]
+                                                              value:[NSNumber numberWithUnsignedInt:seconds]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
++ (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"Supportability/Mobile/%@/API/setMaxEventPoolSize", nativePlatform]
+                                                              value:[NSNumber numberWithUnsignedInt:size]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
+// Logging
 + (void) enqueueLogSuccessMetric:(long)size {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMALoggingMetricSuccessfulSize, nativePlatform, platform]
-                                                    value:[NSNumber numberWithLongLong:size]
-                                                    scope:@""
-                                          produceUnscoped:YES
-                                          additionalValue:nil]];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMALoggingMetricSuccessfulSize, nativePlatform, platform]
+                                                              value:[NSNumber numberWithLongLong:size]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+
 }
 
 + (void) enqueueLogFailedMetric {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMALoggingMetricFailedUpload, nativePlatform, platform]
-                                                    value:@1
-                                                    scope:nil]];
-
+    
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMALoggingMetricFailedUpload, nativePlatform, platform]
+                                                             value:@1
+                                                             scope:nil]];
+    }
 }
 
 // End Logging
@@ -124,27 +164,37 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 + (void) enqueueSessionReplaySuccessMetric:(long)size {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMASessionReplayMetricSuccessfulSize, nativePlatform, platform]
-                                                    value:[NSNumber numberWithLongLong:size]
-                                                    scope:@""
-                                          produceUnscoped:YES
-                                          additionalValue:nil]];
+    
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMASessionReplayMetricSuccessfulSize, nativePlatform, platform]
+                                                              value:[NSNumber numberWithLongLong:size]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
 }
 
 + (void) enqueueSessionReplayFailedMetric {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricFailedUpload, nativePlatform, platform]
-                                                    value:@1
-                                                    scope:nil]];
+    
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricFailedUpload, nativePlatform, platform]
+                                                              value:@1
+                                                              scope:nil]];
+    }
 }
 
 + (void) enqueueSessionReplayURLTooLargeMetric {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
     NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricURLTooLarge, nativePlatform, platform]
-                                                    value:@1
-                                                    scope:nil]];
+    
+    
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricURLTooLarge, nativePlatform, platform]
+                                                              value:@1
+                                                              scope:nil]];
+    }
 }
 
 + (void) processDeferredMetrics {
@@ -178,10 +228,10 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
             }
 
             [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:deferredMetricName
-                                                            value:[NSNumber numberWithLongLong:1]
+                                                            value:metric.value
                                                             scope:@""
                                                   produceUnscoped:YES
-                                                  additionalValue:nil]];
+                                                  additionalValue:metric.additionalValue]];
         }
 
         [deferredMetrics removeAllObjects];
