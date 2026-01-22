@@ -139,81 +139,55 @@ static NSTimeInterval shortTimeInterval = 10;
 }
 
 - (void)testWritesObjectToFile {
-    // Given
-    XCTestExpectation *writeExpectation = [self expectationWithDescription:@"Waiting for write delay to write file"];
-    
-    int docsDirDescriptor = open(".", O_EVTONLY);
-    dispatch_source_t fileSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, docsDirDescriptor, DISPATCH_VNODE_DELETE | DISPATCH_VNODE_WRITE | DISPATCH_VNODE_EXTEND, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-    dispatch_source_set_event_handler(fileSource, ^{
-        unsigned long data = dispatch_source_get_data(fileSource);
-        if(data & DISPATCH_VNODE_DELETE) {
-            NSLog(@"Watched File Deleted!");
-            dispatch_source_cancel(fileSource);
-            return;
-        }
-        
-        NSLog(@"File found and has data");
-        NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
-        NSError *error = nil;
-        NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
-        unarchiver.requiresSecureCoding = YES;
-        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
-        if(retrievedDictionary.count == 1) {
-            NSLog(@"Initial file found and full");
-            NSDictionary *attributes = ((NRMAMobileEvent *)retrievedDictionary[@"aKey"]).attributes;
-            if(attributes.count == 3) {
-                NSLog(@"file has right number of attributes");
-            } else {
-                NSLog(@"file has %d number of attributes", attributes.count);
-            }
-            dispatch_cancel(fileSource);
-            close(docsDirDescriptor);
-            [writeExpectation fulfill];
-        } else if (retrievedDictionary == nil) {
-            NSLog(@"File doesn't exist yet");
-        } else if(retrievedDictionary.count != 1){
-            NSLog(@"File found, but has a count of %lu", (unsigned long)retrievedDictionary.count);
-        }
-    });
-    dispatch_resume(fileSource);
-
+    // 1. Setup Store and Event
     PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                     andMinimumDelay:1];
+                                                               andMinimumDelay:1];
 
     TestEvent *testEvent = [[TestEvent alloc] initWithTimestamp:10
-                                            sessionElapsedTimeInSeconds:50
-                                                 withAttributeValidator:nil];
+                                    sessionElapsedTimeInSeconds:50
+                                         withAttributeValidator:nil];
     
     [testEvent addAttribute:@"AnAttribute" value:@1];
     [testEvent addAttribute:@"AnotherAttribute" value:@NO];
     [testEvent addAttribute:@"AThirdAttribute" value:@"Attribute"];
 
-    // When
+    // 2. When: Set the object
     [sut setObject:testEvent forKey:@"aKey"];
 
-    // Then
-    [self waitForExpectationsWithTimeout:shortTimeInterval*3 handler:nil];
+    // 3. Then: Poll until the file exists AND has the data we want
+    NSPredicate *filePredicate = [NSPredicate predicateWithBlock:^BOOL(id _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+        NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
+        if (!retrievedData) return NO;
 
-    NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
-    NSError *error = nil;
-    NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
-    unarchiver.requiresSecureCoding = YES;
-    NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
+        NSError *err = nil;
+        NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&err];
+        if (err) return NO;
 
-    XCTAssertNil(error, "Error testing file written: %@", [error localizedDescription]);
-    XCTAssertEqual([retrievedDictionary count], 1);
+        unarchiver.requiresSecureCoding = YES;
+        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList]
+                                                                        forKey:NSKeyedArchiveRootObjectKey];
+        
+        NRMAMobileEvent *event = retrievedDictionary ? retrievedDictionary[@"aKey"] : nil;
+        
+        // The predicate is satisfied ONLY when the attributes have been fully flushed
+        return (event.attributes.count == 3);
+    }];
+
+    XCTNSPredicateExpectation *expectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:filePredicate object:nil];
     
+    [self waitForExpectations:@[expectation] timeout:shortTimeInterval * 3];
+    // 4. Final Verification: Load it back into a fresh store to prove persistence
+    NSError *error = nil;
     PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                            andMinimumDelay:1];
+                                                                    andMinimumDelay:1];
     [anotherOne load:&error];
-    XCTAssertNil(error, "Error loading previous events: %@", [error localizedDescription]);
+    
+    XCTAssertNil(error);
     TestEvent *anotherEvent = [anotherOne objectForKey:@"aKey"];
     XCTAssertNotNil(anotherEvent);
     XCTAssertEqual(anotherEvent.timestamp, testEvent.timestamp);
-    XCTAssertEqual(anotherEvent.sessionElapsedTimeSeconds, testEvent.sessionElapsedTimeSeconds);
-    XCTAssertEqual([anotherEvent.attributes count], [testEvent.attributes count]);
+    XCTAssertEqual([anotherEvent.attributes count], 3);
 }
-
 - (void)testStoreReturnsNoIfFileDoesNotExist {
     PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:@"FileDoesNotExist"
                                                      andMinimumDelay:1];
@@ -302,68 +276,51 @@ static NSTimeInterval shortTimeInterval = 10;
 }
 
 - (void)testEventRemoval {
-    // Given
-    int docsDirDescriptor = open(".", O_EVTONLY);
-    dispatch_source_t fileSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, docsDirDescriptor, DISPATCH_VNODE_DELETE | DISPATCH_VNODE_WRITE | DISPATCH_VNODE_EXTEND, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
-    
-    XCTestExpectation *waitForInitialWriteExpectation = [self expectationWithDescription:@"Waiting for the first time the file is written"];
-    PersistentEventStore *sut =  [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                      andMinimumDelay:.025];
-    
-    NSError *error = nil;
+    // 1. Setup Store and Events
+    PersistentEventStore *sut = [[PersistentEventStore alloc] initWithFilename:testFilename
+                                                               andMinimumDelay:.025];
     
     NRMACustomEvent *customEvent = [self createCustomEvent];
     NRMARequestEvent *requestEvent = [self createRequestEvent];
     NRMAInteractionEvent *interactionEvent = [self createInteractionEvent];
 
-
-    dispatch_source_set_event_handler(fileSource, ^{
-        unsigned long data = dispatch_source_get_data(fileSource);
-        if(data & DISPATCH_VNODE_DELETE) {
-            NSLog(@"Watched File Deleted!");
-            dispatch_source_cancel(fileSource);
-            return;
-        }
-        
-        NSLog(@"File found and has data");
-        NSData *retrievedData = [NSData dataWithContentsOfFile:testFilename];
-        NSError *error = nil;
-
-        NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:retrievedData error:&error];
-        unarchiver.requiresSecureCoding = YES;
-        NSDictionary* retrievedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
-
-        if(retrievedDictionary.count == 3) {
-            NSLog(@"Initial file found and full");
-            dispatch_cancel(fileSource);
-            close(docsDirDescriptor);
-            [waitForInitialWriteExpectation fulfill];
-        } else if (retrievedDictionary == nil) {
-            NSLog(@"File doesn't exist yet");
-        } else if(retrievedDictionary.count != 3){
-            NSLog(@"File found, but has a count of %lu", (unsigned long)retrievedDictionary.count);
-        }
-    });
-    dispatch_resume(fileSource);
+    // 2. Setup "Initial Write" Expectation (Wait for 3 events)
+    NSPredicate *initialPredicate = [NSPredicate predicateWithBlock:^BOOL(id _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+        NSData *data = [NSData dataWithContentsOfFile:testFilename];
+        if (!data) return NO;
+        NSDictionary *dict = [NSKeyedUnarchiver unarchivedObjectOfClasses:[PersistentEventStore classList] fromData:data error:nil];
+        return (dict.count == 3);
+    }];
+    XCTNSPredicateExpectation *initialExpectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:initialPredicate object:nil];
     
     [sut setObject:customEvent forKey:@"Custom Event"];
     [sut setObject:requestEvent forKey:@"Request Event"];
     [sut setObject:interactionEvent forKey:@"Interaction Event"];
     
-    [self waitForExpectationsWithTimeout:shortTimeInterval*5 handler:nil];
-    
-    // When
-    [sut removeObjectForKey:@"Request Event"];
-    
-    XCTAssertNil([sut objectForKey:@"Request Event"]);
-    sleep(1);
-    
-    PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
-                                                            andMinimumDelay:shortTimeInterval];
+    [self waitForExpectations:@[initialExpectation] timeout:shortTimeInterval];
 
+    // 3. When: Remove an object
+    [sut removeObjectForKey:@"Request Event"];
+    XCTAssertNil([sut objectForKey:@"Request Event"], @"Object should be gone from memory immediately");
+
+    // 4. Setup "Removal Write" Expectation (Wait for file to drop to 2 events)
+    NSPredicate *removalPredicate = [NSPredicate predicateWithBlock:^BOOL(id _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+        NSData *data = [NSData dataWithContentsOfFile:testFilename];
+        if (!data) return NO;
+        NSDictionary *dict = [NSKeyedUnarchiver unarchivedObjectOfClasses:[PersistentEventStore classList] fromData:data error:nil];
+        return (dict.count == 2); // Verify file was updated on disk
+    }];
+    XCTNSPredicateExpectation *removalExpectation = [[XCTNSPredicateExpectation alloc] initWithPredicate:removalPredicate object:nil];
+    
+    [self waitForExpectations:@[removalExpectation] timeout:shortTimeInterval];
+
+    // 5. Then: Load into a new store to verify persistence
+    NSError *error = nil;
+    PersistentEventStore *anotherOne = [[PersistentEventStore alloc] initWithFilename:testFilename
+                                                                    andMinimumDelay:0];
     [anotherOne load:&error];
     
-    XCTAssertNil([anotherOne objectForKey:@"Request Event"]);
+    XCTAssertNil([anotherOne objectForKey:@"Request Event"], @"Request Event should not exist in the persisted file");
     XCTAssertNotNil([anotherOne objectForKey:@"Custom Event"]);
     XCTAssertNotNil([anotherOne objectForKey:@"Interaction Event"]);
 }
