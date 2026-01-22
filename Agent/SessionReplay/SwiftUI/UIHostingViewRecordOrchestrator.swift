@@ -151,7 +151,7 @@ final class UIHostingViewRecordOrchestrator {
                                        parentId: parentId,
                                        originalView: view)
         } catch {
-            //NRLOG_DEBUG("Error extracting SwiftUI ViewThingys: \(error)")
+            //NRLOG_AGENT_DEBUG("Error extracting SwiftUI ViewThingys: \(error)")
             return []
         }
     }
@@ -307,12 +307,7 @@ final class UIHostingViewRecordOrchestrator {
                 break
             }
             
-            if let id = image?.swiftUISessionReplayIdentifier {
-                contentId = id
-            } else {
-                contentId = IDGenerator.shared.getId()
-                image?.swiftUISessionReplayIdentifier = contentId
-            }
+            contentId = getContentId(for: content, identity: item.identity)
             
             viewName = "SwiftUIImageView"
             var details = makeDetails()
@@ -335,24 +330,6 @@ final class UIHostingViewRecordOrchestrator {
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)
-        }
-    }
-}
-
-fileprivate var associatedSwiftUISessionReplayIdentifierKey: String = "SessionReplayIdentifier"
-
-extension CGImage {
-    var swiftUISessionReplayIdentifier: Int? {
-        set {
-            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
-                objc_setAssociatedObject(self, $0, newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-            }
-        }
-
-        get {
-            withUnsafePointer(to: &associatedSwiftUISessionReplayIdentifierKey) {
-                objc_getAssociatedObject(self, $0) as? Int
-            }
         }
     }
 }
