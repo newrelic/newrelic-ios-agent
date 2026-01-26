@@ -4,7 +4,7 @@
 #pragma once
 #include <queue>
 #include <functional>
-#include <future>
+#include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
@@ -18,22 +18,19 @@ public:
     void enqueue(std::function<void()> workItem);
     void clearQueue();
     bool isEmpty();
-    void synchronize();          // Wait until all queued work finished (no timeout - CAUTION: may block indefinitely)
-    bool synchronize(unsigned int timeout_ms);  // Wait with timeout, returns true if completed, false if timed out
-    void terminate();            // Explicit shutdown (DEPRECATED: blocks indefinitely)
-    bool terminate(unsigned int timeout_ms);    // Shutdown with timeout, returns true if joined, false if detached
+    void synchronize();          // Wait until all queued work finished
+    void terminate();            // Explicit shutdown
 
 private:
-    void task_thread();
+    void workerLoop();
 
     std::queue<std::function<void()>> _queue;
-    std::recursive_mutex _queueMutex;
-    std::mutex _threadMutex;
-    std::condition_variable taskSignaler;
-    std::future<void> worker;
-    std::atomic<bool> shouldTerminate;
-    std::atomic<bool> executing;
-    bool queueReady;
+    std::mutex _mutex;
+    std::condition_variable _cv;         // work arrival or termination
+    std::condition_variable _emptyCv;    // queue became empty
+    std::thread _worker;
+    bool _stopping{false};
+    bool _executing{false};
 };
 } // namespace NewRelic
 #endif //LIBMOBILEAGENT_WORKQUEUE_HPP

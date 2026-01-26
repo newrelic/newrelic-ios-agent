@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NewRelic
 
 struct MaskingView: View {
     @State private var maskedInput: String = ""
@@ -91,7 +92,7 @@ struct MaskingView: View {
                 }
 
                 sectionTitle("Deep Nesting (Mixed Overrides)")
-                
+
                 NRConditionalMaskView(maskApplicationText: false, maskUserInputText: false, maskAllUserTouches: false) {
                     
                     VStack(alignment: .leading, spacing: 10) {
@@ -101,7 +102,7 @@ struct MaskingView: View {
                                 Text("Level 2 (no id)")
                             }
                             VStack(alignment: .leading, spacing: 6) {
-                                NRConditionalMaskView(sessionReplayIdentifier: "my-masked-id") {
+                                NRConditionalMaskView(sessionReplayIdentifier: "msr-swiftui-text-1") {
 
                                     Text("Level 3 Explicit Masked")
                                     VStack(alignment: .leading, spacing: 4) {

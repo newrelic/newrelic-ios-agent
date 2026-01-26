@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "019C3755-F4EF-4C25-8E03-1F1947DF18D4",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : [
+        "NRTestAppTests\/testApodViewModel()",
+        "NRTestAppTests\/testAsyncInstrumentation()"
+      ],
+      "target" : {
+        "containerPath" : "container:NRTestApp.xcodeproj",
+        "identifier" : "2B459FD92E9EF52500CB66F3",
+        "name" : "NRTestAppAsFrameworkTests"
+      }
+    },
+    {
+      "skippedTests" : [
+        "NRTestAppUITests\/testARequests()",
+        "NRTestAppUITests\/testBRequests()"
+      ],
+      "target" : {
+        "containerPath" : "container:NRTestApp.xcodeproj",
+        "identifier" : "2B459FEF2E9EF52F00CB66F3",
+        "name" : "NRTestAppAsFrameworkUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

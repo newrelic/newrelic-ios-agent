@@ -10,23 +10,22 @@ import SwiftUI
 
 @available(iOS 16, *)
 public struct NRConditionalMaskView<Content: View>: View {
-    private let maskApplicationText: Bool?
-    private let maskUserInputText: Bool?
-    private let maskAllImages: Bool?
-    private let maskAllUserTouches: Bool?
+    let maskApplicationText: Bool?
+    let maskUserInputText: Bool?
+    let maskAllImages: Bool?
+    let maskAllUserTouches: Bool?
     
-    private let sessionReplayIdentifier: String?
+    let sessionReplayIdentifier: String?
     
-    private let activated: Bool
+    let activated: Bool
     
-    private let content: () -> Content
+    let content: () -> Content
     
     public init(maskApplicationText: Bool? = nil,
                 maskUserInputText: Bool? = nil,
                 maskAllImages: Bool? = nil,
                 maskAllUserTouches: Bool? = nil,
                 sessionReplayIdentifier: String? = nil,
-                
                 activated: Bool = true,
                 @ViewBuilder content: @escaping () -> Content) {
         self.maskApplicationText = maskApplicationText

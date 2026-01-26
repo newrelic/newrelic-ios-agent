@@ -81,11 +81,6 @@ namespace NewRelic {
         void synchronize() {
             _wrapper->synchronize();
         }
-
-        //used to wait for persistent store writes to finish with timeout (returns true if completed, false if timed out)
-        bool synchronize(unsigned int timeout_ms) {
-            return _wrapper->synchronize(timeout_ms);
-        }
     };
 }
 #endif //LIBMOBILEAGENT_PERSISTENTSTORE_HPP

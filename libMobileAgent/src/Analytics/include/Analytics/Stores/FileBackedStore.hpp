@@ -69,19 +69,10 @@ public:
         workQueue.synchronize();
     }
 
-    bool synchronize(unsigned int timeout_ms) {
-        return workQueue.synchronize(timeout_ms);
-    }
-
 
     virtual ~FileBackedStore() {
-        // Use non-blocking terminate with 500ms timeout to avoid blocking main thread
-        // If timeout occurs, thread will be detached and finish asynchronously
-        bool completed = workQueue.terminate(500);
-        if (!completed) {
-            LLOG_VERBOSE("WorkQueue terminate timed out in FileBackedStore destructor - thread detached");
-        }
 
+        workQueue.terminate();
         std::lock_guard<std::mutex> lk(_fileMutex);
         if (dirtyFlag) {
             flush();
@@ -112,15 +103,13 @@ public:
         dirtyFlag = true;
         workQueue.enqueue([this] {
             try {
-                std::lock_guard<std::mutex> lk(_fileMutex);
-                // Check throttle, but don't block the worker thread with sleep
-                // This allows synchronize() and terminate() to complete faster
-                auto now = std::chrono::system_clock::now();
-                if (now - lastWriteTime >= writeThrottle()) {
-                    flush();
+                // if it hasn't been long enough sleep?
+                if (std::chrono::system_clock::now() - lastWriteTime < writeThrottle()) {
+                    std::this_thread::sleep_for(writeThrottle());
                 }
-                // If throttled, the dirty flag remains set and will be flushed
-                // on next store() call or in destructor
+
+                std::lock_guard<std::mutex> lk(_fileMutex);
+                flush();
             } catch (std::exception& e) {
                 LLOG_VERBOSE("Failed to store item: %s", e.what());
             } catch (...) {

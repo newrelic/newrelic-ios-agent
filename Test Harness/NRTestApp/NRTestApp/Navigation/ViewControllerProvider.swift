@@ -31,6 +31,14 @@ enum ViewControllerProvider {
         return viewController
     }
 #endif
+#if os(iOS)
+
+static var attributedStringTextMaskingViewController: AttributedStringTextMaskingViewController {
+let viewController = AttributedStringTextMaskingViewController()
+return viewController
+}
+#endif
+
     static var collectionViewController: ScrollableCollectionViewController {
         let viewController = ScrollableCollectionViewController()
         return viewController

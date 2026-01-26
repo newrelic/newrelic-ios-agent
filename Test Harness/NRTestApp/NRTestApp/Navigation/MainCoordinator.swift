@@ -54,6 +54,12 @@ class MainCoordinator: Coordinator {
         #endif
     }
 
+
+   func showAttributedStringTextMaskingController() {
+      let attributedStringTextMaskingViewController = ViewControllerProvider.attributedStringTextMaskingViewController
+      navigationController.pushViewController(attributedStringTextMaskingViewController, animated: true)
+   }
+
     func showCollectionController() {
         let collectionViewController = ViewControllerProvider.collectionViewController
         navigationController.pushViewController(collectionViewController, animated: true)

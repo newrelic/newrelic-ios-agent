@@ -27,8 +27,8 @@ namespace NewRelic {
             auto filename = generateFilename();
             FILE* file = fopen(filename.c_str(), "wb");
             if (file == nullptr) {
-                LLOG_ERROR("failed to write handled exception report to %s.\nerror %d: %s", filename.c_str(), errno,
-                             strerror(errno));
+                //LLOG_ERROR("failed to write handled exception report to %s.\nerror %d: %s", filename.c_str(), errno,
+                //             strerror(errno));
                 return;
             }
             flatbuffers::FlatBufferBuilder builder{};
@@ -37,7 +37,7 @@ namespace NewRelic {
             auto size = fwrite(builder.GetBufferPointer(), sizeof(uint8_t), builder.GetSize(), file);
             if (size < builder.GetSize()) {
                 if (ferror(file)) {
-                    LLOG_ERROR("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
+                    //LLOG_ERROR("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
                 }
             }
             fclose(file);
@@ -50,8 +50,8 @@ namespace NewRelic {
                 std::lock_guard<std::mutex> storeLock(_storeMutex);
                 DIR* dirp = opendir(path.c_str());
                 if (dirp == nullptr) {
-                    LLOG_ERROR("failed to open handled exception store dir: \"%s\".\nerror %d: %s", path.c_str(), errno,
-                                 strerror(errno));
+                    //LLOG_ERROR("failed to open handled exception store dir: \"%s\".\nerror %d: %s", path.c_str(), errno,
+                    //             strerror(errno));
                     return false;
                 }
                 struct dirent* dp = nullptr;
@@ -74,7 +74,7 @@ namespace NewRelic {
                             std::streamsize size = file.tellg();
 
                             if (size == -1) {
-                                LLOG_ERROR("failed to get handled exception report file size: %s",filename.c_str());
+                                //LLOG_ERROR("failed to get handled exception report file size: %s",filename.c_str());
                                 file.close();
                             }
 
@@ -83,7 +83,7 @@ namespace NewRelic {
                             if (file.read((char*) buf, size)) {
                                 callback(buf, size);
                             } else {
-                                LLOG_ERROR("failed to read file %s",filename.c_str());
+                                //LLOG_ERROR("failed to read file %s",filename.c_str());
                             }
                             file.close();
                             remove(fullPath.str().c_str());
@@ -102,8 +102,8 @@ namespace NewRelic {
                 std::lock_guard<std::mutex> storeLock(_storeMutex);
                 DIR* dirp = opendir(path.c_str());
                 if (dirp == nullptr) {
-                    LLOG_ERROR("failed to open handled exception store dir: \"%s\".\nerror %d: %s", path.c_str(), errno,
-                               strerror(errno));
+                   // LLOG_ERROR("failed to open handled exception store dir: \"%s\".\nerror %d: %s", path.c_str(), errno,
+                   //            strerror(errno));
                     return;
                 }
 

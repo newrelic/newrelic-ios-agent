@@ -217,6 +217,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
 
+        options.append(UtilOption(title: "Attributed String Text Masking", handler: { [self] in attributedStringTextMaskingAction()}))
+
         options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
         
         options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
@@ -224,8 +226,6 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction()}))
 
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
-
-        options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
 
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
@@ -242,7 +242,6 @@ class ViewController: UIViewController {
         
         options.append(UtilOption(title: "SwiftUIViewRepresentable", handler: { [self] in swiftUIViewRepresentableTapped()}))
 
-        
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
@@ -278,6 +277,10 @@ class ViewController: UIViewController {
     func textMaskingAction() {
         coordinator?.showTextMaskingController()
     }
+    
+    func attributedStringTextMaskingAction() {
+        coordinator?.showAttributedStringTextMaskingController()
+    }
 
     func collectionViewAction() {
         coordinator?.showCollectionController()
@@ -299,9 +302,6 @@ class ViewController: UIViewController {
         coordinator?.showInfiniteImageScrollController()
     }
     
-    func performanceContentView() {
-        coordinator?.showPerformanceContentView()
-    }
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
