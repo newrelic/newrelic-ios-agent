@@ -14,6 +14,7 @@
 #import "NRMACustomEvent.h"
 #import "NRMARequestEvent.h"
 #import "NRMANetworkErrorEvent.h"
+#import "NRMAUserActionEvent.h"
 
 @interface PersistentEventStore ()
 @property (nonatomic, strong) dispatch_queue_t writeQueue;
@@ -216,7 +217,7 @@
 
 + (NSSet*) classList {
     NSSet *classList = [[NSSet alloc] initWithArray:@[ [NRMAPayload class],
-        [NRMAInteractionEvent class],[NRMAMobileEvent class], [NRMASessionEvent class],[NRMACustomEvent class],[NRMARequestEvent class],[NRMANetworkErrorEvent class],
+        [NRMAInteractionEvent class],[NRMAMobileEvent class], [NRMASessionEvent class],[NRMACustomEvent class],[NRMARequestEvent class],[NRMANetworkErrorEvent class], [NRMAUserActionEvent class],
         [NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]];
     return classList;
 }

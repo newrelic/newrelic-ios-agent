@@ -617,16 +617,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         }
     }
 
-    if([NRMAFlags shouldEnableGestureInstrumentation])
-    {
-        self.gestureFacade = [[NRMAUserActionFacade alloc] initWithAnalyticsController:self.analyticsController];
-
-        NRMAUserAction* foregroundGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder *builder) {
-            [builder withActionType:kNRMAUserActionAppLaunch];
-        }];
-        [self.gestureFacade recordUserAction:foregroundGesture];
-    }
-
     // appInstallMetricGenerator will receive the 'new install' notification
     // before the harvester is setup and before the task queue is set up.
     // by adding the appInstallMetricGenerator to the harvestAwareListener
@@ -792,6 +782,11 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
                  */
                 [self sessionStartInitialization];
                 didFireEnterBackground = NO;
+                
+                NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+                [builder withActionType:kNRMAUserActionAppLaunch];
+                NRMAUserAction* backgroundGesture = [builder build];
+                [self.analyticsController recordUserAction:backgroundGesture];
             }
         }
     });
@@ -972,6 +967,11 @@ static UIBackgroundTaskIdentifier background_task;
                     NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                     @try {
+                        
+                        NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+                        [builder withActionType:kNRMAUserActionAppBackground];
+                        NRMAUserAction* backgroundGesture = [builder build];
+                        [self.analyticsController recordUserAction:backgroundGesture];
 #endif
                         self.gestureFacade = nil;
                         [self.analyticsController sessionWillEnd];

@@ -31,6 +31,9 @@ jobs:
       #     curl https://raw.githubusercontent.com/Homebrew/homebrew-core/e92d2ae54954ebf485b484d8522104700b144fee/Formula/lcov.rb > lcov.rb
       #     brew install ./lcov.rb
 
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+
       - name: Update gem
         run: bundle update
 
@@ -57,6 +60,9 @@ jobs:
       # - name: Install lcov
       #   run: brew install lcov
 
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+
       - name: Update gem
         run: bundle update
 
@@ -82,6 +88,9 @@ jobs:
 
       # - name: Install lcov
       #   run: brew install lcov
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update
@@ -139,6 +148,9 @@ jobs:
           # mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           # cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+
       - name: Update gem
         run: bundle update
 
@@ -179,6 +191,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update
