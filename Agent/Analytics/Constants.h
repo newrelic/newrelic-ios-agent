@@ -45,6 +45,7 @@ extern NSString *const kNRMA_RET_mobileRequestError;
 extern NSString *const kNRMA_RET_mobileCrash;
 extern NSString *const kNRMA_RET_mobileBreadcrumb;
 extern NSString *const kNRMA_RET_mobileUserAction;
+extern NSString *const kNRMA_RET_userAction;
 
 extern NSString *const kNRMA_RA_methodExecuted;
 extern NSString *const kNRMA_RA_targetObject;
