@@ -8,7 +8,6 @@
 
 import SwiftUI
 
-@available(iOS 16, *)
 struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
 
     let maskApplicationText: Bool?
@@ -28,8 +27,11 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
                                                                                   inputContent: content))
         hostVC.view.clipsToBounds = false
 
-        hostVC.sizingOptions =
-            UIHostingControllerSizingOptions.intrinsicContentSize
+        if #available(iOS 16.0, *) {
+            hostVC.sizingOptions =
+                UIHostingControllerSizingOptions.intrinsicContentSize
+
+        }
 
         hostVC.view.backgroundColor =
             UIColor.clear
@@ -52,6 +54,7 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
         hostVC.view.swiftUISessionReplayIdentifier = sessionReplayIdentifier
     }
 
+    @available(iOS 16.0, *)
     func sizeThatFits(_ proposal: ProposedViewSize, uiViewController: UIHostingController<MaskedContainerView<Content>>, context: Context) -> CGSize? {
         let preferredSize = CGSize(width: CGFloat.infinity, height: .infinity)
         let proposedSize = proposal.replacingUnspecifiedDimensions(by: preferredSize)

@@ -8,7 +8,6 @@
 
 import SwiftUI
 
-@available(iOS 16, *)
 public struct NRConditionalMaskView<Content: View>: View {
     private let maskApplicationText: Bool?
     private let maskUserInputText: Bool?
