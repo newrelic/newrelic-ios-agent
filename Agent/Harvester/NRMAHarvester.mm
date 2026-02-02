@@ -181,6 +181,10 @@
 
 - (void) removeHarvestAwareObject:(id<NRMAHarvestAware>)harvestAware
 {
+    if (!self.harvestAwareObjects) {
+        NRLOG_AGENT_DEBUG(@"harvestAwareObjects is nil in removeHarvestAwareObject");
+        return;
+    }
     @synchronized(self.harvestAwareObjects){
         [self.harvestAwareObjects removeObject:harvestAware];
     }

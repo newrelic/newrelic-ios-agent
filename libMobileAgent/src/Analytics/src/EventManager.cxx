@@ -32,6 +32,7 @@ bool EventManager::didReachMaxQueueTime(unsigned long long currentTimestamp_ms) 
 
 void EventManager::setMaxBufferSize(unsigned int size) {
     EventBufferConfig::getInstance().setMaxEventBufferSize(size);
+
 }
 
 void EventManager::empty() {

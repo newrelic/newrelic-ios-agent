@@ -8,6 +8,8 @@
 
 import Foundation
 
+#if os(iOS) || os(tvOS)
+
 struct SessionReplayFrame {
     let date: Date
     let views: any SessionReplayViewThingy
@@ -16,3 +18,4 @@ struct SessionReplayFrame {
     let size: CGSize
     let layoutContainerViewCount: Int
 }
+#endif

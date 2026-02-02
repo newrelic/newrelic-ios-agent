@@ -6,7 +6,7 @@
 //  Copyright © 2025 New Relic. All rights reserved.
 //
 
-#if os(iOS)
+//#if os(iOS)
 
 import Foundation
 import SwiftUI
@@ -76,4 +76,4 @@ extension SwiftUIDisplayList.Effect: XrayConvertible {
     }
 }
 
-#endif
+//#endif

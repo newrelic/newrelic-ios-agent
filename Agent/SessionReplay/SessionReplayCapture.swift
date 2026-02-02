@@ -192,24 +192,5 @@ class SessionReplayCapture {
             nextId = thingy.subviews[i].viewDetails.viewId
         }
     }
-    
-//        func logThingys(_ things: [any SessionReplayViewThingy]) {
-//            var lines: [String] = []
-//            lines.reserveCapacity(things.count)
-//
-//            for thing in things {
-//                let frame = thing.viewDetails.frame
-//                let viewId = thing.viewDetails.viewId
-//                let parentId = thing.viewDetails.parentId ?? -1
-//                let viewName = thing.viewDetails.viewName ?? "NoName"
-//                let typeName = String(describing: type(of: thing))
-//                let line = "\(typeName) - id:\(viewId) parent:\(parentId) name:\(viewName) frame:(\(String(format: "%.2f", frame.origin.x)), \(String(format: "%.2f", frame.origin.y)), \(String(format: "%.2f", frame.size.width)), \(String(format: "%.2f", frame.size.height)))"
-//                lines.append(line)
-//            }
-//            let newLog = lines.joined(separator: "\n")
-//            //NRLOG_DEBUG("THINGIES for SwiftUI view:")
-//            //NRLOG_DEBUG(newLog)
-//            //NRLOG_DEBUG("END Thingys for SwiftUI view:")
-//        }
 }
 

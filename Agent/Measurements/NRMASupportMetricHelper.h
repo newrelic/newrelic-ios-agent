@@ -19,6 +19,9 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueUpgradeMetric;
 + (void) enqueueStopAgentMetric;
 + (void) enqueueConfigurationUpdateMetric;
++ (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size;
++ (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds;
+
 + (void) processDeferredMetrics;
 + (void) enqueueOfflinePayloadMetric:(long)size;
 

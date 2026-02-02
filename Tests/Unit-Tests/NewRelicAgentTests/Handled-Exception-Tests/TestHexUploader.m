@@ -18,6 +18,7 @@
 #import "NRMAMeasurements.h"
 #import "NewRelicInternalUtils.h"
 #import "NewRelic.h"
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMAHexUploader ()
 - (void) handledErroredRequest:(NSURLRequest*)request;
@@ -43,6 +44,8 @@
     helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:helper];
+    
+    [NRMASupportMetricHelper processDeferredMetrics];
 }
 
 - (void)tearDown {
@@ -150,6 +153,7 @@
 
     XCTAssertThrows([mockUploader verify]);
 
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
 
     NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
@@ -175,6 +179,7 @@
     NSData *fakeData = [NRMAFakeDataHelper makeDataDictionary:21000];
     XCTAssertNoThrow([(NRMAHexUploader*)mockUploader sendData:fakeData]);
     
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];

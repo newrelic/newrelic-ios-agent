@@ -35,7 +35,10 @@ class ScrollableCollectionViewController: UIViewController {
         // Create and configure collection view
         collectionView = UICollectionView(frame: view.safeAreaLayoutGuide.layoutFrame, collectionViewLayout: layout)
         collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+#if os(iOS)
+
         collectionView.backgroundColor = .systemBackground
+        #endif
         collectionView.register(ColorCollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
         collectionView.dataSource = self
         collectionView.delegate = self
@@ -76,9 +79,13 @@ class ColorCollectionViewCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         // Create blur effect
+#if os(iOS)
+
         let blurEffect = UIBlurEffect(style: .systemMaterial)
         blurEffectView = UIVisualEffectView(effect: blurEffect)
-        
+        #else
+        blurEffectView = UIVisualEffectView()
+        #endif
         super.init(frame: frame)
         
         // Configure cell appearance
@@ -96,13 +103,14 @@ class ColorCollectionViewCell: UICollectionViewCell {
         label.font = UIFont.boldSystemFont(ofSize: 16)
         label.translatesAutoresizingMaskIntoConstraints = false
         
+#if os(iOS)
+
         // Add label to the vibrancy effect view for better text rendering on blur
         let vibrancyEffect = UIVibrancyEffect(blurEffect: blurEffect)
         let vibrancyView = UIVisualEffectView(effect: vibrancyEffect)
         vibrancyView.frame = blurEffectView.bounds
         vibrancyView.contentView.addSubview(label)
         blurEffectView.contentView.addSubview(vibrancyView)
-        
         // Set up constraints for the label
         NSLayoutConstraint.activate([
             label.centerXAnchor.constraint(equalTo: vibrancyView.contentView.centerXAnchor),
@@ -112,6 +120,8 @@ class ColorCollectionViewCell: UICollectionViewCell {
             vibrancyView.topAnchor.constraint(equalTo: blurEffectView.topAnchor),
             vibrancyView.bottomAnchor.constraint(equalTo: blurEffectView.bottomAnchor)
         ])
+#endif
+
     }
     
     required init?(coder: NSCoder) {

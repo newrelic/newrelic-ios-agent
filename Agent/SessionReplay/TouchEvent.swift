@@ -17,6 +17,7 @@ class TouchEvent {
         var moveTouches: [Detail] = []
         var endTouch: Detail?
         let id: Int
+        var isPersisted: Bool = false
         
         struct Detail {
             let location: CGPoint

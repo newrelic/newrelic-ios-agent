@@ -72,6 +72,37 @@ class UILabelThingy: SessionReplayViewThingy {
 
     }
     
+    static func extractLabelAttributes(from view: UIView) -> (text: String?, font: UIFont, textColor: UIColor, textAlignment: String) {
+        var text: String? = nil
+        var font: UIFont = UIFont.systemFont(ofSize: 17.0)
+        var textColor: UIColor = .black
+        var textAlignment: String = "left"
+        
+        if view.responds(to: Selector(("attributedText"))) {
+            if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
+                text = attributedText.string // Extract plain text
+                if attributedText.length > 0 {
+                    // Get font from attributed string
+                    if let attributedFont = attributedText.attribute(.font, at: 0, effectiveRange: nil) as? UIFont {
+                        font = attributedFont
+                    }
+                    // Get text color from attributed string
+                    if let attributedColor = attributedText.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor {
+                        textColor = attributedColor
+                    }
+                    // Get text alignment from paragraph style
+                    if let paragraphStyle = attributedText.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
+                        textAlignment = paragraphStyle.alignment.stringValue()
+                    }
+                } else {
+                    // If attributed string is empty, set text to empty string and use defaults
+                    text = ""
+                }
+            }
+        }
+        return (text, font, textColor, textAlignment)
+    }
+
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
@@ -82,26 +113,11 @@ class UILabelThingy: SessionReplayViewThingy {
         
         if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                   view.isKind(of: rctParagraphClass) {
-            if view.responds(to: Selector(("attributedText"))) {
-                if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
-                    text = attributedText.string  // Extract plain text
-                    
-                    // Get font from attributed string
-                    if let attributedFont = attributedText.attribute(.font, at: 0, effectiveRange: nil) as? UIFont {
-                        font = attributedFont
-                    }
-                    
-                    // Get text color from attributed string
-                    if let attributedColor = attributedText.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor {
-                        textColor = attributedColor
-                    }
-                    
-                    // Get text alignment from paragraph style
-                    if let paragraphStyle = attributedText.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
-                        textAlignment = paragraphStyle.alignment.stringValue()
-                    }
-                }
-            }
+            let extracted = UILabelThingy.extractLabelAttributes(from: view)
+            text = extracted.text
+            font = extracted.font
+            textColor = extracted.textColor
+            textAlignment = extracted.textAlignment
         }
 
         if let isMasked = viewDetails.isMasked {

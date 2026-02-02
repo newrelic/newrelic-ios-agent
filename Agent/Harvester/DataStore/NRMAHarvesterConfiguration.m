@@ -580,6 +580,9 @@ static long long _accountId;
 
     // session replay equality
     if (self.session_replay_sampling_rate != that.session_replay_sampling_rate) return NO;
+    
+    if (self.session_replay_error_sampling_rate != that.session_replay_error_sampling_rate) return NO;
+
     if (![self.session_replay_mode isEqualToString:that.session_replay_mode]) return NO;
     if (self.session_replay_enabled != that.session_replay_enabled) return NO;
     if (self.has_session_replay_config != that.has_session_replay_config) return NO;
@@ -622,10 +625,10 @@ static long long _accountId;
 
 
     // session replay
-
-//    result = 31 * result + self.log_reporting_level.hash;
     result = 31 * result + self.session_replay_enabled;
     result = 31 * result + self.session_replay_sampling_rate;
+    result = 31 * result + self.session_replay_error_sampling_rate;
+
     result = 31 * result + self.session_replay_mode.hash;
 
     return result;

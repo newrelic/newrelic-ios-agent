@@ -33,6 +33,7 @@
 @property(readonly,strong) NSString* loggingHost;
 @property(readonly,strong) NSString* loggingURL;
 @property(readonly,strong) NSString* sessionReplayURL;
+@property(readonly,strong) NSString* sessionReplayMode;
 
 @property(readonly,strong) NRMAAppToken* applicationToken;
 @property(atomic,strong) NSString* sessionIdentifier;

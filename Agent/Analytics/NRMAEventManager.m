@@ -15,7 +15,7 @@
 #import "NRMAAgentConfiguration.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;
-static const NSUInteger kDefaultBufferTimeSeconds = 600; // 10 Minutes
+static const NSUInteger kDefaultBufferTimeSeconds = 60; // 60 seconds
 static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 static const NSUInteger kBufferTimeSecondsLeeway = 60; // 60 seconds
 
@@ -63,7 +63,6 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
         NRLOG_AGENT_WARNING(@"Buffer Time should not be longer than %lu seconds", (unsigned long)kDefaultBufferTimeSeconds);
         maxBufferTimeSeconds = kDefaultBufferTimeSeconds;
     }
-    
     maxBufferTimeSeconds = seconds;
 }
 

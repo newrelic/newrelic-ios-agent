@@ -24,6 +24,9 @@
 #import "Constants.h"
 #import "NRMAAttributeValidator.h"
 
+// Session Replay Error Sampling
+// END
+
 @interface NRMAAnalytics(Protected)
 // Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController;

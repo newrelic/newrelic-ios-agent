@@ -12,7 +12,7 @@ namespace NewRelic {
 
      EventBufferConfig() = default;
  public:
-     static const unsigned int kMaxEventBufferTimeSecDefault = 600;
+     static const unsigned int kMaxEventBufferTimeSecDefault = 60       ;
      static const unsigned int kMaxEventBufferSizeDefault    = 1000;
      static EventBufferConfig& getInstance();
      void setMaxEventBufferTime(unsigned int);

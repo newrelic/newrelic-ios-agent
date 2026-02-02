@@ -15,6 +15,7 @@ class ViewController: UIViewController {
     var options =  [UtilOption]()
     
     var spaceImageView = UIImageView()
+    var zeroImageView = UIImageView()
     var spaceLabel = SecureLabel()
     var privateHelloLabel = UnsecureLabel()
     var spaceStack = UIStackView()
@@ -31,6 +32,8 @@ class ViewController: UIViewController {
 #if os(iOS)
         self.view.backgroundColor = .orange
 #endif
+        zeroImageView.image = UIImage()
+        
         setupSpaceStack()
         setupButtonsTable()
         
@@ -63,6 +66,15 @@ class ViewController: UIViewController {
     }
     
     func setupSpaceStack() {
+        self.view.addSubview(zeroImageView)
+        zeroImageView.translatesAutoresizingMaskIntoConstraints = false
+        zeroImageView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
+        zeroImageView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        zeroImageView.heightAnchor.constraint(lessThanOrEqualToConstant: 25.0).isActive = true
+        zeroImageView.widthAnchor.constraint(lessThanOrEqualToConstant: 25.0).isActive = true
+        zeroImageView.heightAnchor.constraint(greaterThanOrEqualToConstant: 10.0).isActive = true
+        zeroImageView.widthAnchor.constraint(greaterThanOrEqualToConstant: 10.0).isActive = true
+
         //Image View
         spaceImageView.contentMode = .scaleAspectFit
         spaceImageView.heightAnchor.constraint(lessThanOrEqualToConstant: 250.0).isActive = true
@@ -213,9 +225,13 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
+        options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
+        options.append(UtilOption(title: "Confidential View", handler: { [self] in confidentialAction()}))
+
         options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
 
         options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
@@ -271,6 +287,10 @@ class ViewController: UIViewController {
         coordinator?.showDiffTestController()
     }
     
+    func confidentialAction() {
+        coordinator?.showConfidentialController()
+    }
+    
     func infiniteViewAction() {
         coordinator?.showInfiniteScrollController()
     }
@@ -279,6 +299,9 @@ class ViewController: UIViewController {
         coordinator?.showInfiniteImageScrollController()
     }
     
+    func performanceContentView() {
+        coordinator?.showPerformanceContentView()
+    }
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)

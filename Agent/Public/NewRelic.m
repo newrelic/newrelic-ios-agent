@@ -44,6 +44,8 @@
 
 + (void) logError:(NSString* __nonnull) message {
     NRLOG_ERROR(@"%@", message);
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) logVerbose:(NSString* __nonnull) message {
@@ -136,6 +138,8 @@
     NSString * errorDesc = error.localizedDescription;
 
     [self logError:[NSString stringWithFormat:@"Error encountered: %@", errorDesc]];
+  
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) crashNow:(NSString*)message
@@ -173,6 +177,8 @@
     }
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordHandledException:(NSException*)exception
@@ -184,6 +190,9 @@
     }
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
                                                                                     attributes:attributes];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
+
 }
 
 + (void)recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
@@ -194,6 +203,8 @@
     }
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
 }
 
@@ -206,6 +217,8 @@
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:nil];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordError:(NSError* _Nonnull)error
@@ -218,6 +231,8 @@
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:attributes];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) setPlatform:(NRMAApplicationPlatform)platform {
@@ -650,7 +665,7 @@
     if (newSession) {
         [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
         
-        [[NewRelicAgentInternal sharedInstance] sessionReplayStartNewSession];
+        [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
 
         // Perform harvest
         [self harvestNow];
@@ -739,15 +754,17 @@
  * harvest cycle.
  */
 + (void) setMaxEventBufferTime:(unsigned int)seconds {
-    [[NewRelicAgentInternal sharedInstance].analyticsController setMaxEventBufferTime:seconds];
+    [[NewRelicAgentInternal sharedInstance] setMaxEventBufferTime:seconds];
+
 }
+
 /*
  * this method sets the maximum number of events buffered by the agent.
  * this means: once this many events have been recorded, new events have a statistical chance of overwriting
  * previously recorded events in the buffer.
  */
 + (void) setMaxEventPoolSize:(unsigned int)size {
-    [[NewRelicAgentInternal sharedInstance].analyticsController setMaxEventBufferSize:size];
+    [[NewRelicAgentInternal sharedInstance] setMaxEventPoolSize:size];
 }
 
 /*
@@ -770,7 +787,7 @@
  */
 + (BOOL) addSessionReplayMaskViewClass:(NSString*) viewClassName {
     if (viewClassName == NULL || viewClassName.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayMaskViewClass: viewClassName must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayMaskViewClass: viewClassName must not be null or empty");
         return false;
     }
 
@@ -785,7 +802,7 @@
  */
 + (BOOL) addSessionReplayUnmaskViewClass:(NSString*) viewClassName {
     if (viewClassName == NULL || viewClassName.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayUnmaskViewClass: viewClassName must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayUnmaskViewClass: viewClassName must not be null or empty");
         return false;
     }
 
@@ -799,7 +816,7 @@
  */
 + (BOOL) addSessionReplayMaskedAccessibilityIdentifier:(NSString*) identifier {
     if (identifier == NULL || identifier.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayMaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
         return false;
     }
 
@@ -813,12 +830,37 @@
  */
 + (BOOL) addSessionReplayUnmaskedAccessibilityIdentifier:(NSString*) identifier {
     if (identifier == NULL || identifier.length == 0) {
-        NRLOG_ERROR(@"addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
+        NRLOG_AGENT_ERROR(@"addSessionReplayUnmaskedAccessibilityIdentifier: accessibilityIdentifier must not be null or empty");
         return false;
     }
 
     return [NRMAAgentConfiguration addLocalUnmaskedAccessibilityIdentifier: identifier];
 }
+
+#pragma mark - Session Replay Manual
+
+/*
+ * Manually start session replay recording.
+ *
+ * When called, if session replay is enabled through the remote config, session replay
+ * will begin recording regardless of sampling. Manual mode takes precedence over
+ * automatic replay triggering. Recording will continue until pauseReplay is called or the
+ * session ends. If called while already recording, this call is ignored.
+ */
++ (BOOL) recordReplay {
+    return [[NewRelicAgentInternal sharedInstance] recordReplay];
+}
+
+/*
+ * Manually pause session replay recording.
+ *
+ * Stops the current recording session and harvests recorded data. If called while
+ * not recording, this call is ignored.
+ */
++ (BOOL) pauseReplay {
+    return [[NewRelicAgentInternal sharedInstance] pauseReplay];
+}
+
 
 #pragma mark - Hidden APIs
 

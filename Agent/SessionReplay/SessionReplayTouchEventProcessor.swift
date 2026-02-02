@@ -36,7 +36,7 @@ class TouchEventProcessor {
                 RRWebTouchPosition(x: $0.location.x,
                                    y: $0.location.y,
                                    id: touchEvent.id,
-                                   timeOffset: ($0.date - lastTimestamp))
+                                   timeOffset: ($0.date - lastTimestamp) * 1000)
             })
             
             RRWebTouchEvents.append(IncrementalEvent(timestamp: (lastTimestamp * 1000).rounded(), data: .touchMove(touchMoveData)))

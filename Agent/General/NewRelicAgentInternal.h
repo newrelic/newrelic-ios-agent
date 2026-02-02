@@ -70,6 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSDate*) getAppSessionStartDate;
 - (NSString* _Nullable) getUserId;
+- (void) setMaxEventBufferTime:(unsigned int)seconds;
+- (void) setMaxEventPoolSize:(unsigned int)size;
 
 - (void) applicationWillEnterForeground;
 - (void) sessionStartInitialization;
@@ -89,9 +91,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) sessionReplayDisabled;
 
-- (void) sessionReplayStartNewSession;
+- (void) sessionReplayEndSession;
 
 - (BOOL) isSessionReplaySampled;
+- (BOOL) isSessionReplayErrorSampled;
 
 - (BOOL) isSessionReplayEnabled;
 
@@ -115,6 +118,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 // END SESSION REPLAY SECTION End Methods to manage masked elements for SessionReplay
+
+
+// SESSION REPLAY SECTION Methods to start and pause SessionReplay
+
+// Start a session replay recording
+- (BOOL) recordReplay;
+
+// Pause a session replay recording
+- (BOOL) pauseReplay;
+// Notify Session Replay of an error
+- (void)sessionReplayOnError:(NSError *_Nullable)error;
+
+// END SESSION REPLAY SECTION Methods to start and pause SessionReplay
 
 @end
 
