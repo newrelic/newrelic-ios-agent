@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import WebKit
 @_implementationOnly import NewRelicPrivate
 
 import OSLog
@@ -51,8 +52,14 @@ public class NRMASessionReplay: NSObject {
     
     /// Tracks which frame counter values contain full snapshots
     private var fullSnapshotFrameIndices: Set<Int> = []
-    
-    
+
+    /// Stores the latest webview and its rrweb events (single webview tracking)
+    private weak var currentWebView: WKWebView?
+    private var currentWebViewEvents: [String] = []
+
+    /// Lock for thread-safe access to webview events
+    private let webViewEventsLock = NSLock()
+
     public var isFirstChunk = true
     var uncompressedDataSize: Int = 0
     
@@ -67,14 +74,17 @@ public class NRMASessionReplay: NSObject {
         self.delegate = delegate
         self.url = url
         self.sessionReplayCapture = SessionReplayCapture()
-        
+
         // sessionReplayFrameProcessor.useIncrementalDiffs = false // Only take full snapshots, not incremental diffs
-        
+
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         self.framesDirectory = documentsPath.appendingPathComponent("SessionReplayFrames")
-        
+
         super.init()
-        
+
+        // Set the back-reference so SessionReplayCapture can access rrweb events
+        self.sessionReplayCapture.sessionReplay = self
+
         try? FileManager.default.createDirectory(at: framesDirectory, withIntermediateDirectories: true)
     }
     
@@ -113,18 +123,28 @@ public class NRMASessionReplay: NSObject {
         let frameCount = rawFrames.count
         let oldFrameCounter = frameCounter
         let oldUncompressedSize = uncompressedDataSize
-        
+
         NRLOG_DEBUG("🧹 [clearAllData] ==================== CLEARING ALL DATA ====================")
         NRLOG_DEBUG("🧹 [clearAllData] Clearing \(frameCount) frames from buffer")
         NRLOG_DEBUG("🧹 [clearAllData] frameCounter: \(oldFrameCounter), uncompressedDataSize: \(oldUncompressedSize) bytes")
-        
+
         rawFrames.removeAll()
         fullSnapshotFrameIndices.removeAll()
-        
+
         if let touchCapture = sessionReplayTouchCapture {
             let touchCount = touchCapture.touchEvents.count
             NRLOG_DEBUG("🧹 [clearAllData] Resetting \(touchCount) touch events")
             touchCapture.resetEvents()
+        }
+
+        // Clear webview events
+        webViewEventsLock.lock()
+        let webViewEventCount = currentWebViewEvents.count
+        currentWebViewEvents.removeAll()
+        currentWebView = nil
+        webViewEventsLock.unlock()
+        if webViewEventCount > 0 {
+            NRLOG_DEBUG("🧹 [clearAllData] Cleared \(webViewEventCount) webview events")
         }
         
         // should remove frames from file system after processing
@@ -302,11 +322,11 @@ public class NRMASessionReplay: NSObject {
     
     func getSessionReplayFrames(clear: Bool = true) -> [RRWebEventCommon] {
         var processedFrames: [RRWebEventCommon] = []
-        
+
         var currentSize:CGSize = .zero
         let frames = getAndClearFrames(clear: clear)
         sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
-        
+
         for frame in frames {
             if currentSize != frame.size {
                 currentSize = frame.size
@@ -320,7 +340,13 @@ public class NRMASessionReplay: NSObject {
             }
             processedFrames.append(sessionReplayFrameProcessor.processFrame(frame))
         }
-        
+
+////        // Include WebView rrweb events if clear is true
+//        if clear {
+//            let webViewEvents = getAndClearAllWebViewEvents()
+//            processedFrames.append(webViewEvents)
+//        }
+
         return processedFrames
     }
     
@@ -371,8 +397,8 @@ public class NRMASessionReplay: NSObject {
             checkAndForceFullSnapshot(for: frame)
         }
         
-        NRLOG_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
-        NRLOG_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
+        //NRLOG_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
+        //NRLOG_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
         
         // Fetch processed frame and only unpersisted touches
         let lastFrameSize = sessionReplayFrameProcessor.lastFullFrame?.size ?? .zero
@@ -380,7 +406,7 @@ public class NRMASessionReplay: NSObject {
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getUnpersistedTouches()
         
-                NRLOG_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
+               // NRLOG_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
         //        NRLOG_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
         
         guard let firstFrame = rawFrames.first else {
@@ -394,7 +420,7 @@ public class NRMASessionReplay: NSObject {
         
         // Only add meta event for first frame or when frame size changes
         if lastFrameSize != frame.size || isFullSnapshot {
-            NRLOG_DEBUG("💾 [processFrameToFile] Size change detected - Adding meta event")
+           // NRLOG_DEBUG("💾 [processFrameToFile] Size change detected - Adding meta event")
             let metaEventData = RRWebMetaData(
                 href: "http://newrelic.com",
                 width: Int(frame.size.width),
@@ -406,6 +432,11 @@ public class NRMASessionReplay: NSObject {
         
         container.append(AnyRRWebEvent(processedFrame))
         container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
+
+        // Collect and merge WebView rrweb events
+        let webViewEvents = getAndClearAllWebViewEvents()
+        container.append(contentsOf: webViewEvents)
+
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
             lhs.base.timestamp < rhs.base.timestamp
         }
@@ -472,7 +503,7 @@ public class NRMASessionReplay: NSObject {
                 let attributes = [FileAttributeKey.creationDate: Date()]
                 try FileManager.default.setAttributes(attributes, ofItemAtPath: frameURL.path)
                 
-                NRLOG_DEBUG("💾 [processFrameToFile] Mode: ERROR - Checking if pruning needed")
+            //    NRLOG_DEBUG("💾 [processFrameToFile] Mode: ERROR - Checking if pruning needed")
                 // Prune old files if in ERROR mode
                 pruneBufferedFiles(in: frameFolder)
             }
@@ -481,15 +512,117 @@ public class NRMASessionReplay: NSObject {
             
             // Count files in directory
             if let fileCount = try? FileManager.default.contentsOfDirectory(at: frameFolder, includingPropertiesForKeys: nil).count {
-                NRLOG_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
+            //    NRLOG_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
             }
             
-            NRLOG_DEBUG("💾 [processFrameToFile] ================================================")
+          //  NRLOG_DEBUG("💾 [processFrameToFile] ================================================")
         } catch {
             NRLOG_DEBUG("💾 [processFrameToFile] ❌ Failed to append frame to filesystem: \(error)")
         }
     }
-    
+
+    public func addOutsideEvent(_ jsonString: String, from webView: WKWebView? = nil) {
+        guard recordingMode != .off else { return }
+
+        DispatchQueue.global(qos: .background).async { [weak self] in
+            guard let self = self else { return }
+
+            // Store the event for the latest webview (single webview tracking)
+            if let webView = webView {
+                self.webViewEventsLock.lock()
+                defer { self.webViewEventsLock.unlock() }
+
+                // If this is a different webview, replace the old one and clear events
+                if self.currentWebView !== webView {
+                    NRLOG_DEBUG("🌐 New webview detected, replacing previous webview")
+                    self.currentWebView = webView
+                    self.currentWebViewEvents.removeAll()
+                }
+
+                self.currentWebViewEvents.append(jsonString)
+                NRLOG_DEBUG("🌐 Stored rrweb event for webview (total: \(self.currentWebViewEvents.count))")
+            }
+        }
+    }
+
+    /// Get rrweb events for a specific webview (returns events if it's the current webview)
+    func getRRWebEvents(for webView: WKWebView) -> [String] {
+        webViewEventsLock.lock()
+        defer { webViewEventsLock.unlock() }
+
+        // Return events only if this is the current webview
+        if currentWebView === webView {
+            return currentWebViewEvents
+        }
+        return []
+    }
+
+    /// Clear rrweb events for a specific webview (clears if it's the current webview)
+    func clearRRWebEvents(for webView: WKWebView) {
+        webViewEventsLock.lock()
+        defer { webViewEventsLock.unlock() }
+
+        if currentWebView === webView {
+            currentWebViewEvents.removeAll()
+            currentWebView = nil
+        }
+    }
+
+    /// Get all webview rrweb events and clear them (for continuous capture)
+    func getAndClearAllWebViewEvents() -> [AnyRRWebEvent] {
+        webViewEventsLock.lock()
+        defer { webViewEventsLock.unlock() }
+
+        var allEvents: [AnyRRWebEvent] = []
+
+        // Parse events from the current webview
+        for jsonString in currentWebViewEvents {
+            guard let jsonData = jsonString.data(using: .utf8) else {
+                continue
+            }
+
+            do {
+                // Try to decode the JSON to determine event type
+                if let eventDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+                   let eventType = eventDict["type"] as? Int {
+
+                    let decoder = JSONDecoder()
+
+                    switch eventType {
+                    case 2: // Full Snapshot
+                        if let fullSnapshotEvent = try? decoder.decode(FullSnapshotEvent.self, from: jsonData) {
+                            allEvents.append(AnyRRWebEvent(fullSnapshotEvent))
+                        }
+                    case 3: // Incremental Snapshot
+                        if let incrementalEvent = try? decoder.decode(IncrementalEvent.self, from: jsonData) {
+                            allEvents.append(AnyRRWebEvent(incrementalEvent))
+                        }
+                    case 4: // Meta Event
+                        if let metaEvent = try? decoder.decode(MetaEvent.self, from: jsonData) {
+                            // Meta events are commented out - uncomment if needed
+                            // allEvents.append(AnyRRWebEvent(metaEvent))
+                        }
+                    default:
+                        break
+                    }
+                }
+            } catch {
+                NRLOG_DEBUG("🌐 Failed to parse webview rrweb event: \(error)")
+                continue
+            }
+        }
+
+        // Clear events and reset current webview after processing
+        currentWebViewEvents.removeAll()
+        currentWebView = nil
+
+        if allEvents.count > 0 {
+            NRLOG_DEBUG("🌐 Collected and cleared \(allEvents.count) WebView rrweb events")
+        }
+
+        return allEvents
+    }
+        
     // MARK: - Error Sampling Mode Management
     
     /// Sets the recording mode for session replay

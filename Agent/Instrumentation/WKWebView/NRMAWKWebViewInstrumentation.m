@@ -7,7 +7,7 @@
 #import "NRMAWKWebViewNavigationDelegate.h"
 #import <UIKit/UIKit.h>
 
-//NOTE: this files has ARC disabled.
+#import <NewRelic/NewRelic-Swift.h>
 
 static id initWithFrame_configuration(id self, SEL _cmd, CGRect frame, id configuration);
 static id initWithCoder(id self, SEL _cmd, id coder);
@@ -160,10 +160,16 @@ id initWithCoder(id self, SEL _cmd, id coder) {
 #endif
 
 #if !TARGET_OS_TV
-id initWithFrame_configuration(id self, SEL _cmd, CGRect frame, id configuration) {
-    id result = NRMA__WKWebView_initWithFrame_configuration(self, _cmd, frame, configuration);
-    NRMA__WKWebView_setNavigationDelegate(result, _cmd,  [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:nil]);
+id initWithFrame_configuration(id self, SEL _cmd, CGRect frame,
+                               id configuration) {
+  id result = NRMA__WKWebView_initWithFrame_configuration(self, _cmd, frame,
+                                                          configuration);
+  NRMA__WKWebView_setNavigationDelegate(
+      result, _cmd,
+      [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:nil]);
 
-    return result;
+  [NRWKWebViewRRWebRecorder injectRRWebInto:result];
+
+  return result;
 }
 #endif

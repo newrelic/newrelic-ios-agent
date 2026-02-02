@@ -731,6 +731,15 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
 }
 
+
+- (void)recordSessionReplayEvent:(NSString *)jsonEvent from:(WKWebView *)webView {
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+  if (_sessionReplay != nil) {
+    [_sessionReplay recordWebViewEvent:jsonEvent from:webView];
+  }
+#endif
+}
+
 static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
 @"com.newrelic.appWillTerm";

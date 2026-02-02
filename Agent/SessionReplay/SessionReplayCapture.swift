@@ -9,11 +9,15 @@
 import Foundation
 import UIKit
 import SwiftUI
+import WebKit
 
 @available(iOS 13.0, *)
 @objcMembers
 class SessionReplayCapture {
     private var layoutContainerViewCount: Int = 0
+
+    // Weak reference to session replay instance to access rrweb events
+    weak var sessionReplay: NRMASessionReplay?
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
@@ -158,7 +162,11 @@ class SessionReplayCapture {
             
         case let visualEffectView as UIVisualEffectView:
             return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
-            
+        case let webView as WKWebView:
+            // Get rrweb events for this webview if available
+            let rrwebEvents = sessionReplay?.getRRWebEvents(for: webView) ?? []
+            return WKWebViewThingy(view: webView, viewDetails: ViewDetails(view: webView), rrwebEvents: rrwebEvents)
+
         default:
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                originalView.isKind(of: rctParagraphClass) {

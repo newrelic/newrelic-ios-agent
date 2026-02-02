@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import WebKit
 @_implementationOnly import NewRelicPrivate
 
 @available(iOS 13.0, *)
@@ -146,6 +147,22 @@ public class SessionReplayManager: NSObject {
     
     @objc public func isRunning() -> Bool {
         return self.sessionReplayTimer != nil && self.sessionReplayTimer!.isValid
+    }
+    
+    @objc public func recordWebViewEvent(_ jsonString: String) {
+        sessionReplayQueue.async { [self] in
+             if self.sessionReplayMode != .off {
+                 self.sessionReplay.addOutsideEvent(jsonString)
+             }
+        }
+    }
+
+    @objc public func recordWebViewEvent(_ jsonString: String, from webView: WKWebView) {
+        sessionReplayQueue.async { [self] in
+             if self.sessionReplayMode != .off {
+                 self.sessionReplay.addOutsideEvent(jsonString, from: webView)
+             }
+        }
     }
     
     // This function is to handle a session change created by a change in userId
