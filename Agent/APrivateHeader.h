@@ -22,5 +22,6 @@
 #import "NRMABool.h"
 #import "Constants.h"
 #import "NRMAExceptionMetaDataStore.h"
+#import "NRMAUIImageOverride.h"
 
 #endif /* APrivateHeader_h */

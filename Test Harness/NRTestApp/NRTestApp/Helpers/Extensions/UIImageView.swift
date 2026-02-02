@@ -34,6 +34,8 @@ extension UIImageView {
                     activityIndicator.removeFromSuperview()
                     
                     guard let image = UIImage(data: data) else { return }
+                    image.NRSessionReplayImageURL = url // Manually associate the URL with the UIImage for Session Replay
+                   
                     let patternColor = UIColor(patternImage: image)
                     self.backgroundColor = patternColor
                     self.image = image

@@ -151,7 +151,21 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
 
 
                     NSData *data = NRMA__getDataForSessionTask(task);
-
+                    
+                    // Note: For Swift async/await URLSession requests, response body data cannot be captured
+                    // because it's returned directly to the caller and never stored in the task object.
+                    // Delegate callbacks (where we normally capture data) are not invoked for async requests.
+                    // URL association for images also will not work for async/await URLSession requests.
+                    //
+                    // However, we can still successfully record:
+                    // - Request timing (duration)
+                    // - HTTP status codes
+                    // - Response headers
+                    // - Byte counts (task.countOfBytesSent, task.countOfBytesReceived)
+                    // - Error information
+                    //
+                    // This provides valuable performance data even without the response body.
+                    
                     // log the task and data that we will record
                     //NSLog(@"NRMAOverride__urlSessionTask_SetState newState: %ld, taskState:%ld  task: %@ data: %@", (long) newState, (long)task.state, task, data);
 

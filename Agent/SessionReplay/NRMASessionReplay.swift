@@ -96,6 +96,8 @@ public class NRMASessionReplay: NSObject {
                 }
                 self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
                 swizzleSendEvent()
+                // Instrument UIImage to preserve URL from NSData
+                NRMAUIImageOverride.beginInstrumentation()
                 NRLOG_DEBUG("▶️ [start] ✅ Touch capture initialized and event swizzling complete")
             }
         }
