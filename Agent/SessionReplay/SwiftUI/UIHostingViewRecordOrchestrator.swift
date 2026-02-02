@@ -200,7 +200,7 @@ final class UIHostingViewRecordOrchestrator {
                     let clipRect = nextContext.convert(frame: path.boundingRect)
                     nextContext.clip = nextContext.clip.intersection(clipRect)
                 case .filter(.colorMultiply(let color)):
-                    nextContext.tintColor = color
+                    nextContext.setTintColor(from: color)
                 case .identify, .filter, .unknown:
                     break
                 }
@@ -295,8 +295,13 @@ final class UIHostingViewRecordOrchestrator {
                                  fontFamily: font?.familyName ?? "AppleSystemUIFont",
                                  textColor: foregroundColor)
             
-        case SwiftUIDisplayList.Content.Value.color:
-            return nil // TODO: Colors
+        case let SwiftUIDisplayList.Content.Value.color(colorData):
+            contentId = getContentId(for: content, identity: item.identity)
+            viewName = "SwiftUIColorView"
+            var details = makeDetails()
+            // Convert the SwiftUI color data to UIColor for the background
+            details.backgroundColor = colorData.uiColor
+            return UIViewThingy(viewDetails: details)
         case let SwiftUIDisplayList.Content.Value.image(swiftUIImage):
             // Extract UIImage from SwiftUIGraphicsImage
             var image: CGImage?
