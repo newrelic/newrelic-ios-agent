@@ -257,8 +257,16 @@ final class UIHostingViewRecordOrchestrator {
         }
         
         switch content.value {
-        case SwiftUIDisplayList.Content.Value.shape:
-            return nil // TODO: Shapes
+        case let SwiftUIDisplayList.Content.Value.shape(path, fillColor, fillStyle):
+            contentId = getContentId(for: content, identity: item.identity)
+            viewName = "SwiftUIShapeView"
+            var details = makeDetails()
+            details.backgroundColor = .clear // Shapes should not have a bg color by default
+
+            return SwiftUIShapeThingy(viewDetails: details,
+                                     path: path,
+                                     fillColor: fillColor,
+                                     fillStyle: fillStyle)
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
 
