@@ -137,6 +137,7 @@
 		F86429452979CE31002ABA01 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6429705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8672A562EAA69820055FA51 /* SimpleScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8672A552EAA69820055FA51 /* SimpleScrollView.swift */; };
 		F8ACFA292EA019BF00E6692B /* InfiniteImageCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8ACFA282EA019BF00E6692B /* InfiniteImageCollectionView.swift */; };
+		F8BF14362F3268E900EF5628 /* DrawingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14352F3268E900EF5628 /* DrawingsView.swift */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 		F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
@@ -411,6 +412,7 @@
 		F86429542979D347002ABA01 /* NRTestApp--tvOS--Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "NRTestApp--tvOS--Info.plist"; path = "NRTestApp (tvOS)/NRTestApp--tvOS--Info.plist"; sourceTree = SOURCE_ROOT; };
 		F8672A552EAA69820055FA51 /* SimpleScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleScrollView.swift; sourceTree = "<group>"; };
 		F8ACFA282EA019BF00E6692B /* InfiniteImageCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteImageCollectionView.swift; sourceTree = "<group>"; };
+		F8BF14352F3268E900EF5628 /* DrawingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingsView.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
@@ -482,6 +484,7 @@
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
 				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
 				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
+				F8BF14352F3268E900EF5628 /* DrawingsView.swift */,
 				2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */,
 				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
@@ -1245,6 +1248,7 @@
 				F8EAB9752EE09E040008B092 /* ConfidentialViewController.swift in Sources */,
 				F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
+				F8BF14362F3268E900EF5628 /* DrawingsView.swift in Sources */,
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,

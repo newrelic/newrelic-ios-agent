@@ -330,8 +330,30 @@ final class UIHostingViewRecordOrchestrator {
                                      cgImage: image,
                                      swiftUIImage: swiftUIImage,
                                      contentMode: .scaleToFill)
-        case SwiftUIDisplayList.Content.Value.drawing:
-            return nil // TODO: Drawings
+        case SwiftUIDisplayList.Content.Value.drawing(let erasedDrawing):
+            contentId = getContentId(for: content, identity: item.identity)
+            viewName = "SwiftUIDrawingView"
+            var details = makeDetails()
+            details.backgroundColor = .clear
+
+            // Convert drawing to UIImage
+            guard let image = erasedDrawing.makeSwiftUIImage(),
+                  let cgImage = image.cgImage else {
+                return nil
+            }
+
+            // Create SwiftUIGraphicsImage from the generated CGImage
+            let swiftUIImage = SwiftUIGraphicsImage(
+                contents: .cgImage(cgImage),
+                scale: image.scale,
+                maskClr: nil,
+                orientation: .up
+            )
+
+            return UIImageViewThingy(viewDetails: details,
+                                     cgImage: cgImage,
+                                     swiftUIImage: swiftUIImage,
+                                     contentMode: .scaleToFill)
         case SwiftUIDisplayList.Content.Value.platformView:
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUIPlatformView"

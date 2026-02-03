@@ -68,7 +68,11 @@ struct SwiftUIContentView: View {
                     }
                     NavigationLink(destination: ShapesView()) {
                         Text("Shapes")
-                        
+
+                    }
+                    NavigationLink(destination: DrawingsView()) {
+                        Text("Canvas Drawings")
+
                     }
                     NavigationLink(destination: InfiniteImageCollectionView()) {
                         Text("Infinite Images")
