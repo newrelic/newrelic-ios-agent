@@ -72,34 +72,33 @@ class UILabelThingy: SessionReplayViewThingy {
 
     }
     
-    static func extractLabelAttributes(from view: UIView) -> (text: String?, font: UIFont, textColor: UIColor, textAlignment: String) {
+    static func extractLabelAttributes(from attributedText: NSAttributedString) -> (text: String?, font: UIFont, textColor: UIColor, textAlignment: String) {
         var text: String? = nil
         var font: UIFont = UIFont.systemFont(ofSize: 17.0)
         var textColor: UIColor = .black
         var textAlignment: String = "left"
         
-        if view.responds(to: Selector(("attributedText"))) {
-            if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
-                text = attributedText.string // Extract plain text
-                if attributedText.length > 0 {
-                    // Get font from attributed string
-                    if let attributedFont = attributedText.attribute(.font, at: 0, effectiveRange: nil) as? UIFont {
-                        font = attributedFont
-                    }
-                    // Get text color from attributed string
-                    if let attributedColor = attributedText.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor {
-                        textColor = attributedColor
-                    }
-                    // Get text alignment from paragraph style
-                    if let paragraphStyle = attributedText.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
-                        textAlignment = paragraphStyle.alignment.stringValue()
-                    }
-                } else {
-                    // If attributed string is empty, set text to empty string and use defaults
-                    text = ""
+        text = attributedText.string // Extract plain text
+        if attributedText.length > 0 && !attributedText.string.isEmpty {
+            // Get font from attributed string
+            attributedText.enumerateAttributes(in: NSRange(location: 0, length: 1), options: []) { attributes, _, _ in
+                if let attributedFont = attributes[.font] as? UIFont {
+                    font = attributedFont
+                }
+                if let attributedColor = attributes[.foregroundColor] as? UIColor {
+                    textColor = attributedColor
+                }
+                if let paragraphStyle = attributes[.paragraphStyle] as? NSParagraphStyle {
+                    textAlignment = paragraphStyle.alignment.stringValue()
+                    _ = paragraphStyle.lineSpacing
+                    _ = paragraphStyle.lineBreakMode
                 }
             }
+        } else {
+            // If attributed string is empty, set text to empty string and use defaults
+            text = ""
         }
+
         return (text, font, textColor, textAlignment)
     }
 
@@ -113,11 +112,15 @@ class UILabelThingy: SessionReplayViewThingy {
         
         if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                   view.isKind(of: rctParagraphClass) {
-            let extracted = UILabelThingy.extractLabelAttributes(from: view)
-            text = extracted.text
-            font = extracted.font
-            textColor = extracted.textColor
-            textAlignment = extracted.textAlignment
+            if view.responds(to: Selector(("attributedText"))) {
+                if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
+                    let extracted = UILabelThingy.extractLabelAttributes(from: attributedText)
+                    text = extracted.text
+                    font = extracted.font
+                    textColor = extracted.textColor
+                    textAlignment = extracted.textAlignment
+                }
+            }
         }
 
         if let isMasked = viewDetails.isMasked {
@@ -151,9 +154,15 @@ class UILabelThingy: SessionReplayViewThingy {
         self.textColor = textColor
     }
     
-    init(viewDetails: ViewDetails, text: String, textAlignment: String, fontSize: CGFloat, fontName: String, fontFamily: String, textColor: UIColor) {
+    init(viewDetails: ViewDetails, attributedText: NSAttributedString) {
         self.viewDetails = viewDetails
         self.viewDetails.backgroundColor = .clear
+        
+        let extracted = UILabelThingy.extractLabelAttributes(from: attributedText)
+        let text = extracted.text
+        let font = extracted.font
+        let textColor = extracted.textColor
+        let textAlignment = extracted.textAlignment
 
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
@@ -168,24 +177,24 @@ class UILabelThingy: SessionReplayViewThingy {
         if self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
-            self.labelText = String(repeating: "*", count: text.count)
+            self.labelText = String(repeating: "*", count: text?.count ?? 0)
         }
         else {
-            self.labelText = text //view.text ?? ""
+            self.labelText = text ?? ""
         }
         
-        self.fontSize = fontSize
-        
-        let fontNameRaw = fontName
+        self.fontSize = font.pointSize
+        let fontNameRaw = font.fontName
         if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
         } else {
             self.fontName = fontNameRaw
         }
         
-        self.fontFamily = UIFont.convertToCSSFontFamily(fontName)
-
+        self.fontFamily = font.toCSSFontFamily()
+        
         self.textAlignment = textAlignment
+
         self.textColor = textColor
     }
     

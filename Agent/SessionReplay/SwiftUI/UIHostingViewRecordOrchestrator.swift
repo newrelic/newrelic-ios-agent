@@ -200,7 +200,7 @@ final class UIHostingViewRecordOrchestrator {
                     let clipRect = nextContext.convert(frame: path.boundingRect)
                     nextContext.clip = nextContext.clip.intersection(clipRect)
                 case .filter(.colorMultiply(let color)):
-                    nextContext.tintColor = color
+                    nextContext.setTintColor(from: color)
                 case .identify, .filter, .unknown:
                     break
                 }
@@ -261,42 +261,21 @@ final class UIHostingViewRecordOrchestrator {
             return nil // TODO: Shapes
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
-
-            let foregroundColor =
-            storage.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? UIColor ?? .clear
-            let font =
-            storage.attribute(NSAttributedString.Key.font, at: 0, effectiveRange: nil) as? UIFont
-
-            var alignment: NSTextAlignment = .left
-            if let style = storage.attribute(NSAttributedString.Key.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
-                alignment = style.alignment
-                _ = style.lineSpacing
-                _ = style.lineBreakMode
-            }
             
             contentId = getContentId(for: content, identity: item.identity)
-            // Extract masking state from the view
             viewName = "SwiftUITextView"
             let details = makeDetails()
             
-            var outputText = ""
-            if details.isMasked ?? false {
-                outputText = String(repeating: "*", count: storage.string.count)
-            }
-            else {
-                outputText = storage.string
-            }
-            
             return UILabelThingy(viewDetails: details,
-                                 text: outputText,
-                                 textAlignment: alignment.stringValue(),
-                                 fontSize: font?.pointSize ?? 10,
-                                 fontName: font?.fontName ?? "SFUI-Bold",
-                                 fontFamily: font?.familyName ?? "AppleSystemUIFont",
-                                 textColor: foregroundColor)
+                                 attributedText: storage)
             
-        case SwiftUIDisplayList.Content.Value.color:
-            return nil // TODO: Colors
+        case let SwiftUIDisplayList.Content.Value.color(colorData):
+            contentId = getContentId(for: content, identity: item.identity)
+            viewName = "SwiftUIColorView"
+            var details = makeDetails()
+            // Convert the SwiftUI color data to UIColor for the background
+            details.backgroundColor = colorData.uiColor
+            return UIViewThingy(viewDetails: details)
         case let SwiftUIDisplayList.Content.Value.image(swiftUIImage):
             // Extract UIImage from SwiftUIGraphicsImage
             var image: CGImage?
