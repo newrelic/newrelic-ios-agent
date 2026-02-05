@@ -45,36 +45,43 @@ class UILabelThingyTests: XCTestCase {
 
     func testInitWithViewDetailsMasked() {
         let details = makeViewDetails(isMasked: true)
-        let thingy = UILabelThingy(viewDetails: details, text: "abc", textAlignment: "left", fontSize: 12, fontName: "Arial", fontFamily: "Arial", textColor: .black)
+        let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
+        let color = UIColor.red
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        let attrString = NSAttributedString(string: "abc", attributes: [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraph
+        ])
+        let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
         XCTAssertEqual(thingy.labelText, "***")
         XCTAssertTrue(thingy.isMasked)
+        XCTAssertEqual(thingy.fontSize, 15)
+        XCTAssertEqual(thingy.textColor, color)
+        XCTAssertEqual(thingy.textAlignment, "center")
     }
 
     func testInitWithViewDetailsUnmasked() {
         let details = makeViewDetails(isMasked: false)
-        let thingy = UILabelThingy(viewDetails: details, text: "abc", textAlignment: "left", fontSize: 12, fontName: "Arial", fontFamily: "Arial", textColor: .black)
+        let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
+        let color = UIColor.black
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        let attrString = NSAttributedString(string: "abc", attributes: [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraph
+        ])
+        let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
         XCTAssertEqual(thingy.labelText, "abc")
         XCTAssertFalse(thingy.isMasked)
+        XCTAssertEqual(thingy.fontSize, 15)
+        XCTAssertEqual(thingy.textColor, color)
+        XCTAssertEqual(thingy.textAlignment, "center")
     }
 
     func testExtractLabelAttributes_withAttributedText() {
-        // Create a UIView subclass that mimics a UILabel with attributedText
-        class AttributedLabelView: UIView {
-            let attributed: NSAttributedString
-            init(attributed: NSAttributedString) {
-                self.attributed = attributed
-                super.init(frame: .zero)
-            }
-            required init?(coder: NSCoder) { fatalError() }
-            override func value(forKey key: String) -> Any? {
-                if key == "attributedText" { return attributed }
-                return nil
-            }
-            override func responds(to aSelector: Selector!) -> Bool {
-                if aSelector == Selector(("attributedText")) { return true }
-                return super.responds(to: aSelector)
-            }
-        }
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.red
         let paragraph = NSMutableParagraphStyle()
@@ -84,8 +91,7 @@ class UILabelThingyTests: XCTestCase {
             .foregroundColor: color,
             .paragraphStyle: paragraph
         ])
-        let view = AttributedLabelView(attributed: attrString)
-        let (text, extractedFont, extractedColor, extractedAlignment) = UILabelThingy.extractLabelAttributes(from: view)
+        let (text, extractedFont, extractedColor, extractedAlignment) = UILabelThingy.extractLabelAttributes(from: attrString)
         XCTAssertEqual(text, "Hello")
         XCTAssertEqual(extractedFont.fontName, font.fontName)
         XCTAssertEqual(extractedFont.pointSize, font.pointSize)
@@ -94,23 +100,6 @@ class UILabelThingyTests: XCTestCase {
     }
     
     func testExtractLabelAttributes_withEmptyAttributedText() {
-        // Create a UIView subclass that mimics a UILabel with attributedText
-        class AttributedLabelView: UIView {
-            let attributed: NSAttributedString
-            init(attributed: NSAttributedString) {
-                self.attributed = attributed
-                super.init(frame: .zero)
-            }
-            required init?(coder: NSCoder) { fatalError() }
-            override func value(forKey key: String) -> Any? {
-                if key == "attributedText" { return attributed }
-                return nil
-            }
-            override func responds(to aSelector: Selector!) -> Bool {
-                if aSelector == Selector(("attributedText")) { return true }
-                return super.responds(to: aSelector)
-            }
-        }
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.red
         let paragraph = NSMutableParagraphStyle()
@@ -120,8 +109,53 @@ class UILabelThingyTests: XCTestCase {
             .foregroundColor: color,
             .paragraphStyle: paragraph
         ])
-        let view = AttributedLabelView(attributed: attrString)
-        let (text, _, _, _) = UILabelThingy.extractLabelAttributes(from: view)
+        let (text, _, _, _) = UILabelThingy.extractLabelAttributes(from: attrString)
         XCTAssertEqual(text, "")
+    }
+
+    func testInitWithAttributedTextMasked() {
+        let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
+        let color = UIColor.black
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        let attrString = NSAttributedString(string: "SecretText", attributes: [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraph
+        ])
+        let details = makeViewDetails(isMasked: true)
+        let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
+        XCTAssertEqual(thingy.labelText, String(repeating: "*", count: attrString.string.count))
+        XCTAssertTrue(thingy.isMasked)
+        XCTAssertEqual(thingy.fontSize, 15)
+        XCTAssertEqual(thingy.textColor, color)
+        XCTAssertEqual(thingy.textAlignment, "center")
+    }
+
+    func testInitWithAttributedTextUnmasked() {
+        let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
+        let color = UIColor.blue
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .right
+        let attrString = NSAttributedString(string: "VisibleText", attributes: [
+            .font: font,
+            .foregroundColor: color,
+            .paragraphStyle: paragraph
+        ])
+        let details = makeViewDetails(isMasked: false)
+        let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
+        XCTAssertEqual(thingy.labelText, "VisibleText")
+        XCTAssertFalse(thingy.isMasked)
+        XCTAssertEqual(thingy.fontSize, 15)
+        XCTAssertEqual(thingy.textColor, color)
+        XCTAssertEqual(thingy.textAlignment, "right")
+    }
+
+    func testInitWithAttributedTextEmpty() {
+        let attrString = NSAttributedString(string: "")
+        let details = makeViewDetails(isMasked: false)
+        let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
+        XCTAssertEqual(thingy.labelText, "")
+        XCTAssertFalse(thingy.isMasked)
     }
 }
