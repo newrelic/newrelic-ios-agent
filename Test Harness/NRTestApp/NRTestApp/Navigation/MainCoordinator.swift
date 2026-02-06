@@ -113,5 +113,10 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
-        
+
+    func showAttributedTextTestViewController() {
+        let attributedTextTestViewController = ViewControllerProvider.attributedTextTestViewController
+        navigationController.pushViewController(attributedTextTestViewController, animated: true)
+    }
+
 }

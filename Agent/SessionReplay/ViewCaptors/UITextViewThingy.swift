@@ -25,9 +25,14 @@ class UITextViewThingy: SessionReplayViewThingy {
     let fontSize: CGFloat
     let fontName: String
     let fontFamily: String
-    
+    let textAlignment: String
+    let fontWeight: UIFont.Weight
+    let isItalic: Bool
+    let numberOfLines: Int
+    let lineBreakMode: NSLineBreakMode
+    let letterSpacing: CGFloat?
     let textColor: UIColor
-    
+
     init(view: UITextView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
 
@@ -52,29 +57,50 @@ class UITextViewThingy: SessionReplayViewThingy {
         else {
             self.labelText = view.text ?? ""
         }
+        
+        // Try to extract properties from attributed text first, then fall back to view properties
+        let font: UIFont
+        let textColor: UIColor
+        let textAlignment: String
+        let lineBreakMode: NSLineBreakMode
+        let letterSpacing: CGFloat?
 
-        let font = view.font ?? UIFont.systemFont(ofSize: 17.0)
+        if let attributedText = view.attributedText, attributedText.length > 0 {
+            // Extract from attributed text
+            let extracted = TextHelper.extractLabelAttributes(from: attributedText)
+            font = extracted.font
+            textColor = extracted.textColor
+            textAlignment = extracted.textAlignment
+            lineBreakMode = extracted.lineBreakMode
+            letterSpacing = extracted.kern
+        } else {
+            // Fall back to view properties
+            font = view.font ?? UIFont.systemFont(ofSize: 17.0)
+            textColor = view.textColor ?? UIColor.label
+            textAlignment = view.textAlignment.stringValue()
+            lineBreakMode = view.textContainer.lineBreakMode
+            letterSpacing = nil
+        }
 
         self.fontSize = font.pointSize
         let fontNameRaw = font.fontName
-        if(fontNameRaw .hasPrefix(".") && fontNameRaw.count > 1) {
+        if(fontNameRaw.hasPrefix(".") && fontNameRaw.count > 1) {
             self.fontName = String(fontNameRaw.dropFirst())
         }
         else {
             self.fontName = fontNameRaw
         }
-        
-        // Convert Apple font to CSS-compatible font family
+
         self.fontFamily = font.toCSSFontFamily()
+        self.textAlignment = textAlignment
+        self.textColor = textColor
+        self.numberOfLines = 0
+        self.lineBreakMode = lineBreakMode
 
-        if #available(iOS 13.0, *) {
-            self.textColor = view.textColor ?? UIColor.label
-        }
-        else {
-            // Fallback on earlier versions
-            self.textColor = view.textColor ?? UIColor.black
-        }
-
+        let fontTraits = TextHelper.extractFontTraits(from: font)
+        self.fontWeight = fontTraits.weight
+        self.isItalic = fontTraits.isItalic
+        self.letterSpacing = letterSpacing
     }
     
     func cssDescription() -> String {
@@ -86,14 +112,26 @@ class UITextViewThingy: SessionReplayViewThingy {
     }
     
     func inlineCSSDescription() -> String {
+        let wordWrapCSS = TextHelper.generateWordWrapCSS(numberOfLines: numberOfLines, lineBreakMode: lineBreakMode)
+        let fontWeightCSS = TextHelper.cssValueForFontWeight(fontWeight)
+        let fontStyleCSS = isItalic ? "italic" : "normal"
+
+        // Generate letter-spacing CSS if available
+        var letterSpacingCSS = ""
+        if let letterSpacing = self.letterSpacing {
+            letterSpacingCSS = " letter-spacing: \(String(format: "%.2f", letterSpacing))px;"
+        }
+
         return """
                 \(generateBaseCSSStyle())\
-                white-space: pre-wrap;\
-                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
-                color: \(textColor.toHexString(includingAlpha: true));
+                \(wordWrapCSS) \
+                font: \(fontStyleCSS) \(fontWeightCSS) \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+                color: \(textColor.toHexString(includingAlpha: true));\
+                text-align: \(textAlignment); \
+                overflow: hidden; \(letterSpacingCSS)
                 """
     }
-    
+
     func generateRRWebNode() -> ElementNodeData  {
         let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
                                                         isStyle: false,
@@ -154,7 +192,11 @@ extension UITextViewThingy: Equatable {
             lhs.fontSize == rhs.fontSize &&
             lhs.fontName == rhs.fontName &&
             lhs.fontFamily == rhs.fontFamily &&
-            lhs.textColor == rhs.textColor
+            lhs.textColor == rhs.textColor &&
+            lhs.fontWeight == rhs.fontWeight &&
+            lhs.isItalic == rhs.isItalic &&
+            lhs.numberOfLines == rhs.numberOfLines &&
+            lhs.lineBreakMode == rhs.lineBreakMode
     }
 }
 
@@ -166,5 +208,9 @@ extension UITextViewThingy: Hashable {
         hasher.combine(fontName)
         hasher.combine(fontFamily)
         hasher.combine(textColor)
+        hasher.combine(fontWeight)
+        hasher.combine(isItalic)
+        hasher.combine(numberOfLines)
+        hasher.combine(lineBreakMode)
     }
 }

@@ -76,6 +76,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: SocialMediaFeedView()) {
                         Text("Social Media Feed")
                     }
+                    NavigationLink(destination: AttributedTextView()) {
+                        Text("Attributed Text")
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
                 
