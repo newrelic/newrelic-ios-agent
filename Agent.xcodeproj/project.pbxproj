@@ -1658,6 +1658,7 @@
 		F8BF13D12F2BB89100EF5628 /* NRMAUserActionEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F8BF13CE2F2BB88B00EF5628 /* NRMAUserActionEvent.h */; };
 		F8BF148F2F352D5200EF5628 /* TextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF148E2F352D5200EF5628 /* TextHelper.swift */; };
 		F8BF14A52F3668D500EF5628 /* TextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF148E2F352D5200EF5628 /* TextHelper.swift */; };
+		F8BF14D22F36770A00EF5628 /* TextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF148E2F352D5200EF5628 /* TextHelper.swift */; };
 		F8E17C542DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C552DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C562DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
@@ -6181,6 +6182,7 @@
 				2B570A672EF0C348007D9E39 /* IDGenerator.swift in Sources */,
 				02FF4C5F24E3201400115469 /* NRMATimestampContainer.m in Sources */,
 				2B570A5C2EF0C2BD007D9E39 /* ViewDetails.swift in Sources */,
+				F8BF14D22F36770A00EF5628 /* TextHelper.swift in Sources */,
 				02FF4C6024E3201400115469 /* NRMAHarvestableMethodMetric.m in Sources */,
 				02FF4C6124E3201400115469 /* NRMAURLSessionOverride.m in Sources */,
 				02FF4C6224E3201400115469 /* NRMAHarvestableMetric.m in Sources */,
