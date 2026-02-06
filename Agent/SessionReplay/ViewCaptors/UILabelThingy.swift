@@ -30,10 +30,18 @@ class UILabelThingy: SessionReplayViewThingy {
     let textAlignment: String
     let fontFamily: String
     let textColor: UIColor
-    
+    let numberOfLines: Int
+    let lineBreakMode: NSLineBreakMode
+    let fontWeight: UIFont.Weight
+    let isItalic: Bool
+    let letterSpacing: CGFloat?
+
     init(view: UILabel, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
-
+        var frame = self.viewDetails.frame
+        frame.size.width = frame.size.width + 0.5
+        self.viewDetails.frame = frame
+        
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
@@ -52,8 +60,30 @@ class UILabelThingy: SessionReplayViewThingy {
         else {
             self.labelText = view.text ?? ""
         }
-       
-        let font = view.font ?? UIFont.systemFont(ofSize: 17.0)
+
+        // Try to extract properties from attributed text first, then fall back to view properties
+        let font: UIFont
+        let textColor: UIColor
+        let textAlignment: String
+        let lineBreakMode: NSLineBreakMode
+        let letterSpacing: CGFloat?
+
+        if let attributedText = view.attributedText, attributedText.length > 0 {
+            // Extract from attributed text
+            let extracted = TextHelper.extractLabelAttributes(from: attributedText)
+            font = extracted.font
+            textColor = extracted.textColor
+            textAlignment = extracted.textAlignment
+            lineBreakMode = extracted.lineBreakMode
+            letterSpacing = extracted.kern
+        } else {
+            // Fall back to view properties
+            font = view.font ?? UIFont.systemFont(ofSize: 17.0)
+            textColor = view.textColor
+            textAlignment = view.textAlignment.stringValue()
+            lineBreakMode = view.lineBreakMode
+            letterSpacing = nil
+        }
 
         self.fontSize = font.pointSize
         let fontNameRaw = font.fontName
@@ -63,62 +93,43 @@ class UILabelThingy: SessionReplayViewThingy {
         else {
             self.fontName = fontNameRaw
         }
-        
+
         self.fontFamily = font.toCSSFontFamily()
-        
-        self.textAlignment = view.textAlignment.stringValue()
+        self.textAlignment = textAlignment
+        self.textColor = textColor
+        self.numberOfLines = view.numberOfLines
+        self.lineBreakMode = lineBreakMode
 
-        self.textColor = view.textColor
-
-    }
-    
-    static func extractLabelAttributes(from attributedText: NSAttributedString) -> (text: String?, font: UIFont, textColor: UIColor, textAlignment: String) {
-        var text: String? = nil
-        var font: UIFont = UIFont.systemFont(ofSize: 17.0)
-        var textColor: UIColor = .black
-        var textAlignment: String = "left"
-        
-        text = attributedText.string // Extract plain text
-        if attributedText.length > 0 && !attributedText.string.isEmpty {
-            // Get font from attributed string
-            attributedText.enumerateAttributes(in: NSRange(location: 0, length: 1), options: []) { attributes, _, _ in
-                if let attributedFont = attributes[.font] as? UIFont {
-                    font = attributedFont
-                }
-                if let attributedColor = attributes[.foregroundColor] as? UIColor {
-                    textColor = attributedColor
-                }
-                if let paragraphStyle = attributes[.paragraphStyle] as? NSParagraphStyle {
-                    textAlignment = paragraphStyle.alignment.stringValue()
-                    _ = paragraphStyle.lineSpacing
-                    _ = paragraphStyle.lineBreakMode
-                }
-            }
-        } else {
-            // If attributed string is empty, set text to empty string and use defaults
-            text = ""
-        }
-
-        return (text, font, textColor, textAlignment)
+        let fontTraits = TextHelper.extractFontTraits(from: font)
+        self.fontWeight = fontTraits.weight
+        self.isItalic = fontTraits.isItalic
+        self.letterSpacing = letterSpacing
     }
 
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
-
+        var frame = self.viewDetails.frame
+        frame.size.width = frame.size.width + 0.5
+        self.viewDetails.frame = frame
+        
         var text: String?
         var textAlignment = "left"
         var font: UIFont = UIFont.systemFont(ofSize: 17.0)
         var textColor: UIColor = .black
+        var lineBreakMode: NSLineBreakMode = .byWordWrapping
+        var kern : CGFloat? = nil
         
         if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                   view.isKind(of: rctParagraphClass) {
             if view.responds(to: Selector(("attributedText"))) {
                 if let attributedText = view.value(forKey: "attributedText") as? NSAttributedString {
-                    let extracted = UILabelThingy.extractLabelAttributes(from: attributedText)
+                    let extracted = TextHelper.extractLabelAttributes(from: attributedText)
                     text = extracted.text
                     font = extracted.font
                     textColor = extracted.textColor
                     textAlignment = extracted.textAlignment
+                    lineBreakMode = extracted.lineBreakMode
+                    kern = extracted.kern
                 }
             }
         }
@@ -152,18 +163,34 @@ class UILabelThingy: SessionReplayViewThingy {
         self.textAlignment = textAlignment
 
         self.textColor = textColor
+
+        // React Native views typically support multiline by default
+        self.numberOfLines = 0
+        self.lineBreakMode = lineBreakMode
+
+        let fontTraits = TextHelper.extractFontTraits(from: font)
+        self.fontWeight = fontTraits.weight
+        self.isItalic = fontTraits.isItalic
+
+        self.letterSpacing = kern
+
     }
-    
+
     init(viewDetails: ViewDetails, attributedText: NSAttributedString) {
         self.viewDetails = viewDetails
         self.viewDetails.backgroundColor = .clear
-        
-        let extracted = UILabelThingy.extractLabelAttributes(from: attributedText)
+        var frame = self.viewDetails.frame
+        frame.size.width = frame.size.width + 0.5
+        self.viewDetails.frame = frame
+
+        let extracted = TextHelper.extractLabelAttributes(from: attributedText)
         let text = extracted.text
         let font = extracted.font
         let textColor = extracted.textColor
         let textAlignment = extracted.textAlignment
-
+        let lineBreakMode = extracted.lineBreakMode
+        let kern = extracted.kern
+        
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
@@ -196,8 +223,18 @@ class UILabelThingy: SessionReplayViewThingy {
         self.textAlignment = textAlignment
 
         self.textColor = textColor
+
+        // SwiftUI text views typically support multiline by default
+        self.numberOfLines = 0
+        self.lineBreakMode = lineBreakMode
+
+        let fontTraits = TextHelper.extractFontTraits(from: font)
+        self.fontWeight = fontTraits.weight
+        self.isItalic = fontTraits.isItalic
+        self.letterSpacing = kern
+        
     }
-    
+
     func cssDescription() -> String {
         return """
                 #\(viewDetails.cssSelector) { \
@@ -207,15 +244,27 @@ class UILabelThingy: SessionReplayViewThingy {
     }
     
     func inlineCSSDescription() -> String {
+        let wordWrapCSS = TextHelper.generateWordWrapCSS(numberOfLines: numberOfLines, lineBreakMode: lineBreakMode)
+        let fontWeightCSS = TextHelper.cssValueForFontWeight(fontWeight)
+        let fontStyleCSS = isItalic ? "italic" : "normal"
+
+        // Generate letter-spacing CSS if available
+        var letterSpacingCSS = ""
+        if let letterSpacing = self.letterSpacing {
+            letterSpacingCSS = " letter-spacing: \(String(format: "%.2f", letterSpacing))px;"
+        }
+
         return """
                 \(generateBaseCSSStyle())\
                 white-space: pre-wrap;\
-                font: \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
+                \(wordWrapCSS) \
+                font: \(fontStyleCSS) \(fontWeightCSS) \(String(format: "%.2f", self.fontSize))px \(self.fontFamily); \
                 color: \(textColor.toHexString(includingAlpha: true));\
-                text-align: \(textAlignment);
+                text-align: \(textAlignment); \
+                overflow: hidden; \(letterSpacingCSS)
                 """
     }
-    
+
     func generateRRWebNode() -> ElementNodeData  {
         let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
                                                         isStyle: false,
@@ -277,7 +326,12 @@ extension UILabelThingy: Equatable {
             lhs.fontName == rhs.fontName &&
             lhs.fontFamily == rhs.fontFamily &&
             lhs.textAlignment == rhs.textAlignment &&
-            lhs.textColor == rhs.textColor
+            lhs.textColor == rhs.textColor &&
+            lhs.numberOfLines == rhs.numberOfLines &&
+            lhs.lineBreakMode == rhs.lineBreakMode &&
+            lhs.fontWeight == rhs.fontWeight &&
+            lhs.isItalic == rhs.isItalic &&
+            lhs.letterSpacing == rhs.letterSpacing
     }
 }
 
@@ -289,6 +343,11 @@ extension UILabelThingy: Hashable {
         hasher.combine(fontName)
         hasher.combine(fontFamily)
         hasher.combine(textColor)
+        hasher.combine(numberOfLines)
+        hasher.combine(lineBreakMode.rawValue)
+        hasher.combine(fontWeight.rawValue)
+        hasher.combine(isItalic)
+        hasher.combine(letterSpacing)
     }
 }
 

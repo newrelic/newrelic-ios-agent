@@ -1656,6 +1656,8 @@
 		F8BF13CF2F2BB89100EF5628 /* NRMAUserActionEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F8BF13CE2F2BB88B00EF5628 /* NRMAUserActionEvent.h */; };
 		F8BF13D02F2BB89100EF5628 /* NRMAUserActionEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F8BF13CE2F2BB88B00EF5628 /* NRMAUserActionEvent.h */; };
 		F8BF13D12F2BB89100EF5628 /* NRMAUserActionEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = F8BF13CE2F2BB88B00EF5628 /* NRMAUserActionEvent.h */; };
+		F8BF148F2F352D5200EF5628 /* TextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF148E2F352D5200EF5628 /* TextHelper.swift */; };
+		F8BF14A52F3668D500EF5628 /* TextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF148E2F352D5200EF5628 /* TextHelper.swift */; };
 		F8E17C542DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C552DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C562DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
@@ -2702,6 +2704,7 @@
 		F8B30FBF2EEB3D12008E74FB /* UIImage+PngData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+PngData.swift"; sourceTree = "<group>"; };
 		F8BF13B72F2BB85100EF5628 /* NRMAUserActionEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAUserActionEvent.m; sourceTree = "<group>"; };
 		F8BF13CE2F2BB88B00EF5628 /* NRMAUserActionEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAUserActionEvent.h; sourceTree = "<group>"; };
+		F8BF148E2F352D5200EF5628 /* TextHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextHelper.swift; sourceTree = "<group>"; };
 		F8E17C532DB681820098C3CB /* NRLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRLogger.swift; sourceTree = "<group>"; };
 		F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAOfflineStorage.m; sourceTree = "<group>"; };
 		F8E202F32B07BA6E008E0B7B /* NRMAOfflineStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAOfflineStorage.h; sourceTree = "<group>"; };
@@ -4022,6 +4025,7 @@
 				2BAE5C792E85FAB6001D2B88 /* MakeCFTypeSafe.swift */,
 				2B58144F2E87218F005D62D4 /* SVGStrings.swift */,
 				2B0340942E8B056B00182A70 /* Data+md5Hex.swift */,
+				F8BF148E2F352D5200EF5628 /* TextHelper.swift */,
 				2B0340962E8B0B9C00182A70 /* UIImageOrientation.swift */,
 				F8672AB42EB11B2C0055FA51 /* UIFont+CSSConversion.swift */,
 				F8B30FBF2EEB3D12008E74FB /* UIImage+PngData.swift */,
@@ -5574,6 +5578,7 @@
 				0209AC4024E7075200E45C90 /* NRHarvesterConnectionTests.m in Sources */,
 				2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */,
 				F85ABB642F155B6E0098A2CF /* IDGenerator.swift in Sources */,
+				F8BF14A52F3668D500EF5628 /* TextHelper.swift in Sources */,
 				0209AC9B24E7393300E45C90 /* NRCPUVitalsTest.m in Sources */,
 				0209AC1224E7071500E45C90 /* NRMAAPIHelperTests.m in Sources */,
 				0209AC4524E7078000E45C90 /* NRMAFeatureFlagsTests.m in Sources */,
@@ -5725,6 +5730,7 @@
 				02FF4A6C24DC64E600115469 /* NRMANamedValueProducer.m in Sources */,
 				2B0340682E874AAC00182A70 /* ControllerTypeDetector.swift in Sources */,
 				02FF4A7924DC64FC00115469 /* NRCustomMetrics.m in Sources */,
+				F8BF148F2F352D5200EF5628 /* TextHelper.swift in Sources */,
 				2B5814522E87239E005D62D4 /* SwiftUIViewThingySupport.swift in Sources */,
 				342C4B5A2A3BD15A00116992 /* BlockAttributeValidator.m in Sources */,
 				02FF48E124DC622700115469 /* NRMAExceptionHandlerManager.m in Sources */,
