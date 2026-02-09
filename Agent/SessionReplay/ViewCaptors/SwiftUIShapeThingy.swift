@@ -123,7 +123,7 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
                 "height": "100%",
                 "preserveAspectRatio": "none"
             ],
-            childNodes: [.element(pathNode)],
+            childNodes: [],
             isSVG: true
         )
 
@@ -132,17 +132,29 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
             id: viewDetails.viewId,
             tagName: .div,
             attributes: ["id": viewDetails.cssSelector],
-            childNodes: [.element(svgNode)]
+            childNodes: []
         )
         containerNode.attributes["style"] = inlineCSSDescription()
 
+        // Return separate AddRecords for each node (container, svg, path)
+        // rrweb requires each node to be added individually with parent references
         let addContainerNode: RRWebMutationData.AddRecord = .init(
             parentId: parentNodeId,
             nextId: viewDetails.nextId,
             node: .element(containerNode)
         )
+        let addSvgNode: RRWebMutationData.AddRecord = .init(
+            parentId: viewDetails.viewId,
+            nextId: nil,
+            node: .element(svgNode)
+        )
+        let addPathNode: RRWebMutationData.AddRecord = .init(
+            parentId: viewDetails.viewId + 2000000,
+            nextId: nil,
+            node: .element(pathNode)
+        )
 
-        return [addContainerNode]
+        return [addContainerNode, addSvgNode, addPathNode]
     }
 
     func generateRRWebNode() -> ElementNodeData {
