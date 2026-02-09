@@ -357,7 +357,38 @@ struct ViewDetails {
 }
 
 extension ViewDetails: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(viewId)
+        hasher.combine(frame.origin.x)
+        hasher.combine(frame.origin.y)
+        hasher.combine(frame.size.width)
+        hasher.combine(frame.size.height)
+        hasher.combine(alpha)
+        hasher.combine(isHidden)
+        hasher.combine(cornerRadius)
+        hasher.combine(borderWidth)
+        hasher.combine(viewName)
+        hasher.combine(parentId)
+        hasher.combine(nextId)
+        hasher.combine(clip.origin.x)
+        hasher.combine(clip.origin.y)
+        hasher.combine(clip.size.width)
+        hasher.combine(clip.size.height)
+        hasher.combine(isMasked)
+        hasher.combine(maskApplicationText)
+        hasher.combine(maskUserInputText)
+        hasher.combine(maskAllImages)
+        hasher.combine(maskAllUserTouches)
+        hasher.combine(viewIdentifier)
 
+        // Convert UIColors to hex strings before hashing to ensure thread safety
+        if let bgColor = backgroundColor {
+            hasher.combine(bgColor.toHexString(includingAlpha: true))
+        }
+        if let bColor = borderColor {
+            hasher.combine(bColor.toHexString(includingAlpha: true))
+        }
+    }
 }
 
 fileprivate var associatedSessionReplayViewIDKey: String = "SessionReplayID"
