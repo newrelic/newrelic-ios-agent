@@ -38,8 +38,9 @@ public struct NRConditionalMaskView<Content: View>: View {
     }
     
     public var body: some View {
-        // TODO: Check conditions this should be evaaluated enabled? Previews?
-        if activated {
+
+        let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
+        if activated && !iOS15 {
             NRMaskedViewRepresentable(maskApplicationText: self.maskApplicationText,
                                       maskUserInputText: self.maskUserInputText,
                                       maskAllImages: self.maskAllImages,

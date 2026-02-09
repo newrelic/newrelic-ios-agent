@@ -280,7 +280,10 @@ final class UIHostingViewRecordOrchestrator {
             let details = makeDetails()
             
             var outputText = ""
-            if details.isMasked ?? false {
+            
+            var iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
+            
+            if iOS15 || (details.isMasked ?? false) {
                 outputText = String(repeating: "*", count: storage.string.count)
             }
             else {
