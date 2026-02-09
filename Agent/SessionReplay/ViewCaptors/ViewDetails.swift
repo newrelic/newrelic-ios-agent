@@ -199,14 +199,13 @@ struct ViewDetails {
         
         if let sessionReplayIdentifier = sessionReplayIdentifier {
             guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
+            // Check for accessibility identifier in the unmasking list
+            if agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
+                self.isMasked = false
+            }
             // Check for accessibility identifier in the masking list
             if agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier) {
                 self.isMasked = true
-            }
-
-            // Check for accessibility identifier in the masking list
-            if agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
-                self.isMasked = false
             }
         }
     }
