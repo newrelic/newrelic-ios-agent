@@ -52,6 +52,7 @@ public class NRMASessionReplay: NSObject {
     /// Tracks which frame counter values contain full snapshots
     private var fullSnapshotFrameIndices: Set<Int> = []
     
+    private let frameQueue = DispatchQueue(label: "com.newrelic.sessionreplay.frames")
     
     public var isFirstChunk = true
     var uncompressedDataSize: Int = 0
@@ -199,20 +200,24 @@ public class NRMASessionReplay: NSObject {
     
     func addFrame(_ frame: SessionReplayFrame) {
         
-        rawFrames.append(frame)
-        
-        // BEGIN PROCESSING FRAME TO FILE
-        // Process frame to file
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        frameQueue.async { [weak self] in
             guard let self = self else { return }
+            self.rawFrames.append(frame)
             
-            self.processFrameToFile(frame)
+            // BEGIN PROCESSING FRAME TO FILE
+            // Process frame to file
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                guard let self = self else { return }
+                
+                self.processFrameToFile(frame)
+                
+                // END PROCESSING FRAME TO FILE
+            }
             
-            // END PROCESSING FRAME TO FILE
-        }
-        
-        if recordingMode == .error {
-            pruneRawFrames()
+            if self.recordingMode == .error {
+                self.pruneRawFrames()
+            }
+            
         }
     }
     
@@ -356,7 +361,6 @@ public class NRMASessionReplay: NSObject {
     }
     
     /// REPLAY PERSISTENCE
-    
     
     func processFrameToFile(_ frame: SessionReplayFrame) {
         
