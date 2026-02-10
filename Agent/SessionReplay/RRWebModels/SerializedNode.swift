@@ -143,6 +143,8 @@ enum TagType: String, Codable {
     case body = "body"
     case html = "html"
     case image = "img"
+    case svg = "svg"
+    case path = "path"
 }
 
 class ElementNodeData: SerializedNodeData {
@@ -151,16 +153,18 @@ class ElementNodeData: SerializedNodeData {
     let tagName: TagType
     var attributes: RRWebAttributes
     var childNodes: [SerializedNode] = []
-    
+    var isSVG: Bool?
+
     enum CodingKeys: CodingKey {
-        case type, id, tagName, attributes, childNodes
+        case type, id, tagName, attributes, childNodes, isSVG
     }
-    
-    init(id: Int, tagName: TagType, attributes: RRWebAttributes, childNodes: [SerializedNode]) {
+
+    init(id: Int, tagName: TagType, attributes: RRWebAttributes, childNodes: [SerializedNode], isSVG: Bool? = nil) {
         self.id = id
         self.tagName = tagName
         self.attributes = attributes
         self.childNodes = childNodes
+        self.isSVG = isSVG
     }
     
     required init(from decoder: any Decoder) throws {
@@ -169,6 +173,7 @@ class ElementNodeData: SerializedNodeData {
         self.tagName = try container.decode(TagType.self, forKey: .tagName)
         self.attributes = try container.decode(RRWebAttributes.self, forKey: .attributes)
         self.childNodes = try container.decode([SerializedNode].self, forKey: .childNodes)
+        self.isSVG = try container.decodeIfPresent(Bool.self, forKey: .isSVG)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -178,6 +183,9 @@ class ElementNodeData: SerializedNodeData {
         try container.encode(tagName, forKey: .tagName)
         try container.encode(attributes, forKey: .attributes)
         try container.encode(childNodes, forKey: .childNodes)
+        if let isSVG = isSVG {
+            try container.encode(isSVG, forKey: .isSVG)
+        }
     }
 }
 

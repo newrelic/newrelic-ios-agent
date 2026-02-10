@@ -166,13 +166,38 @@ extension ResolvedColor: XrayConvertible {
             // Try to extract paint using reflection
             if let paintChild = r.childIfPresent(SwiftUIConstants.paintPath) {
                 let paintDecoder = XrayDecoder(subject: paintChild)
-                // Try to extract color components directly
-                let red: Float? = try? paintDecoder.extract(SwiftUIConstants.linearRedPath)
-                let green: Float? = try? paintDecoder.extract(SwiftUIConstants.linearGreenPath)
-                let blue: Float? = try? paintDecoder.extract(SwiftUIConstants.linearBluePath)
-                let alpha: Float? = try? paintDecoder.extract(SwiftUIConstants.opacityPath)
 
-                self.init(linearRed: red, linearGreen: green, linearBlue: blue, opacity: alpha)
+                // iOS 26+: Color structure is paint -> color (ResolvedHDR) -> base (Resolved) -> linearRed/linearGreen/linearBlue/opacity
+                if let colorChild = paintDecoder.childIfPresent(SwiftUIConstants.colorPath) {
+                    let colorDecoder = XrayDecoder(subject: colorChild)
+
+                    // Extract from base child (Resolved)
+                    if let baseChild = colorDecoder.childIfPresent(SwiftUIConstants.basePath) {
+                        let baseDecoder = XrayDecoder(subject: baseChild)
+                        let red: Float? = try? baseDecoder.extract(SwiftUIConstants.linearRedPath)
+                        let green: Float? = try? baseDecoder.extract(SwiftUIConstants.linearGreenPath)
+                        let blue: Float? = try? baseDecoder.extract(SwiftUIConstants.linearBluePath)
+                        let alpha: Float? = try? baseDecoder.extract(SwiftUIConstants.opacityPath)
+
+                        self.init(linearRed: red, linearGreen: green, linearBlue: blue, opacity: alpha)
+                    } else {
+                        // Fallback: try extracting directly from colorDecoder
+                        let red: Float? = try? colorDecoder.extract(SwiftUIConstants.linearRedPath)
+                        let green: Float? = try? colorDecoder.extract(SwiftUIConstants.linearGreenPath)
+                        let blue: Float? = try? colorDecoder.extract(SwiftUIConstants.linearBluePath)
+                        let alpha: Float? = try? colorDecoder.extract(SwiftUIConstants.opacityPath)
+
+                        self.init(linearRed: red, linearGreen: green, linearBlue: blue, opacity: alpha)
+                    }
+                } else {
+                    // Fallback: try to extract directly from paintDecoder
+                    let red: Float? = try? paintDecoder.extract(SwiftUIConstants.linearRedPath)
+                    let green: Float? = try? paintDecoder.extract(SwiftUIConstants.linearGreenPath)
+                    let blue: Float? = try? paintDecoder.extract(SwiftUIConstants.linearBluePath)
+                    let alpha: Float? = try? paintDecoder.extract(SwiftUIConstants.opacityPath)
+
+                    self.init(linearRed: red, linearGreen: green, linearBlue: blue, opacity: alpha)
+                }
             } else if let colorView = r.childIfPresent(type: ColorView.self, SwiftUIConstants.paintPath) {
                 // Try ColorView approach
                 self.init(linearRed: colorView.linearRed, linearGreen: colorView.linearGreen,
