@@ -277,9 +277,9 @@ public class SessionReplayManager: NSObject {
         var jsonData: Data
         do {
             jsonData = try encoder.encode(container)
-            //            if let jsonString = String(data: jsonData, encoding: .utf8) {
-            //                NRLOG_DEBUG(jsonString)
-            //            }
+//            if let jsonString = String(data: jsonData, encoding: .utf8) {
+//                NRLOG_DEBUG(jsonString)
+//            }
         } catch {
             NRLOG_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil
