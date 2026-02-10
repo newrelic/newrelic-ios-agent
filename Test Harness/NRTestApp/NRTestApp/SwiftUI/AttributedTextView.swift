@@ -85,17 +85,21 @@ struct AttributedTextView: View {
 
                 // Section 4: TextField with custom styling
                 sectionHeader("TextField - Custom Styling")
-                TextField("Type something...", text: .constant("Pre-filled attributed text"))
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.purple)
-                    .kerning(0.5)
-                    .padding()
-                    .background(Color(UIColor.systemBackground))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray, lineWidth: 1)
-                    )
-                    .padding(.horizontal)
+                if #available(iOS 16.0, *) {
+                    TextField("Type something...", text: .constant("Pre-filled attributed text"))
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.purple)
+                        .kerning(0.5)
+                        .padding()
+                        .background(Color(UIColor.systemBackground))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
+                        .padding(.horizontal)
+                } else {
+                    // Fallback on earlier versions
+                }
 
                 // Section 5: TextEditor with complex formatting
                 sectionHeader("TextEditor - Complex Formatting")
