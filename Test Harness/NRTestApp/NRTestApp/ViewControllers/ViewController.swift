@@ -242,7 +242,8 @@ class ViewController: UIViewController {
         
         options.append(UtilOption(title: "SwiftUIViewRepresentable", handler: { [self] in swiftUIViewRepresentableTapped()}))
 
-        
+        options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
+
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
@@ -302,6 +303,11 @@ class ViewController: UIViewController {
     func performanceContentView() {
         coordinator?.showPerformanceContentView()
     }
+
+    func attributedTextTestAction() {
+        coordinator?.showAttributedTextTestViewController()
+    }
+
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)

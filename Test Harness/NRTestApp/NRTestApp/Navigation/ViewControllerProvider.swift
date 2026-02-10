@@ -55,5 +55,10 @@ enum ViewControllerProvider {
         let viewController = ConfidentialViewController()
         return viewController
     }
+
+    static var attributedTextTestViewController: AttributedTextTestViewController {
+        let viewController = AttributedTextTestViewController()
+        return viewController
+    }
 }
 
