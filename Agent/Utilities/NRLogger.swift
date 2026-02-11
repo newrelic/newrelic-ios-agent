@@ -36,5 +36,9 @@ func NRLOG_AUDIT(_ message: String, file: String = #file, line: Int = #line, fun
 
 func NRLOG_DEBUG(_ message: String, file: String = #file, line: Int = #line, function: String = #function) {
     let fileName = (file as NSString).lastPathComponent
+    NRLogger.log(NRLogLevelDebug.rawValue, inFile: fileName, atLine: UInt32(line), inMethod: function, withMessage: message, withAgentLogsOn: false)
+}
+func NRLOG_AGENT_DEBUG(_ message: String, file: String = #file, line: Int = #line, function: String = #function) {
+    let fileName = (file as NSString).lastPathComponent
     NRLogger.log(NRLogLevelDebug.rawValue, inFile: fileName, atLine: UInt32(line), inMethod: function, withMessage: message, withAgentLogsOn: true)
 }
