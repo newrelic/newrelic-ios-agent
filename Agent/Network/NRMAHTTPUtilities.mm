@@ -54,11 +54,14 @@ NSString* currentParentId = @"";
 }
 
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
-
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
-
-    NSString* xprocess = [NRMAHarvestController configuration].cross_process_id;
-
+    NRMAHarvesterConfiguration *config = [NRMAHarvestController configuration];
+    
+    if (!config) {
+        return mutableRequest;
+    }
+    
+    NSString* xprocess = config.cross_process_id;
     if (xprocess.length) {
         [mutableRequest setValue:xprocess
               forHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY];
