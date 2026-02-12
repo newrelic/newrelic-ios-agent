@@ -274,8 +274,16 @@ final class UIHostingViewRecordOrchestrator {
             viewName = "SwiftUITextView"
             let details = makeDetails()
             
-            return UILabelThingy(viewDetails: details,
-                                 attributedText: storage)
+            let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
+            if iOS15 {
+                return UILabelThingy(viewDetails: details,
+                                     attributedText: storage, iOS15Override:true)
+            }
+            else {
+                return UILabelThingy(viewDetails: details,
+                                     attributedText: storage)
+            }
+
             
         case let SwiftUIDisplayList.Content.Value.color(colorData):
             contentId = getContentId(for: content, identity: item.identity)

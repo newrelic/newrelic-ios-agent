@@ -176,7 +176,7 @@ class UILabelThingy: SessionReplayViewThingy {
 
     }
 
-    init(viewDetails: ViewDetails, attributedText: NSAttributedString) {
+    init(viewDetails: ViewDetails, attributedText: NSAttributedString, iOS15Override: Bool = false) {
         self.viewDetails = viewDetails
         self.viewDetails.backgroundColor = .clear
         var frame = self.viewDetails.frame
@@ -201,7 +201,7 @@ class UILabelThingy: SessionReplayViewThingy {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
         
-        if self.isMasked {
+        if iOS15Override || self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
             self.labelText = String(repeating: "*", count: text?.count ?? 0)
