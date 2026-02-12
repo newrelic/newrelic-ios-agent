@@ -323,7 +323,10 @@ public class NRMASessionReplay: NSObject {
                 let metaEvent = MetaEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: metaEventData)
                 processedFrames.append(metaEvent)
             }
-            processedFrames.append(sessionReplayFrameProcessor.processFrame(frame))
+            let newFrame = sessionReplayFrameProcessor.processFrame(frame)
+            if let newFrame = newFrame {
+                processedFrames.append(newFrame)
+            }
         }
         
         return processedFrames
@@ -391,6 +394,11 @@ public class NRMASessionReplay: NSObject {
             NRLOG_AGENT_DEBUG("💾 [processFrameToFile] No frames in buffer, skipping")
             return
         }
+        
+        guard let processedFrame = processedFrame as? IncrementalEvent else {
+            return
+        }
+        
         let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000).rounded()
         let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
         

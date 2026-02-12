@@ -15,7 +15,7 @@ class SessionReplayFrameProcessor {
     var takeFullSnapshotNext = true
     
     
-    func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon {
+    func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon? {
         guard useIncrementalDiffs else { // If useIncrementalDiffs is false, we only take full snapshots
             self.lastFullFrame = frame
             return processFullSnapshot(frame)
@@ -28,7 +28,7 @@ class SessionReplayFrameProcessor {
             return processFullSnapshot(frame)
         }
         
-        var rrwebCommon: any RRWebEventCommon
+        var rrwebCommon: (any RRWebEventCommon)?
         // If a full snapshot is needed, frame size changed, or UILayoutContainerView count increased
         if takeFullSnapshotNext || frame.size != lastFullFrame.size || (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) {
             rrwebCommon = processFullSnapshot(frame)
@@ -117,7 +117,7 @@ class SessionReplayFrameProcessor {
     }
     
     
-    private func processIncrementalSnapshot(newFrame: SessionReplayFrame, oldFrame: SessionReplayFrame) -> any RRWebEventCommon {
+    private func processIncrementalSnapshot(newFrame: SessionReplayFrame, oldFrame: SessionReplayFrame) -> (any RRWebEventCommon)? {
         // Validate input parameters
         guard newFrame.date >= oldFrame.date else {
             // If frames are out of order, fall back to full snapshot
@@ -157,6 +157,11 @@ class SessionReplayFrameProcessor {
         }
         
         let incrementalUpdate: RRWebIncrementalData = .mutation(RRWebMutationData(adds: adds, removes: removes, texts: texts, attributes: attributes))
+        
+        if adds.isEmpty && removes.isEmpty && texts.isEmpty && attributes.isEmpty {
+            return nil
+        }
+        
         let incrementalEvent = IncrementalEvent(timestamp: (newFrame.date.timeIntervalSince1970 * 1000).rounded(), data: incrementalUpdate)
         return incrementalEvent
         
