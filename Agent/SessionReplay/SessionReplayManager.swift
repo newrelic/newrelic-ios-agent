@@ -188,6 +188,7 @@ public class SessionReplayManager: NSObject {
             
             stop()
             harvest()
+            sessionReplayMode = .off
             NRLOG_AGENT_DEBUG("Session replay paused via manual pauseReplay() API")
             return true
         }
@@ -234,6 +235,11 @@ public class SessionReplayManager: NSObject {
         
         defer {
             self.harvestseconds = 0
+        }
+        
+        if sessionReplayMode == .off {
+            NRLOG_AGENT_DEBUG("Skipping harvest in off mode.")
+            return
         }
         
         if sessionReplayMode == .error {
