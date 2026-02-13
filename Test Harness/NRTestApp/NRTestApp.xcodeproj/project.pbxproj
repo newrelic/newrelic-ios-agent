@@ -145,10 +145,8 @@
 		F8BF16392F3F6D9F00EF5628 /* MUIToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16302F3F6D9F00EF5628 /* MUIToken.swift */; };
 		F8BF163A2F3F6D9F00EF5628 /* HomeProfileCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162E2F3F6D9F00EF5628 /* HomeProfileCardView.swift */; };
 		F8BF163B2F3F6D9F00EF5628 /* ExpenseEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162D2F3F6D9F00EF5628 /* ExpenseEntryView.swift */; };
-		F8BF163D2F3F6D9F00EF5628 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16352F3F6D9F00EF5628 /* WebView.swift */; };
 		F8BF163E2F3F6D9F00EF5628 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16292F3F6D9F00EF5628 /* ChatView.swift */; };
 		F8BF163F2F3F6D9F00EF5628 /* ConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162B2F3F6D9F00EF5628 /* ConfirmationView.swift */; };
-		F8BF16402F3F6D9F00EF5628 /* NewRelicSDK.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16312F3F6D9F00EF5628 /* NewRelicSDK.swift */; };
 		F8BF16412F3F6D9F00EF5628 /* ProviderSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */; };
 		F8BF16432F3F6D9F00EF5628 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16342F3F6D9F00EF5628 /* Views.swift */; };
 		F8BF16442F3F6D9F00EF5628 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162F2F3F6D9F00EF5628 /* model.swift */; };
@@ -436,10 +434,8 @@
 		F8BF162E2F3F6D9F00EF5628 /* HomeProfileCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeProfileCardView.swift; sourceTree = "<group>"; };
 		F8BF162F2F3F6D9F00EF5628 /* model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
 		F8BF16302F3F6D9F00EF5628 /* MUIToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MUIToken.swift; sourceTree = "<group>"; };
-		F8BF16312F3F6D9F00EF5628 /* NewRelicSDK.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRelicSDK.swift; sourceTree = "<group>"; };
 		F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSearchView.swift; sourceTree = "<group>"; };
 		F8BF16342F3F6D9F00EF5628 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
-		F8BF16352F3F6D9F00EF5628 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
@@ -798,10 +794,8 @@
 				F8BF162E2F3F6D9F00EF5628 /* HomeProfileCardView.swift */,
 				F8BF162F2F3F6D9F00EF5628 /* model.swift */,
 				F8BF16302F3F6D9F00EF5628 /* MUIToken.swift */,
-				F8BF16312F3F6D9F00EF5628 /* NewRelicSDK.swift */,
 				F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */,
 				F8BF16342F3F6D9F00EF5628 /* Views.swift */,
-				F8BF16352F3F6D9F00EF5628 /* WebView.swift */,
 			);
 			path = NewRelicSessionReplay;
 			sourceTree = "<group>";
@@ -1273,10 +1267,8 @@
 				F8BF16392F3F6D9F00EF5628 /* MUIToken.swift in Sources */,
 				F8BF163A2F3F6D9F00EF5628 /* HomeProfileCardView.swift in Sources */,
 				F8BF163B2F3F6D9F00EF5628 /* ExpenseEntryView.swift in Sources */,
-				F8BF163D2F3F6D9F00EF5628 /* WebView.swift in Sources */,
 				F8BF163E2F3F6D9F00EF5628 /* ChatView.swift in Sources */,
 				F8BF163F2F3F6D9F00EF5628 /* ConfirmationView.swift in Sources */,
-				F8BF16402F3F6D9F00EF5628 /* NewRelicSDK.swift in Sources */,
 				F8BF16412F3F6D9F00EF5628 /* ProviderSearchView.swift in Sources */,
 				F8BF16432F3F6D9F00EF5628 /* Views.swift in Sources */,
 				F8BF16442F3F6D9F00EF5628 /* model.swift in Sources */,

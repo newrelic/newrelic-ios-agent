@@ -85,10 +85,10 @@ struct ClaimFormView: View {
                                     TextField("Certificate Number", text: $otherCert)
                                 }
                                 header: {
-                                    Text("Manulife details")
+                                    Text("Company details")
                                 }
                                 footer: {
-                                    Text("Please do not submit a separate claim for this expense as any unpaid portion will be processed under the secondary policy wih Manulife.  It may take 5-7 business days to process")
+                                    Text("Please do not submit a separate claim for this expense as any unpaid portion will be processed under the secondary policy wih company.  It may take 5-7 business days to process")
                                 }
                             }
                             Section(header: Text("Provider")) {
