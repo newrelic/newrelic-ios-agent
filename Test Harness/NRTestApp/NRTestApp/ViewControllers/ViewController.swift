@@ -189,6 +189,10 @@ class ViewController: UIViewController {
         coordinator?.showSwiftUITestView()
     }
     
+    func swiftUICustomerViewTapped() {
+        coordinator?.showSwiftUICustomerView()
+    }
+    
     func swiftUIViewRepresentableTapped() {
         coordinator?.showSwiftUIViewRepresentableTestView()
     }
@@ -241,6 +245,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
         
         options.append(UtilOption(title: "SwiftUIViewRepresentable", handler: { [self] in swiftUIViewRepresentableTapped()}))
+        
+        options.append(UtilOption(title: "SwiftUICustomerViewTapped", handler: { [self] in swiftUICustomerViewTapped()}))
 
         options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
 
