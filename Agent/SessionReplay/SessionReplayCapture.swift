@@ -79,9 +79,23 @@ class SessionReplayCapture {
             
             let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
             let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
-            
+
             if !thingys.isEmpty {
-                parentThingy.subviews.append(contentsOf: thingys)
+                // Separate color views (backgrounds) from other views
+                var colorViews: [any SessionReplayViewThingy] = []
+                var otherViews: [any SessionReplayViewThingy] = []
+
+                for thingy in thingys {
+                    if thingy.viewDetails.viewName == "SwiftUIColorView" {
+                        colorViews.append(thingy)
+                    } else {
+                        otherViews.append(thingy)
+                    }
+                }
+
+                // Insert color views first (they go to the back) then other views
+                parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
+                parentThingy.subviews.append(contentsOf: otherViews)
             }
         }
         

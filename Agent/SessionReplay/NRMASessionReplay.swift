@@ -52,6 +52,7 @@ public class NRMASessionReplay: NSObject {
     /// Tracks which frame counter values contain full snapshots
     private var fullSnapshotFrameIndices: Set<Int> = []
     
+    private let frameQueue = DispatchQueue(label: "com.newrelic.sessionreplay.frames")
     
     public var isFirstChunk = true
     var uncompressedDataSize: Int = 0
@@ -79,34 +80,34 @@ public class NRMASessionReplay: NSObject {
     }
     
     public func start() {
-        NRLOG_DEBUG("▶️ [start] ==================== SESSION REPLAY START ====================")
-        NRLOG_DEBUG("▶️ [start] Recording mode: \(recordingMode)")
-        NRLOG_DEBUG("▶️ [start] Max buffer frames: \(maxBufferFrames)")
-        NRLOG_DEBUG("▶️ [start] Error mode buffer duration: \(errorModeBufferDuration)s")
-        NRLOG_DEBUG("▶️ [start] Full snapshot interval: \(fullSnapshotInterval)s")
-        NRLOG_DEBUG("▶️ [start] Prune interval: \(pruneInterval)s")
-        NRLOG_DEBUG("▶️ [start] ====================================================")
+        NRLOG_AGENT_DEBUG("▶️ [start] ==================== SESSION REPLAY START ====================")
+        //NRLOG_AGENT_DEBUG("▶️ [start] Recording mode: \(recordingMode)")
+        //NRLOG_AGENT_DEBUG("▶️ [start] Max buffer frames: \(maxBufferFrames)")
+        //NRLOG_AGENT_DEBUG("▶️ [start] Error mode buffer duration: \(errorModeBufferDuration)s")
+        //NRLOG_AGENT_DEBUG("▶️ [start] Full snapshot interval: \(fullSnapshotInterval)s")
+        //NRLOG_AGENT_DEBUG("▶️ [start] Prune interval: \(pruneInterval)s")
+        //NRLOG_AGENT_DEBUG("▶️ [start] ====================================================")
         
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
         Task{
             await MainActor.run {
                 guard let window = getWindow() else {
-                    NRLOG_DEBUG("▶️ [start] ⚠️ No key window found on didBecomeActive")
+                    NRLOG_AGENT_DEBUG("▶️ [start] ⚠️ No key window found on didBecomeActive")
                     return
                 }
                 self.sessionReplayTouchCapture = SessionReplayTouchCapture(window: window)
                 swizzleSendEvent()
-                NRLOG_DEBUG("▶️ [start] ✅ Touch capture initialized and event swizzling complete")
+                //NRLOG_AGENT_DEBUG("▶️ [start] ✅ Touch capture initialized and event swizzling complete")
             }
         }
     }
     
     public func stop() {
-        NRLOG_DEBUG("⏹️ [stop] ==================== SESSION REPLAY STOP ====================")
-        NRLOG_DEBUG("⏹️ [stop] Final buffer count: \(rawFrames.count)")
-        NRLOG_DEBUG("⏹️ [stop] Final frameCounter: \(frameCounter)")
-        NRLOG_DEBUG("⏹️ [stop] Final uncompressedDataSize: \(uncompressedDataSize) bytes")
-        NRLOG_DEBUG("⏹️ [stop] ====================================================")
+        NRLOG_AGENT_DEBUG("⏹️ [stop] ==================== SESSION REPLAY STOP ====================")
+        //NRLOG_AGENT_DEBUG("⏹️ [stop] Final buffer count: \(rawFrames.count)")
+        //NRLOG_AGENT_DEBUG("⏹️ [stop] Final frameCounter: \(frameCounter)")
+        //NRLOG_AGENT_DEBUG("⏹️ [stop] Final uncompressedDataSize: \(uncompressedDataSize) bytes")
+        //NRLOG_AGENT_DEBUG("⏹️ [stop] ====================================================")
     }
     
     public func clearAllData() {
@@ -114,16 +115,16 @@ public class NRMASessionReplay: NSObject {
         let oldFrameCounter = frameCounter
         let oldUncompressedSize = uncompressedDataSize
         
-        NRLOG_DEBUG("🧹 [clearAllData] ==================== CLEARING ALL DATA ====================")
-        NRLOG_DEBUG("🧹 [clearAllData] Clearing \(frameCount) frames from buffer")
-        NRLOG_DEBUG("🧹 [clearAllData] frameCounter: \(oldFrameCounter), uncompressedDataSize: \(oldUncompressedSize) bytes")
+        NRLOG_AGENT_DEBUG("🧹 [clearAllData] ==================== CLEARING ALL DATA ====================")
+        //NRLOG_AGENT_DEBUG("🧹 [clearAllData] Clearing \(frameCount) frames from buffer")
+        //NRLOG_AGENT_DEBUG("🧹 [clearAllData] frameCounter: \(oldFrameCounter), uncompressedDataSize: \(oldUncompressedSize) bytes")
         
         rawFrames.removeAll()
         fullSnapshotFrameIndices.removeAll()
         
         if let touchCapture = sessionReplayTouchCapture {
             let touchCount = touchCapture.touchEvents.count
-            NRLOG_DEBUG("🧹 [clearAllData] Resetting \(touchCount) touch events")
+            //NRLOG_AGENT_DEBUG("🧹 [clearAllData] Resetting \(touchCount) touch events")
             touchCapture.resetEvents()
         }
         
@@ -138,15 +139,15 @@ public class NRMASessionReplay: NSObject {
             
             // clear the frames directory
             guard FileManager.default.fileExists(atPath: self.framesDirectory.path) else {
-                NRLOG_DEBUG("🧹 [clearAllData] Frames directory doesn't exist, nothing to clear")
+               // NRLOG_AGENT_DEBUG("🧹 [clearAllData] Frames directory doesn't exist, nothing to clear")
                 return
             }
             do {
                 try FileManager.default.removeItem(at: self.framesDirectory)
-                NRLOG_DEBUG("🧹 [clearAllData] ✅ Cleared frames directory")
-                NRLOG_DEBUG("🧹 [clearAllData] ====================================================")
+//                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ✅ Cleared frames directory")
+//                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ====================================================")
             } catch {
-                NRLOG_DEBUG("🧹 [clearAllData] ❌ Failed to clear frames directory: \(error)")
+                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ❌ Failed to clear frames directory: \(error)")
             }
         }
     }
@@ -154,7 +155,7 @@ public class NRMASessionReplay: NSObject {
     func swizzleSendEvent() {
         DispatchQueue.once(token: "com.newrelic.swizzleSendEvent") {
             guard let clazz = objc_getClass("UIApplication") else {
-                NRLOG_DEBUG("ERROR: Unable to swizzle send event. Not able to track touches")
+                NRLOG_AGENT_DEBUG("ERROR: Unable to swizzle send event. Not able to track touches")
                 return
             }
             
@@ -188,7 +189,7 @@ public class NRMASessionReplay: NSObject {
     func takeFrame() {
         Task{
             guard let window = await getWindow() else {
-                NRLOG_DEBUG("No key window found while trying to take a frame")
+                NRLOG_AGENT_DEBUG("No key window found while trying to take a frame")
                 return
             }
             
@@ -199,20 +200,24 @@ public class NRMASessionReplay: NSObject {
     
     func addFrame(_ frame: SessionReplayFrame) {
         
-        rawFrames.append(frame)
-        
-        // BEGIN PROCESSING FRAME TO FILE
-        // Process frame to file
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        frameQueue.async { [weak self] in
             guard let self = self else { return }
+            self.rawFrames.append(frame)
             
-            self.processFrameToFile(frame)
+            // BEGIN PROCESSING FRAME TO FILE
+            // Process frame to file
+            DispatchQueue.global(qos: .background).async { [weak self] in
+                guard let self = self else { return }
+                
+                self.processFrameToFile(frame)
+                
+                // END PROCESSING FRAME TO FILE
+            }
             
-            // END PROCESSING FRAME TO FILE
-        }
-        
-        if recordingMode == .error {
-            pruneRawFrames()
+            if self.recordingMode == .error {
+                self.pruneRawFrames()
+            }
+            
         }
     }
     
@@ -220,7 +225,7 @@ public class NRMASessionReplay: NSObject {
     /// Maintains a fixed-size buffer with the most recent frames
     private func pruneRawFrames() {
         let beforeCount = rawFrames.count
-        NRLOG_DEBUG("🔄 [pruneRawFrames] Starting prune - Buffer count: \(beforeCount), Max allowed: \(maxBufferFrames)")
+        //NRLOG_AGENT_DEBUG("🔄 [pruneRawFrames] Starting prune - Buffer count: \(beforeCount), Max allowed: \(maxBufferFrames)")
         
         // Also ensure we don't keep frames older than the buffer duration
         let now = Date()
@@ -234,31 +239,31 @@ public class NRMASessionReplay: NSObject {
         let totalRemoved = beforeCount - afterCount
         
         if totalRemoved > 0 {
-            NRLOG_DEBUG("🔄 [pruneRawFrames] Removed \(totalRemoved) frames total (time-based: \(timeBasedRemoved)) - Buffer now: \(afterCount)")
+            //NRLOG_AGENT_DEBUG("🔄 [pruneRawFrames] Removed \(totalRemoved) frames total (time-based: \(timeBasedRemoved)) - Buffer now: \(afterCount)")
             if let oldestFrame = rawFrames.first, let newestFrame = rawFrames.last {
                 let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
-                NRLOG_DEBUG("🔄 [pruneRawFrames] Time span after prune: \(String(format: "%.2f", bufferSpan))s")
+              //  NRLOG_AGENT_DEBUG("🔄 [pruneRawFrames] Time span after prune: \(String(format: "%.2f", bufferSpan))s")
             }
         } else {
-            NRLOG_DEBUG("🔄 [pruneRawFrames] No frames removed - Buffer: \(afterCount)")
+            //NRLOG_AGENT_DEBUG("🔄 [pruneRawFrames] No frames removed - Buffer: \(afterCount)")
         }
     }
     
     func getAndClearFrames(clear: Bool = true) -> [SessionReplayFrame] {
-        NRLOG_DEBUG("📤 [getAndClearFrames] Called with clear=\(clear)")
-        NRLOG_DEBUG("📤 [getAndClearFrames] Current buffer count: \(rawFrames.count)")
+        //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Called with clear=\(clear)")
+        //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Current buffer count: \(rawFrames.count)")
         
         var frames = [SessionReplayFrame]()
         frames = self.rawFrames
         
         if frames.count > 0, let oldestFrame = frames.first, let newestFrame = frames.last {
             let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
-            NRLOG_DEBUG("📤 [getAndClearFrames] Returning \(frames.count) frames spanning \(String(format: "%.2f", bufferSpan))s")
-            NRLOG_DEBUG("📤 [getAndClearFrames] Frame range: \(oldestFrame.date) to \(newestFrame.date)")
+            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Returning \(frames.count) frames spanning \(String(format: "%.2f", bufferSpan))s")
+            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Frame range: \(oldestFrame.date) to \(newestFrame.date)")
         }
         
         if clear {
-            NRLOG_DEBUG("📤 [getAndClearFrames] Clearing buffer and files")
+            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Clearing buffer and files")
             self.rawFrames.removeAll()
             self.fullSnapshotFrameIndices.removeAll()
             
@@ -274,15 +279,15 @@ public class NRMASessionReplay: NSObject {
                 self.frameCounter = 0
                 self.uncompressedDataSize = 0
                 
-                NRLOG_DEBUG("📤 [getAndClearFrames] Resetting counters - frameCounter: \(oldFrameCounter)→0, uncompressedDataSize: \(oldUncompressedSize)→0")
+                //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Resetting counters - frameCounter: \(oldFrameCounter)→0, uncompressedDataSize: \(oldUncompressedSize)→0")
                 
                 // clear the frames directory
                 do {
                     try FileManager.default.removeItem(at: self.framesDirectory)
                     try FileManager.default.createDirectory(at: self.framesDirectory, withIntermediateDirectories: true)
-                    NRLOG_DEBUG("📤 [getAndClearFrames] ✅ Cleared frames directory")
+                    //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] ✅ Cleared frames directory")
                 } catch {
-                    NRLOG_DEBUG("📤 [getAndClearFrames] ❌ Failed to clear frames directory: \(error)")
+                    NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] ❌ Failed to clear frames directory: \(error)")
                 }
             }
         }
@@ -318,7 +323,10 @@ public class NRMASessionReplay: NSObject {
                 let metaEvent = MetaEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: metaEventData)
                 processedFrames.append(metaEvent)
             }
-            processedFrames.append(sessionReplayFrameProcessor.processFrame(frame))
+            let newFrame = sessionReplayFrameProcessor.processFrame(frame)
+            if let newFrame = newFrame {
+                processedFrames.append(newFrame)
+            }
         }
         
         return processedFrames
@@ -326,7 +334,7 @@ public class NRMASessionReplay: NSObject {
     
     func getSessionReplayTouches(clear: Bool = true) -> [IncrementalEvent] {
         guard let touchCapture = sessionReplayTouchCapture else {
-            NRLOG_DEBUG("sessionReplayTouchCapture is nil in getSessionReplayTouches")
+            NRLOG_AGENT_DEBUG("sessionReplayTouchCapture is nil in getSessionReplayTouches")
             return []
         }
         let touches = sessionReplayTouchProcessor.processTouches(touchCapture.touchEvents)
@@ -339,7 +347,7 @@ public class NRMASessionReplay: NSObject {
     // Get only touches that haven't been persisted yet for file persistence
     func getUnpersistedTouches() -> [IncrementalEvent] {
         guard let touchCapture = sessionReplayTouchCapture else {
-            NRLOG_DEBUG("sessionReplayTouchCapture is nil in getUnpersistedTouches")
+            NRLOG_AGENT_DEBUG("sessionReplayTouchCapture is nil in getUnpersistedTouches")
             return []
         }
         
@@ -357,22 +365,21 @@ public class NRMASessionReplay: NSObject {
     
     /// REPLAY PERSISTENCE
     
-    
     func processFrameToFile(_ frame: SessionReplayFrame) {
         
         
-        let beforeCount = rawFrames.count
+        //let beforeCount = rawFrames.count
         
-        //NRLOG_DEBUG("📹 [addFrame] Adding frame - Mode: \(recordingMode), Buffer size before: \(beforeCount)")
-        //NRLOG_DEBUG("📹 [addFrame] Frame timestamp: \(frame.date), Size: \(frame.size)")
+        //NRLOG_AGENT_DEBUG("📹 [addFrame] Adding frame - Mode: \(recordingMode), Buffer size before: \(beforeCount)")
+        //NRLOG_AGENT_DEBUG("📹 [addFrame] Frame timestamp: \(frame.date), Size: \(frame.size)")
         
         // Check if we need to force a full snapshot every 15 seconds
         if recordingMode == .error {
             checkAndForceFullSnapshot(for: frame)
         }
         
-        NRLOG_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
-        NRLOG_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
+        //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
+        //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
         
         // Fetch processed frame and only unpersisted touches
         let lastFrameSize = sessionReplayFrameProcessor.lastFullFrame?.size ?? .zero
@@ -380,13 +387,18 @@ public class NRMASessionReplay: NSObject {
         let processedFrame = self.sessionReplayFrameProcessor.processFrame(frame)
         let processedTouches = self.getUnpersistedTouches()
         
-                NRLOG_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
-        //        NRLOG_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
+        //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
+        //        NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
         
         guard let firstFrame = rawFrames.first else {
-            NRLOG_DEBUG("💾 [processFrameToFile] No frames in buffer, skipping")
+            NRLOG_AGENT_DEBUG("💾 [processFrameToFile] No frames in buffer, skipping")
             return
         }
+        
+        guard let processedFrame = processedFrame as? IncrementalEvent else {
+            return
+        }
+        
         let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000).rounded()
         let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
         
@@ -394,7 +406,7 @@ public class NRMASessionReplay: NSObject {
         
         // Only add meta event for first frame or when frame size changes
         if lastFrameSize != frame.size || isFullSnapshot {
-            NRLOG_DEBUG("💾 [processFrameToFile] Size change detected - Adding meta event")
+            NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Size change detected - Adding meta event")
             let metaEventData = RRWebMetaData(
                 href: "http://newrelic.com",
                 width: Int(frame.size.width),
@@ -410,7 +422,7 @@ public class NRMASessionReplay: NSObject {
             lhs.base.timestamp < rhs.base.timestamp
         }
         
-        //        NRLOG_DEBUG("💾 [processFrameToFile] Container events: \(container.count)")
+        //        NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Container events: \(container.count)")
         
         // Extract URL generation logic from createReplayUpload
         let encoder = JSONEncoder()
@@ -418,15 +430,15 @@ public class NRMASessionReplay: NSObject {
         
         // Encode container to get data size for URL generation
         guard let jsonData = try? encoder.encode(container) else {
-            NRLOG_DEBUG("💾 [processFrameToFile] ❌ Failed to encode events for URL generation")
+            NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ❌ Failed to encode events for URL generation")
             return
         }
         
         let beforeSize = uncompressedDataSize
         uncompressedDataSize += jsonData.count
         //
-        //        NRLOG_DEBUG("💾 [processFrameToFile] JSON data size: \(jsonData.count) bytes")
-        //        NRLOG_DEBUG("💾 [processFrameToFile] Cumulative uncompressed size: \(beforeSize) → \(uncompressedDataSize) bytes")
+        //        NRLOG_AGENT_DEBUG("💾 [processFrameToFile] JSON data size: \(jsonData.count) bytes")
+        //        NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Cumulative uncompressed size: \(beforeSize) → \(uncompressedDataSize) bytes")
         
         // BEGIN URL GENERATION
         // Generate upload URL that would be used if accumulated frames uploaded directly
@@ -437,12 +449,12 @@ public class NRMASessionReplay: NSObject {
             isFirstChunk: isFirstChunk,
             isGZipped: true
         ) else {
-            NRLOG_DEBUG("💾 [processFrameToFile] ❌ Failed to construct upload URL for session replay.")
+            NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ❌ Failed to construct upload URL for session replay.")
             return
         }
         // END URL GENERATION
         
-        //  NRLOG_DEBUG("💾 [processFrameToFile] Upload URL generated: \(uploadUrl.absoluteString)")
+        //  NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Upload URL generated: \(uploadUrl.absoluteString)")
         
         // Save frame data and URL separately
         let agent = NewRelicAgentInternal.sharedInstance()
@@ -456,7 +468,7 @@ public class NRMASessionReplay: NSObject {
             let frameURL = frameFolder.appendingPathComponent("frame_\(frameCounter).json")
             try jsonData.write(to: frameURL)
             
-            //NRLOG_DEBUG("💾 [processFrameToFile] ✅ Wrote frame_\(frameCounter).json (\(jsonData.count) bytes)")
+            //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Wrote frame_\(frameCounter).json (\(jsonData.count) bytes)")
             
             // Save/update URL separately
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
@@ -464,7 +476,7 @@ public class NRMASessionReplay: NSObject {
             // Track if this frame contains a full snapshot
             if isFullSnapshot {
                 fullSnapshotFrameIndices.insert(frameCounter)
-                NRLOG_DEBUG("💾 [processFrameToFile] ✅ Recorded full snapshot at frame \(frameCounter)")
+                //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Recorded full snapshot at frame \(frameCounter)")
             }
             
             // In Error mode, we need to track the file creation time for pruning
@@ -472,7 +484,7 @@ public class NRMASessionReplay: NSObject {
                 let attributes = [FileAttributeKey.creationDate: Date()]
                 try FileManager.default.setAttributes(attributes, ofItemAtPath: frameURL.path)
                 
-                NRLOG_DEBUG("💾 [processFrameToFile] Mode: ERROR - Checking if pruning needed")
+                //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Mode: ERROR - Checking if pruning needed")
                 // Prune old files if in ERROR mode
                 pruneBufferedFiles(in: frameFolder)
             }
@@ -481,12 +493,12 @@ public class NRMASessionReplay: NSObject {
             
             // Count files in directory
             if let fileCount = try? FileManager.default.contentsOfDirectory(at: frameFolder, includingPropertiesForKeys: nil).count {
-                NRLOG_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
+                //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
             }
             
-            NRLOG_DEBUG("💾 [processFrameToFile] ================================================")
+            //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ================================================")
         } catch {
-            NRLOG_DEBUG("💾 [processFrameToFile] ❌ Failed to append frame to filesystem: \(error)")
+            NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ❌ Failed to append frame to filesystem: \(error)")
         }
     }
     
@@ -505,36 +517,36 @@ public class NRMASessionReplay: NSObject {
         
         recordingMode = mode
         
-        NRLOG_DEBUG("🎬 [transistionToRecordingMode] ==================== MODE CHANGE ====================")
-        NRLOG_DEBUG("🎬 [transistionToRecordingMode] Old mode: \(oldMode) → New mode: \(mode)")
-        NRLOG_DEBUG("🎬 [transistionToRecordingMode] Buffer stats before transition:")
-        NRLOG_DEBUG("🎬 [transistionToRecordingMode]   - rawFrames count: \(bufferCountBefore)")
-        NRLOG_DEBUG("🎬 [transistionToRecordingMode]   - frameCounter: \(frameCounterBefore)")
-        NRLOG_DEBUG("🎬 [transistionToRecordingMode]   - uncompressedDataSize: \(uncompressedSizeBefore) bytes")
+        NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] ==================== MODE CHANGE ====================")
+        NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Old mode: \(oldMode) → New mode: \(mode)")
+        NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Buffer stats before transition:")
+        NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode]   - rawFrames count: \(bufferCountBefore)")
+        NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode]   - frameCounter: \(frameCounterBefore)")
+        NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode]   - uncompressedDataSize: \(uncompressedSizeBefore) bytes")
         
         if bufferCountBefore > 0, let oldestFrame = rawFrames.first, let newestFrame = rawFrames.last {
             let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
-            NRLOG_DEBUG("🎬 [transistionToRecordingMode]   - Buffer time span: \(String(format: "%.2f", bufferSpan))s")
-            NRLOG_DEBUG("🎬 [transistionToRecordingMode]   - Oldest frame: \(oldestFrame.date)")
-            NRLOG_DEBUG("🎬 [transistionToRecordingMode]   - Newest frame: \(newestFrame.date)")
+            NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode]   - Buffer time span: \(String(format: "%.2f", bufferSpan))s")
+            NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode]   - Oldest frame: \(oldestFrame.date)")
+            NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode]   - Newest frame: \(newestFrame.date)")
         }
         
         // Clear buffers when transitioning modes
         if mode == .off {
-            NRLOG_DEBUG("🎬 [transistionToRecordingMode] Transitioning to OFF - Clearing snapshots")
+            NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Transitioning to OFF - Clearing snapshots")
             lastFullSnapshotTime = nil
         }
         else if mode == .error {
             // When entering error mode, clear any existing frames
-            NRLOG_DEBUG("🎬 [transistionToRecordingMode] Transitioning to ERROR mode - Setting snapshot time")
+            NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Transitioning to ERROR mode - Setting snapshot time")
             lastFullSnapshotTime = Date()
-            NRLOG_DEBUG("🎬 [transistionToRecordingMode] Buffer duration: \(errorModeBufferDuration)s, Full snapshot interval: \(fullSnapshotInterval)s")
+            NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Buffer duration: \(errorModeBufferDuration)s, Full snapshot interval: \(fullSnapshotInterval)s")
         }
         else if mode == .full {
-            NRLOG_DEBUG("🎬 [transistionToRecordingMode] Transitioning to FULL mode")
+            NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Transitioning to FULL mode")
         }
         
-        NRLOG_DEBUG("🎬 [transistionToRecordingMode] ====================================================")
+        NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] ====================================================")
     }
     
     /// Transitions from error mode to full mode when an error is detected
@@ -545,15 +557,15 @@ public class NRMASessionReplay: NSObject {
         
         
         let bufferCount = rawFrames.count
-        NRLOG_DEBUG("🚨 [transitionToFullModeOnError] ==================== ERROR DETECTED ====================")
-        NRLOG_DEBUG("🚨 [transitionToFullModeOnError]   - rawFrames count: \(bufferCount)")
-        NRLOG_DEBUG("🚨 [transitionToFullModeOnError]   - frameCounter: \(frameCounter)")
-        NRLOG_DEBUG("🚨 [transitionToFullModeOnError]   - uncompressedDataSize: \(uncompressedDataSize) bytes")
+        NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] ==================== ERROR DETECTED ====================")
+        NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError]   - rawFrames count: \(bufferCount)")
+        NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError]   - frameCounter: \(frameCounter)")
+        NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError]   - uncompressedDataSize: \(uncompressedDataSize) bytes")
         
         if bufferCount > 0, let oldestFrame = rawFrames.first, let newestFrame = rawFrames.last {
             let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
-            NRLOG_DEBUG("🚨 [transitionToFullModeOnError]   - Buffer time span: \(String(format: "%.2f", bufferSpan))s")
-            NRLOG_DEBUG("🚨 [transitionToFullModeOnError]   - Frames will be uploaded from error buffer")
+            NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError]   - Buffer time span: \(String(format: "%.2f", bufferSpan))s")
+            NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError]   - Frames will be uploaded from error buffer")
         }
         
         // Transition to full mode
@@ -561,8 +573,8 @@ public class NRMASessionReplay: NSObject {
         
         // Force next frame to be a full snapshot for clean transition
         sessionReplayFrameProcessor.takeFullSnapshotNext = true
-        NRLOG_DEBUG("🚨 [transitionToFullModeOnError] Next frame will be a full snapshot")
-        NRLOG_DEBUG("🚨 [transitionToFullModeOnError] =========================================================")
+        NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] Next frame will be a full snapshot")
+        NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] =========================================================")
     }
     
     /// Checks if a full snapshot should be forced (every 15 seconds)
@@ -573,17 +585,17 @@ public class NRMASessionReplay: NSObject {
         defer { bufferLock.unlock() }
         
         guard let lastSnapshot = lastFullSnapshotTime else {
-            NRLOG_DEBUG("📸 [checkAndForceFullSnapshot] First snapshot - forcing full snapshot")
+            NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] First snapshot - forcing full snapshot")
             lastFullSnapshotTime = frame.date
             sessionReplayFrameProcessor.takeFullSnapshotNext = true
             return
         }
         
         let timeSinceLastSnapshot = frame.date.timeIntervalSince(lastSnapshot)
-        //NRLOG_DEBUG("📸 [checkAndForceFullSnapshot] Time since last snapshot: \(String(format: "%.2f", timeSinceLastSnapshot))s / \(fullSnapshotInterval)s")
+        //NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] Time since last snapshot: \(String(format: "%.2f", timeSinceLastSnapshot))s / \(fullSnapshotInterval)s")
         
         if timeSinceLastSnapshot >= fullSnapshotInterval {
-            NRLOG_DEBUG("📸 [checkAndForceFullSnapshot] ✅ Forcing full snapshot after \(String(format: "%.2f", timeSinceLastSnapshot))s")
+            NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] ✅ Forcing full snapshot after \(String(format: "%.2f", timeSinceLastSnapshot))s")
             sessionReplayFrameProcessor.takeFullSnapshotNext = true
             lastFullSnapshotTime = frame.date
         }
@@ -662,7 +674,7 @@ public class NRMASessionReplay: NSObject {
             if fileInfos.count <= minFrameCount {
                 // Not enough files to prune, keep all
                 filesToKeep = fileInfos
-                 NRLOG_DEBUG("🗑️ [pruneBufferedFiles] Only \(fileInfos.count) files - keeping all")
+                 //NRLOG_AGENT_DEBUG("🗑️ [pruneBufferedFiles] Only \(fileInfos.count) files - keeping all")
             }
             else {
                 // Find the most recent full snapshot that allows keeping 14-15 frames
@@ -691,14 +703,14 @@ public class NRMASessionReplay: NSObject {
                     // Keep from the full snapshot onwards
                     filesToKeep = Array(fileInfos[snapshotIndex...])
                     filesToDelete = Array(fileInfos[0..<snapshotIndex])
-                    NRLOG_DEBUG("🗑️ [pruneBufferedFiles] Full snapshot at frame_\(fileInfos[snapshotIndex].frameIndex) - keeping \(filesToKeep.count) frames")
+                    //NRLOG_AGENT_DEBUG("🗑️ [pruneBufferedFiles] Full snapshot at frame_\(fileInfos[snapshotIndex].frameIndex) - keeping \(filesToKeep.count) frames")
                 }
                 else {
                     // No full snapshot found - keep most recent 14 frames
                     let keepStartIndex = max(0, fileInfos.count - minFrameCount)
                     filesToKeep = Array(fileInfos[keepStartIndex...])
                     filesToDelete = Array(fileInfos[0..<keepStartIndex])
-                     NRLOG_DEBUG("🗑️ [pruneBufferedFiles] ⚠️ No full snapshot - keeping \(filesToKeep.count) most recent frames")
+                     //NRLOG_AGENT_DEBUG("🗑️ [pruneBufferedFiles] ⚠️ No full snapshot - keeping \(filesToKeep.count) most recent frames")
                 }
             }
             
@@ -711,11 +723,11 @@ public class NRMASessionReplay: NSObject {
                 fullSnapshotFrameIndices.remove(fileInfo.frameIndex) // Clean up tracking
                 prunedCount += 1
                 prunedSize += fileInfo.size
-                NRLOG_DEBUG("🗑️ [pruneBufferedFiles]   ❌ Removed frame_\(fileInfo.frameIndex)")
+                //NRLOG_AGENT_DEBUG("🗑️ [pruneBufferedFiles]   ❌ Removed frame_\(fileInfo.frameIndex)")
             }
         }
         catch {
-            NRLOG_DEBUG("🗑️ [pruneBufferedFiles] ❌ Failed to prune buffered files: \(error)")
+            NRLOG_AGENT_DEBUG("🗑️ [pruneBufferedFiles] ❌ Failed to prune buffered files: \(error)")
         }
     }
     

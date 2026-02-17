@@ -68,13 +68,20 @@ struct SwiftUIContentView: View {
                     }
                     NavigationLink(destination: ShapesView()) {
                         Text("Shapes")
-                        
+
+                    }
+                    NavigationLink(destination: DrawingsView()) {
+                        Text("Canvas Drawings")
+
                     }
                     NavigationLink(destination: InfiniteImageCollectionView()) {
                         Text("Infinite Images")
                     }
                     NavigationLink(destination: SocialMediaFeedView()) {
                         Text("Social Media Feed")
+                    }
+                    NavigationLink(destination: AttributedTextView()) {
+                        Text("Attributed Text")
                     }
                 }
                 .navigationBarTitle("SwiftUI Elements")
