@@ -141,6 +141,15 @@
 		F8BF14882F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */; };
 		F8BF14892F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */; };
 		F8BF14A42F35345500EF5628 /* AttributedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14A32F35345500EF5628 /* AttributedTextView.swift */; };
+		F8BF16382F3F6D9F00EF5628 /* ClaimFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162A2F3F6D9F00EF5628 /* ClaimFormView.swift */; };
+		F8BF16392F3F6D9F00EF5628 /* MUIToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16302F3F6D9F00EF5628 /* MUIToken.swift */; };
+		F8BF163A2F3F6D9F00EF5628 /* HomeProfileCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162E2F3F6D9F00EF5628 /* HomeProfileCardView.swift */; };
+		F8BF163B2F3F6D9F00EF5628 /* ExpenseEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162D2F3F6D9F00EF5628 /* ExpenseEntryView.swift */; };
+		F8BF163E2F3F6D9F00EF5628 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16292F3F6D9F00EF5628 /* ChatView.swift */; };
+		F8BF163F2F3F6D9F00EF5628 /* ConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162B2F3F6D9F00EF5628 /* ConfirmationView.swift */; };
+		F8BF16412F3F6D9F00EF5628 /* ProviderSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */; };
+		F8BF16432F3F6D9F00EF5628 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16342F3F6D9F00EF5628 /* Views.swift */; };
+		F8BF16442F3F6D9F00EF5628 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162F2F3F6D9F00EF5628 /* model.swift */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
 		F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
@@ -418,6 +427,15 @@
 		F8BF14352F3268E900EF5628 /* DrawingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingsView.swift; sourceTree = "<group>"; };
 		F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedTextTestViewController.swift; sourceTree = "<group>"; };
 		F8BF14A32F35345500EF5628 /* AttributedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedTextView.swift; sourceTree = "<group>"; };
+		F8BF16292F3F6D9F00EF5628 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		F8BF162A2F3F6D9F00EF5628 /* ClaimFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimFormView.swift; sourceTree = "<group>"; };
+		F8BF162B2F3F6D9F00EF5628 /* ConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfirmationView.swift; sourceTree = "<group>"; };
+		F8BF162D2F3F6D9F00EF5628 /* ExpenseEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseEntryView.swift; sourceTree = "<group>"; };
+		F8BF162E2F3F6D9F00EF5628 /* HomeProfileCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeProfileCardView.swift; sourceTree = "<group>"; };
+		F8BF162F2F3F6D9F00EF5628 /* model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = model.swift; sourceTree = "<group>"; };
+		F8BF16302F3F6D9F00EF5628 /* MUIToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MUIToken.swift; sourceTree = "<group>"; };
+		F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSearchView.swift; sourceTree = "<group>"; };
+		F8BF16342F3F6D9F00EF5628 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
@@ -487,6 +505,7 @@
 			isa = PBXGroup;
 			children = (
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
+				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
 				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
 				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
 				F8BF14352F3268E900EF5628 /* DrawingsView.swift */,
@@ -763,6 +782,22 @@
 				F824A30129A811E8000886A6 /* Assets.xcassets */,
 			);
 			path = "NRTestApp (tvOS)";
+			sourceTree = "<group>";
+		};
+		F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */ = {
+			isa = PBXGroup;
+			children = (
+				F8BF16292F3F6D9F00EF5628 /* ChatView.swift */,
+				F8BF162A2F3F6D9F00EF5628 /* ClaimFormView.swift */,
+				F8BF162B2F3F6D9F00EF5628 /* ConfirmationView.swift */,
+				F8BF162D2F3F6D9F00EF5628 /* ExpenseEntryView.swift */,
+				F8BF162E2F3F6D9F00EF5628 /* HomeProfileCardView.swift */,
+				F8BF162F2F3F6D9F00EF5628 /* model.swift */,
+				F8BF16302F3F6D9F00EF5628 /* MUIToken.swift */,
+				F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */,
+				F8BF16342F3F6D9F00EF5628 /* Views.swift */,
+			);
+			path = NewRelicSessionReplay;
 			sourceTree = "<group>";
 		};
 		F8F5D8212BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests */ = {
@@ -1228,6 +1263,15 @@
 				2BAE5C972E860C7D001D2B88 /* DatePickersView.swift in Sources */,
 				2BAE5C982E860C7D001D2B88 /* ButtonsView.swift in Sources */,
 				2BAE5C992E860C7D001D2B88 /* SteppersView.swift in Sources */,
+				F8BF16382F3F6D9F00EF5628 /* ClaimFormView.swift in Sources */,
+				F8BF16392F3F6D9F00EF5628 /* MUIToken.swift in Sources */,
+				F8BF163A2F3F6D9F00EF5628 /* HomeProfileCardView.swift in Sources */,
+				F8BF163B2F3F6D9F00EF5628 /* ExpenseEntryView.swift in Sources */,
+				F8BF163E2F3F6D9F00EF5628 /* ChatView.swift in Sources */,
+				F8BF163F2F3F6D9F00EF5628 /* ConfirmationView.swift in Sources */,
+				F8BF16412F3F6D9F00EF5628 /* ProviderSearchView.swift in Sources */,
+				F8BF16432F3F6D9F00EF5628 /* Views.swift in Sources */,
+				F8BF16442F3F6D9F00EF5628 /* model.swift in Sources */,
 				2BAE5C9A2E860C7D001D2B88 /* ScrollViewsView.swift in Sources */,
 				F8BF14882F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */,
 				2BAE5C9B2E860C7D001D2B88 /* SlidersView.swift in Sources */,
