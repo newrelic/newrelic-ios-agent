@@ -81,7 +81,7 @@ public class SessionReplayManager: NSObject {
                 // The currentMode update to .FULL will stop the pruning in processFrameToFile.
                 self.sessionReplayMode = .full
                 
-                NRLOG_DEBUG("Error detected - transitioning session replay to full mode")
+                NRLOG_AGENT_DEBUG("Error detected - transitioning session replay to full mode")
                 sessionReplay.transitionToFullModeOnError()
             }
         }
@@ -104,7 +104,7 @@ public class SessionReplayManager: NSObject {
             
             
             guard !isRunning() else {
-                NRLOG_DEBUG("Session replay harvest timer attempting to start while already running.")
+                NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to start while already running.")
                 return
             }
             
@@ -113,7 +113,7 @@ public class SessionReplayManager: NSObject {
             
             self.isManuallyRecording = fromManual
             
-            NRLOG_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
+            NRLOG_AGENT_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
             self.sessionReplayTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(self.sessionReplayTick), userInfo: nil, repeats: true)
             
             RunLoop.current.add(self.sessionReplayTimer!, forMode: .default)
@@ -124,7 +124,7 @@ public class SessionReplayManager: NSObject {
     public func stop() {
         let stopBlock = { [self] in
             guard isRunning() else {
-                NRLOG_DEBUG("Session replay harvest timer attempting to stop when not running.")
+                NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to stop when not running.")
                 return
             }
             
@@ -132,7 +132,7 @@ public class SessionReplayManager: NSObject {
             sessionReplayTimer?.invalidate()
             sessionReplayTimer = nil
             
-            NRLOG_DEBUG("Session replay has shut down and is no longer running.")
+            NRLOG_AGENT_DEBUG("Session replay has shut down and is no longer running.")
         }
         
         // If we're already on the sessionReplayQueue, execute immediately
@@ -165,13 +165,13 @@ public class SessionReplayManager: NSObject {
         return sessionReplayQueue.sync {
             
             if isRunning() {
-                NRLOG_DEBUG("Attempted to manually start session replay but it is already recording")
+                NRLOG_AGENT_DEBUG("Attempted to manually start session replay but it is already recording")
                 return false
             }
             
             start(fromManual: true, with: .full)
             
-            NRLOG_DEBUG("Session replay started via manual recordReplay() API")
+            NRLOG_AGENT_DEBUG("Session replay started via manual recordReplay() API")
             return true
         }
     }
@@ -182,13 +182,14 @@ public class SessionReplayManager: NSObject {
             isManuallyRecording = false
             
             if !isRunning() {
-                NRLOG_DEBUG("Attempted to pause session replay but it is not currently recording")
+                NRLOG_AGENT_DEBUG("Attempted to pause session replay but it is not currently recording")
                 return false
             }
             
             stop()
             harvest()
-            NRLOG_DEBUG("Session replay paused via manual pauseReplay() API")
+            sessionReplayMode = .off
+            NRLOG_AGENT_DEBUG("Session replay paused via manual pauseReplay() API")
             return true
         }
     }
@@ -208,7 +209,7 @@ public class SessionReplayManager: NSObject {
             (NewRelicAgentInternal.sharedInstance() != nil &&
              NewRelicAgentInternal.sharedInstance()?.isSessionReplayEnabled() ?? false == false)
         {
-            NRLOG_DEBUG("Session replay harvest timer stopping because New Relic agent is not started.")
+            NRLOG_AGENT_DEBUG("Session replay harvest timer stopping because New Relic agent is not started.")
             stop()
             return
         }
@@ -236,8 +237,13 @@ public class SessionReplayManager: NSObject {
             self.harvestseconds = 0
         }
         
+        if sessionReplayMode == .off {
+            NRLOG_AGENT_DEBUG("Skipping harvest in off mode.")
+            return
+        }
+        
         if sessionReplayMode == .error {
-            NRLOG_DEBUG("Skipping harvest in ERROR mode.")
+            NRLOG_AGENT_DEBUG("Skipping harvest in ERROR mode.")
             return
         }
         
@@ -245,7 +251,7 @@ public class SessionReplayManager: NSObject {
         let touches = self.sessionReplay.getSessionReplayTouches()
         
         if frames.isEmpty && touches.isEmpty {
-            NRLOG_DEBUG("No session replay frames or touches to harvest.")
+            NRLOG_AGENT_DEBUG("No session replay frames or touches to harvest.")
             return
         }
         
@@ -278,10 +284,10 @@ public class SessionReplayManager: NSObject {
         do {
             jsonData = try encoder.encode(container)
 //            if let jsonString = String(data: jsonData, encoding: .utf8) {
-//                NRLOG_DEBUG(jsonString)
+//                NRLOG_AGENT_DEBUG(jsonString)
 //            }
         } catch {
-            NRLOG_DEBUG("Failed to encode session replay events to JSON: \(error)")
+            NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil
         }
         
@@ -291,7 +297,7 @@ public class SessionReplayManager: NSObject {
             let gzippedData = try jsonData.gzipped()
             jsonData = gzippedData
         } catch {
-            NRLOG_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
+            NRLOG_AGENT_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
         }
         
         // Construct upload URL
@@ -302,11 +308,11 @@ public class SessionReplayManager: NSObject {
             isFirstChunk: self.sessionReplay.isFirstChunk,
             isGZipped: jsonData.isGzipped
         ) else {
-            NRLOG_DEBUG("Failed to construct upload URL for session replay.")
+            NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
             return nil
         }
         
-        // NRLOG_DEBUG(url.absoluteString)
+        // NRLOG_AGENT_DEBUG(url.absoluteString)
         
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
     }
@@ -316,10 +322,10 @@ public class SessionReplayManager: NSObject {
     public func checkForPreviousSessionFiles() {
         sessionReplayQueue.async { [self] in
             // CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS
-            NRLOG_DEBUG("CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS")
+            NRLOG_AGENT_DEBUG("CHECK FOR MSR DIRECTORIES FROM PREVIOUSLY CRASHED SESSIONS")
             
             guard let sessionReplayDirectory = getSessionReplayDirectory() else {
-                NRLOG_DEBUG("Could not access session replay directory")
+                NRLOG_AGENT_DEBUG("Could not access session replay directory")
                 return
             }
             
@@ -334,7 +340,7 @@ public class SessionReplayManager: NSObject {
                     }
                     return nil
                 })
-                NRLOG_DEBUG("MSR DIRECTORIES FOUND \(sessionIds)")
+                NRLOG_AGENT_DEBUG("MSR DIRECTORIES FOUND \(sessionIds)")
                 
                 // Process each session
                 for sessionId in sessionIds {
@@ -343,7 +349,7 @@ public class SessionReplayManager: NSObject {
                 
             }
             catch {
-                NRLOG_DEBUG("Failed to read session replay directory: \(error)")
+                NRLOG_AGENT_DEBUG("Failed to read session replay directory: \(error)")
             }
         }
     }
@@ -352,13 +358,13 @@ public class SessionReplayManager: NSObject {
         let urlFile = directory.appendingPathComponent("\(sessionId)_upload_url.txt")
         
         do {
-            NRLOG_DEBUG("Processing session replay for session ID: \(sessionId)")
+            NRLOG_AGENT_DEBUG("Processing session replay for session ID: \(sessionId)")
             
             // BEGIN URL CONSTRUCTION
             
             guard let urlString = try? String(contentsOf: urlFile),
                   let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-                NRLOG_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
+                NRLOG_AGENT_DEBUG("No valid URL found for session replay file with session ID: \(sessionId)")
                 return
             }
             //NRLOG_AGENT_DEBUG(url.absoluteString)
@@ -370,7 +376,7 @@ public class SessionReplayManager: NSObject {
             // Find all frame files for this session
             let sessionDirectory = directory.appendingPathComponent(sessionId)
             guard FileManager.default.fileExists(atPath: sessionDirectory.path) else {
-                NRLOG_DEBUG("Session directory not found for session ID: \(sessionId)")
+                NRLOG_AGENT_DEBUG("Session directory not found for session ID: \(sessionId)")
                 return
             }
             
@@ -387,7 +393,7 @@ public class SessionReplayManager: NSObject {
                 }
             
             if frameFiles.isEmpty {
-                NRLOG_DEBUG("No frame files found for session ID: \(sessionId)")
+                NRLOG_AGENT_DEBUG("No frame files found for session ID: \(sessionId)")
                 try? FileManager.default.removeItem(at: urlFile)
                 try? FileManager.default.removeItem(at: sessionDirectory)
                 return
@@ -416,7 +422,7 @@ public class SessionReplayManager: NSObject {
                                 // Check if any frame in this file is a full snapshot (type = 2)
                                 let hasFullFrame = jsonArray.contains { frame in
                                     if let type = frame["type"] as? Int {
-                                        //NRLOG_DEBUG("Frame type found: \(type) in file \(frameFile.lastPathComponent)")
+                                        //NRLOG_AGENT_DEBUG("Frame type found: \(type) in file \(frameFile.lastPathComponent)")
                                         
                                         return type == 2 //  fullSnapshot
 
@@ -428,10 +434,10 @@ public class SessionReplayManager: NSObject {
                                     foundFirstFullFrame = true
                                     frameContents.append(frameContentWithOuterBracketsRemoved)
                                 } else {
-                                    NRLOG_DEBUG("Skipping frame file \(frameFile.lastPathComponent) - no full snapshot found yet")
+                                    NRLOG_AGENT_DEBUG("Skipping frame file \(frameFile.lastPathComponent) - no full snapshot found yet")
                                 }
                             } else {
-                                NRLOG_DEBUG("Failed to parse frame file \(frameFile.lastPathComponent) to check type")
+                                NRLOG_AGENT_DEBUG("Failed to parse frame file \(frameFile.lastPathComponent) to check type")
                             }
                         } else {
                             // We've found a full frame, include all subsequent frames
@@ -439,15 +445,15 @@ public class SessionReplayManager: NSObject {
                         }
                     }
                 } catch {
-                    NRLOG_DEBUG("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
+                    NRLOG_AGENT_DEBUG("Failed to read frame file \(frameFile.lastPathComponent): \(error)")
                 }
             }
             
             if frameContents.isEmpty {
                 if !foundFirstFullFrame {
-                    NRLOG_DEBUG("No full snapshot frame found for session ID: \(sessionId)")
+                    NRLOG_AGENT_DEBUG("No full snapshot frame found for session ID: \(sessionId)")
                 } else {
-                    NRLOG_DEBUG("No valid frame content found for session ID: \(sessionId)")
+                    NRLOG_AGENT_DEBUG("No valid frame content found for session ID: \(sessionId)")
                 }
                 try FileManager.default.removeItem(at: sessionDirectory)
                 try? FileManager.default.removeItem(at: urlFile)
@@ -459,11 +465,11 @@ public class SessionReplayManager: NSObject {
             let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
             
             guard let jsonData = jsonArrayString.data(using: .utf8) else {
-                NRLOG_DEBUG("Failed to convert JSON string to data for session ID: \(sessionId)")
+                NRLOG_AGENT_DEBUG("Failed to convert JSON string to data for session ID: \(sessionId)")
                 return
             }
             //if let jsonString = String(data: jsonData, encoding: .utf8) {
-            //    NRLOG_DEBUG(jsonString)
+            //    NRLOG_AGENT_DEBUG(jsonString)
             //\
             //}
             
@@ -474,19 +480,19 @@ public class SessionReplayManager: NSObject {
                 let gzippedData = try jsonData.gzipped()
                 finalData = gzippedData
             } catch {
-                NRLOG_DEBUG("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
+                NRLOG_AGENT_DEBUG("Failed to gzip session replay data for session ID \(sessionId): \(error.localizedDescription)")
             }
             
             let upload = SessionReplayData(sessionReplayFramesData: finalData, url: url)
             sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
-            NRLOG_DEBUG("Enqueued previous session replay for session ID: \(sessionId)")
+            NRLOG_AGENT_DEBUG("Enqueued previous session replay for session ID: \(sessionId)")
             
             // Remove processed files
             try FileManager.default.removeItem(at: sessionDirectory)
             try? FileManager.default.removeItem(at: urlFile)
             
         } catch {
-            NRLOG_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
+            NRLOG_AGENT_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
         }
     }
     

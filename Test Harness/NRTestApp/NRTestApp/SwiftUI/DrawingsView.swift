@@ -6,6 +6,8 @@ struct DrawingsView: View {
 
     var body: some View {
         ScrollView {
+            MUIToken.Design.pageContainerInverse.ignoresSafeArea(edges: .top)
+
             VStack(spacing: 20) {
                 Text("Canvas Drawings")
                     .font(.title)
@@ -92,6 +94,7 @@ struct DrawingsView: View {
             }
             .padding()
         }
+        .background(Color(red: 240/255, green: 245/255, blue: 250/255))
         .navigationBarTitle("Canvas Drawings", displayMode: .inline)
     }
 
