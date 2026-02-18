@@ -122,9 +122,12 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     @synchronized (events) {
         [events removeAllObjects];
         [_persistentStore clearAll];
-        oldestEventTimestamp = 0;
         totalAttemptedInserts = 0;
     }
+}
+
+- (void)resetTimestamp {
+    oldestEventTimestamp = 0;
 }
 
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents {

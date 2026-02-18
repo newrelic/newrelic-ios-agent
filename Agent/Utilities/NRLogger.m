@@ -335,7 +335,7 @@ withTimestamp:(NSNumber *) timestamp {
     if (NRSessionId) [commonAttributes setObject:NRSessionId forKey:NRLogMessageSessionIdKey];
     [commonAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey];
     if (name) [commonAttributes setObject:name forKey:NRLogMessageInstrumentationNameKey];
-    [commonAttributes setObject:[NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion forKey:NRLogMessageInstrumentationVersionKey];
+    [commonAttributes setObject:[NRMAAgentConfiguration connectionInformation].deviceInformation.platformVersion ?: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion forKey:NRLogMessageInstrumentationVersionKey];
     if (nativePlatform) [commonAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey];
     if (nrAppId) [commonAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey];
 
