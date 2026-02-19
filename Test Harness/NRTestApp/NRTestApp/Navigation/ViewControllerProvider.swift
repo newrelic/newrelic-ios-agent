@@ -60,5 +60,10 @@ enum ViewControllerProvider {
         let viewController = AttributedTextTestViewController()
         return viewController
     }
+
+    static var urlCacheTestViewController: URLCacheTestViewController {
+        let viewController = URLCacheTestViewController()
+        return viewController
+    }
 }
 

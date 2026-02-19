@@ -250,6 +250,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
 
+        options.append(UtilOption(title: "URL Cache Test", handler: { [self] in urlCacheTestAction()}))
+
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
@@ -312,6 +314,10 @@ class ViewController: UIViewController {
 
     func attributedTextTestAction() {
         coordinator?.showAttributedTextTestViewController()
+    }
+
+    func urlCacheTestAction() {
+        coordinator?.showURLCacheTestViewController()
     }
 
     func makeButton(title: String) -> UIButton {

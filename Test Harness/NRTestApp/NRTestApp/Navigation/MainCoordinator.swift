@@ -133,4 +133,9 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(attributedTextTestViewController, animated: true)
     }
 
+    func showURLCacheTestViewController() {
+        let urlCacheTestViewController = ViewControllerProvider.urlCacheTestViewController
+        navigationController.pushViewController(urlCacheTestViewController, animated: true)
+    }
+
 }
