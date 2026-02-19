@@ -166,9 +166,25 @@ public class SessionReplayReporter: NSObject {
             "replay.lastTimestamp": String(Int(lastTimestamp)),
             "appVersion": appVersion,
             "instrumentation.provider": "mobile",
-            "instrumentation.name": NewRelicInternalUtils.osName(),
-            "instrumentation.version": NewRelicInternalUtils.agentVersion(),
-            "collector.name": NewRelicInternalUtils.osName()
+            "instrumentation.name": {
+                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
+                      let deviceInfo = connectionInfo.deviceInformation else {
+                    return NewRelicInternalUtils.agentName()
+                }
+                let platform = deviceInfo.platform
+                return platform.rawValue == 0 // NRMAPlatform_Native
+                    ? NewRelicInternalUtils.agentName()
+                    : NewRelicInternalUtils.string(from: platform)
+            }(),
+            "instrumentation.version": {
+                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
+                      let deviceInfo = connectionInfo.deviceInformation,
+                      let platformVersion = deviceInfo.platformVersion as String? else {
+                    return NewRelicInternalUtils.agentVersion()
+                }
+                return platformVersion
+            }(),
+            "collector.name": NewRelicInternalUtils.agentName()
         ]
         if isGZipped {
             attributes["content_encoding"] = "gzip"

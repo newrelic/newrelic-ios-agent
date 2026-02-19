@@ -1127,10 +1127,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if([NRMAFlags shouldEnableNewEventSystem]){
         [_sessionAttributeManager removeAllSessionAttributes];
         [_eventManager empty];
+        [_eventManager resetTimestamp];
     } else {
         try {
             _analyticsController->clearAttributesDuplicationStore();
             _analyticsController->clearEventsDuplicationStore();
+            _analyticsController->resetEventTimestamp();
         } catch (std::exception& e) {
             NRLOG_AGENT_VERBOSE(@"Failed to clear last sessions' analytcs, %s",e.what());
         } catch (...) {

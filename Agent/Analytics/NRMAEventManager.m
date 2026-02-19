@@ -18,6 +18,7 @@ static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 60; // 60 seconds
 static const NSUInteger kMinBufferTimeSeconds = 60; // 60 seconds
 static const NSUInteger kBufferTimeSecondsLeeway = 60; // 60 seconds
+static const double kMillisecondsPerSecond = 1000.0; // milliseconds to seconds conversion
 
 // Event Key Format String: TimeStamp|SessionElapsedTime|EventType
 static NSString* const eventKeyFormat = @"%f|%f|%@";
@@ -74,9 +75,9 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     if(oldestEventTimestamp == 0) {
         return false;
     }
-    
+
     NSTimeInterval oldestEventAge = currentTimeMilliseconds - oldestEventTimestamp;
-    return (oldestEventAge / kDefaultBufferSize) + kBufferTimeSecondsLeeway >= maxBufferTimeSeconds;
+    return (oldestEventAge / kMillisecondsPerSecond) + kBufferTimeSecondsLeeway >= maxBufferTimeSeconds;
 }
 
 - (NSUInteger)getEvictionIndex {
@@ -122,9 +123,12 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     @synchronized (events) {
         [events removeAllObjects];
         [_persistentStore clearAll];
-        oldestEventTimestamp = 0;
         totalAttemptedInserts = 0;
     }
+}
+
+- (void)resetTimestamp {
+    oldestEventTimestamp = 0;
 }
 
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents {
