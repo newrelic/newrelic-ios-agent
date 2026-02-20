@@ -103,6 +103,20 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
+    
+    func showSwiftUICustomerView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            if #available(iOS 16.0, *) {
+                let swiftUIView = ClaimFormView()
+                let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+                navigationController.pushViewController(swiftUIViewController, animated: true)
+            } else {
+                // Fallback on earlier versions
+            }
+        }
+#endif
+    }
 
     func showSwiftUIViewRepresentableTestView() {
 #if os(iOS)
@@ -113,5 +127,10 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
-        
+
+    func showAttributedTextTestViewController() {
+        let attributedTextTestViewController = ViewControllerProvider.attributedTextTestViewController
+        navigationController.pushViewController(attributedTextTestViewController, animated: true)
+    }
+
 }

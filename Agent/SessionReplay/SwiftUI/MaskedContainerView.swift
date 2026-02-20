@@ -8,7 +8,6 @@
 
 import SwiftUI
 
-@available(iOS 16, *)
 struct MaskedContainerView<Content: View>: View {
     let inputEnv: EnvironmentValues
     let content: () -> Content

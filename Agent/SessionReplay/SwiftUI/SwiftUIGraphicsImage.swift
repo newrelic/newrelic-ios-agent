@@ -44,9 +44,25 @@ extension SwiftUIGraphicsImage: XrayConvertible {
         // Defer mask resolution into a closure for clearer branching.
         maskClr = {
             if #available(iOS 26, tvOS 26, *) {
-                return xray
-                    .childIfPresent(type: Color._ResHighDef.self, "maskColor")?
-                    .base
+                // Try to extract maskColor using reflection
+                if let maskColorChild = xray.childIfPresent("maskColor") {
+                    let maskDecoder = XrayDecoder(subject: maskColorChild)
+                    if let baseChild = maskDecoder.childIfPresent(SwiftUIConstants.basePath) {
+                        // iOS 26+ ResolvedHDR structure
+                        let baseDecoder = XrayDecoder(subject: baseChild)
+                        if let red: Float = try? baseDecoder.extract(SwiftUIConstants.linearRedPath),
+                           let green: Float = try? baseDecoder.extract(SwiftUIConstants.linearGreenPath),
+                           let blue: Float = try? baseDecoder.extract(SwiftUIConstants.linearBluePath),
+                           let opacity: Float = try? baseDecoder.extract(SwiftUIConstants.opacityPath) {
+                            return Color._ResFoundColor(linearRed: red, linearGreen: green, linearBlue: blue, opacity: opacity)
+                        }
+                    }
+                }
+                // Fallback to legacy type
+                if let legacy = xray.childIfPresent(type: Color._ResHighDef.self, "maskColor") {
+                    return legacy.base
+                }
+                return nil
             } else {
                 return xray.childIfPresent("maskColor")
             }
