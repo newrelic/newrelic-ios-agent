@@ -13,4 +13,7 @@
    <FileRef
       location = "container:Test Harness/NRTestApp/NRTestApp.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:examples/RNSampleApp/ios/RNSampleApp.xcodeproj">
+   </FileRef>
 </Workspace>
