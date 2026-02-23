@@ -11,6 +11,10 @@
 
 #define kNRTimerAssociatedObject @"com.NewRelic.NRSessionTask.Timer"
 #define kNRSessionDataAssociatedObject @"com.NewRelic.NRSessionTask.Data"
+// Marks whether a valid NSURLCache entry existed for the request at the moment the
+// task was created. Combined with countOfBytesReceived == 0 at completion this
+// reliably identifies responses served from NSURLCache rather than the network.
+#define kNRPreflightCacheHitKey @"com.NewRelic.NRSessionTask.PreflightCacheHit"
 
 
 NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id self,SEL _cmd,NSURLSessionConfiguration* configuration,id<NSURLSessionDelegate>delegate,NSOperationQueue* queue);
@@ -32,6 +36,9 @@ NRTimer* NRMA__getTimerForSessionTask(NSURLSessionTask* task);
 NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task);
 void NRMA__setDataForSessionTask(NSURLSessionTask* task, NSData* data);
 void NRMA__setTimerForSessionTask(NSURLSessionTask* task, NRTimer* timer);
+// Returns YES when the response was served from NSURLCache rather than the network.
+// Requires NRMA__markPreflightCacheHit to have been called when the task was created.
+BOOL NRMA__isURLCacheHit(NSURLSessionTask *task, NSData *data);
 
 @interface NRMAURLSessionOverride : NSObject
 + (void) beginInstrumentation;

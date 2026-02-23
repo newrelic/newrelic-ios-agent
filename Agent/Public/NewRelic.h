@@ -638,6 +638,34 @@ extern "C" {
  *******************************************************************************/
 + (NSArray<NSString*>* _Nonnull)httpHeadersAddedForTracking;
 
+/*******************************************************************************
+ * Register an NSCache instance for automatic cache-hit/miss instrumentation.
+ *
+ * After registration every call to -[NSCache objectForKey:] on the provided
+ * cache is intercepted.  A "MobileCache" custom event is recorded for each
+ * access, allowing you to measure cache effectiveness in NRQL:
+ *
+ *   SELECT count(*) FROM MobileCache FACET url, hit TIMESERIES
+ *   SELECT percentage(count(*), WHERE hit = true) FROM MobileCache FACET url
+ *
+ * The @p urlProvider block maps each cache key to the URL the cached object
+ * represents.  Return nil from the block to skip recording for a given key.
+ * A "stored" event is also recorded each time an object is written into the
+ * cache via -setObject:forKey: or -setObject:forKey:cost:.
+ *
+ * Parameters:
+ *   cache        – The NSCache instance to monitor.  A weak reference is held
+ *                  so the cache can be deallocated normally without any
+ *                  deregistration step.
+ *   urlProvider  – Block called with the cache key; return the URL the key
+ *                  represents, or nil to opt out for that key.
+ *
+ * This method must be called after NewRelic.start(withApplicationToken:).
+ * Safe to call from any thread.
+ *******************************************************************************/
++ (void)trackNSCache:(NSCache * _Nonnull)cache
+     withURLProvider:(NSURL * _Nullable (^ _Nonnull)(id _Nonnull key))urlProvider;
+
 #pragma mark - Recording custom events
 
 /*!

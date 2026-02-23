@@ -9,8 +9,10 @@ import UIKit
 
 class ImageDownloader {
 
-    // NSCache for storing downloaded images
-    private static var imageCache = NSCache<NSURL, UIImage>()
+    // NSCache for storing downloaded images.
+    // Exposed as `internal static` so the app can register it with NewRelic
+    // via NewRelic.trackNSCache(_:withURLProvider:) after the agent starts.
+    static var imageCache = NSCache<NSURL, UIImage>()
 
     func downloadImage(from urlString: String, completion: @escaping (UIImage?) -> Void) {
         // 1. Create URL from string
@@ -22,6 +24,8 @@ class ImageDownloader {
 
         let nsurl = url as NSURL
 
+        
+        // Comment out the following section
         // 2. Check NSCache first
         if let cachedImage = ImageDownloader.imageCache.object(forKey: nsurl) {
             print("✅ Using cached image for: \(urlString)")
@@ -30,11 +34,18 @@ class ImageDownloader {
             }
             return
         }
-
+        // Ebd comment out previous section.
+        
         print("📥 Downloading image from: \(urlString)")
 
         // 3. Create URLRequest
         var request = URLRequest(url: url)
+
+        
+        // Keep in mind the cachePolicy can be set directly when created URLRequest.
+        //var request = URLRequest(url: url, cachePolicy: .returnCacheDataElseLoad)
+        
+        
         // 4. Use URLSession dataTask with the specified method
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             // Handle error

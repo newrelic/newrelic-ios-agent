@@ -86,6 +86,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.setMaxEventBufferTime(60)
 
         NewRelic.logVerbose("NewRelic.start was called.")
+        // The urlProvider block maps each NSURL key back to a plain URL; return
+        // nil for any key you don't want tracked.
+        if let imageCache = ImageDownloader.imageCache as? NSCache<AnyObject, AnyObject> {
+            NewRelic.trackNSCache(imageCache) { key in
+                return key as? URL
+            }
+        }
         return true
     }
 

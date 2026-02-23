@@ -28,6 +28,7 @@
 #import "NRMAURLTransformer.h"
 #import "NRMAHTTPUtilities.h"
 #import "Constants.h"
+#import "NRMANSCacheInstrumentation.h"
 
 #define kNRMA_NAME @"name"
 
@@ -438,6 +439,11 @@
     return [NRMAHTTPUtilities trackedHeaderFields];
 }
 
+#pragma mark - NSCache instrumentation
+
++ (void)trackNSCache:(NSCache *)cache withURLProvider:(NSURL * _Nullable (^)(id _Nonnull))urlProvider {
+    [NRMANSCacheInstrumentation registerCache:cache withURLProvider:urlProvider];
+}
 
 #pragma mark - Interactions
 

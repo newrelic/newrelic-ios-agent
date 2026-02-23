@@ -14,6 +14,7 @@
 #import "NRMAReachability.h"
 #import "NRTimer.h"
 #import "NRMAURLSessionOverride.h"
+#import "NRMANSCacheInstrumentation.h"
 #import "NRMAJSON.h"
 #import "NRCustomMetrics+private.h"
 #import "NRMANSURLConnectionSupport.h"
@@ -403,6 +404,8 @@ static NewRelicAgentInternal* _sharedInstance;
         if ([NRMAFlags shouldEnableNSURLSessionInstrumentation]) {
             [NRMAURLSessionOverride beginInstrumentation];
         }
+
+        [NRMANSCacheInstrumentation beginInstrumentation];
 
         if ([NRMAFlags shouldEnableGestureInstrumentation]) {
             [self initializeGestureInstrumentation];
