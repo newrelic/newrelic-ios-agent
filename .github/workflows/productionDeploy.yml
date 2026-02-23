@@ -21,6 +21,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+      
       - name: Update gem
         run: bundle update
 

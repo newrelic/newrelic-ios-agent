@@ -56,6 +56,9 @@ jobs:
           # mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           # cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+
       - name: Update gem
         run: bundle update
 
