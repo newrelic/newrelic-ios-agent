@@ -56,6 +56,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRAutoLogCollector.h"
 #import "NRMAAttributeValidator.h"
+#import "NRMAJSErrorController.h"
 
 #import <NewRelic/NewRelic-Swift.h>
 
@@ -605,6 +606,22 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
         [NRMAHarvestController addHarvestListener:self.handledExceptionsController];
 
+    }
+
+    // Initialize JS Error Controller for Mobile Errors Protocol
+    self.jsErrorController = [[NRMAJSErrorController alloc] initWithAnalyticsController:self.analyticsController
+                                                                       sessionStartTime:self.appSessionStartDate
+                                                                     agentConfiguration:self.agentConfiguration
+                                                                               platform:@"reactnative"
+                                                                              sessionId:[self currentSessionId]
+                                                                     attributeValidator:[[NRMAAttributeValidator alloc] init]];
+
+    if (self.jsErrorController != nil) {
+        if (status != NotReachable) {
+            [self.jsErrorController processAndPublishPersistedErrors];
+        }
+
+        [NRMAHarvestController addHarvestListener:self.jsErrorController];
     }
 
     [self.analyticsController setNRSessionAttribute:@"sessionId"

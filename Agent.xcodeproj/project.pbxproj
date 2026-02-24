@@ -1581,6 +1581,10 @@
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
 		C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */; };
 		C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */; };
+		D48D55132F4CF334003BE3AB /* NRMAMobileErrorsUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = D48D55122F4CF334003BE3AB /* NRMAMobileErrorsUploader.m */; };
+		D48D55142F4CF334003BE3AB /* NRMAJSErrorController.m in Sources */ = {isa = PBXBuildFile; fileRef = D48D55102F4CF334003BE3AB /* NRMAJSErrorController.m */; };
+		D48D55152F4CF334003BE3AB /* NRMAJSErrorController.h in Headers */ = {isa = PBXBuildFile; fileRef = D48D550F2F4CF334003BE3AB /* NRMAJSErrorController.h */; };
+		D48D55162F4CF334003BE3AB /* NRMAMobileErrorsUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = D48D55112F4CF334003BE3AB /* NRMAMobileErrorsUploader.h */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -2680,6 +2684,10 @@
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
 		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
+		D48D550F2F4CF334003BE3AB /* NRMAJSErrorController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAJSErrorController.h; sourceTree = "<group>"; };
+		D48D55102F4CF334003BE3AB /* NRMAJSErrorController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAJSErrorController.m; sourceTree = "<group>"; };
+		D48D55112F4CF334003BE3AB /* NRMAMobileErrorsUploader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAMobileErrorsUploader.h; sourceTree = "<group>"; };
+		D48D55122F4CF334003BE3AB /* NRMAMobileErrorsUploader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAMobileErrorsUploader.m; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
 		F6E79C6E25A65346006277FB /* W3CTraceState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceState.h; sourceTree = "<group>"; };
 		F6E79C7025A65346006277FB /* W3CTraceParent.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceParent.mm; sourceTree = "<group>"; };
@@ -3212,6 +3220,7 @@
 		021A15BC24C9EEE700E8DFD5 /* Agent */ = {
 			isa = PBXGroup;
 			children = (
+				D48D54DB2F4CEF6E003BE3AB /* JSError */,
 				3477DCF42D9753900061C3E4 /* Project Module */,
 				348713D32B8D39C1005A264C /* SessionReplay */,
 				022A81C62502F22F003748E6 /* General */,
@@ -4228,6 +4237,17 @@
 			path = "HybridSupport-Tests";
 			sourceTree = "<group>";
 		};
+		D48D54DB2F4CEF6E003BE3AB /* JSError */ = {
+			isa = PBXGroup;
+			children = (
+				D48D550F2F4CF334003BE3AB /* NRMAJSErrorController.h */,
+				D48D55102F4CF334003BE3AB /* NRMAJSErrorController.m */,
+				D48D55112F4CF334003BE3AB /* NRMAMobileErrorsUploader.h */,
+				D48D55122F4CF334003BE3AB /* NRMAMobileErrorsUploader.m */,
+			);
+			path = JSError;
+			sourceTree = "<group>";
+		};
 		F6E79C6C25A65346006277FB /* DistributedTracing */ = {
 			isa = PBXGroup;
 			children = (
@@ -4439,6 +4459,8 @@
 				02FF494E24DC626E00115469 /* NRMAHarvestController.h in Headers */,
 				02FF4A0024DC647200115469 /* NRMAMeasurements.h in Headers */,
 				02FF4AA724DC652E00115469 /* NRMACPUVitals.h in Headers */,
+				D48D55152F4CF334003BE3AB /* NRMAJSErrorController.h in Headers */,
+				D48D55162F4CF334003BE3AB /* NRMAMobileErrorsUploader.h in Headers */,
 				02FF4A9E24DC652E00115469 /* NRMAUDIDManager.h in Headers */,
 				02FF486824DC617900115469 /* NewRelicAgent+Development.h in Headers */,
 				02FF486024DC615A00115469 /* NRMANetworkResponseData.h in Headers */,
@@ -5918,6 +5940,8 @@
 				3493DF482D4C4BEE00BF5BED /* SessionReplayFrame.swift in Sources */,
 				3493DF4C2D542D9900BF5BED /* UIViewThingy.swift in Sources */,
 				02FF4AD124DC657B00115469 /* NRMAHTTPUtilities.mm in Sources */,
+				D48D55132F4CF334003BE3AB /* NRMAMobileErrorsUploader.m in Sources */,
+				D48D55142F4CF334003BE3AB /* NRMAJSErrorController.m in Sources */,
 				02FF49DF24DC636100115469 /* NRMATraceSegment.m in Sources */,
 				02FF48BB24DC61F600115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
@@ -6992,6 +7016,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -7049,6 +7074,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				STRIP_STYLE = "non-global";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TVOS_DEPLOYMENT_TARGET = 15.0;

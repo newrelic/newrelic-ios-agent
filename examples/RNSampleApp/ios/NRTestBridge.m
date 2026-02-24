@@ -137,7 +137,19 @@
      attributes[@"stackTraceElements"] = stackFramesArr;
      [NewRelic recordHandledExceptionWithStackTrace:attributes];
  }
-                                                                                                                                               
+  RCT_EXPORT_METHOD(recordJavascriptError:(NSString *_Nonnull)name
+                    message:(NSString *_Nonnull)message
+                    stackTrace:(NSString *_Nonnull)stackTrace
+                    isFatal:(BOOL)isFatal
+                    jsAppVersion:(NSString *_Nullable)jsAppVersion
+                    additionalAttributes:(NSDictionary *_Nullable)additionalAttributes) {
+      [NewRelic recordJavascriptError:name
+                              message:message
+                           stackTrace:stackTrace
+                              isFatal:isFatal
+                         jsAppVersion:jsAppVersion
+                 additionalAttributes:additionalAttributes];
+  }
  // MARK: - Network
                                                                                                                                                
  RCT_EXPORT_METHOD(noticeNetworkFailure:(NSString *)url

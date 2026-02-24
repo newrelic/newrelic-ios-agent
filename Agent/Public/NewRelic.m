@@ -28,6 +28,7 @@
 #import "NRMAURLTransformer.h"
 #import "NRMAHTTPUtilities.h"
 #import "Constants.h"
+#import "NRMAJSErrorController.h"
 
 #define kNRMA_NAME @"name"
 
@@ -744,6 +745,37 @@
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
                                                                       withAttributes:attributes];
+}
+
++ (BOOL) recordJavascriptError:(NSString* __nonnull)name
+                       message:(NSString* __nonnull)message
+                    stackTrace:(NSString* __nonnull)stackTrace
+                       isFatal:(BOOL)isFatal
+                  jsAppVersion:(NSString* __nullable)jsAppVersion
+          additionalAttributes:(NSDictionary* __nullable)additionalAttributes
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
+
+    // Get the JS Error Controller
+    NRMAJSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
+
+    if (jsErrorController == nil) {
+        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
+        return false;
+    }
+
+    // Route to JS Error Controller for Mobile Errors Protocol
+    [jsErrorController recordJSError:name
+                             message:message
+                          stackTrace:stackTrace
+                             isFatal:isFatal
+                        jsAppVersion:jsAppVersion
+               additionalAttributes:additionalAttributes];
+
+    return true;
 }
 
 #pragma mark - Event retention settings

@@ -90,6 +90,88 @@ const UtilitiesScreen: React.FC = () => {
     Alert.alert('Success', 'Handled exception recorded!');
   };
 
+  // Mobile Errors Protocol - Manual Test
+  const testMobileJSErrorManual = () => {
+    const stackTrace = `TypeError: Cannot read property 'foo' of undefined
+    at UtilitiesScreen.testMobileJSError (UtilitiesScreen.tsx:95:12)
+    at TouchableOpacity.onPress (UtilitiesScreen.tsx:350:45)
+    at App.handlePress (App.tsx:100:20)
+    at React.render (index.js:15:8)`;
+
+    NRTestBridge.recordJavascriptError(
+      'TypeError',
+      "Cannot read property 'foo' of undefined",
+      stackTrace,
+      false,
+      '1.0.0',
+      {
+        testType: 'manual',
+        component: 'UtilitiesScreen',
+        platform: 'iOS',
+        timestamp: Date.now(),
+      },
+    );
+    Alert.alert(
+      'MobileJSError Recorded (Manual)',
+      'Check New Relic for:\n• MobileJSError event\n• /mobile/errors endpoint\n• URL-encoded stack trace',
+    );
+  };
+
+  // Mobile Errors Protocol - Real Error Test
+  const testMobileJSErrorReal = () => {
+    try {
+      // Intentionally cause a real error
+      const obj: any = null;
+      obj.someProperty.foo.bar(); // Will throw TypeError
+    } catch (error: any) {
+      console.log('Caught error:', error);
+
+      NRTestBridge.recordJavascriptError(
+        error.name || 'Error',
+        error.message || 'Unknown error',
+        error.stack || 'No stack trace available',
+        false,
+        '1.0.0',
+        {
+          testType: 'real',
+          caught: 'try-catch',
+          screen: 'Utilities',
+          errorType: typeof error,
+        },
+      );
+
+      Alert.alert(
+        'Real Error Caught & Recorded',
+        `Error: ${error.message}\n\nCheck console for full details`,
+      );
+    }
+  };
+
+  // Mobile Errors Protocol - Fatal Error Test
+  const testFatalJSError = () => {
+    const stackTrace = `ReferenceError: x is not defined
+    at UtilitiesScreen.testFatalJSError (UtilitiesScreen.tsx:125:5)
+    at criticalFunction (utils.js:42:10)
+    at App.componentDidCatch (App.tsx:50:15)`;
+
+    NRTestBridge.recordJavascriptError(
+      'ReferenceError',
+      'x is not defined - simulating fatal crash',
+      stackTrace,
+      true, // isFatal = true
+      '1.0.0',
+      {
+        testType: 'fatal',
+        severity: 'critical',
+        component: 'UtilitiesScreen',
+      },
+    );
+    Alert.alert(
+      'Fatal Error Recorded',
+      'isFatal=true\n\nShould trigger immediate harvest if configured for fatal errors.',
+    );
+  };
+
   const testCrash = () => {
     Alert.alert(
       'Crash Test',
@@ -346,13 +428,26 @@ const UtilitiesScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Error Testing</Text>
           <TouchableOpacity style={styles.button} onPress={testJSError}>
-            <Text style={styles.buttonText}>Record JS Error</Text>
+            <Text style={styles.buttonText}>Record JS Error (Old)</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={testHandledException}>
             <Text style={styles.buttonText}>Record Handled Exception</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={testCrash}>
             <Text style={styles.buttonText}>⚠️ Test Crash</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mobile Errors Protocol</Text>
+          <TouchableOpacity style={styles.button} onPress={testMobileJSErrorManual}>
+            <Text style={styles.buttonText}>📝 MobileJSError (Manual)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={testMobileJSErrorReal}>
+            <Text style={styles.buttonText}>💥 MobileJSError (Real Error)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.warningButton]} onPress={testFatalJSError}>
+            <Text style={styles.buttonText}>☠️ Fatal JS Error</Text>
           </TouchableOpacity>
         </View>
 
@@ -522,6 +617,9 @@ const styles = StyleSheet.create({
   },
   dangerButton: {
     backgroundColor: '#FF3B30',
+  },
+  warningButton: {
+    backgroundColor: '#FF9500',
   },
   buttonText: {
     color: '#fff',
