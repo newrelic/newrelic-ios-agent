@@ -10,6 +10,10 @@ import Foundation
 import UIKit
 @_implementationOnly import NewRelicPrivate
 
+//#if canImport(SocketIO)
+import SocketIO
+//#endif
+
 @available(iOS 13.0, *)
 @objcMembers
 public class SessionReplayManager: NSObject {
@@ -30,6 +34,13 @@ public class SessionReplayManager: NSObject {
     
     private var isManuallyRecording: Bool = false
     
+    #if canImport(SocketIO)
+    // Set to your Socket.IO server URL to stream replay data for debugging.
+    // e.g. URL(string: "http://localhost:3000") — nil disables streaming.
+    public var socketIOURL: URL? = nil
+    private var socketManager: SocketManager?
+    private var socketIOClient: SocketIOClient?
+    #endif
     
     // TWO SESSION REPLAY MODEs
     public var sessionReplayMode: SessionReplayRecordingMode = .off {
@@ -43,6 +54,12 @@ public class SessionReplayManager: NSObject {
         self.sessionReplay = NRMASessionReplay(url: self.url)
         self.sessionReplayReporter = reporter
         sessionReplayQueue.setSpecific(key: SessionReplayManager.queueKey, value: "com.newrelic.sessionReplayQueue")
+        
+        #if canImport(SocketIO)
+        socketIOURL = URL(string: "http://localhost:3000")
+        print("imported SOCKETIO")
+        #endif
+        
         super.init()
         
         self.sessionReplay.delegate = self
@@ -291,6 +308,12 @@ public class SessionReplayManager: NSObject {
             return nil
         }
         
+        #if canImport(SocketIO)
+        if let jsonString = String(data: jsonData, encoding: .utf8) {
+            sendToSocketIO(jsonString)
+        }
+        #endif
+        
         let uncompressedDataSize = jsonData.count
         
         do {
@@ -464,6 +487,10 @@ public class SessionReplayManager: NSObject {
             
             let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
             
+            #if canImport(SocketIO)
+            sendToSocketIO(jsonArrayString)
+            #endif
+                        
             guard let jsonData = jsonArrayString.data(using: .utf8) else {
                 NRLOG_AGENT_DEBUG("Failed to convert JSON string to data for session ID: \(sessionId)")
                 return
@@ -495,6 +522,48 @@ public class SessionReplayManager: NSObject {
             NRLOG_AGENT_DEBUG("Failed to process session replay file for session ID \(sessionId): \(error)")
         }
     }
+    
+    #if canImport(SocketIO)
+    private func connectSocketIOIfNeeded() {
+        guard let url = socketIOURL, socketManager == nil else { return }
+        socketManager = SocketManager(socketURL: url, config: [
+            .log(false),
+            .connectParams(["type": "recorder"])
+        ])
+        socketIOClient = socketManager?.defaultSocket
+        socketIOClient?.connect()
+    }
+
+    private func sendToSocketIO(_ json: String) {
+        guard socketIOURL != nil else { return }
+        connectSocketIOIfNeeded()
+
+        guard let data = json.data(using: .utf8),
+              let events = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            NRLOG_AGENT_DEBUG("SocketIO: failed to parse JSON array")
+            return
+        }
+
+        let sendBlock = { [weak self] in
+            guard let socket = self?.socketIOClient else { return }
+            socket.emit("recorder-start")
+            for event in events {
+                socket.emit("rrweb-event", event)
+            }
+            //socket.emit("recorder-stop")
+            NRLOG_AGENT_DEBUG("SocketIO: streamed \(events.count) rrweb events")
+        }
+
+        if socketIOClient?.status == .connected {
+            sendBlock()
+        } else {
+            socketIOClient?.once(clientEvent: .connect) { _, _ in
+                sendBlock()
+            }
+        }
+    }
+    #endif
+
     
     private func getSessionReplayDirectory() -> URL? {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
