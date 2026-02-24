@@ -40,6 +40,7 @@ public class SessionReplayManager: NSObject {
     public var socketIOURL: URL? = nil
     private var socketManager: SocketManager?
     private var socketIOClient: SocketIOClient?
+    private var socketIORecorderStarted: Bool = false
     #endif
     
     // TWO SESSION REPLAY MODEs
@@ -174,6 +175,7 @@ public class SessionReplayManager: NSObject {
         // Reset isManuallyRecording for new session
         isManuallyRecording = false
         
+        self.socketIORecorderStarted = false
         // Reset the isFirstChunk for new session
         self.sessionReplay.isFirstChunk = true
     }
@@ -236,6 +238,37 @@ public class SessionReplayManager: NSObject {
         
         if harvestseconds == harvestPeriod {
             harvest()
+        }
+        
+        uploadToWebSocket()
+    }
+    
+    func uploadToWebSocket() {
+        sessionReplayQueue.sync { [weak self] in
+            guard let self = self else { return }
+
+            let frames = self.sessionReplay.getSessionReplayFrames()
+            let touches = self.sessionReplay.getSessionReplayTouches()
+            
+            if frames.isEmpty && touches.isEmpty {
+                NRLOG_AGENT_DEBUG("No session replay frames or touches to harvest.")
+                return
+            }
+            
+            var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
+            container.append(contentsOf: touches.map(AnyRRWebEvent.init))
+            container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+                lhs.base.timestamp < rhs.base.timestamp
+            }
+            
+            let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
+            let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
+            
+            guard let upload = self.createReplayUpload(container: container,
+                                                       firstTimestamp: firstTimestamp,
+                                                       lastTimestamp: lastTimestamp) else {
+                return
+            }
         }
     }
     
@@ -309,9 +342,7 @@ public class SessionReplayManager: NSObject {
         }
         
         #if canImport(SocketIO)
-        if let jsonString = String(data: jsonData, encoding: .utf8) {
-            sendToSocketIO(jsonString)
-        }
+            sendToSocketIO(jsonData)
         #endif
         
         let uncompressedDataSize = jsonData.count
@@ -486,10 +517,6 @@ public class SessionReplayManager: NSObject {
             // Construct JSON array from frame contents
             
             let jsonArrayString = "[" + frameContents.joined(separator: ",") + "]"
-            
-            #if canImport(SocketIO)
-            sendToSocketIO(jsonArrayString)
-            #endif
                         
             guard let jsonData = jsonArrayString.data(using: .utf8) else {
                 NRLOG_AGENT_DEBUG("Failed to convert JSON string to data for session ID: \(sessionId)")
@@ -534,19 +561,21 @@ public class SessionReplayManager: NSObject {
         socketIOClient?.connect()
     }
 
-    private func sendToSocketIO(_ json: String) {
+    private func sendToSocketIO(_ jsonData: Data) {
         guard socketIOURL != nil else { return }
         connectSocketIOIfNeeded()
 
-        guard let data = json.data(using: .utf8),
-              let events = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+        guard let events = try? JSONSerialization.jsonObject(with: jsonData) as? [[String: Any]] else {
             NRLOG_AGENT_DEBUG("SocketIO: failed to parse JSON array")
             return
         }
 
         let sendBlock = { [weak self] in
-            guard let socket = self?.socketIOClient else { return }
-            socket.emit("recorder-start")
+            guard let self, let socket = self.socketIOClient else { return }
+            if !self.socketIORecorderStarted {
+                socket.emit("recorder-start")
+                self.socketIORecorderStarted = true
+            }
             for event in events {
                 socket.emit("rrweb-event", event)
             }
@@ -587,6 +616,12 @@ extension SessionReplayManager: NRMASessionReplayDelegate {
         isGZipped: Bool
     ) -> URL? {
         return self.sessionReplayReporter.uploadURL(uncompressedDataSize: uncompressedDataSize, firstTimestamp: firstTimestamp, lastTimestamp: lastTimestamp, isFirstChunk: isFirstChunk, isGZipped: isGZipped)
+    }
+
+    public func didProcessFrameData(_ jsonData: Data) {
+        #if canImport(SocketIO)
+        sendToSocketIO(jsonData)
+        #endif
     }
 }
 #endif

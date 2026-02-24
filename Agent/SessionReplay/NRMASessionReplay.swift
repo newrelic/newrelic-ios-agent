@@ -743,6 +743,7 @@ public protocol NRMASessionReplayDelegate: AnyObject {
         isFirstChunk: Bool,
         isGZipped: Bool
     ) -> URL?
+    func didProcessFrameData(_ jsonData: Data)
 }
 
 extension DispatchQueue {
