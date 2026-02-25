@@ -32,7 +32,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class NRMAJSErrorController;
+@class JSErrorController;
 
 // Defines the internal agent api.
 @interface NewRelicAgentInternal : NSObject
@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, assign) BOOL enabled;
 @property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
-@property(atomic, strong, nullable) NRMAJSErrorController* jsErrorController;
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;

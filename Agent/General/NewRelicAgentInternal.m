@@ -56,7 +56,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRAutoLogCollector.h"
 #import "NRMAAttributeValidator.h"
-#import "NRMAJSErrorController.h"
+#import "NRMAJSErrorHarvestAdapter.h"
 
 #import <NewRelic/NewRelic-Swift.h>
 
@@ -609,19 +609,21 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 
     // Initialize JS Error Controller for Mobile Errors Protocol
-    self.jsErrorController = [[NRMAJSErrorController alloc] initWithAnalyticsController:self.analyticsController
-                                                                       sessionStartTime:self.appSessionStartDate
-                                                                     agentConfiguration:self.agentConfiguration
-                                                                               platform:@"reactnative"
-                                                                              sessionId:[self currentSessionId]
-                                                                     attributeValidator:[[NRMAAttributeValidator alloc] init]];
+    self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
+                                                                    sessionStartTime:self.appSessionStartDate
+                                                                  agentConfiguration:self.agentConfiguration
+                                                                            platform:@"reactnative"
+                                                                           sessionId:[self currentSessionId]
+                                                                  attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
     if (self.jsErrorController != nil) {
         if (status != NotReachable) {
             [self.jsErrorController processAndPublishPersistedErrors];
         }
 
-        [NRMAHarvestController addHarvestListener:self.jsErrorController];
+        // Use adapter to bridge Swift controller with harvest protocol
+        NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
+        [NRMAHarvestController addHarvestListener:harvestAdapter];
     }
 
     [self.analyticsController setNRSessionAttribute:@"sessionId"

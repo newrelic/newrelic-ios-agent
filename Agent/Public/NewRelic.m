@@ -28,7 +28,7 @@
 #import "NRMAURLTransformer.h"
 #import "NRMAHTTPUtilities.h"
 #import "Constants.h"
-#import "NRMAJSErrorController.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 #define kNRMA_NAME @"name"
 
@@ -760,7 +760,7 @@
     }
 
     // Get the JS Error Controller
-    NRMAJSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
+    JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
 
     if (jsErrorController == nil) {
         NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");

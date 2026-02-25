@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# 2025 New Relic
+# Shell wrapper script used to upload React Native source maps to New Relic.
+# upload-react-native-sourcemap
+
+if [ ! $1 ] || [ ! $2 ]; then
+    echo "New Relic: usage: $0 <INGEST_API_KEY> <APP_TOKEN> [--debug]"
+    echo "  INGEST_API_KEY: Your New Relic Ingest API Key (from https://one.newrelic.com/api-keys)"
+    echo "  APP_TOKEN: Your Mobile App Token (from New Relic mobile app settings)"
+    exit -1
+fi
+
+INGEST_API_KEY=$1
+APP_TOKEN=$2
+DEBUG_FLAG=${3:-''}
+
+echo "New Relic: Processing React Native source map and uploading to New Relic. (In background...)"
+echo "New Relic: For troubleshooting, see upload_sourcemap_results.log file in project root folder. Add --debug as third argument in Run Script for additional information."
+
+WORK_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+SCRIPT="$WORK_DIRECTORY/upload-react-native-sourcemap.swift"
+
+## Running with below command is useful for seeing output in Xcode,
+## but it will incur delays in the build process while the source map uploads.
+# /usr/bin/xcrun --sdk macosx swift "$SCRIPT" $INGEST_API_KEY $APP_TOKEN $DEBUG_FLAG
+
+/usr/bin/xcrun --sdk macosx swift "$SCRIPT" $INGEST_API_KEY $APP_TOKEN $DEBUG_FLAG > upload_sourcemap_results.log 2>&1 &
