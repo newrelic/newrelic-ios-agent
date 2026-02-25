@@ -17,6 +17,15 @@
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
+		2B9318682F4E8B6200E05F23 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9318592F4E8B6200E05F23 /* DataModels.swift */; };
+		2B9318692F4E8B6200E05F23 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B93185D2F4E8B6200E05F23 /* NetworkService.swift */; };
+		2B93186A2F4E8B6200E05F23 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9318602F4E8B6200E05F23 /* DashboardView.swift */; };
+		2B93186B2F4E8B6200E05F23 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9318622F4E8B6200E05F23 /* SettingsView.swift */; };
+		2B93186D2F4E8B6200E05F23 /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B93185F2F4E8B6200E05F23 /* ChartsView.swift */; };
+		2B93186E2F4E8B6200E05F23 /* NewRelicTestAppContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9318652F4E8B6200E05F23 /* NewRelicTestAppContentView.swift */; };
+		2B93186F2F4E8B6200E05F23 /* FormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B9318612F4E8B6200E05F23 /* FormView.swift */; };
+		2B9318702F4E8B6200E05F23 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B93185B2F4E8B6200E05F23 /* Preview Assets.xcassets */; };
+		2B9318782F4E8CA900E05F23 /* DGChartsDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B9318772F4E8CA900E05F23 /* DGChartsDynamic */; };
 		2BAE5C8E2E860C7D001D2B88 /* StacksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C882E860C7D001D2B88 /* StacksView.swift */; };
 		2BAE5C8F2E860C7D001D2B88 /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C832E860C7D001D2B88 /* ProgressViewsView.swift */; };
 		2BAE5C902E860C7D001D2B88 /* ShapesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C862E860C7D001D2B88 /* ShapesView.swift */; };
@@ -330,6 +339,14 @@
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
 		2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NRTestApp.entitlements; sourceTree = "<group>"; };
 		2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIViewRepresentableTestView.swift; sourceTree = "<group>"; };
+		2B9318592F4E8B6200E05F23 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
+		2B93185B2F4E8B6200E05F23 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		2B93185D2F4E8B6200E05F23 /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
+		2B93185F2F4E8B6200E05F23 /* ChartsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartsView.swift; sourceTree = "<group>"; };
+		2B9318602F4E8B6200E05F23 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		2B9318612F4E8B6200E05F23 /* FormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormView.swift; sourceTree = "<group>"; };
+		2B9318622F4E8B6200E05F23 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		2B9318652F4E8B6200E05F23 /* NewRelicTestAppContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRelicTestAppContentView.swift; sourceTree = "<group>"; };
 		2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonsView.swift; sourceTree = "<group>"; };
 		2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickersView.swift; sourceTree = "<group>"; };
@@ -465,6 +482,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
+				2B9318782F4E8CA900E05F23 /* DGChartsDynamic in Frameworks */,
 				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -501,9 +519,57 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2B93185A2F4E8B6200E05F23 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				2B9318592F4E8B6200E05F23 /* DataModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		2B93185C2F4E8B6200E05F23 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				2B93185B2F4E8B6200E05F23 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		2B93185E2F4E8B6200E05F23 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				2B93185D2F4E8B6200E05F23 /* NetworkService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		2B9318632F4E8B6200E05F23 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2B93185F2F4E8B6200E05F23 /* ChartsView.swift */,
+				2B9318602F4E8B6200E05F23 /* DashboardView.swift */,
+				2B9318612F4E8B6200E05F23 /* FormView.swift */,
+				2B9318622F4E8B6200E05F23 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		2B9318672F4E8B6200E05F23 /* NewRelicTestApp */ = {
+			isa = PBXGroup;
+			children = (
+				2B93185A2F4E8B6200E05F23 /* Models */,
+				2B93185C2F4E8B6200E05F23 /* Preview Content */,
+				2B93185E2F4E8B6200E05F23 /* Services */,
+				2B9318632F4E8B6200E05F23 /* Views */,
+				2B9318652F4E8B6200E05F23 /* NewRelicTestAppContentView.swift */,
+			);
+			path = NewRelicTestApp;
+			sourceTree = "<group>";
+		};
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				2B9318672F4E8B6200E05F23 /* NewRelicTestApp */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
 				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
@@ -991,6 +1057,9 @@
 				Base,
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
+			packageReferences = (
+				2B9318762F4E8CA900E05F23 /* XCRemoteSwiftPackageReference "Charts" */,
+			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -1091,6 +1160,7 @@
 			files = (
 				F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
+				2B9318702F4E8B6200E05F23 /* Preview Assets.xcassets in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1291,6 +1361,13 @@
 				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
+				2B9318682F4E8B6200E05F23 /* DataModels.swift in Sources */,
+				2B9318692F4E8B6200E05F23 /* NetworkService.swift in Sources */,
+				2B93186A2F4E8B6200E05F23 /* DashboardView.swift in Sources */,
+				2B93186B2F4E8B6200E05F23 /* SettingsView.swift in Sources */,
+				2B93186D2F4E8B6200E05F23 /* ChartsView.swift in Sources */,
+				2B93186E2F4E8B6200E05F23 /* NewRelicTestAppContentView.swift in Sources */,
+				2B93186F2F4E8B6200E05F23 /* FormView.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
@@ -2064,6 +2141,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2B9318762F4E8CA900E05F23 /* XCRemoteSwiftPackageReference "Charts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2B9318772F4E8CA900E05F23 /* DGChartsDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B9318762F4E8CA900E05F23 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = DGChartsDynamic;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F8302AED296F5EFA003EC291 /* Project object */;
 }
