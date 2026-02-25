@@ -92,6 +92,11 @@
     }
 
     NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+    
+    if (!traceParent) {
+        return;
+    }
+    
     NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
 
     if ([traceParentComponents count] > 2) {
@@ -111,6 +116,11 @@
     }
 
     NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+    
+    if (!traceParent) {
+        return;
+    }
+    
     NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
 
     if ([traceParentComponents count] > 2) {
@@ -122,7 +132,6 @@
         NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
     }
 }
-
 
 + (void) noticeNetworkRequest:(NSURLRequest*)request
                      response:(NSURLResponse*)response
