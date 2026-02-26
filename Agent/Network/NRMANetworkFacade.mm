@@ -93,7 +93,7 @@
 
     NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
     
-    if (!traceParent) {
+    if (!traceParent || ![traceParent isKindOfClass:[NSString class]]) {
         return;
     }
     
@@ -117,9 +117,9 @@
 
     NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
     
-    if (!traceParent) {
+    if (!traceParent || ![traceParent isKindOfClass:[NSString class]]) {
         return;
-    }
+    }  
     
     NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
 
