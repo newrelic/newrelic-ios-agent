@@ -38,7 +38,7 @@
 // START of Script upload-react-native-sourcemap.swift
 import Foundation
 
-let defaultURL = "https://symbol-ingest-api.newrelic.com"
+let defaultURL = "https://symbol-ingest-api.staging-service.newrelic.com"
 let fileManager = FileManager.default
 let environment = ProcessInfo.processInfo.environment
 // Set to true for additional debug info in the upload_sourcemap_results.log file.
@@ -68,10 +68,12 @@ func start() {
         exit(0)
     }
 
-    // Skip simulator builds
+    // Skip simulator builds (unless testing)
     let platformName = environment["EFFECTIVE_PLATFORM_NAME"]
-    if platformName == "-iphonesimulator" {
+    let allowSimulator = environment["NEWRELIC_SOURCEMAP_ALLOW_SIMULATOR"] == "true"
+    if platformName == "-iphonesimulator" && !allowSimulator {
         print("New Relic: Skipping source map upload for simulator build")
+        print("New Relic: Set NEWRELIC_SOURCEMAP_ALLOW_SIMULATOR=true to enable simulator uploads for testing")
         exit(0)
     }
 

@@ -269,7 +269,10 @@ public class JSErrorController: NSObject {
         }
 
         payload["appInfo"] = [
-            "appVersion": connectInfo?.applicationInformation.appVersion ?? "unknown"
+            "appName": connectInfo?.applicationInformation.appName ?? "unknown",
+            "appVersion": connectInfo?.applicationInformation.appVersion ?? "unknown",
+            "appBuild": connectInfo?.applicationInformation.appBuild ?? "unknown",
+            "bundleId": Bundle.main.bundleIdentifier ?? "unknown"
         ]
 
         payload["deviceInfo"] = getDeviceInfo()
