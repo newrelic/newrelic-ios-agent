@@ -446,4 +446,26 @@ public class JSErrorController: NSObject {
             NRLOG_AGENT_DEBUG("Failed to clear persisted JS errors: \(error)")
         }
     }
+
+    // MARK: - Testing Support
+
+    /// Internal method for testing: retrieves a copy of the current error queue
+    /// - Returns: Array of error dictionaries currently in the queue
+    @objc public func getErrorQueueForTesting() -> [[String: Any]] {
+        errorQueueLock.lock()
+        defer { errorQueueLock.unlock() }
+
+        var errors: [[String: Any]] = []
+        for case let error as [String: Any] in errorQueue {
+            errors.append(error)
+        }
+        return errors
+    }
+
+    /// Internal method for testing: clears the error queue
+    @objc public func clearErrorQueueForTesting() {
+        errorQueueLock.lock()
+        defer { errorQueueLock.unlock() }
+        errorQueue.removeAllObjects()
+    }
 }
