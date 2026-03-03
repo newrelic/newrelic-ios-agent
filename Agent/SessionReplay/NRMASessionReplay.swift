@@ -374,9 +374,8 @@ public class NRMASessionReplay: NSObject {
         //NRLOG_AGENT_DEBUG("📹 [addFrame] Frame timestamp: \(frame.date), Size: \(frame.size)")
         
         // Check if we need to force a full snapshot every 15 seconds
-        if recordingMode == .error {
-            checkAndForceFullSnapshot(for: frame)
-        }
+        // THIS IS REQUIRED FOR CRASHED SESSION SUPPORT
+        checkAndForceFullSnapshot(for: frame)
         
         //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
         //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
@@ -388,14 +387,14 @@ public class NRMASessionReplay: NSObject {
         let processedTouches = self.getUnpersistedTouches()
         
         //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
-        //        NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
+        //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
         
         guard let firstFrame = rawFrames.first else {
             NRLOG_AGENT_DEBUG("💾 [processFrameToFile] No frames in buffer, skipping")
             return
         }
         
-        guard let processedFrame = processedFrame as? IncrementalEvent else {
+        guard let processedFrame = processedFrame else {
             return
         }
         
@@ -433,6 +432,8 @@ public class NRMASessionReplay: NSObject {
             NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ❌ Failed to encode events for URL generation")
             return
         }
+        // DEBUGGING FOR jsonData to strring
+//        print("json data text = \(String(data: jsonData, encoding: .utf8) ?? "nil")")
         
         let beforeSize = uncompressedDataSize
         uncompressedDataSize += jsonData.count
@@ -454,7 +455,7 @@ public class NRMASessionReplay: NSObject {
         }
         // END URL GENERATION
         
-        //  NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Upload URL generated: \(uploadUrl.absoluteString)")
+        // NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Upload URL generated: \(uploadUrl.absoluteString)")
         
         // Save frame data and URL separately
         let agent = NewRelicAgentInternal.sharedInstance()
@@ -468,7 +469,7 @@ public class NRMASessionReplay: NSObject {
             let frameURL = frameFolder.appendingPathComponent("frame_\(frameCounter).json")
             try jsonData.write(to: frameURL)
             
-            //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Wrote frame_\(frameCounter).json (\(jsonData.count) bytes)")
+            // NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Wrote frame_\(frameCounter).json (\(jsonData.count) bytes)")
             
             // Save/update URL separately
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
@@ -476,7 +477,7 @@ public class NRMASessionReplay: NSObject {
             // Track if this frame contains a full snapshot
             if isFullSnapshot {
                 fullSnapshotFrameIndices.insert(frameCounter)
-                //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Recorded full snapshot at frame \(frameCounter)")
+                // NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Recorded full snapshot at frame \(frameCounter)")
             }
             
             // In Error mode, we need to track the file creation time for pruning
@@ -491,10 +492,10 @@ public class NRMASessionReplay: NSObject {
             
             frameCounter += 1
             
-            // Count files in directory
-            if let fileCount = try? FileManager.default.contentsOfDirectory(at: frameFolder, includingPropertiesForKeys: nil).count {
-                //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
-            }
+//            // Count files in directory
+//            if let fileCount = try? FileManager.default.contentsOfDirectory(at: frameFolder, includingPropertiesForKeys: nil).count {
+//                NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
+//            }
             
             //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ================================================")
         } catch {
@@ -592,10 +593,10 @@ public class NRMASessionReplay: NSObject {
         }
         
         let timeSinceLastSnapshot = frame.date.timeIntervalSince(lastSnapshot)
-        //NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] Time since last snapshot: \(String(format: "%.2f", timeSinceLastSnapshot))s / \(fullSnapshotInterval)s")
+        // NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] Time since last snapshot: \(String(format: "%.2f", timeSinceLastSnapshot))s / \(fullSnapshotInterval)s")
         
         if timeSinceLastSnapshot >= fullSnapshotInterval {
-            NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] ✅ Forcing full snapshot after \(String(format: "%.2f", timeSinceLastSnapshot))s")
+            // NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] ✅ Forcing full snapshot after \(String(format: "%.2f", timeSinceLastSnapshot))s")
             sessionReplayFrameProcessor.takeFullSnapshotNext = true
             lastFullSnapshotTime = frame.date
         }
