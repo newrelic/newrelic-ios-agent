@@ -53,6 +53,7 @@ public class NRMASessionReplay: NSObject {
     private var fullSnapshotFrameIndices: Set<Int> = []
     
     private let frameQueue = DispatchQueue(label: "com.newrelic.sessionreplay.frames")
+    private let fileIOQueue = DispatchQueue(label: "com.newrelic.sessionreplay.fileio")
     
     public var isFirstChunk = true
     var uncompressedDataSize: Int = 0
@@ -76,7 +77,11 @@ public class NRMASessionReplay: NSObject {
         
         super.init()
         
-        try? FileManager.default.createDirectory(at: framesDirectory, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: framesDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+        )
     }
     
     public func start() {
@@ -131,19 +136,15 @@ public class NRMASessionReplay: NSObject {
         // should remove frames from file system after processing
         
         // Clear the session replay file after processing
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        fileIOQueue.async { [weak self] in
             guard let self = self else { return }
-            
+
             self.frameCounter = 0
             self.uncompressedDataSize = 0
-            
+
             // clear the frames directory
-            guard FileManager.default.fileExists(atPath: self.framesDirectory.path) else {
-               // NRLOG_AGENT_DEBUG("🧹 [clearAllData] Frames directory doesn't exist, nothing to clear")
-                return
-            }
             do {
-                try FileManager.default.removeItem(at: self.framesDirectory)
+                try self.clearFramesDirectory()
 //                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ✅ Cleared frames directory")
 //                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ====================================================")
             } catch {
@@ -206,11 +207,11 @@ public class NRMASessionReplay: NSObject {
             
             // BEGIN PROCESSING FRAME TO FILE
             // Process frame to file
-            DispatchQueue.global(qos: .background).async { [weak self] in
+            self.fileIOQueue.async { [weak self] in
                 guard let self = self else { return }
-                
+
                 self.processFrameToFile(frame)
-                
+
                 // END PROCESSING FRAME TO FILE
             }
             
@@ -270,21 +271,20 @@ public class NRMASessionReplay: NSObject {
             // should remove frames from file system after processing
             
             // Clear the session replay file after processing
-            DispatchQueue.global(qos: .background).async { [weak self] in
+            fileIOQueue.async { [weak self] in
                 guard let self = self else { return }
-                
-                let oldFrameCounter = self.frameCounter
-                let oldUncompressedSize = self.uncompressedDataSize
-                
+
+               // let oldFrameCounter = self.frameCounter
+               // let oldUncompressedSize = self.uncompressedDataSize
+
                 self.frameCounter = 0
                 self.uncompressedDataSize = 0
-                
+
                 //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Resetting counters - frameCounter: \(oldFrameCounter)→0, uncompressedDataSize: \(oldUncompressedSize)→0")
-                
+
                 // clear the frames directory
                 do {
-                    try FileManager.default.removeItem(at: self.framesDirectory)
-                    try FileManager.default.createDirectory(at: self.framesDirectory, withIntermediateDirectories: true)
+                    try self.clearFramesDirectory()
                     //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] ✅ Cleared frames directory")
                 } catch {
                     NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] ❌ Failed to clear frames directory: \(error)")
@@ -465,7 +465,11 @@ public class NRMASessionReplay: NSObject {
         let urlFile = self.framesDirectory.appendingPathComponent("\(sessionId)_upload_url.txt")
         
         do {
-            try FileManager.default.createDirectory(at: frameFolder, withIntermediateDirectories: true);
+            try FileManager.default.createDirectory(
+                at: frameFolder,
+                withIntermediateDirectories: true,
+                attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+            )
             let frameURL = frameFolder.appendingPathComponent("frame_\(frameCounter).json")
             try jsonData.write(to: frameURL)
             
@@ -733,6 +737,35 @@ public class NRMASessionReplay: NSObject {
     }
     
     // END Error Sampling Mode Management
+
+    /// Removes the frames directory and recreates it with explicit file protection.
+    /// If the atomic remove fails (e.g. a locked file inside), falls back to deleting
+    /// each item individually so a single inaccessible file can't block the whole clear.
+    private func clearFramesDirectory() throws {
+        let fm = FileManager.default
+
+        if fm.fileExists(atPath: framesDirectory.path) {
+            do {
+                try fm.removeItem(at: framesDirectory)
+            } catch {
+                // Atomic removal failed — remove contents one-by-one instead.
+                let contents = (try? fm.contentsOfDirectory(
+                    at: framesDirectory,
+                    includingPropertiesForKeys: nil,
+                    options: .skipsHiddenFiles
+                )) ?? []
+                for item in contents {
+                    try? fm.removeItem(at: item)
+                }
+            }
+        }
+
+        try fm.createDirectory(
+            at: framesDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+        )
+    }
 }
 
 @available(iOS 13.0, *)
