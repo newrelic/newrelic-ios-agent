@@ -124,7 +124,7 @@ public class SessionReplayManager: NSObject {
     public func stop() {
         let stopBlock = { [self] in
             guard isRunning() else {
-                NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to stop when not running.")
+                // NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to stop when not running.")
                 return
             }
             
@@ -132,7 +132,7 @@ public class SessionReplayManager: NSObject {
             sessionReplayTimer?.invalidate()
             sessionReplayTimer = nil
             
-            NRLOG_AGENT_DEBUG("Session replay has shut down and is no longer running.")
+           // NRLOG_AGENT_DEBUG("Session replay has shut down and is no longer running.")
         }
         
         // If we're already on the sessionReplayQueue, execute immediately
@@ -422,7 +422,7 @@ public class SessionReplayManager: NSObject {
                                 // Check if any frame in this file is a full snapshot (type = 2)
                                 let hasFullFrame = jsonArray.contains { frame in
                                     if let type = frame["type"] as? Int {
-                                        //NRLOG_AGENT_DEBUG("Frame type found: \(type) in file \(frameFile.lastPathComponent)")
+                                        // NRLOG_AGENT_DEBUG("Frame type found: \(type) in file \(frameFile.lastPathComponent)")
                                         
                                         return type == 2 //  fullSnapshot
 
