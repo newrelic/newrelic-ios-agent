@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.version                = "7.6.2"
   s.summary                = "Real-time performance data with your next iOS app release."
   s.homepage               = "http://newrelic.com/mobile-monitoring"
-  s.license                = "Apache License, Version 2.0"
+  s.license                = { :type => 'Apache License, Version 2.0', :text => 'Apache License, Version 2.0' } 
   s.author                 = { "New Relic, Inc." => "support@newrelic.com" }
   s.source                 = { :http => "https://download.newrelic.com/ios_agent/NewRelic_XCFramework_Agent_7.6.2.zip" }
   s.ios.deployment_target  = '15.0'
