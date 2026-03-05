@@ -53,6 +53,7 @@ public class NRMASessionReplay: NSObject {
     private var fullSnapshotFrameIndices: Set<Int> = []
     
     private let frameQueue = DispatchQueue(label: "com.newrelic.sessionreplay.frames")
+    private let fileIOQueue = DispatchQueue(label: "com.newrelic.sessionreplay.fileio")
     
     public var isFirstChunk = true
     var uncompressedDataSize: Int = 0
@@ -76,7 +77,11 @@ public class NRMASessionReplay: NSObject {
         
         super.init()
         
-        try? FileManager.default.createDirectory(at: framesDirectory, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: framesDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+        )
     }
     
     public func start() {
@@ -131,19 +136,15 @@ public class NRMASessionReplay: NSObject {
         // should remove frames from file system after processing
         
         // Clear the session replay file after processing
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        fileIOQueue.async { [weak self] in
             guard let self = self else { return }
-            
+
             self.frameCounter = 0
             self.uncompressedDataSize = 0
-            
+
             // clear the frames directory
-            guard FileManager.default.fileExists(atPath: self.framesDirectory.path) else {
-               // NRLOG_AGENT_DEBUG("🧹 [clearAllData] Frames directory doesn't exist, nothing to clear")
-                return
-            }
             do {
-                try FileManager.default.removeItem(at: self.framesDirectory)
+                try self.clearFramesDirectory()
 //                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ✅ Cleared frames directory")
 //                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ====================================================")
             } catch {
@@ -206,11 +207,11 @@ public class NRMASessionReplay: NSObject {
             
             // BEGIN PROCESSING FRAME TO FILE
             // Process frame to file
-            DispatchQueue.global(qos: .background).async { [weak self] in
+            self.fileIOQueue.async { [weak self] in
                 guard let self = self else { return }
-                
+
                 self.processFrameToFile(frame)
-                
+
                 // END PROCESSING FRAME TO FILE
             }
             
@@ -270,21 +271,20 @@ public class NRMASessionReplay: NSObject {
             // should remove frames from file system after processing
             
             // Clear the session replay file after processing
-            DispatchQueue.global(qos: .background).async { [weak self] in
+            fileIOQueue.async { [weak self] in
                 guard let self = self else { return }
-                
-                let oldFrameCounter = self.frameCounter
-                let oldUncompressedSize = self.uncompressedDataSize
-                
+
+               // let oldFrameCounter = self.frameCounter
+               // let oldUncompressedSize = self.uncompressedDataSize
+
                 self.frameCounter = 0
                 self.uncompressedDataSize = 0
-                
+
                 //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Resetting counters - frameCounter: \(oldFrameCounter)→0, uncompressedDataSize: \(oldUncompressedSize)→0")
-                
+
                 // clear the frames directory
                 do {
-                    try FileManager.default.removeItem(at: self.framesDirectory)
-                    try FileManager.default.createDirectory(at: self.framesDirectory, withIntermediateDirectories: true)
+                    try self.clearFramesDirectory()
                     //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] ✅ Cleared frames directory")
                 } catch {
                     NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] ❌ Failed to clear frames directory: \(error)")
@@ -374,9 +374,8 @@ public class NRMASessionReplay: NSObject {
         //NRLOG_AGENT_DEBUG("📹 [addFrame] Frame timestamp: \(frame.date), Size: \(frame.size)")
         
         // Check if we need to force a full snapshot every 15 seconds
-        if recordingMode == .error {
-            checkAndForceFullSnapshot(for: frame)
-        }
+        // THIS IS REQUIRED FOR CRASHED SESSION SUPPORT
+        checkAndForceFullSnapshot(for: frame)
         
         //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ========== Processing frame to file ==========")
         //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Frame date: \(frame.date), Size: \(frame.size)")
@@ -388,14 +387,14 @@ public class NRMASessionReplay: NSObject {
         let processedTouches = self.getUnpersistedTouches()
         
         //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Frame type: \(isFullSnapshot ? "FULL SNAPSHOT" : "Incremental")")
-        //        NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
+        //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Unpersisted touches: \(processedTouches.count)")
         
         guard let firstFrame = rawFrames.first else {
             NRLOG_AGENT_DEBUG("💾 [processFrameToFile] No frames in buffer, skipping")
             return
         }
         
-        guard let processedFrame = processedFrame as? IncrementalEvent else {
+        guard let processedFrame = processedFrame else {
             return
         }
         
@@ -433,6 +432,8 @@ public class NRMASessionReplay: NSObject {
             NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ❌ Failed to encode events for URL generation")
             return
         }
+        // DEBUGGING FOR jsonData to strring
+//        print("json data text = \(String(data: jsonData, encoding: .utf8) ?? "nil")")
         
         let beforeSize = uncompressedDataSize
         uncompressedDataSize += jsonData.count
@@ -454,7 +455,7 @@ public class NRMASessionReplay: NSObject {
         }
         // END URL GENERATION
         
-        //  NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Upload URL generated: \(uploadUrl.absoluteString)")
+        // NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Upload URL generated: \(uploadUrl.absoluteString)")
         
         // Save frame data and URL separately
         let agent = NewRelicAgentInternal.sharedInstance()
@@ -464,11 +465,15 @@ public class NRMASessionReplay: NSObject {
         let urlFile = self.framesDirectory.appendingPathComponent("\(sessionId)_upload_url.txt")
         
         do {
-            try FileManager.default.createDirectory(at: frameFolder, withIntermediateDirectories: true);
+            try FileManager.default.createDirectory(
+                at: frameFolder,
+                withIntermediateDirectories: true,
+                attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+            )
             let frameURL = frameFolder.appendingPathComponent("frame_\(frameCounter).json")
             try jsonData.write(to: frameURL)
             
-            //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Wrote frame_\(frameCounter).json (\(jsonData.count) bytes)")
+            // NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Wrote frame_\(frameCounter).json (\(jsonData.count) bytes)")
             
             // Save/update URL separately
             try uploadUrl.absoluteString.write(to: urlFile, atomically: true, encoding: .utf8)
@@ -476,7 +481,7 @@ public class NRMASessionReplay: NSObject {
             // Track if this frame contains a full snapshot
             if isFullSnapshot {
                 fullSnapshotFrameIndices.insert(frameCounter)
-                //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Recorded full snapshot at frame \(frameCounter)")
+                // NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ✅ Recorded full snapshot at frame \(frameCounter)")
             }
             
             // In Error mode, we need to track the file creation time for pruning
@@ -491,10 +496,10 @@ public class NRMASessionReplay: NSObject {
             
             frameCounter += 1
             
-            // Count files in directory
-            if let fileCount = try? FileManager.default.contentsOfDirectory(at: frameFolder, includingPropertiesForKeys: nil).count {
-                //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
-            }
+//            // Count files in directory
+//            if let fileCount = try? FileManager.default.contentsOfDirectory(at: frameFolder, includingPropertiesForKeys: nil).count {
+//                NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Total files in folder: \(fileCount)")
+//            }
             
             //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] ================================================")
         } catch {
@@ -592,10 +597,10 @@ public class NRMASessionReplay: NSObject {
         }
         
         let timeSinceLastSnapshot = frame.date.timeIntervalSince(lastSnapshot)
-        //NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] Time since last snapshot: \(String(format: "%.2f", timeSinceLastSnapshot))s / \(fullSnapshotInterval)s")
+        // NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] Time since last snapshot: \(String(format: "%.2f", timeSinceLastSnapshot))s / \(fullSnapshotInterval)s")
         
         if timeSinceLastSnapshot >= fullSnapshotInterval {
-            NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] ✅ Forcing full snapshot after \(String(format: "%.2f", timeSinceLastSnapshot))s")
+            // NRLOG_AGENT_DEBUG("📸 [checkAndForceFullSnapshot] ✅ Forcing full snapshot after \(String(format: "%.2f", timeSinceLastSnapshot))s")
             sessionReplayFrameProcessor.takeFullSnapshotNext = true
             lastFullSnapshotTime = frame.date
         }
@@ -732,6 +737,35 @@ public class NRMASessionReplay: NSObject {
     }
     
     // END Error Sampling Mode Management
+
+    /// Removes the frames directory and recreates it with explicit file protection.
+    /// If the atomic remove fails (e.g. a locked file inside), falls back to deleting
+    /// each item individually so a single inaccessible file can't block the whole clear.
+    private func clearFramesDirectory() throws {
+        let fm = FileManager.default
+
+        if fm.fileExists(atPath: framesDirectory.path) {
+            do {
+                try fm.removeItem(at: framesDirectory)
+            } catch {
+                // Atomic removal failed — remove contents one-by-one instead.
+                let contents = (try? fm.contentsOfDirectory(
+                    at: framesDirectory,
+                    includingPropertiesForKeys: nil,
+                    options: .skipsHiddenFiles
+                )) ?? []
+                for item in contents {
+                    try? fm.removeItem(at: item)
+                }
+            }
+        }
+
+        try fm.createDirectory(
+            at: framesDirectory,
+            withIntermediateDirectories: true,
+            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+        )
+    }
 }
 
 @available(iOS 13.0, *)
