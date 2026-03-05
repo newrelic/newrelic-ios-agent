@@ -74,6 +74,7 @@ class SessionReplayCapture {
                                                        maskUserInputText: currentView.maskUserInputText,
                                                        maskAllImages: currentView.maskAllImages,
                                                        maskAllUserTouches: currentView.maskAllUserTouches,
+                                                       blockView: currentView.blockView,
                                                        sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
             )
             
