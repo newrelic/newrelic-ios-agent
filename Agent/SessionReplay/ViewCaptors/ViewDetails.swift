@@ -347,10 +347,24 @@ struct ViewDetails {
             return true
         }
 
-        // Check parent view for blockView inheritance
-        if let parentView = view.superview,
-           let parentBlocked = parentView.blockView {
-            return parentBlocked
+        // Recursively check parent view hierarchy for blockView inheritance
+        if let parentView = view.superview {
+            // Check if parent has explicit blockView flag
+            if let parentBlockView = parentView.blockView, parentBlockView {
+                return true
+            }
+
+            // Check if parent has "nr-block" accessibility identifier
+            if let parentAccessibilityId = parentView.accessibilityIdentifier,
+               parentAccessibilityId.count > 0,
+               parentAccessibilityId == "nr-block" || parentAccessibilityId.hasSuffix(".nr-block") {
+                return true
+            }
+
+            // Recursively check parent's ancestors
+            if let ancestorBlocked = checkBlockView(view: parentView), ancestorBlocked {
+                return true
+            }
         }
 
         return nil

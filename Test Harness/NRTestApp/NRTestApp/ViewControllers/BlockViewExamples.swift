@@ -61,33 +61,6 @@ struct KeypadSwiftUIExample: View {
                 .cornerRadius(10)
             }
 
-            // Alternative approach using accessibility identifier
-            VStack(spacing: 15) {
-                Text("Alternative: Using accessibility ID")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-
-                VStack(spacing: 10) {
-                    HStack(spacing: 10) {
-                        Button("A") { /* action */ }
-                            .frame(width: 50, height: 50)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-
-                        Button("B") { /* action */ }
-                            .frame(width: 50, height: 50)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                }
-                .accessibilityIdentifier("nr-block") // This will also trigger blocking
-                .padding()
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(10)
-            }
-
             Spacer()
         }
         .padding()
@@ -335,5 +308,200 @@ class BlockViewSwiftUIHostingController: UIViewController {
             hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+}
+
+// MARK: - Propagation Test Controller
+
+class BlockViewPropagationTestController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        title = "BlockView Propagation Test"
+        setupPropagationTest()
+    }
+
+    private func setupPropagationTest() {
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentView)
+
+        // Test 1: Parent blocked with blockView = true
+        let test1Container = createTestContainer(
+            title: "Test 1: Parent blockView = true",
+            parentBlocked: true,
+            backgroundColor: .systemBlue
+        )
+
+        // Test 2: Parent blocked with accessibility ID
+        let test2Container = createTestContainer(
+            title: "Test 2: Parent accessibility ID = nr-block",
+            parentBlocked: false,
+            backgroundColor: .systemGreen,
+            useAccessibilityID: true
+        )
+
+        // Test 3: Control - Not blocked
+        let test3Container = createTestContainer(
+            title: "Test 3: Control - Not blocked",
+            parentBlocked: false,
+            backgroundColor: .systemOrange
+        )
+
+        contentView.addSubview(test1Container)
+        contentView.addSubview(test2Container)
+        contentView.addSubview(test3Container)
+
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+
+            test1Container.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            test1Container.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            test1Container.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+
+            test2Container.topAnchor.constraint(equalTo: test1Container.bottomAnchor, constant: 30),
+            test2Container.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            test2Container.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+
+            test3Container.topAnchor.constraint(equalTo: test2Container.bottomAnchor, constant: 30),
+            test3Container.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            test3Container.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            test3Container.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
+        ])
+    }
+
+    private func createTestContainer(title: String, parentBlocked: Bool, backgroundColor: UIColor, useAccessibilityID: Bool = false) -> UIView {
+        let container = UIView()
+        container.backgroundColor = backgroundColor
+        container.layer.cornerRadius = 10
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        // Set blocking behavior
+        if useAccessibilityID {
+            container.accessibilityIdentifier = "nr-block"
+        } else if parentBlocked {
+            container.blockView = true
+        }
+
+        // Title label
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.textColor = .white
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(titleLabel)
+
+        // Create nested child views to test propagation
+        let child1 = UIView()
+        child1.backgroundColor = .systemRed
+        child1.layer.cornerRadius = 5
+        child1.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(child1)
+
+        let child1Label = UILabel()
+        child1Label.text = "Child 1"
+        child1Label.font = .systemFont(ofSize: 14)
+        child1Label.textColor = .white
+        child1Label.textAlignment = .center
+        child1Label.translatesAutoresizingMaskIntoConstraints = false
+        child1.addSubview(child1Label)
+
+        // Nested grandchild
+        let grandchild = UIView()
+        grandchild.backgroundColor = .systemPurple
+        grandchild.layer.cornerRadius = 3
+        grandchild.translatesAutoresizingMaskIntoConstraints = false
+        child1.addSubview(grandchild)
+
+        // Make grandchild interactive to test touch blocking
+        let grandchildButton = UIButton(type: .system)
+        grandchildButton.setTitle("Touch Test", for: .normal)
+        grandchildButton.setTitleColor(.white, for: .normal)
+        grandchildButton.titleLabel?.font = .systemFont(ofSize: 10, weight: .bold)
+        grandchildButton.translatesAutoresizingMaskIntoConstraints = false
+        grandchildButton.addTarget(self, action: #selector(touchTestButtonTapped(_:)), for: .touchUpInside)
+        grandchild.addSubview(grandchildButton)
+
+        // Another child view
+        let child2 = UIView()
+        child2.backgroundColor = .systemIndigo
+        child2.layer.cornerRadius = 5
+        child2.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(child2)
+
+        // Make child2 interactive to test touch blocking
+        let child2Button = UIButton(type: .system)
+        child2Button.setTitle("Tap Me", for: .normal)
+        child2Button.setTitleColor(.white, for: .normal)
+        child2Button.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
+        child2Button.translatesAutoresizingMaskIntoConstraints = false
+        child2Button.addTarget(self, action: #selector(touchTestButtonTapped(_:)), for: .touchUpInside)
+        child2.addSubview(child2Button)
+
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 200),
+
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 10),
+            titleLabel.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+
+            child1.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 15),
+            child1.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 15),
+            child1.widthAnchor.constraint(equalToConstant: 120),
+            child1.heightAnchor.constraint(equalToConstant: 80),
+
+            child1Label.topAnchor.constraint(equalTo: child1.topAnchor, constant: 5),
+            child1Label.centerXAnchor.constraint(equalTo: child1.centerXAnchor),
+
+            grandchild.topAnchor.constraint(equalTo: child1Label.bottomAnchor, constant: 5),
+            grandchild.centerXAnchor.constraint(equalTo: child1.centerXAnchor),
+            grandchild.widthAnchor.constraint(equalToConstant: 80),
+            grandchild.heightAnchor.constraint(equalToConstant: 30),
+
+            grandchildButton.centerXAnchor.constraint(equalTo: grandchild.centerXAnchor),
+            grandchildButton.centerYAnchor.constraint(equalTo: grandchild.centerYAnchor),
+
+            child2.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 15),
+            child2.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -15),
+            child2.widthAnchor.constraint(equalToConstant: 100),
+            child2.heightAnchor.constraint(equalToConstant: 60),
+
+            child2Button.centerXAnchor.constraint(equalTo: child2.centerXAnchor),
+            child2Button.centerYAnchor.constraint(equalTo: child2.centerYAnchor)
+        ])
+
+        return container
+    }
+
+    @objc private func touchTestButtonTapped(_ sender: UIButton) {
+        // This will help test which touches are recorded in session replay
+        let alert = UIAlertController(
+            title: "Touch Detected!",
+            message: "This button tap was processed.\nIn blocked areas, touches should not appear in session replay.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+
+        // Visual feedback
+        UIView.animate(withDuration: 0.1, animations: {
+            sender.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                sender.transform = CGAffineTransform.identity
+            }
+        }
     }
 }

@@ -24,6 +24,11 @@ protocol SessionReplayViewThingy: Hashable {
 }
 
 extension SessionReplayViewThingy {
+    /// Determines if subviews should be recorded. Blocked views should not record their subviews.
+    var shouldRecordSubviewsComputed: Bool {
+        return shouldRecordSubviews && !isBlocked
+    }
+
     func generateBaseCSSStyle() -> String {
         var cssStyle = """
             position: fixed; \
@@ -36,7 +41,7 @@ extension SessionReplayViewThingy {
 
         // If the view is blocked, make it a solid black rectangle
         if self.isBlocked {
-            cssStyle.append(" background-color: #000000; opacity: 1.0; color: transparent; overflow: hidden;")
+            cssStyle.append(" background-color: #000000 !important; opacity: 1.0 !important; overflow: hidden !important; z-index: 9999 !important;")
             return cssStyle
         }
 

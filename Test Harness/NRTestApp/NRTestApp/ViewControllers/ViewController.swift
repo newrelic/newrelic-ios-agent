@@ -274,6 +274,7 @@ class ViewController: UIViewController {
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
+        options.append(UtilOption(title: "BlockView Propagation Test", handler: { [self] in blockViewPropagationTest() }))
 
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
@@ -389,6 +390,11 @@ class ViewController: UIViewController {
     func blockViewUIKitAction() {
         let keypadController = KeypadUIKitViewController()
         navigationController?.pushViewController(keypadController, animated: true)
+    }
+
+    func blockViewPropagationTest() {
+        let propagationTestController = BlockViewPropagationTestController()
+        navigationController?.pushViewController(propagationTestController, animated: true)
     }
 }
 
