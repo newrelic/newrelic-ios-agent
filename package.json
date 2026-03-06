@@ -19,5 +19,10 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "webdriverio": "^9.24.0"
+  },
+  "overrides": {
+    "ajv": "^8.17.1",
+    "serialize-javascript": "^7.0.3",
+    "axios": "^1.13.5"
   }
 }
