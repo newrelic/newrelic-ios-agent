@@ -218,6 +218,8 @@ namespace NewRelic {
 
         void clearAttributesDuplicationStore();
 
+        void resetEventTimestamp();
+
         static std::shared_ptr <NRJSON::JsonArray> fetchDuplicatedEvents(
                 PersistentStore<std::string, AnalyticEvent> &eventStore,
                 bool shouldClearStore);
