@@ -168,15 +168,17 @@ func start() {
         exit(1)
     }
 
-    // Generate JS Bundle ID: appVersion.buildNumber-shortUUID
-    // Example: "1.2.3.42-a1b2c3d4"
-    let shortUUID = String(UUID().uuidString.prefix(8).lowercased())
-    var jsBundleId = "\(appVersion).\(buildNumber)-\(shortUUID)"
+    // Get JS Bundle ID from environment variable (set by wrapper script or customer)
+    // The wrapper script auto-detects from package.json if not manually set
+    // For CodePush/OTA updates, customer should set: export NEWRELIC_JS_BUNDLE_ID="1.0.0-v5"
+    var jsBundleId = environment["NEWRELIC_JS_BUNDLE_ID"] ?? appVersion
 
-    // Allow optional override via environment variable
-    if let customId = environment["NEWRELIC_JS_BUNDLE_ID"], !customId.isEmpty {
-        jsBundleId = customId
-        if debug { print("Using custom JS Bundle ID from environment") }
+    if debug {
+        if environment["NEWRELIC_JS_BUNDLE_ID"] != nil {
+            print("Using JS Bundle ID from environment/package.json: \(jsBundleId)")
+        } else {
+            print("Using app version as JS Bundle ID (package.json not found): \(jsBundleId)")
+        }
     }
 
     let sourcemapName = "main.jsbundle.map"
@@ -251,13 +253,84 @@ func uploadSourceMap(
     }
 
     // Add source map file
-    guard let fileData = try? Data(contentsOf: URL(fileURLWithPath: sourcemapPath)) else {
+    guard var fileData = try? Data(contentsOf: URL(fileURLWithPath: sourcemapPath)) else {
         throw SourceMapToolError.sourceMapNotFound
     }
 
+    let maxSizeBytes = 200 * 1024 * 1024  // 200MB
+    let compressionThreshold = 50 * 1024 * 1024  // Compress if > 50MB
+    let originalSizeMB = Double(fileData.count) / (1024 * 1024)
+    var uploadFilename = sourcemapName
+    var contentType = "application/json"
+
+    // Check if compression is needed
+    if fileData.count > compressionThreshold {
+        print("Source map size: \(String(format: "%.2f", originalSizeMB))MB")
+        print("Compressing source map for upload...")
+
+        // Create temporary zip file
+        let tempDir = NSTemporaryDirectory()
+        let zipPath = (tempDir as NSString).appendingPathComponent("sourcemap.zip")
+        let sourceMapFilename = (sourcemapPath as NSString).lastPathComponent
+
+        // Use ditto command to create zip (available on macOS)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        process.arguments = ["-c", "-k", "--sequesterRsrc", "--keepParent", sourcemapPath, zipPath]
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            if process.terminationStatus == 0 {
+                // Read compressed file
+                if let compressedData = try? Data(contentsOf: URL(fileURLWithPath: zipPath)) {
+                    let compressedSizeMB = Double(compressedData.count) / (1024 * 1024)
+                    let compressionRatio = (1.0 - Double(compressedData.count) / Double(fileData.count)) * 100
+
+                    print("Compressed size: \(String(format: "%.2f", compressedSizeMB))MB (\(String(format: "%.1f", compressionRatio))% reduction)")
+
+                    // Check if compressed file is still too large
+                    if compressedData.count > maxSizeBytes {
+                        print("Error: Compressed source map is still too large (\(String(format: "%.2f", compressedSizeMB))MB)")
+                        print("Maximum allowed size is 200MB")
+                        print("Consider:")
+                        print("  • Enable JavaScript minification")
+                        print("  • Use code splitting or dynamic imports")
+                        print("  • Switch to Hermes engine")
+                        try? FileManager.default.removeItem(atPath: zipPath)
+                        throw SourceMapToolError.failedToUpload
+                    }
+
+                    fileData = compressedData
+                    uploadFilename = "sourcemap.zip"
+                    contentType = "application/zip"
+
+                    // Clean up temp file
+                    try? FileManager.default.removeItem(atPath: zipPath)
+                } else {
+                    print("Warning: Failed to read compressed file, uploading uncompressed")
+                }
+            } else {
+                print("Warning: Compression failed, uploading uncompressed")
+            }
+        } catch {
+            print("Warning: Could not compress file (\(error)), uploading uncompressed")
+        }
+    }
+
+    // Final size check for uncompressed files
+    if fileData.count > maxSizeBytes {
+        let sizeMB = Double(fileData.count) / (1024 * 1024)
+        print("Error: Source map file is too large (\(String(format: "%.2f", sizeMB))MB)")
+        print("Maximum allowed size is 200MB")
+        print("Consider enabling minification or code splitting in your React Native build")
+        throw SourceMapToolError.failedToUpload
+    }
+
     body.append("--\(boundary)\r\n".data(using: .utf8)!)
-    body.append("Content-Disposition: form-data; name=\"sourcemap\"; filename=\"\(sourcemapName)\"\r\n".data(using: .utf8)!)
-    body.append("Content-Type: application/json\r\n\r\n".data(using: .utf8)!)
+    body.append("Content-Disposition: form-data; name=\"sourcemap\"; filename=\"\(uploadFilename)\"\r\n".data(using: .utf8)!)
+    body.append("Content-Type: \(contentType)\r\n\r\n".data(using: .utf8)!)
     body.append(fileData)
     body.append("\r\n".data(using: .utf8)!)
     body.append("--\(boundary)--\r\n".data(using: .utf8)!)
@@ -296,32 +369,112 @@ func uploadSourceMap(
             }
         }
 
+        // Parse error response if available
+        var errorMessage: String?
+        if let data = data,
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            errorMessage = json["message"] as? String ?? json["errorMessage"] as? String
+        }
+
         guard (200...299).contains(httpStatusCode) else {
-            if httpStatusCode == 401 {
-                print("Error: Unauthorized (HTTP 401)")
-                print("The API key is valid, but the app token belongs to a different account")
-                print("Please ensure the API key and app token are from the same New Relic account")
-            } else if httpStatusCode == 403 {
-                print("Error: Forbidden (HTTP 403)")
-                print("The API key doesn't have the required capability")
-                print("Please check your New Relic Ingest API Key at https://one.newrelic.com/api-keys")
-            } else if httpStatusCode == 404 {
-                print("Error: Not Found (HTTP 404)")
-                print("The app token (X-APP-LICENSE-KEY) is invalid or doesn't exist")
-                print("Please verify your New Relic app token in Info.plist")
-            } else if httpStatusCode == 413 {
-                print("Error: Payload too large (HTTP 413)")
-                print("Source map file exceeds the 200MB limit")
-            } else {
-                print("Error: Upload failed with HTTP status: \(httpStatusCode)")
+            print("Error: Source map upload failed (HTTP \(httpStatusCode))")
+
+            switch httpStatusCode {
+            case 400:
+                print("Bad Request - Validation failed")
+                if let error = errorMessage {
+                    print("  \(error)")
+                }
+                print("Common causes:")
+                print("  • Source map version must be 3")
+                print("  • Missing required fields (jsBundleId, appVersionId, sourcemapName)")
+                print("  • Invalid JSON format")
+                print("  • ZIP file issues (no valid files, multiple files, or invalid extension)")
+
+            case 401:
+                print("Unauthorized - API key and app token mismatch")
+                if let error = errorMessage {
+                    print("  \(error)")
+                }
+                print("The API key is valid, but the app token belongs to a different account.")
+                print("Ensure both are from the same New Relic account.")
+
+            case 403:
+                print("Forbidden - API key lacks required capability")
+                if let error = errorMessage {
+                    print("  \(error)")
+                }
+                print("Check your New Relic Ingest API Key at https://one.newrelic.com/api-keys")
+
+            case 404:
+                print("Not Found - Invalid app token")
+                if let error = errorMessage {
+                    print("  \(error)")
+                }
+                print("The X-APP-LICENSE-KEY (app token) doesn't exist.")
+                print("Verify your app token in the New Relic mobile app settings.")
+
+            case 413:
+                print("Payload Too Large - File exceeds size limit")
+                if let error = errorMessage {
+                    print("  \(error)")
+                }
+                print("The source map file exceeds 200MB (zipped or unzipped).")
+                print("Consider:")
+                print("  • Enable JavaScript minification")
+                print("  • Use code splitting or dynamic imports")
+                print("  • Switch to Hermes engine (produces smaller bundles)")
+
+            case 500...599:
+                print("Internal Server Error - Server-side issue")
+                if let error = errorMessage {
+                    print("  \(error)")
+                }
+                print("An unexpected error occurred on the server.")
+                print("Check upload_sourcemap_results.log and try again.")
+
+            default:
+                if let error = errorMessage {
+                    print("  \(error)")
+                }
             }
 
+            // Always print full response body in debug mode
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                print("Response: \(responseString)")
+                if debug {
+                    print("Full response body: \(responseString)")
+                }
             }
 
             uploadError = SourceMapToolError.failedToUpload
             return
+        }
+
+        // Success - Parse and display metadata
+        if httpStatusCode == 201, let data = data,
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let metadata = json["sourcemapMetaData"] as? [String: Any] {
+            print("✅ Source map uploaded successfully!")
+            if let entityGuid = metadata["entityGuid"] as? String {
+                print("  Entity GUID: \(entityGuid)")
+            }
+            if let accountId = metadata["accountId"] {
+                print("  Account ID: \(accountId)")
+            }
+            if let appId = metadata["applicationId"] {
+                print("  Application ID: \(appId)")
+            }
+            if let jsBundleId = metadata["JSBundleId"] as? String {
+                print("  JS Bundle ID: \(jsBundleId)")
+            }
+            if let appVersion = metadata["appVersionId"] as? String {
+                print("  App Version: \(appVersion)")
+            }
+            if let createdAt = metadata["createdAt"] as? String {
+                print("  Created At: \(createdAt)")
+            }
+        } else {
+            print("✅ Source map uploaded successfully (HTTP \(httpStatusCode))")
         }
     }
 

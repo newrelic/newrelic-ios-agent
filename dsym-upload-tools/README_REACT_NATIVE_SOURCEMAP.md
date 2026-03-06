@@ -94,13 +94,16 @@ export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.eu01.nr-data.net"
 ```
 
 #### NEWRELIC_JS_BUNDLE_ID
-Override the automatically generated JS Bundle ID with a custom value.
+Override the automatically detected JS Bundle ID with a custom value.
 
 ```bash
 export NEWRELIC_JS_BUNDLE_ID="my-custom-build-id"
 ```
 
-By default, the script generates: `{appVersion}.{buildNumber}-{shortUUID}`
+By default, the script reads the `version` field from `package.json` (e.g., `"1.0.0"`).
+If `package.json` is not found, it falls back to the native app version.
+
+**Important:** This value must match the `jsAppVersion` parameter you pass when calling `NewRelic.recordJavascriptError()` in your React Native app. This is used to match errors with the correct source map for symbolication.
 
 ## How It Works
 
@@ -109,9 +112,29 @@ By default, the script generates: `{appVersion}.{buildNumber}-{shortUUID}`
 3. Reads metadata from your app's `Info.plist`:
    - **App Version** (`CFBundleShortVersionString`)
    - **Build Number** (`CFBundleVersion`)
-4. Generates a **JS Bundle ID** (git commit SHA or build number)
-5. Uploads the source map to New Relic via multipart form POST
-6. Runs in the background to avoid delaying your build
+4. Auto-detects **JS Bundle ID** from `package.json` version field
+5. **Automatic compression** for large files:
+   - Files over 50MB are automatically compressed to `.zip` format
+   - Typical compression: 80-90% size reduction for source maps
+   - Prevents upload failures due to 200MB API limit
+6. Uploads the source map to New Relic via multipart form POST
+7. Runs in the background to avoid delaying your build
+
+### Automatic Compression
+
+Source maps are JSON files that compress very well. The script automatically:
+- Detects if the source map is larger than 50MB
+- Compresses it to `.zip` format using the system `ditto` command
+- Uploads the compressed version if it's smaller than 200MB
+- Falls back to uncompressed if compression fails
+
+**Example output:**
+```
+Source map size: 85.43MB
+Compressing source map for upload...
+Compressed size: 12.67MB (85.2% reduction)
+✅ Source map uploaded successfully!
+```
 
 ## Uploaded Metadata
 
@@ -120,21 +143,105 @@ The following data is sent with each source map upload:
 | Field | Description | Example |
 |-------|-------------|---------|
 | `sourcemap` | The source map file | `main.jsbundle.map` |
-| `jsBundleId` | Unique identifier for this build | `1.2.3.42-a1b2c3d4` (appVersion.buildNumber-shortUUID) |
+| `jsBundleId` | Unique identifier for this build | `1.0.0` (from package.json) |
 | `appVersionId` | App marketing version | `1.2.3` |
 | `sourcemapName` | Name of the source map | `main.jsbundle.map` |
 
-### JS Bundle ID Format
+### JS Bundle ID
 
-The script automatically generates a unique, human-readable identifier:
-```
-Format: {appVersion}.{buildNumber}-{shortUUID}
-Example: 1.2.3.42-a1b2c3d4
+The script automatically detects the JS Bundle ID from your `package.json`:
+```json
+// package.json
+{
+  "version": "1.0.0"  // ← Used as jsBundleId
+}
 ```
 
-This ensures each upload is unique while remaining easy to identify in listings.
+**Important for CodePush/OTA Updates:**
+If you use CodePush or other OTA update mechanisms, you must manually set the `jsBundleId` to match your deployment:
+```bash
+export NEWRELIC_JS_BUNDLE_ID="1.0.0-v5"  # version + CodePush label
+```
+
+This same value must be passed when recording JavaScript errors in your React Native app.
 
 ## Troubleshooting
+
+### Upload Error Codes
+
+The upload script provides detailed error messages for all API responses:
+
+#### HTTP 400 - Bad Request
+**Meaning:** Validation failed on the source map file or request
+
+**Common causes:**
+- Source map version must be 3 (not version 1 or 2)
+- Missing required fields (`jsBundleId`, `appVersionId`, `sourcemapName`)
+- Invalid JSON format in the source map file
+- ZIP file contains no valid files or multiple files
+- Invalid file extension (must be `.map`, `.js.map`, `.json`, or `.zip`)
+
+**Solutions:**
+1. Verify your source map is generated correctly
+2. Check that `SOURCEMAP_FILE` points to a valid `.map` file
+3. Ensure React Native bundler is configured properly
+4. Review `upload_sourcemap_results.log` for detailed error
+
+#### HTTP 401 - Unauthorized
+**Meaning:** API key and app token belong to different accounts
+
+**Error message:** `"User not authorized"` (cross-account protection)
+
+**Solutions:**
+1. Verify both API key and app token are from the **same New Relic account**
+2. Get Ingest API Key from: [https://one.newrelic.com/api-keys](https://one.newrelic.com/api-keys)
+3. Get App Token from: New Relic mobile app settings
+
+#### HTTP 403 - Forbidden
+**Meaning:** API key doesn't have required capabilities
+
+**Error message:** `"User not authorized"`
+
+**Solutions:**
+1. Use an **Ingest API Key**, not a User API Key
+2. Verify the API key has "Insert" permission
+3. Check for extra spaces or quotes in the API key
+
+#### HTTP 404 - Not Found
+**Meaning:** App token (X-APP-LICENSE-KEY) is invalid
+
+**Error message:** `"applicationToken is invalid"`
+
+**Solutions:**
+1. Verify the app token in your `Info.plist` matches New Relic settings
+2. Ensure the app token exists and hasn't been deleted
+3. Check the app token is for the correct account
+
+#### HTTP 413 - Payload Too Large
+**Meaning:** Source map file exceeds 200MB limit (even after compression)
+
+**Error message:** `"Sourcemap file is too large"`
+
+**The script automatically:**
+- Compresses files over 50MB to `.zip` format
+- Typically achieves 80-90% size reduction
+- Only uploads if compressed size is under 200MB
+
+**If you still get this error:**
+1. Enable JavaScript minification in Release builds
+2. Use code splitting or dynamic imports to reduce bundle size
+3. Switch to [Hermes engine](https://reactnative.dev/docs/hermes) (produces smaller bundles)
+4. Check `upload_sourcemap_results.log` for compression details
+
+#### HTTP 500 - Internal Server Error
+**Meaning:** Unexpected server-side error
+
+**Error message:** `"Unexpected error occurred during upload process because of {error}"`
+
+**Solutions:**
+1. Check `upload_sourcemap_results.log` for details
+2. Retry the upload (transient server issue)
+3. Contact New Relic support if issue persists
 
 ### Source map not found error
 
@@ -145,24 +252,6 @@ This ensures each upload is unique while remaining easy to identify in listings.
 2. Check that `SOURCEMAP_FILE` environment variable is set in the bundle phase
 3. Verify the upload script runs **AFTER** the bundle phase (check Build Phases order)
 4. Confirm you're building for Release configuration
-
-### Invalid API Key (HTTP 403)
-
-**Error:** `Upload failed: Invalid API key (HTTP 403)`
-
-**Solutions:**
-1. Verify you're using an **Ingest API Key**, not a User API Key
-2. Get your API key from [https://one.newrelic.com/api-keys](https://one.newrelic.com/api-keys)
-3. Check for extra spaces or quotes around the API key in your script
-
-### File size too large (HTTP 413)
-
-**Error:** `Source map exceeds 200MB limit`
-
-**Solutions:**
-1. Enable JavaScript minification in your Release builds
-2. Use code splitting or dynamic imports to reduce bundle size
-3. Consider using [Hermes engine](https://reactnative.dev/docs/hermes) which produces smaller bundles
 
 ### Script doesn't run
 
@@ -183,27 +272,59 @@ SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n
 
 ## Best Practices
 
-### 1. Automatic Unique Identifiers
+### 1. JS Bundle ID Must Match Between Upload and Errors
 
-The script automatically generates unique, readable JS Bundle IDs in the format:
+**Critical:** The `jsBundleId` used for sourcemap upload must match the `jsAppVersion` you pass when recording JavaScript errors.
+
+```javascript
+// In your React Native app
+import { version } from './package.json';
+
+NewRelic.recordJavascriptError(
+  error.name,
+  error.message,
+  error.stack,
+  false,
+  version  // ← Must match the jsBundleId uploaded with sourcemap!
+);
 ```
-{appVersion}.{buildNumber}-{shortUUID}
-Example: 1.2.3.42-a1b2c3d4
+
+### 2. Automatic Detection from package.json
+
+The script automatically reads from `package.json`:
+```json
+{
+  "version": "1.0.0"  // ← Automatically used as jsBundleId
+}
 ```
 
-No additional configuration needed! Each build gets a guaranteed unique identifier.
+No additional configuration needed for standard builds!
 
-### 2. Custom Build Identifiers (Optional)
+### 3. CodePush / OTA Updates
 
-If you use a CI/CD system with build IDs, you can override the automatic identifier:
+If you use CodePush or other OTA update mechanisms:
 
 ```bash
-export NEWRELIC_JS_BUNDLE_ID="${CI_BUILD_ID}"
+# When releasing CodePush update
+export NEWRELIC_JS_BUNDLE_ID="1.0.0-v5"  # version + CodePush label
+
+# Upload sourcemap with matching ID
 SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
 /bin/sh "${SCRIPT}" "YOUR_INGEST_API_KEY" "YOUR_APP_TOKEN"
 ```
 
-### 3. Store Credentials Securely
+```javascript
+// In your React Native app - detect CodePush label
+import codePush from 'react-native-code-push';
+import { version } from './package.json';
+
+const update = await codePush.getUpdateMetadata();
+const jsBundleId = update ? `${version}-${update.label}` : version;
+
+NewRelic.recordJavascriptError(..., jsBundleId);
+```
+
+### 4. Store Credentials Securely
 
 Don't commit your API keys to version control. Instead:
 
@@ -226,7 +347,7 @@ SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n
 /bin/sh "${SCRIPT}" "${NEWRELIC_INGEST_KEY}" "${NEWRELIC_APP_TOKEN}"
 ```
 
-### 4. Test with Debug Mode First
+### 5. Test with Debug Mode First
 
 Before deploying to production, test the upload with debug mode enabled to verify configuration:
 

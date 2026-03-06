@@ -21,6 +21,26 @@ echo "New Relic: For troubleshooting, see upload_sourcemap_results.log file in p
 WORK_DIRECTORY=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 SCRIPT="$WORK_DIRECTORY/upload-react-native-sourcemap.swift"
 
+# Auto-detect JS Bundle ID from package.json if not already set
+if [ -z "$NEWRELIC_JS_BUNDLE_ID" ]; then
+    # Try to find package.json (typically in parent directory of SRCROOT)
+    if [ -n "$SRCROOT" ]; then
+        PACKAGE_JSON="${SRCROOT}/../package.json"
+    else
+        # Fallback: search current directory and parents
+        PACKAGE_JSON="$(pwd)/package.json"
+    fi
+
+    if [ -f "$PACKAGE_JSON" ]; then
+        # Extract version from package.json
+        JS_VERSION=$(grep -m 1 '"version"' "$PACKAGE_JSON" | sed 's/.*: "\(.*\)".*/\1/' | tr -d '",')
+        if [ -n "$JS_VERSION" ]; then
+            export NEWRELIC_JS_BUNDLE_ID="$JS_VERSION"
+            echo "New Relic: Auto-detected JS Bundle ID from package.json: $JS_VERSION"
+        fi
+    fi
+fi
+
 ## Running with below command is useful for seeing output in Xcode,
 ## but it will incur delays in the build process while the source map uploads.
 # /usr/bin/xcrun --sdk macosx swift "$SCRIPT" $INGEST_API_KEY $APP_TOKEN $DEBUG_FLAG

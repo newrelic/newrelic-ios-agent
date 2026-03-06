@@ -232,6 +232,12 @@ public class JSErrorController: NSObject {
         // Format payload
         let payload = formatPayload(errors)
 
+        // DEBUG: Print full payload for Android team
+        if let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            NRLOG_AGENT_DEBUG("=== JS ERROR PAYLOAD ===\n\(jsonString)\n======================")
+        }
+
         // Get connection info
         let connectInfo = NRMAAgentConfiguration.connectionInformation()
 
@@ -320,9 +326,10 @@ public class JSErrorController: NSObject {
             event["threads"] = urlEncodeStackTrace(stackTrace)
         }
 
-        // Add jsAppVersion if available
+        // Add jsAppVersion and jsBundleId (they're the same value per Mobile Errors Protocol)
         if let jsAppVersion = errorData["jsAppVersion"] as? String {
-            event["jsAppVersion"] = jsAppVersion
+            event["jsAppVersion"] = jsAppVersion  // Keep for backward compatibility
+            event["jsBundleId"] = jsAppVersion    // Required for sourcemap matching
         }
 
         // Add additional attributes if present
