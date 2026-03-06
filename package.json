@@ -2,12 +2,16 @@
   "name": "nrtestapp",
   "version": "1.0.0",
   "dependencies": {
-    "wdio-lambdatest-service": "^4.0.1",
     "@wdio/cli": "^9.24.0",
     "@wdio/local-runner": "^9.24.0",
     "@wdio/mocha-framework": "^9.24.0",
     "appium": "^3.2.0",
-    "dayjs": "^1.11.19"
+    "basic-ftp": "^5.2.0",
+    "body-parser": "^2.2.2",
+    "dayjs": "^1.11.19",
+    "diff": "^5.2.2",
+    "undici": "^7.22.0",
+    "wdio-lambdatest-service": "^4.0.1"
   },
   "scripts": {
     "test:wdio-ios": "./node_modules/.bin/wdio LambdaTest/wdio-config-ios.js"
@@ -15,5 +19,5 @@
   "devDependencies": {
     "typescript": "^5.9.3",
     "webdriverio": "^9.24.0"
-}
+  }
 }
