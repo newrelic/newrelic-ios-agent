@@ -1,0 +1,202 @@
+# LambdaTest iOS Tests for Pull Requests
+# This workflow runs iOS tests on LambdaTest when PRs are opened/updated
+# and posts test results and videos back to the PR
+
+name: "PR: LambdaTest iOS Tests"
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'Agent/**'
+      - 'NewRelic/**'
+      - 'Test Harness/**'
+      - 'LambdaTest/**'
+      - '.github/workflows/pr-lambdatest.yml'
+
+  # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to test'
+        required: true
+        type: string
+
+jobs:
+  # Build and upload the iOS app if needed
+  build-and-upload-app:
+    name: Build & Upload iOS App
+    runs-on: macos-15
+    outputs:
+      app-id: ${{ steps.upload.outputs.app-id }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+        with:
+          submodules: true
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Select Xcode 16.4
+        run: |
+          sudo xcode-select -switch /Applications/Xcode_16.4.app
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set plist secrets
+        env:
+          NRTESTAPP_CRASH_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS }}
+          NRTESTAPP_MAIN_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS }}
+          NRTESTAPP_APP_TOKEN: ${{ secrets.NRTESTAPP_APP_TOKEN }}
+        run: |
+          PLIST_PATH="./Test Harness/NRTestApp/NRAPI-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
+
+      - name: Clean iOS app
+        run: |
+          xcodebuild clean -workspace Agent.xcworkspace -scheme NRTestApp -derivedDataPath "derived_build"
+
+      - name: Build iOS app
+        run: |
+          xcodebuild build \
+            -workspace Agent.xcworkspace -scheme NRTestApp \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath "derived_build" \
+            build
+
+      - name: Compress iOS app
+        run: |
+          cd ./derived_build/Build/Products/Release-iphonesimulator/
+          zip -r nrtestapp-ios.zip NRTestApp.app
+
+      - name: Upload to LambdaTest
+        id: upload
+        env:
+          LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+          LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+        run: |
+          # Move the app to the expected location
+          mkdir -p builds
+          cp "./derived_build/Build/Products/Release-iphonesimulator/nrtestapp-ios.zip" "builds/nrtestapp-ios.zip"
+
+          # Upload to LambdaTest
+          cd LambdaTest
+          node uploadAppToLambdaTest.mjs
+
+          # Export the app ID for the next job
+          if [ -f last-app-id ]; then
+            APP_ID=$(cat last-app-id)
+            echo "app-id=$APP_ID" >> $GITHUB_OUTPUT
+            echo "Uploaded app with ID: $APP_ID"
+          else
+            echo "Error: Could not find app ID after upload"
+            exit 1
+          fi
+
+  # Run the iOS tests and post results to PR
+  run-tests-and-post-results:
+    name: Run Tests & Post Results
+    runs-on: ubuntu-latest
+    needs: build-and-upload-app
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+      LT_APP_ID: ${{ needs.build-and-upload-app.outputs.app-id }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Install additional dependencies
+        run: |
+          cd LambdaTest
+          npm install
+          # Ensure we have the json reporter for wdio
+          npm install @wdio/json-reporter --save-dev
+
+      - name: Set PR status to pending
+        run: |
+          if [ -n "$GITHUB_PR_NUMBER" ]; then
+            curl -X POST \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/statuses/${{ github.event.pull_request.head.sha || github.sha }}" \
+              -d '{
+                "state": "pending",
+                "description": "LambdaTest iOS tests are running...",
+                "context": "LambdaTest/iOS Tests",
+                "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              }'
+          fi
+
+      - name: Run iOS tests
+        id: run-tests
+        continue-on-error: true
+        run: |
+          echo "Running tests with app ID: $LT_APP_ID"
+          cd LambdaTest
+
+          # Create results directory
+          mkdir -p test-results
+
+          # Run tests using PR configuration
+          npx wdio wdio-config-ios-pr.js
+
+          # Check if tests completed (even if some failed)
+          if [ -f "current-build-name" ]; then
+            BUILD_NAME=$(cat current-build-name)
+            echo "BUILD_NAME=$BUILD_NAME" >> $GITHUB_ENV
+            echo "Tests completed with build name: $BUILD_NAME"
+          else
+            echo "Warning: Build name not found, using fallback"
+            BUILD_NAME="PR-$GITHUB_PR_NUMBER Build NRTestApp - iOS:$(date +'%Y-%m-%d_%H-%M')"
+            echo "BUILD_NAME=$BUILD_NAME" >> $GITHUB_ENV
+          fi
+
+      - name: Wait for LambdaTest processing
+        run: |
+          echo "⏳ Waiting for LambdaTest to process results and generate videos..."
+          sleep 30
+
+      - name: Post results to PR
+        if: always() && env.GITHUB_PR_NUMBER
+        env:
+          BUILD_NAME: ${{ env.BUILD_NAME }}
+        run: |
+          echo "📤 Posting results to PR #$GITHUB_PR_NUMBER"
+          echo "Build name: $BUILD_NAME"
+          cd LambdaTest
+          node postResultsToPR.mjs
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambdatest-results
+          path: |
+            LambdaTest/test-results/
+            LambdaTest/current-build-name
+            LambdaTest/test-summary.json
+          retention-days: 7
+
+      - name: Log completion
+        if: always()
+        run: |
+          if [ "${{ steps.run-tests.outcome }}" = "success" ]; then
+            echo "✅ iOS tests completed successfully"
+          else
+            echo "❌ iOS tests completed with failures"
+          fi
