@@ -25,6 +25,10 @@ class MobileErrorsUploader: NSObject {
     private let retryTracker = NSMutableDictionary()
     private let retryTrackerLock = NSLock()
 
+    // Timer tracking for supportability metrics
+    private let uploadTimers = NSMutableDictionary()
+    private let uploadTimersLock = NSLock()
+
     // MARK: - Initialization
 
     init?(host: String, applicationToken: String, appVersion: String, useSSL: Bool) {
@@ -146,6 +150,9 @@ class MobileErrorsUploader: NSObject {
         // Track for retry
         trackRequest(request)
 
+        // Start timing for supportability metrics
+        startUploadTimer(for: request)
+
         // Create and start upload task
         let task = session.dataTask(with: request)
         task.resume()
@@ -164,6 +171,9 @@ class MobileErrorsUploader: NSObject {
         NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Retrying \(requestsToRetry.count) failed uploads")
 
         for request in requestsToRetry {
+            // Start timing for retry
+            startUploadTimer(for: request)
+
             let task = session.dataTask(with: request)
             task.resume()
         }
@@ -289,20 +299,60 @@ class MobileErrorsUploader: NSObject {
 
         NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Received response with status code: \(statusCode)")
 
+        // Record supportability metrics based on status code
         if statusCode >= 200 && statusCode < 300 {
-            // Success
+            // Success - record upload time
+            recordUploadTime(for: request)
             handleSuccessfulRequest(request)
+        } else if statusCode == 408 {
+            // Timeout
+            NRMASupportMetricHelper.enqueueJSErrorUploadTimeoutMetric()
+            NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Request timeout (\(statusCode))")
+            removeFromRetryTracker(request)
+        } else if statusCode == 429 {
+            // Throttled
+            NRMASupportMetricHelper.enqueueJSErrorUploadThrottledMetric()
+            NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Request throttled (\(statusCode)), will retry")
+            handleFailedRequest(request, error: nil)
         } else if statusCode >= 400 && statusCode < 500 {
             // Client error - don't retry
+            NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Client error (\(statusCode)), not retrying")
             removeFromRetryTracker(request)
         } else if statusCode >= 500 && statusCode < 600 {
             // Server error - retry
+            NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Server error (\(statusCode)), will retry")
             handleFailedRequest(request, error: nil)
         } else {
+            NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Unexpected status code: \(statusCode)")
             handleFailedRequest(request, error: nil)
+        }
+    }
+
+    // MARK: - Supportability Metrics
+
+    private func startUploadTimer(for request: URLRequest) {
+        guard let url = request.url?.absoluteString else { return }
+
+        uploadTimersLock.lock()
+        uploadTimers[url] = Date()
+        uploadTimersLock.unlock()
+    }
+
+    private func recordUploadTime(for request: URLRequest) {
+        guard let url = request.url?.absoluteString else { return }
+
+        uploadTimersLock.lock()
+        let startTime = uploadTimers[url] as? Date
+        uploadTimers.removeObject(forKey: url)
+        uploadTimersLock.unlock()
+
+        if let startTime = startTime {
+            let elapsedTime = Date().timeIntervalSince(startTime) * 1000 // Convert to milliseconds
+            NRMASupportMetricHelper.enqueueJSErrorUploadTimeMetric(elapsedTime)
+            NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Recorded upload time: \(elapsedTime)ms")
         }
     }
 }

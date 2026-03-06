@@ -179,6 +179,13 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplayMetricURLTooLarge       kNRMASessionReplay @"/UrlTooLarge"
 #define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
 
+// JS Error
+#define kNRMAJSError kNRAgentHealthPrefix @"/%@/%@/JSError"
+#define kNRMAJSErrorMetricUploadTime        kNRMAJSError @"/UploadTime"
+#define kNRMAJSErrorMetricUploadTimeout     kNRMAJSError @"/UploadTimeOut"
+#define kNRMAJSErrorMetricUploadThrottled   kNRMAJSError @"/UploadThrottled"
+#define kNRMAJSErrorMetricFailedUpload      kNRMAJSError @"/FailedUpload"
+
 #define NRMAHandledRequestKey @"NRMAHandledRequest"
 
 // Network Failure Codes
