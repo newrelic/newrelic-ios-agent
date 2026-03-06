@@ -9,11 +9,13 @@
 #import <Foundation/Foundation.h>
 #import "NRMAHarvestAware.h"
 
+#if TARGET_OS_IOS
+
 @class JSErrorController;
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// Adapter to bridge JSErrorController (Swift) with NRMAHarvestAware protocol
+/// Adapter to bridge JSErrorController (Swift) with NRMAHarvestAware protocol (iOS only - for React Native)
 @interface NRMAJSErrorHarvestAdapter : NSObject <NRMAHarvestAware>
 
 - (instancetype)initWithController:(JSErrorController*)controller;
@@ -21,3 +23,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif // TARGET_OS_IOS

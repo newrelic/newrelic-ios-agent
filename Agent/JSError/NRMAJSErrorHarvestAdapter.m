@@ -7,6 +7,9 @@
 //
 
 #import "NRMAJSErrorHarvestAdapter.h"
+
+#if TARGET_OS_IOS
+
 #import <NewRelic/NewRelic-Swift.h>
 
 @interface NRMAJSErrorHarvestAdapter ()
@@ -56,3 +59,5 @@
 }
 
 @end
+
+#endif // TARGET_OS_IOS

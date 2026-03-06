@@ -759,7 +759,8 @@
         return false;
     }
 
-    // Get the JS Error Controller
+#if TARGET_OS_IOS
+    // Get the JS Error Controller (iOS only - for React Native)
     JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
 
     if (jsErrorController == nil) {
@@ -776,6 +777,11 @@
                additionalAttributes:additionalAttributes];
 
     return true;
+#else
+    // JS Error reporting is only available on iOS (for React Native)
+    NRLOG_AGENT_ERROR(@"JS Error reporting is only available on iOS. Cannot record JS error.");
+    return false;
+#endif
 }
 
 #pragma mark - Event retention settings

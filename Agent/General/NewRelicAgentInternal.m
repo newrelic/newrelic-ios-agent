@@ -608,7 +608,8 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     }
 
-    // Initialize JS Error Controller for Mobile Errors Protocol
+#if TARGET_OS_IOS
+    // Initialize JS Error Controller for Mobile Errors Protocol (iOS only - for React Native)
     self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
                                                                     sessionStartTime:self.appSessionStartDate
                                                                   agentConfiguration:self.agentConfiguration
@@ -625,6 +626,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
         [NRMAHarvestController addHarvestListener:harvestAdapter];
     }
+#endif
 
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
