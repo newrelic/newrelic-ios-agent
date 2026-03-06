@@ -133,4 +133,9 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(attributedTextTestViewController, animated: true)
     }
 
+    func showUIButtonViewController() {
+        let uiButtonViewController = ViewControllerProvider.uiButtonViewController
+        navigationController.pushViewController(uiButtonViewController, animated: true)
+    }
+
 }

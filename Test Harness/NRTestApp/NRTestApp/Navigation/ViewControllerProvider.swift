@@ -60,5 +60,10 @@ enum ViewControllerProvider {
         let viewController = AttributedTextTestViewController()
         return viewController
     }
+
+    static var uiButtonViewController: UIButtonViewController {
+        let viewController = UIButtonViewController()
+        return viewController
+    }
 }
 
