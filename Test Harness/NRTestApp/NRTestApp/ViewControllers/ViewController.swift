@@ -15,17 +15,30 @@ class ViewController: UIViewController {
     var options =  [UtilOption]()
     
     var spaceImageView = UIImageView()
-    var spaceLabel = UILabel()
+    var zeroImageView = UIImageView()
+    var spaceLabel = SecureLabel()
+    var privateHelloLabel = UnsecureLabel()
     var spaceStack = UIStackView()
+    var helloButton = UIButton()
+    var helloWorldLabel: UILabel?
+        
+    private var timeLabel = UILabel()
+    private var appStartDate = Date()
+    private var timer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 #if os(iOS)
-        self.view.backgroundColor = .systemBackground
+        self.view.backgroundColor = .orange
 #endif
+        zeroImageView.image = UIImage()
+        
         setupSpaceStack()
         setupButtonsTable()
+        
+        setupTimeLabel()
+        startTimer()
         
         viewModel.error.onUpdate = { [weak self] _ in
             if let error = self?.viewModel.error.value {
@@ -43,11 +56,25 @@ class ViewController: UIViewController {
         }
         
         viewModel.loadApodData()
+        
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(appDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil)
 
         NewRelic.logInfo("ViewController viewDidLoad finished.")
     }
     
     func setupSpaceStack() {
+        self.view.addSubview(zeroImageView)
+        zeroImageView.translatesAutoresizingMaskIntoConstraints = false
+        zeroImageView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
+        zeroImageView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        zeroImageView.heightAnchor.constraint(lessThanOrEqualToConstant: 25.0).isActive = true
+        zeroImageView.widthAnchor.constraint(lessThanOrEqualToConstant: 25.0).isActive = true
+        zeroImageView.heightAnchor.constraint(greaterThanOrEqualToConstant: 10.0).isActive = true
+        zeroImageView.widthAnchor.constraint(greaterThanOrEqualToConstant: 10.0).isActive = true
+
         //Image View
         spaceImageView.contentMode = .scaleAspectFit
         spaceImageView.heightAnchor.constraint(lessThanOrEqualToConstant: 250.0).isActive = true
@@ -60,9 +87,24 @@ class ViewController: UIViewController {
         
         //Text Label
         spaceLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
-        spaceLabel.text  = ""
+        spaceLabel.text  = "Hello, World"
         spaceLabel.textAlignment = .center
         spaceLabel.numberOfLines = 0
+        spaceLabel.accessibilityIdentifier = "public" // Because this is a SecureLabel this should stay masked.
+        
+        //Text Label
+        privateHelloLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
+        privateHelloLabel.text  = "Secret Hello, World!"
+        privateHelloLabel.textAlignment = .center
+        privateHelloLabel.numberOfLines = 0
+        privateHelloLabel.accessibilityIdentifier = "private" // Even though this is a UnsecureLabel this tag should mark it masked.
+        
+        //Button
+        helloButton.setTitleColor(.green, for: .normal)
+        helloButton.setTitle("Hello", for: .normal)
+        if let helloButtonTitleLabel = helloButton.titleLabel {
+            helloButtonTitleLabel.accessibilityIdentifier = "public"
+        }
         
         //Stack View
         spaceStack.axis = .vertical
@@ -70,8 +112,10 @@ class ViewController: UIViewController {
         spaceStack.alignment = .center
         spaceStack.spacing = 16.0
 
+        spaceStack.addArrangedSubview(privateHelloLabel)
         spaceStack.addArrangedSubview(spaceImageView)
         spaceStack.addArrangedSubview(spaceLabel)
+        spaceStack.addArrangedSubview(helloButton)
         spaceStack.translatesAutoresizingMaskIntoConstraints = false
         
         self.view.addSubview(spaceStack)
@@ -85,11 +129,72 @@ class ViewController: UIViewController {
         spaceLabel.trailingAnchor.constraint(equalTo: self.spaceStack.trailingAnchor).isActive = true
     }
     
+    private func setupTimeLabel() {
+        timeLabel.translatesAutoresizingMaskIntoConstraints = false
+        timeLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium)
+        timeLabel.textColor = .white
+        timeLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        timeLabel.textAlignment = .center
+        timeLabel.layer.cornerRadius = 8
+        timeLabel.layer.masksToBounds = true
+        view.addSubview(timeLabel)
+
+        NSLayoutConstraint.activate([
+            timeLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
+            timeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
+            timeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 165),
+            timeLabel.heightAnchor.constraint(equalToConstant: 28)
+        ])
+    }
+
+    private func startTimer() {
+        updateTimeLabel()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateTimeLabel()
+        }
+    }
+
+    private func updateTimeLabel() {
+        let elapsed = Int(Date().timeIntervalSince(appStartDate))
+        let hours = elapsed / 3600
+        let minutes = (elapsed % 3600) / 60
+        let seconds = elapsed % 60
+
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        let currentTime = formatter.string(from: Date())
+
+        timeLabel.text = String(format: "%02d:%02d:%02d  %@", hours, minutes, seconds, currentTime)
+    }
+    
+    @objc private func appDidBecomeActive() {
+        appStartDate = Date()
+        timer?.invalidate()
+        startTimer()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        timer?.invalidate()
+    }
+    
     @objc func imageTapped(tapGestureRecognizer: UITapGestureRecognizer)
     {
         guard let spaceImage = spaceImageView.image else { return }
 
         coordinator?.showImageViewController(image:spaceImage)
+    }
+    
+    func swiftUIViewTapped() {
+        coordinator?.showSwiftUITestView()
+    }
+    
+    func swiftUICustomerViewTapped() {
+        coordinator?.showSwiftUICustomerView()
+    }
+    
+    func swiftUIViewRepresentableTapped() {
+        coordinator?.showSwiftUIViewRepresentableTestView()
     }
     
     func setupButtonsTable() {
@@ -110,10 +215,27 @@ class ViewController: UIViewController {
         tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
+        options.append(UtilOption(title: "SwiftUI", handler: { [self] in swiftUIViewTapped()}))
+
         options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
+
+        options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
+
+        options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
+        
+        options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
+        
+        options.append(UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction()}))
+
+        options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
+
+        options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
+
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
 #endif
+        options.append(UtilOption(title: "Confidential View", handler: { [self] in confidentialAction()}))
+
         options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
 
         options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
@@ -121,6 +243,16 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction()}))
 
         options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
+        
+        options.append(UtilOption(title: "SwiftUIViewRepresentable", handler: { [self] in swiftUIViewRepresentableTapped()}))
+        
+        options.append(UtilOption(title: "SwiftUICustomerViewTapped", handler: { [self] in swiftUICustomerViewTapped()}))
+
+        options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
+
+        // In setupButtonsTable(), add these options:
+        options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
+        options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
     }
     
     func utilitiesAction() {
@@ -150,6 +282,38 @@ class ViewController: UIViewController {
          }
      }
 
+    func textMaskingAction() {
+        coordinator?.showTextMaskingController()
+    }
+
+    func collectionViewAction() {
+        coordinator?.showCollectionController()
+    }
+    
+    func diffTestViewAction() {
+        coordinator?.showDiffTestController()
+    }
+    
+    func confidentialAction() {
+        coordinator?.showConfidentialController()
+    }
+    
+    func infiniteViewAction() {
+        coordinator?.showInfiniteScrollController()
+    }
+    
+    func infiniteImagesViewAction() {
+        coordinator?.showInfiniteImageScrollController()
+    }
+    
+    func performanceContentView() {
+        coordinator?.showPerformanceContentView()
+    }
+
+    func attributedTextTestAction() {
+        coordinator?.showAttributedTextTestViewController()
+    }
+
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
@@ -157,6 +321,23 @@ class ViewController: UIViewController {
         button.heightAnchor.constraint(equalToConstant: 20.0).isActive = true
         
         return button
+    }
+    
+    // Add these methods to your ViewController class
+    func addHelloWorldLabel() {
+        guard helloWorldLabel == nil else { return }
+        let label = UILabel()
+        label.text = "Hello world"
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        self.spaceStack.addArrangedSubview(label)
+
+        helloWorldLabel = label
+    }
+
+    func removeHelloWorldLabel() {
+        helloWorldLabel?.removeFromSuperview()
+        helloWorldLabel = nil
     }
 }
 

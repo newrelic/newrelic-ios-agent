@@ -905,8 +905,10 @@
     NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
                                                                                           bytesReceived:200
                                                                                            responseTime:[timer timeElapsedInSeconds]];
-
-    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+    
+    NRMAPayload *payload = [[NRMAPayload alloc] initWithTimestamp:[timer timeElapsedInSeconds] accountID:@"1" appID:@"1" traceID:@"1" parentID:@"1" trustedAccountKey:@"1"];
+    payload.dtEnabled = true;
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:payload]);
     
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -923,6 +925,10 @@
     XCTAssertTrue([decode[0][@"bytesSent"] isEqual:@100]);
     XCTAssertTrue([decode[0][@"bytesReceived"] isEqual:@200]);
     XCTAssertTrue([decode[0][@"statusCode"] isEqual:@200]);
+    XCTAssertTrue([decode[0][@"traceId"] isEqual:@"1"]);
+    XCTAssertTrue([decode[0][@"trace.id"] isEqual:@"1"]);
+    XCTAssertNotNil(decode[0][@"id"]);
+    XCTAssertNotNil(decode[0][@"guid"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertFalse([decode[0][@"requestUrl"] isEqualToString:urlString]);
     XCTAssertFalse([decode[0][@"requestUrl"] containsString:@"?"]);
@@ -959,7 +965,9 @@
                                                                            encodedResponseBody:responseBody
                                                                                  appDataHeader:appDataHeader];
 
-    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+    NRMAPayload *payload = [[NRMAPayload alloc] initWithTimestamp:[timer timeElapsedInSeconds] accountID:@"1" appID:@"1" traceID:@"1" parentID:@"1" trustedAccountKey:@"1"];
+    payload.dtEnabled = true;
+    XCTAssertTrue([analytics addHTTPErrorEvent:requestData withResponse:responseData withNRMAPayload:payload]);
 
     NSString* json = [analytics analyticsJSONString];
     NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
@@ -981,7 +989,10 @@
     XCTAssertTrue([decode[0][@"networkError"] isEqualToString:@"unauthorized"]);
     XCTAssertTrue([decode[0][@"nr.X-NewRelic-App-Data"] isEqualToString:appDataHeader]);
     XCTAssertTrue([decode[0][@"nr.responseBody"] isEqualToString:responseBodyEncoded]);
-
+    XCTAssertTrue([decode[0][@"traceId"] isEqual:@"1"]);
+    XCTAssertTrue([decode[0][@"trace.id"] isEqual:@"1"]);
+    XCTAssertNotNil(decode[0][@"id"]);
+    XCTAssertNotNil(decode[0][@"guid"]);
     XCTAssertNotNil(decode[0][@"responseTime"]);
     XCTAssertNil(decode[0][@"networkErrorCode"]);
 
@@ -1183,6 +1194,150 @@
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     
     XCTAssertFalse([analytics recordUserAction:nil]);
+}
+
+- (void) testRecordUserActionWithoutBlock {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+    [builder withActionType:@"Tap"];
+    [builder fromMethod:@"MethodName"];
+    [builder fromClass:@"TestClass"];
+    [builder fromUILabel:@"TestLabel"];
+    [builder withAccessibilityId:@"TestAccessibilityId"];
+    [builder atCoordinates:@"{10, 20}"];
+    [builder withElementFrame:@"{{0, 0}, {100, 50}}"];
+    NRMAUserAction* uiGesture = [builder build];
+
+    XCTAssertTrue([analytics recordUserAction:uiGesture]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"UserAction"]);
+    XCTAssertTrue([decode[0][@"actionType"] isEqualToString:@"Tap"]);
+    XCTAssertTrue([decode[0][@"methodExecuted"] isEqualToString:@"MethodName"]);
+    XCTAssertTrue([decode[0][@"targetObject"] isEqualToString:@"TestClass"]);
+    XCTAssertTrue([decode[0][@"label"] isEqualToString:@"TestLabel"]);
+    XCTAssertTrue([decode[0][@"accessibility"] isEqualToString:@"TestAccessibilityId"]);
+    XCTAssertTrue([decode[0][@"touchCoordinates"] isEqualToString:@"{10, 20}"]);
+    XCTAssertTrue([decode[0][@"controlRect"] isEqualToString:@"{{0, 0}, {100, 50}}"]);
+    XCTAssertNotNil(decode[0][@"timeSinceLoad"]);
+    XCTAssertNotNil(decode[0][@"timestamp"]);
+}
+
+- (void) testRecordUserActionAppBackground {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+    [builder withActionType:kNRMAUserActionAppBackground];
+    NRMAUserAction* backgroundGesture = [builder build];
+
+    XCTAssertTrue([analytics recordUserAction:backgroundGesture]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"UserAction"]);
+    XCTAssertTrue([decode[0][@"actionType"] isEqualToString:kNRMAUserActionAppBackground]);
+    XCTAssertTrue([decode[0][@"methodExecuted"] isEqualToString:@"ApplicationWillEnterBackground"]);
+    XCTAssertTrue([decode[0][@"targetObject"] isEqualToString:@"AppDelegate"]);
+    XCTAssertNotNil(decode[0][@"timeSinceLoad"]);
+    XCTAssertNotNil(decode[0][@"timestamp"]);
+
+}
+
+- (void) testRecordUserActionAppLaunch {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+    [builder withActionType:kNRMAUserActionAppLaunch];
+    NRMAUserAction* launchGesture = [builder build];
+
+    XCTAssertTrue([analytics recordUserAction:launchGesture]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"UserAction"]);
+    XCTAssertTrue([decode[0][@"actionType"] isEqualToString:kNRMAUserActionAppLaunch]);
+    XCTAssertTrue([decode[0][@"methodExecuted"] isEqualToString:@"ApplicationWillEnterForeground"]);
+    XCTAssertTrue([decode[0][@"targetObject"] isEqualToString:@"AppDelegate"]);
+    XCTAssertNotNil(decode[0][@"timeSinceLoad"]);
+    XCTAssertNotNil(decode[0][@"timestamp"]);
+
+}
+
+- (void) testRecordUserActionWithMinimalFields {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+    [builder withActionType:@"Swipe"];
+    [builder fromMethod:@"handleSwipe"];
+    [builder fromClass:@"SwipeController"];
+    NRMAUserAction* swipeGesture = [builder build];
+
+    XCTAssertTrue([analytics recordUserAction:swipeGesture]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"UserAction"]);
+    XCTAssertTrue([decode[0][@"actionType"] isEqualToString:@"Swipe"]);
+    XCTAssertTrue([decode[0][@"methodExecuted"] isEqualToString:@"handleSwipe"]);
+    XCTAssertTrue([decode[0][@"targetObject"] isEqualToString:@"SwipeController"]);
+    XCTAssertNotNil(decode[0][@"timeSinceLoad"]);
+    XCTAssertNotNil(decode[0][@"timestamp"]);
+}
+
+- (void) testRecordUserActionWithEmptyStrings {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+
+    NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+    [builder withActionType:@"Tap"];
+    [builder fromMethod:@"tapMethod"];
+    [builder fromClass:@"TapClass"];
+    [builder fromUILabel:@""];  // Empty label
+    [builder withAccessibilityId:@""];  // Empty accessibility
+    NRMAUserAction* tapGesture = [builder build];
+
+    XCTAssertTrue([analytics recordUserAction:tapGesture]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertNotNil(decode);
+    XCTAssertNotNil(decode[0]);
+    XCTAssertTrue([decode[0][@"eventType"] isEqualToString:@"MobileUserAction"]);
+    XCTAssertTrue([decode[0][@"category"] isEqualToString:@"UserAction"]);
+    XCTAssertTrue([decode[0][@"actionType"] isEqualToString:@"Tap"]);
+    XCTAssertNotNil(decode[0][@"timeSinceLoad"]);
+    XCTAssertNotNil(decode[0][@"timestamp"]);
+    // Empty strings should not be added as attributes
+    XCTAssertNil(decode[0][@"label"]);
+    XCTAssertNil(decode[0][@"accessibility"]);
 }
 
 

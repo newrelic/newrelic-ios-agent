@@ -32,6 +32,7 @@ bool EventManager::didReachMaxQueueTime(unsigned long long currentTimestamp_ms) 
 
 void EventManager::setMaxBufferSize(unsigned int size) {
     EventBufferConfig::getInstance().setMaxEventBufferSize(size);
+
 }
 
 void EventManager::empty() {
@@ -40,9 +41,12 @@ void EventManager::empty() {
     lock1.lock();
     _events.clear();
     _eventDuplicationStore.clear();
-    _oldest_event_timestamp_ms = 0;
     //we're empty so let's reset the total number of attempted inserts.
     _total_attempted_inserts = 0;
+}
+
+void EventManager::resetTimestamp() {
+    _oldest_event_timestamp_ms = 0;
 }
 
     std::string EventManager::createKey(std::shared_ptr<AnalyticEvent> event) {

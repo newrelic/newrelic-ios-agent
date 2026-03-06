@@ -36,11 +36,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface NewRelicAgentInternal : NSObject
 
 @property (nonatomic, readonly, assign) BOOL enabled;
-@property(atomic, strong) NRMAAnalytics* analyticsController;
+@property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
-@property(atomic, strong) NSString* userId;
+@property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
+@property(assign) double sessionReplaySampleSeed;
+@property(assign) double sessionReplayErrorSampleSeed;
 
 // Track the total number of successful network requests logged by the agent
 @property (nonatomic, readonly, assign) NSUInteger lifetimeRequestCount;
@@ -68,10 +70,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSDate*) getAppSessionStartDate;
 - (NSString* _Nullable) getUserId;
+- (void) setMaxEventBufferTime:(unsigned int)seconds;
+- (void) setMaxEventPoolSize:(unsigned int)size;
 
 - (void) applicationWillEnterForeground;
 - (void) sessionStartInitialization;
-+ (NewRelicAgentInternal*) sharedInstance;
++ (NewRelicAgentInternal* _Nullable) sharedInstance;
 
 - (NSString*) currentSessionId;
 
@@ -83,10 +87,55 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
 
+- (void) sessionReplayStart;
+
+- (void) sessionReplayDisabled;
+
+- (void) sessionReplayEndSession;
+
+- (BOOL) isSessionReplaySampled;
+- (BOOL) isSessionReplayErrorSampled;
+
+- (BOOL) isSessionReplayEnabled;
+
+// SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
+
+// Masked section
+
+// Masked Accessibility Identifiers
+- (BOOL)isAccessibilityIdentifierMasked:(NSString *)identifier;
+
+// Masked Classes
+- (BOOL)isClassNameMasked:(NSString *)className;
+
+// Unmasked section
+
+// Unmasked Accessibility Identifiers
+- (BOOL)isAccessibilityIdentifierUnmasked:(NSString *)identifier;
+
+// Unmasked Classes
+- (BOOL)isClassNameUnmasked:(NSString *)className;
+
+
+// END SESSION REPLAY SECTION End Methods to manage masked elements for SessionReplay
+
+
+// SESSION REPLAY SECTION Methods to start and pause SessionReplay
+
+// Start a session replay recording
+- (BOOL) recordReplay;
+
+// Pause a session replay recording
+- (BOOL) pauseReplay;
+// Notify Session Replay of an error
+- (void)sessionReplayOnError:(NSError *_Nullable)error;
+
+// END SESSION REPLAY SECTION Methods to start and pause SessionReplay
+
 @end
 
 /*
- Categories that swizzle methods to intercept method calls implement this protocol.  The 
+ Categories that swizzle methods to intercept method calls implement this protocol.  The
  initializeInstrumentation method of NewRelicAgentInternal calls NewRelicInitializeInstrumentation
  on each category.
  */

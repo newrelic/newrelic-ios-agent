@@ -135,12 +135,21 @@ withTimestamp:(NSNumber *) timestamp {
 }
 
 + (NSString *)logFilePath {
+#if TARGET_OS_TV
+    // tvOS doesn't support writing to NSLibraryDirectory. Use NSCachesDirectory instead.
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+#else
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
+#endif
     NSString *basePath = ([paths count] > 0) ? [paths objectAtIndex:0] : nil;
     if (basePath) {
         return [[basePath stringByAppendingPathComponent:@"newrelic"] stringByAppendingPathComponent:@"log.json"];
     }
-    NSLog(@"NewRelic: No NSDocumentDirectory found, file logging will not be available.");
+#if TARGET_OS_TV
+    NSLog(@"NewRelic: No NSCachesDirectory found, file logging will not be available.");
+#else
+    NSLog(@"NewRelic: No NSLibraryDirectory found, file logging will not be available.");
+#endif
     return nil;
 }
 
@@ -328,7 +337,7 @@ withTimestamp:(NSNumber *) timestamp {
     if (NRSessionId) [commonAttributes setObject:NRSessionId forKey:NRLogMessageSessionIdKey];
     [commonAttributes setObject:NRLogMessageMobileValue forKey:NRLogMessageInstrumentationProviderKey];
     if (name) [commonAttributes setObject:name forKey:NRLogMessageInstrumentationNameKey];
-    [commonAttributes setObject:[NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion forKey:NRLogMessageInstrumentationVersionKey];
+    [commonAttributes setObject:[NRMAAgentConfiguration connectionInformation].deviceInformation.platformVersion ?: [NRMAAgentConfiguration connectionInformation].deviceInformation.agentVersion forKey:NRLogMessageInstrumentationVersionKey];
     if (nativePlatform) [commonAttributes setObject:nativePlatform forKey:NRLogMessageInstrumentationCollectorKey];
     if (nrAppId) [commonAttributes setObject:nrAppId forKey:NRLogMessageAppIdKey];
 

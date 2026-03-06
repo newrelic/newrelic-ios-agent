@@ -6,7 +6,8 @@
 //
 
 #import "triggerException.h"
-#import "NewRelic/NewRelic.h"
+
+#import <NewRelic/NewRelic.h>
 
 @implementation triggerException
 

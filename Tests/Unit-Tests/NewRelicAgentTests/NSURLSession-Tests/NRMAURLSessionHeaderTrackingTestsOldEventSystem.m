@@ -47,15 +47,15 @@ static NewRelicAgentInternal* _sharedInstance;
     NSURLSession* session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:self.queue];
     self.mockSession = [OCMockObject partialMockForObject:session];
     
-    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-
     NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
                                                   collectorAddress:KNRMA_TEST_COLLECTOR_HOST
                                                       crashAddress:nil];
     [NRMAHarvestController initialize:config];
-
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
     NRMAHarvesterConfiguration* harvesterConfig = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
     [harvesterConfig setTrusted_account_key:@"777"];
+    harvesterConfig.account_id = 1234567;
+    harvesterConfig.application_id = 1234567;
     [[controller harvester] configureHarvester:harvesterConfig];
     
     self.finished = false;
@@ -85,16 +85,24 @@ static NewRelicAgentInternal* _sharedInstance;
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        self.finished = true;
-    });
+    __block NSArray* decode = nil;
+        NSTimeInterval timeout = 10.0;
+        NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
 
-    while (CFRunLoopGetMain() && !self.finished) {}
-    
-    NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                      options:0
-                                                        error:nil];
+    while ([timeoutDate timeIntervalSinceNow] > 0) {
+        NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
+        if (json) {
+            decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                     options:0
+                                                       error:nil];
+        }
+        
+        if (decode && decode.count > 0) {
+            break;
+        }
+        
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
 
     XCTAssertNotNil(decode);
     XCTAssertNotNil(decode[0]);
@@ -120,19 +128,29 @@ static NewRelicAgentInternal* _sharedInstance;
 
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"http://www.gooogle.com"]];
     [request setValue:@"Test custom" forHTTPHeaderField:@"TEST_CUSTOM"];
+    
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        self.finished = true;
-    });
+    __block NSArray* decode = nil;
+    NSTimeInterval timeout = 10.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
 
-    while (CFRunLoopGetMain() && !self.finished) {}
-    
-    NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                      options:0
-                                                        error:nil];
+    while ([timeoutDate timeIntervalSinceNow] > 0) {
+        NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
+        if (json) {
+            decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                     options:0
+                                                       error:nil];
+        }
+        
+        if (decode && decode.count > 0) {
+            break;
+        }
+        
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+
     
     XCTAssertNotNil(decode);
     XCTAssertNotNil(decode[0]);
@@ -159,16 +177,28 @@ static NewRelicAgentInternal* _sharedInstance;
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:request];
     [task resume];
 
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        self.finished = true;
-    });
+    __block NSArray* decode = nil;
+    NSTimeInterval timeout = 10.0;
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
 
-    while (CFRunLoopGetMain() && !self.finished) {}
-    
-    NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
-    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
-                                                      options:0
-                                                        error:nil];
+    while ([timeoutDate timeIntervalSinceNow] > 0) {
+        NSString* json = [[NewRelicAgentInternal sharedInstance].analyticsController analyticsJSONString];
+        if (json) {
+            decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                     options:0
+                                                       error:nil];
+        }
+        
+        // Break once we have an event captured
+        if (decode && decode.count > 0) {
+            break;
+        }
+        
+        // Yield to the RunLoop to allow error callbacks to process
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode
+                                 beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+
     
     XCTAssertNotNil(decode);
     XCTAssertNotNil(decode[0]);

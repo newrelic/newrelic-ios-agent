@@ -7,7 +7,7 @@
 #import "NewRelic.h"
 
 
-@interface NewRelicAgent(Development)
+@interface NewRelic(Development)
 /*
  Starts the agent and has it report to the given collector url for development purposes.
  */

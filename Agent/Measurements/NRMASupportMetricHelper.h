@@ -19,10 +19,17 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueUpgradeMetric;
 + (void) enqueueStopAgentMetric;
 + (void) enqueueConfigurationUpdateMetric;
++ (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size;
++ (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds;
+
 + (void) processDeferredMetrics;
 + (void) enqueueOfflinePayloadMetric:(long)size;
 
 + (void) enqueueLogSuccessMetric:(long)size;
 + (void) enqueueLogFailedMetric;
+
++ (void) enqueueSessionReplaySuccessMetric:(long)size;
++ (void) enqueueSessionReplayFailedMetric;
++ (void) enqueueSessionReplayURLTooLargeMetric;
 
 @end

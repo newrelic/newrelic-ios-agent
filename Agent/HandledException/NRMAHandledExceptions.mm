@@ -24,6 +24,9 @@
 #import "Constants.h"
 #import "NRMAAttributeValidator.h"
 
+// Session Replay Error Sampling
+// END
+
 @interface NRMAAnalytics(Protected)
 // Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController;
@@ -431,6 +434,13 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
             else if ([NewRelicInternalUtils isInteger:number]) {
 
                 auto baseValue = NewRelic::Value::createValue([number longLongValue]);
+
+                auto attribute = std::make_shared<NewRelic::AttributeBase>(NewRelic::AttributeBase([key UTF8String],baseValue));
+
+                resultMap.insert(std::make_pair([key UTF8String], attribute));
+            }
+            else if ([NewRelicInternalUtils isBool:number]) {
+                auto baseValue = NewRelic::Value::createValue([number boolValue]);
 
                 auto attribute = std::make_shared<NewRelic::AttributeBase>(NewRelic::AttributeBase([key UTF8String],baseValue));
 

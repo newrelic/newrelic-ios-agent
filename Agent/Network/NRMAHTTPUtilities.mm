@@ -25,6 +25,7 @@
 #import "NRMATraceContext.h"
 #import "W3CTraceParent.h"
 #import "W3CTraceState.h"
+#import "NRLogger.h"
 #import "NRMANetworkRequestData+CppInterface.h"
 #include <Utilities/Application.hpp>
 #import "NRMAHarvestController.h"
@@ -53,11 +54,14 @@ NSString* currentParentId = @"";
 }
 
 + (NSMutableURLRequest*) addCrossProcessIdentifier:(NSURLRequest*)request {
-
     NSMutableURLRequest* mutableRequest = [self makeMutable:request];
-
-    NSString* xprocess = [NRMAHarvestController configuration].cross_process_id;
-
+    NRMAHarvesterConfiguration *config = [NRMAHarvestController configuration];
+    
+    if (!config) {
+        return mutableRequest;
+    }
+    
+    NSString* xprocess = config.cross_process_id;
     if (xprocess.length) {
         [mutableRequest setValue:xprocess
               forHTTPHeaderField:NEW_RELIC_CROSS_PROCESS_ID_HEADER_KEY];
@@ -185,13 +189,17 @@ NSString* currentParentId = @"";
     std::unique_ptr<NewRelic::Connectivity::Payload> payload = nullptr;
     payload = NewRelic::Connectivity::Facade::getInstance().startTrip();
     
-    if(payload == nullptr) { return nil; }
+    if(payload == nullptr) {
+        NRLOG_AGENT_DEBUG(@"Not attaching distributed tracing because account or application id are missing.");
+        return nil;
+    }
     payload->setDistributedTracing(true);
     return [[NRMAPayloadContainer alloc] initWithPayload:std::move(payload)];
 }
 
 + (NRMAPayload *) startTrip {
     if(!NewRelic::Application::getInstance().isValid()) {
+        NRLOG_AGENT_DEBUG(@"Not attaching distributed tracing because account or application id are missing.");
         return nil;
     }
     
@@ -205,7 +213,7 @@ NSString* currentParentId = @"";
         currentParentId = @"";
         
         NRMAPayload * payload;
-        if(currentTraceId != nil && currentParentId != nil){
+        if(currentTraceId != nil && currentParentId != nil && accountID != nil && accountID.length > 0){
             payload = [[NRMAPayload alloc] initWithTimestamp:currentTimeStamp accountID:accountID appID:appId traceID:[NSString stringWithString:currentTraceId] parentID:[NSString stringWithString:currentParentId] trustedAccountKey:trustedAccountKey];
             currentParentId = [payload id];
         }
@@ -214,6 +222,9 @@ NSString* currentParentId = @"";
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithNRMAPayload:(NRMAPayload*)payload {
+    if(payload == nil) {
+        return @{};
+    }
     NSDictionary *json;
     
     if(payload != nil) {
@@ -250,6 +261,9 @@ NSString* currentParentId = @"";
 }
 
 + (NSDictionary<NSString*, NSString*> *) generateConnectivityHeadersWithPayload:(NRMAPayloadContainer*)payloadContainer {
+    if(payloadContainer == nil) {
+        return @{};
+    }
     NSString *payloadHeader;
     const std::unique_ptr<NewRelic::Connectivity::Payload>& payload = [payloadContainer getReference];
     

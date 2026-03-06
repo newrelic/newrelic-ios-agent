@@ -21,6 +21,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+      
       - name: Update gem
         run: bundle update
 
@@ -44,7 +47,7 @@ jobs:
   # The deployProductionSpecs job creates the prod Podspec and Prod Package.swift from template and pushes to cp trunk.
   deployProductionSpecs:
     name: deployProductionSpecs
-    runs-on: macos-15
+    runs-on: macos-14
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
     steps:

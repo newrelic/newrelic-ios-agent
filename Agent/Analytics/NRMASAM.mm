@@ -146,6 +146,23 @@
     }
 }
 
+- (BOOL) removeNRSessionAttributeNamed:(NSString*)name {
+    @synchronized (privateAttributeDict) {
+        id value = [privateAttributeDict objectForKey:name];
+
+        if (value) {
+            [privateAttributeDict removeObjectForKey:name];
+            [_privateAttributePersistentStore removeObjectForKey:name];
+            return YES;
+        }
+        else {
+            NRLOG_AGENT_VERBOSE(@"Failed to remove Session Attribute - it does not exist.");
+
+            return NO;
+        }
+    }
+}
+
 - (BOOL) removeAllSessionAttributes {
     @synchronized (attributeDict) {
         @synchronized (privateAttributeDict) {

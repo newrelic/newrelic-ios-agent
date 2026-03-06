@@ -30,6 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
                                  parentID:(NSString*)parentId
                                  trustedAccountKey:(NSString*)trustedAccountKey;
 
+- (BOOL)isEqual:(id)object;
+- (NSUInteger)hash;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -34,6 +34,7 @@ extern NSString *const kNRMA_RA_upgradeFrom;
 extern NSString *const kNRMA_RA_platform;
 extern NSString *const kNRMA_RA_platformVersion;
 extern NSString *const kNRMA_RA_lastInteraction;
+extern NSString *const kNRMA_RA_hasReplay;
 extern NSString *const kNRMA_RA_appDataHeader;
 extern NSString *const kNRMA_RA_responseBody;
 
@@ -44,6 +45,7 @@ extern NSString *const kNRMA_RET_mobileRequestError;
 extern NSString *const kNRMA_RET_mobileCrash;
 extern NSString *const kNRMA_RET_mobileBreadcrumb;
 extern NSString *const kNRMA_RET_mobileUserAction;
+extern NSString *const kNRMA_RET_userAction;
 
 extern NSString *const kNRMA_RA_methodExecuted;
 extern NSString *const kNRMA_RA_targetObject;

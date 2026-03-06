@@ -1,0 +1,22 @@
+# Jobs run on separate runners, so each needs to configure their environment
+name: Environment setup
+description: Reusable action to setup environment
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65 # pin@v4
+      with:
+        node-version: 20.5.1
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
+    - name: Log success
+      if: ${{ success() }}
+      run: echo "[ RUNNER ] - successfully installed packages"
+      shell: bash
+    - name: Log failure
+      if: ${{ failure() || cancelled() }}
+      run: echo "[ RUNNER ] - failed to install packages"
+      shell: bash

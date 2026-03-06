@@ -20,7 +20,7 @@
 
 @interface NRMAHarvestController : NSObject
 
-+ (NRMAHarvestController*) harvestController;
++ (NRMAHarvestController* _Nullable) harvestController;
 
 + (void) setPeriod:(long long)period;
 
@@ -44,7 +44,7 @@
 
 #pragma mark - HarvestController interface
 
-+ (NRMAHarvesterConfiguration*) configuration;
++ (NRMAHarvesterConfiguration*_Nullable) configuration;
 
 + (NRMAHarvestData*) harvestData;
 

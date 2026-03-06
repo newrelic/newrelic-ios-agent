@@ -9,6 +9,12 @@
 #import "PersistentEventStore.h"
 #import "NRLogger.h"
 #import "NRMAMobileEvent.h"
+#import "NRMAInteractionEvent.h"
+#import "NRMASessionEvent.h"
+#import "NRMACustomEvent.h"
+#import "NRMARequestEvent.h"
+#import "NRMANetworkErrorEvent.h"
+#import "NRMAUserActionEvent.h"
 
 @interface PersistentEventStore ()
 @property (nonatomic, strong) dispatch_queue_t writeQueue;
@@ -83,7 +89,7 @@
        // NRLOG_AUDIT(@"Entered block");
         @synchronized (self) {
             if(!self->_dirty) {
-                NRLOG_AUDIT(@"Not writing file because it's not dirty");
+                NRLOG_AGENT_DEBUG(@"Not writing file because it's not dirty");
                 return;
             }
         }
@@ -103,7 +109,7 @@
        // NRLOG_AGENT_VERBOSE(@"Entered Remove Block");
         @synchronized (self) {
             if(!self->_dirty) {
-                NRLOG_AGENT_VERBOSE(@"Not writing removed item file because it's not dirty");
+                NRLOG_AGENT_DEBUG(@"Not writing removed item file because it's not dirty");
                 return;
             }
         }
@@ -127,7 +133,7 @@
        // NRLOG_AGENT_VERBOSE(@"Entered Clear Block");
         @synchronized (self) {
             if(!self->_dirty) {
-              //  NRLOG_AGENT_VERBOSE(@"Not writing cleared file because it's not dirty");
+              //  NRLOG_AGENT_DEBUG(@"Not writing cleared file because it's not dirty");
                 return;
             }
         }
@@ -147,7 +153,8 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
-    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+    unarchiver.requiresSecureCoding = YES;
+    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
@@ -176,7 +183,7 @@
                                      options:NSDataWritingAtomic
                                        error:&error];
         if(!success) {
-            NRLOG_AGENT_ERROR(@"Error saving data: %@", error.description);
+            NRLOG_AGENT_DEBUG(@"Error saving data: %@", error.description);
         } else {
            // NRLOG_AUDIT(@"Wrote file");
             _lastSave = [NSDate new];
@@ -196,7 +203,8 @@
     }
 
     NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingFromData:storedData error:error];
-    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[[NSSet alloc] initWithArray:@[[NRMAMobileEvent class],[NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]] forKey:NSKeyedArchiveRootObjectKey];
+    unarchiver.requiresSecureCoding = YES;
+    NSDictionary* storedDictionary = [unarchiver decodeObjectOfClasses:[PersistentEventStore classList] forKey:NSKeyedArchiveRootObjectKey];
 
     if(storedDictionary == nil) {
         if(error != NULL && *error != nil) {
@@ -205,6 +213,13 @@
     }
 
     return storedDictionary;
+}
+
++ (NSSet*) classList {
+    NSSet *classList = [[NSSet alloc] initWithArray:@[ [NRMAPayload class],
+        [NRMAInteractionEvent class],[NRMAMobileEvent class], [NRMASessionEvent class],[NRMACustomEvent class],[NRMARequestEvent class],[NRMANetworkErrorEvent class], [NRMAUserActionEvent class],
+        [NSMutableDictionary class],[NSDictionary class],[NSString class],[NSNumber class]]];
+    return classList;
 }
 
 @end

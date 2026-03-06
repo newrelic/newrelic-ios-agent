@@ -1,0 +1,31 @@
+FROM WITHIN THE ROOT OF newrelic-ios-agent 
+
+
+Build the New Relic iOS agent NRTestApp
+
+```
+xcodebuild -workspace Agent.xcworkspace -scheme NRTestApp -derivedDataPath "derived_path" -sdk "iphonesimulator26.0" -configuration "Release"  clean build
+```
+
+Build is available in
+
+```
+../newrelic-ios-agent/derived_path/Build/Products/Release-iphonesimulator
+```
+
+Build is manually copied to ../newrelic-ios-agent/builds/nrtestapp-ios.zip
+
+
+To upload the zip file to the LambdaTest virtualDevice endpoint... 
+
+```
+node LambdaTest/uploadAppToLambdaTest.mjs    
+```
+
+To run the Appium Javascript tests
+
+```
+npm run test:wdio-ios
+```
+
+

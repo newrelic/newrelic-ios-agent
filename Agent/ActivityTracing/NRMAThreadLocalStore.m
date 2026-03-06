@@ -42,7 +42,7 @@ static NSMutableDictionary* __threadDictionaries;
 + (void)setThreadRootTrace:(NRMATrace *)root
 {
     if (root == nil) {
-        NRLOG_AGENT_VERBOSE(@"Attempted to load a nil trace.");
+        NRLOG_AGENT_DEBUG(@"Attempted to load a nil trace.");
         return;
     }
 
@@ -55,7 +55,7 @@ static NSMutableDictionary* __threadDictionaries;
         [stack addObject:root];
     }
 
-    NRLOG_AGENT_VERBOSE(@"Trace %@ is now active", root);
+    NRLOG_AGENT_DEBUG(@"Trace %@ is now active", root);
 }
 
 /** delete thread-local data on all threads */

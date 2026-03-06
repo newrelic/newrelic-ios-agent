@@ -26,11 +26,12 @@ class UtilitiesViewController: UIViewController {
         
         self.view.addSubview(tableView)
         
-        tableView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        tableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
         tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
-
+        
+        self.view.backgroundColor = .white
     }
     
 }

@@ -26,6 +26,7 @@
 #import "NRMACustomEvent.h"
 #import "NRMARequestEvent.h"
 #import "NRMAInteractionEvent.h"
+#import "NRMAUserActionEvent.h"
 #import "NRMAPayload.h"
 #import "NRMANetworkErrorEvent.h"
 #import "NRMASAM.h"
@@ -109,6 +110,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime {
     self = [super init];
     if(self){
+        
+        // Used in New and Old EventSystem.
+        if(__has_feature(cxx_exceptions)) {\
+            LibLogger::setLogger(std::make_shared<NewRelic::NRMALoggerBridge>(NewRelic::NRMALoggerBridge()));
+        }
+
         // Handle New Event System NRMAnalytics Constructor
         if([NRMAFlags shouldEnableNewEventSystem]){
             NSString *filename = [[NewRelicInternalUtils getStorePath] stringByAppendingPathComponent:kNRMA_EventStoreFilename];
@@ -125,23 +132,26 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                                                                            options:0
                                                                              error:nil];
                 if (dictionary[kNRMA_RA_upgradeFrom]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_upgradeFrom];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_upgradeFrom];
                 }
                 if (dictionary[@(kNRMASecureUDIDIsNilNotification.UTF8String)]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMASecureUDIDIsNilNotification];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMASecureUDIDIsNilNotification];
 
                 }
                 if (dictionary[@(kNRMADeviceChangedAttribute.UTF8String)]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMADeviceChangedAttribute];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMADeviceChangedAttribute];
                 }
                 if (dictionary[kNRMA_RA_install]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_install];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_install];
+                }
+                if (dictionary[kNRMA_RA_hasReplay]) {
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_hasReplay];
                 }
 
                 //session duration is only valid for one session. This metric should be removed
                 //after the persistent attributes are loaded.
                 if (dictionary[kNRMA_RA_sessionDuration]) {
-                    [_sessionAttributeManager removeSessionAttributeNamed:kNRMA_RA_sessionDuration];
+                    [_sessionAttributeManager removeNRSessionAttributeNamed:kNRMA_RA_sessionDuration];
                 }
             }
         }
@@ -153,7 +163,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
 
             NSString* documentDirURL = [NewRelicInternalUtils getStorePath];
-            LibLogger::setLogger(std::make_shared<NewRelic::NRMALoggerBridge>(NewRelic::NRMALoggerBridge()));
             _analyticsController = std::make_shared<NewRelic::AnalyticsController>(sessionStartTime,documentDirURL.UTF8String, [NRMAAnalytics eventDupStore], [NRMAAnalytics attributeDupStore]);
             //__kNRMA_RA_upgradeFrom and __kNRMA_RA_install are only valid for one session
             //and will be set shortly after the initialization of NRMAAnalytics.
@@ -181,6 +190,9 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 //after the persistent attributes are loaded.
                 if (dictionary[kNRMA_RA_sessionDuration]) {
                     _analyticsController->removeSessionAttribute([kNRMA_RA_sessionDuration UTF8String]);
+                }
+                if (dictionary[kNRMA_RA_hasReplay]) {
+                    _analyticsController->removeSessionAttribute([kNRMA_RA_hasReplay UTF8String]);
                 }
             }
         }
@@ -409,6 +421,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             }
             if (traceId.length > 0) {
                 [event addAttribute:kNRMA_Attrib_dtTraceId value:traceId];
+                [event addAttribute:kNRMA_Attrib_traceId value:traceId];
             }
         }
         
@@ -691,6 +704,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         }
     }
 }
+
+- (BOOL) removeNRSessionAttributeNamed:(NSString*)name {
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        return [_sessionAttributeManager removeNRSessionAttributeNamed:name];
+    }
+    return false;
+}
+
 - (BOOL) removeAllSessionAttributes {
     if([NRMAFlags shouldEnableNewEventSystem]){
         return [_sessionAttributeManager removeAllSessionAttributes];
@@ -912,45 +933,64 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL)recordUserAction:(NRMAUserAction *)userAction {
     if (userAction == nil) { return NO; };
-    
-    NRMACustomEvent* event = [[NRMACustomEvent alloc] initWithEventType:kNRMA_RET_mobileUserAction
-                                                              timestamp:[NRMAAnalytics currentTimeMillis]
-                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] withAttributeValidator:_attributeValidator];
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NRMAUserActionEvent* event = [[NRMAUserActionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
+                                                        sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                                           category:kNRMA_RET_userAction withAttributeValidator:_attributeValidator];
 
-    if (userAction.associatedMethod.length > 0) {
-        [event addAttribute:kNRMA_RA_methodExecuted value:userAction.associatedMethod];
+        if (userAction.associatedMethod.length > 0) {
+            [event addAttribute:kNRMA_RA_methodExecuted value:userAction.associatedMethod];
+        }
+
+        if (userAction.associatedClass.length > 0) {
+            [event addAttribute:kNRMA_RA_targetObject value:userAction.associatedClass];
+        }
+
+        if (userAction.elementLabel.length > 0) {
+            [event addAttribute:kNRMA_RA_label value:userAction.elementLabel];
+        }
+
+        if ((userAction.accessibilityId.length > 0)) {
+            [event addAttribute:kNRMA_RA_accessibility value:userAction.accessibilityId];
+        }
+
+        if ((userAction.interactionCoordinates.length > 0)) {
+            [event addAttribute:kNRMA_RA_touchCoordinates value:userAction.interactionCoordinates];
+        }
+
+        if ((userAction.actionType.length > 0)) {
+            [event addAttribute:kNMRA_RA_actionType value:userAction.actionType];
+        }
+
+        if ((userAction.elementFrame.length > 0)) {
+            [event addAttribute:kNRMA_RA_frame value:userAction.elementFrame];
+        }
+
+        NSString* deviceOrientation = [NewRelicInternalUtils deviceOrientation];
+        if (deviceOrientation.length > 0) {
+            [event addAttribute:kNRMA_RA_orientation value:deviceOrientation];
+        }
+
+        return [_eventManager addEvent:[event autorelease]];
+    } else {
+        try {
+           return _analyticsController->addUserActionEvent(userAction.associatedMethod.UTF8String,
+                                                     userAction.associatedClass.UTF8String,
+                                                     userAction.elementLabel.UTF8String,
+                                                     userAction.accessibilityId.UTF8String,
+                                                     userAction.interactionCoordinates.UTF8String,
+                                                     userAction.actionType.UTF8String,
+                                                     userAction.elementFrame.UTF8String,
+                                                     [NewRelicInternalUtils deviceOrientation].UTF8String,
+                                                     [self checkOfflineStatus],
+                                                     [self checkBackgroundStatus]);
+        } catch (std::exception &error) {
+            NRLOG_AGENT_VERBOSE(@"Failed to add TrackedGesture: %s.", error.what());
+        } catch (...) {
+            NRLOG_AGENT_VERBOSE(@"Failed to add TrackedGesture: unknown error.");
+        }
     }
-
-    if (userAction.associatedClass.length > 0) {
-        [event addAttribute:kNRMA_RA_targetObject value:userAction.associatedClass];
-    }
-
-    if (userAction.elementLabel.length > 0) {
-        [event addAttribute:kNRMA_RA_label value:userAction.elementLabel];
-    }
-
-    if ((userAction.accessibilityId.length > 0)) {
-        [event addAttribute:kNRMA_RA_accessibility value:userAction.accessibilityId];
-    }
-
-    if ((userAction.interactionCoordinates.length > 0)) {
-        [event addAttribute:kNRMA_RA_touchCoordinates value:userAction.interactionCoordinates];
-    }
-
-    if ((userAction.actionType.length > 0)) {
-        [event addAttribute:kNMRA_RA_actionType value:userAction.actionType];
-    }
-
-    if ((userAction.elementFrame.length > 0)) {
-        [event addAttribute:kNRMA_RA_frame value:userAction.elementFrame];
-    }
-
-    NSString* deviceOrientation = [NewRelicInternalUtils deviceOrientation];
-    if (deviceOrientation.length > 0) {
-        [event addAttribute:kNRMA_RA_orientation value:deviceOrientation];
-    }
-
-    return [_eventManager addEvent:[event autorelease]];
+    return false;
 }
 
 - (BOOL) incrementSessionAttribute:(NSString*)name value:(NSNumber*)number
@@ -1087,10 +1127,12 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     if([NRMAFlags shouldEnableNewEventSystem]){
         [_sessionAttributeManager removeAllSessionAttributes];
         [_eventManager empty];
+        [_eventManager resetTimestamp];
     } else {
         try {
             _analyticsController->clearAttributesDuplicationStore();
             _analyticsController->clearEventsDuplicationStore();
+            _analyticsController->resetEventTimestamp();
         } catch (std::exception& e) {
             NRLOG_AGENT_VERBOSE(@"Failed to clear last sessions' analytcs, %s",e.what());
         } catch (...) {
@@ -1103,14 +1145,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (void) sessionWillEnd {
     _sessionWillEnd = YES;
-    
-    if([NRMAFlags shouldEnableGestureInstrumentation])
-    {
-        NRMAUserAction* backgroundGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder *builder) {
-            [builder withActionType:kNRMAUserActionAppBackground];
-        }];
-        [[NewRelicAgentInternal sharedInstance].gestureFacade recordUserAction:backgroundGesture];
-    }
 
     [self endSessionReusable];
 }
@@ -1228,7 +1262,8 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             kNRMA_RA_upgradeFrom,
             kNRMA_RA_platform,
             kNRMA_RA_platformVersion,
-            kNRMA_RA_lastInteraction
+            kNRMA_RA_lastInteraction,
+            kNRMA_RA_hasReplay
         ,nil];
 }
 

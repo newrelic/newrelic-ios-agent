@@ -17,6 +17,7 @@
 #import "NRMeasurementConsumerHelper.h"
 #import "NRMANamedValueMeasurement.h"
 #import "NRMATaskQueue.h"
+#import "NRMASupportMetricHelper.h"
 
 @interface NRMACrashDataUploader ()
 
@@ -45,7 +46,10 @@
     helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:helper];
-    
+
+        // Put setup code here. This method is called before the invocation of each test method in the class.
+        [NRMASupportMetricHelper processDeferredMetrics];
+
     [super setUp];
 }
 
@@ -144,6 +148,7 @@
 
     XCTAssertNoThrow([uploader uploadCrashReports], @"this should fail without crashing");
     
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];
@@ -175,6 +180,7 @@
     
     XCTAssertNoThrow([uploader uploadCrashReports]);
 
+    [NRMASupportMetricHelper processDeferredMetrics];
     [NRMATaskQueue synchronousDequeue];
     
     NSString* nativePlatform = [NewRelicInternalUtils osName];

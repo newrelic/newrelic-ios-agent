@@ -24,7 +24,7 @@ class WatchAppDelegate: NSObject, WKApplicationDelegate {
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem])
 
-        NewRelic.replaceDeviceIdentifier("myDeviceId")
+        //NewRelic.replaceDeviceIdentifier("myDeviceId")
 
         NewRelic.setMaxEventBufferTime(60)
 

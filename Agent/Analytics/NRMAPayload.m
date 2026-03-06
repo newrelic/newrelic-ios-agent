@@ -103,4 +103,31 @@ static NSString* const kTrustedAccountKey   = @"TrustedAccountKey";
     return self;
 }
 
+- (BOOL)isEqual:(id)object {
+    if (self == object) return YES;
+    if (![object isKindOfClass:[NRMAPayload class]]) return NO;
+    NRMAPayload *other = (NRMAPayload *)object;
+    return self.timestamp == other.timestamp &&
+           [self.payloadType isEqualToString:other.payloadType] &&
+           [self.accountId isEqualToString:other.accountId] &&
+           [self.appId isEqualToString:other.appId] &&
+           [self.id isEqualToString:other.id] &&
+           [self.traceId isEqualToString:other.traceId] &&
+           [self.parentId isEqualToString:other.parentId] &&
+           [self.trustedAccountKey isEqualToString:other.trustedAccountKey] &&
+           self.dtEnabled == other.dtEnabled;
+}
+
+- (NSUInteger)hash {
+    return self.timestamp +
+           self.payloadType.hash +
+           self.accountId.hash +
+           self.appId.hash +
+           self.id.hash +
+           self.traceId.hash +
+           self.parentId.hash +
+           self.trustedAccountKey.hash +
+           self.dtEnabled;
+}
+
 @end

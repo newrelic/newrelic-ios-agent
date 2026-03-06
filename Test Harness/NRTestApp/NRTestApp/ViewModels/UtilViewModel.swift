@@ -22,7 +22,7 @@ class UtilViewModel {
     var goodAttribute = false
     var badAttribute = false
     var attributes = ""
-    var events = 0
+    var events = 0 
 
     var uniqueInteractionTraceIdentifier: String? =  nil
 
@@ -57,6 +57,8 @@ class UtilViewModel {
             Task { await noticeNetworkRequestWithParams() }
         }))
 
+        options.append(UtilOption(title: "Start Replay", handler: { [self] in testStartReplay()}))
+        options.append(UtilOption(title: "Pause Replay", handler: { [self] in testPauseReplay()}))
 
         options.append(UtilOption(title: "Test Log Dict", handler: { [self] in testLogDict()}))
         options.append(UtilOption(title: "Test Log Error", handler: { [self] in testLogError()}))
@@ -195,7 +197,7 @@ class UtilViewModel {
         for i in 0...100 {
             //triggerException.testNSLog(Int32(i))
             print("TEST swift!!!!! ", i, "\n")
-            if #available(iOS 14.0, *) {
+            if #available(iOS 14.0, tvOS 14.0, *) {
                 os_log("TEST OSLog!!!!!!! \(i)")
                 let logger = Logger()
                 logger.warning("TEST Logger!!!!! \(i)")
@@ -219,8 +221,15 @@ class UtilViewModel {
             "additionalAttribute2": "attribute2"
         ])
     }
+    
+    func testStartReplay() {
+        NewRelic.recordReplay()
+    }
 
-
+    func testPauseReplay() {
+        NewRelic.pauseReplay()
+    }
+    
     func noticeNWRequest() {
         NewRelic.noticeNetworkRequest(for: URL(string: "https://www.google.com"), httpMethod: "GET", with: NRTimer(), responseHeaders: [:],
                                       statusCode: 200, bytesSent: 1000, bytesReceived: 1000, responseData: Data(), traceHeaders: nil, andParams: nil)
