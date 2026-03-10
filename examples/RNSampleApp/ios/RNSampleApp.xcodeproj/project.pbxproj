@@ -702,6 +702,7 @@
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
+				D45F543C2F608E6D00AB3CB3 /* ShellScript */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
 				D4D764B22F48E95E00F74958 /* Embed Frameworks */,
@@ -1304,6 +1305,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-RNSampleApp-RNSampleAppTests/Pods-RNSampleApp-RNSampleAppTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		D45F543C2F608E6D00AB3CB3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n  SCRIPT=`/usr/bin/find \"${SRCROOT}/../../..\" -name upload-react-native-sourcemap | head -n 1`                                                  \n  /bin/sh \"${SCRIPT}\" \"\" \"\" --debug    \n";
+		};
 		E235C05ADACE081382539298 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1436,6 +1454,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6K68DWDR29;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = RNSampleApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -1450,6 +1469,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = how;
 				PRODUCT_NAME = RNSampleApp;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNSampleApp-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1465,6 +1485,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6K68DWDR29;
 				INFOPLIST_FILE = RNSampleApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1478,6 +1499,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = how;
 				PRODUCT_NAME = RNSampleApp;
 				SWIFT_OBJC_BRIDGING_HEADER = "RNSampleApp-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

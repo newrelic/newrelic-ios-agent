@@ -166,9 +166,16 @@ const UtilitiesScreen: React.FC = () => {
         component: 'UtilitiesScreen',
       },
     );
+
+    // Give a brief moment for persistence to complete, then crash
+    setTimeout(() => {
+      // This will crash the app
+      throw new Error('FATAL: x is not defined - app crashing now');
+    }, 100);
+
     Alert.alert(
       'Fatal Error Recorded',
-      'isFatal=true\n\nShould trigger immediate harvest if configured for fatal errors.',
+      'App will crash in 100ms to test persistence.\nRelaunch to verify error was sent.',
     );
   };
 
