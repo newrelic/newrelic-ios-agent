@@ -286,10 +286,25 @@ public class JSErrorController: NSObject {
 
         payload["deviceInfo"] = getDeviceInfo()
 
-        // Session attributes - simplified to just sessionId
-        payload["sessionAttributes"] = [
+        // Session attributes (same as log endpoint)
+        var sessionAttrs: [String: Any] = [
             "sessionId": sessionId ?? ""
         ]
+
+        // Add all session attributes from analytics controller
+        if let sessionAttributesJSON = analyticsController.sessionAttributeJSONString(),
+           !sessionAttributesJSON.isEmpty,
+           let sessionData = sessionAttributesJSON.data(using: .utf8),
+           let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
+            for (key, value) in sessionAttributes {
+                // Don't override sessionId if it's already set
+                if sessionAttrs[key] == nil {
+                    sessionAttrs[key] = value
+                }
+            }
+        }
+
+        payload["sessionAttributes"] = sessionAttrs
 
         // Format events
         let events = errors.map { formatErrorAsEvent($0) }
@@ -338,19 +353,6 @@ public class JSErrorController: NSObject {
         if let attributes = errorData["attributes"] as? [String: Any] {
             for (key, value) in attributes {
                 event[key] = value
-            }
-        }
-
-        // Add session attributes (same as log endpoint)
-        if let sessionAttributesJSON = analyticsController.sessionAttributeJSONString(),
-           !sessionAttributesJSON.isEmpty,
-           let sessionData = sessionAttributesJSON.data(using: .utf8),
-           let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
-            for (key, value) in sessionAttributes {
-                // Don't override existing attributes
-                if event[key] == nil {
-                    event[key] = value
-                }
             }
         }
 
