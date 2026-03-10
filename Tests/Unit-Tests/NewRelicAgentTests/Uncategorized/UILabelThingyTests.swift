@@ -20,7 +20,7 @@ class UILabelThingyTests: XCTestCase {
             maskApplicationText: isMasked,
             maskUserInputText: nil,
             maskAllImages: nil,
-            maskAllUserTouches: nil,
+            maskAllUserTouches: nil, blockView: nil,
             sessionReplayIdentifier: nil
         )
     }

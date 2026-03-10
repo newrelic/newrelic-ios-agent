@@ -39,17 +39,19 @@ class SessionReplayCapture {
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
-        
-        // Process UIKit subviews
-        for subview in currentView.subviews {
-            if shouldRecord(view: subview) {
-                var childThingy = findRecorderForView(view: subview)
-                if childThingy.viewDetails.isVisible {
-                    buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-                    parentThingy.subviews.append(childThingy)
+
+        // Process UIKit subviews only if current view should record subviews
+        if parentThingy.shouldRecordSubviewsComputed {
+            for subview in currentView.subviews {
+                if shouldRecord(view: subview) {
+                    var childThingy = findRecorderForView(view: subview)
+                    if childThingy.viewDetails.isVisible {
+                        buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+                        parentThingy.subviews.append(childThingy)
+                    }
+                } else {
+                    buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
                 }
-            } else {
-                buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
             }
         }
         
@@ -74,6 +76,7 @@ class SessionReplayCapture {
                                                        maskUserInputText: currentView.maskUserInputText,
                                                        maskAllImages: currentView.maskAllImages,
                                                        maskAllUserTouches: currentView.maskAllUserTouches,
+                                                       blockView: currentView.blockView,
                                                        sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
             )
             
@@ -94,13 +97,15 @@ class SessionReplayCapture {
                 }
 
                 // Insert color views first (they go to the back) then other views
-                parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
-                parentThingy.subviews.append(contentsOf: otherViews)
+                if parentThingy.shouldRecordSubviewsComputed {
+                    parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
+                    parentThingy.subviews.append(contentsOf: otherViews)
+                }
             }
         }
-        
+
         // Handle UITextField custom text overlay
-        if let textView = currentView as? UITextField {
+        if parentThingy.shouldRecordSubviewsComputed, let textView = currentView as? UITextField {
             let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
             parentThingy.subviews.append(textViewThingy)
         }
