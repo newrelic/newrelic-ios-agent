@@ -157,8 +157,8 @@ public class JSErrorController: NSObject {
             }
             errorQueueLock.unlock()
 
-            // Clear persisted errors after loading
-            clearPersistedErrors()
+            // Don't clear persisted errors yet - wait until after successful send
+            // They will be cleared in onHarvestComplete
         }
     }
 
@@ -185,7 +185,8 @@ public class JSErrorController: NSObject {
     }
 
     @objc public func onHarvestComplete() {
-        // No action needed
+        // Clear persisted errors after successful harvest
+        clearPersistedErrors()
     }
 
     @objc public func onHarvestError() {
@@ -326,16 +327,28 @@ public class JSErrorController: NSObject {
             event["threads"] = urlEncodeStackTrace(stackTrace)
         }
 
-        // Add jsAppVersion and jsBundleId (they're the same value per Mobile Errors Protocol)
+        // Add jsAppVersion
         if let jsAppVersion = errorData["jsAppVersion"] as? String {
-            event["jsAppVersion"] = jsAppVersion  // Keep for backward compatibility
-            event["jsBundleId"] = jsAppVersion    // Required for sourcemap matching
+            event["jsAppVersion"] = jsAppVersion
         }
 
         // Add additional attributes if present
         if let attributes = errorData["attributes"] as? [String: Any] {
             for (key, value) in attributes {
                 event[key] = value
+            }
+        }
+
+        // Add session attributes (same as log endpoint)
+        if let sessionAttributesJSON = analyticsController?.sessionAttributeJSONString(),
+           !sessionAttributesJSON.isEmpty,
+           let sessionData = sessionAttributesJSON.data(using: .utf8),
+           let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
+            for (key, value) in sessionAttributes {
+                // Don't override existing attributes
+                if event[key] == nil {
+                    event[key] = value
+                }
             }
         }
 

@@ -32,13 +32,12 @@
 // Environment Variables (optional):
 // SOURCEMAP_UPLOAD_URL - Override the New Relic server hostname
 // SOURCEMAP_PATH - Override the default source map location (${DERIVED_FILE_DIR}/main.jsbundle.map)
-// NEWRELIC_JS_BUNDLE_ID - Override the automatically generated JS Bundle ID
 //
 // ============================================================================
 // START of Script upload-react-native-sourcemap.swift
 import Foundation
 
-let defaultURL = "https://symbol-ingest-api.staging-service.newrelic.com"
+let defaultURL = "https://symbol-ingest-api.newrelic.com"
 let fileManager = FileManager.default
 let environment = ProcessInfo.processInfo.environment
 // Set to true for additional debug info in the upload_sourcemap_results.log file.
@@ -168,18 +167,8 @@ func start() {
         exit(1)
     }
 
-    // Get JS Bundle ID from environment variable (set by wrapper script or customer)
-    // The wrapper script auto-detects from package.json if not manually set
-    // For CodePush/OTA updates, customer should set: export NEWRELIC_JS_BUNDLE_ID="1.0.0-v5"
-    var jsBundleId = environment["NEWRELIC_JS_BUNDLE_ID"] ?? appVersion
-
-    if debug {
-        if environment["NEWRELIC_JS_BUNDLE_ID"] != nil {
-            print("Using JS Bundle ID from environment/package.json: \(jsBundleId)")
-        } else {
-            print("Using app version as JS Bundle ID (package.json not found): \(jsBundleId)")
-        }
-    }
+    // jsBundleId is the same as appVersionId (CFBundleShortVersionString)
+    let jsBundleId = appVersion
 
     let sourcemapName = "main.jsbundle.map"
 

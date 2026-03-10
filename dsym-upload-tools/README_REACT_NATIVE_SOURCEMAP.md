@@ -93,18 +93,6 @@ Override the New Relic Symbol Ingest API endpoint (for EU regions or testing).
 export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.eu01.nr-data.net"
 ```
 
-#### NEWRELIC_JS_BUNDLE_ID
-Override the automatically detected JS Bundle ID with a custom value.
-
-```bash
-export NEWRELIC_JS_BUNDLE_ID="my-custom-build-id"
-```
-
-By default, the script reads the `version` field from `package.json` (e.g., `"1.0.0"`).
-If `package.json` is not found, it falls back to the native app version.
-
-**Important:** This value must match the `jsAppVersion` parameter you pass when calling `NewRelic.recordJavascriptError()` in your React Native app. This is used to match errors with the correct source map for symbolication.
-
 ## How It Works
 
 1. The script runs only during **Release** configuration builds
@@ -112,8 +100,8 @@ If `package.json` is not found, it falls back to the native app version.
 3. Reads metadata from your app's `Info.plist`:
    - **App Version** (`CFBundleShortVersionString`)
    - **Build Number** (`CFBundleVersion`)
-4. Auto-detects **JS Bundle ID** from `package.json` version field
-5. **Automatic compression** for large files:
+   - **JS Bundle ID** (same as App Version)
+4. **Automatic compression** for large files:
    - Files over 50MB are automatically compressed to `.zip` format
    - Typical compression: 80-90% size reduction for source maps
    - Prevents upload failures due to 200MB API limit
@@ -143,27 +131,15 @@ The following data is sent with each source map upload:
 | Field | Description | Example |
 |-------|-------------|---------|
 | `sourcemap` | The source map file | `main.jsbundle.map` |
-| `jsBundleId` | Unique identifier for this build | `1.0.0` (from package.json) |
-| `appVersionId` | App marketing version | `1.2.3` |
+| `jsBundleId` | Unique identifier for this build (CFBundleShortVersionString) | `1.2.3` |
+| `appVersionId` | App marketing version (CFBundleShortVersionString) | `1.2.3` |
 | `sourcemapName` | Name of the source map | `main.jsbundle.map` |
 
 ### JS Bundle ID
 
-The script automatically detects the JS Bundle ID from your `package.json`:
-```json
-// package.json
-{
-  "version": "1.0.0"  // ← Used as jsBundleId
-}
-```
+The `jsBundleId` and `appVersionId` are both set to your app's `CFBundleShortVersionString` from `Info.plist`. This ensures that source maps are correctly matched to error reports from your React Native app.
 
-**Important for CodePush/OTA Updates:**
-If you use CodePush or other OTA update mechanisms, you must manually set the `jsBundleId` to match your deployment:
-```bash
-export NEWRELIC_JS_BUNDLE_ID="1.0.0-v5"  # version + CodePush label
-```
-
-This same value must be passed when recording JavaScript errors in your React Native app.
+**Important:** When recording JavaScript errors in your React Native app, pass the same version string as the `jsAppVersion` parameter to `NewRelic.recordJavascriptError()`.
 
 ## Troubleshooting
 
@@ -274,57 +250,25 @@ SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n
 
 ### 1. JS Bundle ID Must Match Between Upload and Errors
 
-**Critical:** The `jsBundleId` used for sourcemap upload must match the `jsAppVersion` you pass when recording JavaScript errors.
+**Critical:** The `jsBundleId` used for sourcemap upload (your app's `CFBundleShortVersionString`) must match the `jsAppVersion` you pass when recording JavaScript errors.
 
 ```javascript
-// In your React Native app
-import { version } from './package.json';
+// In your React Native app - pass your app version
+import { NativeModules } from 'react-native';
+
+// Get the native app version (CFBundleShortVersionString)
+const appVersion = NativeModules.RNDeviceInfo?.appVersion || '1.0.0';
 
 NewRelic.recordJavascriptError(
   error.name,
   error.message,
   error.stack,
   false,
-  version  // ← Must match the jsBundleId uploaded with sourcemap!
+  appVersion  // ← Must match CFBundleShortVersionString
 );
 ```
 
-### 2. Automatic Detection from package.json
-
-The script automatically reads from `package.json`:
-```json
-{
-  "version": "1.0.0"  // ← Automatically used as jsBundleId
-}
-```
-
-No additional configuration needed for standard builds!
-
-### 3. CodePush / OTA Updates
-
-If you use CodePush or other OTA update mechanisms:
-
-```bash
-# When releasing CodePush update
-export NEWRELIC_JS_BUNDLE_ID="1.0.0-v5"  # version + CodePush label
-
-# Upload sourcemap with matching ID
-SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
-/bin/sh "${SCRIPT}" "YOUR_INGEST_API_KEY" "YOUR_APP_TOKEN"
-```
-
-```javascript
-// In your React Native app - detect CodePush label
-import codePush from 'react-native-code-push';
-import { version } from './package.json';
-
-const update = await codePush.getUpdateMetadata();
-const jsBundleId = update ? `${version}-${update.label}` : version;
-
-NewRelic.recordJavascriptError(..., jsBundleId);
-```
-
-### 4. Store Credentials Securely
+### 2. Store Credentials Securely
 
 Don't commit your API keys to version control. Instead:
 
@@ -347,7 +291,7 @@ SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n
 /bin/sh "${SCRIPT}" "${NEWRELIC_INGEST_KEY}" "${NEWRELIC_APP_TOKEN}"
 ```
 
-### 5. Test with Debug Mode First
+### 3. Test with Debug Mode First
 
 Before deploying to production, test the upload with debug mode enabled to verify configuration:
 
