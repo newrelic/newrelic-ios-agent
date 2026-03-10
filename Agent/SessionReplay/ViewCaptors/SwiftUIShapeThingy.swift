@@ -13,6 +13,7 @@ import UIKit
 class SwiftUIShapeThingy: SessionReplayViewThingy {
     var viewDetails: ViewDetails
     var isMasked: Bool
+    var isBlocked: Bool
     let path: SwiftUI.Path
     let fillColor: ResolvedColor
     let fillStyle: SwiftUI.FillStyle
@@ -26,6 +27,7 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
     init(viewDetails: ViewDetails, path: SwiftUI.Path, fillColor: ResolvedColor, fillStyle: SwiftUI.FillStyle) {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
+        self.isBlocked = viewDetails.blockView ?? false
         self.path = path
         self.fillColor = fillColor
         self.fillStyle = fillStyle

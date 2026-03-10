@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 import NewRelic
 
 class ViewController: UIViewController {
@@ -105,7 +106,25 @@ class ViewController: UIViewController {
         if let helloButtonTitleLabel = helloButton.titleLabel {
             helloButtonTitleLabel.accessibilityIdentifier = "public"
         }
-        
+
+        // BlockView Example Button (UIKit direct approach)
+        let blockViewButton = UIButton(type: .system)
+        blockViewButton.setTitle("🔒 Blocked Button", for: .normal)
+        blockViewButton.setTitleColor(.white, for: .normal)
+        blockViewButton.backgroundColor = .systemRed
+        blockViewButton.layer.cornerRadius = 8
+        blockViewButton.blockView = true // This will block the entire button
+        blockViewButton.addTarget(self, action: #selector(blockViewButtonTapped), for: .touchUpInside)
+
+        // BlockView Example using accessibility ID
+        let accessibilityBlockButton = UIButton(type: .system)
+        accessibilityBlockButton.setTitle("🛡️ Accessibility Block", for: .normal)
+        accessibilityBlockButton.setTitleColor(.white, for: .normal)
+        accessibilityBlockButton.backgroundColor = .systemPurple
+        accessibilityBlockButton.layer.cornerRadius = 8
+        accessibilityBlockButton.accessibilityIdentifier = "nr-block"
+        accessibilityBlockButton.addTarget(self, action: #selector(accessibilityBlockButtonTapped), for: .touchUpInside)
+
         //Stack View
         spaceStack.axis = .vertical
         spaceStack.distribution = .equalSpacing
@@ -116,6 +135,8 @@ class ViewController: UIViewController {
         spaceStack.addArrangedSubview(spaceImageView)
         spaceStack.addArrangedSubview(spaceLabel)
         spaceStack.addArrangedSubview(helloButton)
+        spaceStack.addArrangedSubview(blockViewButton)
+        spaceStack.addArrangedSubview(accessibilityBlockButton)
         spaceStack.translatesAutoresizingMaskIntoConstraints = false
         
         self.view.addSubview(spaceStack)
@@ -250,6 +271,11 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
 
+        // BlockView examples
+        options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
+        options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
+        options.append(UtilOption(title: "BlockView Propagation Test", handler: { [self] in blockViewPropagationTest() }))
+
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
@@ -338,6 +364,37 @@ class ViewController: UIViewController {
     func removeHelloWorldLabel() {
         helloWorldLabel?.removeFromSuperview()
         helloWorldLabel = nil
+    }
+
+    // MARK: - BlockView Example Actions
+
+    @objc func blockViewButtonTapped() {
+        // This button will appear as a black rectangle in session replay
+        let alert = UIAlertController(title: "Blocked Button", message: "This button is blocked in session replay!", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    @objc func accessibilityBlockButtonTapped() {
+        // This button will also appear as a black rectangle in session replay
+        let alert = UIAlertController(title: "Accessibility Block", message: "This button is blocked using accessibility ID!", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+
+    func blockViewSwiftUIAction() {
+        let hostingController = BlockViewSwiftUIHostingController()
+        navigationController?.pushViewController(hostingController, animated: true)
+    }
+
+    func blockViewUIKitAction() {
+        let keypadController = KeypadUIKitViewController()
+        navigationController?.pushViewController(keypadController, animated: true)
+    }
+
+    func blockViewPropagationTest() {
+        let propagationTestController = BlockViewPropagationTestController()
+        navigationController?.pushViewController(propagationTestController, animated: true)
     }
 }
 

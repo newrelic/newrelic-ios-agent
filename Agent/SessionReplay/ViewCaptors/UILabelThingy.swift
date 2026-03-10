@@ -14,13 +14,14 @@ let RCTParagraphComponentView = "RCTParagraphComponentView"
 
 class UILabelThingy: SessionReplayViewThingy {
     var isMasked: Bool
-    
+    var isBlocked: Bool
+
     var subviews = [any SessionReplayViewThingy]()
-    
+
     var shouldRecordSubviews: Bool {
         false
     }
-    
+
     var viewDetails: ViewDetails
 
     
@@ -41,7 +42,7 @@ class UILabelThingy: SessionReplayViewThingy {
         var frame = self.viewDetails.frame
         frame.size.width = frame.size.width + 0.5
         self.viewDetails.frame = frame
-        
+
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
@@ -51,6 +52,8 @@ class UILabelThingy: SessionReplayViewThingy {
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
+
+        self.isBlocked = viewDetails.blockView ?? false
         
         if self.isMasked {
             // If the view is masked, we should not record the text.
@@ -141,6 +144,9 @@ class UILabelThingy: SessionReplayViewThingy {
         } else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
+
+        self.isBlocked = viewDetails.blockView ?? false
+
         if self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
@@ -232,7 +238,8 @@ class UILabelThingy: SessionReplayViewThingy {
         self.fontWeight = fontTraits.weight
         self.isItalic = fontTraits.isItalic
         self.letterSpacing = kern
-        
+     
+        self.isBlocked = viewDetails.blockView ?? false
     }
 
     func cssDescription() -> String {

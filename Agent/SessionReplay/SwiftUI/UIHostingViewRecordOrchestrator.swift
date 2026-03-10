@@ -253,6 +253,7 @@ final class UIHostingViewRecordOrchestrator {
                         maskUserInputText: viewAttributes.maskUserInputText,
                         maskAllImages: viewAttributes.maskAllImages,
                         maskAllUserTouches: viewAttributes.maskAllUserTouches,
+                        blockView: viewAttributes.blockView,
                         sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier) // viewAttributes.maskUserInput
         }
         
