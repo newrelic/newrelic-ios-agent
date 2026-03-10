@@ -12,7 +12,8 @@ import UIKit
 
 class UIImageViewThingy: SessionReplayViewThingy {
     var isMasked: Bool
-    
+    var isBlocked: Bool
+
     var viewDetails: ViewDetails
     let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
     var image: UIImage?
@@ -36,6 +37,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
+
+        self.isBlocked = viewDetails.blockView ?? false
+
         if !self.isMasked {
             self.image = view.image
         }
@@ -55,6 +59,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
         }
+
+        self.isBlocked = viewDetails.blockView ?? false
+
         if !self.isMasked {
             if let cgImage = cgImage {
                 let uiImage = UIImage(cgImage: cgImage, scale: swiftUIImage.scale, orientation: swiftUIImage.orientation.toUIImageOrientation())

@@ -37,7 +37,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
             maskApplicationText: nil,
             maskUserInputText: nil,
             maskAllImages: nil,
-            maskAllUserTouches: isMasked,
+            maskAllUserTouches: isMasked, blockView: nil,
             sessionReplayIdentifier: nil
         )
     }
