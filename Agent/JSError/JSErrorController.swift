@@ -22,6 +22,7 @@ public class JSErrorController: NSObject {
     private let platform: String
     private let agentConfiguration: AnyObject
     private let attributeValidator: AnyObject
+    private let analyticsController: AnyObject
 
     private var uploader: MobileErrorsUploader?
     private var errorQueue = NSMutableArray()
@@ -59,6 +60,7 @@ public class JSErrorController: NSObject {
         self.platform = platform
         self.agentConfiguration = config
         self.attributeValidator = validator
+        self.analyticsController = analyticsController
 
         super.init()
 
@@ -340,7 +342,7 @@ public class JSErrorController: NSObject {
         }
 
         // Add session attributes (same as log endpoint)
-        if let sessionAttributesJSON = analyticsController?.sessionAttributeJSONString(),
+        if let sessionAttributesJSON = analyticsController.sessionAttributeJSONString(),
            !sessionAttributesJSON.isEmpty,
            let sessionData = sessionAttributesJSON.data(using: .utf8),
            let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
