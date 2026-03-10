@@ -14,7 +14,8 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
     let maskUserInputText: Bool?
     let maskAllImages: Bool?
     let maskAllUserTouches: Bool?
-    
+    let blockView: Bool?
+
     let activated: Bool
 
     let sessionReplayIdentifier: String?
@@ -51,6 +52,7 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
         hostVC.view.maskUserInputText = maskUserInputText
         hostVC.view.maskAllImages = maskAllImages
         hostVC.view.maskAllUserTouches = maskAllUserTouches
+        hostVC.view.blockView = blockView
         hostVC.view.swiftUISessionReplayIdentifier = sessionReplayIdentifier
     }
 
