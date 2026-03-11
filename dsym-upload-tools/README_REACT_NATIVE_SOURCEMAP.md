@@ -9,12 +9,19 @@ This tool automatically uploads React Native JavaScript source maps to New Relic
 - **New Relic Ingest API Key** ([Get one here](https://one.newrelic.com/api-keys))
 - **New Relic Mobile App Token** (from your mobile app settings in New Relic)
 - Xcode project with "Bundle React Native code and images" build phase configured
+- **dsym-upload-tools folder** copied to your project's SRCROOT folder (this is the same folder used for dSYM uploads)
 
 **Important:** Both the Ingest API Key and Mobile App Token must belong to the same New Relic account.
 
+**Note:** If you've already set up dSYM uploads following the [iOS agent documentation](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/installation/spm-installation/#uploading-dsym), the dsym-upload-tools folder is already in place and contains the source map upload script.
+
 ## Installation
 
-### Step 1: Add Run Script Build Phase
+### Step 1: Copy dsym-upload-tools folder (if not already done)
+
+If you haven't already set up dSYM uploads, copy the `dsym-upload-tools` folder from the [New Relic iOS Agent repository](https://github.com/newrelic/newrelic-ios-agent-spm) to your project's SRCROOT folder (typically your `ios` folder in React Native projects).
+
+### Step 2: Add Run Script Build Phase
 
 1. In Xcode, select your project in the navigator
 2. Click on your application target
@@ -23,20 +30,27 @@ This tool automatically uploads React Native JavaScript source maps to New Relic
 5. **Important:** Drag this new phase to run **AFTER** the "Bundle React Native code and images" phase
 6. Name the phase "Upload React Native Source Maps" (optional but recommended)
 
-### Step 2: Configure the Script
+### Step 3: Configure the Script
 
-Add the following code to the Run Script phase, replacing the placeholder values:
+Add the following code to the Run Script phase:
 
 ```bash
-SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
-/bin/sh "${SCRIPT}" "YOUR_INGEST_API_KEY" "YOUR_APP_TOKEN"
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name upload-react-native-sourcemap | head -n 1`
+/bin/sh "${SCRIPT}" "NEWRELIC_INGEST_KEY" "NEWRELIC_APP_TOKEN"
 ```
 
-Where:
-- `YOUR_INGEST_API_KEY`: Your New Relic Ingest API Key ([Get it here](https://one.newrelic.com/api-keys))
-- `YOUR_APP_TOKEN`: Your New Relic Mobile App Token (same token used by the iOS Agent)
+**Configure Credentials:**
 
-### Step 3: Enable Source Map Generation (if not already enabled)
+Replace `"NEWRELIC_INGEST_KEY"` and `"NEWRELIC_APP_TOKEN"` with your actual credentials:
+- **NEWRELIC_INGEST_KEY**: Your New Relic Ingest API Key ([Get it here](https://one.newrelic.com/api-keys))
+- **NEWRELIC_APP_TOKEN**: Your New Relic Mobile App Token (same token used by the iOS Agent)
+
+**Note:** The build will succeed even if you leave the placeholder values. The script will skip the upload with a warning message. Replace them with real credentials when you're ready to enable uploads.
+
+**Tip:** For better security, use Xcode build settings or `.xcconfig` files instead of hardcoding credentials. See [Best Practices](#best-practices) section below.
+
+### Step 4: Enable Source Map Generation (if not already enabled)
 
 Ensure your React Native bundler is configured to generate source maps. This is typically configured in the "Bundle React Native code and images" build phase.
 
@@ -62,8 +76,9 @@ react-native bundle \
 Add `--debug` as the third argument to enable verbose logging:
 
 ```bash
-SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
-/bin/sh "${SCRIPT}" "YOUR_INGEST_API_KEY" "YOUR_APP_TOKEN" --debug
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name upload-react-native-sourcemap | head -n 1`
+/bin/sh "${SCRIPT}" "NEWRELIC_INGEST_KEY" "NEWRELIC_APP_TOKEN" --debug
 ```
 
 Debug output is written to `upload_sourcemap_results.log` in your project root.
@@ -242,8 +257,9 @@ The upload script provides detailed error messages for all API responses:
 Check `upload_sourcemap_results.log` in your project root directory for detailed output. Enable debug mode for more verbose logging:
 
 ```bash
-SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
-/bin/sh "${SCRIPT}" "YOUR_API_KEY" --debug
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name upload-react-native-sourcemap | head -n 1`
+/bin/sh "${SCRIPT}" "NEWRELIC_INGEST_KEY" "NEWRELIC_APP_TOKEN" --debug
 ```
 
 ## Best Practices
@@ -270,34 +286,40 @@ NewRelic.recordJavascriptError(
 
 ### 2. Store Credentials Securely
 
-Don't commit your API keys to version control. Instead:
+Don't commit your API keys to version control. Choose one of these approaches:
 
-**Option A:** Use Xcode build configuration files (`.xcconfig`)
+**Option A:** Replace placeholder strings with actual credentials in the build phase
+```bash
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name upload-react-native-sourcemap | head -n 1`
+/bin/sh "${SCRIPT}" "NRAK-YOUR_ACTUAL_KEY" "AA1234567890abcdef"
+```
+⚠️ **Warning:** Only use this for testing. Don't commit actual credentials to version control.
+
+**Option B (Recommended):** Use Xcode build configuration files (`.xcconfig`)
 ```bash
 // Config/Release.xcconfig
-NEWRELIC_INGEST_KEY = your_ingest_key_here
-NEWRELIC_APP_TOKEN = your_app_token_here
+NEWRELIC_INGEST_KEY = NRAK-your_ingest_key_here
+NEWRELIC_APP_TOKEN = AA1234567890abcdef
 ```
 
-Then in your build phase:
+Then in your build phase, reference the environment variables:
 ```bash
-SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name upload-react-native-sourcemap | head -n 1`
 /bin/sh "${SCRIPT}" "${NEWRELIC_INGEST_KEY}" "${NEWRELIC_APP_TOKEN}"
 ```
 
-**Option B:** Use environment variables from your CI/CD system
-```bash
-SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
-/bin/sh "${SCRIPT}" "${NEWRELIC_INGEST_KEY}" "${NEWRELIC_APP_TOKEN}"
-```
+**Option C:** Use environment variables from your CI/CD system (e.g., GitHub Actions secrets)
 
 ### 3. Test with Debug Mode First
 
 Before deploying to production, test the upload with debug mode enabled to verify configuration:
 
 ```bash
-SCRIPT=`/usr/bin/find "${SRCROOT}" -name upload-react-native-sourcemap | head -n 1`
-/bin/sh "${SCRIPT}" "YOUR_INGEST_API_KEY" "YOUR_APP_TOKEN" --debug
+ARTIFACT_DIR="${BUILD_DIR%Build/*}"
+SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name upload-react-native-sourcemap | head -n 1`
+/bin/sh "${SCRIPT}" "NEWRELIC_INGEST_KEY" "NEWRELIC_APP_TOKEN" --debug
 ```
 
 Check `upload_sourcemap_results.log` for any errors or warnings.

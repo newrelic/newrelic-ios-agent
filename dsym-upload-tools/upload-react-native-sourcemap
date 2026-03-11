@@ -4,15 +4,18 @@
 # Shell wrapper script used to upload React Native source maps to New Relic.
 # upload-react-native-sourcemap
 
-if [ ! $1 ] || [ ! $2 ]; then
-    echo "New Relic: usage: $0 <INGEST_API_KEY> <APP_TOKEN> [--debug]"
-    echo "  INGEST_API_KEY: Your New Relic Ingest API Key (from https://one.newrelic.com/api-keys)"
-    echo "  APP_TOKEN: Your Mobile App Token (from New Relic mobile app settings)"
-    exit -1
-fi
-
 INGEST_API_KEY=$1
 APP_TOKEN=$2
+
+# Check if credentials are provided and not placeholder values
+if [ -z "$INGEST_API_KEY" ] || [ -z "$APP_TOKEN" ] || \
+   [ "$INGEST_API_KEY" = "NEWRELIC_INGEST_KEY" ] || [ "$APP_TOKEN" = "NEWRELIC_APP_TOKEN" ] || \
+   [ "$INGEST_API_KEY" = "YOUR_INGEST_API_KEY" ] || [ "$APP_TOKEN" = "YOUR_APP_TOKEN" ]; then
+    echo "New Relic: Skipping source map upload - credentials not configured"
+    echo "New Relic: To enable source map uploads, set NEWRELIC_INGEST_KEY and NEWRELIC_APP_TOKEN environment variables"
+    echo "New Relic: See https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-react-native for setup instructions"
+    exit 0
+fi
 DEBUG_FLAG=${3:-''}
 
 echo "New Relic: Processing React Native source map and uploading to New Relic. (In background...)"
