@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by New Relic Mobile Agent Team
-//  Copyright © 2025 New Relic. All rights reserved.
+//  Copyright © 2026 New Relic. All rights reserved.
 //
 
 import Foundation
@@ -234,12 +234,6 @@ public class JSErrorController: NSObject {
 
         // Format payload
         let payload = formatPayload(errors)
-
-        // DEBUG: Print full payload for Android team
-        if let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: .prettyPrinted),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
-            NRLOG_AGENT_DEBUG("=== JS ERROR PAYLOAD ===\n\(jsonString)\n======================")
-        }
 
         // Get connection info
         let connectInfo = NRMAAgentConfiguration.connectionInformation()

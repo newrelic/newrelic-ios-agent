@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# 2025 New Relic
+# 2026 New Relic
 # Shell wrapper script used to upload React Native source maps to New Relic.
 # upload-react-native-sourcemap
 

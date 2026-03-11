@@ -3,7 +3,7 @@
 //  NewRelicAgent
 //
 //  Created by New Relic Mobile Agent Team
-//  Copyright © 2025 New Relic. All rights reserved.
+//  Copyright © 2026 New Relic. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
