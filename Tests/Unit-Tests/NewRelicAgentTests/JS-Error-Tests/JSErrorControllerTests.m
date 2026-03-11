@@ -2,7 +2,7 @@
 //  JSErrorControllerTests.m
 //  NewRelicAgentTests
 //
-//  Copyright © 2024 New Relic. All rights reserved.
+//  Copyright © 2026 New Relic. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>
