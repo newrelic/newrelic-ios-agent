@@ -702,7 +702,7 @@
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				D45F543C2F608E6D00AB3CB3 /* ShellScript */,
+				D45F543C2F608E6D00AB3CB3 /* Run Script */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
 				D4D764B22F48E95E00F74958 /* Embed Frameworks */,
@@ -1305,7 +1305,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-RNSampleApp-RNSampleAppTests/Pods-RNSampleApp-RNSampleAppTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D45F543C2F608E6D00AB3CB3 /* ShellScript */ = {
+		D45F543C2F608E6D00AB3CB3 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1314,6 +1314,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Upload React Native Source Maps";
 			outputFileListPaths = (
 			);
 			outputPaths = (
