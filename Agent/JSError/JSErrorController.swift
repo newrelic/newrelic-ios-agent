@@ -27,6 +27,7 @@ public class JSErrorController: NSObject {
     private var uploader: MobileErrorsUploader?
     private var errorQueue = NSMutableArray()
     private let errorQueueLock = NSLock()
+    private var hasLoadedPersistedErrors = false
 
     // MARK: - Initialization
 
@@ -80,6 +81,9 @@ public class JSErrorController: NSObject {
         }
 
         NRLOG_AGENT_DEBUG("JS Error Controller initialized with collector: \(collectorHost)")
+
+        // Load persisted errors from previous session (crash recovery)
+        loadPersistedErrorsOnStartup()
     }
 
     // MARK: - Public Methods
@@ -147,11 +151,17 @@ public class JSErrorController: NSObject {
         persistError(errorData)
     }
 
-    @objc public func processAndPublishPersistedErrors() {
+    // Load persisted errors from disk on app startup only (for crash recovery)
+    private func loadPersistedErrorsOnStartup() {
+        guard !hasLoadedPersistedErrors else {
+            NRLOG_AGENT_DEBUG("Persisted errors already loaded, skipping")
+            return
+        }
+
         let persistedErrors = loadPersistedErrors()
 
         if !persistedErrors.isEmpty {
-            NRLOG_AGENT_DEBUG("Processing \(persistedErrors.count) persisted JS errors")
+            NRLOG_AGENT_DEBUG("Loading \(persistedErrors.count) persisted JS errors from previous session")
 
             errorQueueLock.lock()
             for error in persistedErrors {
@@ -159,9 +169,20 @@ public class JSErrorController: NSObject {
             }
             errorQueueLock.unlock()
 
+            hasLoadedPersistedErrors = true
+
             // Don't clear persisted errors yet - wait until after successful send
             // They will be cleared in onHarvestComplete
+        } else {
+            NRLOG_AGENT_DEBUG("No persisted JS errors found")
+            hasLoadedPersistedErrors = true
         }
+    }
+
+    @objc public func processAndPublishPersistedErrors() {
+        // Deprecated: Now only loads on startup via loadPersistedErrorsOnStartup()
+        // Keeping this method for backward compatibility but it does nothing
+        NRLOG_AGENT_DEBUG("processAndPublishPersistedErrors called - persisted errors are now loaded only on startup")
     }
 
     // MARK: - Harvest Methods (called manually, not via protocol)
@@ -201,8 +222,10 @@ public class JSErrorController: NSObject {
     }
 
     @objc public func onHarvestConnected() {
-        // Process persisted errors when connection is established
-        processAndPublishPersistedErrors()
+        // Note: We don't load persisted errors here to avoid duplicates.
+        // Persisted errors are only loaded once on startup for crash recovery.
+        // Errors from the current session are already in the memory queue.
+        NRLOG_AGENT_DEBUG("Harvest connected - memory queue will be sent on next harvest cycle")
     }
 
     @objc public func onHarvestDisconnected() {
@@ -485,5 +508,17 @@ public class JSErrorController: NSObject {
         errorQueueLock.lock()
         defer { errorQueueLock.unlock() }
         errorQueue.removeAllObjects()
+    }
+
+    /// Internal method for testing: returns the current size of the error queue
+    @objc public func errorQueueSizeForTesting() -> Int {
+        errorQueueLock.lock()
+        defer { errorQueueLock.unlock() }
+        return errorQueue.count
+    }
+
+    /// Internal method for testing: clears persisted errors from disk
+    @objc public func clearPersistedErrorsForTesting() {
+        clearPersistedErrors()
     }
 }
