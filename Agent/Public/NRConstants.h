@@ -180,7 +180,7 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
 
 // JS Error
-#define kNRMAJSError kNRAgentHealthPrefix @"/%@/%@/JSError"
+#define kNRMAJSError kNRAgentHealthPrefix @"/JSError"
 #define kNRMAJSErrorMetricUploadTime        kNRMAJSError @"/UploadTime"
 #define kNRMAJSErrorMetricUploadTimeout     kNRMAJSError @"/UploadTimeOut"
 #define kNRMAJSErrorMetricUploadThrottled   kNRMAJSError @"/UploadThrottled"
