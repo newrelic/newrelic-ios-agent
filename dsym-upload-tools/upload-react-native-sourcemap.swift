@@ -1,6 +1,6 @@
 //
 //  upload-react-native-sourcemap.swift
-//  2025 New Relic
+//  2026 New Relic
 //
 // Swift script used to upload React Native source maps to New Relic.
 // Intended to be run from a Xcode build phase.

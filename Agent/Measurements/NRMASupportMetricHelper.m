@@ -201,11 +201,8 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 
 // JS Error
 + (void) enqueueJSErrorUploadTimeMetric:(double)milliseconds {
-    NSString* nativePlatform = [NewRelicInternalUtils osName];
-    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAJSErrorMetricUploadTime, nativePlatform, platform]
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricUploadTime
                                                               value:[NSNumber numberWithDouble:milliseconds]
                                                               scope:@""
                                                     produceUnscoped:YES
@@ -214,33 +211,24 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 }
 
 + (void) enqueueJSErrorUploadTimeoutMetric {
-    NSString* nativePlatform = [NewRelicInternalUtils osName];
-    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAJSErrorMetricUploadTimeout, nativePlatform, platform]
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricUploadTimeout
                                                               value:@1
                                                               scope:nil]];
     }
 }
 
 + (void) enqueueJSErrorUploadThrottledMetric {
-    NSString* nativePlatform = [NewRelicInternalUtils osName];
-    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAJSErrorMetricUploadThrottled, nativePlatform, platform]
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricUploadThrottled
                                                               value:@1
                                                               scope:nil]];
     }
 }
 
 + (void) enqueueJSErrorFailedUploadMetric {
-    NSString* nativePlatform = [NewRelicInternalUtils osName];
-    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
-
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAJSErrorMetricFailedUpload, nativePlatform, platform]
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricFailedUpload
                                                               value:@1
                                                               scope:nil]];
     }

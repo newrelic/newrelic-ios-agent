@@ -26,12 +26,13 @@ struct ViewDetails {
 
     // Indicates if this view should have its content masked in session replay
     var isMasked: Bool?
-    
+
     // swiftUI masking support
     var maskApplicationText: Bool?
     var maskUserInputText: Bool?
     var maskAllImages: Bool?
     var maskAllUserTouches: Bool?
+    var blockView: Bool?
 
     // Custom identifier for the view (from NRMaskingView view)
     var viewIdentifier: String?
@@ -154,6 +155,11 @@ struct ViewDetails {
             view.maskAllUserTouches = maskAllUserTouches
         }
 
+        if let blockView = ViewDetails.checkBlockView(view: view) {
+            self.blockView = blockView
+            view.blockView = blockView
+        }
+
         if let shouldMask = ViewDetails.checkIsMasked(view: view, viewName: viewName) {
             self.isMasked = shouldMask
             view.sessionReplayMaskState = shouldMask
@@ -161,11 +167,12 @@ struct ViewDetails {
     }
     
     init(frame: CGRect, clip: CGRect, backgroundColor: UIColor, alpha: CGFloat, isHidden: Bool, viewName: String, parentId: Int, cornerRadius: CGFloat, borderWidth: CGFloat, borderColor: UIColor? = nil, viewId: Int?, view: UIView? = nil,
-    
+
           maskApplicationText: Bool?,
           maskUserInputText: Bool?,
           maskAllImages: Bool?,
           maskAllUserTouches: Bool?,
+          blockView: Bool?,
           sessionReplayIdentifier: String?) {
         
         let visibleFrame = frame.intersection(clip)
@@ -196,7 +203,8 @@ struct ViewDetails {
         self.maskUserInputText = maskUserInputText
         self.maskAllImages = maskAllImages
         self.maskAllUserTouches = maskAllUserTouches
-        
+        self.blockView = blockView
+
         if let sessionReplayIdentifier = sessionReplayIdentifier {
             guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
             // Check for accessibility identifier in the unmasking list
@@ -313,16 +321,52 @@ struct ViewDetails {
     }
     
     private static func checkMaskAllUserTouches(view: UIView) -> Bool? {
-        
+
         if let maskAllUserTouches = view.maskAllUserTouches{
             return maskAllUserTouches
         }
-        
+
         if let parentView = view.superview,
            let parentMasked = parentView.maskAllUserTouches {
             return parentMasked
         }
-        
+
+        return nil
+    }
+
+    private static func checkBlockView(view: UIView) -> Bool? {
+        // Check for explicit blockView flag first
+        if let blockView = view.blockView {
+            return blockView
+        }
+
+        // Check for "nr-block" accessibility identifier
+        if let accessibilityId = view.accessibilityIdentifier,
+           accessibilityId.count > 0,
+           accessibilityId == "nr-block" || accessibilityId.hasSuffix(".nr-block") {
+            return true
+        }
+
+        // Recursively check parent view hierarchy for blockView inheritance
+        if let parentView = view.superview {
+            // Check if parent has explicit blockView flag
+            if let parentBlockView = parentView.blockView, parentBlockView {
+                return true
+            }
+
+            // Check if parent has "nr-block" accessibility identifier
+            if let parentAccessibilityId = parentView.accessibilityIdentifier,
+               parentAccessibilityId.count > 0,
+               parentAccessibilityId == "nr-block" || parentAccessibilityId.hasSuffix(".nr-block") {
+                return true
+            }
+
+            // Recursively check parent's ancestors
+            if let ancestorBlocked = checkBlockView(view: parentView), ancestorBlocked {
+                return true
+            }
+        }
+
         return nil
     }
     
@@ -378,6 +422,7 @@ extension ViewDetails: Hashable {
         hasher.combine(maskUserInputText)
         hasher.combine(maskAllImages)
         hasher.combine(maskAllUserTouches)
+        hasher.combine(blockView)
         hasher.combine(viewIdentifier)
 
         // Convert UIColors to hex strings before hashing to ensure thread safety
