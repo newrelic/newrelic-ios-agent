@@ -290,8 +290,9 @@ public class JSErrorController: NSObject {
         }
 
         if let configuration = NRMAHarvestController.configuration(),
-           configuration.application_id > 0 {
-            payload["dataToken"] = [configuration.application_id, 0]
+           let dataToken = configuration.data_token,
+           dataToken.isValid() {
+            payload["dataToken"] = [dataToken.clusterAgentId, dataToken.realAgentId]
         }
 
         payload["appInfo"] = [
