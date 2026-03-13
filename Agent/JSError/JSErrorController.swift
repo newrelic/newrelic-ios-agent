@@ -92,7 +92,6 @@ public class JSErrorController: NSObject {
                       message: String,
                       stackTrace: String,
                       isFatal: Bool,
-                      jsAppVersion: String?,
                       additionalAttributes: [String: Any]?) {
 
         // Validate required parameters
@@ -115,11 +114,6 @@ public class JSErrorController: NSObject {
             "timestamp": Int64(Date().timeIntervalSince1970 * 1000),
             "errorId": UUID().uuidString
         ]
-
-        // Add optional fields
-        if let jsAppVersion = jsAppVersion, !jsAppVersion.isEmpty {
-            errorData["jsAppVersion"] = jsAppVersion
-        }
 
         // Add additional attributes if provided
         if let additionalAttributes = additionalAttributes, !additionalAttributes.isEmpty {
@@ -360,11 +354,6 @@ public class JSErrorController: NSObject {
         // URL encode stack trace
         if let stackTrace = errorData["stackTrace"] as? String, !stackTrace.isEmpty {
             event["threads"] = urlEncodeStackTrace(stackTrace)
-        }
-
-        // Add jsAppVersion
-        if let jsAppVersion = errorData["jsAppVersion"] as? String {
-            event["jsAppVersion"] = jsAppVersion
         }
 
         // Add additional attributes if present

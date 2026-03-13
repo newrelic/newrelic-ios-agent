@@ -751,7 +751,6 @@
                        message:(NSString* __nonnull)message
                     stackTrace:(NSString* __nonnull)stackTrace
                        isFatal:(BOOL)isFatal
-                  jsAppVersion:(NSString* __nullable)jsAppVersion
           additionalAttributes:(NSDictionary* __nullable)additionalAttributes
 {
     // If Agent is shutdown we shouldn't respond.
@@ -773,7 +772,6 @@
                              message:message
                           stackTrace:stackTrace
                              isFatal:isFatal
-                        jsAppVersion:jsAppVersion
                additionalAttributes:additionalAttributes];
 
     return true;
