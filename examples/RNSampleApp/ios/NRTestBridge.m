@@ -147,7 +147,6 @@
                               message:message
                            stackTrace:stackTrace
                               isFatal:isFatal
-                         jsAppVersion:jsAppVersion
                  additionalAttributes:additionalAttributes];
   }
  // MARK: - Network
