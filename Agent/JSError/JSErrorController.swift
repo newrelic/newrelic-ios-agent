@@ -92,7 +92,6 @@ public class JSErrorController: NSObject {
                       message: String,
                       stackTrace: String,
                       isFatal: Bool,
-                      jsAppVersion: String?,
                       additionalAttributes: [String: Any]?) {
 
         // Validate required parameters
@@ -115,11 +114,6 @@ public class JSErrorController: NSObject {
             "timestamp": Int64(Date().timeIntervalSince1970 * 1000),
             "errorId": UUID().uuidString
         ]
-
-        // Add optional fields
-        if let jsAppVersion = jsAppVersion, !jsAppVersion.isEmpty {
-            errorData["jsAppVersion"] = jsAppVersion
-        }
 
         // Add additional attributes if provided
         if let additionalAttributes = additionalAttributes, !additionalAttributes.isEmpty {
@@ -362,11 +356,6 @@ public class JSErrorController: NSObject {
             event["threads"] = urlEncodeStackTrace(stackTrace)
         }
 
-        // Add jsAppVersion
-        if let jsAppVersion = errorData["jsAppVersion"] as? String {
-            event["jsAppVersion"] = jsAppVersion
-        }
-
         // Add additional attributes if present
         if let attributes = errorData["attributes"] as? [String: Any] {
             for (key, value) in attributes {
@@ -480,6 +469,12 @@ public class JSErrorController: NSObject {
         }
 
         let storePath = (documentsPath as NSString).appendingPathComponent(kJSErrorBackupStoreFolder)
+
+        // Check if folder exists before trying to delete
+        guard FileManager.default.fileExists(atPath: storePath) else {
+            NRLOG_AGENT_DEBUG("No persisted JS errors to clear")
+            return
+        }
 
         do {
             try FileManager.default.removeItem(atPath: storePath)

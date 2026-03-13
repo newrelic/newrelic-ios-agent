@@ -118,7 +118,6 @@
                                        message:@"Cannot read property 'foo' of undefined"
                                     stackTrace:@"at testFunction (app.js:123:45)"
                                        isFatal:NO
-                                  jsAppVersion:@"1.0.0"
                           additionalAttributes:@{@"screen": @"HomeScreen"}]);
 
     // Verify error was recorded
@@ -139,7 +138,6 @@
                                        message:@"x is not defined"
                                     stackTrace:@"at <anonymous>:1:1"
                                        isFatal:NO
-                                  jsAppVersion:@"1.0.0"
                           additionalAttributes:nil]);
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -155,7 +153,6 @@
                           message:[NSString stringWithFormat:@"Message %d", i]
                        stackTrace:[NSString stringWithFormat:@"Stack %d", i]
                           isFatal:NO
-                     jsAppVersion:@"1.0.0"
              additionalAttributes:@{@"index": @(i)}];
     }
 
@@ -181,7 +178,6 @@
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:additionalAttributes];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -220,7 +216,6 @@
                       message:explicitMessage
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:additionalAttributes];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -250,7 +245,6 @@
                       message:@"ExplicitMessage"
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:additionalAttributes];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -276,7 +270,6 @@
                       message:@"Critical failure"
                    stackTrace:@"stack"
                       isFatal:YES
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     // Record non-fatal error
@@ -284,7 +277,6 @@
                       message:@"Recoverable error"
                    stackTrace:@"stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -312,7 +304,6 @@
                       message:@"Test error"
                    stackTrace:@"at function (file.js:10:5)"
                       isFatal:NO
-                 jsAppVersion:@"1.0.0"
          additionalAttributes:@{@"screen": @"Home"}];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -343,7 +334,6 @@
                       message:@"Test message"
                    stackTrace:@"stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -359,7 +349,6 @@
                       message:@""
                    stackTrace:@"stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -383,7 +372,6 @@
                           message:@"Test message"
                        stackTrace:@"test stack"
                           isFatal:NO
-                     jsAppVersion:@"1.0.0"
               additionalAttributes:nil];
 
     // Harvest clears memory but leaves disk
@@ -413,7 +401,6 @@
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0.0"
           additionalAttributes:nil];
 
     // Error is in memory queue (1) and on disk
@@ -444,7 +431,6 @@
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0.0"
           additionalAttributes:nil];
 
     NSInteger queueSizeAfterRecord = [controller errorQueueSizeForTesting];
@@ -478,7 +464,6 @@
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0.0"
           additionalAttributes:nil];
 
     // Harvest the error
