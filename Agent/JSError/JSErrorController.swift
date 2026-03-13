@@ -481,6 +481,12 @@ public class JSErrorController: NSObject {
 
         let storePath = (documentsPath as NSString).appendingPathComponent(kJSErrorBackupStoreFolder)
 
+        // Check if folder exists before trying to delete
+        guard FileManager.default.fileExists(atPath: storePath) else {
+            NRLOG_AGENT_DEBUG("No persisted JS errors to clear")
+            return
+        }
+
         do {
             try FileManager.default.removeItem(atPath: storePath)
             NRLOG_AGENT_DEBUG("Cleared persisted JS errors")
