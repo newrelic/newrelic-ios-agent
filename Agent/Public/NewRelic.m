@@ -28,6 +28,7 @@
 #import "NRMAURLTransformer.h"
 #import "NRMAHTTPUtilities.h"
 #import "Constants.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 #define kNRMA_NAME @"name"
 
@@ -744,6 +745,43 @@
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
                                                                       withAttributes:attributes];
+}
+
++ (BOOL) recordJavascriptError:(NSString* __nonnull)name
+                       message:(NSString* __nonnull)message
+                    stackTrace:(NSString* __nonnull)stackTrace
+                       isFatal:(BOOL)isFatal
+                  jsAppVersion:(NSString* __nullable)jsAppVersion
+          additionalAttributes:(NSDictionary* __nullable)additionalAttributes
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return false;
+    }
+
+#if TARGET_OS_IOS
+    // Get the JS Error Controller (iOS only - for React Native)
+    JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
+
+    if (jsErrorController == nil) {
+        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
+        return false;
+    }
+
+    // Route to JS Error Controller for Mobile Errors Protocol
+    [jsErrorController recordJSError:name
+                             message:message
+                          stackTrace:stackTrace
+                             isFatal:isFatal
+                        jsAppVersion:jsAppVersion
+               additionalAttributes:additionalAttributes];
+
+    return true;
+#else
+    // JS Error reporting is only available on iOS (for React Native)
+    NRLOG_AGENT_ERROR(@"JS Error reporting is only available on iOS. Cannot record JS error.");
+    return false;
+#endif
 }
 
 #pragma mark - Event retention settings

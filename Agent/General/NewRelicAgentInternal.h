@@ -32,12 +32,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#if TARGET_OS_IOS
+@class JSErrorController;
+#endif
+
 // Defines the internal agent api.
 @interface NewRelicAgentInternal : NSObject
 
 @property (nonatomic, readonly, assign) BOOL enabled;
 @property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
 @property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
+#if TARGET_OS_IOS
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+#endif
 @property(atomic, strong) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
