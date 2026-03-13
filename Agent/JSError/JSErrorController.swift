@@ -173,12 +173,6 @@ public class JSErrorController: NSObject {
         }
     }
 
-    @objc public func processAndPublishPersistedErrors() {
-        // Deprecated: Now only loads on startup via loadPersistedErrorsOnStartup()
-        // Keeping this method for backward compatibility but it does nothing
-        NRLOG_AGENT_DEBUG("processAndPublishPersistedErrors called - persisted errors are now loaded only on startup")
-    }
-
     // MARK: - Harvest Methods (called manually, not via protocol)
 
     @objc public func onHarvestStart() {
