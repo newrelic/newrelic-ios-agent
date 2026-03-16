@@ -15,7 +15,7 @@ class UIImageViewThingy: SessionReplayViewThingy {
     var isBlocked: Bool
 
     var viewDetails: ViewDetails
-    let imagePlaceholderCSS = "background: rgb(2,0,36);background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(0,212,255,1) 100%);"
+    let imagePlaceholderCSS = "background: #CCCCCC;"
     var image: UIImage?
     var contentMode: [String: String]
     
@@ -107,7 +107,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
         if let imageData = image?.optimizedPngData() {
             imgNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
         }
-        
+        if isMasked {
+            imgNode.attributes["data-nr-masked"] = "image"
+        }
         // Create the container div element
         let containerNode = ElementNodeData(id: viewDetails.viewId,
                                             tagName: .div,
@@ -131,7 +133,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
         if let imageData = image?.optimizedPngData() {
             imgNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
         }
-
+        if isMasked {
+            imgNode.attributes["data-nr-masked"] = "image"
+        }
         // Create and return the container div
         return ElementNodeData(id: viewDetails.viewId,
                                tagName: .div,
@@ -174,6 +178,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
                     imgAttributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
                 }
             }
+        } else {
+            imgAttributes["data-nr-masked"] = "image"
         }
             
         if !imgAttributes.isEmpty {
