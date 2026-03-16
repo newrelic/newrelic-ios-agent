@@ -247,8 +247,8 @@ public class SessionReplayManager: NSObject {
         sessionReplayQueue.sync { [weak self] in
             guard let self = self else { return }
 
-            let frames = self.sessionReplay.getSessionReplayFrames()
-            let touches = self.sessionReplay.getSessionReplayTouches()
+            let frames = self.sessionReplay.getSessionReplayFrames(clear: false)
+            let touches = self.sessionReplay.getSessionReplayTouches(clear: false)
             
             if frames.isEmpty && touches.isEmpty {
                 NRLOG_AGENT_DEBUG("No session replay frames or touches to harvest.")
@@ -264,11 +264,10 @@ public class SessionReplayManager: NSObject {
             let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
             let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
             
-            guard let upload = self.createReplayUpload(container: container,
+            // side effect line in this
+            let _ = self.createReplayUpload(container: container,
                                                        firstTimestamp: firstTimestamp,
-                                                       lastTimestamp: lastTimestamp) else {
-                return
-            }
+                                            lastTimestamp: lastTimestamp, socket: true)
         }
     }
     
@@ -325,7 +324,7 @@ public class SessionReplayManager: NSObject {
 
     }
     
-    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
+    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, socket: Bool = false) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
         
@@ -341,9 +340,11 @@ public class SessionReplayManager: NSObject {
             return nil
         }
         
-        #if canImport(SocketIO)
+        if socket {
+#if canImport(SocketIO)
             sendToSocketIO(jsonData)
-        #endif
+#endif
+        }
         
         let uncompressedDataSize = jsonData.count
         
@@ -580,7 +581,7 @@ public class SessionReplayManager: NSObject {
                 socket.emit("rrweb-event", event)
             }
             //socket.emit("recorder-stop")
-            NRLOG_AGENT_DEBUG("SocketIO: streamed \(events.count) rrweb events")
+            //NRLOG_AGENT_DEBUG("SocketIO: streamed \(events.count) rrweb events")
         }
 
         if socketIOClient?.status == .connected {

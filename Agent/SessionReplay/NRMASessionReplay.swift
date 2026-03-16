@@ -257,11 +257,11 @@ public class NRMASessionReplay: NSObject {
         var frames = [SessionReplayFrame]()
         frames = self.rawFrames
         
-        if frames.count > 0, let oldestFrame = frames.first, let newestFrame = frames.last {
-            let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
-            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Returning \(frames.count) frames spanning \(String(format: "%.2f", bufferSpan))s")
-            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Frame range: \(oldestFrame.date) to \(newestFrame.date)")
-        }
+//        if frames.count > 0, let oldestFrame = frames.first, let newestFrame = frames.last {
+//            let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
+//            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Returning \(frames.count) frames spanning \(String(format: "%.2f", bufferSpan))s")
+//            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Frame range: \(oldestFrame.date) to \(newestFrame.date)")
+//        }
         
         if clear {
             //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Clearing buffer and files")
