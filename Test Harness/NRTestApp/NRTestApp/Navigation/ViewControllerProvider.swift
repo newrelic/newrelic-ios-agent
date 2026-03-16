@@ -60,5 +60,11 @@ enum ViewControllerProvider {
         let viewController = AttributedTextTestViewController()
         return viewController
     }
+#if os(iOS)
+    static var dateTimePickerViewController: DateTimePickerViewController {
+        let viewController = DateTimePickerViewController()
+        return viewController
+    }
+#endif
 }
 

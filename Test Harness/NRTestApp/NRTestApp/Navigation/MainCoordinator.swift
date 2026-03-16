@@ -133,4 +133,11 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(attributedTextTestViewController, animated: true)
     }
 
+    func showDateTimePickerViewController() {
+#if os(iOS)
+        let dateTimePickerViewController = ViewControllerProvider.dateTimePickerViewController
+        navigationController.pushViewController(dateTimePickerViewController, animated: true)
+#endif
+    }
+
 }
