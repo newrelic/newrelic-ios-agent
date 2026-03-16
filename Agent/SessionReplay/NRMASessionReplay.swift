@@ -305,14 +305,16 @@ public class NRMASessionReplay: NSObject {
             .last { $0.isKeyWindow }
     }
     
-    func getSessionReplayFrames(clear: Bool = true) -> [RRWebEventCommon] {
+    func getSessionReplayFrames(clear: Bool = true, readOnly: Bool = false) -> [RRWebEventCommon] {
         var processedFrames: [RRWebEventCommon] = []
         
         var currentSize:CGSize = .zero
         let frames = getAndClearFrames(clear: clear)
-        sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
-        
+        if !readOnly {
+            sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
+        }
         for frame in frames {
+            
             if currentSize != frame.size {
                 currentSize = frame.size
                 let metaEventData = RRWebMetaData(
@@ -323,7 +325,7 @@ public class NRMASessionReplay: NSObject {
                 let metaEvent = MetaEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: metaEventData)
                 processedFrames.append(metaEvent)
             }
-            let newFrame = sessionReplayFrameProcessor.processFrame(frame)
+            let newFrame = sessionReplayFrameProcessor.processFrame(frame,readOnly: readOnly)
             if let newFrame = newFrame {
                 processedFrames.append(newFrame)
             }

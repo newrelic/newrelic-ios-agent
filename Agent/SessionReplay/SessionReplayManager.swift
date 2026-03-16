@@ -243,33 +243,56 @@ public class SessionReplayManager: NSObject {
         uploadToWebSocket()
     }
     
-    func uploadToWebSocket() {
-        sessionReplayQueue.sync { [weak self] in
-            guard let self = self else { return }
+        func uploadToWebSocket() {
+            sessionReplayQueue.async { [weak self] in
+                guard let self = self else { return }
 
-            let frames = self.sessionReplay.getSessionReplayFrames(clear: false)
-            let touches = self.sessionReplay.getSessionReplayTouches(clear: false)
-            
-            if frames.isEmpty && touches.isEmpty {
-                NRLOG_AGENT_DEBUG("No session replay frames or touches to harvest.")
-                return
+                let allFrames = self.sessionReplay.getSessionReplayFrames(
+                    clear: false,
+                    readOnly: true
+                )
+                let allTouches = self.sessionReplay.getSessionReplayTouches(
+                    clear: false
+                )
+
+                let frames = Array(allFrames.suffix(2))
+
+                let touches = allTouches.filter { touch in
+                    let touchTime = TimeInterval(touch.timestamp)
+                    return (Date().timeIntervalSinceNow - touchTime) <= 1.0
+                }
+
+                if frames.isEmpty && touches.isEmpty {
+                    NRLOG_AGENT_DEBUG(
+                        "No session replay frames or touches to harvest."
+                    )
+                    return
+                }
+
+                var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
+                container.append(contentsOf: touches.map(AnyRRWebEvent.init))
+                container.sort {
+                    (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
+                    lhs.base.timestamp < rhs.base.timestamp
+                }
+
+                let firstTimestamp = TimeInterval(
+                    container.first?.base.timestamp ?? 0
+                )
+                let lastTimestamp = TimeInterval(
+                    container.last?.base.timestamp ?? 0
+                )
+
+                // side effect line in this
+                let _ = self.createReplayUploadForWebsocket(
+                    container: container,
+                    firstTimestamp: firstTimestamp,
+                    lastTimestamp: lastTimestamp,
+                    socket: true
+                )
+
             }
-            
-            var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
-            container.append(contentsOf: touches.map(AnyRRWebEvent.init))
-            container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
-                lhs.base.timestamp < rhs.base.timestamp
-            }
-            
-            let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
-            let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
-            
-            // side effect line in this
-            let _ = self.createReplayUpload(container: container,
-                                                       firstTimestamp: firstTimestamp,
-                                            lastTimestamp: lastTimestamp, socket: true)
         }
-    }
     
     @objc public func harvest() {
         // sync is required here or session replay upload fails.
@@ -324,7 +347,7 @@ public class SessionReplayManager: NSObject {
 
     }
     
-    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, socket: Bool = false) -> SessionReplayData? {
+    private func createReplayUpload(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
         
@@ -339,13 +362,7 @@ public class SessionReplayManager: NSObject {
             NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
             return nil
         }
-        
-        if socket {
-#if canImport(SocketIO)
-            sendToSocketIO(jsonData)
-#endif
-        }
-        
+
         let uncompressedDataSize = jsonData.count
         
         do {
@@ -370,6 +387,54 @@ public class SessionReplayManager: NSObject {
         // NRLOG_AGENT_DEBUG(url.absoluteString)
         
         return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
+    }
+    
+    private func createReplayUploadForWebsocket(container: [AnyRRWebEvent], firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, socket: Bool = false) -> SessionReplayData? {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .withoutEscapingSlashes
+        
+        // Encode container to JSON
+        var jsonData: Data
+        do {
+            jsonData = try encoder.encode(container)
+//            if let jsonString = String(data: jsonData, encoding: .utf8) {
+//                NRLOG_AGENT_DEBUG(jsonString)
+//            }
+        } catch {
+            NRLOG_AGENT_DEBUG("Failed to encode session replay events to JSON: \(error)")
+            return nil
+        }
+        
+        if socket {
+#if canImport(SocketIO)
+            sendToSocketIO(jsonData)
+#endif
+        }
+        
+//        let uncompressedDataSize = jsonData.count
+//        
+//        do {
+//            let gzippedData = try jsonData.gzipped()
+//            jsonData = gzippedData
+//        } catch {
+//            NRLOG_AGENT_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
+//        }
+//        
+//        // Construct upload URL
+//        guard let url = sessionReplayReporter.uploadURL(
+//            uncompressedDataSize: uncompressedDataSize,
+//            firstTimestamp: firstTimestamp,
+//            lastTimestamp: lastTimestamp,
+//            isFirstChunk: self.sessionReplay.isFirstChunk,
+//            isGZipped: jsonData.isGzipped
+//        ) else {
+//            NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
+//            return nil
+//        }
+        
+        // NRLOG_AGENT_DEBUG(url.absoluteString)
+        
+        return nil
     }
     
     // REPLAY PERSISTENCE

@@ -15,16 +15,20 @@ class SessionReplayFrameProcessor {
     var takeFullSnapshotNext = true
     
     
-    func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon? {
+    func processFrame(_ frame: SessionReplayFrame, readOnly: Bool = false) -> RRWebEventCommon? {
         guard useIncrementalDiffs else { // If useIncrementalDiffs is false, we only take full snapshots
-            self.lastFullFrame = frame
+            if !readOnly {
+                self.lastFullFrame = frame
+            }
             return processFullSnapshot(frame)
         }
         
         // If there is no last frame, always take a full snapshot
         guard let lastFullFrame = lastFullFrame else {
-            takeFullSnapshotNext = false
-            self.lastFullFrame = frame
+            if !readOnly {
+                takeFullSnapshotNext = false
+                self.lastFullFrame = frame
+            }
             return processFullSnapshot(frame)
         }
         
@@ -32,21 +36,32 @@ class SessionReplayFrameProcessor {
         // If a full snapshot is needed, frame size changed, or UILayoutContainerView count increased
         if takeFullSnapshotNext || frame.size != lastFullFrame.size || (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) {
             rrwebCommon = processFullSnapshot(frame)
-            takeFullSnapshotNext = false
+            if !readOnly {
+                
+                takeFullSnapshotNext = false
+            }
         } else {
             rrwebCommon = processIncrementalSnapshot(newFrame: frame, oldFrame: lastFullFrame)
-            takeFullSnapshotNext = false
+            if !readOnly {
+                
+                takeFullSnapshotNext = false
+            }
         }
         // If we have a full snapshot, compare the rootViewControllerIDs. If they match, continue with partial snapshots
         // If they don't, then do a full snapshot next time.
         if frame.rootViewControllerId != lastFullFrame.rootViewControllerId ||
             frame.views.viewDetails.viewId != lastFullFrame.views.viewDetails.viewId ||
             frame.rootSwiftUIViewId != lastFullFrame.rootSwiftUIViewId {
-
-            takeFullSnapshotNext = true // When the viewController transitions there is a frame where they are combined so take the full snapshot after things have settled.
+            if !readOnly {
+                
+                takeFullSnapshotNext = true // When the viewController transitions there is a frame where they are combined so take the full snapshot after things have settled.
+            }
         }
         
-        self.lastFullFrame = frame
+        if !readOnly {
+            
+            self.lastFullFrame = frame
+        }
         return rrwebCommon
     }
     
