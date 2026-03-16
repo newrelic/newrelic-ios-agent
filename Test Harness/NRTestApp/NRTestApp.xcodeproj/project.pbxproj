@@ -62,6 +62,8 @@
 		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
+		2BEB3F552F68A8E1006AA9C4 /* CacheExampleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BEB3F542F68A8E1006AA9C4 /* CacheExampleViewController.swift */; };
+		2BEB3F562F68A8E1006AA9C4 /* CacheExampleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BEB3F542F68A8E1006AA9C4 /* CacheExampleViewController.swift */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
@@ -374,6 +376,7 @@
 		2BD05DD12ADF323A00C0C972 /* NRTestAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NRTestAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppUITests.swift; sourceTree = "<group>"; };
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
+		2BEB3F542F68A8E1006AA9C4 /* CacheExampleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheExampleViewController.swift; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
 		F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS) Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -699,6 +702,7 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				2BEB3F542F68A8E1006AA9C4 /* CacheExampleViewController.swift */,
 				2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */,
 				2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */,
 				2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */,
@@ -1294,6 +1298,7 @@
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
+				2BEB3F552F68A8E1006AA9C4 /* CacheExampleViewController.swift in Sources */,
 				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
@@ -1368,6 +1373,7 @@
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
+				2BEB3F562F68A8E1006AA9C4 /* CacheExampleViewController.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
