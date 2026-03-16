@@ -259,7 +259,9 @@ public class SessionReplayManager: NSObject {
 
                 let touches = allTouches.filter { touch in
                     let touchTime = TimeInterval(touch.timestamp)
-                    return (Date().timeIntervalSinceNow - touchTime) <= 1.0
+                    let now = Date().timeIntervalSince1970 * 1000.0
+                    let touchDelta = (now - touchTime)
+                    return touchDelta <= 1000.0
                 }
 
                 if frames.isEmpty && touches.isEmpty {
