@@ -118,7 +118,6 @@
                                        message:@"Cannot read property 'foo' of undefined"
                                     stackTrace:@"at testFunction (app.js:123:45)"
                                        isFatal:NO
-                                  jsAppVersion:@"1.0.0"
                           additionalAttributes:@{@"screen": @"HomeScreen"}]);
 
     // Verify error was recorded
@@ -139,7 +138,6 @@
                                        message:@"x is not defined"
                                     stackTrace:@"at <anonymous>:1:1"
                                        isFatal:NO
-                                  jsAppVersion:@"1.0.0"
                           additionalAttributes:nil]);
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -155,7 +153,6 @@
                           message:[NSString stringWithFormat:@"Message %d", i]
                        stackTrace:[NSString stringWithFormat:@"Stack %d", i]
                           isFatal:NO
-                     jsAppVersion:@"1.0.0"
              additionalAttributes:@{@"index": @(i)}];
     }
 
@@ -181,7 +178,6 @@
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:additionalAttributes];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -220,7 +216,6 @@
                       message:explicitMessage
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:additionalAttributes];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -250,7 +245,6 @@
                       message:@"ExplicitMessage"
                    stackTrace:@"test stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:additionalAttributes];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -276,7 +270,6 @@
                       message:@"Critical failure"
                    stackTrace:@"stack"
                       isFatal:YES
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     // Record non-fatal error
@@ -284,7 +277,6 @@
                       message:@"Recoverable error"
                    stackTrace:@"stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -312,7 +304,6 @@
                       message:@"Test error"
                    stackTrace:@"at function (file.js:10:5)"
                       isFatal:NO
-                 jsAppVersion:@"1.0.0"
          additionalAttributes:@{@"screen": @"Home"}];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -343,7 +334,6 @@
                       message:@"Test message"
                    stackTrace:@"stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -359,7 +349,6 @@
                       message:@""
                    stackTrace:@"stack"
                       isFatal:NO
-                 jsAppVersion:@"1.0"
          additionalAttributes:nil];
 
     NSArray* errors = [controller getErrorQueueForTesting];
@@ -368,24 +357,158 @@
 
 // MARK: - Helper Methods
 
+// MARK: - Persistence and Duplicate Prevention Tests
+
+- (void)testPersistedErrorsLoadedOnNewControllerInstance {
+    // This tests the full disk persistence flow, not the duplicate prevention.
+    // For duplicate prevention tests, see testOnHarvestConnected and testNoDuplicates tests.
+
+    // Setup: Create controller and clear any old persisted errors
+    JSErrorController* firstController = [self createTestController];
+    [firstController clearPersistedErrorsForTesting];
+
+    // Record error → goes to memory + disk
+    [firstController recordJSError:@"TestError"
+                          message:@"Test message"
+                       stackTrace:@"test stack"
+                          isFatal:NO
+              additionalAttributes:nil];
+
+    // Harvest clears memory but leaves disk
+    [firstController onHarvest];
+
+    // Verify memory queue is empty
+    XCTAssertEqual([firstController errorQueueSizeForTesting], 0,
+                   @"Queue should be empty after harvest");
+
+    // Create new instance (simulates app restart)
+    JSErrorController* secondController =
+        [self createTestControllerWithSessionId:@"test-session-id-2" clearQueue:NO];
+
+    // Should load from disk
+    XCTAssertEqual([secondController errorQueueSizeForTesting], 1,
+                   @"New controller instance should load persisted errors from disk");
+
+    // Cleanup
+    [secondController clearPersistedErrorsForTesting];
+}
+
+- (void)testOnHarvestConnectedDoesNotReloadPersistedErrors {
+    // Setup: Create a controller with a persisted error
+    JSErrorController* controller = [self createTestController];
+
+    [controller recordJSError:@"TestError"
+                      message:@"Test message"
+                   stackTrace:@"test stack"
+                      isFatal:NO
+          additionalAttributes:nil];
+
+    // Error is in memory queue (1) and on disk
+    NSInteger queueSizeInitial = [controller errorQueueSizeForTesting];
+    XCTAssertEqual(queueSizeInitial, 1, @"Should have 1 error in queue");
+
+    // Simulate network reconnection
+    [controller onHarvestConnected];
+
+    // Queue size should still be 1 (not reloaded from disk)
+    NSInteger queueSizeAfterReconnect = [controller errorQueueSizeForTesting];
+    XCTAssertEqual(queueSizeAfterReconnect, 1, @"Should still have 1 error (no duplicate from disk)");
+
+    // Clean up
+    [controller clearPersistedErrorsForTesting];
+}
+
+- (void)testNoDuplicatesWhenNetworkDisconnectsBeforeHarvest {
+    // This is the key test for the bug fix
+
+    // Scenario: Error recorded → network drops → network reconnects → harvest
+    // Expected: Only 1 error sent, not 2
+
+    JSErrorController* controller = [self createTestController];
+
+    // Step 1: Record error (goes to memory + disk)
+    [controller recordJSError:@"TestError"
+                      message:@"Test message"
+                   stackTrace:@"test stack"
+                      isFatal:NO
+          additionalAttributes:nil];
+
+    NSInteger queueSizeAfterRecord = [controller errorQueueSizeForTesting];
+    XCTAssertEqual(queueSizeAfterRecord, 1, @"Should have 1 error after recording");
+
+    // Step 2: Network disconnects (simulated - no action needed)
+
+    // Step 3: Network reconnects
+    [controller onHarvestConnected];
+
+    // Queue should still have only 1 error (not reloaded from disk)
+    NSInteger queueSizeAfterReconnect = [controller errorQueueSizeForTesting];
+    XCTAssertEqual(queueSizeAfterReconnect, 1, @"Should have 1 error (no duplicate)");
+
+    // Step 4: Harvest
+    [controller onHarvest];
+
+    // Queue should now be empty
+    NSInteger queueSizeAfterHarvest = [controller errorQueueSizeForTesting];
+    XCTAssertEqual(queueSizeAfterHarvest, 0, @"Queue should be empty after harvest");
+
+    // Clean up
+    [controller clearPersistedErrorsForTesting];
+}
+
+- (void)testPersistedErrorsClearedAfterSuccessfulHarvest {
+    JSErrorController* controller = [self createTestController];
+
+    // Record error
+    [controller recordJSError:@"TestError"
+                      message:@"Test message"
+                   stackTrace:@"test stack"
+                      isFatal:NO
+          additionalAttributes:nil];
+
+    // Harvest the error
+    [controller onHarvest];
+
+    // Simulate successful harvest
+    [controller onHarvestComplete];
+
+    // Create new controller to check if persisted errors are gone
+    JSErrorController* newController = [self createTestController];
+    NSInteger queueSize = [newController errorQueueSizeForTesting];
+
+    XCTAssertEqual(queueSize, 0, @"Persisted errors should be cleared after successful harvest");
+}
+
+// MARK: - Helper Methods
+
 - (JSErrorController*)createTestController {
+    return [self createTestControllerWithClearQueue:YES];
+}
+
+- (JSErrorController*)createTestControllerWithClearQueue:(BOOL)shouldClear {
+    return [self createTestControllerWithSessionId:@"test-session-id" clearQueue:shouldClear];
+}
+
+- (JSErrorController*)createTestControllerWithSessionId:(NSString*)sessionId clearQueue:(BOOL)shouldClear {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc]
         initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"test-token-12345"]
         collectorAddress:nil
         crashAddress:nil];
-    agentConfig.sessionIdentifier = @"test-session-id";
+    agentConfig.sessionIdentifier = sessionId;
 
     JSErrorController* controller = [[JSErrorController alloc]
         initWithAnalyticsController:analytics
         sessionStartTime:[NSDate new]
         agentConfiguration:agentConfig
         platform:[NewRelicInternalUtils osName]
-        sessionId:@"test-session-id"
+        sessionId:sessionId
         attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-    // Clear any existing errors
-    [controller clearErrorQueueForTesting];
+    // Optionally clear any existing errors (persisted errors loaded in init)
+    if (shouldClear) {
+        [controller clearErrorQueueForTesting];
+    }
 
     return controller;
 }
