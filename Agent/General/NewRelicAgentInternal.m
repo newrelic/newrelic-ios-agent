@@ -618,9 +618,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                                                                   attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
     if (self.jsErrorController != nil) {
-        if (status != NotReachable) {
-            [self.jsErrorController processAndPublishPersistedErrors];
-        }
 
         // Use adapter to bridge Swift controller with harvest protocol
         NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
