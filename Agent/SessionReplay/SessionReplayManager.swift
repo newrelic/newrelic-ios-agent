@@ -10,9 +10,9 @@ import Foundation
 import UIKit
 @_implementationOnly import NewRelicPrivate
 
-//#if canImport(SocketIO)
+#if canImport(SocketIO)
 import SocketIO
-//#endif
+#endif
 
 @available(iOS 13.0, *)
 @objcMembers
@@ -175,7 +175,9 @@ public class SessionReplayManager: NSObject {
         // Reset isManuallyRecording for new session
         isManuallyRecording = false
         
+#if canImport(SocketIO)
         self.socketIORecorderStarted = false
+#endif
         // Reset the isFirstChunk for new session
         self.sessionReplay.isFirstChunk = true
     }
