@@ -278,7 +278,7 @@ final class UIHostingViewRecordOrchestrator {
             
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUITextView"
-            let details = makeDetails(widthOffset: 20)
+            let details = makeDetails(widthOffset: 2)
             
             let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
             if iOS15 {
