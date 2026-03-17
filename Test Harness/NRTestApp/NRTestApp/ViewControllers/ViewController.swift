@@ -276,6 +276,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
         options.append(UtilOption(title: "BlockView Propagation Test", handler: { [self] in blockViewPropagationTest() }))
 
+        options.append(UtilOption(title: "Cache Example", handler: { [self] in cacheExampleAction() }))
+
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
@@ -338,6 +340,10 @@ class ViewController: UIViewController {
 
     func attributedTextTestAction() {
         coordinator?.showAttributedTextTestViewController()
+    }
+
+    func cacheExampleAction() {
+        coordinator?.showCacheExampleViewController()
     }
 
     func makeButton(title: String) -> UIButton {

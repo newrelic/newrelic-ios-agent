@@ -60,5 +60,10 @@ enum ViewControllerProvider {
         let viewController = AttributedTextTestViewController()
         return viewController
     }
+
+    static var cacheExampleViewController: CacheExampleViewController {
+        let viewController = CacheExampleViewController()
+        return viewController
+    }
 }
 
