@@ -275,10 +275,12 @@ final class UIHostingViewRecordOrchestrator {
                                      fillStyle: fillStyle)
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
-            
+            let spaceCount = storage.string.filter { $0 == " " }.count
+            let calculatedOffset = CGFloat(spaceCount * 2)
+
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUITextView"
-            let details = makeDetails(widthOffset: 2)
+            let details = makeDetails(widthOffset: calculatedOffset)
             
             let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
             if iOS15 {
