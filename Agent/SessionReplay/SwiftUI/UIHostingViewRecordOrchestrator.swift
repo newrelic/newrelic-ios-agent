@@ -275,11 +275,22 @@ final class UIHostingViewRecordOrchestrator {
                                      fillStyle: fillStyle)
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
+            let rawString = storage.string
+                
+            // 1. Split the string into lines
+            let lines = rawString.components(separatedBy: .newlines)
+            
+            // 2. Find the line with the maximum number of spaces
+            let maxSpacesOnOneLine = lines.map { line in
+                line.filter { $0 == " " }.count
+            }.max() ?? 0
+            // 3. Calculate offset (max spaces * 2)
+            let calculatedOffset = CGFloat(maxSpacesOnOneLine * 2)
             
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUITextView"
-            let details = makeDetails(widthOffset: 2)
-            
+            let details = makeDetails(widthOffset: calculatedOffset)
+
             let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
             if iOS15 {
                 return UILabelThingy(viewDetails: details,
