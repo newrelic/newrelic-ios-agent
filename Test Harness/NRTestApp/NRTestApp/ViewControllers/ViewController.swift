@@ -271,6 +271,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
 
+        options.append(UtilOption(title: "Date Time Picker", handler: { [self] in dateTimePickerAction()}))
+
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
@@ -340,6 +342,10 @@ class ViewController: UIViewController {
         coordinator?.showAttributedTextTestViewController()
     }
 
+    func dateTimePickerAction() {
+        coordinator?.showDateTimePickerViewController()
+    }
+
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
@@ -383,18 +389,24 @@ class ViewController: UIViewController {
     }
 
     func blockViewSwiftUIAction() {
+#if os(iOS)
         let hostingController = BlockViewSwiftUIHostingController()
         navigationController?.pushViewController(hostingController, animated: true)
+#endif
     }
 
     func blockViewUIKitAction() {
+#if os(iOS)
         let keypadController = KeypadUIKitViewController()
         navigationController?.pushViewController(keypadController, animated: true)
+#endif
     }
 
     func blockViewPropagationTest() {
+#if os(iOS)
         let propagationTestController = BlockViewPropagationTestController()
         navigationController?.pushViewController(propagationTestController, animated: true)
+#endif
     }
 }
 
