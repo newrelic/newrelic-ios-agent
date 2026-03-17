@@ -177,7 +177,12 @@ class SessionReplayCapture {
             
         case let visualEffectView as UIVisualEffectView:
             return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
-            
+
+        #if os(iOS)
+        case let datePicker as UIDatePicker:
+            return UIDatePickerThingy(view: datePicker, viewDetails: ViewDetails(view: datePicker))
+        #endif
+
         default:
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                originalView.isKind(of: rctParagraphClass) {

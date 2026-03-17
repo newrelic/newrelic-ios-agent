@@ -1686,6 +1686,7 @@
 		F8E202DE2B07BA61008E0B7B /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		F8E202DF2B07BA61008E0B7B /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		F8E277D42E3908F100D6F04C /* CustomTextThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */; };
+		F8EACA8B2F6867ED00385075 /* UIDatePickerThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */; };
 		F8EF24542BC0797B00591F58 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F8FBFA512A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
 		F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
@@ -2738,6 +2739,7 @@
 		F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAOfflineStorage.m; sourceTree = "<group>"; };
 		F8E202F32B07BA6E008E0B7B /* NRMAOfflineStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAOfflineStorage.h; sourceTree = "<group>"; };
 		F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTextThingy.swift; sourceTree = "<group>"; };
+		F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIDatePickerThingy.swift; sourceTree = "<group>"; };
 		F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMARequestEvent.m; sourceTree = "<group>"; };
 		F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMARequestEvent.h; sourceTree = "<group>"; };
 		F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAPayload.m; sourceTree = "<group>"; };
@@ -4109,6 +4111,7 @@
 				2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */,
 				F8BF13E02F3122E400EF5628 /* SwiftUIShapeThingy.swift */,
 				F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */,
+				F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */,
 				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
 				F80C1D692DA07691007C0F52 /* ViewDetails.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
@@ -5682,6 +5685,7 @@
 				0209AC9124E7393300E45C90 /* NRMA_Swift_Trouble_Class.m in Sources */,
 				0209AC2524E7071F00E45C90 /* NRHTTPTransactionTest.m in Sources */,
 				0209AC3E24E7075200E45C90 /* NRHarvesterTest.m in Sources */,
+				F8EACA8A2F6867ED00385075 /* UIDatePickerThingy.swift in Sources */,
 				0209ABFD24E7070900E45C90 /* NRMAURLSessionNetworkErrorTests.m in Sources */,
 				F8BF154F2F3A387800EF5628 /* SwiftUIConstants.swift in Sources */,
 				0209AC9624E7393300E45C90 /* NRTimerTests.m in Sources */,
@@ -5940,6 +5944,7 @@
 				02FF487224DC618F00115469 /* NRGCDOverride.m in Sources */,
 				F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */,
 				02FF494D24DC626E00115469 /* NRMAHarvesterConnection.m in Sources */,
+				F8EACA8B2F6867ED00385075 /* UIDatePickerThingy.swift in Sources */,
 				02FF48B924DC61F600115469 /* NRMAClassDataContainer.m in Sources */,
 				02FF4A0724DC647200115469 /* NRMAMeasurementPool.m in Sources */,
 				02FF491724DC624400115469 /* NRMACrashReport_Stack.m in Sources */,

@@ -371,6 +371,12 @@ struct ViewDetails {
     }
     
     private static func getClippingRect(for view: UIView, in window: UIWindow) -> CGRect {
+        // Check if this view has skipAggressiveClipping flag
+        if view.skipAggressiveClipping == true {
+            return window.frame
+        }
+
+        // Original clipping logic
         var clippingView: UIView? = view.superview
         while clippingView != nil {
             if clippingView is UIScrollView || clippingView?.clipsToBounds == true {
