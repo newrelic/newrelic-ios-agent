@@ -236,25 +236,30 @@ final class UIHostingViewRecordOrchestrator {
         let frame = baseContext.convert(frame: item.frame)
         var viewName = "SwiftUIView"
 
-        func makeDetails() -> ViewDetails {
-            ViewDetails(frame: frame,
-                        clip: viewAttributes.clip,
-                        backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
-                        alpha: viewAttributes.alpha,
-                        isHidden: viewAttributes.isHidden,
-                        viewName: viewName,
-                        parentId: parentId,
-                        cornerRadius: viewAttributes.layerCornerRadius,
-                        borderWidth: viewAttributes.layerBorderWidth,
-                        borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),//Int(content.seed.value),
-                        viewId: contentId,
-                        view: originalView,
-                        maskApplicationText: viewAttributes.maskApplicationText,
-                        maskUserInputText: viewAttributes.maskUserInputText,
-                        maskAllImages: viewAttributes.maskAllImages,
-                        maskAllUserTouches: viewAttributes.maskAllUserTouches,
-                        blockView: viewAttributes.blockView,
-                        sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier) // viewAttributes.maskUserInput
+        func makeDetails(widthOffset: CGFloat = 0) -> ViewDetails {
+                    let adjustedFrame = CGRect(x: frame.origin.x,
+                                               y: frame.origin.y,
+                                               width: frame.size.width + widthOffset,
+                                               height: frame.size.height)
+                    
+                    return ViewDetails(frame: adjustedFrame,
+                                clip: viewAttributes.clip,
+                                backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
+                                alpha: viewAttributes.alpha,
+                                isHidden: viewAttributes.isHidden,
+                                viewName: viewName,
+                                parentId: parentId,
+                                cornerRadius: viewAttributes.layerCornerRadius,
+                                borderWidth: viewAttributes.layerBorderWidth,
+                                borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
+                                viewId: contentId,
+                                view: originalView,
+                                maskApplicationText: viewAttributes.maskApplicationText,
+                                maskUserInputText: viewAttributes.maskUserInputText,
+                                maskAllImages: viewAttributes.maskAllImages,
+                                maskAllUserTouches: viewAttributes.maskAllUserTouches,
+                                blockView: viewAttributes.blockView,
+                                sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier)
         }
         
         switch content.value {
@@ -273,7 +278,7 @@ final class UIHostingViewRecordOrchestrator {
             
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUITextView"
-            let details = makeDetails()
+            let details = makeDetails(widthOffset: 2)
             
             let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
             if iOS15 {
