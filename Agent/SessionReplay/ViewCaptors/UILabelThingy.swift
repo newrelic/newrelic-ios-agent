@@ -37,10 +37,11 @@ class UILabelThingy: SessionReplayViewThingy {
     let isItalic: Bool
     let letterSpacing: CGFloat?
 
+    let widthOffset = 1.0
     init(view: UILabel, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
-        frame.size.width = frame.size.width + 0.5
+        frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
 
         if let isMasked = viewDetails.isMasked {
@@ -112,7 +113,7 @@ class UILabelThingy: SessionReplayViewThingy {
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
-        frame.size.width = frame.size.width + 0.5
+        frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
         
         var text: String?
@@ -186,7 +187,7 @@ class UILabelThingy: SessionReplayViewThingy {
         self.viewDetails = viewDetails
         self.viewDetails.backgroundColor = .clear
         var frame = self.viewDetails.frame
-        frame.size.width = frame.size.width + 0.5
+        frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
 
         let extracted = TextHelper.extractLabelAttributes(from: attributedText)
