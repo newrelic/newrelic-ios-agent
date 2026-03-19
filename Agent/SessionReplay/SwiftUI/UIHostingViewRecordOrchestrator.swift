@@ -272,7 +272,8 @@ final class UIHostingViewRecordOrchestrator {
             return SwiftUIShapeThingy(viewDetails: details,
                                      path: path,
                                      fillColor: fillColor,
-                                     fillStyle: fillStyle)
+                                     fillStyle: fillStyle,
+                                     fallbackTintColor: baseContext.tintColor)
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
             let rawString = storage.string
@@ -341,11 +342,23 @@ final class UIHostingViewRecordOrchestrator {
                 return nil
             }
 
+            // Get tint color from context (foreground color from colorMultiply filter)
+            let maskColor: Color._ResFoundColor? = if let tintColor = baseContext.tintColor {
+                Color._ResFoundColor(
+                    linearRed: Float(tintColor.cgColor.components?[0] ?? 0),
+                    linearGreen: Float(tintColor.cgColor.components?[1] ?? 0),
+                    linearBlue: Float(tintColor.cgColor.components?[2] ?? 0),
+                    opacity: Float(tintColor.cgColor.alpha)
+                )
+            } else {
+                nil
+            }
+
             // Create SwiftUIGraphicsImage from the generated CGImage
             let swiftUIImage = SwiftUIGraphicsImage(
                 contents: .cgImage(cgImage),
                 scale: image.scale,
-                maskClr: nil,
+                maskClr: maskColor,
                 orientation: .up
             )
 

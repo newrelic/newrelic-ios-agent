@@ -168,6 +168,8 @@
 		F8EAB9742EE09E040008B092 /* ConfidentialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */; };
 		F8EAB9752EE09E040008B092 /* ConfidentialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */; };
 		F8EACABE2F688F7300385075 /* DateTimePickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */; };
+		F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */; };
+		F8EACAE82F6AE2BC00385075 /* TintedImagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */; };
 		F8F5D8232BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */; };
 		F8F5D8252BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */; };
 		F8F5D8312BEBB84D00CDC139 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
@@ -461,6 +463,8 @@
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
 		F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimePickerViewController.swift; sourceTree = "<group>"; };
+		F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TintedSymbolsView.swift; sourceTree = "<group>"; };
+		F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TintedImagesViewController.swift; sourceTree = "<group>"; };
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -583,6 +587,7 @@
 				2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */,
 				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
+				F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
 				F8BF14A32F35345500EF5628 /* AttributedTextView.swift */,
 				F8672A552EAA69820055FA51 /* SimpleScrollView.swift */,
@@ -773,6 +778,7 @@
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
 				F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */,
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
+				F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */,
 				F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */,
 				F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */,
 				F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */,
@@ -1378,6 +1384,7 @@
 				2B93186E2F4E8B6200E05F23 /* NewRelicTestAppContentView.swift in Sources */,
 				2B93186F2F4E8B6200E05F23 /* FormView.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
+				F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
@@ -1389,6 +1396,7 @@
 				F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
 				F8BF14362F3268E900EF5628 /* DrawingsView.swift in Sources */,
+				F8EACAE82F6AE2BC00385075 /* TintedImagesViewController.swift in Sources */,
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,

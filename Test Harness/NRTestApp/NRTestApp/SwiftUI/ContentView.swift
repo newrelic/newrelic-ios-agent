@@ -86,6 +86,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: AttributedTextView()) {
                         Text("Attributed Text")
                     }
+                    NavigationLink(destination: TintedSymbolsView()) {
+                        Text("Tinted SF Symbols")
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
                 
