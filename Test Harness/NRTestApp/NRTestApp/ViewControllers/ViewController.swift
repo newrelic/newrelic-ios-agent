@@ -247,6 +247,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
         
         options.append(UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction()}))
+        
+        options.append(UtilOption(title: "Tinted Images View", handler: { [self] in tintedImagesViewController()}))
 
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
@@ -412,6 +414,12 @@ class ViewController: UIViewController {
 #if os(iOS)
         let propagationTestController = BlockViewPropagationTestController()
         navigationController?.pushViewController(propagationTestController, animated: true)
+#endif
+    }
+    
+    func tintedImagesViewController() {
+#if os(iOS)
+        coordinator?.showTintedImagesViewController()
 #endif
     }
 }

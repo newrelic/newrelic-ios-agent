@@ -139,6 +139,13 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(dateTimePickerViewController, animated: true)
 #endif
     }
+    
+    func showTintedImagesViewController() {
+#if os(iOS)
+        let tintedImagesViewController = ViewControllerProvider.tintedImagesViewController
+        navigationController.pushViewController(tintedImagesViewController, animated: true)
+#endif
+    }
 
     func showSwitchTestViewController() {
 #if os(iOS)

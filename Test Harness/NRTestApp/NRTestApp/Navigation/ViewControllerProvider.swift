@@ -71,5 +71,11 @@ enum ViewControllerProvider {
         return viewController
     }
 #endif
+#if os(iOS)
+    static var tintedImagesViewController: TintedImagesViewController {
+        let viewController = TintedImagesViewController()
+        return viewController
+    }
+#endif
 }
 
