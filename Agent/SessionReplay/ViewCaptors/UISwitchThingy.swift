@@ -64,12 +64,6 @@ class UISwitchThingy: SessionReplayViewThingy {
 
         return """
         .switch#\(viewDetails.cssSelector) {
-            position: fixed;
-            left: \(String(format: "%.2f", viewDetails.frame.origin.x))px;
-            top: \(String(format: "%.2f", viewDetails.frame.origin.y))px;
-            width: \(String(format: "%.2f", viewDetails.frame.size.width))px;
-            height: \(String(format: "%.2f", viewDetails.frame.size.height))px;
-            display: inline-block;
         }
         .switch#\(viewDetails.cssSelector) input {
             opacity: 0;
@@ -137,7 +131,8 @@ class UISwitchThingy: SessionReplayViewThingy {
                 "id": viewDetails.cssSelector,
                 "class": "switch",
                 "data-nr-type": "toggle",
-                "data-checked": isOn ? "true" : "false"
+                "data-checked": isOn ? "true" : "false",
+                "style": "\(generateBaseCSSStyle()) display: inline-block;"
             ],
             childNodes: [.element(inputNode), .element(sliderNode)]
         )
@@ -173,7 +168,8 @@ class UISwitchThingy: SessionReplayViewThingy {
                 "id": viewDetails.cssSelector,
                 "class": "switch",
                 "data-nr-type": "toggle",
-                "data-checked": isOn ? "true" : "false"
+                "data-checked": isOn ? "true" : "false",
+                "style": "\(generateBaseCSSStyle()) display: inline-block;"
             ],
             childNodes: [.element(inputNode), .element(sliderNode)]
         )
@@ -188,15 +184,16 @@ class UISwitchThingy: SessionReplayViewThingy {
         let labelId = viewDetails.viewId
         let inputId = viewDetails.viewId + 1
 
-        // Update both data-checked on label (for CSS) and checked on input
-        if self.isOn != typedOther.isOn {
-            // Update label's data-checked attribute - CSS uses this
+        // Check if anything changed
+        if self != typedOther {
+            // Always update style (includes position) and data-checked
             let labelAttributes: [String: String] = [
+                "style": "\(typedOther.generateBaseCSSStyle()) display: inline-block;",
                 "data-checked": typedOther.isOn ? "true" : "false"
             ]
             mutations.append(RRWebMutationData.AttributeRecord(id: labelId, attributes: labelAttributes))
 
-            // Also update checkbox for completeness
+            // Update checkbox checked state
             let inputAttributes: [String: String] = [
                 "checked": typedOther.isOn ? "checked" : ""
             ]
