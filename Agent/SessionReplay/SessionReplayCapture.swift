@@ -41,7 +41,7 @@ class SessionReplayCapture {
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
 
         // Process UIKit subviews only if current view should record subviews
-        if parentThingy.shouldRecordSubviewsComputed || (parentThingy.isMasked && !parentThingy.isBlocked) || (!parentThingy.isMasked && !parentThingy.isBlocked) {
+        if parentThingy.shouldRecordSubviewsComputed {
             for subview in currentView.subviews {
                 if shouldRecord(view: subview) {
                     var childThingy = findRecorderForView(view: subview)

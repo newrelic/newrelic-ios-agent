@@ -20,7 +20,7 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
     let fallbackTintColor: UIColor?
 
     var shouldRecordSubviews: Bool {
-        false
+        true
     }
 
     var subviews: [any SessionReplayViewThingy] = []
