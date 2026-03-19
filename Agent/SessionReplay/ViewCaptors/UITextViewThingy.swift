@@ -17,7 +17,7 @@ class UITextViewThingy: SessionReplayViewThingy {
     var subviews = [any SessionReplayViewThingy]()
     
     var shouldRecordSubviews: Bool {
-        false
+        true
     }
     
     var viewDetails: ViewDetails
