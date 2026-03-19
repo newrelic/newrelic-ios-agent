@@ -140,4 +140,11 @@ class MainCoordinator: Coordinator {
 #endif
     }
 
+    func showSwitchTestViewController() {
+#if os(iOS)
+        let switchTestViewController = ViewControllerProvider.switchTestViewController
+        navigationController.pushViewController(switchTestViewController, animated: true)
+#endif
+    }
+
 }
