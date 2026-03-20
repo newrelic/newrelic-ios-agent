@@ -92,10 +92,10 @@ class UISwitchThingy: SessionReplayViewThingy {
             transition: 0.4s;
             border-radius: \(String(format: "%.2f", thumbHeight / 2))px;
         }
-        .switch#\(viewDetails.cssSelector)[data-checked="true"] .slider {
+        .switch#\(viewDetails.cssSelector).checked .slider {
             background-color: \(onColor);
         }
-        .switch#\(viewDetails.cssSelector)[data-checked="true"] .slider:before {
+        .switch#\(viewDetails.cssSelector).checked .slider:before {
             transform: translateX(\(String(format: "%.2f", translateDistance))px);
         }
         """
@@ -129,9 +129,7 @@ class UISwitchThingy: SessionReplayViewThingy {
             tagName: .label,
             attributes: [
                 "id": viewDetails.cssSelector,
-                "class": "switch",
-                "data-nr-type": "toggle",
-                "data-checked": isOn ? "true" : "false",
+                "class": isOn ? "switch checked" : "switch",
                 "style": "\(generateBaseCSSStyle()) display: inline-block;"
             ],
             childNodes: [.element(inputNode), .element(sliderNode)]
@@ -166,9 +164,7 @@ class UISwitchThingy: SessionReplayViewThingy {
             tagName: .label,
             attributes: [
                 "id": viewDetails.cssSelector,
-                "class": "switch",
-                "data-nr-type": "toggle",
-                "data-checked": isOn ? "true" : "false",
+                "class": isOn ? "switch checked" : "switch",
                 "style": "\(generateBaseCSSStyle()) display: inline-block;"
             ],
             childNodes: [.element(inputNode), .element(sliderNode)]
@@ -186,10 +182,10 @@ class UISwitchThingy: SessionReplayViewThingy {
 
         // Check if anything changed
         if self != typedOther {
-            // Always update style (includes position) and data-checked
+            // Always update style (includes position) and class
             let labelAttributes: [String: String] = [
                 "style": "\(typedOther.generateBaseCSSStyle()) display: inline-block;",
-                "data-checked": typedOther.isOn ? "true" : "false"
+                "class": typedOther.isOn ? "switch checked" : "switch"
             ]
             mutations.append(RRWebMutationData.AttributeRecord(id: labelId, attributes: labelAttributes))
 
