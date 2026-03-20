@@ -41,11 +41,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, assign) BOOL enabled;
 @property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
-@property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
+@property(atomic, strong, nullable) NRMAHandledExceptions* handledExceptionsController;
 #if TARGET_OS_IOS
 @property(atomic, strong, nullable) JSErrorController* jsErrorController;
 #endif
-@property(atomic, strong) NRMAUserActionFacade* gestureFacade;
+@property(atomic, strong, nullable) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
 @property(assign) double sessionReplaySampleSeed;
