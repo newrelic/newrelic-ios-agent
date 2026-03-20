@@ -58,17 +58,16 @@
 		2BD05DEE2ADF326A00C0C972 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
 		2BD05DEF2ADF326A00C0C972 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
 		2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD05DF12ADF32D300C0C972 /* harvestConnector.json */; };
-		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
-		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		D42ABA222F6DCE9F0058C0B0 /* NewRelic.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */; };
+		D42ABA232F6DCE9F0058C0B0 /* NewRelic.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D44CB0FE2F6DD32400AF9521 /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = D44CB0FD2F6DD32400AF9521 /* PerformanceSuite */; };
+		D44CB1012F6DD33100AF9521 /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = D44CB1002F6DD33100AF9521 /* GCDWebServer */; };
 		D46F92252F6DBAAF00FD2EBE /* UITestsInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F92202F6DBAAF00FD2EBE /* UITestsInterop.swift */; };
 		D46F92262F6DBAAF00FD2EBE /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921D2F6DBAAF00FD2EBE /* MetricsConsumer.swift */; };
 		D46F92272F6DBAAF00FD2EBE /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921E2F6DBAAF00FD2EBE /* PerformanceScreen.swift */; };
 		D46F92282F6DBAAF00FD2EBE /* UITestsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921F2F6DBAAF00FD2EBE /* UITestsHelper.swift */; };
-		D46F923B2F6DBC4F00FD2EBE /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = D46F923A2F6DBC4F00FD2EBE /* PerformanceSuite */; };
-		D46F92422F6DBD3500FD2EBE /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = D46F92412F6DBD3500FD2EBE /* GCDWebServer */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
 		F802EE9A2BE0218700AB956F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F802EE992BE0218700AB956F /* Assets.xcassets */; };
@@ -196,13 +195,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		2B6588122EA9957600A5AC8C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 021A15B924C9EEE700E8DFD5;
-			remoteInfo = Agent_iOS;
-		};
 		2B65881F2EA995B600A5AC8C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F8302B5229705766003EC291 /* Agent.xcodeproj */;
@@ -303,7 +295,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */,
+				D42ABA232F6DCE9F0058C0B0 /* NewRelic.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -384,6 +376,7 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
+		D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = NewRelic.xcframework; path = ../../NewRelic.xcframework; sourceTree = "<group>"; };
 		D46F921D2F6DBAAF00FD2EBE /* MetricsConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsConsumer.swift; sourceTree = "<group>"; };
 		D46F921E2F6DBAAF00FD2EBE /* PerformanceScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceScreen.swift; sourceTree = "<group>"; };
 		D46F921F2F6DBAAF00FD2EBE /* UITestsHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsHelper.swift; sourceTree = "<group>"; };
@@ -483,10 +476,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D46F923B2F6DBC4F00FD2EBE /* PerformanceSuite in Frameworks */,
-				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
-				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
-				D46F92422F6DBD3500FD2EBE /* GCDWebServer in Frameworks */,
+				D44CB1012F6DD33100AF9521 /* GCDWebServer in Frameworks */,
+				D44CB0FE2F6DD32400AF9521 /* PerformanceSuite in Frameworks */,
+				D42ABA222F6DCE9F0058C0B0 /* NewRelic.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -703,6 +695,7 @@
 		F8302B8129705B28003EC291 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -892,7 +885,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				2B6588132EA9957600A5AC8C /* PBXTargetDependency */,
 			);
 			name = NRTestApp;
 			productName = NRTestApp;
@@ -1021,8 +1013,8 @@
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
 			packageReferences = (
-				D46F92392F6DBC4F00FD2EBE /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
-				D46F92402F6DBD3500FD2EBE /* XCRemoteSwiftPackageReference "GCDWebServer" */,
+				D44CB0FC2F6DD32400AF9521 /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
+				D44CB0FF2F6DD33100AF9521 /* XCRemoteSwiftPackageReference "GCDWebServer" */,
 			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
@@ -1439,11 +1431,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		2B6588132EA9957600A5AC8C /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = Agent_iOS;
-			targetProxy = 2B6588122EA9957600A5AC8C /* PBXContainerItemProxy */;
-		};
 		2B6588202EA995B600A5AC8C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = Agent_tvos;
@@ -2109,7 +2096,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		D46F92392F6DBC4F00FD2EBE /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
+		D44CB0FC2F6DD32400AF9521 /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/bookingcom/perfsuite-ios";
 			requirement = {
@@ -2117,7 +2104,7 @@
 				minimumVersion = 1.6.0;
 			};
 		};
-		D46F92402F6DBD3500FD2EBE /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
+		D44CB0FF2F6DD33100AF9521 /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/swisspol/GCDWebServer";
 			requirement = {
@@ -2128,14 +2115,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		D46F923A2F6DBC4F00FD2EBE /* PerformanceSuite */ = {
+		D44CB0FD2F6DD32400AF9521 /* PerformanceSuite */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D46F92392F6DBC4F00FD2EBE /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
+			package = D44CB0FC2F6DD32400AF9521 /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
 			productName = PerformanceSuite;
 		};
-		D46F92412F6DBD3500FD2EBE /* GCDWebServer */ = {
+		D44CB1002F6DD33100AF9521 /* GCDWebServer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D46F92402F6DBD3500FD2EBE /* XCRemoteSwiftPackageReference "GCDWebServer" */;
+			package = D44CB0FF2F6DD33100AF9521 /* XCRemoteSwiftPackageReference "GCDWebServer" */;
 			productName = GCDWebServer;
 		};
 /* End XCSwiftPackageProductDependency section */
