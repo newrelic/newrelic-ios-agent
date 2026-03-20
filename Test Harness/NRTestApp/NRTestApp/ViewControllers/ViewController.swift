@@ -275,6 +275,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Date Time Picker", handler: { [self] in dateTimePickerAction()}))
 
+        options.append(UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction()}))
+
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
@@ -346,6 +348,10 @@ class ViewController: UIViewController {
 
     func dateTimePickerAction() {
         coordinator?.showDateTimePickerViewController()
+    }
+
+    func switchTestAction() {
+        coordinator?.showSwitchTestViewController()
     }
 
     func makeButton(title: String) -> UIButton {

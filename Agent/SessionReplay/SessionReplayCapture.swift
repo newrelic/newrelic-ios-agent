@@ -181,6 +181,9 @@ class SessionReplayCapture {
         #if os(iOS)
         case let datePicker as UIDatePicker:
             return UIDatePickerThingy(view: datePicker, viewDetails: ViewDetails(view: datePicker))
+
+        case let switchControl as UISwitch:
+            return UISwitchThingy(view: switchControl, viewDetails: ViewDetails(view: switchControl))
         #endif
 
         default:
