@@ -1770,6 +1770,7 @@
 				);
 				MARKETING_VERSION = 4.7;
 				OTHER_LDFLAGS = "";
+				"OTHER_SWIFT_FLAGS[arch=*]" = "-DDEBUG_IMPORT";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRApp.bitcode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
