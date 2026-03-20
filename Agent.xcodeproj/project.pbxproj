@@ -1582,6 +1582,9 @@
 		C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */; };
 		C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */; };
 		D4580CA72F563363003BAD8C /* JSErrorControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */; };
+		D46F91C02F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
+		D46F91C12F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
+		D46F91C22F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
 		D48D55192F4E46B2003BE3AB /* MobileErrorsUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48D55182F4E46B2003BE3AB /* MobileErrorsUploader.swift */; };
 		D48D551A2F4E46B2003BE3AB /* JSErrorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48D55172F4E46B2003BE3AB /* JSErrorController.swift */; };
 		D48D551D2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = D48D551C2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.m */; };
@@ -2687,6 +2690,7 @@
 		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
 		D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSErrorControllerTests.m; sourceTree = "<group>"; };
+		D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UISwitchThingy.swift; sourceTree = "<group>"; };
 		D48D55172F4E46B2003BE3AB /* JSErrorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSErrorController.swift; sourceTree = "<group>"; };
 		D48D55182F4E46B2003BE3AB /* MobileErrorsUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileErrorsUploader.swift; sourceTree = "<group>"; };
 		D48D551B2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAJSErrorHarvestAdapter.h; sourceTree = "<group>"; };
@@ -4106,6 +4110,7 @@
 		341E84D22D9CB1F000968D7D /* ViewCaptors */ = {
 			isa = PBXGroup;
 			children = (
+				D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */,
 				2B0B6BAB2DEA349D0080C3D6 /* UITextFieldThingy.swift */,
 				F8BF13E02F3122E400EF5628 /* SwiftUIShapeThingy.swift */,
 				F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */,
@@ -5631,6 +5636,7 @@
 				0209ACA224E7393300E45C90 /* NRThreadInfoTest.m in Sources */,
 				F8FBFA5F2A78336200CDC8C5 /* TestNRMAPayload.m in Sources */,
 				0209ABF524E706FA00E45C90 /* NRGCDOverrideTest.m in Sources */,
+				D46F91C22F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */,
 				0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */,
 				0209ACA124E7393300E45C90 /* NRUncaughtExceptionhandlerTests.m in Sources */,
 				340D642E2AA9301900E63CC1 /* PersistentStoreTests.m in Sources */,
@@ -5680,7 +5686,6 @@
 				0209AC9124E7393300E45C90 /* NRMA_Swift_Trouble_Class.m in Sources */,
 				0209AC2524E7071F00E45C90 /* NRHTTPTransactionTest.m in Sources */,
 				0209AC3E24E7075200E45C90 /* NRHarvesterTest.m in Sources */,
-				F8EACA8A2F6867ED00385075 /* UIDatePickerThingy.swift in Sources */,
 				0209ABFD24E7070900E45C90 /* NRMAURLSessionNetworkErrorTests.m in Sources */,
 				F8BF154F2F3A387800EF5628 /* SwiftUIConstants.swift in Sources */,
 				0209AC9624E7393300E45C90 /* NRTimerTests.m in Sources */,
@@ -5871,6 +5876,7 @@
 				02FF489924DC61D200115469 /* NRMAURLSessionTaskDelegateBase.m in Sources */,
 				02FF4A9F24DC652E00115469 /* NRMAMemoryVitals.m in Sources */,
 				02FF4AB124DC652E00115469 /* NRMAJSON.m in Sources */,
+				D46F91C02F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */,
 				F85558532DE7C4F6008B6EDD /* SessionReplayData.swift in Sources */,
 				02FF49F124DC645B00115469 /* NRMAAppUpgradeMetricGenerator.m in Sources */,
 				02FF48DA24DC622700115469 /* NRMATimestampContainer.m in Sources */,
@@ -6306,6 +6312,7 @@
 				F8728E422ACC9D5A0056F641 /* NRMANetworkMonitor.m in Sources */,
 				02FF4C8424E3201400115469 /* NRMASummaryMeasurementConsumer.m in Sources */,
 				F8FBFA562A71BA2900CDC8C5 /* NRMAPayload.m in Sources */,
+				D46F91C12F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */,
 				02FF4C8524E3201400115469 /* NRMAFlags.m in Sources */,
 				2B570A7B2EF0C480007D9E39 /* SwiftUIDisplayList+XRAY.swift in Sources */,
 				02FF4C8624E3201400115469 /* NRMACrashDataWriter.m in Sources */,
