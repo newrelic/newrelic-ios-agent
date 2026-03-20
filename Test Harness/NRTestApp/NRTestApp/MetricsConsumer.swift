@@ -7,14 +7,8 @@
 
 import Foundation
 import OSLog
-
-#if DEBUG_IMPORT
-
 import PerformanceSuite
-#endif
 import SwiftUI
-
-#if DEBUG_IMPORT
 
 extension UIHostingController: PerformanceTrackable {
     var performanceScreen: PerformanceScreen? {
@@ -208,4 +202,3 @@ class MetricsConsumer: PerformanceSuiteMetricsReceiver {
         log("onViewDidDisappear \(screen)")
     }
 }
-#endif

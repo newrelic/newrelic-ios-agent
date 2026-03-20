@@ -7,22 +7,13 @@
 
 import UIKit
 import NewRelic
-#if DEBUG_IMPORT
-
 import PerformanceSuite
-#endif
 // For more info on installing the New Relic agent go to https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/installation/spm-installation/#configure-using-swift-package-manager
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-#if DEBUG
-        // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
-        NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
-
-
-#if DEBUG_IMPORT
         // if use perofrmance sutie
         UITestsHelper.prepareForTestsIfNeeded()
 
@@ -32,7 +23,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         } catch {
             preconditionFailure("Couldn't initialize PerformanceSuite: \(error)")
         }
-        #endif
+
+#if DEBUG
+        // The New Relic agent is set to log at NRLogLevelInfo by default, debug logging should only be used for debugging when all agent logs are desired.
+        NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
 #endif
         NRLogger.setLogLevels(NRLogLevelDebug.rawValue)
 
