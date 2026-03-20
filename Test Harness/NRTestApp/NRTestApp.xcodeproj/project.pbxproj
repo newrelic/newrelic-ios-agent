@@ -63,6 +63,12 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		D46F92252F6DBAAF00FD2EBE /* UITestsInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F92202F6DBAAF00FD2EBE /* UITestsInterop.swift */; };
+		D46F92262F6DBAAF00FD2EBE /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921D2F6DBAAF00FD2EBE /* MetricsConsumer.swift */; };
+		D46F92272F6DBAAF00FD2EBE /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921E2F6DBAAF00FD2EBE /* PerformanceScreen.swift */; };
+		D46F92282F6DBAAF00FD2EBE /* UITestsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921F2F6DBAAF00FD2EBE /* UITestsHelper.swift */; };
+		D46F923B2F6DBC4F00FD2EBE /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = D46F923A2F6DBC4F00FD2EBE /* PerformanceSuite */; };
+		D46F92422F6DBD3500FD2EBE /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = D46F92412F6DBD3500FD2EBE /* GCDWebServer */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
 		F802EE9A2BE0218700AB956F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F802EE992BE0218700AB956F /* Assets.xcassets */; };
@@ -378,6 +384,10 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
+		D46F921D2F6DBAAF00FD2EBE /* MetricsConsumer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsConsumer.swift; sourceTree = "<group>"; };
+		D46F921E2F6DBAAF00FD2EBE /* PerformanceScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceScreen.swift; sourceTree = "<group>"; };
+		D46F921F2F6DBAAF00FD2EBE /* UITestsHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsHelper.swift; sourceTree = "<group>"; };
+		D46F92202F6DBAAF00FD2EBE /* UITestsInterop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestsInterop.swift; sourceTree = "<group>"; };
 		F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS) Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS_App.swift; sourceTree = "<group>"; };
 		F802EE972BE0218600AB956F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -473,8 +483,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D46F923B2F6DBC4F00FD2EBE /* PerformanceSuite in Frameworks */,
 				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
 				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
+				D46F92422F6DBD3500FD2EBE /* GCDWebServer in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,6 +655,10 @@
 		F8302AF7296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXGroup;
 			children = (
+				D46F921D2F6DBAAF00FD2EBE /* MetricsConsumer.swift */,
+				D46F921E2F6DBAAF00FD2EBE /* PerformanceScreen.swift */,
+				D46F921F2F6DBAAF00FD2EBE /* UITestsHelper.swift */,
+				D46F92202F6DBAAF00FD2EBE /* UITestsInterop.swift */,
 				2BAE5C8D2E860C7D001D2B88 /* SwiftUI */,
 				2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */,
 				F86428492971DF80002ABA01 /* Helpers */,
@@ -1004,6 +1020,10 @@
 				Base,
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
+			packageReferences = (
+				D46F92392F6DBC4F00FD2EBE /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
+				D46F92402F6DBD3500FD2EBE /* XCRemoteSwiftPackageReference "GCDWebServer" */,
+			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -1304,6 +1324,10 @@
 				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
 				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
+				D46F92252F6DBAAF00FD2EBE /* UITestsInterop.swift in Sources */,
+				D46F92262F6DBAAF00FD2EBE /* MetricsConsumer.swift in Sources */,
+				D46F92272F6DBAAF00FD2EBE /* PerformanceScreen.swift in Sources */,
+				D46F92282F6DBAAF00FD2EBE /* UITestsHelper.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
@@ -2082,6 +2106,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D46F92392F6DBC4F00FD2EBE /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/bookingcom/perfsuite-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.6.0;
+			};
+		};
+		D46F92402F6DBD3500FD2EBE /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swisspol/GCDWebServer";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.5.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D46F923A2F6DBC4F00FD2EBE /* PerformanceSuite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D46F92392F6DBC4F00FD2EBE /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
+			productName = PerformanceSuite;
+		};
+		D46F92412F6DBD3500FD2EBE /* GCDWebServer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D46F92402F6DBD3500FD2EBE /* XCRemoteSwiftPackageReference "GCDWebServer" */;
+			productName = GCDWebServer;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F8302AED296F5EFA003EC291 /* Project object */;
 }
