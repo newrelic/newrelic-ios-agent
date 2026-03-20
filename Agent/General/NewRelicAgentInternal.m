@@ -307,7 +307,9 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 - (BOOL) isDisabled {
-    return [[NRMAHarvestController harvestController] harvester].currentState == NRMA_HARVEST_DISABLED;
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    return harvester.currentState == NRMA_HARVEST_DISABLED;
 }
 
 - (void) destroyAgent {
@@ -660,11 +662,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) sessionReplayStart {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    // START ERROR MODE CHANGE
-    
-    // should isSampled matter when deciding to start or not in every case?
-    
-    BOOL isSampled = [self isSessionReplaySampled];
     // always start session replay if its error or full
     // ERROR MODE
     if ([self isSessionReplayEnabled]) {
@@ -870,7 +867,10 @@ static UIBackgroundTaskIdentifier background_task;
 #else
     _currentApplicationState = UIApplicationStateBackground;
 #endif
-    [[NRMAHarvestController harvestController].harvestTimer stop];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    if (controller) {
+        [controller.harvestTimer stop];
+    }
 
 
     // Disable observers.
@@ -938,7 +938,11 @@ static UIBackgroundTaskIdentifier background_task;
             @try {
 #endif
                 NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
-                [[[NRMAHarvestController harvestController] harvester] execute];
+                NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+                NRMAHarvester* harvester = [controller harvester];
+                if (harvester) {
+                    [harvester execute];
+                }
 #ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
             } @catch (NSException *exception) {
                 [NRMAExceptionHandler logException:exception
@@ -1012,7 +1016,11 @@ static UIBackgroundTaskIdentifier background_task;
 
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
-                    [[[NRMAHarvestController harvestController] harvester] execute];
+                    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+                    NRMAHarvester* harvester = [controller harvester];
+                    if (harvester) {
+                        [harvester execute];
+                    }
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
                     [self sessionReplayEndSession];
@@ -1123,7 +1131,11 @@ void applicationDidEnterBackgroundCF(void) {
             }
         }];
 
-        [[[NRMAHarvestController harvestController] harvester] execute];
+        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+        NRMAHarvester* harvester = [controller harvester];
+        if (harvester) {
+            [harvester execute];
+        }
 
         [task setTaskCompletedWithSuccess:true];
     }
@@ -1152,7 +1164,12 @@ void applicationDidEnterBackgroundCF(void) {
         // * CLEAR EXISTING HARVESTABLE DATA *//
 
         // Clear harvestData
-        [[[[NRMAHarvestController harvestController] harvester] harvestData] clear];
+        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+        NRMAHarvester* harvester = [controller harvester];
+        NRMAHarvestData* harvestData = [harvester harvestData];
+        if (harvestData) {
+            [harvestData clear];
+        }
 
         // Clear activity traces
         [NRMATraceController cleanup];
@@ -1193,13 +1210,17 @@ void applicationDidEnterBackgroundCF(void) {
 #endif
 
         // Clear stored user defaults
-        [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
-        [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];
-        [[[NRMAHarvestController harvestController] harvester] clearStoredApplicationIdentifier];
+        if (harvester) {
+            [harvester clearStoredConnectionInformation];
+            [harvester clearStoredHarvesterConfiguration];
+            [harvester clearStoredApplicationIdentifier];
+        }
 
         [[NewRelicAgentInternal sharedInstance] agentShutdown];
 
-        [[NRMAHarvestController harvestController].harvestTimer stop];
+        if (controller) {
+            [controller.harvestTimer stop];
+        }
 
         // Disable observers.
         [[NSNotificationCenter defaultCenter] removeObserver:self
