@@ -199,6 +199,11 @@ final class UIHostingViewRecordOrchestrator {
                 case .clip(let path, _):
                     let clipRect = nextContext.convert(frame: path.boundingRect)
                     nextContext.clip = nextContext.clip.intersection(clipRect)
+
+                    // Extract corner radius from clipping path
+                    if let extractedCornerRadius = CornerRadiusExtractor.extractCornerRadius(from: path) {
+                        nextContext.cornerRadius = extractedCornerRadius
+                    }
                 case .filter(.colorMultiply(let color)):
                     nextContext.setTintColor(from: color)
                 case .identify, .filter, .unknown:
@@ -241,7 +246,20 @@ final class UIHostingViewRecordOrchestrator {
                                                y: frame.origin.y,
                                                width: frame.size.width + widthOffset,
                                                height: frame.size.height)
-                    
+
+                    // Enhanced corner radius detection
+                    var effectiveCornerRadius = viewAttributes.layerCornerRadius
+
+                    // If no explicit corner radius, try context-extracted radius
+                    if effectiveCornerRadius == 0 && baseContext.cornerRadius > 0 {
+                        effectiveCornerRadius = baseContext.cornerRadius
+                    }
+
+                    // If still no corner radius, use component defaults
+                    if effectiveCornerRadius == 0 {
+                        effectiveCornerRadius = CornerRadiusExtractor.detectComponentType(from: viewName)
+                    }
+
                     return ViewDetails(frame: adjustedFrame,
                                 clip: viewAttributes.clip,
                                 backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
@@ -249,7 +267,7 @@ final class UIHostingViewRecordOrchestrator {
                                 isHidden: viewAttributes.isHidden,
                                 viewName: viewName,
                                 parentId: parentId,
-                                cornerRadius: viewAttributes.layerCornerRadius,
+                                cornerRadius: effectiveCornerRadius,
                                 borderWidth: viewAttributes.layerBorderWidth,
                                 borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
                                 viewId: contentId,
