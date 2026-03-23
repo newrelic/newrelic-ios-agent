@@ -1,0 +1,44 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.2.1 effective-5.10 (swiftlang-6.2.1.4.8 clang-1700.4.4.1)
+// swift-module-flags: -target x86_64-apple-watchos8.7-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name NewRelic -module-alias Module___NewRelic=NewRelic -module-alias Module____StringProcessing=_StringProcessing -module-alias Module____SwiftConcurrencyShims=_SwiftConcurrencyShims -module-alias Module____Concurrency=_Concurrency -module-alias Module___UIKit=UIKit -module-alias Module___SwiftUI=SwiftUI
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.1
+import Foundation
+@_exported import Module___NewRelic
+import Swift
+import Module___SwiftUI
+import Module___UIKit
+import Module____Concurrency
+import Module____StringProcessing
+import Module____SwiftConcurrencyShims
+@objc @_inheritsConvenienceInitializers @available(iOS 13.0, *)
+@objcMembers public class SessionReplayManager : ObjectiveC.NSObject {
+  @objc override dynamic public init()
+  @objc deinit
+}
+@available(iOS 13.0, *)
+@objc public enum SessionReplayRecordingMode : Swift.Int {
+  case error = 0
+  case full = 1
+  case off = 2
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  @available(iOS 13.0, *)
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@available(iOS 13, tvOS 13, *)
+extension SwiftUICore.View {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public func NRTrackView(name: Swift.String? = nil) -> some SwiftUICore.View
+  
+  #endif
+}
+@available(iOS 13.0, *)
+extension Module___NewRelic.SessionReplayRecordingMode : Swift.Equatable {}
+@available(iOS 13.0, *)
+extension Module___NewRelic.SessionReplayRecordingMode : Swift.Hashable {}
+@available(iOS 13.0, *)
+extension Module___NewRelic.SessionReplayRecordingMode : Swift.RawRepresentable {}

@@ -1,0 +1,350 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.2.1 effective-5.10 (swiftlang-6.2.1.4.8 clang-1700.4.4.1)
+// swift-module-flags: -target x86_64-apple-ios15.0-macabi -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name NewRelic -module-alias Module___NewRelic=NewRelic -module-alias Module____StringProcessing=_StringProcessing -module-alias Module____SwiftConcurrencyShims=_SwiftConcurrencyShims -module-alias Module____Concurrency=_Concurrency -module-alias Module___SwiftUI=SwiftUI -module-alias Module___UIKit=UIKit -module-alias Module___OSLog=OSLog -module-alias Module___CoreGraphics=CoreGraphics -module-alias Module___CommonCrypto=CommonCrypto -module-alias Module___SwiftShims=SwiftShims -module-alias Module___Compression=Compression -module-alias Module___zlib=zlib
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.1
+import Module___CommonCrypto
+import Module___Compression
+import Module___CoreGraphics
+import Foundation
+@_exported import Module___NewRelic
+import Module___OSLog
+import Swift
+import Module___SwiftShims
+import Module___SwiftUI
+import Module___UIKit
+import Module____Concurrency
+import Module____StringProcessing
+import Module____SwiftConcurrencyShims
+import Module___zlib
+@objc @available(iOS 13.0, *)
+@objcMembers public class NRMASessionReplay : ObjectiveC.NSObject {
+  weak public var delegate: (any Module___NewRelic.NRMASessionReplayDelegate)?
+  @objc public var recordingMode: Module___NewRelic.SessionReplayRecordingMode
+  @objc public var isFirstChunk: Swift.Bool
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(url: Foundation.NSString, delegate: (any Module___NewRelic.NRMASessionReplayDelegate)? = nil)
+  #endif
+  @objc public func start()
+  @objc public func stop()
+  @objc public func clearAllData()
+  @objc public func transistionToRecordingMode(_ mode: Module___NewRelic.SessionReplayRecordingMode)
+  @objc public func transitionToFullModeOnError()
+  @objc deinit
+}
+@available(iOS 13.0, *)
+public protocol NRMASessionReplayDelegate : AnyObject {
+  #if compiler(>=5.3) && $NonescapableTypes
+  func generateUploadURL(uncompressedDataSize: Swift.Int, firstTimestamp: Foundation.TimeInterval, lastTimestamp: Foundation.TimeInterval, isFirstChunk: Swift.Bool, isGZipped: Swift.Bool) -> Foundation.URL?
+  #endif
+}
+public struct SwiftUIViewAttributes : Swift.Equatable {
+  public var frame: CoreFoundation.CGRect {
+    get
+  }
+  public var clip: CoreFoundation.CGRect {
+    get
+  }
+  public var backgroundColor: Module___CoreGraphics.CGColor? {
+    get
+  }
+  public var layerBorderColor: Module___CoreGraphics.CGColor? {
+    get
+  }
+  public var layerBorderWidth: CoreFoundation.CGFloat {
+    get
+  }
+  public var layerCornerRadius: CoreFoundation.CGFloat {
+    get
+  }
+  public var alpha: CoreFoundation.CGFloat {
+    get
+  }
+  public static func == (a: Module___NewRelic.SwiftUIViewAttributes, b: Module___NewRelic.SwiftUIViewAttributes) -> Swift.Bool
+}
+@available(iOS 13, tvOS 13, *)
+extension SwiftUICore.View {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public func NRTrackView(name: Swift.String? = nil) -> some SwiftUICore.View
+  
+  #endif
+}
+public enum XRayDecoderError : Swift.Error {
+  public struct XrayDecoderContext {
+    public let typeOfSubject: any Any.Type
+    public let pathsXRAY: [Module___NewRelic.RunTimeTypeInspector.Path]
+    public init(typeOfSubject: any Any.Type, pathsXRAY: [Module___NewRelic.RunTimeTypeInspector.Path])
+  }
+  case notFound(Module___NewRelic.XRayDecoderError.XrayDecoderContext)
+  case typeMismatch(Module___NewRelic.XRayDecoderError.XrayDecoderContext, expectedType: any Any.Type, gotType: any Any.Type)
+}
+@Module____Concurrency.MainActor @preconcurrency public struct NRConditionalMaskView<Content> : SwiftUICore.View where Content : SwiftUICore.View {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public init(maskApplicationText: Swift.Bool? = nil, maskUserInputText: Swift.Bool? = nil, maskAllImages: Swift.Bool? = nil, maskAllUserTouches: Swift.Bool? = nil, blockView: Swift.Bool? = nil, sessionReplayIdentifier: Swift.String? = nil, activated: Swift.Bool = true, @SwiftUICore.ViewBuilder content: @escaping () -> Content)
+  #endif
+  @Module____Concurrency.MainActor @preconcurrency public var body: some SwiftUICore.View {
+    get
+  }
+  public typealias Body = @_opaqueReturnTypeOf("$s8NewRelic21NRConditionalMaskViewV4bodyQrvp", 0) __<Content>
+}
+public protocol SwiftUIThingyData {
+  var mimeType: Swift.String { get }
+  func determineIdentifier() -> Swift.String
+  func determineData() -> Foundation.Data
+}
+public protocol XrayConvertible {
+  init(xray: Module___NewRelic.XrayDecoder) throws
+}
+extension Module___NewRelic.XrayConvertible {
+  public typealias Lazy = Module___NewRelic.XrayDecoder.Lazy<Self>
+}
+extension Module___NewRelic.XrayDecoder.Lazy : Module___NewRelic.XrayConvertible {
+  public init(xray: Module___NewRelic.XrayDecoder) throws
+}
+extension Module___NewRelic.XrayDecoder.Lazy {
+  public init(_ xray: T)
+}
+extension Module___UIKit.UIView {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public var maskApplicationText: Swift.Bool? {
+    get
+    set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public var maskUserInputText: Swift.Bool? {
+    get
+    set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public var maskAllImages: Swift.Bool? {
+    get
+    set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public var maskAllUserTouches: Swift.Bool? {
+    get
+    set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public var blockView: Swift.Bool? {
+    get
+    set
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @Module____Concurrency.MainActor @preconcurrency public var skipAggressiveClipping: Swift.Bool? {
+    get
+    set
+  }
+  #endif
+}
+@objc @objcMembers public class JSErrorController : ObjectiveC.NSObject {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public init?(analyticsController: Swift.AnyObject, sessionStartTime: Foundation.Date, agentConfiguration: Swift.AnyObject, platform: Swift.String, sessionId: Swift.String, attributeValidator: Swift.AnyObject)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func recordJSError(_ name: Swift.String, message: Swift.String, stackTrace: Swift.String, isFatal: Swift.Bool, additionalAttributes: [Swift.String : Any]?)
+  #endif
+  @objc public func onHarvestStart()
+  @objc public func onHarvestBefore()
+  @objc public func onHarvest()
+  @objc public func onHarvestComplete()
+  @objc public func onHarvestError()
+  @objc public func onHarvestStop()
+  @objc public func onHarvestConnected()
+  @objc public func onHarvestDisconnected()
+  @objc public func getErrorQueueForTesting() -> [[Swift.String : Any]]
+  @objc public func clearErrorQueueForTesting()
+  @objc public func errorQueueSizeForTesting() -> Swift.Int
+  @objc public func clearPersistedErrorsForTesting()
+  @objc deinit
+}
+@available(iOS 13.0, *)
+@objc public enum SessionReplayRecordingMode : Swift.Int {
+  case error = 0
+  case full = 1
+  case off = 2
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  @available(iOS 13.0, *)
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+public struct SwiftUIAlignment : Swift.Hashable {
+  public let horizontal: Module___NewRelic.SwiftUIAlignment.Horizontal?
+  public let vertical: Module___NewRelic.SwiftUIAlignment.Vertical?
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(horizontal: Module___NewRelic.SwiftUIAlignment.Horizontal? = nil, vertical: Module___NewRelic.SwiftUIAlignment.Vertical? = nil)
+  #endif
+  public enum Horizontal : Swift.String {
+    case left
+    case right
+    case center
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init?(rawValue: Swift.String)
+    #endif
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public enum Vertical : Swift.String {
+    case top
+    case bottom
+    case center
+    #if compiler(>=5.3) && $NonescapableTypes
+    public init?(rawValue: Swift.String)
+    #endif
+    public typealias RawValue = Swift.String
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+  public static func == (a: Module___NewRelic.SwiftUIAlignment, b: Module___NewRelic.SwiftUIAlignment) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct RunTimeTypeInspector {
+  public typealias Child = (label: Swift.String?, value: Any)
+  public typealias Children = Swift.AnyCollection<Module___NewRelic.RunTimeTypeInspector.Child>
+  public enum DisplayStyle : Swift.Equatable {
+    case `struct`
+    case `class`
+    case `enum`(case: Swift.String)
+    case tuple
+    case `nil`
+    case opaque
+    public static func == (a: Module___NewRelic.RunTimeTypeInspector.DisplayStyle, b: Module___NewRelic.RunTimeTypeInspector.DisplayStyle) -> Swift.Bool
+  }
+  public enum Path {
+    case index(Swift.Int)
+    case key(Swift.String)
+  }
+  public let subject: Any
+  public let typeOfSubject: any Any.Type
+  public let displayStyle: Module___NewRelic.RunTimeTypeInspector.DisplayStyle
+  public let children: Module___NewRelic.RunTimeTypeInspector.Children
+  #if compiler(>=5.3) && $NonescapableTypes
+  public var superclassMirror: Module___NewRelic.RunTimeTypeInspector? {
+    get
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public var keyPaths: [Swift.String : Swift.Int]? {
+    get
+  }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(subject: Any, typeOfSubject: (any Any.Type)? = nil)
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func child(_ paths: [Module___NewRelic.RunTimeTypeInspector.Path]) -> Any?
+  #endif
+}
+extension Module___NewRelic.RunTimeTypeInspector.Path : Swift.ExpressibleByIntegerLiteral {
+  public init(integerLiteral value: Swift.Int)
+  public typealias IntegerLiteralType = Swift.Int
+}
+extension Module___NewRelic.RunTimeTypeInspector.Path : Swift.ExpressibleByStringLiteral {
+  public init(stringLiteral value: Swift.String)
+  public typealias ExtendedGraphemeClusterLiteralType = Swift.String
+  public typealias StringLiteralType = Swift.String
+  public typealias UnicodeScalarLiteralType = Swift.String
+}
+extension Module___NewRelic.XrayDecoder {
+  public func report(_ error: any Swift.Error)
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func rawChildIfExists<T>(type: T.Type = T.self, _ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) -> T?
+  #endif
+  public func extract<T>(type: T.Type = T.self, _ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) throws -> T
+  public func extract<T>(type: T.Type = T.self, _ pathsXRAY: [Module___NewRelic.RunTimeTypeInspector.Path]) throws -> T
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func xray<T>(type: T.Type = T.self, _ subject: Any?) throws -> T where T : Module___NewRelic.XrayConvertible
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func childIfPresent<T>(type: T.Type = T.self, _ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) -> T? where T : Module___NewRelic.XrayConvertible
+  #endif
+  public func extract<T>(type: T.Type = T.self, _ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) throws -> T where T : Module___NewRelic.XrayConvertible
+  public func extract<T>(type: T.Type = T.self, _ pathsXRAY: [Module___NewRelic.RunTimeTypeInspector.Path]) throws -> T where T : Module___NewRelic.XrayConvertible
+  public func extract<Element>(_ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) throws -> [Element] where Element : Module___NewRelic.XrayConvertible
+  public func extract<Key, Value>(_ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) throws -> [Key : Value] where Key : Swift.Hashable, Value : Module___NewRelic.XrayConvertible
+  public func extract<Key, Value>(_ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) throws -> [Key : Value] where Key : Module___NewRelic.XrayConvertible, Key : Swift.Hashable, Value : Module___NewRelic.XrayConvertible
+}
+@objc @available(iOS 13.0, *)
+@objcMembers public class SessionReplayManager : ObjectiveC.NSObject {
+  @objc public var harvestPeriod: Swift.Int64
+  @objc public var sessionReplayTimer: Foundation.Timer?
+  @objc public var sessionReplayMode: Module___NewRelic.SessionReplayRecordingMode {
+    @objc get
+    @objc set
+  }
+  @objc public init(reporter: Module___NewRelic.SessionReplayReporter, url: Foundation.NSString)
+  @objc public func setRecordingMode(_ mode: Module___NewRelic.SessionReplayRecordingMode)
+  @objc public func getCurrentRecordingMode() -> Module___NewRelic.SessionReplayRecordingMode
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func onError(_ error: (any Swift.Error)?)
+  #endif
+  @objc public func start(fromManual: Swift.Bool = false, with newMode: Module___NewRelic.SessionReplayRecordingMode)
+  @objc public func stop()
+  @objc public func isRunning() -> Swift.Bool
+  @objc public func endSession(harvest: Swift.Bool = true)
+  @objc public func manualRecordReplay() -> Swift.Bool
+  @objc public func manualPauseReplay() -> Swift.Bool
+  @objc public func isManuallyActive() -> Swift.Bool
+  @objc public func clearAllData()
+  @objc public func harvest()
+  @objc public func checkForPreviousSessionFiles()
+  @objc deinit
+}
+@available(iOS 13.0, *)
+extension Module___NewRelic.SessionReplayManager : Module___NewRelic.NRMASessionReplayDelegate {
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc dynamic public func generateUploadURL(uncompressedDataSize: Swift.Int, firstTimestamp: Foundation.TimeInterval, lastTimestamp: Foundation.TimeInterval, isFirstChunk: Swift.Bool, isGZipped: Swift.Bool) -> Foundation.URL?
+  #endif
+}
+public struct XrayDecoder {
+  public var displayStyle: Module___NewRelic.RunTimeTypeInspector.DisplayStyle {
+    get
+  }
+  public init(runTimeTypeInspector: Module___NewRelic.RunTimeTypeInspector)
+  #if compiler(>=5.3) && $NonescapableTypes
+  @inlinable public init(subject: Any?) {
+        let runTimeTypeInspector = RunTimeTypeInspector(subject: subject as Any)
+        self.init(runTimeTypeInspector: runTimeTypeInspector)
+    }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func child(_ paths: [Module___NewRelic.RunTimeTypeInspector.Path]) -> Any?
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public func childIfPresent(_ first: Module___NewRelic.RunTimeTypeInspector.Path, _ rest: Module___NewRelic.RunTimeTypeInspector.Path...) -> Any?
+  #endif
+  public struct Lazy<T> where T : Module___NewRelic.XrayConvertible {
+    public let lazyXRAY: () throws -> T
+  }
+}
+@objc @objcMembers public class SessionReplayReporter : ObjectiveC.NSObject {
+  @objc public init(applicationToken: Swift.String, url: Foundation.NSString)
+  @objc deinit
+}
+extension Module___NewRelic.NRConditionalMaskView : Swift.Sendable {}
+@available(iOS 13.0, *)
+extension Module___NewRelic.SessionReplayRecordingMode : Swift.Equatable {}
+@available(iOS 13.0, *)
+extension Module___NewRelic.SessionReplayRecordingMode : Swift.Hashable {}
+@available(iOS 13.0, *)
+extension Module___NewRelic.SessionReplayRecordingMode : Swift.RawRepresentable {}
+extension Module___NewRelic.SwiftUIAlignment.Horizontal : Swift.Equatable {}
+extension Module___NewRelic.SwiftUIAlignment.Horizontal : Swift.Hashable {}
+extension Module___NewRelic.SwiftUIAlignment.Horizontal : Swift.RawRepresentable {}
+extension Module___NewRelic.SwiftUIAlignment.Vertical : Swift.Equatable {}
+extension Module___NewRelic.SwiftUIAlignment.Vertical : Swift.Hashable {}
+extension Module___NewRelic.SwiftUIAlignment.Vertical : Swift.RawRepresentable {}
