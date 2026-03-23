@@ -50,6 +50,7 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+!NewRelic.xcframework/**/dSYMs/*.dSYM
 
 # CocoaPods
 #
