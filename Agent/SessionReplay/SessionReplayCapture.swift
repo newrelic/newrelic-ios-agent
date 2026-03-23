@@ -163,6 +163,13 @@ class SessionReplayCapture {
     }
     
     private func findRecorderForView(view originalView: UIView) -> any SessionReplayViewThingy {
+        let viewClassName = NSStringFromClass(type(of: originalView))
+
+        // Special handling for tab bar buttons - detect selection state
+        if viewClassName.contains("UITabButton") {
+            return UITabButtonThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+        }
+
         switch originalView {
         case let view as UILabel:
             return UILabelThingy(view: view, viewDetails: ViewDetails(view: view))
@@ -200,10 +207,18 @@ class SessionReplayCapture {
         guard let superview = view.superview else {
             return true
         }
-        
+
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
-        
+
+        // Skip UITabBar internal visual effect views that don't render correctly in HTML
+        let viewClassName = NSStringFromClass(type(of: view))
+
+        // Skip blend mode views (DestOutView, DestInView, etc.)
+        if viewClassName.contains("DestOutView") {
+            return false
+        }
+
         return !(areFramesTheSame && isClear)
     }
     

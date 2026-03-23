@@ -1689,6 +1689,9 @@
 		F8E202DF2B07BA61008E0B7B /* NRMAOfflineStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */; };
 		F8E277D42E3908F100D6F04C /* CustomTextThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */; };
 		F8EACA8B2F6867ED00385075 /* UIDatePickerThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */; };
+		F8EACB882F6DE5E200385075 /* UITabButtonThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACB872F6DE5E200385075 /* UITabButtonThingy.swift */; };
+		F8EACB892F6DE5E200385075 /* UITabButtonThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACB872F6DE5E200385075 /* UITabButtonThingy.swift */; };
+		F8EACB8A2F6DE5E200385075 /* UITabButtonThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACB872F6DE5E200385075 /* UITabButtonThingy.swift */; };
 		F8EF24542BC0797B00591F58 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F8FBFA512A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
 		F8FBFA522A71ACB200CDC8C5 /* NRMARequestEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */; };
@@ -2743,6 +2746,7 @@
 		F8E202F32B07BA6E008E0B7B /* NRMAOfflineStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAOfflineStorage.h; sourceTree = "<group>"; };
 		F8E277C02E3908E500D6F04C /* CustomTextThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTextThingy.swift; sourceTree = "<group>"; };
 		F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIDatePickerThingy.swift; sourceTree = "<group>"; };
+		F8EACB872F6DE5E200385075 /* UITabButtonThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITabButtonThingy.swift; sourceTree = "<group>"; };
 		F8FBFA502A71ACB200CDC8C5 /* NRMARequestEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMARequestEvent.m; sourceTree = "<group>"; };
 		F8FBFA532A71ACC000CDC8C5 /* NRMARequestEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMARequestEvent.h; sourceTree = "<group>"; };
 		F8FBFA542A71BA2900CDC8C5 /* NRMAPayload.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAPayload.m; sourceTree = "<group>"; };
@@ -4117,6 +4121,7 @@
 				F8EACA892F6867ED00385075 /* UIDatePickerThingy.swift */,
 				2B0B6BAC2DEA349D0080C3D6 /* UITextViewThingy.swift */,
 				F80C1D692DA07691007C0F52 /* ViewDetails.swift */,
+				F8EACB872F6DE5E200385075 /* UITabButtonThingy.swift */,
 				3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */,
 				F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */,
 				3493DF4D2D54310900BF5BED /* UILabelThingy.swift */,
@@ -5568,6 +5573,7 @@
 				2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */,
 				F6E79D0325A75E6F006277FB /* TestNRMATraceContext.mm in Sources */,
 				F8BF15522F3A38D100EF5628 /* XrayDecoder.swift in Sources */,
+				F8EACB882F6DE5E200385075 /* UITabButtonThingy.swift in Sources */,
 				0209AC4B24E7078C00E45C90 /* NRMACrashReportTest.m in Sources */,
 				0209ACB324E7394B00E45C90 /* NRMAInternalTests.m in Sources */,
 				0209AC4424E7078000E45C90 /* NRMAInteractionTraceFeatureFlag.m in Sources */,
@@ -5956,6 +5962,7 @@
 				341E85062D9F4B5600968D7D /* SerializedNode.swift in Sources */,
 				02FF496D24DC629000115469 /* NRMAAgentConfiguration.m in Sources */,
 				02FF48E524DC622700115469 /* NRMAExceptionDataCollectionWrapper.m in Sources */,
+				F8EACB892F6DE5E200385075 /* UITabButtonThingy.swift in Sources */,
 				02FF496A24DC629000115469 /* NRMAHarvestResponse.m in Sources */,
 				02FF4A5524DC64D500115469 /* NRMAMethodSummaryMeasurement.m in Sources */,
 				02FF485E24DC615A00115469 /* NRMALoggerBridge.mm in Sources */,
@@ -6274,6 +6281,7 @@
 				F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */,
 				2B570A742EF0C432007D9E39 /* SwiftUIDisplayList+SwiftUIViewUpdater.swift in Sources */,
 				02FF4C6724E3201400115469 /* NRMAAnalytics.mm in Sources */,
+				F8EACB8A2F6DE5E200385075 /* UITabButtonThingy.swift in Sources */,
 				02FF4C6824E3201400115469 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
 				02FF4C6924E3201400115469 /* NRMAMeasurement.m in Sources */,
 				02FF4C6A24E3201400115469 /* NRMAMeasurementException.m in Sources */,

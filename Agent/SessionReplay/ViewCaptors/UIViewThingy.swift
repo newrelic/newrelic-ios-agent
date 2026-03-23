@@ -25,6 +25,15 @@ class UIViewThingy: SessionReplayViewThingy {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
         self.isBlocked = viewDetails.blockView ?? false
+        
+        let viewClassName = NSStringFromClass(type(of: view))
+
+        // Special handling for tab bar platter view - give it pill-shaped styling
+        if viewClassName.contains("UITabBarPlatterView") {
+            // Override background color to create pill appearance
+            self.viewDetails.backgroundColor = UIColor(white: 0.95, alpha: 0.9)
+            self.viewDetails.cornerRadius = 27.0 // Standard iOS pill corner radius
+        }
     }
 
     init(viewDetails: ViewDetails) {

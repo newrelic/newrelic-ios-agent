@@ -48,11 +48,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         // Detect if image is tinted
         if let image = view.image {
-            if #available(iOS 13.0, *) {
-                self.isTinted = image.isSymbolImage || image.renderingMode == .alwaysTemplate
-            } else {
-                self.isTinted = image.renderingMode == .alwaysTemplate
-            }
+            // Only tint if rendering mode explicitly says to
+            self.isTinted = image.renderingMode == .alwaysTemplate
 
             if self.isTinted {
                 self.tintColor = view.tintColor
