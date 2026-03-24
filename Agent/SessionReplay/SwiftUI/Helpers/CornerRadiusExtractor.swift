@@ -120,7 +120,8 @@ struct CornerRadiusExtractor {
             return getDefaultCornerRadius(for: "List")
         } else if cleanName.contains("Navigation") || cleanName.contains("Link") {
             return getDefaultCornerRadius(for: "NavigationLink")
-        } else if cleanName.contains("Button") {
+        } else if cleanName.contains("Button") || cleanName.contains("Control") || cleanName.contains("Touch") {
+            // SwiftUI buttons might appear as Control, Touch, or other internal names
             return getDefaultCornerRadius(for: "Button")
         } else if cleanName.contains("Toggle") {
             return getDefaultCornerRadius(for: "Toggle")
@@ -132,8 +133,150 @@ struct CornerRadiusExtractor {
             return getDefaultCornerRadius(for: "Picker")
         } else if cleanName.contains("Group") {
             return getDefaultCornerRadius(for: "GroupBox")
+        } else if cleanName.contains("Shape") || cleanName.contains("Rectangle") {
+            // Many SwiftUI buttons are rendered as shapes
+            return getDefaultCornerRadius(for: "Button")
         }
 
         return 0.0
+    }
+
+    /// Analyzes a SwiftUI content type and suggests appropriate corner radius
+    static func detectCornerRadiusFromContent(contentType: String, parentViewName: String) -> CGFloat {
+        // For SwiftUI buttons that appear as shapes or platform views,
+        // check if the parent context suggests it's a button
+        if contentType.contains("shape") || contentType.contains("color") {
+            if parentViewName.contains("Button") || parentViewName.contains("Touch") || parentViewName.contains("Control") {
+                return getDefaultCornerRadius(for: "Button")
+            }
+        }
+
+        return 0.0
+    }
+
+
+    /// Enhanced UIKit component detection - provides fallback defaults when no explicit corner radius
+    static func detectUIKitComponentType(view: UIView) -> CGFloat {
+        let className = String(describing: type(of: view))
+
+        // SwiftUI List cells - these need special handling for sectioned corner radius
+        if className.contains("ListCollectionViewCell") {
+            return detectSwiftUIListCellCornerRadius(view: view)
+        }
+
+        // Collection view cells
+        if className.contains("CollectionViewCell") {
+            return 8.0
+        }
+
+        // Table view cells
+        if className.contains("TableViewCell") {
+            return 10.0
+        }
+
+        // System background views in Lists
+        if className.contains("SystemBackgroundView") {
+            return detectSystemBackgroundViewCornerRadius(view: view)
+        }
+
+        // UIKitPlatformViewHost in Lists (SwiftUI -> UIKit bridging)
+        if className.contains("UIKitPlatformViewHost") || className.contains("PlatformViewHost") {
+            return detectPlatformViewHostCornerRadius(view: view)
+        }
+
+        // Buttons
+        if className.contains("Button") {
+            return 8.0
+        }
+
+        // Text fields
+        if className.contains("TextField") || className.contains("TextInput") {
+            return 8.0
+        }
+
+        // Image views that might have rounded corners
+        if className.contains("ImageView") {
+            return 4.0
+        }
+
+        // Views with common corner radius patterns
+        if className.contains("Card") || className.contains("Container") {
+            return 12.0
+        }
+
+        return 0.0
+    }
+
+    /// Detects corner radius for SwiftUI List cells based on position in section
+    static func detectSwiftUIListCellCornerRadius(view: UIView) -> CGFloat {
+        // SwiftUI List cells should have 10px corner radius for sectioned lists
+        // The system automatically handles which corners to round based on position
+        return 10.0
+    }
+
+    /// Detects corner radius for system background views (often inside List cells)
+    static func detectSystemBackgroundViewCornerRadius(view: UIView) -> CGFloat {
+        // Check if this is inside a List structure
+        if isInsideSwiftUIList(view: view) {
+            return 10.0
+        }
+        return 0.0
+    }
+
+    /// Detects corner radius for UIKitPlatformViewHost (SwiftUI-UIKit bridging views)
+    static func detectPlatformViewHostCornerRadius(view: UIView) -> CGFloat {
+        if isInsideSwiftUIList(view: view) {
+            return 10.0
+        }
+        return 0.0
+    }
+
+    /// Helper to detect if a view is inside a SwiftUI List
+    static func isInsideSwiftUIList(view: UIView) -> Bool {
+        var currentView: UIView? = view.superview
+        while currentView != nil {
+            let className = String(describing: type(of: currentView!))
+
+            // Enhanced List detection including all SwiftUI List-related classes
+            if className.contains("ListCollectionViewCell") ||
+               className.contains("UICollectionView") ||
+               className.contains("ListCellContentView") ||
+               className.contains("UICollectionViewListCell") ||
+               className.contains("ListRepresentable") ||
+               className.contains("CollectionView") {
+                return true
+            }
+            currentView = currentView?.superview
+        }
+        return false
+    }
+
+    /// Detects the position of a view within a SwiftUI List section for selective corner rounding
+    static func detectListCellPosition(view: UIView) -> ListCellPosition {
+        // For now, we'll detect based on the view hierarchy and naming patterns
+        var currentView: UIView? = view.superview
+
+        while currentView != nil {
+            let className = String(describing: type(of: currentView!))
+
+            // Look for ListCollectionViewCell which contains position information
+            if className.contains("ListCollectionViewCell") {
+                // For now, assume this is a first cell (top corners) - this could be enhanced
+                // by analyzing the cell's position in the collection view
+                return .first
+            }
+
+            currentView = currentView?.superview
+        }
+
+        return .middle // Default to middle (no corners)
+    }
+
+    /// Represents the position of a cell within a List section
+    enum ListCellPosition {
+        case first      // Top corners rounded
+        case middle     // No corners rounded
+        case last       // Bottom corners rounded
+        case single     // All corners rounded
     }
 }

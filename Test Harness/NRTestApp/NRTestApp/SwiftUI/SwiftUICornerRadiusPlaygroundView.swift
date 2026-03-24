@@ -52,16 +52,61 @@ struct SwiftUICornerRadiusPlaygroundView: View {
                 sectionHeader("🎛️ System Components (Should show default radius)")
 
                 VStack(spacing: 12) {
-                    // List Example
+                    // List Example - THE KEY TEST FOR THE FIX
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("List Component")
+                        Text("SwiftUI List (Grouped Style) - TESTING FIX")
                             .font(.headline)
+                            .foregroundColor(.red)
+                        Text("✅ Should show 10px corner radius on all inner elements")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         List {
-                            Text("List Item 1")
-                            Text("List Item 2")
-                            Text("List Item 3")
+                            Text("First Item (should have top corners rounded)")
+                            Text("Middle Item (should have no corners rounded)")
+                            Text("Last Item (should have bottom corners rounded)")
+                            Section("Another Section") {
+                                Text("Single Item (should have all corners rounded)")
+                            }
+                            Section("Multiple Items") {
+                                Text("First in section")
+                                Text("Middle in section")
+                                Text("Last in section")
+                            }
                         }
-                        .frame(height: 120)
+                        .frame(height: 250)
+                        .listStyle(GroupedListStyle())
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+
+                    // Specific test for UIKitPlatformViewHost detection
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("UIKitPlatformViewHost Test (CRITICAL FIX)")
+                            .font(.headline)
+                            .foregroundColor(.red)
+                        Text("✅ Inner UIView should get border-top-left-radius: 10px, border-top-right-radius: 10px")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        List {
+                            HStack {
+                                Text("This should show selective corner radius")
+                                Spacer()
+                                Text("→")
+                            }
+                            HStack {
+                                Text("UIKitPlatformViewHost_ListRepresentable_Collection")
+                                Spacer()
+                                Text("→")
+                            }
+                            HStack {
+                                Text("SystemBackgroundView should inherit corners")
+                                Spacer()
+                                Text("→")
+                            }
+                        }
+                        .frame(height: 150)
                         .listStyle(GroupedListStyle())
                     }
                     .padding()
@@ -86,13 +131,40 @@ struct SwiftUICornerRadiusPlaygroundView: View {
                 }
 
                 // MARK: - Button Examples
-                sectionHeader("🔘 Button Examples")
+                sectionHeader("🔘 Button Examples (Testing SwiftUI Button Fix)")
 
                 VStack(spacing: 12) {
-                    buttonExample("Default Button", radius: 8, color: .blue)
-                    buttonExample("Medium Button", radius: 12, color: .green)
-                    buttonExample("Large Button", radius: 16, color: .purple)
-                    buttonExample("Pill Button", radius: 25, color: .orange)
+                    // Standard SwiftUI buttons (these should get 10px default radius)
+                    VStack(alignment: .leading) {
+                        Text("Standard SwiftUI Buttons (should get 10px default)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        VStack(spacing: 8) {
+                            Button("Default Button Style") {
+                                print("Default button tapped")
+                            }
+
+                            Button("Bordered Button") {
+                                print("Bordered button tapped")
+                            }
+                            .buttonStyle(BorderedButtonStyle())
+
+                            Button("Prominent Button") {
+                                print("Prominent button tapped")
+                            }
+                            .buttonStyle(BorderedProminentButtonStyle())
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+
+                    // Custom styled buttons
+                    buttonExample("Custom 8px Button", radius: 8, color: .blue)
+                    buttonExample("Custom 12px Button", radius: 12, color: .green)
+                    buttonExample("Custom 16px Button", radius: 16, color: .purple)
+                    buttonExample("Custom Pill Button", radius: 25, color: .orange)
                 }
 
                 // MARK: - Form Controls

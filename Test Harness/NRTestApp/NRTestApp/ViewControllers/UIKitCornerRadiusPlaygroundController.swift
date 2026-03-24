@@ -162,12 +162,35 @@ class UIKitCornerRadiusPlaygroundController: UIViewController {
         let asymmetricContainer = createLabeledContainer(title: "Asymmetric Corners (top-left, bottom-right only)", view: asymmetricView)
         contentStackView.addArrangedSubview(asymmetricContainer)
 
+        // MARK: - Collection View Cells (ColorCollectionViewCell-style)
+        addSectionHeader("📱 Collection View Cells (ColorCollectionViewCell Fix Test)")
+
+        // Test ColorCollectionViewCell-style views
+        let collectionCellTest1 = createColorCollectionViewCellTest(cornerRadius: 8, color: .systemRed, text: "8px")
+        let collectionCellContainer1 = createLabeledContainer(title: "ColorCollectionViewCell Style (8px) - Should show 8px", view: collectionCellTest1)
+        contentStackView.addArrangedSubview(collectionCellContainer1)
+
+        let collectionCellTest2 = createColorCollectionViewCellTest(cornerRadius: 12, color: .systemBlue, text: "12px")
+        let collectionCellContainer2 = createLabeledContainer(title: "ColorCollectionViewCell Style (12px) - Should show 12px", view: collectionCellTest2)
+        contentStackView.addArrangedSubview(collectionCellContainer2)
+
+        let collectionCellTest3 = createColorCollectionViewCellTest(cornerRadius: 16, color: .systemGreen, text: "16px")
+        let collectionCellContainer3 = createLabeledContainer(title: "ColorCollectionViewCell Style (16px) - Should show 16px", view: collectionCellTest3)
+        contentStackView.addArrangedSubview(collectionCellContainer3)
+
+        // Test exact ColorCollectionViewCell reproduction
+        let exactReproduction = createExactColorCollectionViewCellReproduction()
+        let exactContainer = createLabeledContainer(title: "EXACT ColorCollectionViewCell Reproduction (layer.cornerRadius = 8)", view: exactReproduction)
+        contentStackView.addArrangedSubview(exactContainer)
+
         // MARK: - Real-world Examples
         addSectionHeader("🌍 Real-world Examples")
 
         // iOS Settings-style cell
         let settingsCell = createSettingsStyleCell()
-        let settingsCellContainer = createLabeledContainer(title: "iOS Settings Cell Style", view: settingsCell)
+        let settingsCell2 = createSettingsStyleCell()
+
+        let settingsCellContainer = createLabeledContainer(title: "iOS Settings Cell Style", view: settingsCell, view2: settingsCell2)
         contentStackView.addArrangedSubview(settingsCellContainer)
 
         // Modern card design
@@ -227,7 +250,6 @@ class UIKitCornerRadiusPlaygroundController: UIViewController {
         button.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
         return button
     }
-
     private func createLabeledContainer(title: String, view: UIView) -> UIView {
         let containerView = UIView()
         containerView.backgroundColor = .clear
@@ -236,6 +258,28 @@ class UIKitCornerRadiusPlaygroundController: UIViewController {
         titleLabel.textAlignment = .left
 
         let stackView = UIStackView(arrangedSubviews: [titleLabel, view])
+        stackView.axis = .vertical
+        stackView.spacing = 8
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+
+        containerView.addSubview(stackView)
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        ])
+
+        return containerView
+    }
+    private func createLabeledContainer(title: String, view: UIView, view2: UIView) -> UIView {
+        let containerView = UIView()
+        containerView.backgroundColor = .clear
+
+        let titleLabel = createLabel(text: title, fontSize: 16, weight: .medium, color: .secondaryLabel)
+        titleLabel.textAlignment = .left
+
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, view, view2])
         stackView.axis = .vertical
         stackView.spacing = 8
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -302,6 +346,80 @@ class UIKitCornerRadiusPlaygroundController: UIViewController {
         ])
 
         return cardView
+    }
+
+    private func createCollectionViewCellStyle(cornerRadius: CGFloat, color: UIColor, text: String) -> UIView {
+        let cellView = UIView()
+        cellView.backgroundColor = color
+        cellView.layer.cornerRadius = cornerRadius
+        cellView.clipsToBounds = true
+        cellView.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.text = text
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        cellView.addSubview(label)
+        NSLayoutConstraint.activate([
+            cellView.heightAnchor.constraint(equalToConstant: 80),
+            cellView.widthAnchor.constraint(equalToConstant: 80),
+            label.centerXAnchor.constraint(equalTo: cellView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: cellView.centerYAnchor)
+        ])
+
+        return cellView
+    }
+
+    private func createColorCollectionViewCellTest(cornerRadius: CGFloat, color: UIColor, text: String) -> UIView {
+        // Create a view that mimics ColorCollectionViewCell behavior
+        let cellView = UIView()
+        cellView.backgroundColor = color
+        cellView.layer.cornerRadius = cornerRadius
+        cellView.clipsToBounds = true
+        cellView.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.text = text
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        cellView.addSubview(label)
+        NSLayoutConstraint.activate([
+            cellView.heightAnchor.constraint(equalToConstant: 80),
+            cellView.widthAnchor.constraint(equalToConstant: 80),
+            label.centerXAnchor.constraint(equalTo: cellView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: cellView.centerYAnchor)
+        ])
+
+        return cellView
+    }
+
+    private func createExactColorCollectionViewCellReproduction() -> UIView {
+        // Exact reproduction of ColorCollectionViewCell logic
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+
+        // Create the actual test cell
+        let testCell = TestColorCollectionViewCell(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        testCell.backgroundColor = UIColor(hue: 0.3, saturation: 0.8, brightness: 0.8, alpha: 1.0)
+        testCell.configure(with: 42)
+        testCell.translatesAutoresizingMaskIntoConstraints = false
+
+        containerView.addSubview(testCell)
+        NSLayoutConstraint.activate([
+            containerView.heightAnchor.constraint(equalToConstant: 120),
+            testCell.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            testCell.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            testCell.widthAnchor.constraint(equalToConstant: 100),
+            testCell.heightAnchor.constraint(equalToConstant: 100)
+        ])
+
+        return containerView
     }
 
     private func createSettingsStyleCell() -> UIView {
@@ -409,4 +527,64 @@ class UIKitCornerRadiusPlaygroundController: UIViewController {
                                  ])
     }
 }
+
+// Test class that exactly replicates ColorCollectionViewCell
+class TestColorCollectionViewCell: UICollectionViewCell {
+    private let label = UILabel()
+    private let blurEffectView: UIVisualEffectView
+
+    override init(frame: CGRect) {
+        // Create blur effect
+#if os(iOS)
+        let blurEffect = UIBlurEffect(style: .systemMaterial)
+        blurEffectView = UIVisualEffectView(effect: blurEffect)
+#else
+        blurEffectView = UIVisualEffectView()
+#endif
+        super.init(frame: frame)
+
+        // Configure cell appearance - THIS IS THE KEY LINE THAT WAS FAILING
+        layer.cornerRadius = 8
+        clipsToBounds = true
+
+        // Set up blur effect view
+        blurEffectView.frame = contentView.bounds
+        blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        contentView.addSubview(blurEffectView)
+
+        // Configure label
+        label.textAlignment = .center
+        label.textColor = .black
+        label.font = UIFont.boldSystemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+#if os(iOS)
+        // Add label to the vibrancy effect view for better text rendering on blur
+        let vibrancyEffect = UIVibrancyEffect(blurEffect: blurEffect)
+        let vibrancyView = UIVisualEffectView(effect: vibrancyEffect)
+        vibrancyView.frame = blurEffectView.bounds
+        vibrancyView.contentView.addSubview(label)
+        blurEffectView.contentView.addSubview(vibrancyView)
+
+        // Set up constraints for the label
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: vibrancyView.contentView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: vibrancyView.contentView.centerYAnchor),
+            vibrancyView.leadingAnchor.constraint(equalTo: blurEffectView.leadingAnchor),
+            vibrancyView.trailingAnchor.constraint(equalTo: blurEffectView.trailingAnchor),
+            vibrancyView.topAnchor.constraint(equalTo: blurEffectView.topAnchor),
+            vibrancyView.bottomAnchor.constraint(equalTo: blurEffectView.bottomAnchor)
+        ])
+#endif
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(with number: Int) {
+        label.text = "\(number)"
+    }
+}
+
 #endif
