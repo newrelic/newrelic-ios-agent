@@ -37,7 +37,7 @@ class UILabelThingy: SessionReplayViewThingy {
     let isItalic: Bool
     let letterSpacing: CGFloat?
 
-    let widthOffset = 1.0
+    let widthOffset = 2.0
     init(view: UILabel, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame

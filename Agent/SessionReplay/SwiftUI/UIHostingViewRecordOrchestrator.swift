@@ -286,8 +286,8 @@ final class UIHostingViewRecordOrchestrator {
                 line.filter { $0 == " " }.count
             }.max() ?? 0
             // 3. Calculate offset (max spaces * 2)
-            let calculatedOffset = CGFloat(maxSpacesOnOneLine * 2)
-            
+            let calculatedOffset = CGFloat(maxSpacesOnOneLine * 2) + 2.0
+
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUITextView"
             let details = makeDetails(widthOffset: calculatedOffset)
