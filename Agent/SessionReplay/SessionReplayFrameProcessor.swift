@@ -13,6 +13,9 @@ class SessionReplayFrameProcessor {
     var useIncrementalDiffs = true
 
     var takeFullSnapshotNext = true
+
+    // Private queue for thread-safe tree operations
+    private let treeProcessingQueue = DispatchQueue(label: "com.newrelic.sessionreplay.tree.processing", qos: .userInitiated)
     
     
     func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon? {
@@ -124,8 +127,20 @@ class SessionReplayFrameProcessor {
             return processFullSnapshot(newFrame)
         }
         
-        let oldFlattenedThingies = flattenTree(rootThingy: oldFrame.views)
-        let newFlattenedThingies = flattenTree(rootThingy: newFrame.views)
+        // Safely flatten trees with thread safety and error handling
+        var oldFlattenedThingies: [any SessionReplayViewThingy] = []
+        var newFlattenedThingies: [any SessionReplayViewThingy] = []
+
+        treeProcessingQueue.sync {
+            oldFlattenedThingies = flattenTree(rootThingy: oldFrame.views)
+            newFlattenedThingies = flattenTree(rootThingy: newFrame.views)
+        }
+
+        // If flattening failed or returned empty results, fall back to full snapshot
+        guard !oldFlattenedThingies.isEmpty && !newFlattenedThingies.isEmpty else {
+            print("Warning: flattenTree returned empty results, falling back to full snapshot")
+            return processFullSnapshot(newFrame)
+        }
         
         let operations = generateDiff(old: oldFlattenedThingies, new: newFlattenedThingies)
         
@@ -265,12 +280,33 @@ class SessionReplayFrameProcessor {
     private func flattenTree(rootThingy: any SessionReplayViewThingy) -> [any SessionReplayViewThingy] {
         var thingies: [any SessionReplayViewThingy] = []
         var queue: [any SessionReplayViewThingy] = [rootThingy]
-        
+        var visited = Set<AnyHashable>() // Track visited nodes to prevent infinite loops
+
+        // Reasonable upper limit to prevent memory exhaustion
+        let maxNodes = 10000
+
+        // Reserve capacity for better performance
+        thingies.reserveCapacity(100) // Conservative initial estimate
+        visited.reserveCapacity(100)
+
         while let thingy = queue.popLast() {
+            // Prevent infinite loops from circular references
+            guard !visited.contains(AnyHashable(thingy)) else {
+                continue
+            }
+
+            // Prevent memory exhaustion from very large hierarchies
+            guard thingies.count < maxNodes else {
+                print("Warning: flattenTree hit maximum node limit of \(maxNodes), truncating tree")
+                break
+            }
+
+            visited.insert(AnyHashable(thingy))
             thingies.append(thingy)
+
             queue.append(contentsOf: thingy.subviews)
         }
-        
+
         return thingies
     }
 }
