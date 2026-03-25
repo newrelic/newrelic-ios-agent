@@ -282,9 +282,6 @@ class SessionReplayFrameProcessor {
         var queue: [any SessionReplayViewThingy] = [rootThingy]
         var visited = Set<AnyHashable>() // Track visited nodes to prevent infinite loops
 
-        // Reasonable upper limit to prevent memory exhaustion
-        let maxNodes = 10000
-
         // Reserve capacity for better performance
         thingies.reserveCapacity(100) // Conservative initial estimate
         visited.reserveCapacity(100)
@@ -293,12 +290,6 @@ class SessionReplayFrameProcessor {
             // Prevent infinite loops from circular references
             guard !visited.contains(AnyHashable(thingy)) else {
                 continue
-            }
-
-            // Prevent memory exhaustion from very large hierarchies
-            guard thingies.count < maxNodes else {
-                print("Warning: flattenTree hit maximum node limit of \(maxNodes), truncating tree")
-                break
             }
 
             visited.insert(AnyHashable(thingy))
