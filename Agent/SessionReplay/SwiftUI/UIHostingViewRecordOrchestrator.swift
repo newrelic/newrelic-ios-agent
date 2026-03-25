@@ -236,24 +236,30 @@ final class UIHostingViewRecordOrchestrator {
         let frame = baseContext.convert(frame: item.frame)
         var viewName = "SwiftUIView"
 
-        func makeDetails() -> ViewDetails {
-            ViewDetails(frame: frame,
-                        clip: viewAttributes.clip,
-                        backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
-                        alpha: viewAttributes.alpha,
-                        isHidden: viewAttributes.isHidden,
-                        viewName: viewName,
-                        parentId: parentId,
-                        cornerRadius: viewAttributes.layerCornerRadius,
-                        borderWidth: viewAttributes.layerBorderWidth,
-                        borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),//Int(content.seed.value),
-                        viewId: contentId,
-                        view: originalView,
-                        maskApplicationText: viewAttributes.maskApplicationText,
-                        maskUserInputText: viewAttributes.maskUserInputText,
-                        maskAllImages: viewAttributes.maskAllImages,
-                        maskAllUserTouches: viewAttributes.maskAllUserTouches,
-                        sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier) // viewAttributes.maskUserInput
+        func makeDetails(widthOffset: CGFloat = 0) -> ViewDetails {
+                    let adjustedFrame = CGRect(x: frame.origin.x,
+                                               y: frame.origin.y,
+                                               width: frame.size.width + widthOffset,
+                                               height: frame.size.height)
+                    
+                    return ViewDetails(frame: adjustedFrame,
+                                clip: viewAttributes.clip,
+                                backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
+                                alpha: viewAttributes.alpha,
+                                isHidden: viewAttributes.isHidden,
+                                viewName: viewName,
+                                parentId: parentId,
+                                cornerRadius: viewAttributes.layerCornerRadius,
+                                borderWidth: viewAttributes.layerBorderWidth,
+                                borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
+                                viewId: contentId,
+                                view: originalView,
+                                maskApplicationText: viewAttributes.maskApplicationText,
+                                maskUserInputText: viewAttributes.maskUserInputText,
+                                maskAllImages: viewAttributes.maskAllImages,
+                                maskAllUserTouches: viewAttributes.maskAllUserTouches,
+                                blockView: viewAttributes.blockView,
+                                sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier)
         }
         
         switch content.value {
@@ -266,14 +272,26 @@ final class UIHostingViewRecordOrchestrator {
             return SwiftUIShapeThingy(viewDetails: details,
                                      path: path,
                                      fillColor: fillColor,
-                                     fillStyle: fillStyle)
+                                     fillStyle: fillStyle,
+                                     fallbackTintColor: baseContext.tintColor)
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
+            let rawString = storage.string
+                
+            // 1. Split the string into lines
+            let lines = rawString.components(separatedBy: .newlines)
+            
+            // 2. Find the line with the maximum number of spaces
+            let maxSpacesOnOneLine = lines.map { line in
+                line.filter { $0 == " " }.count
+            }.max() ?? 0
+            // 3. Calculate offset (max spaces * 2)
+            let calculatedOffset = CGFloat(maxSpacesOnOneLine * 2)
             
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUITextView"
-            let details = makeDetails()
-            
+            let details = makeDetails(widthOffset: calculatedOffset)
+
             let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
             if iOS15 {
                 return UILabelThingy(viewDetails: details,
@@ -324,11 +342,23 @@ final class UIHostingViewRecordOrchestrator {
                 return nil
             }
 
+            // Get tint color from context (foreground color from colorMultiply filter)
+            let maskColor: Color._ResFoundColor? = if let tintColor = baseContext.tintColor {
+                Color._ResFoundColor(
+                    linearRed: Float(tintColor.cgColor.components?[0] ?? 0),
+                    linearGreen: Float(tintColor.cgColor.components?[1] ?? 0),
+                    linearBlue: Float(tintColor.cgColor.components?[2] ?? 0),
+                    opacity: Float(tintColor.cgColor.alpha)
+                )
+            } else {
+                nil
+            }
+
             // Create SwiftUIGraphicsImage from the generated CGImage
             let swiftUIImage = SwiftUIGraphicsImage(
                 contents: .cgImage(cgImage),
                 scale: image.scale,
-                maskClr: nil,
+                maskClr: maskColor,
                 orientation: .up
             )
 

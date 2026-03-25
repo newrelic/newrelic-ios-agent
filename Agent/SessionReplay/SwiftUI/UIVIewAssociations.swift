@@ -12,6 +12,8 @@ internal var associatedMaskApplicationTextKey: UInt8 = 3
 internal var associatedMaskUserInputTextKey: UInt8 = 4
 internal var associatedMaskAllUserTouchesKey: UInt8 = 5
 internal var associatedMaskAllImagesKey: UInt8 = 6
+internal var associatedBlockViewKey: UInt8 = 7
+internal var associatedSkipAggressiveClippingKey: UInt8 = 8
 
 #if os(iOS) || os(tvOS)
 extension UIView {
@@ -68,17 +70,47 @@ extension UIView {
     }
     
     public var maskAllUserTouches: Bool? {
-        
+
         set {
             withUnsafePointer(to: &associatedMaskAllUserTouchesKey) {
                 objc_setAssociatedObject(self, $0, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 
             }
         }
-        
-        
+
+
         get {
             withUnsafePointer(to: &associatedMaskAllUserTouchesKey) {
+                objc_getAssociatedObject(self, $0) as? Bool
+            }
+        }
+    }
+
+    public var blockView: Bool? {
+
+        set {
+            withUnsafePointer(to: &associatedBlockViewKey) {
+                objc_setAssociatedObject(self, $0, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+
+            }
+        }
+
+
+        get {
+            withUnsafePointer(to: &associatedBlockViewKey) {
+                objc_getAssociatedObject(self, $0) as? Bool
+            }
+        }
+    }
+
+    public var skipAggressiveClipping: Bool? {
+        set {
+            withUnsafePointer(to: &associatedSkipAggressiveClippingKey) {
+                objc_setAssociatedObject(self, $0, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+        get {
+            withUnsafePointer(to: &associatedSkipAggressiveClippingKey) {
                 objc_getAssociatedObject(self, $0) as? Bool
             }
         }

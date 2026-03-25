@@ -23,7 +23,7 @@ static NSString* __NRMA__applicationPlatformVersion = nil;
 // Default max event buffer time is 1 minute (60 seconds).
 static NSUInteger __NRMA__maxEventBufferTime = 60;
 static NSUInteger __NRMA__maxEventBufferSize = 1000;
-static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
+static NSUInteger __NRMA__maxOfflineStorageSizeBytes = 100000000; // 100 MB in bytes
 
 @implementation NRMAAgentConfiguration
 
@@ -60,11 +60,11 @@ static NSUInteger __NRMA__maxOfflineStorageSize = 100000000; // 100 mb
 }
 
 + (void) setMaxOfflineStorageSize:(NSUInteger)megabytes {
-    __NRMA__maxOfflineStorageSize = megabytes;
+    __NRMA__maxOfflineStorageSizeBytes = megabytes * 1000000; // Convert MB to bytes (1 MB = 1,000,000 bytes)
 }
 
 + (NSUInteger) getMaxOfflineStorageSize {
-    return __NRMA__maxOfflineStorageSize;
+    return __NRMA__maxOfflineStorageSizeBytes;
 }
 
 static NSMutableArray * __NRMA__session_replay_maskedClassNames;

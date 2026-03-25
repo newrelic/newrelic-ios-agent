@@ -14,13 +14,14 @@ let RCTParagraphComponentView = "RCTParagraphComponentView"
 
 class UILabelThingy: SessionReplayViewThingy {
     var isMasked: Bool
-    
+    var isBlocked: Bool
+
     var subviews = [any SessionReplayViewThingy]()
-    
+
     var shouldRecordSubviews: Bool {
-        false
+        true
     }
-    
+
     var viewDetails: ViewDetails
 
     
@@ -36,12 +37,13 @@ class UILabelThingy: SessionReplayViewThingy {
     let isItalic: Bool
     let letterSpacing: CGFloat?
 
+    let widthOffset = 1.0
     init(view: UILabel, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
-        frame.size.width = frame.size.width + 0.5
+        frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
-        
+
         if let isMasked = viewDetails.isMasked {
             self.isMasked = isMasked
         }
@@ -51,6 +53,8 @@ class UILabelThingy: SessionReplayViewThingy {
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
+
+        self.isBlocked = viewDetails.blockView ?? false
         
         if self.isMasked {
             // If the view is masked, we should not record the text.
@@ -109,7 +113,7 @@ class UILabelThingy: SessionReplayViewThingy {
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
-        frame.size.width = frame.size.width + 0.5
+        frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
         
         var text: String?
@@ -141,6 +145,9 @@ class UILabelThingy: SessionReplayViewThingy {
         } else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
         }
+
+        self.isBlocked = viewDetails.blockView ?? false
+
         if self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
@@ -180,7 +187,7 @@ class UILabelThingy: SessionReplayViewThingy {
         self.viewDetails = viewDetails
         self.viewDetails.backgroundColor = .clear
         var frame = self.viewDetails.frame
-        frame.size.width = frame.size.width + 0.5
+        frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
 
         let extracted = TextHelper.extractLabelAttributes(from: attributedText)
@@ -232,7 +239,8 @@ class UILabelThingy: SessionReplayViewThingy {
         self.fontWeight = fontTraits.weight
         self.isItalic = fontTraits.isItalic
         self.letterSpacing = kern
-        
+     
+        self.isBlocked = viewDetails.blockView ?? false
     }
 
     func cssDescription() -> String {

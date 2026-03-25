@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
+		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
@@ -61,6 +63,9 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
+		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
+		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
 		F802EE9A2BE0218700AB956F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F802EE992BE0218700AB956F /* Assets.xcassets */; };
@@ -156,6 +161,9 @@
 		F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
 		F8EAB9742EE09E040008B092 /* ConfidentialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */; };
 		F8EAB9752EE09E040008B092 /* ConfidentialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */; };
+		F8EACABE2F688F7300385075 /* DateTimePickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */; };
+		F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */; };
+		F8EACAE82F6AE2BC00385075 /* TintedImagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */; };
 		F8F5D8232BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */; };
 		F8F5D8252BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */; };
 		F8F5D8312BEBB84D00CDC139 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
@@ -322,6 +330,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
 		2B3493692E8EF15A006DE9D0 /* MaskingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingView.swift; sourceTree = "<group>"; };
@@ -372,6 +381,9 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
+		D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTestViewController.swift; sourceTree = "<group>"; };
+		D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CustomSwitch.swift; path = ../CustomSwitch.swift; sourceTree = "<group>"; };
+		D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToggleStyle.swift; sourceTree = "<group>"; };
 		F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS) Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS_App.swift; sourceTree = "<group>"; };
 		F802EE972BE0218600AB956F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -439,6 +451,9 @@
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
+		F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimePickerViewController.swift; sourceTree = "<group>"; };
+		F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TintedSymbolsView.swift; sourceTree = "<group>"; };
+		F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TintedImagesViewController.swift; sourceTree = "<group>"; };
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
@@ -504,6 +519,7 @@
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
 				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
@@ -512,6 +528,7 @@
 				2BAE5C7D2E860C7D001D2B88 /* ButtonsView.swift */,
 				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
+				F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
 				F8BF14A32F35345500EF5628 /* AttributedTextView.swift */,
 				F8672A552EAA69820055FA51 /* SimpleScrollView.swift */,
@@ -695,11 +712,15 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */,
+				2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */,
 				2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */,
 				2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */,
 				F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */,
 				F8302AFC296F5EFA003EC291 /* ViewController.swift */,
+				F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */,
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
+				F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */,
 				F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */,
 				F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */,
 				F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */,
@@ -762,6 +783,7 @@
 				2B708A982ADF3AD80063110E /* NewRelic+Replace.h */,
 				F864284D2971DFC9002ABA01 /* triggerException.h */,
 				F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */,
+				D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -1228,6 +1250,7 @@
 				F802EED52BE12E5700AB956F /* UtilViewModel.swift in Sources */,
 				F802EED12BE023E000AB956F /* triggerException.m in Sources */,
 				F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */,
+				2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */,
 				F802EECD2BE023CB00AB956F /* plistHelper.swift in Sources */,
 				F802EECF2BE023D200AB956F /* Variable.swift in Sources */,
 				F802EED02BE023D700AB956F /* Date.swift in Sources */,
@@ -1243,9 +1266,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */,
 				F864284C2971DFA5002ABA01 /* triggerException.m in Sources */,
 				F86428482971C661002ABA01 /* UtilViewModel.swift in Sources */,
 				F8ACFA292EA019BF00E6692B /* InfiniteImageCollectionView.swift in Sources */,
+				D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */,
 				F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
@@ -1272,6 +1297,7 @@
 				F8BF16412F3F6D9F00EF5628 /* ProviderSearchView.swift in Sources */,
 				F8BF16432F3F6D9F00EF5628 /* Views.swift in Sources */,
 				F8BF16442F3F6D9F00EF5628 /* model.swift in Sources */,
+				F8EACABE2F688F7300385075 /* DateTimePickerViewController.swift in Sources */,
 				2BAE5C9A2E860C7D001D2B88 /* ScrollViewsView.swift in Sources */,
 				F8BF14882F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */,
 				2BAE5C9B2E860C7D001D2B88 /* SlidersView.swift in Sources */,
@@ -1290,18 +1316,22 @@
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
 				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
+				D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
+				F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
 				F81061F82E16C13F00B8CC81 /* ScrollableCollectionViewController.swift in Sources */,
 				F8BF14A42F35345500EF5628 /* AttributedTextView.swift in Sources */,
 				2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */,
+				2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */,
 				F8EAB9752EE09E040008B092 /* ConfidentialViewController.swift in Sources */,
 				F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
 				F8BF14362F3268E900EF5628 /* DrawingsView.swift in Sources */,
+				F8EACAE82F6AE2BC00385075 /* TintedImagesViewController.swift in Sources */,
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,

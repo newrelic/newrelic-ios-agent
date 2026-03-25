@@ -133,4 +133,25 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(attributedTextTestViewController, animated: true)
     }
 
+    func showDateTimePickerViewController() {
+#if os(iOS)
+        let dateTimePickerViewController = ViewControllerProvider.dateTimePickerViewController
+        navigationController.pushViewController(dateTimePickerViewController, animated: true)
+#endif
+    }
+    
+    func showTintedImagesViewController() {
+#if os(iOS)
+        let tintedImagesViewController = ViewControllerProvider.tintedImagesViewController
+        navigationController.pushViewController(tintedImagesViewController, animated: true)
+#endif
+    }
+
+    func showSwitchTestViewController() {
+#if os(iOS)
+        let switchTestViewController = ViewControllerProvider.switchTestViewController
+        navigationController.pushViewController(switchTestViewController, animated: true)
+#endif
+    }
+
 }

@@ -206,9 +206,46 @@ extension ResolvedColor: XrayConvertible {
                 self.init(linearRed: nil, linearGreen: nil, linearBlue: nil, opacity: nil)
             }
         } else {
-            // Pre-iOS 26: use legacy type
-            let legacyPaint: SwiftUI.Color._ResFoundColor? = r.getIfPresent(SwiftUIConstants.paintPath, r)
-            self.init(paint: legacyPaint)
+            // Pre-iOS 26 (including iOS 18): try multiple extraction paths
+
+            // First try: extract legacy _ResFoundColor directly
+            if let legacyPaint: SwiftUI.Color._ResFoundColor = r.getIfPresent(SwiftUIConstants.paintPath, r) {
+                self.init(paint: legacyPaint)
+                return
+            }
+
+            // Second try: extract from paint child with color path (iOS 18 structure)
+            if let paintChild = r.childIfPresent(SwiftUIConstants.paintPath) {
+                let paintDecoder = XrayDecoder(subject: paintChild)
+
+                // Try to extract color components directly from paint
+                if let red: Float = try? paintDecoder.extract(SwiftUIConstants.linearRedPath),
+                   let green: Float = try? paintDecoder.extract(SwiftUIConstants.linearGreenPath),
+                   let blue: Float = try? paintDecoder.extract(SwiftUIConstants.linearBluePath),
+                   let alpha: Float = try? paintDecoder.extract(SwiftUIConstants.opacityPath) {
+                    self.init(linearRed: red, linearGreen: green, linearBlue: blue, opacity: alpha)
+                    return
+                }
+
+                // Try color -> base path
+                if let colorChild = paintDecoder.childIfPresent(SwiftUIConstants.colorPath) {
+                    let colorDecoder = XrayDecoder(subject: colorChild)
+
+                    if let baseChild = colorDecoder.childIfPresent(SwiftUIConstants.basePath) {
+                        let baseDecoder = XrayDecoder(subject: baseChild)
+                        let red: Float? = try? baseDecoder.extract(SwiftUIConstants.linearRedPath)
+                        let green: Float? = try? baseDecoder.extract(SwiftUIConstants.linearGreenPath)
+                        let blue: Float? = try? baseDecoder.extract(SwiftUIConstants.linearBluePath)
+                        let alpha: Float? = try? baseDecoder.extract(SwiftUIConstants.opacityPath)
+
+                        self.init(linearRed: red, linearGreen: green, linearBlue: blue, opacity: alpha)
+                        return
+                    }
+                }
+            }
+
+            // Last resort: all nil
+            self.init(linearRed: nil, linearGreen: nil, linearBlue: nil, opacity: nil)
         }
     }
 }

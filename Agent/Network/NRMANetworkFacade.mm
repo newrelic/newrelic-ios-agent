@@ -419,7 +419,9 @@
 }
 
 - (NSString*) crossProcessId {
-    return [[[NRMAHarvestController harvestController] harvester] crossProcessID];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    return harvester ? [harvester crossProcessID] : nil;
 }
 
 @end
