@@ -306,32 +306,49 @@ public class NRMASessionReplay: NSObject {
     }
     
     func getSessionReplayFrames(clear: Bool = true, readOnly: Bool = false) -> [RRWebEventCommon] {
-        var processedFrames: [RRWebEventCommon] = []
-        
-        var currentSize:CGSize = .zero
-        let frames = getAndClearFrames(clear: clear)
-        if !readOnly {
-            sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
-        }
-        for frame in frames {
-            
-            if currentSize != frame.size {
-                currentSize = frame.size
-                let metaEventData = RRWebMetaData(
-                    href: "http://newrelic.com",
-                    width: Int(currentSize.width),
-                    height: Int(currentSize.height)
-                )
-                let metaEvent = MetaEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: metaEventData)
-                processedFrames.append(metaEvent)
+        return frameQueue.sync { [weak self] in
+            guard let self = self else { return [] }
+
+            var processedFrames: [RRWebEventCommon] = []
+            var currentSize: CGSize = .zero
+
+            // Get frames in a thread-safe manner
+            let frames = self.getAndClearFrames(clear: clear)
+
+            // Guard against empty frames to prevent unnecessary processing
+            guard !frames.isEmpty else {
+                return []
             }
-            let newFrame = sessionReplayFrameProcessor.processFrame(frame,readOnly: readOnly)
-            if let newFrame = newFrame {
-                processedFrames.append(newFrame)
+
+            // Reset processor state safely
+            if !readOnly {
+                self.sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
             }
+            // Reserve capacity for better performance
+            processedFrames.reserveCapacity(frames.count * 2) // Estimate for frames + meta events
+
+            for frame in frames {
+                // Check for size changes and add meta event if needed
+                if currentSize != frame.size {
+                    currentSize = frame.size
+                    let metaEventData = RRWebMetaData(
+                        href: "http://newrelic.com",
+                        width: Int(currentSize.width),
+                        height: Int(currentSize.height)
+                    )
+                    let metaEvent = MetaEvent(timestamp: (frame.date.timeIntervalSince1970 * 1000).rounded(), data: metaEventData)
+                    processedFrames.append(metaEvent)
+                }
+
+                // Process frame safely
+                let newFrame = sessionReplayFrameProcessor.processFrame(frame,readOnly: readOnly)
+                if let newFrame = newFrame {
+                    processedFrames.append(newFrame)
+                }
+            }
+
+            return processedFrames
         }
-        
-        return processedFrames
     }
     
     func getSessionReplayTouches(clear: Bool = true) -> [IncrementalEvent] {
