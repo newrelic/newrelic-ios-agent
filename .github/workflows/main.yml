@@ -24,7 +24,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.2"
 
       # - name: Install lcov
       #   run: |
@@ -55,7 +55,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.2"
 
       # - name: Install lcov
       #   run: brew install lcov
@@ -84,7 +84,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.2"
 
       # - name: Install lcov
       #   run: brew install lcov
@@ -117,7 +117,7 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.2"
 
       - name: Install the Apple certificate and provisioning profile
         env:
