@@ -20,6 +20,8 @@ class MetricsConsumer: PerformanceSuiteMetricsReceiver {
 
     let interop = UITestsHelper.isInTests ? UITestsInterop.Server() : nil
     private let metricsFileURL: URL
+    private var metricsLabel: UILabel?
+    private var resourceMonitorTimer: Timer?
 
     init() {
         // Set up metrics file in Documents directory
@@ -29,6 +31,47 @@ class MetricsConsumer: PerformanceSuiteMetricsReceiver {
         // Create empty array if file doesn't exist
         if !FileManager.default.fileExists(atPath: metricsFileURL.path) {
             saveMetrics([])
+        }
+
+        // Always create hidden label for Appium tests (for now)
+        setupMetricsLabel()
+
+        // Start monitoring memory/CPU for performance testing
+        startResourceMonitoring()
+    }
+
+    deinit {
+        resourceMonitorTimer?.invalidate()
+    }
+
+    private func setupMetricsLabel() {
+        // Delay to ensure UI is ready
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            let label = UILabel()
+            label.accessibilityIdentifier = "performance_metrics_json"
+            label.numberOfLines = 0
+            label.text = "[]"  // Start with empty array
+            label.frame = CGRect(x: -1000, y: -1000, width: 10, height: 10)  // Off-screen
+            label.alpha = 0.01  // Nearly invisible
+            label.font = UIFont.systemFont(ofSize: 8)
+
+            // Try multiple ways to add the label
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = scene.windows.first {
+                window.addSubview(label)
+                self.metricsLabel = label
+                NSLog("✅ Metrics label created and added to window")
+            } else if let window = UIApplication.shared.windows.first {
+                window.addSubview(label)
+                self.metricsLabel = label
+                NSLog("✅ Metrics label created and added to first window")
+            } else if let rootVC = UIApplication.shared.windows.first?.rootViewController {
+                rootVC.view.addSubview(label)
+                self.metricsLabel = label
+                NSLog("✅ Metrics label created and added to root view controller")
+            } else {
+                NSLog("❌ Failed to find a place to add metrics label")
+            }
         }
     }
 
@@ -162,6 +205,19 @@ class MetricsConsumer: PerformanceSuiteMetricsReceiver {
             try data.write(to: metricsFileURL)
 
             log("Saved metric to disk: \(metricsFileURL.path)")
+
+            // Update UI label for Appium tests
+            if let label = metricsLabel {
+                if let jsonData = try? JSONSerialization.data(withJSONObject: metrics, options: []),
+                   let jsonString = String(data: jsonData, encoding: .utf8) {
+                    DispatchQueue.main.async {
+                        label.text = jsonString
+                        NSLog("✅ Updated metrics label with %d metrics (%.1f KB)", metrics.count, Double(jsonString.count) / 1024.0)
+                    }
+                }
+            } else {
+                NSLog("⚠️ Metrics label is nil, cannot update UI")
+            }
         } catch {
             log("Error saving metric to disk: \(error)")
         }
@@ -200,5 +256,83 @@ class MetricsConsumer: PerformanceSuiteMetricsReceiver {
 
     func onViewDidDisappear(screen: PerformanceScreen) {
         log("onViewDidDisappear \(screen)")
+    }
+
+    // MARK: - Resource Monitoring (Memory & CPU)
+
+    private func startResourceMonitoring() {
+        // Sample memory/CPU every 2 seconds during performance tests
+        // MUST run on main thread for timer to fire properly
+        DispatchQueue.main.async { [weak self] in
+            self?.resourceMonitorTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+                self?.captureResourceMetrics()
+            }
+            NSLog("🔄 Resource monitoring timer started")
+        }
+    }
+
+    private func captureResourceMetrics() {
+        let memoryMB = getMemoryUsage()
+        let cpuPercent = getCPUUsage()
+
+        let metrics: [String: Any] = [
+            "type": "resourceUsage",
+            "memoryMB": memoryMB,
+            "cpuPercent": cpuPercent
+        ]
+
+        NSLog("📊 Captured resources: Memory=%.2f MB, CPU=%.2f%%", memoryMB, cpuPercent)
+        saveMetricToDisk(metrics)
+    }
+
+    private func getMemoryUsage() -> Double {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+
+        let kerr: kern_return_t = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+
+        if kerr == KERN_SUCCESS {
+            return Double(info.resident_size) / 1024.0 / 1024.0 // Convert to MB
+        }
+        return 0
+    }
+
+    private func getCPUUsage() -> Double {
+        var threadsList: thread_act_array_t?
+        var threadsCount = mach_msg_type_number_t(0)
+        let threadsResult = withUnsafeMutablePointer(to: &threadsList) {
+            $0.withMemoryRebound(to: thread_act_array_t?.self, capacity: 1) {
+                task_threads(mach_task_self_, $0, &threadsCount)
+            }
+        }
+
+        guard threadsResult == KERN_SUCCESS, let threads = threadsList else {
+            return 0
+        }
+
+        var totalCPU = 0.0
+        for index in 0..<Int(threadsCount) {
+            var threadInfo = thread_basic_info()
+            var threadInfoCount = mach_msg_type_number_t(THREAD_INFO_MAX)
+
+            let infoResult = withUnsafeMutablePointer(to: &threadInfo) {
+                $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                    thread_info(threads[index], thread_flavor_t(THREAD_BASIC_INFO), $0, &threadInfoCount)
+                }
+            }
+
+            if infoResult == KERN_SUCCESS {
+                let cpuUsage = Double(threadInfo.cpu_usage) / Double(TH_USAGE_SCALE) * 100.0
+                totalCPU += cpuUsage
+            }
+        }
+
+        vm_deallocate(mach_task_self_, vm_address_t(UInt(bitPattern: threads)), vm_size_t(Int(threadsCount) * MemoryLayout<thread_t>.stride))
+
+        return totalCPU
     }
 }

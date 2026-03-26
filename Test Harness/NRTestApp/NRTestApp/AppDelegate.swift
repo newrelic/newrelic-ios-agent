@@ -13,13 +13,15 @@ import PerformanceSuite
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
+    var metricsConsumer: MetricsConsumer?  // Keep it alive!
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // if use perofrmance sutie
         UITestsHelper.prepareForTestsIfNeeded()
 
-        let metricsConsumer = MetricsConsumer()
+        metricsConsumer = MetricsConsumer()
         do {
-            try PerformanceMonitoring.enable(config: .all(receiver: metricsConsumer), didCrashPreviously: false)
+            try PerformanceMonitoring.enable(config: .all(receiver: metricsConsumer!), didCrashPreviously: false)
         } catch {
             preconditionFailure("Couldn't initialize PerformanceSuite: \(error)")
         }

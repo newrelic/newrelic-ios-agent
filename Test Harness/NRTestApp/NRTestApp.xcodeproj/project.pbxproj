@@ -60,14 +60,14 @@
 		2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD05DF12ADF32D300C0C972 /* harvestConnector.json */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
-		D42ABA222F6DCE9F0058C0B0 /* NewRelic.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */; };
-		D42ABA232F6DCE9F0058C0B0 /* NewRelic.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		D44CB0FE2F6DD32400AF9521 /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = D44CB0FD2F6DD32400AF9521 /* PerformanceSuite */; };
-		D44CB1012F6DD33100AF9521 /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = D44CB1002F6DD33100AF9521 /* GCDWebServer */; };
+		D434C9BB2F732644006A69AE /* NewRelic.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */; };
+		D434C9BC2F732644006A69AE /* NewRelic.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D42ABA212F6DCE9F0058C0B0 /* NewRelic.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D46F92252F6DBAAF00FD2EBE /* UITestsInterop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F92202F6DBAAF00FD2EBE /* UITestsInterop.swift */; };
 		D46F92262F6DBAAF00FD2EBE /* MetricsConsumer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921D2F6DBAAF00FD2EBE /* MetricsConsumer.swift */; };
 		D46F92272F6DBAAF00FD2EBE /* PerformanceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921E2F6DBAAF00FD2EBE /* PerformanceScreen.swift */; };
 		D46F92282F6DBAAF00FD2EBE /* UITestsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F921F2F6DBAAF00FD2EBE /* UITestsHelper.swift */; };
+		D4E955062F75A75D00D858DD /* PerformanceSuite in Frameworks */ = {isa = PBXBuildFile; productRef = D4E955052F75A75D00D858DD /* PerformanceSuite */; };
+		D4E955082F75A80000D858DD /* GCDWebServer in Frameworks */ = {isa = PBXBuildFile; productRef = D4E955072F75A80000D858DD /* GCDWebServer */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
 		F802EE9A2BE0218700AB956F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F802EE992BE0218700AB956F /* Assets.xcassets */; };
@@ -289,13 +289,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		2BE9D6C32A1E90E400A09A98 /* Embed Frameworks */ = {
+		D434C9BD2F732644006A69AE /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D42ABA232F6DCE9F0058C0B0 /* NewRelic.xcframework in Embed Frameworks */,
+				D434C9BC2F732644006A69AE /* NewRelic.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -476,9 +476,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D44CB1012F6DD33100AF9521 /* GCDWebServer in Frameworks */,
-				D44CB0FE2F6DD32400AF9521 /* PerformanceSuite in Frameworks */,
-				D42ABA222F6DCE9F0058C0B0 /* NewRelic.xcframework in Frameworks */,
+				D4E955062F75A75D00D858DD /* PerformanceSuite in Frameworks */,
+				D4E955082F75A80000D858DD /* GCDWebServer in Frameworks */,
+				D434C9BB2F732644006A69AE /* NewRelic.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -880,7 +880,7 @@
 				F8302AF2296F5EFA003EC291 /* Frameworks */,
 				F8302AF3296F5EFA003EC291 /* Resources */,
 				F8302B7A297057F9003EC291 /* Run New Relic dSYM Upload Tool */,
-				2BE9D6C32A1E90E400A09A98 /* Embed Frameworks */,
+				D434C9BD2F732644006A69AE /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1013,8 +1013,8 @@
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
 			packageReferences = (
-				D44CB0FC2F6DD32400AF9521 /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
-				D44CB0FF2F6DD33100AF9521 /* XCRemoteSwiftPackageReference "GCDWebServer" */,
+				D4E955042F75A75D00D858DD /* XCRemoteSwiftPackageReference "perfsuite-ios" */,
+				D4E955062F75A80000D858DD /* XCRemoteSwiftPackageReference "GCDWebServer" */,
 			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
@@ -1736,6 +1736,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_ENTITLEMENTS = NRTestApp/NRTestApp.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
@@ -1745,6 +1746,7 @@
 				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestApp/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -1758,8 +1760,9 @@
 				MARKETING_VERSION = 4.7;
 				OTHER_LDFLAGS = "";
 				"OTHER_SWIFT_FLAGS[arch=*]" = "-DDEBUG_IMPORT";
-				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRApp.bitcode;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRTestApp5436;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -1780,13 +1783,11 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = NO;
 				CODE_SIGN_ENTITLEMENTS = NRTestApp/NRTestApp.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 13;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
+				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_APP_SANDBOX = YES;
 				"ENABLE_APP_SANDBOX[sdk=*]" = NO;
 				"ENABLE_APP_SANDBOX[sdk=macosx*]" = YES;
@@ -1794,6 +1795,7 @@
 				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestApp/Info.plist;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -1806,11 +1808,9 @@
 				);
 				MARKETING_VERSION = 4.7;
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRApp.bitcode;
+				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRTestApp5436;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = iOSAgentiOSDist;
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = iOSAgentDist;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -2096,7 +2096,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		D44CB0FC2F6DD32400AF9521 /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
+		D4E955042F75A75D00D858DD /* XCRemoteSwiftPackageReference "perfsuite-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/bookingcom/perfsuite-ios";
 			requirement = {
@@ -2104,25 +2104,25 @@
 				minimumVersion = 1.6.0;
 			};
 		};
-		D44CB0FF2F6DD33100AF9521 /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
+		D4E955062F75A80000D858DD /* XCRemoteSwiftPackageReference "GCDWebServer" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swisspol/GCDWebServer";
+			repositoryURL = "https://github.com/yene/GCDWebServer";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 3.5.4;
+				minimumVersion = 3.5.7;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		D44CB0FD2F6DD32400AF9521 /* PerformanceSuite */ = {
+		D4E955052F75A75D00D858DD /* PerformanceSuite */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D44CB0FC2F6DD32400AF9521 /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
+			package = D4E955042F75A75D00D858DD /* XCRemoteSwiftPackageReference "perfsuite-ios" */;
 			productName = PerformanceSuite;
 		};
-		D44CB1002F6DD33100AF9521 /* GCDWebServer */ = {
+		D4E955072F75A80000D858DD /* GCDWebServer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = D44CB0FF2F6DD33100AF9521 /* XCRemoteSwiftPackageReference "GCDWebServer" */;
+			package = D4E955062F75A80000D858DD /* XCRemoteSwiftPackageReference "GCDWebServer" */;
 			productName = GCDWebServer;
 		};
 /* End XCSwiftPackageProductDependency section */
