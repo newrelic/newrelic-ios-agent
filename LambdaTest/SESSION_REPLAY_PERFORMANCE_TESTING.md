@@ -10,28 +10,40 @@ export LT_USERNAME="your-username"
 export LT_ACCESSKEY="your-access-key"
 export LT_APP_ID="your-app-id"
 
-# Run baseline test
-BASELINE=1 npx wdio LambdaTest/wdio-config-ios-baseline.js
+# Run all three tests
+NO_AGENT=1 npx wdio LambdaTest/wdio-config-ios-no-agent.js     # No agent test
+BASELINE=1 npx wdio LambdaTest/wdio-config-ios-baseline.js     # Agent only test
+npx wdio LambdaTest/wdio-config-ios-session-replay.js          # Agent + Session Replay test
 
-# Run Session Replay test
-npx wdio LambdaTest/wdio-config-ios-session-replay.js
-
-# Compare results
+# Compare results (two-way)
 node LambdaTest/scripts/compare-session-replay-overhead.js \
   LambdaTest/baseline_results.json \
   LambdaTest/session_replay_results.json
 
-# View report
-cat LambdaTest/comparison-report.txt
+# Or compare all three (three-way)
+node LambdaTest/scripts/compare-three-way-overhead.js \
+  LambdaTest/no_agent_results.json \
+  LambdaTest/baseline_results.json \
+  LambdaTest/session_replay_results.json
+
+# View reports
+cat LambdaTest/comparison-report.txt          # Two-way comparison
+cat LambdaTest/three-way-comparison-report.txt # Three-way comparison
 ```
 
 Results are automatically saved to JSON files. No manual copying required!
 
 ## Overview
 
-Session Replay performance testing compares two test runs:
-1. **Baseline**: App running WITHOUT Session Replay enabled
-2. **Session Replay**: App running WITH Session Replay enabled
+Session Replay performance testing compares three test configurations:
+1. **No Agent**: App running WITHOUT New Relic agent (pure baseline)
+2. **Agent Only (Baseline)**: App running WITH agent, WITHOUT Session Replay enabled
+3. **Agent + Session Replay**: App running WITH both agent AND Session Replay enabled
+
+This allows us to measure:
+- **Agent overhead**: Impact of the New Relic agent itself (vs no agent)
+- **Session Replay overhead**: Incremental impact of Session Replay (on top of agent)
+- **Total overhead**: Combined impact of agent + Session Replay (vs no agent)
 
 We measure and compare:
 - **Memory usage** (average and peak)
@@ -118,9 +130,25 @@ Alternatively, you can upload via the LambdaTest web interface:
 
 ## Running the Tests
 
-### Step 1: Run Baseline Test (Session Replay OFF)
+### Step 1: Run No Agent Test (Pure Baseline)
 
-This test runs the app WITHOUT Session Replay to establish baseline metrics.
+This test runs the app WITHOUT the New Relic agent to establish a pure baseline.
+
+**Important:** Set `NO_AGENT=1` environment variable so the test saves results correctly.
+
+```bash
+cd LambdaTest
+NO_AGENT=1 npx wdio wdio-config-ios-no-agent.js
+```
+
+The test will:
+- Perform intensive UI operations (5 navigation cycles, scrolling, image loading, 3 SwiftUI interactions)
+- Collect memory and CPU metrics every 2 seconds
+- **Automatically save results** to `no_agent_results.json`
+
+### Step 2: Run Baseline Test (Agent Only, Session Replay OFF)
+
+This test runs the app WITH the agent but WITHOUT Session Replay to measure agent overhead.
 
 **Important:** Set `BASELINE=1` environment variable so the test saves results correctly.
 
@@ -130,13 +158,13 @@ BASELINE=1 npx wdio wdio-config-ios-baseline.js
 ```
 
 The test will:
-- Perform intensive UI operations (5 navigation cycles, scrolling, image loading, SwiftUI interactions)
+- Perform the same intensive UI operations
 - Collect memory and CPU metrics every 2 seconds
 - **Automatically save results** to `baseline_results.json`
 
-### Step 2: Run Session Replay Test (Session Replay ON)
+### Step 3: Run Session Replay Test (Agent + Session Replay ON)
 
-This test runs the app WITH Session Replay enabled to measure overhead.
+This test runs the app WITH both agent AND Session Replay enabled to measure total overhead.
 
 ```bash
 cd LambdaTest
@@ -146,9 +174,11 @@ npx wdio wdio-config-ios-session-replay.js
 The test performs the same intensive UI operations and collects the same metrics.
 - **Automatically saves results** to `session_replay_results.json`
 
-### Step 3: Compare Results
+### Step 4: Compare Results
 
-Use the comparison script to analyze the overhead:
+#### Option A: Two-Way Comparison (Agent vs Agent+SR)
+
+Compare agent-only vs agent+session-replay to measure Session Replay's incremental overhead:
 
 ```bash
 node scripts/compare-session-replay-overhead.js baseline_results.json session_replay_results.json
@@ -162,6 +192,22 @@ The script will:
 - Output performance metrics comparison (startup time, TTI)
 - Output health check results (hangs, leaks)
 - Provide overhead summary with verdict (PASS/FAIL)
+
+#### Option B: Three-Way Comparison (No Agent vs Agent vs Agent+SR)
+
+Compare all three configurations to see both agent and Session Replay overhead:
+
+```bash
+node scripts/compare-three-way-overhead.js no_agent_results.json baseline_results.json session_replay_results.json
+```
+
+The script will:
+- Display detailed three-way comparison to console
+- **Automatically save report** to `three-way-comparison-report.txt`
+- Show agent overhead (vs no agent)
+- Show Session Replay overhead (on top of agent)
+- Show total overhead (vs no agent)
+- Provide comprehensive overhead analysis
 
 ## Acceptable Overhead Thresholds
 
@@ -216,14 +262,18 @@ All metrics are saved to a hidden UILabel with accessibility ID `performance_met
 ### 4. Automatic Results Storage
 
 The test automatically detects which configuration is running:
+- **No Agent test**: Checks for `NO_AGENT=1` environment variable
 - **Baseline test**: Checks for `BASELINE=1` environment variable
 - **Session Replay test**: No environment variable set
 
 Based on detection, results are automatically saved:
-- Baseline → `baseline_results.json` with `sessionReplayEnabled: false`
-- Session Replay → `session_replay_results.json` with `sessionReplayEnabled: true`
+- No Agent → `no_agent_results.json` with `agentEnabled: false, sessionReplayEnabled: false`
+- Baseline → `baseline_results.json` with `agentEnabled: true, sessionReplayEnabled: false`
+- Session Replay → `session_replay_results.json` with `agentEnabled: true, sessionReplayEnabled: true`
 
-The comparison script reads both JSON files and saves a detailed report to `comparison-report.txt`.
+The comparison scripts read the JSON files and save detailed reports:
+- Two-way comparison → `comparison-report.txt`
+- Three-way comparison → `three-way-comparison-report.txt`
 
 ### 5. Test Scenarios
 
@@ -231,9 +281,9 @@ The enhanced test performs intensive UI operations to stress test Session Replay
 - **Navigation stress test**: 5 iterations of screen navigation
 - **Infinite scroll test**: 4 scrolls down + 2 scrolls up to test scroll capture
 - **Image collection scrolling**: 4 scrolls through image collections
-- **SwiftUI interactions**: 2 examples with up to 3 button taps each + scrolling within SwiftUI views
+- **SwiftUI interactions**: 3 examples with up to 3 button taps each + scrolling within SwiftUI views
 
-Total test duration: ~5 minutes with continuous monitoring (~147-148 metric samples).
+Total test duration: ~5 minutes with continuous monitoring (~145-150 metric samples).
 
 ## Interpreting Results
 
@@ -298,8 +348,8 @@ Average CPU:
 
 To integrate with GitHub Actions or other CI/CD:
 
-1. Run both tests sequentially (results auto-save to JSON files)
-2. Run comparison script (auto-saves report to txt file)
+1. Run all three tests sequentially (results auto-save to JSON files)
+2. Run comparison scripts (auto-save reports to txt files)
 3. Upload results as artifacts or post to PRs
 
 Example:
@@ -309,27 +359,31 @@ export LT_USERNAME="your-username"
 export LT_ACCESSKEY="your-access-key"
 export LT_APP_ID="your-app-id"
 
-# Run baseline (automatically saves to baseline_results.json)
-BASELINE=1 npx wdio wdio-config-ios-baseline.js
+# Run all three tests (automatically save to JSON files)
+NO_AGENT=1 npx wdio wdio-config-ios-no-agent.js           # → no_agent_results.json
+BASELINE=1 npx wdio wdio-config-ios-baseline.js           # → baseline_results.json
+npx wdio wdio-config-ios-session-replay.js                # → session_replay_results.json
 
-# Run Session Replay test (automatically saves to session_replay_results.json)
-npx wdio wdio-config-ios-session-replay.js
-
-# Compare (automatically saves to comparison-report.txt)
-node scripts/compare-session-replay-overhead.js baseline_results.json session_replay_results.json
+# Compare (automatically saves to report files)
+node scripts/compare-session-replay-overhead.js baseline_results.json session_replay_results.json  # → comparison-report.txt
+node scripts/compare-three-way-overhead.js no_agent_results.json baseline_results.json session_replay_results.json  # → three-way-comparison-report.txt
 
 # Upload artifacts
+# - no_agent_results.json
 # - baseline_results.json
 # - session_replay_results.json
 # - comparison-report.txt
+# - three-way-comparison-report.txt
 ```
 
 ## Files
 
-- `wdio-config-ios-baseline.js`: WebDriverIO config for baseline test
+- `wdio-config-ios-no-agent.js`: WebDriverIO config for no agent test
+- `wdio-config-ios-baseline.js`: WebDriverIO config for agent-only baseline test
 - `wdio-config-ios-session-replay.js`: WebDriverIO config for Session Replay test
 - `tests/session-replay-performance.test.js`: Test suite with intensive UI operations
-- `scripts/compare-session-replay-overhead.js`: Comparison and analysis script
+- `scripts/compare-session-replay-overhead.js`: Two-way comparison script (baseline vs session replay)
+- `scripts/compare-three-way-overhead.js`: Three-way comparison script (no agent vs agent vs session replay)
 - `Test Harness/NRTestApp/NRTestApp/MetricsConsumer.swift`: Metrics collection implementation
 - `Test Harness/NRTestApp/NRTestApp/AppDelegate.swift`: Session Replay toggle logic
 

@@ -87,10 +87,6 @@ describe("Session Replay Performance Impact", () => {
       await driver.back();
       await helloWorldText.waitForExist({ timeout: 5000 });
 
-      // Scroll back to top of main screen
-      await driver.execute('mobile: scroll', { direction: 'up' });
-      await driver.pause(500);
-
       console.log('  Infinite scroll test completed');
     } catch (e) {
       console.log('  Infinite scroll not available, skipping:', e.message);
@@ -126,10 +122,6 @@ describe("Session Replay Performance Impact", () => {
       await driver.back();
       await helloWorldText.waitForExist({ timeout: 5000 });
 
-      // Scroll back to top of main screen
-      await driver.execute('mobile: scroll', { direction: 'up' });
-      await driver.pause(500);
-
       console.log('  Image collection test completed');
     } catch (e) {
       console.log('  Image collection not available, skipping:', e.message);
@@ -139,20 +131,19 @@ describe("Session Replay Performance Impact", () => {
     await driver.pause(3000);
 
     // === Phase 4: SwiftUI Interactions ===
-    console.log('Phase 4: SwiftUI interactions (2 examples)');
+    console.log('Phase 4: SwiftUI interactions (3 examples)');
 
-    // Navigate to 2 different SwiftUI examples, starting from main each time
-    for (let exampleNum = 0; exampleNum < 2; exampleNum++) {
+    // Navigate to 3 SwiftUI examples
+    for (let exampleNum = 0; exampleNum < 3; exampleNum++) {
       try {
-        // Scroll up to make sure SwiftUI button is visible
-        await driver.execute('mobile: scroll', { direction: 'up' });
-        await driver.pause(500);
-
-        // Click SwiftUI from main screen
+        // Find and click SwiftUI button from main screen (like Phase 2 and 3)
+        console.log(`    Looking for SwiftUI button`);
         const swiftUIButton = await $('//XCUIElementTypeCell[.//XCUIElementTypeStaticText[@name="SwiftUI"]]');
         await swiftUIButton.waitForExist({ timeout: 5000 });
+
+        console.log(`    Clicking SwiftUI button`);
         await swiftUIButton.click();
-        await driver.pause(1000);
+        await driver.pause(1500);
 
         // Get all example buttons in the SwiftUI list
         const buttons = await $$("XCUIElementTypeButton");
@@ -167,13 +158,19 @@ describe("Session Replay Performance Impact", () => {
 
           // Interact with elements in the example
           try {
-            const interactiveElements = await $$("XCUIElementTypeButton");
+            const allButtons = await $$("XCUIElementTypeButton");
+            const interactiveElements = allButtons.slice(2); // Skip back/nav buttons
             if (interactiveElements.length > 0) {
               // Click a few interactive elements
               for (let i = 0; i < Math.min(3, interactiveElements.length); i++) {
-                if (await interactiveElements[i].isDisplayed()) {
-                  await interactiveElements[i].click();
-                  await driver.pause(300);
+                try {
+                  if (await interactiveElements[i].isDisplayed()) {
+                    await interactiveElements[i].click();
+                    await driver.pause(300);
+                  }
+                } catch (e) {
+                  // Skip if element not clickable
+                  console.log(`      Element ${i} not clickable, skipping`);
                 }
               }
             }
@@ -186,8 +183,10 @@ describe("Session Replay Performance Impact", () => {
           }
 
           // Go back to main screen
+          console.log(`    Returning to main screen`);
           await driver.back();
           await helloWorldText.waitForExist({ timeout: 5000 });
+          await driver.pause(1000); // Extra wait to let screen settle
 
           console.log(`    SwiftUI example ${exampleNum + 1} completed`);
         }
@@ -197,7 +196,10 @@ describe("Session Replay Performance Impact", () => {
         try {
           await driver.back();
           await helloWorldText.waitForExist({ timeout: 5000 });
-        } catch {}
+          await driver.pause(1000);
+        } catch (backError) {
+          console.log(`    Could not return to main screen: ${backError.message}`);
+        }
       }
     }
 
@@ -303,10 +305,12 @@ describe("Session Replay Performance Impact", () => {
     expect(memoryLeaks.length).toBe(0);
 
     // === Save Summary for Comparison ===
-    // Detect test type: BASELINE env var is set when running baseline test
+    // Detect test type based on environment variables
+    const isNoAgent = process.env.NO_AGENT === '1';
     const isBaseline = process.env.BASELINE === '1';
     const summary = {
-      sessionReplayEnabled: !isBaseline,
+      agentEnabled: !isNoAgent,
+      sessionReplayEnabled: !isBaseline && !isNoAgent,
       testDuration: resourceMetrics.length * 2, // 2 seconds per sample
       resourceMetrics: {
         count: resourceMetrics.length,
@@ -335,8 +339,15 @@ describe("Session Replay Performance Impact", () => {
     console.log('\n=== TEST SUMMARY ===');
     console.log(JSON.stringify(summary, null, 2));
 
-    // Save results to file
-    const filename = isBaseline ? 'baseline_results.json' : 'session_replay_results.json';
+    // Save results to file based on test type
+    let filename;
+    if (isNoAgent) {
+      filename = 'no_agent_results.json';
+    } else if (isBaseline) {
+      filename = 'baseline_results.json';
+    } else {
+      filename = 'session_replay_results.json';
+    }
     const filepath = path.join(__dirname, '..', filename);
 
     try {
