@@ -7060,13 +7060,14 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
 				CURRENT_PROJECT_VERSION = 7.7.0;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 7.7.0;
