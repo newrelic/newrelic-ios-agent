@@ -18,7 +18,9 @@ class AttributedTextTestViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+#if os(iOS)
         view.backgroundColor = .systemBackground
+#endif
         title = "Attributed Text Test"
 
         setupScrollView()
@@ -286,8 +288,9 @@ class AttributedTextTestViewController: UIViewController {
     private func createComplexTextField() -> UITextField {
         let textField = UITextField()
         textField.borderStyle = .roundedRect
+#if os(iOS)
         textField.backgroundColor = .systemBackground
-
+#endif
         // Attributed placeholder
         let placeholderAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.italicSystemFont(ofSize: 14),
@@ -316,10 +319,12 @@ class AttributedTextTestViewController: UIViewController {
 
     private func createComplexTextView() -> UITextView {
         let textView = UITextView()
+#if os(iOS)
         textView.isEditable = true
+        textView.backgroundColor = .secondarySystemBackground
+#endif
         textView.isScrollEnabled = false
         textView.font = UIFont.systemFont(ofSize: 16)
-        textView.backgroundColor = .secondarySystemBackground
         textView.layer.cornerRadius = 8
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
 

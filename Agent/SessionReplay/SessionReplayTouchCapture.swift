@@ -76,12 +76,46 @@ class SessionReplayTouchCapture: NSObject {
         guard let view = view else {
             return true
         }
-        
+
+        // Check if the view or any ancestor is blocked - block touches for blocked views
+        if shouldBlockTouchesForView(view) {
+            return true
+        }
+
+        // Check for explicit view-level maskAllUserTouches setting
+        if let maskAllUserTouches = view.maskAllUserTouches {
+            return maskAllUserTouches
+        }
+
+        // Check for explicit session replay mask state
         if let maskState = view.sessionReplayMaskState {
             return maskState
         }
-        
+
+        // Fall back to global configuration
         return NRMAHarvestController.configuration()?.session_replay_maskAllUserTouches ?? true
+    }
+
+    // Checks if touches should be blocked due to blockView settings on this view or ancestors
+    private func shouldBlockTouchesForView(_ view: UIView) -> Bool {
+        // Check current view for explicit blockView flag
+        if let blockView = view.blockView, blockView {
+            return true
+        }
+
+        // Check current view for "nr-block" accessibility identifier
+        if let accessibilityId = view.accessibilityIdentifier,
+           accessibilityId.count > 0,
+           accessibilityId == "nr-block" || accessibilityId.hasSuffix(".nr-block") {
+            return true
+        }
+
+        // Recursively check parent view hierarchy
+        if let parentView = view.superview {
+            return shouldBlockTouchesForView(parentView)
+        }
+
+        return false
     }
     
     public func resetEvents() {

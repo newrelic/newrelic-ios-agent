@@ -37,7 +37,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
             maskApplicationText: nil,
             maskUserInputText: nil,
             maskAllImages: nil,
-            maskAllUserTouches: isMasked,
+            maskAllUserTouches: isMasked, blockView: nil,
             sessionReplayIdentifier: nil
         )
     }
@@ -78,7 +78,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         XCTAssertEqual(thingy.viewDetails.viewId, 42)
         XCTAssertFalse(thingy.isMasked)
-        XCTAssertFalse(thingy.shouldRecordSubviews)
+        XCTAssertTrue(thingy.shouldRecordSubviews)
         XCTAssertTrue(thingy.subviews.isEmpty)
     }
 

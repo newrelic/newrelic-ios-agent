@@ -20,6 +20,7 @@
 #define INVALID_AGENT_ID       450
 #define UNSUPPORTED_MEDIA_TYPE 415
 #define UNKNOWN                 -1
+#define ZERO_STATUS_CODE         0
 
 @interface NRMAHarvestResponse : NSObject
 {
