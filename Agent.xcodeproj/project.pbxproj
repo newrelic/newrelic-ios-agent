@@ -1034,6 +1034,7 @@
 		2BDCA8AB2A8C41160005740D /* NRMASAM.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA8A92A8C41160005740D /* NRMASAM.mm */; };
 		2BDCA8B32A8C43080005740D /* NRMASAMTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA8B02A8C43040005740D /* NRMASAMTest.mm */; };
 		2BDCA8B42A8C43080005740D /* NRMASAMTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2BDCA8B02A8C43040005740D /* NRMASAMTest.mm */; };
+		2BEB15B42F4E0C4A00AD7A2B /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 2BEB15B32F4E0C4A00AD7A2B /* SocketIO */; };
 		2BF42C6428B80B82006E9C27 /* NRMASysctlBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */; };
 		2BF42C6528B80B82006E9C27 /* NRMASysctlBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BF42C6228B80B82006E9C27 /* NRMASysctlBinding.h */; };
 		2BF42C6628B80B82006E9C27 /* NRMASysctlBinding.c in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6328B80B82006E9C27 /* NRMASysctlBinding.c */; };
@@ -2785,6 +2786,7 @@
 				34C18551292464E500F10825 /* Hex.framework in Frameworks */,
 				34C18552292464E500F10825 /* JSON.framework in Frameworks */,
 				34C18553292464E500F10825 /* Utilities.framework in Frameworks */,
+				2BEB15B42F4E0C4A00AD7A2B /* SocketIO in Frameworks */,
 				3478A8A426B36F920056F3B3 /* SystemConfiguration.framework in Frameworks */,
 				3478A8AA26B36FB90056F3B3 /* libc++.tbd in Frameworks */,
 				34731AF826B372FE00CE568A /* libCrashReporter.a in Frameworks */,
@@ -5182,6 +5184,9 @@
 				Base,
 			);
 			mainGroup = 021A15B024C9EEE700E8DFD5;
+			packageReferences = (
+				2BEB15B22F4E0C4A00AD7A2B /* XCRemoteSwiftPackageReference "socket" */,
+			);
 			productRefGroup = 021A15BB24C9EEE700E8DFD5 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -7715,6 +7720,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2BEB15B22F4E0C4A00AD7A2B /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2BEB15B32F4E0C4A00AD7A2B /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2BEB15B22F4E0C4A00AD7A2B /* XCRemoteSwiftPackageReference "socket" */;
+			productName = SocketIO;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 021A15B124C9EEE700E8DFD5 /* Project object */;
 }
