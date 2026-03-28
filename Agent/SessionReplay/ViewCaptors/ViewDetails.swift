@@ -110,7 +110,14 @@ struct ViewDetails {
         backgroundColor = view.backgroundColor
         alpha = view.alpha
         isHidden = view.isHidden
-        cornerRadius = view.layer.cornerRadius
+        // Enhanced corner radius detection for UIKit
+        // Always prioritize explicit layer.cornerRadius first
+        if view.layer.cornerRadius > 0 {
+            cornerRadius = view.layer.cornerRadius
+        } else {
+            // Fall back to component-based detection if no explicit corner radius
+            cornerRadius = CornerRadiusExtractor.detectUIKitComponentType(view: view)
+        }
         borderWidth = view.layer.borderWidth
 
         // Checking if we have a border, because asking for the layer's

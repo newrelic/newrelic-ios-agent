@@ -199,6 +199,11 @@ final class UIHostingViewRecordOrchestrator {
                 case .clip(let path, _):
                     let clipRect = nextContext.convert(frame: path.boundingRect)
                     nextContext.clip = nextContext.clip.intersection(clipRect)
+
+                    // Extract corner radius from clipping path
+                    if let extractedCornerRadius = CornerRadiusExtractor.extractCornerRadius(from: path) {
+                        nextContext.cornerRadius = extractedCornerRadius
+                    }
                 case .filter(.colorMultiply(let color)):
                     nextContext.setTintColor(from: color)
                 case .identify, .filter, .unknown:
@@ -236,12 +241,39 @@ final class UIHostingViewRecordOrchestrator {
         let frame = baseContext.convert(frame: item.frame)
         var viewName = "SwiftUIView"
 
-        func makeDetails(widthOffset: CGFloat = 0) -> ViewDetails {
+        func makeDetails(widthOffset: CGFloat = 0, color: Bool = false) -> ViewDetails {
                     let adjustedFrame = CGRect(x: frame.origin.x,
                                                y: frame.origin.y,
                                                width: frame.size.width + widthOffset,
                                                height: frame.size.height)
-                    
+
+                    // Enhanced corner radius detection
+                    var effectiveCornerRadius = viewAttributes.layerCornerRadius
+
+                    // If no explicit corner radius, try context-extracted radius
+                    if effectiveCornerRadius == 0 && baseContext.cornerRadius > 0 {
+                        effectiveCornerRadius = baseContext.cornerRadius
+
+                    }
+
+                    // If still no corner radius, use component defaults
+                    if effectiveCornerRadius == 0 {
+                        effectiveCornerRadius = CornerRadiusExtractor.detectComponentType(from: viewName)
+                    }
+
+                    // Additional check for SwiftUI content-based detection
+                    if effectiveCornerRadius == 0 {
+                        let contentTypeHint = String(describing: content.value)
+                        effectiveCornerRadius = CornerRadiusExtractor.detectCornerRadiusFromContent(
+                            contentType: contentTypeHint,
+                            parentViewName: viewName
+                        )
+                    }
+
+            if color && effectiveCornerRadius > 0.0 {
+                effectiveCornerRadius = effectiveCornerRadius + 10.0
+            }
+            
                     return ViewDetails(frame: adjustedFrame,
                                 clip: viewAttributes.clip,
                                 backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
@@ -249,7 +281,7 @@ final class UIHostingViewRecordOrchestrator {
                                 isHidden: viewAttributes.isHidden,
                                 viewName: viewName,
                                 parentId: parentId,
-                                cornerRadius: viewAttributes.layerCornerRadius,
+                                cornerRadius: effectiveCornerRadius,
                                 borderWidth: viewAttributes.layerBorderWidth,
                                 borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
                                 viewId: contentId,
@@ -306,7 +338,8 @@ final class UIHostingViewRecordOrchestrator {
         case let SwiftUIDisplayList.Content.Value.color(colorData):
             contentId = getContentId(for: content, identity: item.identity)
             viewName = "SwiftUIColorView"
-            var details = makeDetails()
+            var details = makeDetails(color: true)
+
             // Convert the SwiftUI color data to UIColor for the background
             details.backgroundColor = colorData.uiColor
             return UIViewThingy(viewDetails: details)

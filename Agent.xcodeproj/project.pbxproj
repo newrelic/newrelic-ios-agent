@@ -890,6 +890,9 @@
 		2B3493642E8E1440006DE9D0 /* XrayDecoder+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */; };
 		2B3493662E8E1F5A006DE9D0 /* SwiftUIStyledTextRes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493652E8E1F56006DE9D0 /* SwiftUIStyledTextRes.swift */; };
 		2B3493682E8EE257006DE9D0 /* RandomString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493672E8EE254006DE9D0 /* RandomString.swift */; };
+		2B3ACCA72F71F9B600895B02 /* CornerRadiusExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3ACCA62F71F9B600895B02 /* CornerRadiusExtractor.swift */; };
+		2B3ACCA82F71F9B600895B02 /* CornerRadiusExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3ACCA62F71F9B600895B02 /* CornerRadiusExtractor.swift */; };
+		2B3ACCA92F71F9B600895B02 /* CornerRadiusExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3ACCA62F71F9B600895B02 /* CornerRadiusExtractor.swift */; };
 		2B3BA83D2EF1C47E007B798A /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
 		2B3BA8512EF1C56D007B798A /* SessionReplayRecordingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */; };
 		2B3BA8522EF1C7B0007B798A /* SessionReplayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF472D4C4BEE00BF5BED /* SessionReplayFrame.swift */; };
@@ -2579,6 +2582,7 @@
 		2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XrayDecoder+Navigation.swift"; sourceTree = "<group>"; };
 		2B3493652E8E1F56006DE9D0 /* SwiftUIStyledTextRes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIStyledTextRes.swift; sourceTree = "<group>"; };
 		2B3493672E8EE254006DE9D0 /* RandomString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomString.swift; sourceTree = "<group>"; };
+		2B3ACCA62F71F9B600895B02 /* CornerRadiusExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CornerRadiusExtractor.swift; sourceTree = "<group>"; };
 		2B4226E529DB99740068BB8A /* NRMAHTTPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHTTPUtilitiesTests.m; sourceTree = "<group>"; };
 		2B5814382E87163A005D62D4 /* XrayConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XrayConvertible.swift; sourceTree = "<group>"; };
 		2B58144F2E87218F005D62D4 /* SVGStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGStrings.swift; sourceTree = "<group>"; };
@@ -4056,6 +4060,7 @@
 		2B0340982E8B0BE600182A70 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				2B3ACCA62F71F9B600895B02 /* CornerRadiusExtractor.swift */,
 				2B3493672E8EE254006DE9D0 /* RandomString.swift */,
 				2B3493612E8E12DE006DE9D0 /* VCExtractor.swift */,
 				2B3493592E8DBD24006DE9D0 /* SwiftUIAlignment.swift */,
@@ -5941,6 +5946,7 @@
 				02FF482924DB5BA500115469 /* NRMAFlags.m in Sources */,
 				F891A6BE2CB6F5C1007675F4 /* NRAutoLogCollector.m in Sources */,
 				F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */,
+				2B3ACCA72F71F9B600895B02 /* CornerRadiusExtractor.swift in Sources */,
 				02FF48D924DC622700115469 /* NRMACrashDataWriter.m in Sources */,
 				02FF487224DC618F00115469 /* NRGCDOverride.m in Sources */,
 				F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */,
@@ -6159,6 +6165,7 @@
 				2B570A772EF0C469007D9E39 /* XrayDecoder+Navigation.swift in Sources */,
 				02FF4C0C24E3201400115469 /* NRMAHarvestController.m in Sources */,
 				02FF4C0D24E3201400115469 /* NRMADEBUG_Reachability.m in Sources */,
+				2B3ACCA82F71F9B600895B02 /* CornerRadiusExtractor.swift in Sources */,
 				02FF4C0E24E3201400115469 /* NRMAHTTPTransactionMeasurement.m in Sources */,
 				2B570A682EF0C356007D9E39 /* IncrementalDiffGenerator.swift in Sources */,
 				02FF4C0F24E3201400115469 /* NRMACrashReport_AppInfo.m in Sources */,
@@ -6600,6 +6607,7 @@
 				348232BE2BC5F1F60070FAC3 /* NRMAHarvesterConnection.m in Sources */,
 				348232FD2BC5F20B0070FAC3 /* NRMAHarvestData.m in Sources */,
 				3482324B2BC5F1070070FAC3 /* W3CTraceParent.mm in Sources */,
+				2B3ACCA92F71F9B600895B02 /* CornerRadiusExtractor.swift in Sources */,
 				348233482BC5F2710070FAC3 /* NRMAURLSessionTaskDelegate.m in Sources */,
 				348232832BC5F1AE0070FAC3 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
 				348233B02BC5F32B0070FAC3 /* NewRelic.m in Sources */,

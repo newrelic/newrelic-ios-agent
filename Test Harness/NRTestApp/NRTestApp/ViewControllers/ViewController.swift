@@ -285,6 +285,9 @@ class ViewController: UIViewController {
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
+
+        // Corner Radius Testing
+        options.append(UtilOption(title: "🔴 UIKit Corner Radius Playground", handler: { [self] in showUIKitCornerRadiusPlayground() }))
     }
     
     func utilitiesAction() {
@@ -420,6 +423,13 @@ class ViewController: UIViewController {
     func tintedImagesViewController() {
 #if os(iOS)
         coordinator?.showTintedImagesViewController()
+#endif
+    }
+
+    func showUIKitCornerRadiusPlayground() {
+#if os(iOS)
+        let playgroundController = UIKitCornerRadiusPlaygroundController()
+        navigationController?.pushViewController(playgroundController, animated: true)
 #endif
     }
 }
