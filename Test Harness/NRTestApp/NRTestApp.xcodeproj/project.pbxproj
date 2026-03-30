@@ -156,6 +156,12 @@
 		F8BF16432F3F6D9F00EF5628 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16342F3F6D9F00EF5628 /* Views.swift */; };
 		F8BF16442F3F6D9F00EF5628 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162F2F3F6D9F00EF5628 /* model.swift */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
+		F8D23CB42F7727D7000FFD31 /* SwiftUITabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */; };
+		F8D23CB52F7727D7000FFD31 /* FormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB02F7727D7000FFD31 /* FormView.swift */; };
+		F8D23CB62F7727D7000FFD31 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB12F7727D7000FFD31 /* SettingsView.swift */; };
+		F8D23CB72F7727D7000FFD31 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAF2F7727D7000FFD31 /* DataModels.swift */; };
+		F8D23CB82F7727D7000FFD31 /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */; };
+		F8D23CB92F7727D7000FFD31 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */; };
 		F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
 		F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
@@ -449,6 +455,12 @@
 		F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSearchView.swift; sourceTree = "<group>"; };
 		F8BF16342F3F6D9F00EF5628 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
+		F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartsView.swift; sourceTree = "<group>"; };
+		F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		F8D23CAF2F7727D7000FFD31 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
+		F8D23CB02F7727D7000FFD31 /* FormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormView.swift; sourceTree = "<group>"; };
+		F8D23CB12F7727D7000FFD31 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITabBar.swift; sourceTree = "<group>"; };
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
 		F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimePickerViewController.swift; sourceTree = "<group>"; };
@@ -529,6 +541,7 @@
 				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
 				F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */,
+				F8D23CB32F7727D7000FFD31 /* UITabBarView */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
 				F8BF14A32F35345500EF5628 /* AttributedTextView.swift */,
 				F8672A552EAA69820055FA51 /* SimpleScrollView.swift */,
@@ -820,6 +833,19 @@
 				F8BF16342F3F6D9F00EF5628 /* Views.swift */,
 			);
 			path = NewRelicSessionReplay;
+			sourceTree = "<group>";
+		};
+		F8D23CB32F7727D7000FFD31 /* UITabBarView */ = {
+			isa = PBXGroup;
+			children = (
+				F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */,
+				F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */,
+				F8D23CAF2F7727D7000FFD31 /* DataModels.swift */,
+				F8D23CB02F7727D7000FFD31 /* FormView.swift */,
+				F8D23CB12F7727D7000FFD31 /* SettingsView.swift */,
+				F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */,
+			);
+			path = UITabBarView;
 			sourceTree = "<group>";
 		};
 		F8F5D8212BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests */ = {
@@ -1320,6 +1346,12 @@
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */,
+				F8D23CB42F7727D7000FFD31 /* SwiftUITabBar.swift in Sources */,
+				F8D23CB52F7727D7000FFD31 /* FormView.swift in Sources */,
+				F8D23CB62F7727D7000FFD31 /* SettingsView.swift in Sources */,
+				F8D23CB72F7727D7000FFD31 /* DataModels.swift in Sources */,
+				F8D23CB82F7727D7000FFD31 /* ChartsView.swift in Sources */,
+				F8D23CB92F7727D7000FFD31 /* DashboardView.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
