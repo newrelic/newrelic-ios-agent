@@ -10,6 +10,7 @@
 #import "NRLogger.h"
 #import "NRConstants.h"
 #import "NRMAAgentConfiguration.h"
+#import "NRMASupportMetricHelper.h"
 
 @implementation NRMAHarvesterConfiguration
 
@@ -197,6 +198,11 @@ static long long _accountId;
             else {
                 self.session_replay_error_sampling_rate = 100.0;
             }
+
+            // Enqueue supportability metrics for Session Replay configuration
+            [NRMASupportMetricHelper enqueueSessionReplayConfigEnabledMetric:self.session_replay_enabled];
+            [NRMASupportMetricHelper enqueueSessionReplayConfigSamplingRateMetric:self.session_replay_sampling_rate];
+            [NRMASupportMetricHelper enqueueSessionReplayConfigErrorSamplingRateMetric:self.session_replay_error_sampling_rate];
 
             // Handle mode string
             if ([innerDict objectForKey: kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY]) {
