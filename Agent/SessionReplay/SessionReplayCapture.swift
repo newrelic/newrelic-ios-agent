@@ -55,11 +55,18 @@ class SessionReplayCapture {
             }
         }
         
-        // Handle SwiftUI hosting views
-        if let viewController = extractVC(from: currentView),
-           ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
+        // Handle SwiftUI hosting views.
+        // Gap 1: also trigger extraction for .navigationStackHostingController so that
+        // _UIHostingView instances whose parent VC is a UINavigationController (the case
+        // for every pushed NavigationStack destination) are not silently skipped.
+        if let viewController = extractVC(from: currentView) {
+            let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
+            if vcType == .hostingController || vcType == .navigationStackHostingController {
             let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") && className.contains("RootView") {
+            // Gap 4: removed && className.contains("RootView") — pushed NavigationStack
+            // destination hosting views don't have "RootView" in their class name, so the
+            // old guard prevented rootSwiftUIViewID from ever being set for them.
+            if className.contains("_UIHostingView") {
                 rootSwiftUIViewID = parentThingy.viewDetails.viewId
             }
             
@@ -102,7 +109,8 @@ class SessionReplayCapture {
                     parentThingy.subviews.append(contentsOf: otherViews)
                 }
             }
-        }
+            } // if vcType == .hostingController || .navigationStackHostingController
+        } // if let viewController
 
         // Handle UITextField custom text overlay
         if parentThingy.shouldRecordSubviewsComputed, let textView = currentView as? UITextField {
