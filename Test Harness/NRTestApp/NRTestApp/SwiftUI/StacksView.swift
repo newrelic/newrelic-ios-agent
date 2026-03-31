@@ -58,6 +58,7 @@ struct StacksView: View {
             }
             .navigationBarTitle("Stacks Example", displayMode: .inline)
         }
+        .navigationViewStyle(.stack)
         .NRTrackView(name: "StacksView")
     }
 }
