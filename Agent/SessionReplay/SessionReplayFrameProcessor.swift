@@ -36,8 +36,11 @@ class SessionReplayFrameProcessor {
         }
         
         var rrwebCommon: (any RRWebEventCommon)?
-        // If a full snapshot is needed, frame size changed, or UILayoutContainerView count increased
-        if takeFullSnapshotNext || frame.size != lastFullFrame.size || (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) {
+        // If a full snapshot is needed, frame size changed, UILayoutContainerView count increased,
+        // or the NavigationStack depth changed.
+        if takeFullSnapshotNext || frame.size != lastFullFrame.size ||
+            (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) ||
+            frame.navigationStackDepth != lastFullFrame.navigationStackDepth {
             rrwebCommon = processFullSnapshot(frame)
             if !readOnly {
                 

@@ -16,9 +16,11 @@ internal enum ControllerTypeDetector {
         typealias Rule = (predicate: (String) -> Bool, kind: ControllerTypeDetector)
 
         let rules: [Rule] = [
-            ({ $0.hasPrefix("_TtGC7SwiftUI19UIHostingController") }, .hostingController),
+            ({ $0.hasPrefix("_TtGC7SwiftUI29PresentationHostingController") }, .modal),
+            ({ $0.hasPrefix("_TtGC7SwiftUI") && $0.contains("HostingController") }, .hostingController),
+            // UIKit UINavigationController or any remaining SwiftUI navigation-wrapper VC
+            // whose class name did not match either rule above.
             ({ $0.contains("Navigation") }, .navigationStackHostingController),
-            ({ $0.hasPrefix("_TtGC7SwiftUI29PresentationHostingController") }, .modal)
         ]
 
         for rule in rules where rule.predicate(className) {
