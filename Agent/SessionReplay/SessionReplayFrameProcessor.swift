@@ -32,8 +32,14 @@ class SessionReplayFrameProcessor {
         }
         
         var rrwebCommon: (any RRWebEventCommon)?
-        // If a full snapshot is needed, frame size changed, or UILayoutContainerView count increased
-        if takeFullSnapshotNext || frame.size != lastFullFrame.size || (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) {
+        // If a full snapshot is needed, frame size changed, UILayoutContainerView count increased,
+        // or the NavigationStack depth changed (a destination was pushed or popped).
+        // NavigationStack depth uses != (not >) because both push and pop require an immediate
+        // full snapshot — unlike UIKit navigation where only push is caught here and pop is
+        // caught by the takeFullSnapshotNext mechanism via rootViewControllerId.
+        if takeFullSnapshotNext || frame.size != lastFullFrame.size ||
+            (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) ||
+            frame.navigationStackDepth != lastFullFrame.navigationStackDepth {
             rrwebCommon = processFullSnapshot(frame)
             takeFullSnapshotNext = false
         } else {
