@@ -2,12 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "container:../NewRelicTestApp/NewRelicTestApp.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:examples/spm/SPMExample/SPMExample.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:Test Harness/SessionReplayTest/SessionReplayTest.xcodeproj">
    </FileRef>
    <FileRef

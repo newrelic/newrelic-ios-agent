@@ -6,9 +6,9 @@ struct SwiftUIContentView: View {
             
             NavigationView {
                 List {
-                    NavigationLink(destination: NewRelicTestAppContentView()) {
-                        Text(verbatim:"NewRelicTestApp")
-                    }
+//                    NavigationLink(destination: NewRelicTestAppContentView()) {
+//                        Text(verbatim:"NewRelicTestApp")
+//                    }
                     NavigationLink(destination: MaskingView()) {
                         NRConditionalMaskView(maskApplicationText: false) {
                             Text("Masking")
