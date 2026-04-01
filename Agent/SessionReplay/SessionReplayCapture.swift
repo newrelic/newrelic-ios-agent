@@ -14,6 +14,7 @@ import SwiftUI
 @objcMembers
 class SessionReplayCapture {
     private var layoutContainerViewCount: Int = 0
+    private var navigationStackDepth: Int = 0
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
@@ -26,8 +27,9 @@ class SessionReplayCapture {
         var rootSwiftUIViewID: Int? = nil
         var rootThingy = findRecorderForView(view: rootView)
         
-        // Reset counter for this frame capture
+        // Reset counters for this frame capture
         layoutContainerViewCount = 0
+        navigationStackDepth = 0
         
         // Build tree using recursive approach to properly handle value semantics
         buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
@@ -35,7 +37,7 @@ class SessionReplayCapture {
         // Set nextId for all views after tree is built
         setNextIdRecursively(for: &rootThingy)
         
-        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size:  rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount)
+        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
@@ -55,12 +57,19 @@ class SessionReplayCapture {
             }
         }
         
-        // Handle SwiftUI hosting views
-        if let viewController = extractVC(from: currentView),
-           ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
+        // Handle SwiftUI hosting views.
+        if let viewController = extractVC(from: currentView) {
+            let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
+            if vcType == .hostingController || vcType == .navigationStackHostingController {
             let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") && className.contains("RootView") {
+            if className.contains("_UIHostingView") {
                 rootSwiftUIViewID = parentThingy.viewDetails.viewId
+                // Count each NavigationStack destination hosting view (one per pushed screen).
+                // This depth value is checked in SessionReplayFrameProcessor to force an
+                // immediate full snapshot on push or pop, matching layoutContainerViewCount's role.
+                if vcType == .navigationStackHostingController {
+                    navigationStackDepth += 1
+                }
             }
             
             let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
@@ -102,7 +111,8 @@ class SessionReplayCapture {
                     parentThingy.subviews.append(contentsOf: otherViews)
                 }
             }
-        }
+            } // if vcType == .hostingController || .navigationStackHostingController
+        } // if let viewController
 
         // Handle UITextField custom text overlay
         if parentThingy.shouldRecordSubviewsComputed, let textView = currentView as? UITextField {

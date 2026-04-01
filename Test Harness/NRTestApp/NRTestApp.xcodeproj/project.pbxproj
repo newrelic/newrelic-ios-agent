@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
+		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
+		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
@@ -336,6 +339,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
@@ -531,6 +535,7 @@
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
@@ -1277,6 +1282,7 @@
 				F802EED12BE023E000AB956F /* triggerException.m in Sources */,
 				F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */,
+				2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F802EECD2BE023CB00AB956F /* plistHelper.swift in Sources */,
 				F802EECF2BE023D200AB956F /* Variable.swift in Sources */,
 				F802EED02BE023D700AB956F /* Date.swift in Sources */,
@@ -1367,6 +1373,7 @@
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
+				2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1407,6 +1414,7 @@
 				F86429332979CDFA002ABA01 /* ApodURL.swift in Sources */,
 				F86429342979CDFA002ABA01 /* plistHelper.swift in Sources */,
 				F86429352979CDFA002ABA01 /* triggerException.m in Sources */,
+				2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				F86429382979CDFA002ABA01 /* AppDelegate.swift in Sources */,
 				F8BF14892F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */,
