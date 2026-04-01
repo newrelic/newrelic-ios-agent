@@ -17,5 +17,9 @@ struct SessionReplayFrame {
     let rootSwiftUIViewId: Int?
     let size: CGSize
     let layoutContainerViewCount: Int
+    /// Number of NavigationStack destination hosting views visible in this frame.
+    /// Increments by 1 for each pushed destination; 0 means the stack is at its root.
+    /// A change in this value (push or pop) triggers an immediate full snapshot.
+    let navigationStackDepth: Int
 }
 #endif

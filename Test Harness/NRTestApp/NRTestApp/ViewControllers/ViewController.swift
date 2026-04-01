@@ -253,6 +253,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
         options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
+        
+        options.append(UtilOption(title: "SwiftUI UITabBar", handler: { [self] in showSwiftUITabBar()}))
 
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
@@ -403,6 +405,12 @@ class ViewController: UIViewController {
 #if os(iOS)
         let hostingController = BlockViewSwiftUIHostingController()
         navigationController?.pushViewController(hostingController, animated: true)
+#endif
+    }
+    
+    func showSwiftUITabBar() {
+#if os(iOS)
+        coordinator?.showSwiftUITabBar()
 #endif
     }
 

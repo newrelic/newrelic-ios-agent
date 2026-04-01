@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
+		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
+		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
+		2B131C8D2F7DDADF00748ACB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB12F7727D7000FFD31 /* SettingsView.swift */; };
+		2B131C8E2F7DDADF00748ACB /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAF2F7727D7000FFD31 /* DataModels.swift */; };
+		2B131C8F2F7DDADF00748ACB /* SwiftUITabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */; };
+		2B131C902F7DDADF00748ACB /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */; };
+		2B131C912F7DDADF00748ACB /* FormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB02F7727D7000FFD31 /* FormView.swift */; };
+		2B131C922F7DDADF00748ACB /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */; };
 		2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
@@ -334,6 +343,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
@@ -455,6 +465,12 @@
 		F8BF16332F3F6D9F00EF5628 /* ProviderSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderSearchView.swift; sourceTree = "<group>"; };
 		F8BF16342F3F6D9F00EF5628 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
 		F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestAppNavigationTests.swift; sourceTree = "<group>"; };
+		F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartsView.swift; sourceTree = "<group>"; };
+		F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		F8D23CAF2F7727D7000FFD31 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
+		F8D23CB02F7727D7000FFD31 /* FormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormView.swift; sourceTree = "<group>"; };
+		F8D23CB12F7727D7000FFD31 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUITabBar.swift; sourceTree = "<group>"; };
 		F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffTestViewController.swift; sourceTree = "<group>"; };
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
 		F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimePickerViewController.swift; sourceTree = "<group>"; };
@@ -525,6 +541,7 @@
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
 				2B3ACCC42F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
@@ -536,6 +553,7 @@
 				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
 				F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */,
+				F8D23CB32F7727D7000FFD31 /* UITabBarView */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
 				F8BF14A32F35345500EF5628 /* AttributedTextView.swift */,
 				F8672A552EAA69820055FA51 /* SimpleScrollView.swift */,
@@ -828,6 +846,19 @@
 				F8BF16342F3F6D9F00EF5628 /* Views.swift */,
 			);
 			path = NewRelicSessionReplay;
+			sourceTree = "<group>";
+		};
+		F8D23CB32F7727D7000FFD31 /* UITabBarView */ = {
+			isa = PBXGroup;
+			children = (
+				F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */,
+				F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */,
+				F8D23CAF2F7727D7000FFD31 /* DataModels.swift */,
+				F8D23CB02F7727D7000FFD31 /* FormView.swift */,
+				F8D23CB12F7727D7000FFD31 /* SettingsView.swift */,
+				F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */,
+			);
+			path = UITabBarView;
 			sourceTree = "<group>";
 		};
 		F8F5D8212BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests */ = {
@@ -1259,6 +1290,7 @@
 				F802EED12BE023E000AB956F /* triggerException.m in Sources */,
 				F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */,
+				2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F802EECD2BE023CB00AB956F /* plistHelper.swift in Sources */,
 				F802EECF2BE023D200AB956F /* Variable.swift in Sources */,
 				F802EED02BE023D700AB956F /* Date.swift in Sources */,
@@ -1287,6 +1319,12 @@
 				2BAE5C8F2E860C7D001D2B88 /* ProgressViewsView.swift in Sources */,
 				2BAE5C902E860C7D001D2B88 /* ShapesView.swift in Sources */,
 				2BAE5C912E860C7D001D2B88 /* TogglesView.swift in Sources */,
+				2B131C8D2F7DDADF00748ACB /* SettingsView.swift in Sources */,
+				2B131C8E2F7DDADF00748ACB /* DataModels.swift in Sources */,
+				2B131C8F2F7DDADF00748ACB /* SwiftUITabBar.swift in Sources */,
+				2B131C902F7DDADF00748ACB /* DashboardView.swift in Sources */,
+				2B131C912F7DDADF00748ACB /* FormView.swift in Sources */,
+				2B131C922F7DDADF00748ACB /* ChartsView.swift in Sources */,
 				2BAE5C922E860C7D001D2B88 /* ListsView.swift in Sources */,
 				2BAE5C932E860C7D001D2B88 /* PickersView.swift in Sources */,
 				2BAE5C942E860C7D001D2B88 /* SegmentedControlsView.swift in Sources */,
@@ -1345,6 +1383,7 @@
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
+				2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1385,6 +1424,7 @@
 				F86429332979CDFA002ABA01 /* ApodURL.swift in Sources */,
 				F86429342979CDFA002ABA01 /* plistHelper.swift in Sources */,
 				F86429352979CDFA002ABA01 /* triggerException.m in Sources */,
+				2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				F86429382979CDFA002ABA01 /* AppDelegate.swift in Sources */,
 				F8BF14892F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */,
@@ -1504,7 +1544,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestAppUITests/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -1532,7 +1572,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestAppUITests/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -1564,7 +1604,7 @@
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NRTestApp (watchOS)";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -1600,7 +1640,7 @@
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NRTestApp (watchOS)";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -1629,7 +1669,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -1660,7 +1700,7 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1691,7 +1731,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -1722,7 +1762,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -1991,7 +2031,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
@@ -2015,7 +2055,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;

@@ -44,18 +44,13 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         if !self.isMasked {
             self.image = view.image
-        }
-
-        // Detect if image is tinted
-        if let image = view.image {
-            if #available(iOS 13.0, *) {
-                self.isTinted = image.isSymbolImage || image.renderingMode == .alwaysTemplate
-            } else {
+            // Detect if image is tinted
+            if let image = self.image {
                 self.isTinted = image.renderingMode == .alwaysTemplate
-            }
 
-            if self.isTinted {
-                self.tintColor = view.tintColor
+                if self.isTinted {
+                    self.tintColor = view.tintColor
+                }
             }
         }
 

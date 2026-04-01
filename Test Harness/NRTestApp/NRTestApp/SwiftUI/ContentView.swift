@@ -89,6 +89,12 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: SwiftUICornerRadiusPlaygroundView()) {
                         Text("🔵 SwiftUI Corner Radius Playground")
                     }
+                    if #available(iOS 16.0, *) {
+                        
+                        NavigationLink(destination: NavigationStackView()) {
+                            Text("NavigationStack")
+                        }
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
                 
