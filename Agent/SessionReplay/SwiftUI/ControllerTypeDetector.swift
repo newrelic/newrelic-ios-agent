@@ -17,9 +17,13 @@ internal enum ControllerTypeDetector {
 
         let rules: [Rule] = [
             ({ $0.hasPrefix("_TtGC7SwiftUI29PresentationHostingController") }, .modal),
+            // SwiftUI NavigationStack destination hosting controllers satisfy BOTH the Navigation
+            // and HostingController predicates. This rule must precede the generic hosting
+            // controller rule so they are not incorrectly classified as plain .hostingController,
+            // which would prevent navigationStackDepth from incrementing on push/pop.
+            ({ $0.hasPrefix("_TtGC7SwiftUI") && $0.contains("Navigation") && $0.contains("HostingController") }, .navigationStackHostingController),
             ({ $0.hasPrefix("_TtGC7SwiftUI") && $0.contains("HostingController") }, .hostingController),
-            // UIKit UINavigationController or any remaining SwiftUI navigation-wrapper VC
-            // whose class name did not match either rule above.
+            // Catch-all for UIKit UINavigationController whose class name did not match above.
             ({ $0.contains("Navigation") }, .navigationStackHostingController),
         ]
 
