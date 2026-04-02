@@ -77,7 +77,7 @@ class SessionReplayCapture {
                                                        backgroundColor: currentView.backgroundColor?.cgColor,
                                                        layerBorderColor: currentView.layer.borderColor,
                                                        layerBorderWidth: currentView.layer.borderWidth,
-                                                       layerCornerRadius: currentView.layer.cornerRadius,
+                                                       layerCornerRadius: currentView.layer.effectiveCornerRadius,
                                                        alpha: currentView.alpha,
                                                        isHidden: currentView.isHidden,
                                                        intrinsicContentSize: currentView.intrinsicContentSize,

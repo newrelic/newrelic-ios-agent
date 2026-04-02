@@ -110,7 +110,7 @@ struct ViewDetails {
         backgroundColor = view.backgroundColor
         alpha = view.alpha
         isHidden = view.isHidden
-        cornerRadius = view.layer.cornerRadius
+        cornerRadius = view.layer.effectiveCornerRadius
         borderWidth = view.layer.borderWidth
 
         // Checking if we have a border, because asking for the layer's

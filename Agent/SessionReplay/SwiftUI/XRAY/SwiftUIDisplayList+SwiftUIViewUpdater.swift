@@ -68,7 +68,7 @@ extension SwiftUIDisplayList.SwiftUIViewUpdater.ViewInfo: XrayConvertible {
         self.intrinsicContentSize = metrics.intrinsic
 
         self.borderWidth        = baseLayer.borderWidth
-        self.cornerRadius       = baseLayer.cornerRadius
+        self.cornerRadius       = baseLayer.effectiveCornerRadius
         self.backgroundColor    = baseLayer.backgroundColor?.safeColor
         self.borderColor        = baseLayer.borderColor?.safeColor
         self.isHidden           = baseLayer.isHidden
