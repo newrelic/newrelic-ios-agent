@@ -12,6 +12,9 @@ import SwiftUI
 struct SwiftUIContext {
     var frame: CGRect
     var clip: CGRect
+    /// Corner radius synthesized from a SwiftUI `.clip` effect (e.g. `.cornerRadius(r)`).
+    /// Nil means no clip-derived radius has been encountered yet for this context level.
+    var cornerRadius: CGFloat?
     // Store tint color components directly for iOS version compatibility
     var tintColorRed: Float?
     var tintColorGreen: Float?

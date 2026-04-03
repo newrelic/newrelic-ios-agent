@@ -205,6 +205,12 @@ final class UIHostingViewRecordOrchestrator {
                 case .clip(let path, _):
                     let clipRect = nextContext.convert(frame: path.boundingRect)
                     nextContext.clip = nextContext.clip.intersection(clipRect)
+                    if let r = path.approximateCornerRadius {
+                        nextContext.cornerRadius = r
+                        NRLOG_DEBUG("NR_CR_DBG clip r=\(r) bounds=\(path.boundingRect)")
+                    } else {
+                        NRLOG_DEBUG("NR_CR_DBG clip NO_RADIUS bounds=\(path.boundingRect)")
+                    }
                 case .filter(.colorMultiply(let color)):
                     nextContext.setTintColor(from: color)
                 case .identify, .filter, .unknown:
@@ -247,7 +253,16 @@ final class UIHostingViewRecordOrchestrator {
                                                y: frame.origin.y,
                                                width: frame.size.width + widthOffset,
                                                height: frame.size.height)
-                    
+
+                    // Prefer a corner radius synthesized from a parent .clip effect (SwiftUI
+                    // .cornerRadius() / .clipShape()) over the hosting view's CALayer radius.
+                    // The CALayer radius is typically 0 for SwiftUI-clipped views because
+                    // SwiftUI uses clip paths rather than CALayer.cornerRadius.
+                    let effectiveCornerRadius = baseContext.cornerRadius ?? viewAttributes.layerCornerRadius
+                    let effectiveMaskedCorners: CACornerMask = baseContext.cornerRadius != nil
+                        ? [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+                        : viewAttributes.layerMaskedCorners
+
                     return ViewDetails(frame: adjustedFrame,
                                 clip: viewAttributes.clip,
                                 backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
@@ -255,12 +270,12 @@ final class UIHostingViewRecordOrchestrator {
                                 isHidden: viewAttributes.isHidden,
                                 viewName: viewName,
                                 parentId: parentId,
-                                cornerRadius: viewAttributes.layerCornerRadius,
+                                cornerRadius: effectiveCornerRadius,
                                 borderWidth: viewAttributes.layerBorderWidth,
                                 borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
                                 viewId: contentId,
                                 view: originalView,
-                                maskedCorners: viewAttributes.layerMaskedCorners,
+                                maskedCorners: effectiveMaskedCorners,
                                 maskApplicationText: viewAttributes.maskApplicationText,
                                 maskUserInputText: viewAttributes.maskUserInputText,
                                 maskAllImages: viewAttributes.maskAllImages,
