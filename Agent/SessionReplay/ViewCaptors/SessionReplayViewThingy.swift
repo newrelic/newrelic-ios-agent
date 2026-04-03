@@ -36,7 +36,7 @@ extension SessionReplayViewThingy {
             top: \(String(format: "%.2f", self.viewDetails.frame.origin.y))px; \
             width: \(String(format: "%.2f", self.viewDetails.frame.size.width))px; \
             height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
-            border-radius: \(String(format: "%.2f", self.viewDetails.cornerRadius))px;
+            \(self.viewDetails.cornerRadiusCSS)
             """
 
         // If the view is blocked, make it a solid black rectangle
@@ -78,7 +78,7 @@ extension SessionReplayViewThingy {
             styleDifferences["top"] = "\(String(format: "%.2f", other.viewDetails.frame.origin.y))px"
             styleDifferences["width"] = "\(String(format: "%.2f", other.viewDetails.frame.size.width))px"
             styleDifferences["height"] = "\(String(format: "%.2f", other.viewDetails.frame.size.height))px"
-            styleDifferences["border-radius"] = "\(String(format: "%.2f", other.viewDetails.cornerRadius))px"
+            other.viewDetails.applyCornerRadiusDifferences(to: &styleDifferences)
         }
 
         // Check alpha/opacity changes

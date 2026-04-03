@@ -22,4 +22,13 @@ extension CALayer {
         if cornerRadius > 0 { return cornerRadius }
         return sublayers?.first(where: { $0.masksToBounds && $0.cornerRadius > 0 })?.cornerRadius ?? 0
     }
+
+    /// Returns the masked corners that correspond to `effectiveCornerRadius`.
+    /// Follows the same fallthrough logic so the two values always refer to
+    /// the same layer.
+    var effectiveMaskedCorners: CACornerMask {
+        if cornerRadius > 0 { return maskedCorners }
+        return sublayers?.first(where: { $0.masksToBounds && $0.cornerRadius > 0 })?.maskedCorners
+            ?? [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+    }
 }

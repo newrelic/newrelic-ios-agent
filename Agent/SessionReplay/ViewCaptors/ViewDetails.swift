@@ -17,6 +17,7 @@ struct ViewDetails {
     let alpha: CGFloat
     let isHidden: Bool
     let cornerRadius: CGFloat
+    let maskedCorners: CACornerMask
     let borderWidth: CGFloat
     let borderColor: UIColor?
     let viewName: String
@@ -82,6 +83,38 @@ struct ViewDetails {
         return sanitized.isEmpty ? "view" : sanitized
     }
 
+    /// CSS string for corner radius, respecting `maskedCorners`.
+    /// When all four corners are masked (default) emits `border-radius: Xpx;`.
+    /// When only a subset is masked, emits individual per-corner properties.
+    var cornerRadiusCSS: String {
+        let allCorners: CACornerMask = [.layerMinXMinYCorner, .layerMaxXMinYCorner,
+                                        .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        let r = String(format: "%.2f", cornerRadius)
+        if maskedCorners == allCorners {
+            return "border-radius: \(r)px;"
+        }
+        let tl = maskedCorners.contains(.layerMinXMinYCorner) ? r : "0"
+        let tr = maskedCorners.contains(.layerMaxXMinYCorner) ? r : "0"
+        let bl = maskedCorners.contains(.layerMinXMaxYCorner) ? r : "0"
+        let br = maskedCorners.contains(.layerMaxXMaxYCorner) ? r : "0"
+        return "border-top-left-radius: \(tl)px; border-top-right-radius: \(tr)px; border-bottom-left-radius: \(bl)px; border-bottom-right-radius: \(br)px;"
+    }
+
+    /// Writes per-corner border-radius entries into `dict` for mutation diffing.
+    func applyCornerRadiusDifferences(to dict: inout [String: String]) {
+        let allCorners: CACornerMask = [.layerMinXMinYCorner, .layerMaxXMinYCorner,
+                                        .layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        let r = "\(String(format: "%.2f", cornerRadius))px"
+        if maskedCorners == allCorners {
+            dict["border-radius"] = r
+        } else {
+            dict["border-top-left-radius"]     = maskedCorners.contains(.layerMinXMinYCorner) ? r : "0px"
+            dict["border-top-right-radius"]    = maskedCorners.contains(.layerMaxXMinYCorner) ? r : "0px"
+            dict["border-bottom-left-radius"]  = maskedCorners.contains(.layerMinXMaxYCorner) ? r : "0px"
+            dict["border-bottom-right-radius"] = maskedCorners.contains(.layerMaxXMaxYCorner) ? r : "0px"
+        }
+    }
+
     var isVisible: Bool {
         !isHidden &&
         alpha > 0 &&
@@ -110,7 +143,17 @@ struct ViewDetails {
         backgroundColor = view.backgroundColor
         alpha = view.alpha
         isHidden = view.isHidden
-        cornerRadius = view.layer.effectiveCornerRadius
+        let layerCornerRadius = view.layer.effectiveCornerRadius
+        // UICollectionView list cells render section-card corner rounding via Core Graphics
+        // (not CALayer.cornerRadius), so we synthesize it from the cell's section position.
+        if layerCornerRadius == 0,
+           let (synthesized, synthesizedMask) = ViewDetails.listCellCornerRadius(for: view) {
+            cornerRadius = synthesized
+            maskedCorners = synthesizedMask
+        } else {
+            cornerRadius = layerCornerRadius
+            maskedCorners = view.layer.effectiveMaskedCorners
+        }
         borderWidth = view.layer.borderWidth
 
         // Checking if we have a border, because asking for the layer's
@@ -167,23 +210,24 @@ struct ViewDetails {
     }
     
     init(frame: CGRect, clip: CGRect, backgroundColor: UIColor, alpha: CGFloat, isHidden: Bool, viewName: String, parentId: Int, cornerRadius: CGFloat, borderWidth: CGFloat, borderColor: UIColor? = nil, viewId: Int?, view: UIView? = nil,
-
+          maskedCorners: CACornerMask = [.layerMinXMinYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMaxXMaxYCorner],
           maskApplicationText: Bool?,
           maskUserInputText: Bool?,
           maskAllImages: Bool?,
           maskAllUserTouches: Bool?,
           blockView: Bool?,
           sessionReplayIdentifier: String?) {
-        
+
         let visibleFrame = frame.intersection(clip)
-        
+
         self.frame = visibleFrame.isNull ? .zero : visibleFrame
         self.clip = clip
-        
+
         self.backgroundColor = backgroundColor
         self.alpha = alpha
         self.isHidden = isHidden
         self.cornerRadius = cornerRadius
+        self.maskedCorners = maskedCorners
         self.borderWidth = borderWidth
 
         self.borderColor = borderColor
@@ -370,6 +414,68 @@ struct ViewDetails {
         return nil
     }
     
+    /// Synthesizes per-corner corner radius for UICollectionViewListCell background views.
+    /// SwiftUI List cells draw their section-card rounded corners via Core Graphics
+    /// (in UICollectionViewListLayoutSectionBackgroundColorDecorationView.draw(rect:)),
+    /// NOT via CALayer.cornerRadius. This helper detects first/last cells in a section
+    /// and returns a synthesized radius + mask so the replay HTML looks correct.
+    private static func listCellCornerRadius(for view: UIView) -> (CGFloat, CACornerMask)? {
+        let className = String(describing: type(of: view))
+
+        // The section-level decoration view (_UICollectionViewListLayoutSectionBackgroundColorDecorationView)
+        // IS the card that the user sees — it has backgroundColor but draws rounded corners via Core
+        // Graphics, not CALayer.cornerRadius. Always give it all-four-corners radius.
+        if className.contains("SectionBackground") {
+            return (10.0, [.layerMinXMinYCorner, .layerMaxXMinYCorner,
+                           .layerMinXMaxYCorner, .layerMaxXMaxYCorner])
+        }
+
+        // Propagate synthesized corner radius to UIView children of UISystemBackgroundView.
+        // The hierarchy is: ListCollectionViewCell → UISystemBackgroundView → UIView.
+        // The UIView has no CALayer cornerRadius itself, but it shares the same visible
+        // shape as its parent background view, so it should carry the same radius.
+        if className == "UIView",
+           let parent = view.superview,
+           String(describing: type(of: parent)).contains("SystemBackground") {
+            return listCellCornerRadius(for: parent)
+        }
+
+        guard className.contains("SystemBackground") else { return nil }
+
+        var current: UIView? = view.superview
+        var cell: UICollectionViewCell? = nil
+        var collectionView: UICollectionView? = nil
+        while let c = current {
+            if cell == nil, let cv = c as? UICollectionViewCell {
+                cell = cv
+            } else if let cv = c as? UICollectionView {
+                collectionView = cv
+                break
+            }
+            current = c.superview
+        }
+
+        guard let cell = cell,
+              let collectionView = collectionView,
+              let indexPath = collectionView.indexPath(for: cell) else { return nil }
+
+        let item = indexPath.item
+        let itemCount = collectionView.numberOfItems(inSection: indexPath.section)
+        let isFirst = item == 0
+        let isLast = item == itemCount - 1
+        guard isFirst || isLast else { return nil }
+
+        let radius: CGFloat = 10.0
+        if isFirst && isLast {
+            return (radius, [.layerMinXMinYCorner, .layerMaxXMinYCorner,
+                             .layerMinXMaxYCorner, .layerMaxXMaxYCorner])
+        } else if isFirst {
+            return (radius, [.layerMinXMinYCorner, .layerMaxXMinYCorner])
+        } else {
+            return (radius, [.layerMinXMaxYCorner, .layerMaxXMaxYCorner])
+        }
+    }
+
     private static func getClippingRect(for view: UIView, in window: UIWindow) -> CGRect {
         // Check if this view has skipAggressiveClipping flag
         if view.skipAggressiveClipping == true {
@@ -415,6 +521,7 @@ extension ViewDetails: Hashable {
         hasher.combine(alpha)
         hasher.combine(isHidden)
         hasher.combine(cornerRadius)
+        hasher.combine(maskedCorners.rawValue)
         hasher.combine(borderWidth)
         hasher.combine(viewName)
         hasher.combine(parentId)

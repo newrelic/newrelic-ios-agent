@@ -260,6 +260,7 @@ final class UIHostingViewRecordOrchestrator {
                                 borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
                                 viewId: contentId,
                                 view: originalView,
+                                maskedCorners: viewAttributes.layerMaskedCorners,
                                 maskApplicationText: viewAttributes.maskApplicationText,
                                 maskUserInputText: viewAttributes.maskUserInputText,
                                 maskAllImages: viewAttributes.maskAllImages,

@@ -22,6 +22,7 @@ public struct SwiftUIViewAttributes: Equatable {
     public internal(set) var layerBorderColor: CGColor?
     public internal(set) var layerBorderWidth: CGFloat
     public internal(set) var layerCornerRadius: CGFloat
+    public internal(set) var layerMaskedCorners: CACornerMask
     public internal(set) var alpha: CGFloat
 
     // Visibility & layout
