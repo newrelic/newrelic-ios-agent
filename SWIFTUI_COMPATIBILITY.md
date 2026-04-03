@@ -9,7 +9,7 @@ This document covers which SwiftUI components and patterns are captured, masked,
 | Requirement | Details |
 |---|---|
 | Minimum iOS for Session Replay | iOS 16+ (full SwiftUI support) |
-| iOS 15 behavior | SwiftUI views rendered but `NRConditionalMaskView` masking is **inactive** — content appears unmasked |
+| iOS 15 behavior | SwiftUI views rendered but `NRConditionalMaskView` masking is **always active** — content appears masked |
 | Framework | `NewRelic` module, SwiftUI integration via `UIHostingView` introspection |
 | Screen tracking modifier | `.NRTrackView(name:)` |
 | Masking API | `NRConditionalMaskView(...)` wrapper |
@@ -121,7 +121,7 @@ NRConditionalMaskView(
 }
 ```
 
-**Minimum iOS:** 16.0 — on iOS 15 the wrapper renders content without any masking applied.
+**Minimum iOS:** 16.0 — on iOS 15 the wrapper renders content always masked without the ability to unmask.
 
 ### `.NRTrackView(name:)` Modifier
 
@@ -154,7 +154,6 @@ The `MaskingView` test file verifies all permutations:
 4. **Child masked in unmasked parent** — child `NRConditionalMaskView` with `maskApplicationText: true` masks only that subtree
 5. **Deep nesting (4+ levels)** — mixed masking across hierarchy levels
 6. **Sibling mixing** — sibling views with different masking, each with explicit `sessionReplayIdentifier`
-7. **Reusable components** — `MaskableRow` with masking passed as parameter
 8. **NavigationLink within masked parent** — destination inherits masking
 
 ---
@@ -179,7 +178,7 @@ struct ConfidentialView: View {
 
 | Limitation | Details |
 |---|---|
-| iOS 15 masking inactive | `NRConditionalMaskView` renders content without masking on iOS 15 |
+| iOS 15 masking always active | `NRConditionalMaskView` renders content with masking on iOS 15 |
 | Custom `ToggleStyle` | Non-standard toggle styles are captured as generic views; semantic state not guaranteed |
 | Slider / Stepper value | Current numeric value not captured semantically in replay |
 | Picker (menu/sheet style) | System overlay presentation may not be captured |
