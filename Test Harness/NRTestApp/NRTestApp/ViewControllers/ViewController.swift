@@ -247,10 +247,14 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
         
         options.append(UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction()}))
+        
+        options.append(UtilOption(title: "Tinted Images View", handler: { [self] in tintedImagesViewController()}))
 
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
         options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
+        
+        options.append(UtilOption(title: "SwiftUI UITabBar", handler: { [self] in showSwiftUITabBar()}))
 
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
@@ -272,6 +276,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
 
         options.append(UtilOption(title: "Date Time Picker", handler: { [self] in dateTimePickerAction()}))
+
+        options.append(UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction()}))
 
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
@@ -346,6 +352,10 @@ class ViewController: UIViewController {
         coordinator?.showDateTimePickerViewController()
     }
 
+    func switchTestAction() {
+        coordinator?.showSwitchTestViewController()
+    }
+
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
@@ -394,6 +404,12 @@ class ViewController: UIViewController {
         navigationController?.pushViewController(hostingController, animated: true)
 #endif
     }
+    
+    func showSwiftUITabBar() {
+#if os(iOS)
+        coordinator?.showSwiftUITabBar()
+#endif
+    }
 
     func blockViewUIKitAction() {
 #if os(iOS)
@@ -406,6 +422,12 @@ class ViewController: UIViewController {
 #if os(iOS)
         let propagationTestController = BlockViewPropagationTestController()
         navigationController?.pushViewController(propagationTestController, animated: true)
+#endif
+    }
+    
+    func tintedImagesViewController() {
+#if os(iOS)
+        coordinator?.showTintedImagesViewController()
 #endif
     }
 }

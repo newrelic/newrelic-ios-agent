@@ -65,6 +65,17 @@ enum ViewControllerProvider {
         let viewController = DateTimePickerViewController()
         return viewController
     }
+
+    static var switchTestViewController: SwitchTestViewController {
+        let viewController = SwitchTestViewController()
+        return viewController
+    }
+#endif
+#if os(iOS)
+    static var tintedImagesViewController: TintedImagesViewController {
+        let viewController = TintedImagesViewController()
+        return viewController
+    }
 #endif
 }
 

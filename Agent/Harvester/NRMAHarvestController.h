@@ -24,7 +24,7 @@
 
 + (void) setPeriod:(long long)period;
 
-+ (void) initialize:(NRMAAgentConfiguration*)configuration;
++ (void) initialize:(NRMAAgentConfiguration* _Nonnull)configuration;
 
 + (void) start;
 
@@ -32,9 +32,9 @@
 
 - (void) createHarvester;
 
-- (NRMAHarvester*) harvester;
+- (NRMAHarvester* _Nullable) harvester;
 
-- (NRMAHarvestTimer*) harvestTimer;
+- (NRMAHarvestTimer* _Nullable) harvestTimer;
 
 - (void) deinitialize;
 
@@ -46,11 +46,11 @@
 
 + (NRMAHarvesterConfiguration*_Nullable) configuration;
 
-+ (NRMAHarvestData*) harvestData;
++ (NRMAHarvestData* _Nullable) harvestData;
 
-+ (void) addHarvestListener:(id<NRMAHarvestAware>)obj;
++ (void) addHarvestListener:(id<NRMAHarvestAware> _Nonnull)obj;
 
-+ (void) removeHarvestListener:(id<NRMAHarvestAware>)obj;
++ (void) removeHarvestListener:(id<NRMAHarvestAware> _Nonnull)obj;
 
 #pragma mark - for testing
 
@@ -64,13 +64,13 @@
 
 #pragma mark - harvest data interface
 
-+ (void) addHarvestableHTTPTransaction:(NRMAHarvestableHTTPTransaction*)transaction;
++ (void) addHarvestableHTTPTransaction:(NRMAHarvestableHTTPTransaction* _Nonnull)transaction;
 
-+ (void) addNamedValue:(NRMANamedValueMeasurement*)measurement;
++ (void) addNamedValue:(NRMANamedValueMeasurement* _Nonnull)measurement;
 
-+ (void) addHarvestableActivity:(NRMAHarvestableActivity*)activity;
++ (void) addHarvestableActivity:(NRMAHarvestableActivity* _Nonnull)activity;
 
-+ (void) addHarvestableAnalytics:(NRMAHarvestableAnalytics*)analytics;
++ (void) addHarvestableAnalytics:(NRMAHarvestableAnalytics* _Nonnull)analytics;
 @end
 
 #ifdef __cplusplus

@@ -18,6 +18,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
     let imagePlaceholderCSS = "background: #CCCCCC;"
     var image: UIImage?
     var contentMode: [String: String]
+    var isTinted: Bool = false
+    var tintColor: UIColor?
     
     var shouldRecordSubviews: Bool {
         true
@@ -42,8 +44,16 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
         if !self.isMasked {
             self.image = view.image
+            // Detect if image is tinted
+            if let image = self.image {
+                self.isTinted = image.renderingMode == .alwaysTemplate
+
+                if self.isTinted {
+                    self.tintColor = view.tintColor
+                }
+            }
         }
-        
+
         self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: view.contentMode)
     }
     
@@ -68,7 +78,13 @@ class UIImageViewThingy: SessionReplayViewThingy {
                     self.image = uiImage
             }
         }
-        
+
+        // Check for SwiftUI tinting (maskColor)
+        if let maskColor = swiftUIImage.maskClr {
+            self.isTinted = true
+            self.tintColor = maskColor.uiColor
+        }
+
         self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: contentMode)
     }
     
@@ -87,6 +103,16 @@ class UIImageViewThingy: SessionReplayViewThingy {
     func imageInlineCSSDescription() -> String {
         if isMasked {
             return "\(generateBaseCSSStyle()) \(imagePlaceholderCSS)"
+        }
+        else if isTinted, let tintColor = tintColor {
+            // For tinted images, use inline SVG filter
+            let filterDataURL = UIImageViewThingy.generateSVGTintFilterDataURL(for: tintColor)
+            return  """
+                    \(generateBaseCSSStyle()) \
+                    object-fit: \(contentMode["object-fit"] ?? "contain"); \
+                    object-position: \(contentMode["object-position"] ?? "center"); \
+                    filter: url('\(filterDataURL)#tint');
+                    """
         }
         else {
             return  """
@@ -193,7 +219,9 @@ class UIImageViewThingy: SessionReplayViewThingy {
 
 extension UIImageViewThingy: Equatable {
     static func == (lhs: UIImageViewThingy, rhs: UIImageViewThingy) -> Bool {
-        return lhs.viewDetails == rhs.viewDetails && UIImageViewThingy.imagesAreLikelyEqual(lhs.image, rhs.image)
+        let imagesEqual = UIImageViewThingy.imagesAreLikelyEqual(lhs.image, rhs.image)
+        let tintEqual = lhs.isTinted == rhs.isTinted && lhs.tintColor == rhs.tintColor
+        return lhs.viewDetails == rhs.viewDetails && imagesEqual && tintEqual
     }
 }
 
@@ -201,10 +229,39 @@ extension UIImageViewThingy: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(viewDetails)
         hasher.combine(image?.hashValue ?? 0)
+        hasher.combine(isTinted)
+        hasher.combine(tintColor)
     }
 }
 
 extension UIImageViewThingy {
+    private static func generateSVGTintFilterDataURL(for color: UIColor) -> String {
+        var red: CGFloat = 0.0
+        var green: CGFloat = 0.0
+        var blue: CGFloat = 0.0
+        var alpha: CGFloat = 0.0
+
+        guard color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return ""
+        }
+
+        // Generate inline SVG filter using feFlood + feComposite
+        // This is the standard way to tint template images
+        // 1. feFlood fills with the tint color
+        // 2. feComposite uses 'in' operator to use source alpha as mask
+        let colorHex = color.toHexString(includingAlpha: false)
+        let svgFilter = """
+        <svg xmlns="http://www.w3.org/2000/svg"><defs><filter id="tint"><feFlood flood-color="\(colorHex)" flood-opacity="\(alpha)" result="flood"/><feComposite in="flood" in2="SourceAlpha" operator="in"/></filter></defs></svg>
+        """
+
+        // Encode as base64 data URL
+        guard let data = svgFilter.data(using: .utf8) else {
+            return ""
+        }
+
+        return "data:image/svg+xml;base64,\(data.base64EncodedString())"
+    }
+
     private static func contentModeToCSS(contentMode: UIView.ContentMode) -> [String: String] {
         var cssProperties = [String: String]()
         

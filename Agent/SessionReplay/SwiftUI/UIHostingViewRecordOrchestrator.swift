@@ -43,11 +43,17 @@ final class UIHostingViewRecordOrchestrator {
         let seed: UInt16
         let identity: UInt32
         let contentType: String
-        
-        init(content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity) {
+        /// Ties this key to a specific _UIHostingView instance so that two different
+        /// hosting views (e.g. separate NavigationStack destination screens) never
+        /// share content IDs even when SwiftUI happens to assign the same seed/identity
+        /// values in their independent display lists.
+        let hostingViewId: ObjectIdentifier
+
+        init(content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity, hostingView: UIView) {
             self.seed = content.seed.value
             self.identity = identity.value
-            
+            self.hostingViewId = ObjectIdentifier(hostingView)
+
             // Create a type identifier based on the content value
             switch content.value {
             case .text(_, _):
@@ -67,9 +73,9 @@ final class UIHostingViewRecordOrchestrator {
             }
         }
     }
-    
-    private static func getContentId(for content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity) -> Int {
-        let cacheKey = ContentCacheKey(content: content, identity: identity)
+
+    private static func getContentId(for content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity, hostingView: UIView) -> Int {
+        let cacheKey = ContentCacheKey(content: content, identity: identity, hostingView: hostingView)
         
         return cacheQueue.sync {
             // Check if cleanup is needed
@@ -264,7 +270,7 @@ final class UIHostingViewRecordOrchestrator {
         
         switch content.value {
         case let SwiftUIDisplayList.Content.Value.shape(path, fillColor, fillStyle):
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIShapeView"
             var details = makeDetails()
             details.backgroundColor = .clear // Shapes should not have a bg color by default
@@ -272,7 +278,8 @@ final class UIHostingViewRecordOrchestrator {
             return SwiftUIShapeThingy(viewDetails: details,
                                      path: path,
                                      fillColor: fillColor,
-                                     fillStyle: fillStyle)
+                                     fillStyle: fillStyle,
+                                     fallbackTintColor: baseContext.tintColor)
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
             let rawString = storage.string
@@ -287,7 +294,7 @@ final class UIHostingViewRecordOrchestrator {
             // 3. Calculate offset (max spaces * 2)
             let calculatedOffset = CGFloat(maxSpacesOnOneLine * 2)
             
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUITextView"
             let details = makeDetails(widthOffset: calculatedOffset)
 
@@ -303,7 +310,7 @@ final class UIHostingViewRecordOrchestrator {
 
             
         case let SwiftUIDisplayList.Content.Value.color(colorData):
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIColorView"
             var details = makeDetails()
             // Convert the SwiftUI color data to UIColor for the background
@@ -319,8 +326,8 @@ final class UIHostingViewRecordOrchestrator {
                 break
             }
             
-            contentId = getContentId(for: content, identity: item.identity)
-            
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
+
             viewName = "SwiftUIImageView"
             var details = makeDetails()
             details.backgroundColor = .clear // Images should not have a bg color by default
@@ -330,7 +337,7 @@ final class UIHostingViewRecordOrchestrator {
                                      swiftUIImage: swiftUIImage,
                                      contentMode: .scaleToFill)
         case SwiftUIDisplayList.Content.Value.drawing(let erasedDrawing):
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIDrawingView"
             var details = makeDetails()
             details.backgroundColor = .clear
@@ -341,11 +348,23 @@ final class UIHostingViewRecordOrchestrator {
                 return nil
             }
 
+            // Get tint color from context (foreground color from colorMultiply filter)
+            let maskColor: Color._ResFoundColor? = if let tintColor = baseContext.tintColor {
+                Color._ResFoundColor(
+                    linearRed: Float(tintColor.cgColor.components?[0] ?? 0),
+                    linearGreen: Float(tintColor.cgColor.components?[1] ?? 0),
+                    linearBlue: Float(tintColor.cgColor.components?[2] ?? 0),
+                    opacity: Float(tintColor.cgColor.alpha)
+                )
+            } else {
+                nil
+            }
+
             // Create SwiftUIGraphicsImage from the generated CGImage
             let swiftUIImage = SwiftUIGraphicsImage(
                 contents: .cgImage(cgImage),
                 scale: image.scale,
-                maskClr: nil,
+                maskClr: maskColor,
                 orientation: .up
             )
 
@@ -354,13 +373,13 @@ final class UIHostingViewRecordOrchestrator {
                                      swiftUIImage: swiftUIImage,
                                      contentMode: .scaleToFill)
         case SwiftUIDisplayList.Content.Value.platformView:
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIPlatformView"
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)
         case SwiftUIDisplayList.Content.Value.unknown:
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)

@@ -78,11 +78,17 @@ static NewRelicAgentInternal* _sharedInstance;
     // Set up dispatch source for file monitoring
     self.source = dispatch_source_create(DISPATCH_SOURCE_TYPE_VNODE, self.fileDescriptor, DISPATCH_VNODE_WRITE, DISPATCH_TARGET_QUEUE_DEFAULT);
 
-    __weak typeof(self) weakSelf = self;
+    // 1. Use __typeof__ for better compatibility
+    __weak __typeof__(self) weakSelf = self;
+
     dispatch_source_set_cancel_handler(self.source, ^{
-        if (weakSelf.fileDescriptor) {
-            close(weakSelf.fileDescriptor);
-            weakSelf.fileDescriptor = 0;
+        // 2. Create a local strong reference to ensure self stays alive during execution
+        __strong __typeof__(weakSelf) strongSelf = weakSelf;
+        
+        // 3. Access the primitive via the pointer, not the property dot-notation
+        if (strongSelf && strongSelf->_fileDescriptor) {
+            close(strongSelf->_fileDescriptor);
+            strongSelf->_fileDescriptor = 0;
         }
     });
 }

@@ -264,7 +264,10 @@
 }
 
 + (NSString*) crossProcessId {
-    return [[[[NRMAHarvestController harvestController] harvester] crossProcessID] copy];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    NSString* crossProcessId = [harvester crossProcessID];
+    return crossProcessId ? [crossProcessId copy] : nil;
 }
 
 #pragma mark - manage feature flags
