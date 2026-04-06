@@ -732,6 +732,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (_sessionReplay != nil) {
         [_sessionReplay onError:error];
+        @synchronized(kNRMAAnalyticsInitializationLock) {
+            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+        }
     }
 #endif
 }
@@ -828,19 +831,50 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
 
+    // Update session duration manager with new session start time for 4-hour session timeout
+    [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
     
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (@available(iOS 13.0, *)) {
-       // ERROR MODE
-        // BOOL isSampled = [self isSessionReplaySampled];
-        if ([self isSessionReplayEnabled]) {
+        if ([self isSessionReplaySampled] && [self isSessionReplayEnabled]) {
+            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]]; // Add the hasReplay attribute here incase the analytics controller wasn't created at the start of the session replay.
+        }
+#endif
+    }
+}
 
-        //if (isSampled && [self isSessionReplayEnabled]) {
-            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+- (void) handle4HourSessionRestart {
+    NRLOG_AGENT_DEBUG(@"Executing 4-hour automatic session restart");
+
+    // End current session (adds sessionDuration attribute and Session event)
+    [self.analyticsController newSession];
+
+    // Create Session/Duration metric (matches background behavior)
+    NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:@"Session/Duration"
+                                                    value:[NSNumber numberWithDouble:sessionLength]
+                                                    scope:nil]];
+    
+    // Add supportability metric for tracking
+    [NRMASupportMetricHelper enqueue4HourSessionRestartMetric];
+
+    // Trigger harvest to send all pending data before restart
+    [[NRMAHarvestController harvestController].harvester execute];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
+
+    // Restart session: new session ID, new sample seeds, restart harvest
+    [self sessionStartInitialization];
+
+    // Restart session replay if enabled
+    #if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if (@available(iOS 13.0, *)) {
+        if ([self isSessionReplayEnabled] && [self isSessionReplaySampled]) {
+            [self sessionReplayStart];
         }
     }
-#endif
+    #endif
 }
 
 #if !TARGET_OS_WATCH

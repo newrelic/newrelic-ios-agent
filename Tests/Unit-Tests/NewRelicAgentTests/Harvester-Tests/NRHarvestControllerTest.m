@@ -15,6 +15,9 @@
 #import "NRAgentTestBase.h"
 #import "NRMAMeasurements.h"
 #import "NRMAAppToken.h"
+#import "NewRelicAgentInternal.h"
+#import "NewRelic.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 @interface NRMAHarvestAwareTester : NSObject <NRMAHarvestAware>
 @end
@@ -59,6 +62,10 @@
 @interface NRMAHarvester (test)
 - (void) clearStoredHarvesterConfiguration;
 - (NRMAHarvesterConnection*)connection;
+@end
+
+@interface NRMAHarvestTimer (test)
+- (void) tick;
 @end
 
 
@@ -129,6 +136,187 @@
 
     XCTAssertNoThrow([[[NRMAHarvestController harvestController] harvester] execute], @"assert no crash when harvest aware executes");
 
+}
+
+- (void) testHarvestTimerSessionTimeoutLogic
+{
+    // Test that the HarvestTimer's tick method correctly checks session duration
+    // and triggers session restart when the timeout is exceeded
+
+    // Initialize NewRelicAgentInternal singleton
+    [NewRelic startWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN];
+
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvestTimer* timer = [controller harvestTimer];
+    NRMASessionDurationManager* sessionManager = [NRMASessionDurationManager shared];
+
+    // Store original max duration to restore later
+    NSTimeInterval originalMaxDuration = sessionManager.maxSessionDuration;
+
+    // Configure session manager for a very short timeout (2 seconds)
+    [sessionManager setMaxSessionDuration:2.0];
+
+    // Set session start time to 5 seconds ago (well past the 2 second limit)
+    NSDate* pastStartTime = [NSDate dateWithTimeIntervalSinceNow:-5.0];
+    [sessionManager updateSessionStartTime:pastStartTime];
+
+    // Verify session has exceeded before tick
+    XCTAssertTrue([sessionManager hasSessionExceeded], @"Session should have exceeded the 2 second limit");
+
+    // Mock NewRelicAgentInternal to verify handle4HourSessionRestart is called
+    id mockAgentInternal = [OCMockObject partialMockForObject:[NewRelicAgentInternal sharedInstance]];
+    [[mockAgentInternal expect] handle4HourSessionRestart];
+
+    // Manually trigger the tick method (simulates harvest timer firing)
+    [timer tick];
+
+    // Wait for async dispatch to complete (tick uses dispatch_async)
+    [NSThread sleepForTimeInterval:1.0];
+
+    // Verify that handle4HourSessionRestart was called
+    XCTAssertNoThrow([mockAgentInternal verify], @"handle4HourSessionRestart should have been called");
+
+    // Clean up
+    [mockAgentInternal stopMocking];
+
+    // Restore original configuration
+    [sessionManager setMaxSessionDuration:originalMaxDuration];
+    [sessionManager updateSessionStartTime:[NSDate date]];
+}
+
+- (void) testHarvestTimerSessionNotTimeoutWhenUnderLimit
+{
+    // Test that the HarvestTimer's tick method does NOT trigger restart
+    // when session is still under the timeout limit
+
+    // Initialize NewRelicAgentInternal singleton
+    [NewRelic startWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN];
+
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvestTimer* timer = [controller harvestTimer];
+    NRMASessionDurationManager* sessionManager = [NRMASessionDurationManager shared];
+
+    // Store original max duration to restore later
+    NSTimeInterval originalMaxDuration = sessionManager.maxSessionDuration;
+
+    // Configure session manager for 100 second timeout
+    [sessionManager setMaxSessionDuration:100.0];
+
+    // Set session start time to 10 seconds ago (under the 100 second limit)
+    NSDate* recentStartTime = [NSDate dateWithTimeIntervalSinceNow:-10.0];
+    [sessionManager updateSessionStartTime:recentStartTime];
+
+    // Verify session has NOT exceeded before tick
+    XCTAssertFalse([sessionManager hasSessionExceeded], @"Session should not have exceeded the 100 second limit");
+
+    // Mock NewRelicAgentInternal to verify handle4HourSessionRestart is NOT called
+    id mockAgentInternal = [OCMockObject partialMockForObject:[NewRelicAgentInternal sharedInstance]];
+    [[mockAgentInternal reject] handle4HourSessionRestart];
+
+    // Manually trigger the tick method (simulates harvest timer firing)
+    [timer tick];
+
+    // Wait for async dispatch to complete (tick uses dispatch_async)
+    [NSThread sleepForTimeInterval:1.0];
+
+    // Verify that handle4HourSessionRestart was NOT called
+    XCTAssertNoThrow([mockAgentInternal verify], @"handle4HourSessionRestart should not have been called");
+
+    // Clean up
+    [mockAgentInternal stopMocking];
+
+    // Restore original configuration
+    [sessionManager setMaxSessionDuration:originalMaxDuration];
+    [sessionManager updateSessionStartTime:[NSDate date]];
+}
+
+- (void) testHarvestTimerSessionRestartResetsSessionDuration
+{
+    // Test that after a session restart triggered by the timer,
+    // the session duration is properly reset
+
+    NRMASessionDurationManager* sessionManager = [NRMASessionDurationManager shared];
+
+    // Store original max duration
+    NSTimeInterval originalMaxDuration = sessionManager.maxSessionDuration;
+
+    // Configure session manager for short timeout
+    [sessionManager setMaxSessionDuration:2.0];
+
+    // Set session start time to past the limit
+    NSDate* pastStartTime = [NSDate dateWithTimeIntervalSinceNow:-5.0];
+    [sessionManager updateSessionStartTime:pastStartTime];
+
+    // Verify session has exceeded
+    XCTAssertTrue([sessionManager hasSessionExceeded], @"Session should have exceeded");
+    NSTimeInterval oldDuration = [sessionManager currentSessionDuration];
+    XCTAssertGreaterThan(oldDuration, 2.0, @"Old session duration should be over 2 seconds");
+
+    // Simulate session restart by updating start time to now
+    // (This is what handle4HourSessionRestart does via sessionStartInitialization)
+    NSDate* newStartTime = [NSDate date];
+    [sessionManager updateSessionStartTime:newStartTime];
+
+    // Verify session no longer exceeds after restart
+    XCTAssertFalse([sessionManager hasSessionExceeded], @"New session should not have exceeded");
+
+    // Verify new session duration is very small
+    NSTimeInterval newDuration = [sessionManager currentSessionDuration];
+    XCTAssertLessThan(newDuration, 1.0, @"New session duration should be less than 1 second");
+
+    // Restore original configuration
+    [sessionManager setMaxSessionDuration:originalMaxDuration];
+}
+
+- (void) testHarvestTimerSessionRestartChangesSessionId
+{
+    // Test that the session ID changes after a 4-hour session restart
+
+    // Initialize NewRelicAgentInternal singleton
+    [NewRelic startWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN];
+
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvestTimer* timer = [controller harvestTimer];
+    NRMASessionDurationManager* sessionManager = [NRMASessionDurationManager shared];
+
+    // Store original max duration to restore later
+    NSTimeInterval originalMaxDuration = sessionManager.maxSessionDuration;
+
+    // Configure session manager for a very short timeout (2 seconds)
+    [sessionManager setMaxSessionDuration:2.0];
+
+    // Set session start time to 5 seconds ago (well past the 2 second limit)
+    NSDate* pastStartTime = [NSDate dateWithTimeIntervalSinceNow:-5.0];
+    [sessionManager updateSessionStartTime:pastStartTime];
+
+    // Get the session ID before restart
+    NSString* sessionIdBefore = [[NewRelicAgentInternal sharedInstance] currentSessionId];
+    XCTAssertNotNil(sessionIdBefore, @"Session ID should exist before restart");
+
+    // Verify session has exceeded
+    XCTAssertTrue([sessionManager hasSessionExceeded], @"Session should have exceeded the 2 second limit");
+
+    // Manually trigger the tick method (simulates harvest timer firing)
+    [timer tick];
+
+    // Wait for async dispatch to complete and session restart to finish
+    // The tick method uses dispatch_async and handle4HourSessionRestart does work
+    [NSThread sleepForTimeInterval:2.0];
+
+    // Get the session ID after restart
+    NSString* sessionIdAfter = [[NewRelicAgentInternal sharedInstance] currentSessionId];
+    XCTAssertNotNil(sessionIdAfter, @"Session ID should exist after restart");
+
+    // Verify session ID has changed
+    XCTAssertNotEqualObjects(sessionIdBefore, sessionIdAfter, @"Session ID should change after 4-hour restart");
+
+    // Verify session duration has been reset
+    NSTimeInterval durationAfter = [sessionManager currentSessionDuration];
+    XCTAssertLessThan(durationAfter, 3.0, @"Session duration should be reset after restart");
+
+    // Restore original configuration
+    [sessionManager setMaxSessionDuration:originalMaxDuration];
+    [sessionManager updateSessionStartTime:[NSDate date]];
 }
 
 @end

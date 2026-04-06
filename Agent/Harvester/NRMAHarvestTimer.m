@@ -10,6 +10,8 @@
 #import "NRMAHarvestController.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
+#import "NewRelicAgentInternal.h"
+#import <NewRelic/NewRelic-Swift.h>
 static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 #define NR_NEVER_TICKED -1
 
@@ -79,12 +81,20 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
     long long delta = (long long)(NRMAMillisecondTimestamp() - tick);
     NRLOG_AGENT_VERBOSE(@"HarvestTimer tick took %lld ms",delta);
     [self updateTimer];
+    
+    // Check for session timeout using SessionDurationManager
+    if ([[NRMASessionDurationManager shared] hasSessionExceeded]) {
+        NSTimeInterval elapsed = [[NRMASessionDurationManager shared] currentSessionDuration];
+        NSTimeInterval maxDuration = [[NRMASessionDurationManager shared] maxSessionDuration];
+        NRLOG_AGENT_INFO(@"HarvestTimer: Session duration reached limit (%.0f seconds / %.0f max). Triggering session restart.", elapsed, maxDuration);
+        [[NewRelicAgentInternal sharedInstance] handle4HourSessionRestart];
+    }
 }
 
 - (void) updateTimer
 {
     if (self.period != ([NRMAHarvestController configuration].data_report_period*1000)) {
-        
+
         [self stop];
         self.period = [NRMAHarvestController configuration].data_report_period*1000;
         NRLOG_AGENT_VERBOSE(@"Updating harvest period to %lldms",self.period);
