@@ -90,10 +90,18 @@ struct SwiftUIContentView: View {
                         Text("Tinted SF Symbols")
                     }
                     if #available(iOS 16.0, *) {
-                        
                         NavigationLink(destination: NavigationStackView()) {
                             Text("NavigationStack")
                         }
+                    }
+                    NavigationLink(destination: NavigationLinkLabelLayoutTestCase()) {
+                        Text("NavigationLink Labels")
+                    }
+                    NavigationLink(destination: ScrollUnderHeaderTestCase()) {
+                        Text("Scroll Under Header")
+                    }
+                    NavigationLink(destination: TypeScaleTestCase()) {
+                        Text("Type Scale")
                     }
                 }
                 .navigationBarTitle("SwiftUI Elements")
