@@ -556,6 +556,10 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
         if item.title == "🛡️ Accessibility Block" {
             cell.accessibilityIdentifier = "nr-block"
         }
+        if item.title == "Hello (masking fixture)" {
+            cell.accessibilityIdentifier = "public"
+
+        }
 
         cell.accessoryType = .disclosureIndicator
 
