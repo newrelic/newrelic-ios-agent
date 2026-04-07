@@ -840,8 +840,8 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
         if ([self isSessionReplaySampled] && [self isSessionReplayEnabled]) {
             [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]]; // Add the hasReplay attribute here incase the analytics controller wasn't created at the start of the session replay.
         }
-#endif
     }
+#endif
 }
 
 - (void) handle4HourSessionRestart {
