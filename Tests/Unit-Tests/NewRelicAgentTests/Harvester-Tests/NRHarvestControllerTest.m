@@ -19,6 +19,12 @@
 #import "NewRelic.h"
 #import <NewRelic/NewRelic-Swift.h>
 
+@interface NewRelicAgentInternal(UnitTests)
+
+- (void)destroyAgent;
+
+@end
+
 @interface NRMAHarvestAwareTester : NSObject <NRMAHarvestAware>
 @end
 @implementation NRMAHarvestAwareTester
@@ -182,6 +188,8 @@
     // Restore original configuration
     [sessionManager setMaxSessionDuration:originalMaxDuration];
     [sessionManager updateSessionStartTime:[NSDate date]];
+    
+    [[NewRelicAgentInternal sharedInstance] destroyAgent];
 }
 
 - (void) testHarvestTimerSessionNotTimeoutWhenUnderLimit
@@ -228,6 +236,8 @@
     // Restore original configuration
     [sessionManager setMaxSessionDuration:originalMaxDuration];
     [sessionManager updateSessionStartTime:[NSDate date]];
+    
+    [[NewRelicAgentInternal sharedInstance] destroyAgent];
 }
 
 - (void) testHarvestTimerSessionRestartResetsSessionDuration
@@ -317,6 +327,8 @@
     // Restore original configuration
     [sessionManager setMaxSessionDuration:originalMaxDuration];
     [sessionManager updateSessionStartTime:[NSDate date]];
+    
+    [[NewRelicAgentInternal sharedInstance] destroyAgent];
 }
 
 @end
