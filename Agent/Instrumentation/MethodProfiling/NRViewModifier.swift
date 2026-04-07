@@ -93,7 +93,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                     "viewInstanceId": id,
                     "restarted":      NSNumber(value: hasAppearedBefore),
                     "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
-                    "timeVisible":    NSNumber(value: max(loadTimeSec, 0.0)),
+                    "timeVisible":    NSNumber(value: max(timeVisibleSec, 0.0)),
                     "platform":       "SwiftUI",
                 ])
 

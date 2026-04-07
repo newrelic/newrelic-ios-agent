@@ -41,57 +41,71 @@ static NSString * const kSwiftManglingMarker = @"_Tt";
 #pragma mark - Swift name demangling
 
 /**
- * Returns the demangled Swift type name for `cls`, or the raw ObjC class name if
- * no demangling is needed / available.
+ * Strips the outermost module prefix from a (possibly generic) type name.
  *
- * - `fullName`  YES → "ModuleName.ClassName"  (for viewClass attribute)
- * - `fullName`  NO  → "ClassName"             (for viewName attribute)
+ * Scans for the first '.' at angle-bracket depth 0, which is the module separator.
+ * This avoids the "trailing >" bug caused by finding a '.' inside generic params.
  *
- * swift_demangle is a public symbol in the Swift runtime dylib; we look it up
- * lazily via dlsym so we don't need to link against a specific Swift library.
+ *   "NRTestApp.ProductViewController"            → "ProductViewController"
+ *   "SwiftUI.UIHostingController<NRTestApp.Foo>" → "UIHostingController<NRTestApp.Foo>"
+ *   "UIViewController"                           → "UIViewController"  (no dot → unchanged)
+ */
+static NSString *NRMA_StripOuterModule(NSString *name) {
+    NSUInteger depth = 0;
+    for (NSUInteger i = 0; i < name.length; i++) {
+        unichar c = [name characterAtIndex:i];
+        if      (c == '<') depth++;
+        else if (c == '>') { if (depth > 0) depth--; }
+        else if (c == '.' && depth == 0) {
+            return [name substringFromIndex:i + 1];
+        }
+    }
+    return name;
+}
+
+/**
+ * Returns the demangled type name for `cls`.
+ *
+ * - fullName YES → "ModuleName.ClassName"  (viewClass attribute)
+ * - fullName NO  → "ClassName"             (viewName attribute)
+ *
+ * Handles three cases:
+ *   1. Mangled Swift names (_Tt…): demangled via swift_demangle, then module-stripped if needed.
+ *   2. Already-demangled module-qualified names (e.g. "NRTestApp.Foo" returned directly by
+ *      newer Swift runtimes): module-stripped without demangling step.
+ *   3. Plain ObjC names ("UIViewController"): returned as-is for fullName, or unchanged since
+ *      there is no module prefix to strip.
  */
 static NSString *NRMA_DemangledName(Class cls, BOOL fullName) {
     NSString *rawName = NSStringFromClass(cls);
+    NSString *qualified = rawName;
 
-    if (![rawName hasPrefix:kSwiftManglingMarker]) {
-        // Plain ObjC class — already human-readable
-        return rawName;
+    if ([rawName hasPrefix:kSwiftManglingMarker]) {
+        typedef char *(*SwiftDemangle)(const char *, size_t, char *, size_t *, uint32_t);
+        static SwiftDemangle demangle = NULL;
+        static dispatch_once_t token;
+        dispatch_once(&token, ^{
+            demangle = (SwiftDemangle)dlsym(RTLD_DEFAULT, "swift_demangle");
+        });
+        if (demangle) {
+            const char *cstr = [rawName UTF8String];
+            size_t outLen = 0;
+            char *buf = demangle(cstr, strlen(cstr), NULL, &outLen, 0);
+            if (buf) {
+                qualified = [NSString stringWithUTF8String:buf];
+                free(buf);
+            }
+        }
     }
-
-    // Resolve swift_demangle once
-    typedef char *(*SwiftDemangle)(const char *, size_t, char *, size_t *, uint32_t);
-    static SwiftDemangle demangle = NULL;
-    static dispatch_once_t token;
-    dispatch_once(&token, ^{
-        demangle = (SwiftDemangle)dlsym(RTLD_DEFAULT, "swift_demangle");
-    });
-
-    if (!demangle) {
-        return rawName;
-    }
-
-    const char *mangledCStr = [rawName UTF8String];
-    size_t outputLen = 0;
-    char *demangled = demangle(mangledCStr, strlen(mangledCStr), NULL, &outputLen, 0);
-
-    if (!demangled) {
-        return rawName;
-    }
-
-    // demangled is e.g. "MyApp.MyViewController" — caller owns the buffer
-    NSString *full = [NSString stringWithUTF8String:demangled];
-    free(demangled);
 
     if (fullName) {
-        return full;
+        return qualified;
     }
 
-    // Strip the module prefix (everything up to and including the last '.')
-    NSRange dot = [full rangeOfString:@"." options:NSBackwardsSearch];
-    if (dot.location != NSNotFound) {
-        return [full substringFromIndex:dot.location + 1];
-    }
-    return full;
+    // Strip outermost module prefix for the simple viewName.
+    // Works on both swift_demangle output and names already returned demangled
+    // by the runtime (e.g. "NRTestApp.TextMaskingViewController").
+    return NRMA_StripOuterModule(qualified);
 }
 
 // Storage for original IMPs — set once during swizzle setup
@@ -102,11 +116,21 @@ static void (*orig_viewDidDisappear)(id, SEL, BOOL);
 #pragma mark - Helpers
 
 NS_INLINE BOOL NRMA_ShouldSkipClass(Class cls) {
-    // Skip SwiftUI framework hosting internals only — NRMobileView modifier handles those.
-    // Do NOT skip _TtC-prefixed names: that prefix means "Swift class with ObjC parent",
-    // which covers all Swift UIViewController subclasses and is exactly what we want to track.
+    // Skip SwiftUI framework classes — NRMobileViewModifier handles those.
     NSString *name = NSStringFromClass(cls);
-    return [name hasPrefix:kSwiftUIPrefix];
+    if ([name hasPrefix:kSwiftUIPrefix]) return YES;
+
+    // Skip UIHostingController and its subclasses. They wrap SwiftUI views and are
+    // already covered by NRMobileViewModifier. Their viewClass is an unreadable
+    // generic type tree; tracking them produces duplicate, noisy events.
+    static Class hostingControllerClass;
+    static dispatch_once_t token;
+    dispatch_once(&token, ^{
+        hostingControllerClass = NSClassFromString(@"UIHostingController");
+    });
+    if (hostingControllerClass && [cls isSubclassOfClass:hostingControllerClass]) return YES;
+
+    return NO;
 }
 
 // File-private — used only for a type-safe cast when calling the informal hook.
