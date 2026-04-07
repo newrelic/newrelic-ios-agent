@@ -76,6 +76,12 @@
  
  - NRFeatureFlag_OfflineStorage
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
+
+ - NRFeatureFlag_MobileViews
+    Disabled by default. Enables automatic capture of MobileView events for UIViewController lifecycle
+    (viewDidLoad → viewDidAppear → viewDidDisappear) and SwiftUI onAppear/onDisappear.
+    Each visible appearance of a view emits a MobileView event with viewClass, viewName,
+    viewInstanceId, restarted, loadTime (ms), and timeVisible (ms) attributes.
 */
 
 
@@ -103,4 +109,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
     NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
     NRFeatureFlag_AutoCollectLogs                       = 1 << 23, // Disabled by default
+    NRFeatureFlag_MobileViews                           = 1 << 24,
 };

@@ -27,6 +27,9 @@ class ViewController: UIViewController {
     private var appStartDate = Date()
     private var timer: Timer?
 
+    func nrMobileViewName () -> String {
+        "MainViewController"
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.

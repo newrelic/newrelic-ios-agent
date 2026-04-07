@@ -122,6 +122,8 @@ struct NavigationStackView: View {
             }
         }
         .NRTrackView(name: "NavigationStackView")
+        .NRMobileView(name: "NavigationStackView")
+
     }
 }
 
