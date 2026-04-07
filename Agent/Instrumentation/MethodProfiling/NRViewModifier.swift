@@ -109,13 +109,14 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 @available(iOS 13, tvOS 13, *)
 public extension SwiftUI.View {
     func NRMobileView(name: String? = nil) -> some View {
-        // String(reflecting:) gives the module-qualified name: "MyApp.ProductView"
-        // String(describing:) gives the simple name:           "ProductView"
-        let qualifiedName = String(reflecting: type(of: self))
-        let simpleName    = String(describing: type(of: self))
+        // String(reflecting:) produces a noisy generic modifier stack when views are chained
+        // (e.g. "SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<...>>"), so we use
+        // String(describing:) for a clean simple name, or the caller-supplied name if given.
+        let simpleName = String(describing: type(of: self))
+        let resolved   = name ?? simpleName
         return modifier(NRMobileViewModifier(
-            viewName:  name ?? simpleName,
-            viewClass: qualifiedName
+            viewName:  resolved,
+            viewClass: resolved
         ))
     }
 }

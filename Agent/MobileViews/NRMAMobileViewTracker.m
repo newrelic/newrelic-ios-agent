@@ -218,8 +218,8 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         kNRAttr_timeVisible:    @(timeVisibleSec),
     }];
 
-    NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
-                        viewName, loadTimeSec, timeVisibleSec, isRestarted ? @"YES" : @"NO");
+    //NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
+    //                    viewName, loadTimeSec, timeVisibleSec, isRestarted ? @"YES" : @"NO");
 
     // Mark that this VC has appeared at least once (restarted = YES on next display)
     objc_setAssociatedObject(self, &kNRHasAppearedBeforeKey,

@@ -334,7 +334,9 @@ static NewRelicAgentInternal* _sharedInstance;
     }
 
     if ([NRMAFlags shouldEnableMobileViews]) {
+#if !TARGET_OS_WATCH
         [[NRMAMobileViewTracker sharedInstance] start];
+#endif
     }
 
     if ([NRMAFlags shouldEnableCrashReporting]) {
