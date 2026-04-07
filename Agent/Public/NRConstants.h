@@ -180,6 +180,11 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplayMetricURLTooLarge       kNRMASessionReplay @"/UrlTooLarge"
 #define kNRMASessionReplayMetricSuccessfulSize    kNRMASessionReplay @"/Size/Uncompressed"
 
+// Session Replay Configuration
+#define kNRMASessionReplayConfigEnabled              @"Supportability/Mobile/iOS/Config/SessionReplay/Enabled"
+#define kNRMASessionReplayConfigSamplingRate         @"Supportability/Mobile/iOS/Config/SessionReplay/SamplingRate/Value"
+#define kNRMASessionReplayConfigErrorSamplingRate    @"Supportability/Mobile/iOS/Config/SessionReplay/ErrorSamplingRate/Value"
+
 // JS Error
 #define kNRMAJSError kNRAgentHealthPrefix @"/JSError"
 #define kNRMAJSErrorMetricUploadTime        kNRMAJSError @"/UploadTime"

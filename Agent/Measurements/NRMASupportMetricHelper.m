@@ -209,6 +209,36 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueueSessionReplayConfigEnabledMetric:(BOOL)enabled {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigEnabled
+                                                              value:[NSNumber numberWithBool:enabled]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
++ (void) enqueueSessionReplayConfigSamplingRateMetric:(double)samplingRate {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigSamplingRate
+                                                              value:[NSNumber numberWithDouble:samplingRate]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
++ (void) enqueueSessionReplayConfigErrorSamplingRateMetric:(double)errorSamplingRate {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigErrorSamplingRate
+                                                              value:[NSNumber numberWithDouble:errorSamplingRate]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
 // End Session Replay
 
 // JS Error
