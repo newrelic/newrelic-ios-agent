@@ -67,18 +67,18 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 appearTime = now
                 instanceId = id
 
-                // loadTime: modifier creation (≈ view body evaluation) → onAppear
-                let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
-
-                NewRelic.recordCustomEvent("MobileView", attributes: [
-                    "viewClass":      viewClass,
-                    "viewName":       viewName,
-                    "viewInstanceId": id,
-                    "restarted":      NSNumber(value: hasAppearedBefore),
-                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
-                    "timeVisible":    NSNumber(value: 0.0), // placeholder until disappear
-                    "platform":       "SwiftUI",
-                ])
+//                // loadTime: modifier creation (≈ view body evaluation) → onAppear
+//                let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
+//
+//                NewRelic.recordCustomEvent("MobileView", attributes: [
+//                    "viewClass":      viewClass,
+//                    "viewName":       viewName,
+//                    "viewInstanceId": id,
+//                    "restarted":      NSNumber(value: hasAppearedBefore),
+//                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
+//                    "timeVisible":    NSNumber(value: 0.0), // placeholder until disappear
+//                    "platform":       "SwiftUI",
+//                ])
             }
             .onDisappear {
                 let disappearTime = Date()
@@ -109,10 +109,13 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 @available(iOS 13, tvOS 13, *)
 public extension SwiftUI.View {
     func NRMobileView(name: String? = nil) -> some View {
-        let typeName = String(describing: type(of: self))
+        // String(reflecting:) gives the module-qualified name: "MyApp.ProductView"
+        // String(describing:) gives the simple name:           "ProductView"
+        let qualifiedName = String(reflecting: type(of: self))
+        let simpleName    = String(describing: type(of: self))
         return modifier(NRMobileViewModifier(
-            viewName:  name ?? typeName,
-            viewClass: typeName
+            viewName:  name ?? simpleName,
+            viewClass: qualifiedName
         ))
     }
 }

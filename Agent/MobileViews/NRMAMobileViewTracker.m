@@ -10,6 +10,7 @@
 #import "NRMAMobileViewTracker.h"
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
+#import <dlfcn.h>
 #import "NewRelic.h"
 #import "NRLogger.h"
 #import "NRMAMethodSwizzling.h"
@@ -34,6 +35,65 @@ static NSString * const kNRAttr_timeVisible    = @"timeVisible";
 static NSString * const kSwiftMangledPrefix = @"_TtC";
 static NSString * const kSwiftUIPrefix      = @"SwiftUI.";
 
+// Swift mangling marker — any class name starting with _Tt is mangled
+static NSString * const kSwiftManglingMarker = @"_Tt";
+
+#pragma mark - Swift name demangling
+
+/**
+ * Returns the demangled Swift type name for `cls`, or the raw ObjC class name if
+ * no demangling is needed / available.
+ *
+ * - `fullName`  YES → "ModuleName.ClassName"  (for viewClass attribute)
+ * - `fullName`  NO  → "ClassName"             (for viewName attribute)
+ *
+ * swift_demangle is a public symbol in the Swift runtime dylib; we look it up
+ * lazily via dlsym so we don't need to link against a specific Swift library.
+ */
+static NSString *NRMA_DemangledName(Class cls, BOOL fullName) {
+    NSString *rawName = NSStringFromClass(cls);
+
+    if (![rawName hasPrefix:kSwiftManglingMarker]) {
+        // Plain ObjC class — already human-readable
+        return rawName;
+    }
+
+    // Resolve swift_demangle once
+    typedef char *(*SwiftDemangle)(const char *, size_t, char *, size_t *, uint32_t);
+    static SwiftDemangle demangle = NULL;
+    static dispatch_once_t token;
+    dispatch_once(&token, ^{
+        demangle = (SwiftDemangle)dlsym(RTLD_DEFAULT, "swift_demangle");
+    });
+
+    if (!demangle) {
+        return rawName;
+    }
+
+    const char *mangledCStr = [rawName UTF8String];
+    size_t outputLen = 0;
+    char *demangled = demangle(mangledCStr, strlen(mangledCStr), NULL, &outputLen, 0);
+
+    if (!demangled) {
+        return rawName;
+    }
+
+    // demangled is e.g. "MyApp.MyViewController" — caller owns the buffer
+    NSString *full = [NSString stringWithUTF8String:demangled];
+    free(demangled);
+
+    if (fullName) {
+        return full;
+    }
+
+    // Strip the module prefix (everything up to and including the last '.')
+    NSRange dot = [full rangeOfString:@"." options:NSBackwardsSearch];
+    if (dot.location != NSNotFound) {
+        return [full substringFromIndex:dot.location + 1];
+    }
+    return full;
+}
+
 // Storage for original IMPs — set once during swizzle setup
 static void (*orig_viewDidLoad)(id, SEL);
 static void (*orig_viewDidAppear)(id, SEL, BOOL);
@@ -42,17 +102,29 @@ static void (*orig_viewDidDisappear)(id, SEL, BOOL);
 #pragma mark - Helpers
 
 NS_INLINE BOOL NRMA_ShouldSkipClass(Class cls) {
+    // Skip SwiftUI framework hosting internals only — NRMobileView modifier handles those.
+    // Do NOT skip _TtC-prefixed names: that prefix means "Swift class with ObjC parent",
+    // which covers all Swift UIViewController subclasses and is exactly what we want to track.
     NSString *name = NSStringFromClass(cls);
-    return [name hasPrefix:kSwiftMangledPrefix] || [name hasPrefix:kSwiftUIPrefix];
+    return [name hasPrefix:kSwiftUIPrefix];
 }
 
+// File-private — used only for a type-safe cast when calling the informal hook.
+// Developers never need to adopt this; it exists solely to avoid a compiler warning.
+@protocol _NRMVNameHook <NSObject>
+- (NSString *)nrMobileViewName;
+@end
+
 NS_INLINE NSString *NRMA_ViewNameForController(UIViewController *vc) {
-    if ([vc conformsToProtocol:@protocol(NRMobileViewNameProvider)] &&
-        [vc respondsToSelector:@selector(nrMobileViewName)]) {
-        NSString *custom = [(id<NRMobileViewNameProvider>)vc nrMobileViewName];
+    // Informal protocol: if the VC implements nrMobileViewName (ObjC or @objc Swift),
+    // use it; otherwise fall back to the demangled class name.
+    SEL sel = @selector(nrMobileViewName);
+    if ([vc respondsToSelector:sel]) {
+        NSString *custom = [(id<_NRMVNameHook>)vc nrMobileViewName];
         if (custom.length > 0) return custom;
     }
-    return NSStringFromClass([vc class]);
+    // Demangled simple name, e.g. "ProductDetailViewController"
+    return NRMA_DemangledName([vc class], NO);
 }
 
 #pragma mark - Swizzled method implementations
@@ -107,7 +179,9 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     }
 
     BOOL isRestarted = (hasAppearedBefore != nil && hasAppearedBefore.boolValue);
-    NSString *viewClass = NSStringFromClass([self class]);
+    // viewClass: fully-qualified demangled name, e.g. "MyApp.ProductDetailViewController"
+    NSString *viewClass = NRMA_DemangledName([self class], YES);
+    // viewName: simple demangled name (or custom override), e.g. "ProductDetailViewController"
     NSString *viewName  = NRMA_ViewNameForController(self);
 
     [NewRelic recordCustomEvent:kNRMobileViewEventType

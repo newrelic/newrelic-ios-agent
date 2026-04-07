@@ -9,6 +9,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,12 +18,26 @@ NS_ASSUME_NONNULL_BEGIN
  * record MobileView events.
  *
  * Attributes emitted on each MobileView event:
- *   viewClass       (NSString) — ObjC/Swift class name of the view controller
- *   viewName        (NSString) — Display name; overridable via NRMobileViewNameProvider protocol
+ *   viewClass       (NSString) — Fully-qualified demangled class name, e.g. "MyApp.ProductViewController"
+ *   viewName        (NSString) — Simple display name, e.g. "ProductViewController"; customisable (see below)
  *   viewInstanceId  (NSString) — UUID unique to this single visible lifetime of the view
  *   restarted       (NSNumber/BOOL) — NO on first appearance, YES on subsequent appearances
- *   loadTime        (NSNumber/double, ms) — viewDidLoad → viewDidAppear (0 if viewDidLoad not observed)
- *   timeVisible     (NSNumber/double, ms) — viewDidAppear → viewDidDisappear
+ *   loadTime        (NSNumber/double, seconds) — viewDidLoad → viewDidAppear
+ *   timeVisible     (NSNumber/double, seconds) — viewDidAppear → viewDidDisappear
+ *
+ * ─── Customising viewName ────────────────────────────────────────────────────
+ *
+ * No protocol adoption or header import required. Just implement nrMobileViewName
+ * on any UIViewController subclass and it will be picked up automatically.
+ *
+ * Objective-C:
+ *   - (NSString *)nrMobileViewName { return @"Product Detail"; }
+ *
+ * Swift (no 'override' — there is no base implementation to override):
+ *   @objc func nrMobileViewName() -> String { "Product Detail" }
+ *
+ * Return nil or empty string to use the default demangled class name.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 @interface NRMAMobileViewTracker : NSObject
 
@@ -34,15 +49,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)start;
 
-@end
-
-/**
- * UIViewController subclasses may implement this protocol to provide a custom
- * viewName for MobileView events, overriding the default class-name-based name.
- */
-@protocol NRMobileViewNameProvider <NSObject>
-@optional
-- (NSString *)nrMobileViewName;
 @end
 
 NS_ASSUME_NONNULL_END
