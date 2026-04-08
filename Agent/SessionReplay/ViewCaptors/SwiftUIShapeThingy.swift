@@ -13,22 +13,26 @@ import UIKit
 class SwiftUIShapeThingy: SessionReplayViewThingy {
     var viewDetails: ViewDetails
     var isMasked: Bool
+    var isBlocked: Bool
     let path: SwiftUI.Path
     let fillColor: ResolvedColor
     let fillStyle: SwiftUI.FillStyle
+    let fallbackTintColor: UIColor?
 
     var shouldRecordSubviews: Bool {
-        false
+        true
     }
 
     var subviews: [any SessionReplayViewThingy] = []
 
-    init(viewDetails: ViewDetails, path: SwiftUI.Path, fillColor: ResolvedColor, fillStyle: SwiftUI.FillStyle) {
+    init(viewDetails: ViewDetails, path: SwiftUI.Path, fillColor: ResolvedColor, fillStyle: SwiftUI.FillStyle, fallbackTintColor: UIColor? = nil) {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
+        self.isBlocked = viewDetails.blockView ?? false
         self.path = path
         self.fillColor = fillColor
         self.fillStyle = fillStyle
+        self.fallbackTintColor = fallbackTintColor
     }
 
     func cssDescription() -> String {
@@ -82,9 +86,14 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
     }
 
     private func getFillColorHex() -> String {
-        // First try to get the UIColor directly
+        // First try to get the UIColor directly from fillColor
         if let uiColor = fillColor.uiColor {
             return uiColor.toHexString(includingAlpha: true)
+        }
+
+        // Second try: use fallback tint color from context (for iOS 18 compatibility)
+        if let fallbackColor = fallbackTintColor {
+            return fallbackColor.toHexString(includingAlpha: true)
         }
 
         // Last resort: transparent

@@ -184,33 +184,21 @@ NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id s
 NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequest* request)
 {
     if (self == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. self is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
         return nil;
     }
     if (_cmd == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. _cmd is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
         return nil;
     }
     if (request == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. request is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
         return nil;
     }
     if (NRMAOriginal__dataTaskWithRequest == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. NRMAOriginal__dataTaskWithRequest is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
         return nil;
     }
     
     if (request.URL == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request has no URL. Returning nil."];
-        NRLOG_AGENT_ERROR(@"%@", res);
         return nil;
     } else {
-        NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [begin] Request appears good, instrumenting request: %@", request.URL.absoluteString];
-        NRLOG_AGENT_VERBOSE(@"%@", res);
     }
     
     IMP originalImp = NRMAOriginal__dataTaskWithRequest;
@@ -237,10 +225,7 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequ
 
     // Try to override the methods of the private class that is returned by this method.
     [NRMAURLSessionTaskOverride instrumentConcreteClass:[task class]];
-    
-    NSString *res = [NSString stringWithFormat:@"NRMAFEB08::NRMAOverride__dataTaskWithRequest. [end] Leaving after instrumenting request."];
-    NRLOG_AGENT_VERBOSE(@"%@", res);
-        
+            
     return task;
 }
 
@@ -256,9 +241,6 @@ NSURLSessionTask* NRMAOverride__dataTaskWithRequest_completionHandler(id self, S
     IMP originalImp = NRMAOriginal__dataTaskWithRequest_completionHandler;
 
     if (originalImp == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__dataTaskWithRequest_completionHandler. NRMAOriginal__dataTaskWithRequest_completionHandler is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
-
         return nil;
     }
 
@@ -313,9 +295,6 @@ NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url)
     IMP originalImp = NRMAOriginal__dataTaskWithURL;
 
     if (originalImp == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__dataTaskWithURL. NRMAOriginal__dataTaskWithURL is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
-
         return nil;
     }
 
@@ -334,9 +313,6 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromFile(id self, SEL _cmd
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithRequest_fromFile;
 
     if (originalImp == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromFile. NRMAOriginal__uploadTaskWithRequest_fromFile is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
-
         return nil;
     }
 
@@ -363,9 +339,6 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithRequest_fromData(id self, SEL _cmd
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithRequest_fromData;
 
     if (originalImp == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromData. NRMAOriginal__uploadTaskWithRequest_fromData is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
-
         return nil;
     }
 
@@ -390,8 +363,6 @@ NSURLSessionTask* NRMAOverride__uploadTaskWithStreamedRequest(id self, SEL _cmd,
     IMP originalImp = (IMP)NRMAOriginal__uploadTaskWithStreamedRequest;
 
     if (originalImp == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithStreamedRequest. NRMAOriginal__uploadTaskWithStreamedRequest is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
 
         return nil;
     }
@@ -409,8 +380,7 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromFile_completionH
     IMP originalIMP = NRMAOriginal__uploadTaskWithRequest_fromFile_completionHandler;
 
     if (originalIMP == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromFile_completionHandler. NRMAOriginal__uploadTaskWithRequest_fromFile_completionHandler is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
+
         return nil;
     }
 
@@ -465,8 +435,7 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
     IMP originalIMP = NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler;
 
     if (originalIMP == nil) {
-        NSString *res = [NSString stringWithFormat:@"NRMAOverride__uploadTaskWithRequest_fromData_completionHandler. NRMAOriginal__uploadTaskWithRequest_fromData_completionHandler is nil. returning nil"];
-        NRLOG_AGENT_ERROR(@"%@", res);
+
         return nil;
     }
 

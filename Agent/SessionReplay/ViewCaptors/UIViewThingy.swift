@@ -11,23 +11,26 @@ import UIKit
 
 class UIViewThingy: SessionReplayViewThingy {
     var isMasked: Bool
-    
+    var isBlocked: Bool
+
     var subviews = [any SessionReplayViewThingy]()
-    
+
     var shouldRecordSubviews: Bool {
         true
     }
-    
+
     var viewDetails: ViewDetails
     
     init(view: UIView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
+        self.isBlocked = viewDetails.blockView ?? false
     }
-    
+
     init(viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
+        self.isBlocked = viewDetails.blockView ?? false
     }
     
     func cssDescription() -> String {

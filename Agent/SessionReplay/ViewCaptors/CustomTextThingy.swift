@@ -12,11 +12,12 @@ import UIKit
 
 class CustomTextThingy: SessionReplayViewThingy {
     var isMasked: Bool
-    
+    var isBlocked: Bool
+
     var subviews = [any SessionReplayViewThingy]()
     
     var shouldRecordSubviews: Bool {
-        false
+        true
     }
     
     var viewDetails: ViewDetails
@@ -56,7 +57,9 @@ class CustomTextThingy: SessionReplayViewThingy {
         else {
             self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskUserInputText ?? true
         }
-        
+
+        self.isBlocked = viewDetails.blockView ?? false
+
         if self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label

@@ -32,4 +32,9 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueSessionReplayFailedMetric;
 + (void) enqueueSessionReplayURLTooLargeMetric;
 
++ (void) enqueueJSErrorUploadTimeMetric:(double)milliseconds;
++ (void) enqueueJSErrorUploadTimeoutMetric;
++ (void) enqueueJSErrorUploadThrottledMetric;
++ (void) enqueueJSErrorFailedUploadMetric;
+
 @end

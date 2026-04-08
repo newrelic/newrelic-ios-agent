@@ -612,7 +612,9 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 
 + (BOOL) shouldCollectTraces
 {
-    NRMAHarvestData* harvestData = [[[NRMAHarvestController harvestController] harvester] harvestData];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    NRMAHarvestData* harvestData = [harvester harvestData];
     NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
 
     if (harvestData == nil || configuration == nil)
