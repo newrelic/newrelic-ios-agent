@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Observation
 
 public struct NRConditionalMaskView<Content: View>: View {
     private let maskApplicationText: Bool?
@@ -53,6 +54,17 @@ public struct NRConditionalMaskView<Content: View>: View {
                                       sessionReplayIdentifier: sessionReplayIdentifier,
                                       content: content
             )
+            .onAppear {
+                if #available(iOS 17.0, *) {
+                    withObservationTracking {
+                        print("self = \(self)")
+                        
+                    }
+                } else {
+                    // Fallback on earlier versions
+                }
+            }
+
         }
         else {
             content()
@@ -63,3 +75,13 @@ public struct NRConditionalMaskView<Content: View>: View {
 }
 
 
+@available(iOS 17.0, *)
+public func withObservationTracking(execute: @Sendable @escaping () -> Void) {
+    Observation.withObservationTracking {
+        execute()
+    } onChange: {
+        DispatchQueue.main.async {
+            withObservationTracking(execute: execute)
+        }
+    }
+}

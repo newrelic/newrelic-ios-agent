@@ -14,6 +14,11 @@
 		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
+		2B3CF4A82F8701DB00C2915D /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 2B3CF4A72F8701DB00C2915D /* Lottie */; };
+		2B3CF4AE2F87024400C2915D /* LottieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3CF4AD2F87024400C2915D /* LottieView.swift */; };
+		2B3CF4B02F87026F00C2915D /* View+CustomModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3CF4AF2F87026F00C2915D /* View+CustomModifiers.swift */; };
+		2B3CF4BC2F88262A00C2915D /* Loader.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B3CF4BB2F88262A00C2915D /* Loader.json */; };
+		2B3CF4BD2F88262A00C2915D /* Loader.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B3CF4BB2F88262A00C2915D /* Loader.json */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
@@ -66,9 +71,12 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		4480789D589D4AC7A0ED6DEF /* ObservationTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDA3BA495CA4B5FA0ED9E6C /* ObservationTableView.swift */; };
+		A8B974D7A3E4423D9959D65F /* ObservationTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDA3BA495CA4B5FA0ED9E6C /* ObservationTableView.swift */; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
+		DBCB8A90494F4086BFBBD00C /* ObservationTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDA3BA495CA4B5FA0ED9E6C /* ObservationTableView.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
 		F802EE9A2BE0218700AB956F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F802EE992BE0218700AB956F /* Assets.xcassets */; };
@@ -344,6 +352,9 @@
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
 		2B3493692E8EF15A006DE9D0 /* MaskingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingView.swift; sourceTree = "<group>"; };
+		2B3CF4AD2F87024400C2915D /* LottieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieView.swift; sourceTree = "<group>"; };
+		2B3CF4AF2F87026F00C2915D /* View+CustomModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+CustomModifiers.swift"; sourceTree = "<group>"; };
+		2B3CF4BB2F88262A00C2915D /* Loader.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Loader.json; sourceTree = "<group>"; };
 		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
@@ -391,6 +402,7 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
+		8FDA3BA495CA4B5FA0ED9E6C /* ObservationTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservationTableView.swift; sourceTree = "<group>"; };
 		D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTestViewController.swift; sourceTree = "<group>"; };
 		D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CustomSwitch.swift; path = ../CustomSwitch.swift; sourceTree = "<group>"; };
 		D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToggleStyle.swift; sourceTree = "<group>"; };
@@ -497,6 +509,7 @@
 			files = (
 				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
 				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
+				2B3CF4A82F8701DB00C2915D /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,7 +548,10 @@
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				2B3CF4AF2F87026F00C2915D /* View+CustomModifiers.swift */,
+				2B3CF4AD2F87024400C2915D /* LottieView.swift */,
 				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
+				8FDA3BA495CA4B5FA0ED9E6C /* ObservationTableView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
@@ -668,6 +684,7 @@
 		F8302AF7296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXGroup;
 			children = (
+				2B3CF4BB2F88262A00C2915D /* Loader.json */,
 				2BAE5C8D2E860C7D001D2B88 /* SwiftUI */,
 				2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */,
 				F86428492971DF80002ABA01 /* Helpers */,
@@ -1044,6 +1061,9 @@
 				Base,
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
+			packageReferences = (
+				2B3CF4A62F8701DB00C2915D /* XCRemoteSwiftPackageReference "lottie-ios" */,
+			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -1144,6 +1164,7 @@
 			files = (
 				F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
+				2B3CF4BC2F88262A00C2915D /* Loader.json in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1168,6 +1189,7 @@
 			files = (
 				F824A54E29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F824A30229A811E8000886A6 /* Assets.xcassets in Resources */,
+				2B3CF4BD2F88262A00C2915D /* Loader.json in Resources */,
 				F86428F72979CDB0002ABA01 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1283,6 +1305,7 @@
 				F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */,
 				2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
+				A8B974D7A3E4423D9959D65F /* ObservationTableView.swift in Sources */,
 				F802EECD2BE023CB00AB956F /* plistHelper.swift in Sources */,
 				F802EECF2BE023D200AB956F /* Variable.swift in Sources */,
 				F802EED02BE023D700AB956F /* Date.swift in Sources */,
@@ -1304,6 +1327,7 @@
 				F8ACFA292EA019BF00E6692B /* InfiniteImageCollectionView.swift in Sources */,
 				D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */,
 				F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */,
+				2B3CF4B02F87026F00C2915D /* View+CustomModifiers.swift in Sources */,
 				F8302B9129707BCC003EC291 /* ApodService.swift in Sources */,
 				F8302B8B297076F9003EC291 /* MainCoordinator.swift in Sources */,
 				F8672A562EAA69820055FA51 /* SimpleScrollView.swift in Sources */,
@@ -1345,6 +1369,7 @@
 				F8302B992970ADC1003EC291 /* UIImageView.swift in Sources */,
 				F8302B9B2970B29D003EC291 /* Date.swift in Sources */,
 				F81062192E17250B00B8CC81 /* InfiniteScrollViewController.swift in Sources */,
+				2B3CF4AE2F87024400C2915D /* LottieView.swift in Sources */,
 				F8302B9D2970B3E0003EC291 /* ApodURL.swift in Sources */,
 				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
@@ -1374,6 +1399,7 @@
 				F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */,
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
+				DBCB8A90494F4086BFBBD00C /* ObservationTableView.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1415,6 +1441,7 @@
 				F86429342979CDFA002ABA01 /* plistHelper.swift in Sources */,
 				F86429352979CDFA002ABA01 /* triggerException.m in Sources */,
 				2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
+				4480789D589D4AC7A0ED6DEF /* ObservationTableView.swift in Sources */,
 				F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				F86429382979CDFA002ABA01 /* AppDelegate.swift in Sources */,
 				F8BF14892F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */,
@@ -2134,6 +2161,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2B3CF4A62F8701DB00C2915D /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2B3CF4A72F8701DB00C2915D /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B3CF4A62F8701DB00C2915D /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F8302AED296F5EFA003EC291 /* Project object */;
 }
