@@ -1683,6 +1683,12 @@
 		F8BF15572F3A3A8F00EF5628 /* XRayDecoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B34935D2E8DD6EF006DE9D0 /* XRayDecoderError.swift */; };
 		F8BF15582F3A3AC700EF5628 /* XrayDecoder+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */; };
 		F8BF15592F3A3AE800EF5628 /* UIViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */; };
+		F8D23CF22F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */; };
+		F8D23CF32F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */; };
+		F8D23CF42F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */; };
+		F8D23CF62F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF52F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift */; };
+		F8D23CF72F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF52F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift */; };
+		F8D23CF82F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF52F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift */; };
 		F8E17C542DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C552DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
 		F8E17C562DB681820098C3CB /* NRLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E17C532DB681820098C3CB /* NRLogger.swift */; };
@@ -2739,6 +2745,9 @@
 		F8BF13E02F3122E400EF5628 /* SwiftUIShapeThingy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIShapeThingy.swift; sourceTree = "<group>"; };
 		F8BF148E2F352D5200EF5628 /* TextHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextHelper.swift; sourceTree = "<group>"; };
 		F8BF154C2F3A37FB00EF5628 /* SwiftUIShapeThingyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIShapeThingyTests.swift; sourceTree = "<group>"; };
+		F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMASessionDurationManager.swift; sourceTree = "<group>"; };
+		F8D23CF52F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRMASessionDurationManagerTests.swift; sourceTree = "<group>"; };
+		F8D23CF92F840F92000FFD31 /* Agent-watchos-Tests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Agent-watchos-Tests-Bridging-Header.h"; sourceTree = "<group>"; };
 		F8E17C532DB681820098C3CB /* NRLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRLogger.swift; sourceTree = "<group>"; };
 		F8E202DD2B07BA61008E0B7B /* NRMAOfflineStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAOfflineStorage.m; sourceTree = "<group>"; };
 		F8E202F32B07BA6E008E0B7B /* NRMAOfflineStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAOfflineStorage.h; sourceTree = "<group>"; };
@@ -2979,6 +2988,7 @@
 				0209AC3624E7075100E45C90 /* NRHarvestableVitalsTest.m */,
 				0209AC3C24E7075200E45C90 /* NRHarvestControllerTest.m */,
 				0209AC3B24E7075200E45C90 /* NRHarvesterConnectionTests.h */,
+				F8D23CF52F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift */,
 				0209AC3924E7075200E45C90 /* NRHarvesterConnectionTests.m */,
 				0209AC3524E7075100E45C90 /* NRHarvesterStateTest.h */,
 				0209AC3824E7075200E45C90 /* NRHarvesterStateTest.m */,
@@ -2986,6 +2996,7 @@
 				0209AC3724E7075100E45C90 /* NRHarvesterTest.m */,
 				0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */,
 				0209AC2A24E7072700E45C90 /* Harvestable-Data-Tests */,
+				F8D23CF92F840F92000FFD31 /* Agent-watchos-Tests-Bridging-Header.h */,
 			);
 			path = "Harvester-Tests";
 			sourceTree = "<group>";
@@ -3266,6 +3277,7 @@
 			children = (
 				02FF47F324DB56B000115469 /* NewRelicAgentInternal.h */,
 				02FF47F524DB56B000115469 /* NewRelicAgentInternal.m */,
+				F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */,
 			);
 			path = General;
 			sourceTree = "<group>";
@@ -5169,6 +5181,7 @@
 					};
 					3431DD162BED375E00FF145F = {
 						CreatedOnToolsVersion = 15.3;
+						LastSwiftMigration = 2620;
 					};
 					348232212BC5EEE60070FAC3 = {
 						CreatedOnToolsVersion = 15.0;
@@ -5671,6 +5684,7 @@
 				F8BF15532F3A38F300EF5628 /* XrayConvertible.swift in Sources */,
 				0209AC0D24E7071500E45C90 /* NewRelicTests.m in Sources */,
 				0209ABF324E706FA00E45C90 /* NRTraceTest.m in Sources */,
+				F8D23CF72F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift in Sources */,
 				0209AC0224E7070900E45C90 /* NRURLSessionTaskOverrideWithDelegateTest.m in Sources */,
 				F8BF154E2F3A384F00EF5628 /* SwiftUIColor.swift in Sources */,
 				F85ABB5F2F1557DD0098A2CF /* SessionReplayViewThingy.swift in Sources */,
@@ -5751,6 +5765,7 @@
 				341E851B2D9F643300968D7D /* AnyRRWebEvent.swift in Sources */,
 				3493DF332D4C332500BF5BED /* NRMASessionReplay.swift in Sources */,
 				02FF4AA924DC652E00115469 /* NRMAAppToken.m in Sources */,
+				F8D23CF42F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */,
 				02FF4AC324DC656900115469 /* NRMAPayloadContainer.mm in Sources */,
 				2BDB78D12E8C42B900357BC1 /* SwiftUIViewAttributes.swift in Sources */,
 				02FF49BF24DC62B800115469 /* NRMAHarvestableTrace.m in Sources */,
@@ -6019,6 +6034,7 @@
 				0256581124EB19BF00FE3125 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0256581224EB19BF00FE3125 /* APINetworkNoticeTest.m in Sources */,
 				0256581324EB19BF00FE3125 /* NRMADeviceInformationTests.m in Sources */,
+				F8D23CF82F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift in Sources */,
 				F8FBFA602A78336200CDC8C5 /* TestNRMAPayload.m in Sources */,
 				0256581424EB19BF00FE3125 /* TestUICollectionViewInstrumentation.m in Sources */,
 				0256581524EB19BF00FE3125 /* NRNSURLConnectionSupportTests.m in Sources */,
@@ -6349,6 +6365,7 @@
 				2B570A552EF0C1F7007D9E39 /* NRMASessionReplay.swift in Sources */,
 				2B570A5F2EF0C2E7007D9E39 /* RRWebEvent.swift in Sources */,
 				34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */,
+				F8D23CF22F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */,
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */,
@@ -6434,6 +6451,7 @@
 				3431DD442BED389800FF145F /* NRMACrashReportRecorderTests.m in Sources */,
 				3431DD412BED388E00FF145F /* NRMA_Swift_Trouble_Class.m in Sources */,
 				3431DD352BED381400FF145F /* TestW3CTraceParent.mm in Sources */,
+				F8D23CF62F840F8E000FFD31 /* NRMASessionDurationManagerTests.swift in Sources */,
 				3431DD4A2BED38B200FF145F /* NRNSURLConnectionDelegateBaseTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6510,6 +6528,7 @@
 				348232ED2BC5F2050070FAC3 /* NRMAHarvestableVitals.m in Sources */,
 				348233592BC5F2780070FAC3 /* NRGCDOverride.m in Sources */,
 				F831D1F72BD3107B00047D81 /* NRMAExceptionHandlerManager.m in Sources */,
+				F8D23CF32F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */,
 				3482338E2BC5F3120070FAC3 /* NRMATraceMachineAgentUserInterface.m in Sources */,
 				348233652BC5F2DD0070FAC3 /* NRMACustomEvent.m in Sources */,
 				348233252BC5F2270070FAC3 /* NRMACrashReport_Exception.m in Sources */,
@@ -7420,6 +7439,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 7.7.0;
@@ -7468,6 +7488,7 @@
 				SDKROOT = watchos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Harvester-Tests/Agent-watchos-Tests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -7482,6 +7503,7 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 7.7.0;
@@ -7524,6 +7546,7 @@
 				SDKROOT = watchos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OBJC_BRIDGING_HEADER = "Tests/Unit-Tests/NewRelicAgentTests/Harvester-Tests/Agent-watchos-Tests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				WATCHOS_DEPLOYMENT_TARGET = 7.0;
