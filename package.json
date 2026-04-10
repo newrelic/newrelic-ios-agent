@@ -21,7 +21,7 @@
     "webdriverio": "^9.24.0"
   },
   "overrides": {
-    "ajv": "^8.17.1",
+    "ajv": "^8.18.0",
     "serialize-javascript": "^7.0.3",
     "axios": "^1.13.5"
   }
