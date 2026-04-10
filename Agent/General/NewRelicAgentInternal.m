@@ -683,6 +683,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         NSTimeInterval elapsed = [[NRMASessionDurationManager shared] currentSessionDuration];
         NSTimeInterval maxDuration = [[NRMASessionDurationManager shared] maxSessionDuration];
         NRLOG_AGENT_INFO(@"HarvestTimer: Session duration reached limit (%.0f seconds / %.0f max). Triggering session restart.", elapsed, maxDuration);
+        [[NRMASessionDurationManager shared] updateSessionStartTime:[NSDate date]];
         [self handle4HourSessionRestart];
     }
 }
