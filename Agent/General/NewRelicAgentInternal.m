@@ -660,6 +660,33 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
 }
 
+- (void) uploadLogsIfSampled {
+    NRMAHarvesterConfiguration* configuration = [NRMAHarvestController configuration];
+
+    BOOL isSampled = self.sampleSeed <= configuration.sampling_rate;
+    BOOL isEnabled = configuration.log_reporting_enabled;
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    BOOL sessionReplayOverride = [_sessionReplay isRunning];
+#else
+    BOOL sessionReplayOverride = NO;
+#endif
+    // NRLOG_AGENT_VERBOSE(@"logging config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, self.sampleSeed, configuration.sampling_rate);
+    if (isEnabled && (isSampled || sessionReplayOverride) && [NRMAFlags shouldEnableLogReporting]) {
+        // Do log upload
+        [NRLogger enqueueLogUpload];
+    }
+}
+
+- (void) checkAndHandleSessionTimeout {
+    // Check for session timeout using SessionDurationManager
+    if ([[NRMASessionDurationManager shared] hasSessionExceeded]) {
+        NSTimeInterval elapsed = [[NRMASessionDurationManager shared] currentSessionDuration];
+        NSTimeInterval maxDuration = [[NRMASessionDurationManager shared] maxSessionDuration];
+        NRLOG_AGENT_INFO(@"HarvestTimer: Session duration reached limit (%.0f seconds / %.0f max). Triggering session restart.", elapsed, maxDuration);
+        [self handle4HourSessionRestart];
+    }
+}
+
 - (void) sessionReplayStart {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     // always start session replay if its error or full
