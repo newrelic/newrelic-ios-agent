@@ -10,6 +10,7 @@
 #import "NRMAHarvestController.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
+
 static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 #define NR_NEVER_TICKED -1
 
@@ -84,7 +85,7 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 - (void) updateTimer
 {
     if (self.period != ([NRMAHarvestController configuration].data_report_period*1000)) {
-        
+
         [self stop];
         self.period = [NRMAHarvestController configuration].data_report_period*1000;
         NRLOG_AGENT_VERBOSE(@"Updating harvest period to %lldms",self.period);

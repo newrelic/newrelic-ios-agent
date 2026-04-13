@@ -90,16 +90,24 @@ struct NavigationStackView: View {
                 }
             }
             .navigationTitle("NavigationStack")
+            #if !os(tvOS)
             .navigationBarTitleDisplayMode(.large)
+            #endif
             // Searchable – exercises the search bar attached to the navigation stack.
+            #if os(tvOS)
+            .searchable(text: $searchText, prompt: "Filter items")
+            #else
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Filter items")
+            #endif
             .toolbar {
+                #if !os(tvOS)
                 // ToolbarItem in principal position (title area on compact)
                 ToolbarItem(placement: .principal) {
                     Text("Stack Demo")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                 }
+                #endif
                 // Trailing button – pushes a leaf item
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -166,7 +174,9 @@ struct NavItemDetailView: View {
             }
         }
         .navigationTitle(item.title)
+        #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Image(systemName: "circle.fill")
@@ -250,10 +260,13 @@ struct NavLeafView: View {
         }
         .padding()
         .navigationTitle("Leaf")
+        #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)
         // Exercises hiding the system back button and providing a custom one
         .navigationBarBackButtonHidden(true)
+        #endif
         .toolbar {
+            #if !os(tvOS)
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     path.removeLast()
@@ -261,6 +274,7 @@ struct NavLeafView: View {
                     Label("Back", systemImage: "chevron.left")
                 }
             }
+            #endif
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     path = NavigationPath()
@@ -294,6 +308,8 @@ struct NavSettingsDetailView: View {
             }
         }
         .navigationTitle("Settings Detail")
+        #if !os(tvOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }

@@ -90,6 +90,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
 
+- (void) checkAndHandleSessionTimeout;
+
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
@@ -99,6 +101,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) sessionReplayDisabled;
 
 - (void) sessionReplayEndSession;
+
+// Logging Collection - handles sampling check and log upload
+- (void) uploadLogsIfSampled;
 
 - (BOOL) isSessionReplaySampled;
 - (BOOL) isSessionReplayErrorSampled;
