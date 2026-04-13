@@ -33,6 +33,13 @@ class UIViewThingy: SessionReplayViewThingy {
             self.viewDetails.backgroundColor = .clear
         }
         #endif
+
+// Investigate
+//        #if os(iOS)
+//        if self.viewDetails.viewName.hasPrefix("HostingView") {
+//            self.viewDetails.backgroundColor = .clear
+//        }
+//        #endif
     }
 
     init(viewDetails: ViewDetails) {

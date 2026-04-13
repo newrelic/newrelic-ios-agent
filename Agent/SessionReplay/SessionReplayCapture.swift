@@ -45,11 +45,34 @@ class SessionReplayCapture {
         // Process UIKit subviews only if current view should record subviews
         if parentThingy.shouldRecordSubviewsComputed {
             for subview in currentView.subviews {
+
                 if shouldRecord(view: subview) {
                     var childThingy = findRecorderForView(view: subview)
                     if childThingy.viewDetails.isVisible {
+                        let className = NSStringFromClass(type(of: currentView))
+                        if className.contains("_UIHostingView") {
+                            rootSwiftUIViewID = parentThingy.viewDetails.viewId
+                        }
                         buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-                        parentThingy.subviews.append(childThingy)
+                        
+                        if let parentView = currentView.superview {
+                            
+                            let parentClassName = NSStringFromClass(type(of: parentView))
+                            //print("className = \(className ?? "none") and parentClassName = \(parentClassName)")
+                    
+                            
+// Partially fixes New Relic for iOS app blank screen
+//                            if className.hasPrefix("UINavigationTransitionView") {
+//                                //childThingy.v = .clear
+//                                continue
+//                            }
+                     
+                            parentThingy.subviews.append(childThingy)
+
+                        } else {
+                            parentThingy.subviews.append(childThingy)
+                        }
+                        
                     }
                 } else {
                     buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
@@ -61,57 +84,82 @@ class SessionReplayCapture {
         if let viewController = extractVC(from: currentView) {
             let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
             if vcType == .hostingController || vcType == .navigationStackHostingController {
-            let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") {
-                rootSwiftUIViewID = parentThingy.viewDetails.viewId
-                // Count each NavigationStack destination hosting view (one per pushed screen).
-                // This depth value is checked in SessionReplayFrameProcessor to force an
-                // immediate full snapshot on push or pop, matching layoutContainerViewCount's role.
-                if vcType == .navigationStackHostingController {
-                    navigationStackDepth += 1
-                }
-            }
-            
-            let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
-                                                       clip: parentThingy.viewDetails.clip,
-                                                       backgroundColor: currentView.backgroundColor?.cgColor,
-                                                       layerBorderColor: currentView.layer.borderColor,
-                                                       layerBorderWidth: currentView.layer.borderWidth,
-                                                       layerCornerRadius: currentView.layer.cornerRadius,
-                                                       alpha: currentView.alpha,
-                                                       isHidden: currentView.isHidden,
-                                                       intrinsicContentSize: currentView.intrinsicContentSize,
-                                                       maskApplicationText: currentView.maskApplicationText,
-                                                       maskUserInputText: currentView.maskUserInputText,
-                                                       maskAllImages: currentView.maskAllImages,
-                                                       maskAllUserTouches: currentView.maskAllUserTouches,
-                                                       blockView: currentView.blockView,
-                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
-            )
-            
-            let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
-            let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
-
-            if !thingys.isEmpty {
-                // Separate color views (backgrounds) from other views
-                var colorViews: [any SessionReplayViewThingy] = []
-                var otherViews: [any SessionReplayViewThingy] = []
-
-                for thingy in thingys {
-                    if thingy.viewDetails.viewName == "SwiftUIColorView" {
-                        colorViews.append(thingy)
-                    } else {
-                        otherViews.append(thingy)
+                let className = NSStringFromClass(type(of: currentView))
+                if className.contains("_UIHostingView") {
+                    rootSwiftUIViewID = parentThingy.viewDetails.viewId
+                    // Count each NavigationStack destination hosting view (one per pushed screen).
+                    // This depth value is checked in SessionReplayFrameProcessor to force an
+                    // immediate full snapshot on push or pop, matching layoutContainerViewCount's role.
+                    if vcType == .navigationStackHostingController {
+                        navigationStackDepth += 1
                     }
                 }
-
-                // Insert color views first (they go to the back) then other views
-                if parentThingy.shouldRecordSubviewsComputed {
-                    parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
-                    parentThingy.subviews.append(contentsOf: otherViews)
-                }
+                
+                //            // _UIHostingView is now a pass-through; compute its actual window-space frame
+                //            // for SwiftUI display list coordinate conversion.
+                //            let hostingViewFrame: CGRect = {
+                //                if let sv = currentView.superview, let window = currentView.window {
+                //                    return sv.convert(currentView.frame, to: window)
+                //                }
+                //                return currentView.frame
+                //            }()
+                
+                let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
+                                                           clip: parentThingy.viewDetails.clip,
+                                                           backgroundColor: currentView.backgroundColor?.cgColor,
+                                                           layerBorderColor: currentView.layer.borderColor,
+                                                           layerBorderWidth: currentView.layer.borderWidth,
+                                                           layerCornerRadius: currentView.layer.cornerRadius,
+                                                           alpha: currentView.alpha,
+                                                           isHidden: currentView.isHidden,
+                                                           intrinsicContentSize: currentView.intrinsicContentSize,
+                                                           maskApplicationText: currentView.maskApplicationText,
+                                                           maskUserInputText: currentView.maskUserInputText,
+                                                           maskAllImages: currentView.maskAllImages,
+                                                           maskAllUserTouches: currentView.maskAllUserTouches,
+                                                           blockView: currentView.blockView,
+                                                           sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
+                )
+                
+                let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
+               
+//                if let parentView = currentView.superview {
+//                    
+//                    let parentClassName = NSStringFromClass(type(of: parentView))
+//                    print("vc type = \(vcType) and className = \(className ?? "none") and parentClassName = \(parentClassName)")
+//                    
+//                    if className.hasPrefix("UINavigationTransitionView") {
+//                        return
+//                    }
+//                }
+                let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
+                
+                if !thingys.isEmpty {
+                    // Separate color views (backgrounds) from other views
+                    var colorViews: [any SessionReplayViewThingy] = []
+                    var otherViews: [any SessionReplayViewThingy] = []
+                    
+                    for thingy in thingys {
+                        
+                        // print thingy details
+                        
+                        //print("in buildViewTree =" + thingy.viewDetails.viewName)
+                        
+                        if thingy.viewDetails.viewName == "SwiftUIColorView" {
+                            colorViews.append(thingy)
+                        }
+                        else {
+                            otherViews.append(thingy)
+                        }
+                    }
+                    
+                    // Insert color views first (they go to the back) then other views
+                    if parentThingy.shouldRecordSubviewsComputed {
+                        parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
+                        parentThingy.subviews.append(contentsOf: otherViews)
+                    }
+                } // if vcType == .hostingController || .navigationStackHostingController
             }
-            } // if vcType == .hostingController || .navigationStackHostingController
         } // if let viewController
 
         // Handle UITextField custom text overlay
@@ -210,10 +258,10 @@ class SessionReplayCapture {
         guard let superview = view.superview else {
             return true
         }
-        
+
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
-        
+
         return !(areFramesTheSame && isClear)
     }
     

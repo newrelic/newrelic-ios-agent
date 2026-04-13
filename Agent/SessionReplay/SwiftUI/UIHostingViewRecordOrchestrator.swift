@@ -9,6 +9,7 @@
 import Foundation
 import UIKit
 import SwiftUI
+@_implementationOnly import NewRelicPrivate
 
 @available(iOS 13.0, *)
 final class UIHostingViewRecordOrchestrator {
