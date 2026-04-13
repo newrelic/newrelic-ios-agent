@@ -50,25 +50,13 @@ class SessionReplayCapture {
                     var childThingy = findRecorderForView(view: subview)
                     if childThingy.viewDetails.isVisible {
                         let className = NSStringFromClass(type(of: currentView))
-                        if className.contains("_UIHostingView") {
-                            rootSwiftUIViewID = parentThingy.viewDetails.viewId
-                        }
+
                         buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
                         
-                        if let parentView = currentView.superview {
-                            
-                            let parentClassName = NSStringFromClass(type(of: parentView))
-                            //print("className = \(className ?? "none") and parentClassName = \(parentClassName)")
-                    
-                            
-// Partially fixes New Relic for iOS app blank screen
-//                            if className.hasPrefix("UINavigationTransitionView") {
-//                                //childThingy.v = .clear
-//                                continue
-//                            }
-                     
-                            parentThingy.subviews.append(childThingy)
-
+                        // Fix for New Relic for iOS like container with .navigation containers
+                        if className.hasPrefix("UINavigationTransitionView") {
+                            // Push navigation transition views to the back so other sibling views render in front.
+                            parentThingy.subviews.insert(childThingy, at: 0)
                         } else {
                             parentThingy.subviews.append(childThingy)
                         }
@@ -94,16 +82,7 @@ class SessionReplayCapture {
                         navigationStackDepth += 1
                     }
                 }
-                
-                //            // _UIHostingView is now a pass-through; compute its actual window-space frame
-                //            // for SwiftUI display list coordinate conversion.
-                //            let hostingViewFrame: CGRect = {
-                //                if let sv = currentView.superview, let window = currentView.window {
-                //                    return sv.convert(currentView.frame, to: window)
-                //                }
-                //                return currentView.frame
-                //            }()
-                
+
                 let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
                                                            clip: parentThingy.viewDetails.clip,
                                                            backgroundColor: currentView.backgroundColor?.cgColor,
@@ -123,15 +102,6 @@ class SessionReplayCapture {
                 
                 let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
                
-//                if let parentView = currentView.superview {
-//                    
-//                    let parentClassName = NSStringFromClass(type(of: parentView))
-//                    print("vc type = \(vcType) and className = \(className ?? "none") and parentClassName = \(parentClassName)")
-//                    
-//                    if className.hasPrefix("UINavigationTransitionView") {
-//                        return
-//                    }
-//                }
                 let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
                 
                 if !thingys.isEmpty {
@@ -140,11 +110,7 @@ class SessionReplayCapture {
                     var otherViews: [any SessionReplayViewThingy] = []
                     
                     for thingy in thingys {
-                        
-                        // print thingy details
-                        
-                        //print("in buildViewTree =" + thingy.viewDetails.viewName)
-                        
+                    
                         if thingy.viewDetails.viewName == "SwiftUIColorView" {
                             colorViews.append(thingy)
                         }
