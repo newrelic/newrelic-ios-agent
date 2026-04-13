@@ -53,14 +53,15 @@ class SessionReplayCapture {
 
                         buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
                         
-                        // Fix for New Relic for iOS like container with .navigation containers
-                        if className.hasPrefix("UINavigationTransitionView") {
-                            // Push navigation transition views to the back so other sibling views render in front.
-                            parentThingy.subviews.insert(childThingy, at: 0)
-                        } else {
-                            parentThingy.subviews.append(childThingy)
-                        }
                         
+//                        // Fix for New Relic for iOS like container with .navigation containers
+//                        if className.hasPrefix("UINavigationTransitionView") {
+//                            // Push navigation transition views to the back so other sibling views render in front.
+//                            parentThingy.subviews.insert(childThingy, at: 0)
+//                        }
+//                        else {
+                            parentThingy.subviews.append(childThingy)
+                      //  }
                     }
                 } else {
                     buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)

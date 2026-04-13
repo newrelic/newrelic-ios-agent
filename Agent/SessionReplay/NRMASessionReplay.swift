@@ -95,13 +95,6 @@ public class NRMASessionReplay: NSObject {
         
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleMaskingStateChanged(_:)),
-            name: .nrSessionReplayMaskingStateChanged,
-            object: nil
-        )
-
         Task{
             await MainActor.run {
                 guard let window = getWindow() else {
@@ -121,12 +114,6 @@ public class NRMASessionReplay: NSObject {
         //NRLOG_AGENT_DEBUG("⏹️ [stop] Final frameCounter: \(frameCounter)")
         //NRLOG_AGENT_DEBUG("⏹️ [stop] Final uncompressedDataSize: \(uncompressedDataSize) bytes")
         //NRLOG_AGENT_DEBUG("⏹️ [stop] ====================================================")
-        NotificationCenter.default.removeObserver(self, name: .nrSessionReplayMaskingStateChanged, object: nil)
-    }
-
-    @objc private func handleMaskingStateChanged(_ notification: Notification) {
-        print("🔔 [NRMASessionReplay] maskingStateChanged received — forcing full snapshot")
-       // sessionReplayFrameProcessor.takeFullSnapshotNext = true
     }
     
     public func clearAllData() {
