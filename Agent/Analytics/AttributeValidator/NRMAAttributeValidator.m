@@ -10,6 +10,7 @@
 #import "Constants.h"
 #import "NRMAAnalytics.h"
 #import "NRLogger.h"
+#import "NRMABool.h"
 
 @implementation NRMAAttributeValidator
 
@@ -49,6 +50,11 @@
 }
 
 - (BOOL)valueValidator:(id)value {
+    if (value == nil || [value isKindOfClass:[NSNull class]]) {
+        NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be nil");
+        return false;
+    }
+
     if ([value isKindOfClass:[NSString class]]) {
         if ([(NSString*)value length] == 0) {
             NRLOG_AGENT_ERROR(@"invalid attribute: value length = 0");
@@ -58,9 +64,8 @@
             NRLOG_AGENT_ERROR(@"invalid attribute: value exceeded maximum byte size exceeded");
             return false;
         }
-    }
-    if (value == nil || [value isKindOfClass:[NSNull class]]) {
-        NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be nil");
+    } else if (![value isKindOfClass:[NSNumber class]] && ![value isKindOfClass:[NRMABool class]]) {
+        NRLOG_AGENT_ERROR(@"invalid attribute: value must be an NSString, NSNumber, or BOOL");
         return false;
     }
     
