@@ -86,6 +86,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: TintedSymbolsView()) {
                         Text("Tinted SF Symbols")
                     }
+                    NavigationLink(destination: SwiftUICornerRadiusPlaygroundView()) {
+                        Text("🔵 SwiftUI Corner Radius Playground")
+                    }
                     if #available(iOS 16.0, *) {
                         
                         NavigationLink(destination: NavigationStackView()) {

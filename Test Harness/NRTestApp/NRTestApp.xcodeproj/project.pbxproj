@@ -10,10 +10,20 @@
 		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
+		2B131C8D2F7DDADF00748ACB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB12F7727D7000FFD31 /* SettingsView.swift */; };
+		2B131C8E2F7DDADF00748ACB /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAF2F7727D7000FFD31 /* DataModels.swift */; };
+		2B131C8F2F7DDADF00748ACB /* SwiftUITabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */; };
+		2B131C902F7DDADF00748ACB /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */; };
+		2B131C912F7DDADF00748ACB /* FormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB02F7727D7000FFD31 /* FormView.swift */; };
+		2B131C922F7DDADF00748ACB /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */; };
 		2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
+		2B3ACCBE2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3ACCBD2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift */; };
+		2B3ACCBF2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3ACCBD2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift */; };
+		2B3ACCC52F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3ACCC42F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift */; };
+		2B3ACCC62F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3ACCC42F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
@@ -159,12 +169,6 @@
 		F8BF16432F3F6D9F00EF5628 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16342F3F6D9F00EF5628 /* Views.swift */; };
 		F8BF16442F3F6D9F00EF5628 /* model.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162F2F3F6D9F00EF5628 /* model.swift */; };
 		F8C8812929845B8C001C15B9 /* NRTestAppNavigationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C8812829845B8C001C15B9 /* NRTestAppNavigationTests.swift */; };
-		F8D23CB42F7727D7000FFD31 /* SwiftUITabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB22F7727D7000FFD31 /* SwiftUITabBar.swift */; };
-		F8D23CB52F7727D7000FFD31 /* FormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB02F7727D7000FFD31 /* FormView.swift */; };
-		F8D23CB62F7727D7000FFD31 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CB12F7727D7000FFD31 /* SettingsView.swift */; };
-		F8D23CB72F7727D7000FFD31 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAF2F7727D7000FFD31 /* DataModels.swift */; };
-		F8D23CB82F7727D7000FFD31 /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAD2F7727D7000FFD31 /* ChartsView.swift */; };
-		F8D23CB92F7727D7000FFD31 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CAE2F7727D7000FFD31 /* DashboardView.swift */; };
 		F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
 		F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */; };
@@ -344,6 +348,8 @@
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
 		2B3493692E8EF15A006DE9D0 /* MaskingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingView.swift; sourceTree = "<group>"; };
+		2B3ACCBD2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitCornerRadiusPlaygroundController.swift; sourceTree = "<group>"; };
+		2B3ACCC42F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUICornerRadiusPlaygroundView.swift; sourceTree = "<group>"; };
 		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
@@ -536,6 +542,7 @@
 			isa = PBXGroup;
 			children = (
 				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
+				2B3ACCC42F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
@@ -730,6 +737,7 @@
 		F8302B8C29707828003EC291 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				2B3ACCBD2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift */,
 				D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */,
 				2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */,
 				2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */,
@@ -1311,6 +1319,12 @@
 				2BAE5C8F2E860C7D001D2B88 /* ProgressViewsView.swift in Sources */,
 				2BAE5C902E860C7D001D2B88 /* ShapesView.swift in Sources */,
 				2BAE5C912E860C7D001D2B88 /* TogglesView.swift in Sources */,
+				2B131C8D2F7DDADF00748ACB /* SettingsView.swift in Sources */,
+				2B131C8E2F7DDADF00748ACB /* DataModels.swift in Sources */,
+				2B131C8F2F7DDADF00748ACB /* SwiftUITabBar.swift in Sources */,
+				2B131C902F7DDADF00748ACB /* DashboardView.swift in Sources */,
+				2B131C912F7DDADF00748ACB /* FormView.swift in Sources */,
+				2B131C922F7DDADF00748ACB /* ChartsView.swift in Sources */,
 				2BAE5C922E860C7D001D2B88 /* ListsView.swift in Sources */,
 				2BAE5C932E860C7D001D2B88 /* PickersView.swift in Sources */,
 				2BAE5C942E860C7D001D2B88 /* SegmentedControlsView.swift in Sources */,
@@ -1352,12 +1366,7 @@
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */,
-				F8D23CB42F7727D7000FFD31 /* SwiftUITabBar.swift in Sources */,
-				F8D23CB52F7727D7000FFD31 /* FormView.swift in Sources */,
-				F8D23CB62F7727D7000FFD31 /* SettingsView.swift in Sources */,
-				F8D23CB72F7727D7000FFD31 /* DataModels.swift in Sources */,
-				F8D23CB82F7727D7000FFD31 /* ChartsView.swift in Sources */,
-				F8D23CB92F7727D7000FFD31 /* DashboardView.swift in Sources */,
+				2B3ACCC62F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
 				2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */,
 				F8302B8E297078EA003EC291 /* ApodViewModel.swift in Sources */,
@@ -1368,6 +1377,7 @@
 				F8EAB9752EE09E040008B092 /* ConfidentialViewController.swift in Sources */,
 				F832CB0D2E5CDBC7007569CE /* InfiniteImageCollectionViewController.swift in Sources */,
 				F824A43929AEADC2000886A6 /* ImageDetailPDFView.swift in Sources */,
+				2B3ACCBF2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift in Sources */,
 				F8BF14362F3268E900EF5628 /* DrawingsView.swift in Sources */,
 				F8EACAE82F6AE2BC00385075 /* TintedImagesViewController.swift in Sources */,
 				2B69E45E2DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */,
@@ -1426,7 +1436,9 @@
 				F864293D2979CDFA002ABA01 /* ViewController.swift in Sources */,
 				F864293E2979CDFA002ABA01 /* UtilitiesViewController.swift in Sources */,
 				F864293F2979CDFA002ABA01 /* WebViewController.swift in Sources */,
+				2B3ACCBE2F71FFAF00895B02 /* UIKitCornerRadiusPlaygroundController.swift in Sources */,
 				F86429402979CDFA002ABA01 /* ApodViewModel.swift in Sources */,
+				2B3ACCC52F71FFBE00895B02 /* SwiftUICornerRadiusPlaygroundView.swift in Sources */,
 				F86429412979CDFA002ABA01 /* UtilViewModel.swift in Sources */,
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
