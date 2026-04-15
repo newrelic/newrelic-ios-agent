@@ -666,7 +666,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     BOOL isSampled = self.sampleSeed <= configuration.sampling_rate;
     BOOL isEnabled = configuration.log_reporting_enabled;
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    BOOL sessionReplayOverride = [_sessionReplay isRunning];
+    BOOL sessionReplayOverride = ([_sessionReplay isRunning] && ([_sessionReplay sessionReplayMode] == SessionReplayRecordingModeFull));
 #else
     BOOL sessionReplayOverride = NO;
 #endif
