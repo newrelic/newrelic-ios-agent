@@ -377,7 +377,15 @@ final class UIHostingViewRecordOrchestrator {
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIPlatformView"
             var details = makeDetails()
-            details.backgroundColor = .clear
+            // Try to extract the actual background from the renderer's view cache
+            // instead of always defaulting to clear.
+            let displayListId = SwiftUIDisplayList.Index.ID(identity: item.identity)
+            if let viewInfo = renderer.renderer.viewCache.map[.init(id: displayListId)],
+               let bgColor = viewInfo.backgroundColor {
+                details.backgroundColor = UIColor(cgColor: bgColor)
+            } else {
+                details.backgroundColor = .clear
+            }
             return UIViewThingy(viewDetails: details)
         case SwiftUIDisplayList.Content.Value.unknown:
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
