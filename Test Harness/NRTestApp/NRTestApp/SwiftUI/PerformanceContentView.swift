@@ -143,12 +143,14 @@ struct HeavyUIKitTab: View {
                     HStack {
                         ComplexUIKitView(itemIndex: index)
                             .frame(width: 60, height: 60)
-                        VStack(alignment: .leading) {
-                            Text("Tab \(tabIndex) - Item \(index)")
-                                .font(.headline)
-                            Text("Complex UIKit integration")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        NRConditionalMaskView {
+                            VStack(alignment: .leading) {
+                                Text("Tab \(tabIndex) - Item \(index)")
+                                    .font(.headline)
+                                Text("Complex UIKit integration")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         Spacer()
                         ComplexUIKitView(itemIndex: index + 1000)

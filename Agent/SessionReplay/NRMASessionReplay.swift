@@ -257,11 +257,11 @@ public class NRMASessionReplay: NSObject {
         var frames = [SessionReplayFrame]()
         frames = self.rawFrames
         
-        if frames.count > 0, let oldestFrame = frames.first, let newestFrame = frames.last {
-            let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
-            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Returning \(frames.count) frames spanning \(String(format: "%.2f", bufferSpan))s")
-            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Frame range: \(oldestFrame.date) to \(newestFrame.date)")
-        }
+//        if frames.count > 0, let oldestFrame = frames.first, let newestFrame = frames.last {
+//            let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
+//            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Returning \(frames.count) frames spanning \(String(format: "%.2f", bufferSpan))s")
+//            //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Frame range: \(oldestFrame.date) to \(newestFrame.date)")
+//        }
         
         if clear {
             //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Clearing buffer and files")
@@ -305,7 +305,7 @@ public class NRMASessionReplay: NSObject {
             .last { $0.isKeyWindow }
     }
     
-    func getSessionReplayFrames(clear: Bool = true) -> [RRWebEventCommon] {
+    func getSessionReplayFrames(clear: Bool = true, readOnly: Bool = false) -> [RRWebEventCommon] {
         return frameQueue.sync { [weak self] in
             guard let self = self else { return [] }
 
@@ -321,8 +321,9 @@ public class NRMASessionReplay: NSObject {
             }
 
             // Reset processor state safely
-            self.sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
-
+            if !readOnly {
+                self.sessionReplayFrameProcessor.lastFullFrame = nil // We want the first frame to be a full frame
+            }
             // Reserve capacity for better performance
             processedFrames.reserveCapacity(frames.count * 2) // Estimate for frames + meta events
 
@@ -340,7 +341,8 @@ public class NRMASessionReplay: NSObject {
                 }
 
                 // Process frame safely
-                if let newFrame = self.sessionReplayFrameProcessor.processFrame(frame) {
+                let newFrame = sessionReplayFrameProcessor.processFrame(frame,readOnly: readOnly)
+                if let newFrame = newFrame {
                     processedFrames.append(newFrame)
                 }
             }
@@ -794,6 +796,7 @@ public protocol NRMASessionReplayDelegate: AnyObject {
         isFirstChunk: Bool,
         isGZipped: Bool
     ) -> URL?
+    func didProcessFrameData(_ jsonData: Data)
 }
 
 extension DispatchQueue {

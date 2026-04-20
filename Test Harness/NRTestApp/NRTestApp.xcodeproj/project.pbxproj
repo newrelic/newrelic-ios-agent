@@ -22,6 +22,7 @@
 		2B69E4602DE8F9EB00543A2E /* TextMaskingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */; };
 		2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
 		2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8208B82E5D0F100063E9BD /* SwiftUIViewRepresentableTestView.swift */; };
+		2B9318782F4E8CA900E05F23 /* DGChartsDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = 2B9318772F4E8CA900E05F23 /* DGChartsDynamic */; };
 		2BAE5C8E2E860C7D001D2B88 /* StacksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C882E860C7D001D2B88 /* StacksView.swift */; };
 		2BAE5C8F2E860C7D001D2B88 /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C832E860C7D001D2B88 /* ProgressViewsView.swift */; };
 		2BAE5C902E860C7D001D2B88 /* ShapesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C862E860C7D001D2B88 /* ShapesView.swift */; };
@@ -63,7 +64,6 @@
 		2BD05DF22ADF32D300C0C972 /* harvestConnector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD05DF12ADF32D300C0C972 /* harvestConnector.json */; };
 		2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BE9D6C22A1E90E400A09A98 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
@@ -172,6 +172,9 @@
 		F8EAB9752EE09E040008B092 /* ConfidentialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */; };
 		F8EACABE2F688F7300385075 /* DateTimePickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */; };
 		F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */; };
+		F8AABB022F7F000000385075 /* NavigationLinkLabelLayoutTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AABB012F7F000000385075 /* NavigationLinkLabelLayoutTestCase.swift */; };
+		F8AABB042F7F000000385075 /* ScrollUnderHeaderTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AABB032F7F000000385075 /* ScrollUnderHeaderTestCase.swift */; };
+		F8AABB062F7F000000385075 /* TypeScaleTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AABB052F7F000000385075 /* TypeScaleTestCase.swift */; };
 		F8EACAE82F6AE2BC00385075 /* TintedImagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */; };
 		F8F5D8232BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */; };
 		F8F5D8252BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */; };
@@ -469,6 +472,9 @@
 		F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfidentialViewController.swift; sourceTree = "<group>"; };
 		F8EACA822F6860F500385075 /* DateTimePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateTimePickerViewController.swift; sourceTree = "<group>"; };
 		F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TintedSymbolsView.swift; sourceTree = "<group>"; };
+		F8AABB012F7F000000385075 /* NavigationLinkLabelLayoutTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationLinkLabelLayoutTestCase.swift; sourceTree = "<group>"; };
+		F8AABB032F7F000000385075 /* ScrollUnderHeaderTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollUnderHeaderTestCase.swift; sourceTree = "<group>"; };
+		F8AABB052F7F000000385075 /* TypeScaleTestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeScaleTestCase.swift; sourceTree = "<group>"; };
 		F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TintedImagesViewController.swift; sourceTree = "<group>"; };
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
@@ -496,7 +502,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2BE9D6C12A1E90E400A09A98 /* NewRelic.framework in Frameworks */,
-				2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */,
+				2B9318782F4E8CA900E05F23 /* DGChartsDynamic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,6 +552,9 @@
 				F85CEDDE2ECE1DBE004A314F /* SocialMediaFeedView.swift */,
 				2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */,
 				F8EACAE12F69F1FA00385075 /* TintedSymbolsView.swift */,
+				F8AABB012F7F000000385075 /* NavigationLinkLabelLayoutTestCase.swift */,
+				F8AABB032F7F000000385075 /* ScrollUnderHeaderTestCase.swift */,
+				F8AABB052F7F000000385075 /* TypeScaleTestCase.swift */,
 				F8D23CB32F7727D7000FFD31 /* UITabBarView */,
 				2BAE5C7F2E860C7D001D2B88 /* DatePickersView.swift */,
 				F8BF14A32F35345500EF5628 /* AttributedTextView.swift */,
@@ -1044,6 +1053,9 @@
 				Base,
 			);
 			mainGroup = F8302AEC296F5EFA003EC291;
+			packageReferences = (
+				2B9318762F4E8CA900E05F23 /* XCRemoteSwiftPackageReference "Charts" */,
+			);
 			productRefGroup = F8302AF6296F5EFA003EC291 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -1352,6 +1364,9 @@
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */,
+				F8AABB022F7F000000385075 /* NavigationLinkLabelLayoutTestCase.swift in Sources */,
+				F8AABB042F7F000000385075 /* ScrollUnderHeaderTestCase.swift in Sources */,
+				F8AABB062F7F000000385075 /* TypeScaleTestCase.swift in Sources */,
 				F8D23CB42F7727D7000FFD31 /* SwiftUITabBar.swift in Sources */,
 				F8D23CB52F7727D7000FFD31 /* FormView.swift in Sources */,
 				F8D23CB62F7727D7000FFD31 /* SettingsView.swift in Sources */,
@@ -2134,6 +2149,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2B9318762F4E8CA900E05F23 /* XCRemoteSwiftPackageReference "Charts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2B9318772F4E8CA900E05F23 /* DGChartsDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2B9318762F4E8CA900E05F23 /* XCRemoteSwiftPackageReference "Charts" */;
+			productName = DGChartsDynamic;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F8302AED296F5EFA003EC291 /* Project object */;
 }
