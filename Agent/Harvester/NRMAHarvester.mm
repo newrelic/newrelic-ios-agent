@@ -479,6 +479,9 @@
         [self saveHarvesterConfiguration:configuration];
 
         [NRMASupportMetricHelper processDeferredMetrics];
+        
+        [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:@"Remote configuration changed"
+                                                                   withAttributes:nil];
 
         [self transitionToConnected:configuration];
         
