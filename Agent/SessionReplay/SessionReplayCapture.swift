@@ -38,12 +38,12 @@ class SessionReplayCapture {
         // Build tree using recursive approach to properly handle value semantics
         buildViewTree(for: rootView, into: &rootThingy)
 
-        NRLOG_DEBUG("START THINGYS")
+        //NRLOG_DEBUG("START THINGYS")
 
         // Log the built thingy tree after construction
-        logThingyTree(rootThingy, depth: 0)
+        //logThingyTree(rootThingy, depth: 0)
 
-        NRLOG_DEBUG("END THINGYS")
+        //NRLOG_DEBUG("END THINGYS")
 
         // Set nextId for all views after tree is built
         setNextIdRecursively(for: &rootThingy)
@@ -137,17 +137,17 @@ class SessionReplayCapture {
         // Handle SwiftUI hosting views.
         if let viewController = extractVC(from: currentView) {
             let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
-            print("\(indent)🎭 Found VC: \(type(of: viewController)) vcType=\(vcType)")
+            //print("\(indent)🎭 Found VC: \(type(of: viewController)) vcType=\(vcType)")
             
             if vcType == .hostingController || vcType == .navigationStackHostingController {
-                print("\(indent)\t🏠 Hosting view detected: \(className)")
+                //print("\(indent)\t🏠 Hosting view detected: \(className)")
                 
                 if className.contains("_UIHostingView") || className.hasSuffix("HostingView") {
                     rootSwiftUIViewID = parentThingy.viewDetails.viewId
-                    print("\(indent)\t\t🌳 Set rootSwiftUIViewID=\(parentThingy.viewDetails.viewId)")
+                    //print("\(indent)\t\t🌳 Set rootSwiftUIViewID=\(parentThingy.viewDetails.viewId)")
                     if vcType == .navigationStackHostingController {
                         navigationStackDepth += 1
-                        print("\(indent)\t\t📚 NavigationStack depth now: \(navigationStackDepth)")
+                        //print("\(indent)\t\t📚 NavigationStack depth now: \(navigationStackDepth)")
                     }
                 }
             }
@@ -172,19 +172,17 @@ class SessionReplayCapture {
 
                 let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
 
-                print("\(indent)\t\t🔍 Extracting SwiftUI display list from \(className)...")
+                //print("\(indent)\t\t🔍 Extracting SwiftUI display list from \(className)...")
                 let subviewCallback: (UIView, inout any SessionReplayViewThingy) -> Void = { [weak self] (platformView, thingy) in
                     self?.buildViewTree(for: platformView, into: &thingy)
                 }
                 let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId, buildSubtreeCallback: subviewCallback)
-            if thingys.count > 0 {
-                print("yay")
-            }
-                print("\(indent)\t\t📦 Got \(thingys.count) SwiftUI thingys from display list")
-                for (i, t) in thingys.enumerated() {
-                    let f = t.viewDetails.frame
-                    print("\(indent)\t\t\t[\(i)] \(t.viewDetails.viewName) id=\(t.viewDetails.viewId) frame=(\(Int(f.origin.x)),\(Int(f.origin.y)),\(Int(f.width)),\(Int(f.height))) visible=\(t.viewDetails.isVisible)")
-                }
+          
+                //print("\(indent)\t\t📦 Got \(thingys.count) SwiftUI thingys from display list")
+//                for (i, t) in thingys.enumerated() {
+//                    let f = t.viewDetails.frame
+//                    print("\(indent)\t\t\t[\(i)] \(t.viewDetails.viewName) id=\(t.viewDetails.viewId) frame=(\(Int(f.origin.x)),\(Int(f.origin.y)),\(Int(f.width)),\(Int(f.height))) visible=\(t.viewDetails.isVisible)")
+//                }
 
                 if !thingys.isEmpty {
                     var colorViews: [any SessionReplayViewThingy] = []
@@ -199,12 +197,12 @@ class SessionReplayCapture {
                         }
                     }
 
-                    print("\(indent)\t\t🎨 Sorted: \(colorViews.count) color views (→ front of array), \(otherViews.count) other views (→ end)")
+                    //print("\(indent)\t\t🎨 Sorted: \(colorViews.count) color views (→ front of array), \(otherViews.count) other views (→ end)")
 
                     if parentThingy.shouldRecordSubviewsComputed {
                         parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
                         parentThingy.subviews.append(contentsOf: otherViews)
-                        print("\(indent)\t\t✅ Parent \(parentThingy.viewDetails.viewName) now has \(parentThingy.subviews.count) total children after SwiftUI merge")
+                        //print("\(indent)\t\t✅ Parent \(parentThingy.viewDetails.viewName) now has \(parentThingy.subviews.count) total children after SwiftUI merge")
                     }
                 }
             }

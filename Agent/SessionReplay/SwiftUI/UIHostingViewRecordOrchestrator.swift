@@ -191,7 +191,7 @@ final class UIHostingViewRecordOrchestrator {
         guard !items.isEmpty else { return [] }
 
         let indent = String(repeating: "\t", count: traversalDepth)
-        print("\(indent)📋 [Traverse] \(items.count) items at depth=\(traversalDepth) contextFrame=\(context.frame)")
+        //print("\(indent)📋 [Traverse] \(items.count) items at depth=\(traversalDepth) contextFrame=\(context.frame)")
 
         var collected: [any SessionReplayViewThingy] = []
         collected.reserveCapacity(items.count)
@@ -209,7 +209,7 @@ final class UIHostingViewRecordOrchestrator {
                 case .color:         contentType = "color"
                 case .unknown:       contentType = "unknown"
                 }
-                print("\(indent)\t[\(idx)] CONTENT type=\(contentType) frame=\(item.frame) seed=\(content.seed.value) identity=\(item.identity.value)")
+                //print("\(indent)\t[\(idx)] CONTENT type=\(contentType) frame=\(item.frame) seed=\(content.seed.value) identity=\(item.identity.value)")
 
                 if let built = buildContentThingy(item: item,
                                                   content: content,
@@ -221,15 +221,15 @@ final class UIHostingViewRecordOrchestrator {
                                                   buildSubtreeCallback: buildSubtreeCallback) {
                     let f = built.viewDetails.frame
                     let vis = built.viewDetails.isVisible
-                    print("\(indent)\t\t→ built \(built.viewDetails.viewName) id=\(built.viewDetails.viewId) frame=(\(Int(f.origin.x)),\(Int(f.origin.y)),\(Int(f.width)),\(Int(f.height))) visible=\(vis)")
+                    //print("\(indent)\t\t→ built \(built.viewDetails.viewName) id=\(built.viewDetails.viewId) frame=(\(Int(f.origin.x)),\(Int(f.origin.y)),\(Int(f.width)),\(Int(f.height))) visible=\(vis)")
                     if vis {
                         collected.append(built)
                     }
                     else {
-                        print("\(indent)\t\t⚠️ NOT VISIBLE, skipping")
+                        //print("\(indent)\t\t⚠️ NOT VISIBLE, skipping")
                     }
                 } else {
-                    print("\(indent)\t\t→ build returned nil")
+                   // print("\(indent)\t\t→ build returned nil")
                 }
 
             case .effect(let effect, let nestedList):
@@ -243,31 +243,31 @@ final class UIHostingViewRecordOrchestrator {
                     let displayListId = SwiftUIDisplayList.Index.ID(identity: item.identity)
                     if let viewInfo = renderer.renderer.viewCache.map[.init(id: displayListId)] {
                         nextContext.convert(to: viewInfo.frame)
-                        print("\(indent)\t[\(idx)] EFFECT platformGroup → resolved viewCache frame=\(viewInfo.frame)")
+                        //print("\(indent)\t[\(idx)] EFFECT platformGroup → resolved viewCache frame=\(viewInfo.frame)")
                     } else {
-                        print("\(indent)\t[\(idx)] EFFECT platformGroup → no viewCache entry")
+                        //print("\(indent)\t[\(idx)] EFFECT platformGroup → no viewCache entry")
                     }
                 case .clip(let path, _):
                     effectName = "clip"
                     let clipRect = nextContext.convert(frame: path.boundingRect)
                     nextContext.clip = nextContext.clip.intersection(clipRect)
-                    print("\(indent)\t[\(idx)] EFFECT clip boundingRect=\(path.boundingRect) → clip=\(nextContext.clip)")
+                    //print("\(indent)\t[\(idx)] EFFECT clip boundingRect=\(path.boundingRect) → clip=\(nextContext.clip)")
                 case .filter(.colorMultiply(let color)):
                     effectName = "colorMultiply"
                     nextContext.setTintColor(from: color)
-                    print("\(indent)\t[\(idx)] EFFECT colorMultiply")
+                    //print("\(indent)\t[\(idx)] EFFECT colorMultiply")
                 case .identify:
                     effectName = "identify"
-                    print("\(indent)\t[\(idx)] EFFECT identify")
+                    //print("\(indent)\t[\(idx)] EFFECT identify")
                 case .filter:
                     effectName = "filter(other)"
-                    print("\(indent)\t[\(idx)] EFFECT filter(other)")
+                    //print("\(indent)\t[\(idx)] EFFECT filter(other)")
                 case .unknown:
                     effectName = "unknown"
-                    print("\(indent)\t[\(idx)] EFFECT unknown")
+                    //print("\(indent)\t[\(idx)] EFFECT unknown")
                 }
 
-                print("\(indent)\t\t↳ nested items=\(nestedList.items.count) effectName=\(effectName)")
+                //print("\(indent)\t\t↳ nested items=\(nestedList.items.count) effectName=\(effectName)")
                 traversalDepth += 2
                 let nested = traverseDisplayList(items: nestedList.items,
                                                  context: nextContext,
@@ -277,16 +277,16 @@ final class UIHostingViewRecordOrchestrator {
                                                  originalView: originalView,
                                                  buildSubtreeCallback: buildSubtreeCallback)
                 traversalDepth -= 2
-                print("\(indent)\t\t↳ nested returned \(nested.count) thingys")
+                //print("\(indent)\t\t↳ nested returned \(nested.count) thingys")
                 collected.append(contentsOf: nested)
 
             case .unknown:
-                print("\(indent)\t[\(idx)] UNKNOWN item, skipping")
+                //print("\(indent)\t[\(idx)] UNKNOWN item, skipping")
                 continue
             }
         }
 
-        print("\(indent)📋 [Traverse] returning \(collected.count) items from depth=\(traversalDepth)")
+        //print("\(indent)📋 [Traverse] returning \(collected.count) items from depth=\(traversalDepth)")
         return collected
     }
     
@@ -308,7 +308,7 @@ final class UIHostingViewRecordOrchestrator {
         let frame = baseContext.convert(frame: item.frame)
         var viewName = "SwiftUIView"
 
-        print("\(buildIndent)🏗️ buildContent: itemFrame=\(item.frame) → convertedFrame=\(frame) seed=\(content.seed.value)")
+        //print("\(buildIndent)🏗️ buildContent: itemFrame=\(item.frame) → convertedFrame=\(frame) seed=\(content.seed.value)")
 
         func makeDetails(widthOffset: CGFloat = 0, alphaOverride: CGFloat? = nil) -> ViewDetails {
                     let adjustedFrame = CGRect(x: frame.origin.x,
@@ -343,7 +343,7 @@ final class UIHostingViewRecordOrchestrator {
         case let SwiftUIDisplayList.Content.Value.shape(path, fillColor, fillStyle):
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIShapeView"
-            print("\(buildIndent)\t🔷 SHAPE id=\(contentId ?? -1) fillColor=\(fillColor) bounds=\(path.boundingRect)")
+            //print("\(buildIndent)\t🔷 SHAPE id=\(contentId ?? -1) fillColor=\(fillColor) bounds=\(path.boundingRect)")
             var details = makeDetails()
             details.backgroundColor = .clear
 
@@ -369,7 +369,9 @@ final class UIHostingViewRecordOrchestrator {
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUITextView"
             let truncatedText = rawString.prefix(60).replacingOccurrences(of: "\n", with: "\\n")
-            print("\(buildIndent)\t📝 TEXT id=\(contentId ?? -1) \"\(truncatedText)\" widthOffset=\(calculatedOffset)")
+            
+            //print("\(buildIndent)\t📝 TEXT id=\(contentId ?? -1) \"\(truncatedText)\" widthOffset=\(calculatedOffset)")
+            
             let details = makeDetails(widthOffset: calculatedOffset)
 
             let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
@@ -386,7 +388,9 @@ final class UIHostingViewRecordOrchestrator {
         case let SwiftUIDisplayList.Content.Value.color(colorData):
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIColorView"
-            print("\(buildIndent)\t🎨 COLOR id=\(contentId ?? -1) color=\(colorData.uiColor)")
+            
+            //print("\(buildIndent)\t🎨 COLOR id=\(contentId ?? -1) color=\(colorData.uiColor)")
+            
             var details = makeDetails()
             details.backgroundColor = colorData.uiColor
             return UIViewThingy(viewDetails: details)
@@ -403,7 +407,9 @@ final class UIHostingViewRecordOrchestrator {
 
             viewName = "SwiftUIImageView"
             let imgSize = image.map { "(\($0.width)x\($0.height))" } ?? "(nil)"
-            print("\(buildIndent)\t🖼️ IMAGE id=\(contentId ?? -1) size=\(imgSize) scale=\(swiftUIImage.scale)")
+            
+            //print("\(buildIndent)\t🖼️ IMAGE id=\(contentId ?? -1) size=\(imgSize) scale=\(swiftUIImage.scale)")
+            
             var details = makeDetails()
             details.backgroundColor = .clear
 
@@ -414,14 +420,16 @@ final class UIHostingViewRecordOrchestrator {
         case SwiftUIDisplayList.Content.Value.drawing(let erasedDrawing):
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIDrawingView"
-            print("\(buildIndent)\t✏️ DRAWING id=\(contentId ?? -1)")
+            
+            //print("\(buildIndent)\t✏️ DRAWING id=\(contentId ?? -1)")
+            
             var details = makeDetails()
             details.backgroundColor = .clear
 
             // Convert drawing to UIImage
             guard let image = erasedDrawing.makeSwiftUIImage(),
                   let cgImage = image.cgImage else {
-                print("\(buildIndent)\t\t⚠️ Drawing → image conversion failed")
+               // print("\(buildIndent)\t\t⚠️ Drawing → image conversion failed")
                 return nil
             }
 
@@ -453,7 +461,7 @@ final class UIHostingViewRecordOrchestrator {
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIPlatformView"
             var details = makeDetails()
-            print("\(buildIndent)\t📱 PLATFORM_VIEW id=\(contentId ?? -1) frame=\(frame)")
+            //print("\(buildIndent)\t📱 PLATFORM_VIEW id=\(contentId ?? -1) frame=\(frame)")
 
             let displayListId = SwiftUIDisplayList.Index.ID(identity: item.identity)
             let viewInfo = renderer.renderer.viewCache.map[.init(id: displayListId)]
@@ -465,13 +473,13 @@ final class UIHostingViewRecordOrchestrator {
 
             var thingy: any SessionReplayViewThingy = UIViewThingy(viewDetails: details)
             if let platformUIView = viewInfo?.uiView, let callback = buildSubtreeCallback {
-                print("\(buildIndent)\t\t🔗 PLATFORM_VIEW bridging into UIKit subtree for \(NSStringFromClass(type(of: platformUIView)))")
+                //print("\(buildIndent)\t\t🔗 PLATFORM_VIEW bridging into UIKit subtree for \(NSStringFromClass(type(of: platformUIView)))")
                 callback(platformUIView, &thingy)
             }
             return thingy
         case SwiftUIDisplayList.Content.Value.unknown:
             contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
-            print("\(buildIndent)\t❓ UNKNOWN content id=\(contentId ?? -1) frame=\(frame)")
+            //print("\(buildIndent)\t❓ UNKNOWN content id=\(contentId ?? -1) frame=\(frame)")
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)
