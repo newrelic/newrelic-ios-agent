@@ -85,9 +85,6 @@ class SessionReplayCapture {
         print("\(indent)🧩 \(details.viewName) id=\(details.viewId) parent=\(details.parentId ?? -1) frame=(\(Int(frame.origin.x)),\(Int(frame.origin.y)),\(Int(frame.width)),\(Int(frame.height)))\(visible)\(bg) children=\(thingy.subviews.count)")
 
         for child in thingy.subviews {
-            if child.viewDetails.viewName.hasPrefix("HostingView") {
-                print("got one")
-            }
             logThingyTree(child, depth: depth + 1)
         }
     }
@@ -130,7 +127,7 @@ class SessionReplayCapture {
                 }
             }
         } else {
-            print("\(indent)\t⛔ shouldRecordSubviews=false, skipping UIKit subviews")
+            //print("\(indent)\t⛔ shouldRecordSubviews=false, skipping UIKit subviews")
         }
         let className = NSStringFromClass(type(of: currentView))
 
