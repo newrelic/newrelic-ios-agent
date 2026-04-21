@@ -974,6 +974,11 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
         // there are multiple classes in the class hierarchy that don't implement
         // the SEL selector
 
+        // Save pre-advancement class: a 3rd-party swizzle (e.g. a testing framework)
+        // can cause a false color mismatch that looks like [super _cmd] but isn't.
+        // In that case the NR-prefixed selector still lives on the concrete class.
+        Class preAdvancementClass = actingClass;
+
         //We know we must move up the hierarchy at least one level.
         actingClass = class_getSuperclass(actingClass);
 
@@ -981,14 +986,23 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
         method = NRMA__getMethod(actingClass,originalSelector);
 
         if (method == nil) {
-            //if method is nil, this means we've instrumented a method, but the selector we are getting passed doesn't match the selector when when instrumented this method.
-            //this means that we have encounted a 3rd party sdk swizzle conflict and now the app will hang in the while loop below. to prevent this from happening
-            //let's throw an exeption instead, so we can immediately identify the issue.
-            NRLOG_AGENT_ERROR(@"Unable to find instrumented method. It's possible another framework has renamed the selector. Throwing Exception...");
-            @throw [NSException exceptionWithName:@"NRInvalidArgumentException"
-                                           reason:[NSString stringWithFormat:@"New Relic detected an unrecognized selector, '%@', sent to '%@'. It's possible _cmd was renamed by an unsafe method_exchangeImplementations().",cleanSelector,NSStringFromClass(actingClass)]
-                                         userInfo:nil];
+            // Before throwing, check whether a 3rd-party swizzle caused the color
+            // mismatch rather than a genuine [super _cmd] call.  If the NR-prefixed
+            // selector still exists on the concrete class, recover silently instead
+            // of crashing — tracing for this call will be skipped but the app continues.
+            method = NRMA__getMethod(preAdvancementClass, originalSelector);
+            if (method != nil) {
+                NRLOG_AGENT_WARNING(@"New Relic detected a 3rd-party swizzle conflict for '%@' on '%@'. Recovering — interaction trace for this call will be incomplete.", cleanSelector, NSStringFromClass(preAdvancementClass));
+                actingClass = preAdvancementClass;
+            } else {
+                // Genuinely unrecoverable: the selector was renamed out of the entire
+                // hierarchy.  Throw so the hang in the while-loop below is avoided.
+                NRLOG_AGENT_ERROR(@"Unable to find instrumented method. It's possible another framework has renamed the selector. Throwing Exception...");
+                @throw [NSException exceptionWithName:@"NRInvalidArgumentException"
+                                               reason:[NSString stringWithFormat:@"New Relic detected an unrecognized selector, '%@', sent to '%@'. It's possible _cmd was renamed by an unsafe method_exchangeImplementations().",cleanSelector,NSStringFromClass(actingClass)]
+                                             userInfo:nil];
             }
+        }
 
         while (method == NRMA__getMethod(class_getSuperclass(actingClass), originalSelector)) {
             //if the parentClasses method is the same as parentClass->superclass's method
