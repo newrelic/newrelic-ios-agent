@@ -72,6 +72,7 @@ extension SwiftUIDisplayList.SwiftUIViewUpdater.ViewInfo: XrayConvertible {
         self.backgroundColor    = baseLayer.backgroundColor?.safeColor
         self.borderColor        = baseLayer.borderColor?.safeColor
         self.isHidden           = baseLayer.isHidden
+        self.uiView             = hostView
     }
 }
 

@@ -46,6 +46,8 @@ internal struct SwiftUIDisplayList {
             let alpha: CGFloat
             let isHidden: Bool
             let intrinsicContentSize: CGSize
+            // The UIKit view backing this platform view node, if available.
+            let uiView: UIView?
         }
     }
     

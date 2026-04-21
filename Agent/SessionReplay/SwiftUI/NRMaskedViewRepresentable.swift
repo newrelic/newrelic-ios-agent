@@ -47,20 +47,6 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
         hostVC.rootView = MaskedContainerView(context.environment,
                                                          inputContent: content)
 
-//        // Approach 5: diff masking properties — only notify when something actually changed,
-//        // not on every parent re-render that happens to re-invoke this representable.
-//        if #available(iOS 17.0, *) {
-////            let maskingChanged = hostVC.view.maskApplicationText != maskApplicationText
-////                || hostVC.view.maskUserInputText != maskUserInputText
-////                || hostVC.view.maskAllImages != maskAllImages
-////                || hostVC.view.maskAllUserTouches != maskAllUserTouches
-////                || hostVC.view.blockView != blockView
-////                || hostVC.view.swiftUISessionReplayIdentifier != sessionReplayIdentifier
-////            if maskingChanged {
-//                NRMaskingChangeObservable.shared.notifyChange()
-// //           }
-//        }
-
         // Handle association w/ host `UIView`
         hostVC.view.maskApplicationText = maskApplicationText
         hostVC.view.maskUserInputText = maskUserInputText
