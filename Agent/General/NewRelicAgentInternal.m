@@ -669,6 +669,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 - (void) uploadLogsIfSampled {
     NRMAHarvesterConfiguration* configuration = [NRMAHarvestController configuration];
+    if (configuration == nil) {
+        return;
+    }
 
     BOOL isSampled = self.sampleSeed <= configuration.sampling_rate;
     BOOL isEnabled = configuration.log_reporting_enabled;
@@ -1387,9 +1390,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isMasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers) {
-        isMasked = [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers containsObject:identifier];
+    @synchronized(config.session_replay_maskedAccessibilityIdentifiers) {
+        isMasked = [config.session_replay_maskedAccessibilityIdentifiers containsObject:identifier];
     }
     return isMasked;
 }
@@ -1399,9 +1407,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isMasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_maskedClassNames) {
-        isMasked = [[NRMAHarvestController configuration].session_replay_maskedClassNames containsObject:className];
+    @synchronized(config.session_replay_maskedClassNames) {
+        isMasked = [config.session_replay_maskedClassNames containsObject:className];
     }
     return isMasked;
 }
@@ -1413,9 +1426,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isUnmasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers) {
-        isUnmasked = [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers containsObject:identifier];
+    @synchronized(config.session_replay_unmaskedAccessibilityIdentifiers) {
+        isUnmasked = [config.session_replay_unmaskedAccessibilityIdentifiers containsObject:identifier];
     }
     return isUnmasked;
 }
@@ -1425,9 +1443,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isUnmasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_unmaskedClassNames) {
-        isUnmasked = [[NRMAHarvestController configuration].session_replay_unmaskedClassNames containsObject:className];
+    @synchronized(config.session_replay_unmaskedClassNames) {
+        isUnmasked = [config.session_replay_unmaskedClassNames containsObject:className];
     }
     return isUnmasked;
 }
