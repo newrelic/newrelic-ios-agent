@@ -15,7 +15,7 @@
 
 @property(assign) long long period;
 @property(strong,atomic) NSTimer* timer;
-@property(strong) NRMAHarvester* harvester;
+@property(weak) NRMAHarvester* harvester;
 - (id) initWithHarvester:(NRMAHarvester*)harvester;
 - (void) start;
 - (void) stop;

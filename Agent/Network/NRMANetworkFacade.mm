@@ -415,7 +415,11 @@
 }
 
 + (int) responseBodyCaptureSizeLimit {
-    return [NRMAHarvestController configuration].response_body_limit;
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return 0;
+    }
+    return config.response_body_limit;
 }
 
 - (NSString*) crossProcessId {
