@@ -46,24 +46,16 @@ class UIDatePickerThingy: SessionReplayViewThingy {
         }
     }
 
-    func cssDescription() -> String {
-        return "#\(viewDetails.cssSelector) { \(generateBaseCSSStyle()) }"
-    }
-
     func generateRRWebNode() -> ElementNodeData {
         return ElementNodeData(
             id: viewDetails.viewId,
             tagName: .div,
             attributes: [
-                "id": viewDetails.cssSelector
+                "id": viewDetails.cssSelector,
+                "style": inlineCSSDescription()
             ],
             childNodes: []
         )
-    }
-
-    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        let node = generateRRWebNode()
-        return [.init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(node))]
     }
 
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {

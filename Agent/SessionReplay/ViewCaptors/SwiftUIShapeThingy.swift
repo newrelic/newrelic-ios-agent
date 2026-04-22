@@ -46,14 +46,6 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
         self.fallbackTintColor = fallbackTintColor
     }
 
-    func cssDescription() -> String {
-        return """
-                #\(viewDetails.cssSelector) { \
-                \(inlineCSSDescription())\
-                }
-                """
-    }
-
     func inlineCSSDescription() -> String {
         return "\(generateBaseCSSStyle()) display: block;"
     }
@@ -120,108 +112,6 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
 
     private func getFillRule() -> String {
         return fillStyle.isEOFilled ? "evenodd" : "nonzero"
-    }
-
-    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        // Create the shape container div element
-        let shapeNode = ElementNodeData(
-            id: viewDetails.viewId + 1000000, // Use offset to avoid ID conflicts
-            tagName: .div,
-            attributes: [:],
-            childNodes: []
-        )
-        shapeNode.attributes["style"] = shapeInlineCSSDescription()
-
-        if isMasked {
-            shapeNode.attributes["data-nr-masked"] = "shape"
-        } else {
-            let svgPathData = convertPathToSVGData()
-            let fillColorHex = getFillColorHex()
-            let fillRule = getFillRule()
-
-            // Create SVG path element
-            let pathNode = ElementNodeData(
-                id: viewDetails.viewId + 2000000,
-                tagName: .path,
-                attributes: [
-                    "d": svgPathData,
-                    "fill": fillColorHex,
-                    "fill-rule": fillRule
-                ],
-                childNodes: [],
-                isSVG: true
-            )
-
-            // Create SVG element with viewBox matching the frame
-            let svgNode = ElementNodeData(
-                id: viewDetails.viewId + 3000000,
-                tagName: .svg,
-                attributes: [
-                    "viewBox": "0 0 \(viewDetails.frame.width) \(viewDetails.frame.height)",
-                    "width": "100%",
-                    "height": "100%",
-                    "preserveAspectRatio": "none"
-                ],
-                childNodes: [],
-                isSVG: true
-            )
-
-            // When not masked, add SVG structure to shape node
-            let addSvgNode: RRWebMutationData.AddRecord = .init(
-                parentId: viewDetails.viewId + 1000000,
-                nextId: nil,
-                node: .element(svgNode)
-            )
-            let addPathNode: RRWebMutationData.AddRecord = .init(
-                parentId: viewDetails.viewId + 3000000,
-                nextId: nil,
-                node: .element(pathNode)
-            )
-
-            // Create container div
-            let containerNode = ElementNodeData(
-                id: viewDetails.viewId,
-                tagName: .div,
-                attributes: ["id": viewDetails.cssSelector],
-                childNodes: []
-            )
-            containerNode.attributes["style"] = inlineCSSDescription()
-
-            let addContainerNode: RRWebMutationData.AddRecord = .init(
-                parentId: parentNodeId,
-                nextId: viewDetails.nextId,
-                node: .element(containerNode)
-            )
-            let addShapeNode: RRWebMutationData.AddRecord = .init(
-                parentId: viewDetails.viewId,
-                nextId: nil,
-                node: .element(shapeNode)
-            )
-
-            return [addContainerNode, addShapeNode, addSvgNode, addPathNode]
-        }
-
-        // Create container div
-        let containerNode = ElementNodeData(
-            id: viewDetails.viewId,
-            tagName: .div,
-            attributes: ["id": viewDetails.cssSelector],
-            childNodes: []
-        )
-        containerNode.attributes["style"] = inlineCSSDescription()
-
-        let addContainerNode: RRWebMutationData.AddRecord = .init(
-            parentId: parentNodeId,
-            nextId: viewDetails.nextId,
-            node: .element(containerNode)
-        )
-        let addShapeNode: RRWebMutationData.AddRecord = .init(
-            parentId: viewDetails.viewId,
-            nextId: nil,
-            node: .element(shapeNode)
-        )
-
-        return [addContainerNode, addShapeNode]
     }
 
     func generateRRWebNode() -> ElementNodeData {

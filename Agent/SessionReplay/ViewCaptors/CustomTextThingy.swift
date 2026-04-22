@@ -161,14 +161,6 @@ class CustomTextThingy: SessionReplayViewThingy {
         return actualTextBounds
     }
 
-    func cssDescription() -> String {
-        return """
-                #\(viewDetails.cssSelector) { \
-                \(inlineCSSDescription()) \
-                } 
-                """
-    }
-    
     func inlineCSSDescription() -> String {
         let fontWeightCSS = TextHelper.cssValueForFontWeight(fontWeight)
         let fontStyleCSS = isItalic ? "italic" : "normal"
@@ -194,31 +186,14 @@ class CustomTextThingy: SessionReplayViewThingy {
                                                         isStyle: false,
                                                         textContent: labelText,
                                                         childNodes: []))
-        
-        return ElementNodeData(id: viewDetails.viewId,
-                                        tagName: .span,
-                                        attributes: ["id":viewDetails.cssSelector],
-                                        childNodes: [textNode])
-    }
-    
-    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        let elementNode = ElementNodeData(id: viewDetails.viewId,
-                                   tagName: .span,
-                                   attributes: ["id":viewDetails.cssSelector],
-                                   childNodes: [])
-        elementNode.attributes["style"] = inlineCSSDescription()
 
-        let textNode = SerializedNode.text(TextNodeData(id: IDGenerator.shared.getId(),
-                                                        isStyle: false,
-                                                        textContent: labelText,
-                                                        childNodes: []))
-        
-        let addElementNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(elementNode))
-        let addTextNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: textNode)
-        
-        return [addElementNode, addTextNode]
+        return ElementNodeData(id: viewDetails.viewId,
+                               tagName: .span,
+                               attributes: ["id": viewDetails.cssSelector,
+                                            "style": inlineCSSDescription()],
+                               childNodes: [textNode])
     }
-    
+
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
         guard let typedOther = other as? CustomTextThingy else {
             return []

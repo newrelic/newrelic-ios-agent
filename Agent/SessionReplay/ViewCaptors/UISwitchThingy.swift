@@ -54,146 +54,89 @@ class UISwitchThingy: SessionReplayViewThingy {
         }
     }
 
-    func cssDescription() -> String {
-        let onColor = onTintColor.toHexString(includingAlpha: true)
-        let offColor = offTintColor.toHexString(includingAlpha: true)
-        let thumbColor = thumbTintColor.toHexString(includingAlpha: true)
-        let thumbHeight = viewDetails.frame.size.height - 4
-        let thumbWidth = thumbHeight * 1.5 // Make it pill-shaped (wider than tall)
-        let translateDistance = viewDetails.frame.size.width - thumbWidth - 4
+    func inlineCSSDescription() -> String {
+        return "\(generateBaseCSSStyle()) display: inline-block;"
+    }
 
+    private var thumbHeight: CGFloat {
+        return viewDetails.frame.size.height - 4
+    }
+
+    private var thumbWidth: CGFloat {
+        return thumbHeight * 1.5 // pill-shaped
+    }
+
+    private var translateDistance: CGFloat {
+        return viewDetails.frame.size.width - thumbWidth - 4
+    }
+
+    private func trackInlineStyle() -> String {
+        let backgroundColor = isOn ? onTintColor : offTintColor
+        let radius = viewDetails.frame.size.height / 2
         return """
-        .switch#\(viewDetails.cssSelector) {
-        }
-        .switch#\(viewDetails.cssSelector) input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .switch#\(viewDetails.cssSelector) .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: \(offColor);
-            transition: 0.4s;
-            border-radius: \(String(format: "%.2f", viewDetails.frame.size.height / 2))px;
-        }
-        .switch#\(viewDetails.cssSelector) .slider:before {
-            position: absolute;
-            content: "";
-            height: \(String(format: "%.2f", thumbHeight))px;
-            width: \(String(format: "%.2f", thumbWidth))px;
-            left: 2px;
-            bottom: 2px;
-            background-color: \(thumbColor);
-            transition: 0.4s;
-            border-radius: \(String(format: "%.2f", thumbHeight / 2))px;
-        }
-        .switch#\(viewDetails.cssSelector).checked .slider {
-            background-color: \(onColor);
-        }
-        .switch#\(viewDetails.cssSelector).checked .slider:before {
-            transform: translateX(\(String(format: "%.2f", translateDistance))px);
-        }
+        position: absolute; \
+        top: 0; left: 0; right: 0; bottom: 0; \
+        background-color: \(backgroundColor.toHexString(includingAlpha: true)); \
+        border-radius: \(String(format: "%.2f", radius))px; \
+        transition: background-color 0.4s;
+        """
+    }
+
+    private func thumbInlineStyle() -> String {
+        let thumbLeft = isOn ? (translateDistance + 2) : 2.0
+        return """
+        position: absolute; \
+        top: 2px; \
+        left: \(String(format: "%.2f", thumbLeft))px; \
+        width: \(String(format: "%.2f", thumbWidth))px; \
+        height: \(String(format: "%.2f", thumbHeight))px; \
+        background-color: \(thumbTintColor.toHexString(includingAlpha: true)); \
+        border-radius: \(String(format: "%.2f", thumbHeight / 2))px; \
+        transition: left 0.4s;
         """
     }
 
     func generateRRWebNode() -> ElementNodeData {
-        // Create hidden checkbox input
-        let inputNode = ElementNodeData(
+        let trackNode = ElementNodeData(
             id: viewDetails.viewId + 1,
-            tagName: .input,
-            attributes: [
-                "type": "checkbox",
-                "checked": isOn ? "checked" : ""
-            ],
+            tagName: .span,
+            attributes: ["style": trackInlineStyle()],
             childNodes: []
         )
 
-        // Create slider span (thumb will be created by CSS ::before)
-        let sliderNode = ElementNodeData(
+        let thumbNode = ElementNodeData(
             id: viewDetails.viewId + 2,
             tagName: .span,
-            attributes: [
-                "class": "slider round"
-            ],
+            attributes: ["style": thumbInlineStyle()],
             childNodes: []
         )
 
-        // Create label container (the .switch)
         return ElementNodeData(
             id: viewDetails.viewId,
             tagName: .label,
-            attributes: [
-                "id": viewDetails.cssSelector,
-                "class": isOn ? "switch checked" : "switch",
-                "style": "\(generateBaseCSSStyle()) display: inline-block;"
-            ],
-            childNodes: [.element(inputNode), .element(sliderNode)]
+            attributes: ["id": viewDetails.cssSelector,
+                         "style": inlineCSSDescription()],
+            childNodes: [.element(trackNode), .element(thumbNode)]
         )
-    }
-
-    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        // Create hidden checkbox input
-        let inputNode = ElementNodeData(
-            id: viewDetails.viewId + 1,
-            tagName: .input,
-            attributes: [
-                "type": "checkbox",
-                "checked": isOn ? "checked" : ""
-            ],
-            childNodes: []
-        )
-
-        // Create slider span (thumb will be created by CSS ::before)
-        let sliderNode = ElementNodeData(
-            id: viewDetails.viewId + 2,
-            tagName: .span,
-            attributes: [
-                "class": "slider round"
-            ],
-            childNodes: []
-        )
-
-        // Create label container (the .switch)
-        let node = ElementNodeData(
-            id: viewDetails.viewId,
-            tagName: .label,
-            attributes: [
-                "id": viewDetails.cssSelector,
-                "class": isOn ? "switch checked" : "switch",
-                "style": "\(generateBaseCSSStyle()) display: inline-block;"
-            ],
-            childNodes: [.element(inputNode), .element(sliderNode)]
-        )
-
-        return [.init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(node))]
     }
 
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
         guard let typedOther = other as? UISwitchThingy else { return [] }
         var mutations = [MutationRecord]()
 
-        let labelId = viewDetails.viewId
-        let inputId = viewDetails.viewId + 1
-
-        // Check if anything changed
         if self != typedOther {
-            // Always update style (includes position) and class
-            let labelAttributes: [String: String] = [
-                "style": "\(typedOther.generateBaseCSSStyle()) display: inline-block;",
-                "class": typedOther.isOn ? "switch checked" : "switch"
-            ]
-            mutations.append(RRWebMutationData.AttributeRecord(id: labelId, attributes: labelAttributes))
-
-            // Update checkbox checked state
-            let inputAttributes: [String: String] = [
-                "checked": typedOther.isOn ? "checked" : ""
-            ]
-            mutations.append(RRWebMutationData.AttributeRecord(id: inputId, attributes: inputAttributes))
+            mutations.append(RRWebMutationData.AttributeRecord(
+                id: viewDetails.viewId,
+                attributes: ["style": typedOther.inlineCSSDescription()]
+            ))
+            mutations.append(RRWebMutationData.AttributeRecord(
+                id: viewDetails.viewId + 1,
+                attributes: ["style": typedOther.trackInlineStyle()]
+            ))
+            mutations.append(RRWebMutationData.AttributeRecord(
+                id: viewDetails.viewId + 2,
+                attributes: ["style": typedOther.thumbInlineStyle()]
+            ))
         }
 
         return mutations

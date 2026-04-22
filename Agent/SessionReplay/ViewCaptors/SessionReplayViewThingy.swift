@@ -17,7 +17,7 @@ protocol SessionReplayViewThingy: Hashable {
 
     var subviews: [any SessionReplayViewThingy] { get set }
     
-    func cssDescription() -> String
+    func inlineCSSDescription() -> String
     func generateRRWebNode() -> ElementNodeData
     func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord]
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord]
@@ -27,6 +27,15 @@ extension SessionReplayViewThingy {
     /// Determines if subviews should be recorded. Blocked views should not record their subviews.
     var shouldRecordSubviewsComputed: Bool {
         return shouldRecordSubviews && !isBlocked
+    }
+
+    func inlineCSSDescription() -> String {
+        return generateBaseCSSStyle()
+    }
+
+    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
+        let node = generateRRWebNode()
+        return [.init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(node))]
     }
 
     func generateBaseCSSStyle() -> String {

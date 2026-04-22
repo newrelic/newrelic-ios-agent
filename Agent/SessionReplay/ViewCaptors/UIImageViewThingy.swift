@@ -88,14 +88,6 @@ class UIImageViewThingy: SessionReplayViewThingy {
         self.contentMode = UIImageViewThingy.contentModeToCSS(contentMode: contentMode)
     }
     
-    func cssDescription() -> String {
-        return """
-                #\(viewDetails.cssSelector) { \
-                \(inlineCSSDescription())\
-                }
-                """
-    }
-    
     func inlineCSSDescription() -> String {
         return "\(generateBaseCSSStyle()) display: block;"
     }
@@ -123,32 +115,6 @@ class UIImageViewThingy: SessionReplayViewThingy {
         }
     }
     
-    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        // Create the img element
-        let imgNode = ElementNodeData(id: viewDetails.viewId + 1000000, // Use offset to avoid ID conflicts
-                                      tagName: .image,
-                                      attributes: [:],
-                                      childNodes: [])
-        imgNode.attributes["style"] = imageInlineCSSDescription()
-        if let imageData = image?.optimizedPngData() {
-            imgNode.attributes["src"] = "data:image/png;base64,\(imageData.base64EncodedString())"
-        }
-        if isMasked {
-            imgNode.attributes["data-nr-masked"] = "image"
-        }
-        // Create the container div element
-        let containerNode = ElementNodeData(id: viewDetails.viewId,
-                                            tagName: .div,
-                                            attributes: ["id": viewDetails.cssSelector],
-                                            childNodes: [])
-        containerNode.attributes["style"] = inlineCSSDescription()
-        
-        let addDivNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(containerNode))
-        let addImgNode: RRWebMutationData.AddRecord = .init(parentId: viewDetails.viewId, nextId: nil, node: .element(imgNode))
-
-        return [addDivNode, addImgNode]
-    }
-    
     func generateRRWebNode() -> ElementNodeData {
         // Create the img element
         let imgNode = ElementNodeData(id: viewDetails.viewId + 1000000, // Use offset to avoid ID conflicts
@@ -165,7 +131,8 @@ class UIImageViewThingy: SessionReplayViewThingy {
         // Create and return the container div
         return ElementNodeData(id: viewDetails.viewId,
                                tagName: .div,
-                               attributes: ["id": viewDetails.cssSelector],
+                               attributes: ["id": viewDetails.cssSelector,
+                                            "style": inlineCSSDescription()],
                                childNodes: [.element(imgNode)])
     }
     

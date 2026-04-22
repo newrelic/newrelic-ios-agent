@@ -41,25 +41,14 @@ class UIViewThingy: SessionReplayViewThingy {
         self.isBlocked = viewDetails.blockView ?? false
     }
     
-    func cssDescription() -> String {
-        return "#\(viewDetails.cssSelector) {\(generateBaseCSSStyle())} "
-    }
-    
     func generateRRWebNode() -> ElementNodeData {
         return ElementNodeData(id: viewDetails.viewId,
                                tagName: .div,
-                               attributes: ["id":viewDetails.cssSelector],
+                               attributes: ["id": viewDetails.cssSelector,
+                                            "style": inlineCSSDescription()],
                                childNodes: [])
     }
-    
-    func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        let node = generateRRWebNode()
-        node.attributes["style"] = generateBaseCSSStyle()
-        let addNode: RRWebMutationData.AddRecord = .init(parentId: parentNodeId, nextId: viewDetails.nextId, node: .element(node))
-        
-        return [addNode]
-    }
-    
+
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
         guard let typedOther = other as? UIViewThingy else {
             return []

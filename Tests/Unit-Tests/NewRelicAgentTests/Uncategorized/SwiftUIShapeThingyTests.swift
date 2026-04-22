@@ -84,32 +84,6 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
     // MARK: - CSS Generation Tests
 
-    func testCSSDescription() {
-        let details = makeViewDetails(
-            frame: CGRect(x: 10, y: 20, width: 100, height: 50),
-            viewId: 42,
-            isMasked: false
-        )
-        let path = makeTestPath()
-        let color = makeTestColor()
-        let fillStyle = SwiftUI.FillStyle()
-
-        let thingy = SwiftUIShapeThingy(
-            viewDetails: details,
-            path: path,
-            fillColor: color,
-            fillStyle: fillStyle
-        )
-
-        let css = thingy.cssDescription()
-        XCTAssertTrue(css.contains("#SwiftUIShapeView-42"))
-        XCTAssertTrue(css.contains("position: fixed"))
-        XCTAssertTrue(css.contains("left: 10.00px"))
-        XCTAssertTrue(css.contains("top: 20.00px"))
-        XCTAssertTrue(css.contains("width: 100.00px"))
-        XCTAssertTrue(css.contains("height: 50.00px"))
-    }
-
     func testInlineCSSDescription() {
         let details = makeViewDetails(frame: CGRect(x: 10, y: 20, width: 100, height: 50), isMasked: false)
         let path = makeTestPath()
@@ -397,7 +371,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
     // MARK: - RRWeb Addition Node Tests (Mutations)
 
-    func testGenerateRRWebAdditionNode_ReturnsSeparateRecords() {
+    func testGenerateRRWebAdditionNode_ReturnsSingleNestedRecord() {
         let details = makeViewDetails(viewId: 42, parentId: 10, isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
@@ -412,8 +386,8 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Should return 4 separate AddRecords: container, shape, svg, path
-        XCTAssertEqual(records.count, 4)
+        // Addition now reuses generateRRWebNode() and wraps the fully-nested tree in a single AddRecord
+        XCTAssertEqual(records.count, 1)
     }
 
     func testGenerateRRWebAdditionNode_ContainerRecord() {
@@ -432,7 +406,6 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // First record should be the container div
         XCTAssertEqual(records[0].parentId, 10)
         XCTAssertEqual(records[0].nextId, 99)
 
@@ -441,7 +414,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
             XCTAssertEqual(containerNode.tagName, .div)
             XCTAssertEqual(containerNode.attributes["id"], "SwiftUIShapeView-42")
             XCTAssertNotNil(containerNode.attributes["style"])
-            XCTAssertTrue(containerNode.childNodes.isEmpty) // Should be empty, not nested
+            XCTAssertEqual(containerNode.childNodes.count, 1) // Shape div nested inside
         } else {
             XCTFail("Expected element node")
         }
@@ -462,17 +435,15 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Second record should be the shape div
-        XCTAssertEqual(records[1].parentId, 42) // Parent is container
-        XCTAssertNil(records[1].nextId)
-
-        if case .element(let shapeNode) = records[1].node {
+        // The shape div is nested as the first child of the container
+        if case .element(let containerNode) = records[0].node,
+           case .element(let shapeNode) = containerNode.childNodes.first {
             XCTAssertEqual(shapeNode.id, 42 + 1000000)
             XCTAssertEqual(shapeNode.tagName, .div)
             XCTAssertNotNil(shapeNode.attributes["style"])
-            XCTAssertTrue(shapeNode.childNodes.isEmpty) // Should be empty, not nested
+            XCTAssertEqual(shapeNode.childNodes.count, 1) // SVG nested inside
         } else {
-            XCTFail("Expected element node")
+            XCTFail("Expected nested shape element")
         }
     }
 
@@ -496,18 +467,17 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Third record should be the SVG element
-        XCTAssertEqual(records[2].parentId, 42 + 1000000) // Parent is shape div
-        XCTAssertNil(records[2].nextId)
-
-        if case .element(let svgNode) = records[2].node {
+        // The SVG is nested two levels deep: container > shape > svg
+        if case .element(let containerNode) = records[0].node,
+           case .element(let shapeNode) = containerNode.childNodes.first,
+           case .element(let svgNode) = shapeNode.childNodes.first {
             XCTAssertEqual(svgNode.id, 42 + 3000000)
             XCTAssertEqual(svgNode.tagName, .svg)
             XCTAssertEqual(svgNode.attributes["viewBox"], "0 0 100.0 50.0")
             XCTAssertEqual(svgNode.isSVG, true)
-            XCTAssertTrue(svgNode.childNodes.isEmpty) // Should be empty, not nested
+            XCTAssertEqual(svgNode.childNodes.count, 1) // Path nested inside
         } else {
-            XCTFail("Expected element node")
+            XCTFail("Expected nested svg element")
         }
     }
 
@@ -526,11 +496,11 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Fourth record should be the path element
-        XCTAssertEqual(records[3].parentId, 42 + 3000000) // Parent is SVG
-        XCTAssertNil(records[3].nextId)
-
-        if case .element(let pathNode) = records[3].node {
+        // The path is nested three levels deep: container > shape > svg > path
+        if case .element(let containerNode) = records[0].node,
+           case .element(let shapeNode) = containerNode.childNodes.first,
+           case .element(let svgNode) = shapeNode.childNodes.first,
+           case .element(let pathNode) = svgNode.childNodes.first {
             XCTAssertEqual(pathNode.id, 42 + 2000000)
             XCTAssertEqual(pathNode.tagName, .path)
             XCTAssertNotNil(pathNode.attributes["d"])
@@ -539,7 +509,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
             XCTAssertEqual(pathNode.isSVG, true)
             XCTAssertTrue(pathNode.childNodes.isEmpty)
         } else {
-            XCTFail("Expected element node")
+            XCTFail("Expected nested path element")
         }
     }
 
@@ -830,15 +800,15 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Should return only 2 records when masked: container, shape
-        XCTAssertEqual(records.count, 2)
+        // Addition returns a single nested record (container > shape) when masked
+        XCTAssertEqual(records.count, 1)
 
-        // Verify shape record is masked
-        if case .element(let shapeNode) = records[1].node {
-            XCTAssertEqual(shapeNode.attributes["data-nr-masked"], "shape")
+        if case .element(let containerNode) = records[0].node,
+           case .element(let shapeNode) = containerNode.childNodes.first {
+            XCTAssertEqual(shapeNode.attributes["data-nr-masked"], "image")
             XCTAssertTrue(shapeNode.childNodes.isEmpty)
         } else {
-            XCTFail("Expected element node")
+            XCTFail("Expected nested shape element")
         }
     }
 
