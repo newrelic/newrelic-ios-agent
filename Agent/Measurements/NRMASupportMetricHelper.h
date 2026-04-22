@@ -21,6 +21,7 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueConfigurationUpdateMetric;
 + (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size;
 + (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds;
++ (void) enqueue4HourSessionRestartMetric;
 
 + (void) processDeferredMetrics;
 + (void) enqueueOfflinePayloadMetric:(long)size;
@@ -31,6 +32,9 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueSessionReplaySuccessMetric:(long)size;
 + (void) enqueueSessionReplayFailedMetric;
 + (void) enqueueSessionReplayURLTooLargeMetric;
++ (void) enqueueSessionReplayConfigEnabledMetric:(BOOL)enabled;
++ (void) enqueueSessionReplayConfigSamplingRateMetric:(double)samplingRate;
++ (void) enqueueSessionReplayConfigErrorSamplingRateMetric:(double)errorSamplingRate;
 
 + (void) enqueueJSErrorUploadTimeMetric:(double)milliseconds;
 + (void) enqueueJSErrorUploadTimeoutMetric;

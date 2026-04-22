@@ -73,6 +73,18 @@ class MainCoordinator: Coordinator {
         let diffTestViewController = ViewControllerProvider.diffTestViewController
         navigationController.pushViewController(diffTestViewController, animated: true)
     }
+    
+    func showSwiftUITabBar() {
+#if os(iOS)
+        if #available(iOS 18.0, *) {
+            let swiftUIView = SwiftUITabBar()
+            let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+            navigationController.pushViewController(swiftUIViewController, animated: true)
+        } else {
+            // Fallback on earlier versions
+        }
+#endif
+    }
 
     func showPerformanceContentView() {
 #if os(iOS)

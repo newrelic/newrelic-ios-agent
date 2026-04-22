@@ -120,6 +120,18 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueue4HourSessionRestartMetric {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAMaxDurationSessionRestartMetric,
+                                                                      nativePlatform, platform]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
 + (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
 
@@ -194,6 +206,36 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
         [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat: kNRMASessionReplayMetricURLTooLarge, nativePlatform, platform]
                                                               value:@1
                                                               scope:nil]];
+    }
+}
+
++ (void) enqueueSessionReplayConfigEnabledMetric:(BOOL)enabled {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigEnabled
+                                                              value:[NSNumber numberWithBool:enabled]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
++ (void) enqueueSessionReplayConfigSamplingRateMetric:(double)samplingRate {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigSamplingRate
+                                                              value:[NSNumber numberWithDouble:samplingRate]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
++ (void) enqueueSessionReplayConfigErrorSamplingRateMetric:(double)errorSamplingRate {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMASessionReplayConfigErrorSamplingRate
+                                                              value:[NSNumber numberWithDouble:errorSamplingRate]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
     }
 }
 
