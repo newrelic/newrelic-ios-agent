@@ -199,6 +199,10 @@
 		F8F5D8462BEBB86000CDC139 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
 		F8F5D8472BEBB86000CDC139 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
 		F8F5D8482BEBB86000CDC139 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
+		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
+		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
+		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
+		CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -473,6 +477,8 @@
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
+		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
+		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -563,6 +569,7 @@
 				2BAE5C892E860C7D001D2B88 /* SteppersView.swift */,
 				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
 				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
+				CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -746,6 +753,7 @@
 				F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
+				CD0001001CD000000000CD00 /* MapViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1375,6 +1383,8 @@
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
+				CD0001011CD000000000CD00 /* MapViewController.swift in Sources */,
+				CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1431,6 +1441,8 @@
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
+				CD0001021CD000000000CD00 /* MapViewController.swift in Sources */,
+				CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
