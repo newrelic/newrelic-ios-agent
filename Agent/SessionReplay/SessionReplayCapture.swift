@@ -98,7 +98,8 @@ class SessionReplayCapture {
                 var otherViews: [any SessionReplayViewThingy] = []
 
                 for thingy in thingys {
-                    if thingy.viewDetails.viewName == "SwiftUIColorView" {
+                    if thingy.viewDetails.viewName == "SwiftUIColorView"
+                        || thingy.viewDetails.viewName == "SwiftUIPlatformView" {
                         colorViews.append(thingy)
                     } else {
                         otherViews.append(thingy)
@@ -214,7 +215,16 @@ class SessionReplayCapture {
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
         
-        return !(areFramesTheSame && isClear)
+        if areFramesTheSame && isClear {
+            // Still record navigation bar internal views and SwiftUI platform view hosts.
+            let className = NSStringFromClass(type(of: view))
+            if className.contains("NavigationBar") || className.contains("LargeTitle")
+                || className.contains("UIKitPlatformViewHost") {
+                return true
+            }
+            return false
+        }
+        return true
     }
     
     private func setNextIdRecursively(for thingy: inout any SessionReplayViewThingy) {
