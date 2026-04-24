@@ -94,6 +94,7 @@ public class NRMASessionReplay: NSObject {
         //NRLOG_AGENT_DEBUG("▶️ [start] ====================================================")
         
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
+
         Task{
             await MainActor.run {
                 guard let window = getWindow() else {

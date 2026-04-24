@@ -9,6 +9,18 @@
 import Foundation
 import SwiftUI
 
+/// Convert a linear-light component to sRGB gamma-encoded.
+/// SwiftUI's internal color types store values in linear space, but
+/// UIColor(red:green:blue:alpha:) expects sRGB gamma-encoded values.
+@inline(__always)
+private func linearToSRGB(_ c: Float) -> Float {
+    if c <= 0.0031308 {
+        return c * 12.92
+    } else {
+        return 1.055 * powf(c, 1.0 / 2.4) - 0.055
+    }
+}
+
 @available(iOS 13.0, tvOS 13.0, *)
 extension SwiftUI.Color {
     // Pre-iOS 26 internal color types
@@ -17,11 +29,11 @@ extension SwiftUI.Color {
         let linearGreen: Float
         let linearBlue: Float
         let opacity: Float
-        
+
         var uiColor: UIColor {
-            UIColor(red: CGFloat(linearRed),
-                    green: CGFloat(linearGreen),
-                    blue: CGFloat(linearBlue),
+            UIColor(red: CGFloat(linearToSRGB(linearRed)),
+                    green: CGFloat(linearToSRGB(linearGreen)),
+                    blue: CGFloat(linearToSRGB(linearBlue)),
                     alpha: CGFloat(opacity))
         }
     }
@@ -42,9 +54,9 @@ internal struct ColorView {
     let headroom: Float
 
     var uiColor: UIColor {
-        UIColor(red: CGFloat(linearRed),
-                green: CGFloat(linearGreen),
-                blue: CGFloat(linearBlue),
+        UIColor(red: CGFloat(linearToSRGB(linearRed)),
+                green: CGFloat(linearToSRGB(linearGreen)),
+                blue: CGFloat(linearToSRGB(linearBlue)),
                 alpha: CGFloat(opacity))
     }
 
@@ -79,7 +91,10 @@ internal struct ResolvedColor: Hashable {
         guard let r = linearRed, let g = linearGreen, let b = linearBlue, let a = opacity else {
             return nil
         }
-        return UIColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: CGFloat(a))
+        return UIColor(red: CGFloat(linearToSRGB(r)),
+                       green: CGFloat(linearToSRGB(g)),
+                       blue: CGFloat(linearToSRGB(b)),
+                       alpha: CGFloat(a))
     }
 
     // Direct component initializer

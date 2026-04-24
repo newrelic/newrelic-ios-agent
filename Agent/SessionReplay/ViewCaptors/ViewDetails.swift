@@ -38,6 +38,7 @@ struct ViewDetails {
     var viewIdentifier: String?
 
     var cssSelector: String {
+
         return "\(self.viewName)-\(self.viewId)"
     }
     

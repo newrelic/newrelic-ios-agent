@@ -213,3 +213,242 @@ class ComplexViewController: UIViewController {
 
     private func updateContent() { label.text = "\(itemIndex)" }
 }
+
+// MARK: - @Observable + @Bindable Demo (iOS 17+)
+
+@available(iOS 17.0, *)
+@Observable
+class UserProfile {
+    var name: String = "Alice"
+    var age: Int = 30
+    var isPremium: Bool = false
+    var score: Double = 50.0
+}
+
+@available(iOS 17.0, *)
+struct BindableDemoView: View {
+    @State private var profile = UserProfile()
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                Text("@Bindable creates $bindings on @Observable properties so they work with SwiftUI controls.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center).padding(.horizontal)
+
+                GroupBox("Live values (parent @State)") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Name: \(profile.name)")
+                        Text("Age: \(profile.age)")
+                        Text("Premium: \(profile.isPremium ? "yes" : "no")")
+                        Text("Score: \(String(format: "%.0f", profile.score))")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                BindableEditorView(profile: profile)
+            }
+            .padding()
+        }
+        .navigationTitle("@Bindable")
+        .onAppear { NewRelic.recordBreadcrumb("BindableDemoView appeared") }
+        .NRTrackView(name: "BindableDemoView")
+    }
+}
+
+@available(iOS 17.0, *)
+struct BindableEditorView: View {
+    @Bindable var profile: UserProfile   // @Bindable lets us use $ on @Observable
+
+    var body: some View {
+        GroupBox("Editor child — uses @Bindable") {
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Name")
+                    TextField("Name", text: $profile.name)
+                        .textFieldStyle(.roundedBorder)
+                        .onChange(of: profile.name) { _, new in
+                            NewRelic.recordBreadcrumb("BindableProfile name", attributes: ["name": new])
+                        }
+                }
+                Stepper("Age: \(profile.age)", value: $profile.age, in: 1...120)
+                Toggle("Premium", isOn: $profile.isPremium)
+                    .onChange(of: profile.isPremium) { _, new in
+                        NewRelic.recordCustomEvent("BindableProfilePremium",
+                            attributes: ["value": NSNumber(value: new)])
+                    }
+                Slider(value: $profile.score, in: 0...100) {
+                    Text("Score")
+                }
+                Text("Score: \(String(format: "%.0f", profile.score))")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - @Environment(Model.self) Demo (iOS 17+)
+
+@available(iOS 17.0, *)
+@Observable
+class AppTheme {
+    var primaryColor: Color = .blue
+    var fontSize: Double = 16
+    var isDense: Bool = false
+}
+
+@available(iOS 17.0, *)
+struct EnvironmentObservableDemoView: View {
+    @State private var theme = AppTheme()
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Form {
+                Section {
+                    ColorPicker("Primary color", selection: $theme.primaryColor)
+                        .onChange(of: theme.primaryColor) { _, _ in
+                            NewRelic.recordBreadcrumb("AppTheme primaryColor changed")
+                        }
+                    HStack {
+                        Text("Font size: \(Int(theme.fontSize))")
+                        Slider(value: $theme.fontSize, in: 10...28)
+                    }
+                    Toggle("Dense layout", isOn: $theme.isDense)
+                } header: {
+                    Text("Theme controls (parent — injects via .environment())")
+                }
+            }
+            .frame(maxHeight: 260)
+
+            Divider()
+
+            ThemeChildView()
+                .padding()
+        }
+        .environment(theme)
+        .navigationTitle("@Environment(Model.self)")
+        .onAppear { NewRelic.recordBreadcrumb("EnvironmentObservableDemoView appeared") }
+        .NRTrackView(name: "EnvironmentObservableDemoView")
+    }
+}
+
+@available(iOS 17.0, *)
+struct ThemeChildView: View {
+    @Environment(AppTheme.self) private var theme
+
+    var body: some View {
+        GroupBox("Child reads @Environment(AppTheme.self)") {
+            VStack(spacing: 8) {
+                Text("Hello, themed world!")
+                    .font(.system(size: theme.fontSize))
+                    .foregroundColor(theme.primaryColor)
+                Text(theme.isDense ? "Dense layout active" : "Normal spacing")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .padding(theme.isDense ? 4 : 12)
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+// MARK: - Nested @Observable + @Bindable on nested model (iOS 17+)
+
+@available(iOS 17.0, *)
+@Observable
+class CartItem {
+    var name: String
+    var quantity: Int
+    var price: Double
+    init(name: String, quantity: Int = 1, price: Double) {
+        self.name = name; self.quantity = quantity; self.price = price
+    }
+    var subtotal: Double { Double(quantity) * price }
+}
+
+@available(iOS 17.0, *)
+@Observable
+class ShoppingCart {
+    var items: [CartItem] = []
+    var couponCode: String = ""
+    var total: Double { items.reduce(0) { $0 + $1.subtotal } }
+    var discountedTotal: Double { couponCode.uppercased() == "SAVE10" ? total * 0.9 : total }
+
+    func addItem(_ item: CartItem) {
+        items.append(item)
+        NewRelic.recordCustomEvent("CartItemAdded",
+            attributes: ["name": item.name, "price": NSNumber(value: item.price)])
+    }
+    func removeItems(at offsets: IndexSet) {
+        items.remove(atOffsets: offsets)
+        NewRelic.recordBreadcrumb("CartItemRemoved")
+    }
+}
+
+@available(iOS 17.0, *)
+struct NestedObservableDemoView: View {
+    @State private var cart = ShoppingCart()
+
+    private let sampleNames = ["Widget", "Gadget", "Doohickey", "Thingamajig", "Gizmo"]
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(cart.items, id: \.name) { item in
+                    CartItemRowView(item: item)
+                }
+                .onDelete { cart.removeItems(at: $0) }
+
+                Button("+ Add random item") {
+                    let name = sampleNames.randomElement()! + " \(Int.random(in: 1...99))"
+                    cart.addItem(CartItem(name: name, price: Double.random(in: 1...50).rounded()))
+                }
+            } header: {
+                Text("Items — each row uses @Bindable on a nested @Observable")
+            }
+
+            Section {
+                TextField("Coupon code (try SAVE10)", text: $cart.couponCode)
+                    .onChange(of: cart.couponCode) { _, new in
+                        NewRelic.recordBreadcrumb("CartCoupon", attributes: ["code": new])
+                    }
+                HStack {
+                    Text("Total")
+                    Spacer()
+                    Text("$\(String(format: "%.2f", cart.discountedTotal))")
+                        .fontWeight(.bold)
+                }
+                if cart.couponCode.uppercased() == "SAVE10" {
+                    Text("10% discount applied!")
+                        .foregroundColor(.green).font(.caption)
+                }
+            } header: {
+                Text("Cart summary")
+            }
+        }
+        .navigationTitle("Nested @Observable")
+        .onAppear { NewRelic.recordBreadcrumb("NestedObservableDemoView appeared") }
+        .NRTrackView(name: "NestedObservableDemoView")
+    }
+}
+
+@available(iOS 17.0, *)
+struct CartItemRowView: View {
+    @Bindable var item: CartItem   // @Bindable on a nested @Observable
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.name).font(.subheadline)
+                Text("$\(String(format: "%.2f", item.price)) each")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Stepper("\(item.quantity)", value: $item.quantity, in: 1...99)
+                .labelsHidden()
+            Text("$\(String(format: "%.2f", item.subtotal))")
+                .font(.subheadline).fontWeight(.medium)
+                .frame(width: 60, alignment: .trailing)
+        }
+    }
+}

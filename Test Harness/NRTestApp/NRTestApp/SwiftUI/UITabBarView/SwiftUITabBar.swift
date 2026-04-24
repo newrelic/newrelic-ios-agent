@@ -25,13 +25,13 @@ struct SwiftUITabBar: View {
                     Label("Form", systemImage: "doc.text.fill")
                 }
                 .tag(1)
-                .apply { view in
+                .apply(transform: { view in
                     if let count = formBadgeCount {
                         view.badge(count)
                     } else {
                         view
                     }
-                }
+                })
 
             if #available(iOS 17.0, *) {
                 ChartsView()
@@ -46,13 +46,13 @@ struct SwiftUITabBar: View {
                     Label("Alerts", systemImage: "bell.badge.fill")
                 }
                 .tag(3)
-                .apply { view in
+                .apply(transform: { view in
                     if let count = notificationBadgeCount {
                         view.badge(count)
                     } else {
                         view
                     }
-                }
+                })
 
             ProfilePlaceholderView()
                 .tabItem {

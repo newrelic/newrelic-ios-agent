@@ -14,7 +14,7 @@ public struct NRConditionalMaskView<Content: View>: View {
     private let maskAllImages: Bool?
     private let maskAllUserTouches: Bool?
     private let blockView: Bool?
-
+    
     private let sessionReplayIdentifier: String?
     
     private let activated: Bool
@@ -27,7 +27,7 @@ public struct NRConditionalMaskView<Content: View>: View {
                 maskAllUserTouches: Bool? = nil,
                 blockView: Bool? = nil,
                 sessionReplayIdentifier: String? = nil,
-
+                
                 activated: Bool = true,
                 @ViewBuilder content: @escaping () -> Content) {
         self.maskApplicationText = maskApplicationText
@@ -41,7 +41,7 @@ public struct NRConditionalMaskView<Content: View>: View {
     }
     
     public var body: some View {
-
+        
         let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
         if activated && !iOS15 {
             NRMaskedViewRepresentable(maskApplicationText: self.maskApplicationText,
@@ -58,8 +58,4 @@ public struct NRConditionalMaskView<Content: View>: View {
             content()
         }
     }
-    
-    
 }
-
-

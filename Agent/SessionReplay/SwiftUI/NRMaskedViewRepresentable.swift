@@ -46,7 +46,7 @@ struct NRMaskedViewRepresentable<Content: View>: UIViewControllerRepresentable {
 
         hostVC.rootView = MaskedContainerView(context.environment,
                                                          inputContent: content)
-        
+
         // Handle association w/ host `UIView`
         hostVC.view.maskApplicationText = maskApplicationText
         hostVC.view.maskUserInputText = maskUserInputText

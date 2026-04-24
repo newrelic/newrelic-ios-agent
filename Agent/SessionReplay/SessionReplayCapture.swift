@@ -15,6 +15,7 @@ import SwiftUI
 class SessionReplayCapture {
     private var layoutContainerViewCount: Int = 0
     private var navigationStackDepth: Int = 0
+    private var rootSwiftUIViewID: Int? = nil
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
@@ -23,96 +24,185 @@ class SessionReplayCapture {
         if let rootViewController = effectiveViewController {
             rootViewControllerID = String(describing: type(of: rootViewController))
         }
-        
-        var rootSwiftUIViewID: Int? = nil
+
         var rootThingy = findRecorderForView(view: rootView)
-        
+
         // Reset counters for this frame capture
         layoutContainerViewCount = 0
         navigationStackDepth = 0
-        
+        rootSwiftUIViewID = nil
+
+        // Log the UIKit view hierarchy before building the tree
+        //logUIKitViewHierarchy(rootView)
+
         // Build tree using recursive approach to properly handle value semantics
-        buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-        
+        buildViewTree(for: rootView, into: &rootThingy)
+
+        //NRLOG_DEBUG("START THINGYS")
+
+        // Log the built thingy tree after construction
+        //logThingyTree(rootThingy, depth: 0)
+
+        //NRLOG_DEBUG("END THINGYS")
+
         // Set nextId for all views after tree is built
         setNextIdRecursively(for: &rootThingy)
-        
+
         return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
     }
+
+    // MARK: - Hierarchy Logging
+
+    @MainActor
+    private func logUIKitViewHierarchy(_ view: UIView, depth: Int = 0) {
+        let indent = String(repeating: "\t", count: depth)
+        let className = NSStringFromClass(type(of: view))
+        let frame = view.frame
+        let hidden = view.isHidden ? " [HIDDEN]" : ""
+        let alpha = view.alpha < 1.0 ? " alpha=\(String(format: "%.2f", view.alpha))" : ""
+        let accessId = view.accessibilityIdentifier.map { " id=\"\($0)\"" } ?? ""
+        let vcInfo: String
+        if let vc = view.parentViewController {
+            vcInfo = " vc=\(type(of: vc))"
+        } else {
+            vcInfo = ""
+        }
+
+        print("\(indent)📐 \(className)\(accessId)\(vcInfo) frame=(\(Int(frame.origin.x)),\(Int(frame.origin.y)),\(Int(frame.width)),\(Int(frame.height)))\(hidden)\(alpha) subviews=\(view.subviews.count)")
+
+        for subview in view.subviews {
+            logUIKitViewHierarchy(subview, depth: depth + 1)
+        }
+    }
+
+    private func logThingyTree(_ thingy: any SessionReplayViewThingy, depth: Int) {
+        let indent = String(repeating: "\t", count: depth)
+        let details = thingy.viewDetails
+        let frame = details.frame
+        let visible = details.isVisible ? "" : " [NOT VISIBLE]"
+        let bg = details.backgroundColor != .clear ? " bg=\(details.backgroundColor)" : ""
+
+        print("\(indent)🧩 \(details.viewName) id=\(details.viewId) parent=\(details.parentId ?? -1) frame=(\(Int(frame.origin.x)),\(Int(frame.origin.y)),\(Int(frame.width)),\(Int(frame.height)))\(visible)\(bg) children=\(thingy.subviews.count)")
+
+        for child in thingy.subviews {
+            logThingyTree(child, depth: depth + 1)
+        }
+    }
     
-    private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
+    private var buildTreeDepth: Int = 0
+
+    private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy) {
+        let indent = String(repeating: "\t", count: buildTreeDepth)
+        let currentClassName = NSStringFromClass(type(of: currentView))
+
+        //print("\(indent)🔨 buildViewTree: \(currentClassName) (subviews=\(currentView.subviews.count), shouldRecord=\(parentThingy.shouldRecordSubviewsComputed), parentThingy=\(parentThingy.viewDetails.viewName))")
 
         // Process UIKit subviews only if current view should record subviews
         if parentThingy.shouldRecordSubviewsComputed {
-            for subview in currentView.subviews {
-                if shouldRecord(view: subview) {
+            for (idx, subview) in currentView.subviews.enumerated() {
+                let subClassName = NSStringFromClass(type(of: subview))
+                let shouldRec = shouldRecord(view: subview)
+
+                //print("\(indent)\t[\(idx)] \(subClassName) frame=\(subview.frame) shouldRecord=\(shouldRec)")
+
+                if shouldRec {
                     var childThingy = findRecorderForView(view: subview)
-                    if childThingy.viewDetails.isVisible {
-                        buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+                    let isVisible = childThingy.viewDetails.isVisible
+
+                    //print("\(indent)\t\t→ thingy=\(childThingy.viewDetails.viewName) visible=\(isVisible)")
+
+                    if isVisible {
+                        buildTreeDepth += 2
+                        buildViewTree(for: subview, into: &childThingy)
+                        buildTreeDepth -= 2
+
                         parentThingy.subviews.append(childThingy)
+                        //print("\(indent)\t\t✅ appended \(childThingy.viewDetails.viewName) (id=\(childThingy.viewDetails.viewId)) to parent \(parentThingy.viewDetails.viewName) (id=\(parentThingy.viewDetails.viewId)), parent now has \(parentThingy.subviews.count) children")
                     }
                 } else {
-                    buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+                    //print("\(indent)\t\t⏭️ skipping \(subClassName), recursing into its children with same parent")
+                    buildTreeDepth += 2
+                    buildViewTree(for: subview, into: &parentThingy)
+                    buildTreeDepth -= 2
                 }
             }
+        } else {
+            //print("\(indent)\t⛔ shouldRecordSubviews=false, skipping UIKit subviews")
         }
-        
+        let className = NSStringFromClass(type(of: currentView))
+
         // Handle SwiftUI hosting views.
         if let viewController = extractVC(from: currentView) {
             let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
+            //print("\(indent)🎭 Found VC: \(type(of: viewController)) vcType=\(vcType)")
+            
             if vcType == .hostingController || vcType == .navigationStackHostingController {
-            let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") {
-                rootSwiftUIViewID = parentThingy.viewDetails.viewId
-                // Count each NavigationStack destination hosting view (one per pushed screen).
-                // This depth value is checked in SessionReplayFrameProcessor to force an
-                // immediate full snapshot on push or pop, matching layoutContainerViewCount's role.
-                if vcType == .navigationStackHostingController {
-                    navigationStackDepth += 1
-                }
-            }
-            
-            let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
-                                                       clip: parentThingy.viewDetails.clip,
-                                                       backgroundColor: currentView.backgroundColor?.cgColor,
-                                                       layerBorderColor: currentView.layer.borderColor,
-                                                       layerBorderWidth: currentView.layer.borderWidth,
-                                                       layerCornerRadius: currentView.layer.cornerRadius,
-                                                       alpha: currentView.alpha,
-                                                       isHidden: currentView.isHidden,
-                                                       intrinsicContentSize: currentView.intrinsicContentSize,
-                                                       maskApplicationText: currentView.maskApplicationText,
-                                                       maskUserInputText: currentView.maskUserInputText,
-                                                       maskAllImages: currentView.maskAllImages,
-                                                       maskAllUserTouches: currentView.maskAllUserTouches,
-                                                       blockView: currentView.blockView,
-                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
-            )
-            
-            let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
-            let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
-
-            if !thingys.isEmpty {
-                // Separate color views (backgrounds) from other views
-                var colorViews: [any SessionReplayViewThingy] = []
-                var otherViews: [any SessionReplayViewThingy] = []
-
-                for thingy in thingys {
-                    if thingy.viewDetails.viewName == "SwiftUIColorView" {
-                        colorViews.append(thingy)
-                    } else {
-                        otherViews.append(thingy)
+                //print("\(indent)\t🏠 Hosting view detected: \(className)")
+                
+                if className.contains("_UIHostingView") || className.hasSuffix("HostingView") {
+                    rootSwiftUIViewID = parentThingy.viewDetails.viewId
+                    //print("\(indent)\t\t🌳 Set rootSwiftUIViewID=\(parentThingy.viewDetails.viewId)")
+                    if vcType == .navigationStackHostingController {
+                        navigationStackDepth += 1
+                        //print("\(indent)\t\t📚 NavigationStack depth now: \(navigationStackDepth)")
                     }
                 }
+            }
 
-                // Insert color views first (they go to the back) then other views
-                if parentThingy.shouldRecordSubviewsComputed {
-                    parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
-                    parentThingy.subviews.append(contentsOf: otherViews)
+
+                let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
+                                                           clip: parentThingy.viewDetails.clip,
+                                                           backgroundColor: currentView.backgroundColor?.cgColor,
+                                                           layerBorderColor: currentView.layer.borderColor,
+                                                           layerBorderWidth: currentView.layer.borderWidth,
+                                                           layerCornerRadius: currentView.layer.cornerRadius,
+                                                           alpha: currentView.alpha,
+                                                           isHidden: currentView.isHidden,
+                                                           intrinsicContentSize: currentView.intrinsicContentSize,
+                                                           maskApplicationText: currentView.maskApplicationText,
+                                                           maskUserInputText: currentView.maskUserInputText,
+                                                           maskAllImages: currentView.maskAllImages,
+                                                           maskAllUserTouches: currentView.maskAllUserTouches,
+                                                           blockView: currentView.blockView,
+                                                           sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
+                )
+
+                let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
+
+                //print("\(indent)\t\t🔍 Extracting SwiftUI display list from \(className)...")
+                let subviewCallback: (UIView, inout any SessionReplayViewThingy) -> Void = { [weak self] (platformView, thingy) in
+                    self?.buildViewTree(for: platformView, into: &thingy)
+                }
+                let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId, buildSubtreeCallback: subviewCallback)
+          
+                //print("\(indent)\t\t📦 Got \(thingys.count) SwiftUI thingys from display list")
+//                for (i, t) in thingys.enumerated() {
+//                    let f = t.viewDetails.frame
+//                    print("\(indent)\t\t\t[\(i)] \(t.viewDetails.viewName) id=\(t.viewDetails.viewId) frame=(\(Int(f.origin.x)),\(Int(f.origin.y)),\(Int(f.width)),\(Int(f.height))) visible=\(t.viewDetails.isVisible)")
+//                }
+
+                if !thingys.isEmpty {
+                    var colorViews: [any SessionReplayViewThingy] = []
+                    var otherViews: [any SessionReplayViewThingy] = []
+
+                    for thingy in thingys {
+                        if thingy.viewDetails.viewName == "SwiftUIColorView"
+                            || thingy.viewDetails.viewName == "SwiftUIPlatformView" {
+                            colorViews.append(thingy)
+                        } else {
+                            otherViews.append(thingy)
+                        }
+                    }
+
+                    //print("\(indent)\t\t🎨 Sorted: \(colorViews.count) color views (→ front of array), \(otherViews.count) other views (→ end)")
+
+                    if parentThingy.shouldRecordSubviewsComputed {
+                        parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
+                        parentThingy.subviews.append(contentsOf: otherViews)
+                        //print("\(indent)\t\t✅ Parent \(parentThingy.viewDetails.viewName) now has \(parentThingy.subviews.count) total children after SwiftUI merge")
+                    }
                 }
             }
-            } // if vcType == .hostingController || .navigationStackHostingController
-        } // if let viewController
 
         // Handle UITextField custom text overlay
         if parentThingy.shouldRecordSubviewsComputed, let textView = currentView as? UITextField {
@@ -210,11 +300,20 @@ class SessionReplayCapture {
         guard let superview = view.superview else {
             return true
         }
-        
+
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
-        
-        return !(areFramesTheSame && isClear)
+
+        if areFramesTheSame && isClear {
+            // Still record navigation bar internal views and SwiftUI platform view hosts.
+            let className = NSStringFromClass(type(of: view))
+            if className.contains("NavigationBar") || className.contains("LargeTitle")
+                || className.contains("UIKitPlatformViewHost") {
+                return true
+            }
+            return false
+        }
+        return true
     }
     
     private func setNextIdRecursively(for thingy: inout any SessionReplayViewThingy) {
