@@ -242,6 +242,7 @@ struct ClaimFormView: View {
                 //            }
 
         }
+        .NRMobileView(name: "ClaimFormView")
         .navigationViewStyle(.stack)
     }
     

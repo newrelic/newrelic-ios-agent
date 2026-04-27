@@ -98,6 +98,7 @@ struct SwiftUIContentView: View {
             }
             .navigationViewStyle(.stack)
             .NRTrackView(name: "SwiftUIContentView")
+            .NRMobileView(name: "SwiftUIContentView")
         }
     }
 }

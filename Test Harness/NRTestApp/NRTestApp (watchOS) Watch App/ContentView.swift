@@ -19,6 +19,7 @@ struct ContentView: View {
             }
         }
         .NRTrackView(name: "WatchOSContentView")
+        .NRMobileView(name: "WatchOSContentView")
     }
 }
 

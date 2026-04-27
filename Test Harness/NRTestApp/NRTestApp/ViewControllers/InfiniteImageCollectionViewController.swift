@@ -14,6 +14,10 @@ class InfiniteImageCollectionViewController: UIViewController {
     private var isLoading = false
     private let imageCache = NSCache<NSString, UIImage>()
     
+    @objc func nrMobileViewName() -> String? {
+        "Infinite Images View Controller"
+    }
+    
     // Sample image URLs
     private let imageURLs = [
         "https://picsum.photos/300/300?random=1",
