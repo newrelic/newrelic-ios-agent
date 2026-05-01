@@ -15,9 +15,8 @@ import zlib
 public class SessionReplayReporter: NSObject {
     private var sessionReplayFramesUploadArray: [SessionReplayData] = []
     private var isUploading = false
-    private var failureCount = 0
     private let uploadQueue = DispatchQueue(label: "com.newrelicagent.sessionreplayqueue")
-    private let kNRMAMaxUploadRetry = 3
+    private let orchestrator = NRMARetryOrchestrator(initialDelay: 1.0, maxDelay: 16.0)
     private let applicationToken: String
     private let url: NSString
     private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
@@ -58,93 +57,91 @@ public class SessionReplayReporter: NSObject {
     }
 
     private func processNextUploadTask() {
-         uploadQueue.async { [weak self] in
-             guard let self = self, !self.isUploading, !self.sessionReplayFramesUploadArray.isEmpty else {
-                 return
-             }
+        uploadQueue.async { [weak self] in
+            guard let self = self, !self.isUploading, !self.sessionReplayFramesUploadArray.isEmpty else {
+                return
+            }
 
-             self.isUploading = true
-             
-             let upload = self.sessionReplayFramesUploadArray.first!
-             let dataSizeInBytes = upload.sessionReplayFramesData.count
-             let dataSizeInMB = Double(dataSizeInBytes) / (1024.0 * 1024.0)
-             NRLOG_AGENT_DEBUG("Session replay frames compressed data: \(String(format: "%.2f", dataSizeInMB)) MB")
+            self.isUploading = true
 
-             if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
-                 NRLOG_AGENT_DEBUG("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
-                 self.isUploading = false
-                 NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("SessionReplay")
-                 self.sessionReplayFramesUploadArray.removeFirst()
-                 self.pendingUploads -= 1
-                 
-                 // Check if we should end the background task
-                 if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
-                     self.endBackgroundTaskIfNeeded()
-                 }
-                 return
-             }
+            let upload = self.sessionReplayFramesUploadArray.first!
+            let dataSizeInBytes = upload.sessionReplayFramesData.count
+            let dataSizeInMB = Double(dataSizeInBytes) / (1024.0 * 1024.0)
+            NRLOG_AGENT_DEBUG("Session replay frames compressed data: \(String(format: "%.2f", dataSizeInMB)) MB")
 
-             var request = URLRequest(url: upload.url)
-             request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-             if upload.sessionReplayFramesData.isGzipped {
-                 request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
-                 request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
-             }
-             request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
-             request.setValue(applicationToken, forHTTPHeaderField:"X-App-License-Key")
+            if upload.sessionReplayFramesData.count > kNRMAMaxPayloadSizeLimit {
+                NRLOG_AGENT_DEBUG("Unable to send session replay frames because payload is larger than 1 MB. \(upload.sessionReplayFramesData.count) bytes.")
+                self.isUploading = false
+                NRMASupportMetricHelper.enqueueMaxPayloadSizeLimitMetric("SessionReplay")
+                self.sessionReplayFramesUploadArray.removeFirst()
+                self.pendingUploads -= 1
 
-             request.httpMethod = "POST"
+                if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+                    self.endBackgroundTaskIfNeeded()
+                }
+                return
+            }
 
-             let session = URLSession(configuration: .default)
-             let uploadTask = session.uploadTask(with: request, from: upload.sessionReplayFramesData) { data, response, error in
-                 self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count)
-             }
+            var request = URLRequest(url: upload.url)
+            request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+            if upload.sessionReplayFramesData.isGzipped {
+                request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
+                request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+            }
+            request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
+            request.setValue(applicationToken, forHTTPHeaderField: "X-App-License-Key")
+            request.httpMethod = "POST"
 
-             uploadTask.resume()
-         }
-     }
-    
-    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, dataSize: Int) {
-       var errorCode = false
-       var errorCodeInt = 0
+            let session = URLSession(configuration: .default)
+            let uploadData = upload.sessionReplayFramesData
+            let dataSize = upload.sessionReplayFramesData.count
 
-       if let httpResponse = response as? HTTPURLResponse {
-           errorCode = httpResponse.statusCode >= 300
-           errorCodeInt = httpResponse.statusCode
-       }
+            let executeRequest: NRMAExecuteRequestBlock = { onResponse in
+                let task = session.uploadTask(with: request, from: uploadData) { _, response, error in
+                    onResponse(response as? HTTPURLResponse, nil, error)
+                }
+                task.resume()
+            }
 
-       if error == nil && !errorCode {
-           NRLOG_AGENT_DEBUG("Session replay frames uploaded successfully.")
-           self.sessionReplayFramesUploadArray.removeFirst()
-           self.failureCount = 0
-           self.pendingUploads -= 1
-           NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
-       } else if errorCodeInt == URL_TOO_LARGE {
-           NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
-           NRMASupportMetricHelper.enqueueSessionReplayURLTooLargeMetric()
-           self.sessionReplayFramesUploadArray.removeFirst()
-           self.failureCount = 0
-           self.pendingUploads -= 1
-       } else {
-           self.failureCount += 1
-       }
+            let shouldRetry: (HTTPURLResponse?, Error?) -> Bool = { response, error in
+                if error != nil { return true }
+                guard let statusCode = response?.statusCode else { return false }
+                if statusCode == Int(URL_TOO_LARGE) { return false }
+                return statusCode >= 500
+            }
 
-       if self.failureCount > self.kNRMAMaxUploadRetry {
-           NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
-           NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
-           self.sessionReplayFramesUploadArray.removeFirst()
-           self.failureCount = 0
-           self.pendingUploads -= 1
-       }
+            let waitForDelay = NRMARetryOrchestrator.asyncWaitForDelay(on: self.uploadQueue)
 
-       self.isUploading = false
-       self.processNextUploadTask()
-       
-       // End background task when all uploads are complete
-       if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
-           self.endBackgroundTaskIfNeeded()
-       }
-   }
+            self.orchestrator.execute(withMaxRetries: 5,
+                                      executeRequest: executeRequest,
+                                      shouldRetry: shouldRetry,
+                                      waitForDelay: waitForDelay) { response, _, error, _ in
+                self.uploadQueue.async {
+                    let statusCode = response?.statusCode ?? 0
+
+                    if error == nil && statusCode < 300 {
+                        NRLOG_AGENT_DEBUG("Session replay frames uploaded successfully.")
+                        NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(Int(Int32(dataSize)))
+                    } else if statusCode == Int(URL_TOO_LARGE) {
+                        NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+                        NRMASupportMetricHelper.enqueueSessionReplayURLTooLargeMetric()
+                    } else {
+                        NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
+                        NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+                    }
+
+                    self.sessionReplayFramesUploadArray.removeFirst()
+                    self.pendingUploads -= 1
+                    self.isUploading = false
+                    self.processNextUploadTask()
+
+                    if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+                        self.endBackgroundTaskIfNeeded()
+                    }
+                }
+            }
+        }
+    }
     
     func uploadURL(uncompressedDataSize: Int, firstTimestamp: TimeInterval, lastTimestamp: TimeInterval, isFirstChunk: Bool, isGZipped: Bool) -> URL? {
         guard let config = NRMAHarvestController.configuration() else {

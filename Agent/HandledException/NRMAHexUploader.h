@@ -23,7 +23,7 @@
  * object.
  */
 
-@interface NRMAHexUploader : NRMAConnection<NSURLSessionDelegate, NSURLSessionDataDelegate>
+@interface NRMAHexUploader : NRMAConnection
 
 - (instancetype) initWithHost:(NSString*)host;
 

@@ -14,6 +14,11 @@
 #import "NRMAHarvestController.h"
 #import "NRMATaskQueue.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMARetryOrchestrator.h"
+
+// Maximum within-request retry attempts for crash uploads.
+// Separate from kNRMAMaxCrashUploadRetry which controls across-launch retries.
+static const NSInteger kNRMACrashWithinRequestRetries = 5;
 
 static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 
@@ -137,32 +142,51 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 
     NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Perform crash upload");
 
-    [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
+    unsigned long long requestLength = [reqData length];
+    NSURLSession *session = self.uploadSession;
+
+    // Async executeRequest: fires a file-based upload task and delivers the result via onResponse.
+    NRMAExecuteRequestBlock executeRequest = ^(void (^onResponse)(NSHTTPURLResponse*, NSData*, NSError*)) {
+        [[session uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData *data, NSURLResponse *response, NSError *responseError) {
+            NRLOG_AGENT_DEBUG(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
+            if (responseError) {
+                NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
+            }
+            onResponse((NSHTTPURLResponse *)response, data, responseError);
+        }] resume];
+    };
+
+    // Crash-specific shouldRetry: network errors and 429 only.
+    // 500 is intentionally excluded — the crash server returns 500 to signal "received, delete file."
+    BOOL (^shouldRetry)(NSHTTPURLResponse *, NSError *) = ^BOOL(NSHTTPURLResponse *response, NSError *error) {
+        if (error != nil) return YES;
+        NSInteger status = response.statusCode;
+        return status == 429 || status == 503;
+    };
+
+    NRMARetryOrchestrator *orchestrator = [[NRMARetryOrchestrator alloc] initWithInitialDelay:1.0 maxDelay:16.0];
+    [orchestrator executeWithMaxRetries:kNRMACrashWithinRequestRetries
+                         executeRequest:executeRequest
+                            shouldRetry:shouldRetry
+                           waitForDelay:[NRMARetryOrchestrator asyncWaitForDelayOnQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)]
+                             completion:^(NSHTTPURLResponse *response, NSData *data, NSError *error, NSInteger retryCount) {
         __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
 
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
-        if(responseError) {
-            NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
-        }
-
         if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-
-            unsigned long long requestLength = [reqData length];
-            reqData = nil;
-
-            if(((NSHTTPURLResponse*)response).statusCode == 200 || ((NSHTTPURLResponse*)response).statusCode == 500) {
-
-                // Enqueue Data Usage Supportability Metric for /mobile_crash is request successful.
+            NSInteger statusCode = response.statusCode;
+            if (statusCode == 200 || statusCode == 500) {
+                // 200 = success; 500 = crash received by server. Either way, delete the file.
                 [NRMASupportMetricHelper enqueueDataUseMetric:@"mobile_crash"
                                                          size:requestLength
                                                      received:response.expectedContentLength];
-
                 [self removeCrashLogAtpath:path];
             } else {
-                NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - failed to upload crash log: %@, to try again later.",path.path);
+                NRLOG_AGENT_DEBUG(@"NEWRELIC CRASH UPLOADER - failed to upload crash log: %@, to try again later.", path.path);
             }
+        } else if (error) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash upload failed after %ld retries: %@", (long)retryCount, error);
         }
-    }] resume];
+    }];
 }
 
 - (void) removeCrashLogAtpath:(NSURL*) path {

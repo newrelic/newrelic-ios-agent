@@ -16,6 +16,8 @@
 #import "NRMAHarvesterConnection+GZip.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRMAFlags.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMARetryOrchestrator.h"
 
 @implementation NRMAHarvesterConnection
 @synthesize connectionInformation = _connectionInformation;
@@ -25,6 +27,15 @@
     if (self) {
         self.harvestSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"data"];
+
+        // Initialize retry configuration with defaults
+        self.maxForegroundRetries = 5;
+        self.maxBackgroundRetries = 1;
+        self.initialRetryDelay = 1.0;
+        self.maxRetryDelay = 16.0;
+
+        self.retryOrchestrator = [[NRMARetryOrchestrator alloc] initWithInitialDelay:self.initialRetryDelay
+                                                                             maxDelay:self.maxRetryDelay];
     }
     return self;
 }
@@ -98,76 +109,106 @@
 
 - (NRMAHarvestResponse*) send:(NSURLRequest *)post
 {
-    NRMAHarvestResponse* harvestResponse = [[NRMAHarvestResponse alloc] init];
-    __block NSHTTPURLResponse* response;
-    __block NSError* error;
-    __block NSData* data;
-
-    __block dispatch_semaphore_t harvestRequestSemaphore = dispatch_semaphore_create(0);
-    
+    // Check payload size before attempting any retries
     BOOL wasCompressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
     long size = wasCompressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
     if (size > kNRMAMaxPayloadSizeLimit) {
         NSString* subDest = [[post URL] lastPathComponent];
         NRLOG_AGENT_ERROR(@"Unable to send %@ harvest because payload is larger than 1 MB.", subDest);
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:subDest];
+        NRMAHarvestResponse* harvestResponse = [[NRMAHarvestResponse alloc] init];
         harvestResponse.statusCode = ENTITY_TOO_LARGE;
         return harvestResponse;
     }
-    
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC - REQUEST: %@", post);
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC - REQUEST BODY: %@", post.HTTPBody);
 
+    NSInteger maxRetries = [self maxRetriesForCurrentState];
+    NRLOG_AGENT_DEBUG(@"❤️ NEWRELIC - REQUEST (attempt 1/%ld): %@", (long)(maxRetries + 1), post);
+    NRLOG_AGENT_DEBUG(@"❤️ NEWRELIC - REQUEST BODY: %@", post.HTTPBody);
+
+    // Prepare request data once; reused across retry attempts.
     NSData *initialReqBody = [post.HTTPBody copy];
     NSMutableURLRequest *modifiedRequest = [post mutableCopy];
     [modifiedRequest setHTTPBody:nil];
 
-    [[self.harvestSession uploadTaskWithRequest:modifiedRequest
-                                       fromData:initialReqBody
-                              completionHandler:^(NSData* responseBody, NSURLResponse* bresponse, NSError* berror){
-        @autoreleasepool {
-            data = responseBody;
-            error = berror;
-            response = (NSHTTPURLResponse*)bresponse;
-            dispatch_semaphore_signal(harvestRequestSemaphore);
-            
-            NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
-            
-            // Enqueue Data Usage Supportability Metric for /data or /connect if the harvest request was successful.
-            if (!error) {
-                BOOL wasCompressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
-                long size = wasCompressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
-                NSString* subDest = [[post URL] lastPathComponent];
+    // Sync executeRequest: wraps the async URLSession upload task with a semaphore so
+    // onResponse is called synchronously before the block returns. This keeps send:
+    // synchronous for callers in NRMAHarvester.
+    NSURLSession *session = self.harvestSession;
+    NRMAExecuteRequestBlock executeRequest = ^(void (^onResponse)(NSHTTPURLResponse*, NSData*, NSError*)) {
+        __block NSHTTPURLResponse *httpResponse = nil;
+        __block NSData *responseData = nil;
+        __block NSError *responseError = nil;
+        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 
-                [NRMASupportMetricHelper enqueueDataUseMetric:subDest size:size received:responseBody.length];
+        [[session uploadTaskWithRequest:modifiedRequest
+                               fromData:initialReqBody
+                      completionHandler:^(NSData *body, NSURLResponse *response, NSError *error) {
+            @autoreleasepool {
+                httpResponse = (NSHTTPURLResponse *)response;
+                responseData = body;
+                responseError = error;
+                dispatch_semaphore_signal(sem);
+
+                NRLOG_AGENT_DEBUG(@"NEWRELIC CONNECT - RESPONSE: %@", [response debugDescription]);
+
+                if (!error) {
+                    BOOL compressed = [post.allHTTPHeaderFields[kNRMAContentEncodingHeader] isEqualToString:kNRMAGZipHeader];
+                    long sz = compressed ? [post.allHTTPHeaderFields[kNRMAActualSizeHeader] longLongValue] : [post.HTTPBody length];
+                    [NRMASupportMetricHelper enqueueDataUseMetric:[[post URL] lastPathComponent] size:sz received:body.length];
+                }
             }
-        }
-    }] resume];
+        }] resume];
 
-    dispatch_semaphore_wait(harvestRequestSemaphore, dispatch_time(DISPATCH_TIME_NOW,  (uint64_t)(post.timeoutInterval*(double)(NSEC_PER_SEC))));
-    
-    if (error) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC CONNECT - Failed to retrieve collector response: %@",error);
+        dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, (uint64_t)(post.timeoutInterval * (double)NSEC_PER_SEC)));
 
-#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-        @try {
+        if (responseError) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC CONNECT - Failed to retrieve collector response: %@", responseError);
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+            @try {
 #endif
-            [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRSupportabilityPrefix@"/Collector/ResponseErrorCodes/%"NRMA_NSI,[error code]]
-                                                            value:@1
-                                                            scope:@""]];
-#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-        } @catch (NSException* exception) {
-            [NRMAExceptionHandler logException:exception
-                                         class:NSStringFromClass([self class])
-                                      selector:NSStringFromSelector(_cmd)];
+                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRSupportabilityPrefix@"/Collector/ResponseErrorCodes/%"NRMA_NSI, [responseError code]]
+                                                                value:@1
+                                                                scope:@""]];
+#ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
+            } @catch (NSException *exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([self class])
+                                          selector:@"send:"];
+            }
+#endif
         }
-#endif
+
+        onResponse(httpResponse, responseData, responseError);
+    };
+
+    BOOL (^shouldRetry)(NSHTTPURLResponse *, NSError *) = ^BOOL(NSHTTPURLResponse *response, NSError *error) {
+        NRMAHarvestResponse *hr = [[NRMAHarvestResponse alloc] init];
+        hr.statusCode = (int)response.statusCode;
+        hr.error = error;
+        return [self shouldRetryForResponse:hr];
+    };
+
+    // Because executeRequest and waitForDelay are both synchronous, the orchestrator's
+    // recursive callback chain fires entirely on the calling thread before
+    // executeWithMaxRetries:... returns, so harvestResponse is always set.
+    __block NRMAHarvestResponse *harvestResponse = nil;
+
+    [self.retryOrchestrator executeWithMaxRetries:maxRetries
+                                   executeRequest:executeRequest
+                                      shouldRetry:shouldRetry
+                                     waitForDelay:[NRMARetryOrchestrator syncWaitForDelay]
+                                       completion:^(NSHTTPURLResponse *response, NSData *data, NSError *error, NSInteger retryCount) {
+        harvestResponse = [[NRMAHarvestResponse alloc] init];
+        harvestResponse.statusCode = (int)response.statusCode;
+        harvestResponse.responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         harvestResponse.error = error;
-    }
+        NRLOG_AGENT_DEBUG(@"NEWRELIC CONNECT - RESPONSE DATA: %@", harvestResponse.responseBody);
 
-    harvestResponse.statusCode = (int)response.statusCode;
-    harvestResponse.responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE DATA: %@", harvestResponse.responseBody);
+        if (retryCount > 0) {
+            [self recordRetryMetric:retryCount success:[harvestResponse isOK]];
+        }
+    }];
+
     return harvestResponse;
 }
 
@@ -254,6 +295,57 @@
 
 - (void) setMaxOfflineStorageSize:(NSUInteger) size {
     [_offlineStorage setMaxOfflineStorageSize:size];
+}
+
+#pragma mark - Retry Logic Helper Methods
+
+- (NSInteger) maxRetriesForCurrentState {
+#if TARGET_OS_WATCH
+    WKApplicationState state = [NewRelicAgentInternal sharedInstance].currentApplicationState;
+    return (state == WKApplicationStateBackground) ? self.maxBackgroundRetries : self.maxForegroundRetries;
+#else
+    UIApplicationState state = [NewRelicAgentInternal sharedInstance].currentApplicationState;
+    return (state == UIApplicationStateBackground) ? self.maxBackgroundRetries : self.maxForegroundRetries;
+#endif
+}
+
+- (BOOL) shouldRetryForResponse:(NRMAHarvestResponse*)response {
+    // Retry on network errors (timeout, no connection, DNS failure, etc.)
+    if (response.error != nil && [NRMAOfflineStorage checkErrorToPersist:response.error]) {
+        return YES;
+    }
+
+    // Retry on specific HTTP status codes (rate limit and server errors)
+    NSInteger status = response.statusCode;
+    if (status == 429 || status == 500 || status == 502 || status == 503 || status == 504) {
+        return YES;
+    }
+
+    return NO;
+}
+
+
+- (void) recordRetryMetric:(NSInteger)attemptCount success:(BOOL)success {
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        // Record retry count metric
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRSupportabilityPrefix@"/Collector/Retry/Count"]
+                                                        value:@(attemptCount)
+                                                        scope:@""]];
+
+        // Record success or failure metric
+        NSString* resultMetric = success ? kNRSupportabilityPrefix@"/Collector/Retry/Success" : kNRSupportabilityPrefix@"/Collector/Retry/Failed";
+        [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:resultMetric
+                                                        value:@1
+                                                        scope:@""]];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
+    }
+#endif
 }
 
 @end

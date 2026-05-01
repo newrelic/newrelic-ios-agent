@@ -7,6 +7,7 @@
 //
 
 #import "NRLogger.h"
+#import "NRMARetryOrchestrator.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAJSON.h"
 #import "NewRelicAgentInternal.h"
@@ -19,7 +20,7 @@
 
 NRLogger *_nr_logger = nil;
 
-#define kNRMAMaxLogUploadRetry 3
+#define kNRMAMaxLogUploadRetry 5
 
 @interface NRLogger()
 
@@ -221,8 +222,8 @@ withTimestamp:(NSNumber *) timestamp {
         
         self->uploadQueue = [NSMutableArray array];
         self->isUploading = NO;
-        self->failureCount = 0;
         self->debugLogs = NO;
+        self->retryOrchestrator = [[NRMARetryOrchestrator alloc] initWithInitialDelay:1.0 maxDelay:16.0];
         self->remoteLogLevel = NRLogLevelError | NRLogLevelWarning;
         // This was including Error and warning previously but since warning is the highest we want to emit by default this will emit warning and error by default.
         
@@ -625,74 +626,66 @@ withTimestamp:(NSNumber *) timestamp {
         NSData *formattedData = [self->uploadQueue firstObject];
         
         if (self->debugLogs) {
-            NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData
-                                                                   options:0
-                                                                     error:nil];
+            NSArray* decode = [NSJSONSerialization JSONObjectWithData:formattedData options:0 error:nil];
             NSLog(@"Uploading log data:\n %@", decode);
         }
 
         NSURLSession *session = [NSURLSession sessionWithConfiguration:NSURLSession.sharedSession.configuration];
-        NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString: self->logURL]];
+        NSMutableURLRequest* req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:self->logURL]];
         [req setValue:self->logIngestKey forHTTPHeaderField:@"X-App-License-Key"];
         [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
         [req setValue:kNRMAGZipHeader forHTTPHeaderField:kNRMAContentEncodingHeader];
-
         req.HTTPMethod = @"POST";
         
-        NSURLSessionUploadTask *uploadTask = [session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-            
-            BOOL errorCode = false;
-            NSInteger errorCodeInt = 0;
-            
-            if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-                errorCode = ((NSHTTPURLResponse*)response).statusCode >= 300;
-                errorCodeInt = ((NSHTTPURLResponse*)response).statusCode;
-            }
-            if (!error && !errorCode) {
-                NRLOG_AGENT_VERBOSE(@"Logs uploaded successfully.");
-                // Remove the first element from the upload queue.
-                [self->uploadQueue removeObjectAtIndex:0];
-                self->failureCount = 0;
-                
-                [NRMASupportMetricHelper enqueueLogSuccessMetric: [formattedData length]];
-            }
-            else if (errorCode) {
-                NRLOG_AGENT_ERROR(@"Logs failed to upload. response: %@", response);
-                self->failureCount = self->failureCount + 1;
-                
-                [NRMASupportMetricHelper enqueueLogFailedMetric];
-            }
-            else {
-                NRLOG_AGENT_ERROR(@"Logs failed to upload. error: %@", error);
-                self->failureCount = self->failureCount + 1;
-                
-                // send log payload failed support metric
-                [NRMASupportMetricHelper enqueueLogFailedMetric];
-            }
-            
-            if (self->failureCount > kNRMAMaxLogUploadRetry) {
-                [self->uploadQueue removeObjectAtIndex:0];
-                self->failureCount = 0;
-            }
-            
-            // isUploading is turned off upon successful or failed logs request.
-            self->isUploading = NO;
-            
-            if (self->debugLogs) {
-                NSLog(@"isUploading ==> FALSE");
-                if (self->uploadQueue.count > 0) {
-                    NSLog(@"logs uploadQueue has contents, proceeding with additional uploads");
+        // Async executeRequest: fires an upload task and delivers the result via onResponse.
+        NRMAExecuteRequestBlock executeRequest = ^(void (^onResponse)(NSHTTPURLResponse*, NSData*, NSError*)) {
+            [[session uploadTaskWithRequest:req fromData:formattedData completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                onResponse((NSHTTPURLResponse *)response, data, error);
+            }] resume];
+        };
+
+        // Retry on network errors or any HTTP status >= 300.
+        BOOL (^shouldRetry)(NSHTTPURLResponse *, NSError *) = ^BOOL(NSHTTPURLResponse *response, NSError *error) {
+            if (error != nil) return YES;
+            return response.statusCode >= 300;
+        };
+
+        NRMAWaitForDelayBlock waitForDelay = [NRMARetryOrchestrator asyncWaitForDelayOnQueue:self->logQueue];
+
+        [self->retryOrchestrator executeWithMaxRetries:kNRMAMaxLogUploadRetry
+                                        executeRequest:executeRequest
+                                           shouldRetry:shouldRetry
+                                          waitForDelay:waitForDelay
+                                            completion:^(NSHTTPURLResponse *response, NSData *data, NSError *error, NSInteger retryCount) {
+            dispatch_async(self->logQueue, ^{
+                if (!error && response.statusCode < 300) {
+                    NRLOG_AGENT_DEBUG(@"Logs uploaded successfully.");
+                    [NRMASupportMetricHelper enqueueLogSuccessMetric:[formattedData length]];
+                } else if (error) {
+                    NRLOG_AGENT_ERROR(@"Logs failed to upload. error: %@", error);
+                    [NRMASupportMetricHelper enqueueLogFailedMetric];
+                } else {
+                    NRLOG_AGENT_ERROR(@"Logs failed to upload. response: %@", response);
+                    [NRMASupportMetricHelper enqueueLogFailedMetric];
                 }
-                for (NSData *data in self->uploadQueue) {
-                    NSLog(@"logs item: length=%lu",(unsigned long)data.length);
+
+                [self->uploadQueue removeObjectAtIndex:0];
+                self->isUploading = NO;
+
+                if (self->debugLogs) {
+                    NSLog(@"isUploading ==> FALSE");
+                    if (self->uploadQueue.count > 0) {
+                        NSLog(@"logs uploadQueue has contents, proceeding with additional uploads");
+                    }
+                    for (NSData *d in self->uploadQueue) {
+                        NSLog(@"logs item: length=%lu", (unsigned long)d.length);
+                    }
+                    NSLog(@"Logs isUploading ==> FALSE");
                 }
-                NSLog(@"Logs isUploading ==> FALSE");
-            }
-            
-            [self processNextUploadTask];
+
+                [self processNextUploadTask];
+            });
         }];
-        
-        [uploadTask resume];
     });
 }
 

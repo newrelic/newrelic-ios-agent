@@ -12,6 +12,7 @@
 #import "NRMAJSON.h"
 #import "NRMAConnection.h"
 #import "NRMAOfflineStorage.h"
+#import "NRMARetryOrchestrator.h"
 
 #define kCOLLECTOR_CONNECT_URI         @"/mobile/v5/connect"
 #define kCOLLECTOR_DATA_URL            @"/mobile/v3/data"
@@ -26,6 +27,13 @@
 @property(strong) NRMAConnectInformation* connectionInformation;
 @property(strong) NSURLSession* harvestSession;
 @property(strong) NRMAOfflineStorage* offlineStorage;
+@property(strong) NRMARetryOrchestrator* retryOrchestrator;
+
+// Retry configuration properties
+@property(assign) NSInteger maxForegroundRetries;     // Default: 5
+@property(assign) NSInteger maxBackgroundRetries;      // Default: 1
+@property(assign) NSTimeInterval initialRetryDelay;    // Default: 1.0
+@property(assign) NSTimeInterval maxRetryDelay;        // Default: 16.0
 
 - (id) init;
 - (NSURLRequest*) createPostWithURI:(NSString*)uri message:(NSString*)message;

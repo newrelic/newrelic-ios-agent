@@ -14,6 +14,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class NRMARetryOrchestrator;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -110,8 +112,8 @@ typedef enum _NRLogTargets {
 
     NSMutableArray *uploadQueue;
     BOOL isUploading;
-    unsigned int failureCount;
     BOOL debugLogs;
+    NRMARetryOrchestrator *retryOrchestrator;
 
     NRLogLevels remoteLogLevel;
 

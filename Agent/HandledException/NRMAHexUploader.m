@@ -7,19 +7,17 @@
 //
 
 #import "NRMAHexUploader.h"
-#import "NRMARetryTracker.h"
+#import "NRMARetryOrchestrator.h"
 #import "NRLogger.h"
-#include <libkern/OSAtomic.h>
 #import "NRMASupportMetricHelper.h"
 #import "NRConstants.h"
 
-#define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
+#define kNRMAHexRetryLimit 5
 
 @interface NRMAHexUploader()
 @property(strong) NSString* host;
-@property(strong) NSMutableArray* retryQueue;
 @property(strong) NSURLSession* session;
-@property(strong) NRMARetryTracker* taskStore;
+@property(strong) NRMARetryOrchestrator* orchestrator;
 @end
 
 @implementation NRMAHexUploader
@@ -28,61 +26,75 @@
     self = [super init];
     if (self) {
         self.host = host;
-        self.retryQueue = [NSMutableArray new];
         NSURLSessionConfiguration* sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
-        self.session = [NSURLSession sessionWithConfiguration:sessionConfiguration
-                                                     delegate:self
-                                                delegateQueue:nil];
-        self.taskStore = [[NRMARetryTracker alloc] initWithRetryLimit:kNRMARetryLimit];
+        self.session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
+        self.orchestrator = [[NRMARetryOrchestrator alloc] initWithInitialDelay:1.0 maxDelay:16.0];
     }
     return self;
 }
 
 - (void) sendData:(NSData*)data {
-
     if (data == nil) return;
 
     NSMutableURLRequest* request = [self newPostWithURI:self.host];
-
     if (request == nil) return;
 
     request.HTTPMethod = @"POST";
-
     [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%lu",(unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
-    
-    if([data length] > kNRMAMaxPayloadSizeLimit) {
+    [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
+
+    if ([data length] > kNRMAMaxPayloadSizeLimit) {
         NRLOG_AGENT_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
         return;
     }
-    
+
     NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
 
     NSMutableURLRequest *modifiedRequest = [request mutableCopy];
     [modifiedRequest setHTTPBody:nil];
 
-    NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:modifiedRequest fromData:data];
+    NSURLSession *session = self.session;
 
-    // Note: Previously the NRMAHexUploader used uploadTaskWithStreamedRequest
-    //NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
+    // Async executeRequest: fires a completion-handler upload task and delivers
+    // the result via onResponse. Each retry creates a fresh task.
+    NRMAExecuteRequestBlock executeRequest = ^(void (^onResponse)(NSHTTPURLResponse*, NSData*, NSError*)) {
+        [[session uploadTaskWithRequest:modifiedRequest
+                               fromData:data
+                      completionHandler:^(NSData *responseBody, NSURLResponse *response, NSError *error) {
+            NRLOG_AGENT_DEBUG(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", response);
+            if (error) {
+                NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@",
+                                  [error localizedDescription]);
+            }
+            onResponse((NSHTTPURLResponse *)response, responseBody, error);
+        }] resume];
+    };
 
-    [self.taskStore track:uploadTask.originalRequest];
-    [uploadTask resume];
+    // Retry on network errors or any HTTP 4xx/5xx.
+    BOOL (^shouldRetry)(NSHTTPURLResponse *, NSError *) = ^BOOL(NSHTTPURLResponse *response, NSError *error) {
+        if (error != nil) return YES;
+        return response.statusCode >= 400;
+    };
+
+    [self.orchestrator executeWithMaxRetries:kNRMAHexRetryLimit
+                              executeRequest:executeRequest
+                                 shouldRetry:shouldRetry
+                                waitForDelay:[NRMARetryOrchestrator asyncWaitForDelayOnQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)]
+                                  completion:^(NSHTTPURLResponse *response, NSData *responseBody, NSError *error, NSInteger retryCount) {
+        if (error == nil && response.statusCode < 400) {
+            NRLOG_AGENT_DEBUG(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
+            [NRMASupportMetricHelper enqueueDataUseMetric:@"f"
+                                                     size:[modifiedRequest.HTTPBody length]
+                                                 received:response.expectedContentLength];
+        } else {
+            NRLOG_AGENT_DEBUG(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
+        }
+    }];
 }
 
 - (void) retryFailedTasks {
-    NSArray* localRetryQueue;
-    @synchronized(self.retryQueue) {
-        localRetryQueue = self.retryQueue;
-        // The following line prevents this temp local variable from being optimized out.
-        OSMemoryBarrier();
-        self.retryQueue = [NSMutableArray new];
-    }
-
-    for (NSURLSessionUploadTask* task in localRetryQueue) {
-        [task resume];
-    }
+    // Retries are now handled immediately by NRMARetryOrchestrator inside sendData:.
 }
 
 - (void) invalidate {
@@ -90,65 +102,6 @@
 }
 
 - (void) dealloc {
-    
-}
-
-- (void)  URLSession:(NSURLSession*)session
-                task:(NSURLSessionTask*)task
-didCompleteWithError:(nullable NSError*)error {
-
-    if (error) {
-#if !TARGET_OS_WATCH
-        if (error.code == kCFURLErrorCancelled) {
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload cancelled: %@", error);
-        }
-        else {
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
-        }
-#endif
-        [self handledErroredRequest:task.originalRequest];
-    } else {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
-    }
-}
-
-
-- (void) URLSession:(NSURLSession*)session
-           dataTask:(NSURLSessionDataTask*)dataTask
- didReceiveResponse:(NSURLResponse*)response
-  completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
-//    NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
-//
-//    NSInteger statusCode = httpResponse.statusCode;
-
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", response);
-    
-    if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
-        ((NSHTTPURLResponse*)response).statusCode >= 400) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
-        [self handledErroredRequest:dataTask.originalRequest];
-    }
-    else {
-        // Enqueue Data Usage Supportability Metric for /f if request is successful.
-        [NRMASupportMetricHelper enqueueDataUseMetric:@"f"
-                                                 size:[[[dataTask originalRequest] HTTPBody] length]
-                                             received:response.expectedContentLength];
-    }
-
-    completionHandler(NSURLSessionResponseAllow);
-}
-
-- (void) handledErroredRequest:(NSURLRequest*)request {
-    if ([self.taskStore shouldRetryTask:request]) {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
-        NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:[request HTTPBody]];
-        @synchronized(self.retryQueue) {
-            [self.retryQueue addObject:uploadTask];
-        }
-    } else {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
-        [self.taskStore untrack:request];
-    }
 }
 
 @end
