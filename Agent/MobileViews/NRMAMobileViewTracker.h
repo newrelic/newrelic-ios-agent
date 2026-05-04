@@ -41,6 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface NRMAMobileViewTracker : NSObject
 
+FOUNDATION_EXPORT BOOL NRMA_ShouldSkipViewName(NSString *viewName);
+
 + (instancetype)sharedInstance;
 
 /**

@@ -29,5 +29,5 @@
 #import "NRMAAttributeValidator.h"
 #import "NRMAAppToken.h"
 #import "NRMAHarvesterConfiguration.h"
-
+#import "NRMAMobileViewTracker.h"
 #endif /* APrivateHeader_h */

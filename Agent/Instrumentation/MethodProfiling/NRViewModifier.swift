@@ -10,6 +10,8 @@
 // This is an experimental feature to better track SwiftUI.
 //
 
+@_implementationOnly import NewRelicPrivate
+
 #if canImport(SwiftUI)
 import SwiftUI
 
@@ -62,43 +64,42 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear {
+                if NRMA_ShouldSkipViewName(viewName) { return }
+
                 let now = Date()
                 let id = UUID().uuidString
                 appearTime = now
                 instanceId = id
                 
                 //                // loadTime: modifier creation (≈ view body evaluation) → onAppear
-                //                let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
+                                let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
                 //
                 NewRelic.recordCustomEvent("MobileView", attributes: [
                     "viewClass":      viewClass,
                     "viewName":       viewName,
                     "viewInstanceId": id,
                     "restarted":      NSNumber(value: hasAppearedBefore),
-                    //"loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
+                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
                     "appeared":       NSNumber(value: true),
                     //"timeVisible":    NSNumber(value: 0.0), // placeholder until disappear
                     "uiPlatform":       "SwiftUI",
                 ])
             }
             .onDisappear {
-                if viewName.hasPrefix("UIHostingController") { return }
-                if viewName.hasPrefix("NavigationStackHostingController") { return }
-                if viewName.hasPrefix("StyleContextSplitViewNavigationController") { return }
-                if viewName.hasPrefix("PresentationHostingController") { return }
-                
+                if NRMA_ShouldSkipViewName(viewName) { return }
+
                 let disappearTime = Date()
                 guard let appeared = appearTime, let id = instanceId else { return }
                 
                 let timeVisibleSec = disappearTime.timeIntervalSince(appeared)
-                let loadTimeSec    = appeared.timeIntervalSince(modifierCreatedAt)
+               // let loadTimeSec    = appeared.timeIntervalSince(modifierCreatedAt)
                 
                 NewRelic.recordCustomEvent("MobileView", attributes: [
                     "viewClass":      viewClass,
                     "viewName":       viewName,
                     "viewInstanceId": id,
                     "restarted":      NSNumber(value: hasAppearedBefore),
-                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
+//                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
                     "timeVisible":    NSNumber(value: max(timeVisibleSec, 0.0)),
                     "uiPlatform":       "SwiftUI",
                     "appeared":       NSNumber(value: false),

@@ -38,6 +38,26 @@ static NSString * const kSwiftUIPrefix      = @"SwiftUI.";
 // Swift mangling marker — any class name starting with _Tt is mangled
 static NSString * const kSwiftManglingMarker = @"_Tt";
 
+// Returns YES if the given class or class-name prefix should be excluded from tracking.
+FOUNDATION_EXPORT BOOL NRMA_ShouldSkipClass(Class cls);
+                                                                                  
+// Canonical list of SwiftUI host/container class-name prefixes we skip.
+FOUNDATION_EXPORT NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void);
+                                                                                             
+NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
+    static NSArray<NSString *> *prefixes;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        prefixes = @[
+            @"UIHostingController",
+            @"NavigationStackHostingController",
+            @"StyleContextSplitViewNavigationController",
+            @"PresentationHostingController",
+        ];
+    });
+    return prefixes;
+}
+
 #pragma mark - Swift name demangling
 
 /**
@@ -115,22 +135,15 @@ static void (*orig_viewDidDisappear)(id, SEL, BOOL);
 
 #pragma mark - Helpers
 
-NS_INLINE BOOL NRMA_ShouldSkipClass(Class cls) {
-    // Skip SwiftUI framework classes — NRMobileViewModifier handles those.
-    NSString *name = NSStringFromClass(cls);
-    if ([name hasPrefix:kSwiftUIPrefix]) return YES;
-
-    // Skip UIHostingController and its subclasses. They wrap SwiftUI views and are
-    // already covered by NRMobileViewModifier. Their viewClass is an unreadable
-    // generic type tree; tracking them produces duplicate, noisy events.
-    static Class hostingControllerClass;
-    static dispatch_once_t token;
-    dispatch_once(&token, ^{
-        hostingControllerClass = NSClassFromString(@"UIHostingController");
-    });
-    if (hostingControllerClass && [cls isSubclassOfClass:hostingControllerClass]) return YES;
-
+BOOL NRMA_ShouldSkipViewName(NSString *viewName) {
+    for (NSString *prefix in NRMAExcludedViewClassPrefixes()) {
+        if ([viewName hasPrefix:prefix]) return YES;
+    }
     return NO;
+}
+
+BOOL NRMA_ShouldSkipClass(Class cls) {
+    return NRMA_ShouldSkipViewName(NSStringFromClass(cls));
 }
 
 // File-private — used only for a type-safe cast when calling the informal hook.
