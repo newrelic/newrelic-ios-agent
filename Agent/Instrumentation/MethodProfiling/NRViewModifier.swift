@@ -129,7 +129,7 @@ public extension SwiftUI.View {
     }
     
     // NavigationStack / NavigationLink + navigationDestination(for:)
-    @available(iOS 16.0, *)
+    @available(iOS 16.0, tvOS 16.0, watchOS 9.0, *)
     func NRMobileDestination<D: Hashable, C: View>(
         for data: D.Type,
         name: @escaping (D) -> String = { String(describing: $0) },
@@ -175,7 +175,7 @@ public extension SwiftUI.View {
             content().NRMobileView(name: name)
         }
     }
-
+    #if os(iOS) || targetEnvironment(macCatalyst)
     func NRMobilePopover<C: View>(
         isPresented: Binding<Bool>, name: String,
         attachmentAnchor: PopoverAttachmentAnchor = .rect(.bounds),
@@ -186,6 +186,7 @@ public extension SwiftUI.View {
             content().NRMobileView(name: name)
         }
     }
+    #endif
 }
 
 // NavigationLink helper (value-less destination form).

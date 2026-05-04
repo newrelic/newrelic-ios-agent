@@ -152,6 +152,8 @@ BOOL NRMA_ShouldSkipClass(Class cls) {
 - (NSString *)nrMobileViewName;
 @end
 
+#if !TARGET_OS_WATCH
+
 NS_INLINE NSString *NRMA_ViewNameForController(UIViewController *vc) {
     // Informal protocol: if the VC implements nrMobileViewName (ObjC or @objc Swift),
     // use it; otherwise fall back to the demangled class name.
@@ -247,6 +249,7 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     objc_setAssociatedObject(self, &kNRAppearTimestampKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(self, &kNRViewInstanceIdKey,  nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
+#endif
 
 #pragma mark - NRMAMobileViewTracker
 
@@ -264,6 +267,8 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
 - (void)start {
     static dispatch_once_t swizzleOnce;
     dispatch_once(&swizzleOnce, ^{
+#if !TARGET_OS_WATCH
+
         Class vcClass = [UIViewController class];
 
         orig_viewDidLoad = (void(*)(id,SEL))
@@ -280,7 +285,7 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
             NRMAReplaceInstanceMethod(vcClass,
                                      @selector(viewDidDisappear:),
                                      (IMP)NRMA_ViewDidDisappear);
-
+#endif
         NRLOG_AGENT_INFO(@"[MobileViews] UIViewController lifecycle tracking started.");
     });
 }
