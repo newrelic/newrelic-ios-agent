@@ -39,6 +39,7 @@
 		2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */; };
 		2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */; };
 		2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */; };
+		ABCDE0001000000000000001 /* ModalsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE0001000000000000002 /* ModalsDemoView.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -365,6 +366,7 @@
 		2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldsView.swift; sourceTree = "<group>"; };
 		2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TogglesView.swift; sourceTree = "<group>"; };
 		2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalReproView.swift; sourceTree = "<group>"; };
+		ABCDE0001000000000000002 /* ModalsDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalsDemoView.swift; sourceTree = "<group>"; };
 		2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceContentView.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
@@ -538,6 +540,7 @@
 				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
+				ABCDE0001000000000000002 /* ModalsDemoView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
 				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
 				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
@@ -1337,6 +1340,7 @@
 				F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */,
 				2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */,
+				ABCDE0001000000000000001 /* ModalsDemoView.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,

@@ -208,6 +208,10 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     // viewName: simple demangled name (or custom override), e.g. "ProductDetailViewController"
     NSString *viewName  = NRMA_ViewNameForController(self);
 
+    if ([viewName hasPrefix:@"UIHostingController"]) return;
+    if ([viewName hasPrefix:@"NavigationStackHostingController"]) return;
+    if ([viewName hasPrefix:@"StyleContextSplitViewNavigationController"]) return;
+    if ([viewName hasPrefix:@"PresentationHostingController"]) return;
     [NewRelic recordCustomEvent:kNRMobileViewEventType
                      attributes:@{
         kNRAttr_viewClass:      viewClass,
@@ -216,6 +220,7 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         kNRAttr_restarted:      @(isRestarted),
         kNRAttr_loadTime:       @(loadTimeSec),
         kNRAttr_timeVisible:    @(timeVisibleSec),
+        @"uiPlatform":       @"UIKit",
     }];
 
     //NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
