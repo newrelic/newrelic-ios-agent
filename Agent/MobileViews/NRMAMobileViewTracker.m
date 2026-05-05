@@ -50,9 +50,17 @@ NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
     dispatch_once(&once, ^{
         prefixes = @[
             @"UIHostingController",
+            @"UINavigationController",
             @"NavigationStackHostingController",
             @"StyleContextSplitViewNavigationController",
             @"PresentationHostingController",
+            @"UICompatibilityInputViewController",
+            @"UIPredictionViewController",
+            @"UISystemInputAssistantViewController",
+            @"UICompatibilityInputViewController",
+            @"UIKitNavigationController",
+            @"_UICursorAccessoryViewController",
+            @"NotifyingMulticolumnSplitViewController",
         ];
     });
     return prefixes;
@@ -173,6 +181,9 @@ static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
 
     if (NRMA_ShouldSkipClass([self class])) return;
 
+    NSString *viewName  = NRMA_ViewNameForController(self);
+    if (NRMA_ShouldSkipViewName(viewName)) return;
+    
     objc_setAssociatedObject(self, &kNRLoadTimestampKey,
                              @(CFAbsoluteTimeGetCurrent()),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -183,14 +194,36 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
 
     if (NRMA_ShouldSkipClass([self class])) return;
 
+    NSString *viewName  = NRMA_ViewNameForController(self);
+    if (NRMA_ShouldSkipViewName(viewName)) return;
+    
     objc_setAssociatedObject(self, &kNRAppearTimestampKey,
                              @(CFAbsoluteTimeGetCurrent()),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
+    NSString *uuid = [[NSUUID UUID] UUIDString];
     // Fresh UUID for this single visible-lifetime instance
     objc_setAssociatedObject(self, &kNRViewInstanceIdKey,
-                             [[NSUUID UUID] UUIDString],
+                             uuid,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    
+    NSString *viewClass = NRMA_DemangledName([self class], YES);
+
+    [NewRelic recordCustomEvent:kNRMobileViewEventType
+                     attributes:@{
+        kNRAttr_viewClass:      viewClass,
+        kNRAttr_viewName:       viewName,
+        kNRAttr_viewInstanceId: uuid,
+        @"appeared": @YES,
+        @"uiPlatform":       @"UIKit",
+        @"agentName": @"iOS",
+//        @"crashCount": @0,
+//        @"hexCount": @0,
+//        @"requestErrorCount": @0,
+//        @"anrCount": @0,
+//        @"requestCount": @0,
+//        @"userActionCount": @0,
+
+    }];
 }
 
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
@@ -223,10 +256,6 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     // viewName: simple demangled name (or custom override), e.g. "ProductDetailViewController"
     NSString *viewName  = NRMA_ViewNameForController(self);
 
-    if ([viewName hasPrefix:@"UIHostingController"]) return;
-    if ([viewName hasPrefix:@"NavigationStackHostingController"]) return;
-    if ([viewName hasPrefix:@"StyleContextSplitViewNavigationController"]) return;
-    if ([viewName hasPrefix:@"PresentationHostingController"]) return;
     [NewRelic recordCustomEvent:kNRMobileViewEventType
                      attributes:@{
         kNRAttr_viewClass:      viewClass,
@@ -235,7 +264,16 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         kNRAttr_restarted:      @(isRestarted),
         kNRAttr_loadTime:       @(loadTimeSec),
         kNRAttr_timeVisible:    @(timeVisibleSec),
+        @"appeared": @NO,
         @"uiPlatform":       @"UIKit",
+        @"agentName": @"iOS",
+        @"crashCount": @0,
+        @"hexCount": @0,
+        @"requestErrorCount": @0,
+        @"anrCount": @0,
+        @"requestCount": @0,
+        @"userActionCount": @0,
+
     }];
 
     //NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
@@ -285,8 +323,9 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
             NRMAReplaceInstanceMethod(vcClass,
                                      @selector(viewDidDisappear:),
                                      (IMP)NRMA_ViewDidDisappear);
-#endif
         NRLOG_AGENT_INFO(@"[MobileViews] UIViewController lifecycle tracking started.");
+#endif
+
     });
 }
 

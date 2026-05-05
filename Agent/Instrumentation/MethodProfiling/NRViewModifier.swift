@@ -71,9 +71,9 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 appearTime = now
                 instanceId = id
                 
-                //                // loadTime: modifier creation (≈ view body evaluation) → onAppear
-                                let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
-                //
+                // loadTime: modifier creation (≈ view body evaluation) → onAppear
+                let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
+
                 NewRelic.recordCustomEvent("MobileView", attributes: [
                     "viewClass":      viewClass,
                     "viewName":       viewName,
@@ -81,8 +81,14 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                     "restarted":      NSNumber(value: hasAppearedBefore),
                     "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
                     "appeared":       NSNumber(value: true),
-                    //"timeVisible":    NSNumber(value: 0.0), // placeholder until disappear
                     "uiPlatform":       "SwiftUI",
+                    "agentName": "iOS",
+                    "crashCount":0,
+                    "hexCount": 0,
+                    "requestErrorCount": 0,
+                    "anrCount": 0,
+                    "requestCount": 0,
+                    "userActionCount": 0,
                 ])
             }
             .onDisappear {
@@ -92,6 +98,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 guard let appeared = appearTime, let id = instanceId else { return }
                 
                 let timeVisibleSec = disappearTime.timeIntervalSince(appeared)
+                // loadTime is currently only included in appeared = true
                // let loadTimeSec    = appeared.timeIntervalSince(modifierCreatedAt)
                 
                 NewRelic.recordCustomEvent("MobileView", attributes: [
@@ -99,10 +106,18 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                     "viewName":       viewName,
                     "viewInstanceId": id,
                     "restarted":      NSNumber(value: hasAppearedBefore),
+                    // loadTime is currently only included in appeared = true
 //                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
                     "timeVisible":    NSNumber(value: max(timeVisibleSec, 0.0)),
                     "uiPlatform":       "SwiftUI",
                     "appeared":       NSNumber(value: false),
+                    "agentName": "iOS",
+                    "crashCount":0,
+                    "hexCount": 0,
+                    "requestErrorCount": 0,
+                    "anrCount": 0,
+                    "requestCount": 0,
+                    "userActionCount": 0,
                 ])
                 
                 hasAppearedBefore = true
@@ -250,12 +265,18 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
                     "viewInstanceId": id,
                     "uiPlatform": "SwiftUI",
                     "navigationKind": "tab",
-                    "dwellThreshold": 0.5,
                     // loadTime ≈ 0 for tab switches; semantics caveat in docs
+                    "appeared":       NSNumber(value: false),
+                    "agentName": "iOS",
+                    "crashCount":0,
+                    "hexCount": 0,
+                    "requestErrorCount": 0,
+                    "anrCount": 0,
+                    "requestCount": 0,
+                    "userActionCount": 0,
                 ])
             }
     }
-    // emitDisappearIfNeeded() fires a closing event with timeVisible
 }
 
 #endif
