@@ -161,6 +161,7 @@ public class SessionReplayReporter: NSObject {
             "rrweb.version": "^2.0.0-alpha.17",
             "payload.type": "standard",
             "hasMeta": String(true),
+            "hasReplay": String(true),
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(Int(firstTimestamp)),
             "replay.lastTimestamp": String(Int(lastTimestamp)),
