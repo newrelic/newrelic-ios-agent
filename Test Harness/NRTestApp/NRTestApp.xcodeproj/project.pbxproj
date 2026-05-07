@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1750461F0DCCB5A6F8C0C0CC /* SRDevHUDViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFC14FFF573EE9B406658BE9 /* SRDevHUDViewModel.swift */; };
 		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
@@ -39,6 +40,7 @@
 		2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */; };
 		2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */; };
 		2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */; };
+		2BBE5C2E2ED00001001D2B88 /* BridgeStressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BBE5C2E2ED00002001D2B88 /* BridgeStressView.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -66,9 +68,12 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		32F89E9CCE2A90F8242C32F3 /* SRDevHUDWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6556FF59D10B4AEDB4BA89 /* SRDevHUDWindow.swift */; };
+		83A793812E13F5CE3FEB4FB8 /* SRDevHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0565C18A5CD6E7F37881D5B8 /* SRDevHUDView.swift */; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
+		DFB426F04BC86D3AE0134AC1 /* SRDevHUDInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6676DC8EB55FB5EA9BDE545 /* SRDevHUDInstaller.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
 		F802EE982BE0218600AB956F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE972BE0218600AB956F /* ContentView.swift */; };
 		F802EE9A2BE0218700AB956F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F802EE992BE0218700AB956F /* Assets.xcassets */; };
@@ -339,6 +344,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0565C18A5CD6E7F37881D5B8 /* SRDevHUDView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDevHUDView.swift; sourceTree = "<group>"; };
+		1A6556FF59D10B4AEDB4BA89 /* SRDevHUDWindow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDevHUDWindow.swift; sourceTree = "<group>"; };
 		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -365,6 +372,7 @@
 		2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldsView.swift; sourceTree = "<group>"; };
 		2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TogglesView.swift; sourceTree = "<group>"; };
 		2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalReproView.swift; sourceTree = "<group>"; };
+		2BBE5C2E2ED00002001D2B88 /* BridgeStressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeStressView.swift; sourceTree = "<group>"; };
 		2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceContentView.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
@@ -394,6 +402,7 @@
 		D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTestViewController.swift; sourceTree = "<group>"; };
 		D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CustomSwitch.swift; path = ../CustomSwitch.swift; sourceTree = "<group>"; };
 		D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToggleStyle.swift; sourceTree = "<group>"; };
+		D6676DC8EB55FB5EA9BDE545 /* SRDevHUDInstaller.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDevHUDInstaller.swift; sourceTree = "<group>"; };
 		F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS) Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS_App.swift; sourceTree = "<group>"; };
 		F802EE972BE0218600AB956F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -473,6 +482,7 @@
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
+		FFC14FFF573EE9B406658BE9 /* SRDevHUDViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDevHUDViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -532,12 +542,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		195FBA0232A073824B77582C /* DevHUD */ = {
+			isa = PBXGroup;
+			children = (
+				FFC14FFF573EE9B406658BE9 /* SRDevHUDViewModel.swift */,
+				0565C18A5CD6E7F37881D5B8 /* SRDevHUDView.swift */,
+				1A6556FF59D10B4AEDB4BA89 /* SRDevHUDWindow.swift */,
+				D6676DC8EB55FB5EA9BDE545 /* SRDevHUDInstaller.swift */,
+			);
+			name = DevHUD;
+			path = DevHUD;
+			sourceTree = "<group>";
+		};
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
 				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
+				2BBE5C2E2ED00002001D2B88 /* BridgeStressView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
 				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
 				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
@@ -681,6 +704,7 @@
 				F8302B06296F5EFB003EC291 /* Info.plist */,
 				F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */,
 				F825C6632C790F4F006062A5 /* readme.md */,
+				195FBA0232A073824B77582C /* DevHUD */,
 			);
 			path = NRTestApp;
 			sourceTree = "<group>";
@@ -1337,6 +1361,7 @@
 				F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */,
 				2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */,
+				2BBE5C2E2ED00001001D2B88 /* BridgeStressView.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
@@ -1375,6 +1400,10 @@
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
+				1750461F0DCCB5A6F8C0C0CC /* SRDevHUDViewModel.swift in Sources */,
+				83A793812E13F5CE3FEB4FB8 /* SRDevHUDView.swift in Sources */,
+				32F89E9CCE2A90F8242C32F3 /* SRDevHUDWindow.swift in Sources */,
+				DFB426F04BC86D3AE0134AC1 /* SRDevHUDInstaller.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

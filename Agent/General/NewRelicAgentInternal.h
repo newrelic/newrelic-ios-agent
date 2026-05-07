@@ -144,6 +144,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 // END SESSION REPLAY SECTION Methods to start and pause SessionReplay
 
+#if DEBUG
+// Debug-only accessor for the SessionReplayManager. Returns id to avoid importing
+// the generated Swift header from this internal header. Compiled out of release builds.
+// Intended for internal test-harness diagnostics (Dev HUD), not a supported API.
+- (id _Nullable) debugSessionReplayManager;
+#endif
+
 @end
 
 /*

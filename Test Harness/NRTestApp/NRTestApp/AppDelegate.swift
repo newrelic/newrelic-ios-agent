@@ -86,6 +86,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.setMaxEventBufferTime(60)
 
         NewRelic.logVerbose("NewRelic.start was called.")
+
+#if DEBUG
+        if #available(iOS 16.0, *) {
+            SRDevHUDInstaller.install()
+        }
+#endif
+
         return true
     }
 

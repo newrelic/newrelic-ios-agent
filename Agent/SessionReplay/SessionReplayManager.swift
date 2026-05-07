@@ -22,6 +22,10 @@ public class SessionReplayManager: NSObject {
     public var harvestPeriod: Int64 = 60
     private var harvestseconds = 0
     public var sessionReplayTimer: Timer?
+
+    /// Timestamp of the most recent successful call to `harvest()`. Stamped unconditionally
+    /// (even if the harvest had nothing to upload) so diagnostics can show recording health.
+    @objc public private(set) var lastHarvestDate: Date?
     
     private let url: NSString
     
@@ -226,8 +230,9 @@ public class SessionReplayManager: NSObject {
         // sync is required here or session replay upload fails.
         sessionReplayQueue.sync { [weak self] in
             guard let self = self else { return }
-            
+
             self.harvestSessionReplayFramesAndTouches()
+            self.lastHarvestDate = Date()
         }
     }
     
