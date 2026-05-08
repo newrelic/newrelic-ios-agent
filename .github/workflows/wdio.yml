@@ -6,6 +6,9 @@
 
 name: "WDIO: automate iOS tests"
 
+permissions:
+  contents: read
+
 on:
   # enables option for workflow to be manually executed in Github UI
   workflow_dispatch:
