@@ -58,14 +58,18 @@ jobs:
                 archive_format: 'zip',
               });
               const fs = require('fs');
-              fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/app-id.zip`, Buffer.from(download.data));
+              const path = require('path');
+              const artifactDir = path.join(process.env.RUNNER_TEMP, 'artifacts');
+              fs.mkdirSync(artifactDir, { recursive: true });
+              fs.writeFileSync(path.join(artifactDir, 'app-id.zip'), Buffer.from(download.data));
             }
 
       - name: Extract app ID (from workflow_run)
         if: github.event_name == 'workflow_run'
         run: |
-          if [ -f app-id.zip ]; then
-            unzip -q app-id.zip -d LambdaTest/
+          if [ -f "${{ runner.temp }}/artifacts/app-id.zip" ]; then
+            mkdir -p "${{ runner.temp }}/artifacts/LambdaTest"
+            unzip -q "${{ runner.temp }}/artifacts/app-id.zip" -d "${{ runner.temp }}/artifacts/LambdaTest"
             echo "Extracted app ID from workflow_run artifact"
           fi
         continue-on-error: true
@@ -75,14 +79,20 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: lambdatest-app-id
-          path: ${{ github.workspace }}/LambdaTest
+          path: ${{ runner.temp }}/artifacts/LambdaTest
         continue-on-error: true
 
       - name: Set LT_APP_ID environment variable
         run: |
-          if [ -f LambdaTest/last-app-id ]; then
-            echo "LT_APP_ID=$(tr -d '\n' < LambdaTest/last-app-id)" >> $GITHUB_ENV
-            echo "Using app ID: $(tr -d '\n' < LambdaTest/last-app-id)"
+          APP_ID_FILE="${{ runner.temp }}/artifacts/LambdaTest/last-app-id"
+          if [ -f "$APP_ID_FILE" ]; then
+            APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
+            if echo "$APP_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+              echo "LT_APP_ID=$APP_ID" >> $GITHUB_ENV
+              echo "Using app ID: $APP_ID"
+            else
+              echo "Artifact app ID is invalid; tests will use default app ID from config"
+            fi
           else
             echo "No app ID artifact found, tests will use default app ID from config"
           fi
