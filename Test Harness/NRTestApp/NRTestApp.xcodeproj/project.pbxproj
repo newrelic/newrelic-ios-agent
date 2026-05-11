@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1750461F0DCCB5A6F8C0C0CC /* SRDevHUDViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFC14FFF573EE9B406658BE9 /* SRDevHUDViewModel.swift */; };
+		D1DB0A001AAAAAAAAAAAA001 /* SRDebugOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DB0A001AAAAAAAAAAAA002 /* SRDebugOverlayView.swift */; };
+		D1DB0A001AAAAAAAAAAAA003 /* SRDebugOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DB0A001AAAAAAAAAAAA004 /* SRDebugOverlayController.swift */; };
 		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
@@ -346,6 +348,8 @@
 /* Begin PBXFileReference section */
 		0565C18A5CD6E7F37881D5B8 /* SRDevHUDView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDevHUDView.swift; sourceTree = "<group>"; };
 		1A6556FF59D10B4AEDB4BA89 /* SRDevHUDWindow.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDevHUDWindow.swift; sourceTree = "<group>"; };
+		D1DB0A001AAAAAAAAAAAA002 /* SRDebugOverlayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDebugOverlayView.swift; sourceTree = "<group>"; };
+		D1DB0A001AAAAAAAAAAAA004 /* SRDebugOverlayController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SRDebugOverlayController.swift; sourceTree = "<group>"; };
 		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -549,6 +553,8 @@
 				0565C18A5CD6E7F37881D5B8 /* SRDevHUDView.swift */,
 				1A6556FF59D10B4AEDB4BA89 /* SRDevHUDWindow.swift */,
 				D6676DC8EB55FB5EA9BDE545 /* SRDevHUDInstaller.swift */,
+				D1DB0A001AAAAAAAAAAAA002 /* SRDebugOverlayView.swift */,
+				D1DB0A001AAAAAAAAAAAA004 /* SRDebugOverlayController.swift */,
 			);
 			name = DevHUD;
 			path = DevHUD;
@@ -1404,6 +1410,8 @@
 				83A793812E13F5CE3FEB4FB8 /* SRDevHUDView.swift in Sources */,
 				32F89E9CCE2A90F8242C32F3 /* SRDevHUDWindow.swift in Sources */,
 				DFB426F04BC86D3AE0134AC1 /* SRDevHUDInstaller.swift in Sources */,
+				D1DB0A001AAAAAAAAAAAA001 /* SRDebugOverlayView.swift in Sources */,
+				D1DB0A001AAAAAAAAAAAA003 /* SRDebugOverlayController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

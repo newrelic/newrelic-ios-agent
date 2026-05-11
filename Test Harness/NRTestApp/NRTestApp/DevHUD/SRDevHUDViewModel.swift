@@ -13,6 +13,8 @@ final class SRDevHUDViewModel: ObservableObject {
     @Published var harvestPeriod: Int = 60
     @Published var lastHarvestText: String = "never"
     @Published var sessionIdShort: String = "-"
+    @Published var overlayOn: Bool = false
+    @Published var overlayRectCount: Int = 0
 
     private var timer: Timer?
 
@@ -44,6 +46,16 @@ final class SRDevHUDViewModel: ObservableObject {
         refresh()
     }
 
+    func setOverlay(_ on: Bool) {
+        overlayOn = on
+        if on {
+            SRDebugOverlayController.shared?.start()
+        } else {
+            SRDebugOverlayController.shared?.stop()
+        }
+        refresh()
+    }
+
     private func refresh() {
         let mgr = NewRelic.debugSessionReplayManager()
         modeText = Self.describe(mgr?.getCurrentRecordingMode())
@@ -60,6 +72,14 @@ final class SRDevHUDViewModel: ObservableObject {
 
         let sid = NewRelic.currentSessionId() ?? "-"
         sessionIdShort = sid.count > 8 ? String(sid.suffix(8)) : sid
+
+        if let ctrl = SRDebugOverlayController.shared {
+            overlayOn = ctrl.isRunning
+            overlayRectCount = ctrl.view.rects.count
+        } else {
+            overlayOn = false
+            overlayRectCount = 0
+        }
     }
 
     private static func describe(_ mode: SessionReplayRecordingMode?) -> String {

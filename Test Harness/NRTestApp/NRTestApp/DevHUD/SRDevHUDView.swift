@@ -52,6 +52,24 @@ struct SRDevHUDView: View {
 
             Divider().background(Color.white.opacity(0.2))
 
+            Toggle(isOn: Binding(
+                get: { vm.overlayOn },
+                set: { vm.setOverlay($0) }
+            )) {
+                HStack {
+                    Text("Capture overlay")
+                    Spacer(minLength: 4)
+                    Text("\(vm.overlayRectCount) views")
+                        .foregroundColor(.white.opacity(0.55))
+                }
+            }
+            .toggleStyle(.switch)
+            .tint(.green)
+
+            if vm.overlayOn {
+                legend
+            }
+
             HStack(spacing: 8) {
                 Button("Harvest") { vm.forceHarvest() }
                     .buttonStyle(.bordered)
@@ -67,7 +85,27 @@ struct SRDevHUDView: View {
         .padding(10)
         .background(Color.black.opacity(0.85))
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .frame(minWidth: 220)
+        .frame(minWidth: 240)
+    }
+
+    private var legend: some View {
+        HStack(spacing: 8) {
+            swatch(.green,  "rec")
+            swatch(.orange, "mask")
+            swatch(.red,    "block")
+            swatch(.purple, "SwUI")
+            swatch(.yellow, "clear")
+        }
+        .font(.system(size: 9, design: .monospaced))
+    }
+
+    private func swatch(_ color: Color, _ label: String) -> some View {
+        HStack(spacing: 2) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(color.opacity(0.85))
+                .frame(width: 9, height: 9)
+            Text(label).foregroundColor(.white.opacity(0.75))
+        }
     }
 
     private func row(_ label: String, _ value: String) -> some View {

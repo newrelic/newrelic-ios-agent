@@ -507,9 +507,50 @@ public class SessionReplayManager: NSObject {
         }
         return documentsDirectory.appendingPathComponent(kNRMA_SessionReplayFrames_folder)
     }
-    
+
+#if DEBUG
+    /// Debug-only. Runs a throwaway SR capture on the key window and returns flattened
+    /// per-view rectangles for the NRTestApp Dev HUD overlay. Not used in production;
+    /// the result is not enqueued or harvested.
+    @MainActor
+    @objc public func debugCaptureOverlayRects() -> [SRDebugOverlayRect] {
+        guard let window = SessionReplayManager.debugKeyWindow() else { return [] }
+        let capture = SessionReplayCapture()
+        let frame = capture.recordFrom(rootView: window)
+        return SRDebugOverlayFlattener.flatten(frame: frame)
+    }
+
+    @MainActor
+    private static func debugKeyWindow() -> UIWindow? {
+        let scenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .filter { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }
+
+        for scene in scenes {
+            if let key = scene.windows.first(where: { $0.isKeyWindow && !($0 is SessionReplayDebugOverlayMarkerWindow) }) {
+                return key
+            }
+        }
+        // Fall back to the first non-overlay window so the HUD window itself isn't captured.
+        for scene in scenes {
+            if let w = scene.windows.first(where: { !($0 is SessionReplayDebugOverlayMarkerWindow) }) {
+                return w
+            }
+        }
+        return nil
+    }
+#endif
+
 #endif
 }
+
+#if DEBUG && (os(iOS) || os(tvOS))
+/// Marker protocol-class that the Dev HUD's overlay window conforms to, so the
+/// debug capture can skip its own overlay window when picking the key window.
+/// Declared in the agent so production code has a stable type to check against.
+@available(iOS 13.0, *)
+@objc open class SessionReplayDebugOverlayMarkerWindow: UIWindow {}
+#endif
 
 #if os(iOS) || os(tvOS)
 
