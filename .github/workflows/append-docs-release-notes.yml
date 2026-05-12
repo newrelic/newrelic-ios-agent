@@ -13,6 +13,9 @@ on:
     types: [closed]
     branches: [develop]
 
+permissions:
+  contents: read
+
 concurrency:
   group: docs-next-append
   cancel-in-progress: false
