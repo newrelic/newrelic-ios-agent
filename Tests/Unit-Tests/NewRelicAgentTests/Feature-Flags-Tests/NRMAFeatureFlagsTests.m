@@ -280,5 +280,43 @@ static NRMAFeatureFlags __originalFlags;
     XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
 }
 
+- (void) testJSErrorEventsFlags {
+    NRMAFeatureFlags flags = [NRMAFlags featureFlags];
+    XCTAssertFalse(flags, @"flags should be empty");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_JSErrorEvents];
+    flags = [NRMAFlags featureFlags];
+
+    XCTAssertTrue(flags & NRFeatureFlag_JSErrorEvents, @"JSErrorEvents should be enabled.");
+    XCTAssertFalse(flags & ~NRFeatureFlag_JSErrorEvents, @"no other bits should be enabled.");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+    flags = [NRMAFlags featureFlags];
+    XCTAssertFalse(flags & NRFeatureFlag_JSErrorEvents, @"JSErrorEvents should be disabled.");
+    XCTAssertFalse(flags, @"flags should be empty");
+}
+
+- (void) testShouldEnableJSErrorEvents {
+    XCTAssertFalse([NRMAFlags shouldEnableJSErrorEvents], @"since no flags have been set this should be false!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+
+    XCTAssertFalse([NRMAFlags shouldEnableJSErrorEvents], @"this should now be disabled");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_JSErrorEvents];
+
+    XCTAssertTrue([NRMAFlags shouldEnableJSErrorEvents], @"this should now be enabled!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+
+    XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
+}
+
+- (void) testJSErrorEventsEnabledByDefault {
+    // Use fresh flags to check defaults
+    NRMAFeatureFlags featureFlag = __originalFlags;
+    XCTAssertTrue(featureFlag & NRFeatureFlag_JSErrorEvents, @"JS Error reporting should be enabled by default!");
+}
+
 
 @end

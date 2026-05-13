@@ -151,8 +151,8 @@ public class SessionReplayReporter: NSObject {
             NRLOG_AGENT_DEBUG("Error accessing harvester configuration information")
             return nil
         }
-        guard let cStringAppVersion: UnsafePointer<CChar> = NRMA_getAppVersion(), let appVersion = String(validatingUTF8: cStringAppVersion) else {
-            NRLOG_AGENT_DEBUG("Error accessing app version information")
+        guard let connectionInfo = NRMAAgentConfiguration.connectionInformation() else {
+            NRLOG_AGENT_DEBUG("Error accessing connection information")
             return nil
         }
         var attributes: [String: String] = [
@@ -165,11 +165,16 @@ public class SessionReplayReporter: NSObject {
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(Int(firstTimestamp)),
             "replay.lastTimestamp": String(Int(lastTimestamp)),
-            "appVersion": appVersion,
+            "appVersion": {
+                guard let applicationInformation = connectionInfo.applicationInformation,
+                      let appVersion = applicationInformation.appVersion as String? else {
+                    return "unknown"
+                }
+                return appVersion
+            }(),
             "instrumentation.provider": "mobile",
             "instrumentation.name": {
-                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
-                      let deviceInfo = connectionInfo.deviceInformation else {
+                guard let deviceInfo = connectionInfo.deviceInformation else {
                     return NewRelicInternalUtils.agentName()
                 }
                 let platform = deviceInfo.platform
@@ -178,8 +183,7 @@ public class SessionReplayReporter: NSObject {
                     : NewRelicInternalUtils.string(from: platform)
             }(),
             "instrumentation.version": {
-                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
-                      let deviceInfo = connectionInfo.deviceInformation,
+                guard let deviceInfo = connectionInfo.deviceInformation,
                       let platformVersion = deviceInfo.platformVersion as String? else {
                     return NewRelicInternalUtils.agentVersion()
                 }

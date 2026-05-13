@@ -337,9 +337,6 @@ public class JSErrorController: NSObject {
             event["errorName"] = name
         }
 
-        // High-level error classification
-        event["errorType"] = "JavascriptError"
-
         if let isFatal = errorData["isFatal"] as? Bool {
             event["isFatalError"] = isFatal ? "true" : "false"
         }
