@@ -330,12 +330,15 @@ public class JSErrorController: NSObject {
         }
 
         if let message = errorData["message"] as? String {
-            event["description"] = message
+            event["errorMessage"] = message
         }
 
         if let name = errorData["name"] as? String {
-            event["errorType"] = name
+            event["errorName"] = name
         }
+
+        // High-level error classification
+        event["errorType"] = "JavascriptError"
 
         if let isFatal = errorData["isFatal"] as? Bool {
             event["isFatalError"] = isFatal ? "true" : "false"
@@ -510,5 +513,12 @@ public class JSErrorController: NSObject {
     /// Internal method for testing: clears persisted errors from disk
     @objc public func clearPersistedErrorsForTesting() {
         clearPersistedErrors()
+    }
+
+    /// Internal method for testing: formats an error as it would appear in the wire format
+    /// - Parameter errorData: The raw error data from the queue
+    /// - Returns: The formatted event as it would be sent over the wire
+    @objc public func formatErrorAsEventForTesting(_ errorData: [String: Any]) -> [String: Any] {
+        return formatErrorAsEvent(errorData)
     }
 }
