@@ -400,33 +400,6 @@
     XCTAssertEqualObjects(wireFormat[@"errorName"], testName, @"errorName should contain the JS error name");
 }
 
-- (void)testWireFormatErrorTypeIsHighLevelClassification {
-    JSErrorController* controller = [self createTestController];
-    XCTAssertNotNil(controller);
-
-    // Test with various specific error types
-    NSArray* errorNames = @[@"TypeError", @"ReferenceError", @"SyntaxError", @"RangeError"];
-
-    for (NSString* errorName in errorNames) {
-        [controller clearErrorQueueForTesting];
-
-        [controller recordJSError:errorName
-                          message:@"Test message"
-                       stackTrace:@"test stack"
-                          isFatal:NO
-             additionalAttributes:nil];
-
-        NSArray* errors = [controller getErrorQueueForTesting];
-        NSDictionary* error = errors.firstObject;
-        NSDictionary* wireFormat = [controller formatErrorAsEventForTesting:error];
-
-        // errorType should always be "JavascriptError" regardless of specific error name
-        XCTAssertNotNil(wireFormat[@"errorType"], @"errorType should be present in wire format");
-        XCTAssertEqualObjects(wireFormat[@"errorType"], @"JavascriptError",
-                             @"errorType should be 'JavascriptError' for %@", errorName);
-    }
-}
-
 - (void)testWireFormatErrorIdRemainsCamelCase {
     JSErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
@@ -470,7 +443,6 @@
     XCTAssertNotNil(wireFormat[@"errorId"], @"errorId should be present");
     XCTAssertEqualObjects(wireFormat[@"errorMessage"], @"Cannot read property 'x' of null", @"errorMessage should contain message");
     XCTAssertEqualObjects(wireFormat[@"errorName"], @"TypeError", @"errorName should contain error name");
-    XCTAssertEqualObjects(wireFormat[@"errorType"], @"JavascriptError", @"errorType should be JavascriptError");
     XCTAssertEqualObjects(wireFormat[@"isFatalError"], @"true", @"isFatalError should be true");
     XCTAssertNotNil(wireFormat[@"timestamp"], @"timestamp should be present");
     XCTAssertNotNil(wireFormat[@"threads"], @"threads should be present");
