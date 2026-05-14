@@ -27,8 +27,11 @@
 - NRFeatureFlag_CrashReporting 
    Enabled by default. Enable or disable New Relic's crash reporter.
 
-- NRHandledExceptionEvents
+- NRFeatureFlag_HandledExceptionEvents
    Enabled by default. Controls capture of handled exceptions via 'recordHandledException:' API.
+
+- NRFeatureFlag_JSErrorEvents
+   Enabled by default. Controls capture of JavaScript errors via 'recordJavascriptError:' API.
 
 - NRFeatureFlag_NSURLSessionInstrumentation
    Enable (default) or disable flag for instrumentation of NSURLSessions.
@@ -103,4 +106,5 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
     NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
     NRFeatureFlag_AutoCollectLogs                       = 1 << 23, // Disabled by default
+    NRFeatureFlag_JSErrorEvents                         = 1 << 24  // Enabled by default
 };

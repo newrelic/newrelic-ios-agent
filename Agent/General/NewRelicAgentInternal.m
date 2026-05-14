@@ -612,18 +612,20 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 #if TARGET_OS_IOS
     // Initialize JS Error Controller for Mobile Errors Protocol (iOS only - for React Native)
-    self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
-                                                                    sessionStartTime:self.appSessionStartDate
-                                                                  agentConfiguration:self.agentConfiguration
-                                                                            platform:@"reactnative"
-                                                                           sessionId:[self currentSessionId]
-                                                                  attributeValidator:[[NRMAAttributeValidator alloc] init]];
+    if ([NRMAFlags shouldEnableJSErrorEvents]) {
+        self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
+                                                                        sessionStartTime:self.appSessionStartDate
+                                                                      agentConfiguration:self.agentConfiguration
+                                                                                platform:@"reactnative"
+                                                                               sessionId:[self currentSessionId]
+                                                                      attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-    if (self.jsErrorController != nil) {
+        if (self.jsErrorController != nil) {
 
-        // Use adapter to bridge Swift controller with harvest protocol
-        NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
-        [NRMAHarvestController addHarvestListener:harvestAdapter];
+            // Use adapter to bridge Swift controller with harvest protocol
+            NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
+            [NRMAHarvestController addHarvestListener:harvestAdapter];
+        }
     }
 #endif
 

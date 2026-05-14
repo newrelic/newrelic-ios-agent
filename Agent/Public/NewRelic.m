@@ -761,6 +761,12 @@
         return false;
     }
 
+    // Check if JSError feature flag is enabled
+    if (![NRMAFlags shouldEnableJSErrorEvents]) {
+        NRLOG_AGENT_VERBOSE(@"JS Error reporting is disabled via feature flag. Cannot record JS error.");
+        return false;
+    }
+
 #if TARGET_OS_IOS
     // Get the JS Error Controller (iOS only - for React Native)
     JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
