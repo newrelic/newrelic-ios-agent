@@ -27,8 +27,8 @@ jobs:
   ios-data:
     name: Generate iOS data
     runs-on: ubuntu-latest
-    # Only run if manually triggered or if uploadApp workflow succeeded
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Only run if manually triggered from main, or if trusted uploadApp workflow_run succeeded from main
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'push') }}
     env:
       LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
