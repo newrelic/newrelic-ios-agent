@@ -16,14 +16,15 @@ static NRMAFeatureFlags __originalFlags;
 
 @implementation NRMAFeatureFlagsTests
 
++ (void)initialize {
+    if (self == [NRMAFeatureFlagsTests class]) {
+        __originalFlags = [NRMAFlags featureFlags];
+    }
+}
+
 - (void)setUp
 {
     [super setUp];
-
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        __originalFlags = [NRMAFlags featureFlags];
-    });
     [NRMAFlags setFeatureFlags:0];
 }
 
