@@ -68,6 +68,7 @@ class UtilViewModel {
         options.append(UtilOption(title: "Make 100 Special Character Logs", handler: { [self] in make100SpecialCharacterLogs()}))
 
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
+        options.append(UtilOption(title: "Record JavaScript Error", handler: { [self] in recordJavascriptError()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
 
@@ -259,6 +260,19 @@ class UtilViewModel {
         let dataTask = urlSession.dataTask(with: request)
 
         dataTask.resume()
+    }
+
+    func recordJavascriptError() {
+        NewRelic.recordJavascriptError(
+            "TypeError",
+            message: "Cannot read property 'foo' of undefined",
+            stackTrace: "at myFunction (app.js:42:15)\nat anotherFunction (app.js:30:5)\nat main (app.js:10:3)",
+            isFatal: false,
+            additionalAttributes: [
+                "component": "TestComponent",
+                "cause": "Felt like it."
+            ]
+        )
     }
 
     @objc func make100SpecialCharacterLogs() {

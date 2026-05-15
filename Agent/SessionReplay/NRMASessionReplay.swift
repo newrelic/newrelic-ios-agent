@@ -73,7 +73,7 @@ public class NRMASessionReplay: NSObject {
         // sessionReplayFrameProcessor.useIncrementalDiffs = false // Only take full snapshots, not incremental diffs
         
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        self.framesDirectory = documentsPath.appendingPathComponent("SessionReplayFrames")
+        self.framesDirectory = documentsPath.appendingPathComponent(kNRMA_SessionReplayFrames_folder)
         
         super.init()
         
