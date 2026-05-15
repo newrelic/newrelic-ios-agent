@@ -619,18 +619,20 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 #if TARGET_OS_IOS
     // Initialize JS Error Controller for Mobile Errors Protocol (iOS only - for React Native)
-    self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
-                                                                    sessionStartTime:self.appSessionStartDate
-                                                                  agentConfiguration:self.agentConfiguration
-                                                                            platform:@"reactnative"
-                                                                           sessionId:[self currentSessionId]
-                                                                  attributeValidator:[[NRMAAttributeValidator alloc] init]];
+    if ([NRMAFlags shouldEnableJSErrorEvents]) {
+        self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
+                                                                        sessionStartTime:self.appSessionStartDate
+                                                                      agentConfiguration:self.agentConfiguration
+                                                                                platform:@"reactnative"
+                                                                               sessionId:[self currentSessionId]
+                                                                      attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-    if (self.jsErrorController != nil) {
+        if (self.jsErrorController != nil) {
 
-        // Use adapter to bridge Swift controller with harvest protocol
-        NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
-        [NRMAHarvestController addHarvestListener:harvestAdapter];
+            // Use adapter to bridge Swift controller with harvest protocol
+            NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
+            [NRMAHarvestController addHarvestListener:harvestAdapter];
+        }
     }
 #endif
 
@@ -710,8 +712,13 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         if (m != SessionReplayRecordingModeOff) {
             
             [_sessionReplay startFromManual:FALSE with:m];
-            @synchronized(kNRMAAnalyticsInitializationLock) {
-                [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+
+            // Only add hasReplay attribute if starting in full mode
+            // For error mode, the attribute will be added when an error occurs
+            if (m == SessionReplayRecordingModeFull) {
+                @synchronized(kNRMAAnalyticsInitializationLock) {
+                    [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+                }
             }
         }
     }
@@ -872,14 +879,6 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     // Update session duration manager with new session start time for 4-hour session timeout
     [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
-    
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-    if (@available(iOS 13.0, *)) {
-        if ([self isSessionReplaySampled] && [self isSessionReplayEnabled]) {
-            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]]; // Add the hasReplay attribute here incase the analytics controller wasn't created at the start of the session replay.
-        }
-    }
-#endif
 }
 
 - (void) handle4HourSessionRestart {

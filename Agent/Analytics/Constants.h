@@ -92,6 +92,7 @@ extern NSString *const kNRMA_Attrib_file_private;
 extern NSString *const  kNRMA_EventStoreFilename;
 
 extern NSString *const kNRMA_Offline_folder;
+extern NSString *const kNRMA_SessionReplayFrames_folder;
 
 extern NSString *const kNRMA_Collector_connect_url;
 extern NSString *const kNRMA_Collector_data_url;

@@ -17,6 +17,8 @@
 
 + (BOOL) shouldEnableHandledExceptionEvents;
 
++ (BOOL) shouldEnableJSErrorEvents;
+
 + (BOOL) shouldEnableGestureInstrumentation;
 
 + (BOOL) shouldEnableNSURLSessionInstrumentation;
