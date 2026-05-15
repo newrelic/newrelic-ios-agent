@@ -355,6 +355,106 @@
     XCTAssertEqual(errors.count, 0, @"Should not record error with empty message");
 }
 
+// MARK: - Wire Format Tests
+
+- (void)testWireFormatContainsErrorMessage {
+    JSErrorController* controller = [self createTestController];
+    XCTAssertNotNil(controller);
+
+    NSString* testMessage = @"Cannot read property 'foo' of undefined";
+    [controller recordJSError:@"TypeError"
+                      message:testMessage
+                   stackTrace:@"at testFunction (app.js:123:45)"
+                      isFatal:NO
+         additionalAttributes:nil];
+
+    NSArray* errors = [controller getErrorQueueForTesting];
+    NSDictionary* error = errors.firstObject;
+    NSDictionary* wireFormat = [controller formatErrorAsEventForTesting:error];
+
+    // errorMessage should be present and contain the message
+    XCTAssertNotNil(wireFormat[@"errorMessage"], @"errorMessage should be present in wire format");
+    XCTAssertEqualObjects(wireFormat[@"errorMessage"], testMessage, @"errorMessage should contain the error message");
+
+    // description should NOT be present (deprecated)
+    XCTAssertNil(wireFormat[@"description"], @"description attribute should no longer be present");
+}
+
+- (void)testWireFormatContainsErrorName {
+    JSErrorController* controller = [self createTestController];
+    XCTAssertNotNil(controller);
+
+    NSString* testName = @"TypeError";
+    [controller recordJSError:testName
+                      message:@"Test error message"
+                   stackTrace:@"at testFunction (app.js:123:45)"
+                      isFatal:NO
+         additionalAttributes:nil];
+
+    NSArray* errors = [controller getErrorQueueForTesting];
+    NSDictionary* error = errors.firstObject;
+    NSDictionary* wireFormat = [controller formatErrorAsEventForTesting:error];
+
+    // errorName should be present and contain the error name
+    XCTAssertNotNil(wireFormat[@"errorName"], @"errorName should be present in wire format");
+    XCTAssertEqualObjects(wireFormat[@"errorName"], testName, @"errorName should contain the JS error name");
+}
+
+- (void)testWireFormatErrorIdRemainsCamelCase {
+    JSErrorController* controller = [self createTestController];
+    XCTAssertNotNil(controller);
+
+    [controller recordJSError:@"TestError"
+                      message:@"Test message"
+                   stackTrace:@"test stack"
+                      isFatal:NO
+         additionalAttributes:nil];
+
+    NSArray* errors = [controller getErrorQueueForTesting];
+    NSDictionary* error = errors.firstObject;
+    NSDictionary* wireFormat = [controller formatErrorAsEventForTesting:error];
+
+    // errorId should be present and in camelCase format
+    XCTAssertNotNil(wireFormat[@"errorId"], @"errorId should be present in wire format");
+    XCTAssertTrue([wireFormat[@"errorId"] isKindOfClass:[NSString class]], @"errorId should be a string");
+
+    // Verify it's NOT in other formats (snake_case, kebab-case, etc.)
+    XCTAssertNil(wireFormat[@"error_id"], @"error_id (snake_case) should not be present");
+    XCTAssertNil(wireFormat[@"error-id"], @"error-id (kebab-case) should not be present");
+    XCTAssertNil(wireFormat[@"ErrorId"], @"ErrorId (PascalCase) should not be present");
+}
+
+- (void)testWireFormatCompleteStructure {
+    JSErrorController* controller = [self createTestController];
+    XCTAssertNotNil(controller);
+
+    [controller recordJSError:@"TypeError"
+                      message:@"Cannot read property 'x' of null"
+                   stackTrace:@"at function (file.js:10:5)"
+                      isFatal:YES
+         additionalAttributes:@{@"screen": @"HomeScreen", @"userId": @"12345"}];
+
+    NSArray* errors = [controller getErrorQueueForTesting];
+    NSDictionary* error = errors.firstObject;
+    NSDictionary* wireFormat = [controller formatErrorAsEventForTesting:error];
+
+    // Verify all expected attributes are present with correct names
+    XCTAssertEqualObjects(wireFormat[@"eventType"], @"MobileJSError", @"eventType should be MobileJSError");
+    XCTAssertNotNil(wireFormat[@"errorId"], @"errorId should be present");
+    XCTAssertEqualObjects(wireFormat[@"errorMessage"], @"Cannot read property 'x' of null", @"errorMessage should contain message");
+    XCTAssertEqualObjects(wireFormat[@"errorName"], @"TypeError", @"errorName should contain error name");
+    XCTAssertEqualObjects(wireFormat[@"isFatalError"], @"true", @"isFatalError should be true");
+    XCTAssertNotNil(wireFormat[@"timestamp"], @"timestamp should be present");
+    XCTAssertNotNil(wireFormat[@"threads"], @"threads should be present");
+
+    // Verify additional attributes are merged
+    XCTAssertEqualObjects(wireFormat[@"screen"], @"HomeScreen", @"Custom attributes should be merged");
+    XCTAssertEqualObjects(wireFormat[@"userId"], @"12345", @"Custom attributes should be merged");
+
+    // Verify deprecated attributes are NOT present
+    XCTAssertNil(wireFormat[@"description"], @"description should not be present");
+}
+
 // MARK: - Helper Methods
 
 // MARK: - Persistence and Duplicate Prevention Tests

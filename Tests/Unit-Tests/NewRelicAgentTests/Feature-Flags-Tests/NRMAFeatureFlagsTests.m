@@ -16,14 +16,15 @@ static NRMAFeatureFlags __originalFlags;
 
 @implementation NRMAFeatureFlagsTests
 
++ (void)initialize {
+    if (self == [NRMAFeatureFlagsTests class]) {
+        __originalFlags = [NRMAFlags featureFlags];
+    }
+}
+
 - (void)setUp
 {
     [super setUp];
-
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        __originalFlags = [NRMAFlags featureFlags];
-    });
     [NRMAFlags setFeatureFlags:0];
 }
 
@@ -40,8 +41,17 @@ static NRMAFeatureFlags __originalFlags;
 {
     NRMAFeatureFlags featureFlag = __originalFlags;
     XCTAssertTrue(featureFlag & NRFeatureFlag_CrashReporting, @"crash reporting should be enabled by default!!");
-    XCTAssertFalse(featureFlag & NRFeatureFlag_NetworkRequestEvents, @"Network requests events should be disabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_InteractionTracing, @"interaction tracing should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_NSURLSessionInstrumentation, @"NSURLSession instrumentation should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_HttpResponseBodyCapture, @"HTTP response body capture should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_DefaultInteractions, @"default interactions should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_WebViewInstrumentation, @"web view instrumentation should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_HandledExceptionEvents, @"handled exception events should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_NetworkRequestEvents, @"Network requests events should be enabled by default!!");
     XCTAssertTrue(featureFlag & NRFeatureFlag_RequestErrorEvents, @"request error events should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_DistributedTracing, @"distributed tracing should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_AppStartMetrics, @"app start metrics should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_JSErrorEvents, @"JS error events should be enabled by default!!");
 }
 
 - (void) testNetworkRequestEventsFlags {
@@ -278,6 +288,44 @@ static NRMAFeatureFlags __originalFlags;
     [NRMAFlags disableFeatures:NRFeatureFlag_LogReporting];
 
     XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
+}
+
+- (void) testJSErrorEventsFlags {
+    NRMAFeatureFlags flags = [NRMAFlags featureFlags];
+    XCTAssertFalse(flags, @"flags should be empty");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_JSErrorEvents];
+    flags = [NRMAFlags featureFlags];
+
+    XCTAssertTrue(flags & NRFeatureFlag_JSErrorEvents, @"JSErrorEvents should be enabled.");
+    XCTAssertFalse(flags & ~NRFeatureFlag_JSErrorEvents, @"no other bits should be enabled.");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+    flags = [NRMAFlags featureFlags];
+    XCTAssertFalse(flags & NRFeatureFlag_JSErrorEvents, @"JSErrorEvents should be disabled.");
+    XCTAssertFalse(flags, @"flags should be empty");
+}
+
+- (void) testShouldEnableJSErrorEvents {
+    XCTAssertFalse([NRMAFlags shouldEnableJSErrorEvents], @"since no flags have been set this should be false!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+
+    XCTAssertFalse([NRMAFlags shouldEnableJSErrorEvents], @"this should now be disabled");
+
+    [NRMAFlags enableFeatures:NRFeatureFlag_JSErrorEvents];
+
+    XCTAssertTrue([NRMAFlags shouldEnableJSErrorEvents], @"this should now be enabled!");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+
+    XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
+}
+
+- (void) testJSErrorEventsEnabledByDefault {
+    // Use fresh flags to check defaults
+    NRMAFeatureFlags featureFlag = __originalFlags;
+    XCTAssertTrue(featureFlag & NRFeatureFlag_JSErrorEvents, @"JS Error reporting should be enabled by default!");
 }
 
 

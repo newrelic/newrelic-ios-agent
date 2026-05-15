@@ -500,7 +500,7 @@ public class SessionReplayManager: NSObject {
         guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             return nil
         }
-        return documentsDirectory.appendingPathComponent("SessionReplayFrames")
+        return documentsDirectory.appendingPathComponent(kNRMA_SessionReplayFrames_folder)
     }
     
 #endif
