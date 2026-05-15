@@ -31,12 +31,32 @@ NS_ASSUME_NONNULL_BEGIN
  * on any UIViewController subclass and it will be picked up automatically.
  *
  * Objective-C:
- *   - (NSString *)nrMobileViewName { return @"Product Detail"; }
+ *   - (nullable NSString *)nrMobileViewName { return @"Product Detail"; }
  *
  * Swift (no 'override' — there is no base implementation to override):
- *   @objc func nrMobileViewName() -> String { "Product Detail" }
+ *   @objc func nrMobileViewName() -> String? { "Product Detail" }
  *
- * Return nil or empty string to use the default demangled class name.
+ * Return values:
+ *   - non-empty string → used as viewName.
+ *   - empty string ""  → falls back to the demangled class name (legacy).
+ *   - nil              → view is IGNORED entirely; no MobileView events emitted.
+ *
+ * ─── Custom attributes ───────────────────────────────────────────────────────
+ *
+ * Optionally implement nrMobileViewAttributes to attach extra attributes to every
+ * MobileView event emitted for the view. Reserved keys (viewClass, viewName,
+ * viewInstanceId, restarted, loadTime, timeVisible, appeared, uiPlatform,
+ * agentName) cannot be overridden.
+ *
+ * Objective-C:
+ *   - (nullable NSDictionary<NSString *, id> *)nrMobileViewAttributes {
+ *       return @{ @"productId": @42, @"section": @"detail" };
+ *   }
+ *
+ * Swift:
+ *   @objc func nrMobileViewAttributes() -> [String: Any]? {
+ *       ["productId": 42, "section": "detail"]
+ *   }
  * ─────────────────────────────────────────────────────────────────────────────
  */
 @interface NRMAMobileViewTracker : NSObject

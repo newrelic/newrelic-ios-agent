@@ -119,6 +119,12 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: SwiftUITabBar()) {
                         Text("Tab Bar (NRMobileTabTracking)")
                     }
+                    NavigationLink(destination: MobileViewAttributesDemoView()) {
+                        Text("MobileView · Custom Attributes")
+                    }
+                    NavigationLink(destination: MobileViewIgnoredDemoView()) {
+                        Text("MobileView · Ignored")
+                    }
                     if #available(iOS 16.0, *) {
                         NRMobileNavigationLink(name: "NavigationStackView") {
                             NavigationStackView()

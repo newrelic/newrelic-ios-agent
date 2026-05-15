@@ -50,76 +50,67 @@ public extension SwiftUI.View {
 /// viewInstanceId per appearance, matching the UIKit NRMAMobileViewTracker schema.
 @available(iOS 13, tvOS 13, *)
 internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
-    
+
     let viewName: String
     let viewClass: String
-    
+    let customAttributes: [String: Any]?
+    let ignored: Bool
+
     @State private var appearTime: Date?
     @State private var instanceId: String?
     @State private var hasAppearedBefore: Bool = false
-    
+
     // Approximation of "load time": modifier creation → onAppear
     private let modifierCreatedAt = Date()
-    
+
     func body(content: Content) -> some View {
         content
             .onAppear {
+                if ignored { return }
                 if NRMA_ShouldSkipViewName(viewName) { return }
 
                 let now = Date()
                 let id = UUID().uuidString
                 appearTime = now
                 instanceId = id
-                
+
                 // loadTime: modifier creation (≈ view body evaluation) → onAppear
                 let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
 
-                NewRelic.recordCustomEvent("MobileView", attributes: [
-                    "viewClass":      viewClass,
-                    "viewName":       viewName,
-                    "viewInstanceId": id,
-                    "restarted":      NSNumber(value: hasAppearedBefore),
-                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
-                    "appeared":       NSNumber(value: true),
-                    "uiPlatform":       "SwiftUI",
-                    "agentName": "iOS",
-                    "crashCount":0,
-                    "hexCount": 0,
-                    "requestErrorCount": 0,
-                    "anrCount": 0,
-                    "requestCount": 0,
-                    "userActionCount": 0,
-                ])
+                var attrs: [String: Any] = customAttributes ?? [:]
+                // Reserved keys overwrite any caller-supplied values to keep the event schema stable.
+                attrs["viewClass"]      = viewClass
+                attrs["viewName"]       = viewName
+                attrs["viewInstanceId"] = id
+                attrs["restarted"]      = NSNumber(value: hasAppearedBefore)
+                attrs["loadTime"]       = NSNumber(value: max(loadTimeSec, 0.0))
+                attrs["appeared"]       = NSNumber(value: true)
+                attrs["uiPlatform"]     = "SwiftUI"
+                attrs["agentName"]      = "iOS"
+                NewRelic.recordCustomEvent("MobileView", attributes: attrs)
             }
             .onDisappear {
+                if ignored { return }
                 if NRMA_ShouldSkipViewName(viewName) { return }
 
                 let disappearTime = Date()
                 guard let appeared = appearTime, let id = instanceId else { return }
-                
+
                 let timeVisibleSec = disappearTime.timeIntervalSince(appeared)
                 // loadTime is currently only included in appeared = true
                // let loadTimeSec    = appeared.timeIntervalSince(modifierCreatedAt)
-                
-                NewRelic.recordCustomEvent("MobileView", attributes: [
-                    "viewClass":      viewClass,
-                    "viewName":       viewName,
-                    "viewInstanceId": id,
-                    "restarted":      NSNumber(value: hasAppearedBefore),
-                    // loadTime is currently only included in appeared = true
-//                    "loadTime":       NSNumber(value: max(loadTimeSec, 0.0)),
-                    "timeVisible":    NSNumber(value: max(timeVisibleSec, 0.0)),
-                    "uiPlatform":       "SwiftUI",
-                    "appeared":       NSNumber(value: false),
-                    "agentName": "iOS",
-                    "crashCount":0,
-                    "hexCount": 0,
-                    "requestErrorCount": 0,
-                    "anrCount": 0,
-                    "requestCount": 0,
-                    "userActionCount": 0,
-                ])
-                
+
+                var attrs: [String: Any] = customAttributes ?? [:]
+                attrs["viewClass"]      = viewClass
+                attrs["viewName"]       = viewName
+                attrs["viewInstanceId"] = id
+                attrs["restarted"]      = NSNumber(value: hasAppearedBefore)
+                attrs["timeVisible"]    = NSNumber(value: max(timeVisibleSec, 0.0))
+                attrs["uiPlatform"]     = "SwiftUI"
+                attrs["appeared"]       = NSNumber(value: false)
+                attrs["agentName"]      = "iOS"
+                NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+
                 hasAppearedBefore = true
                 appearTime = nil
                 instanceId = nil
@@ -129,17 +120,28 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 
 /// Attach this modifier to SwiftUI views to emit MobileView events.
 /// Enable via NRFeatureFlag_MobileViews.
+///
+/// - Parameters:
+///   - name: Display name for the view. Defaults to the SwiftUI view type name.
+///   - attributes: Optional custom attributes merged into every MobileView event emitted
+///     for this view. Reserved keys (viewClass, viewName, viewInstanceId, restarted,
+///     loadTime, timeVisible, appeared, uiPlatform, agentName) are not overridden.
+///   - ignored: When true, no MobileView events are emitted for this view. Default false.
 @available(iOS 13, tvOS 13, *)
 public extension SwiftUI.View {
-    func NRMobileView(name: String? = nil) -> some View {
+    func NRMobileView(name: String? = nil,
+                      attributes: [String: Any]? = nil,
+                      ignored: Bool = false) -> some View {
         // String(reflecting:) produces a noisy generic modifier stack when views are chained
         // (e.g. "SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<...>>"), so we use
         // String(describing:) for a clean simple name, or the caller-supplied name if given.
         let simpleName = String(describing: type(of: self))
         let resolved   = name ?? simpleName
         return modifier(NRMobileViewModifier(
-            viewName:  resolved,
-            viewClass: resolved
+            viewName:         resolved,
+            viewClass:        resolved,
+            customAttributes: attributes,
+            ignored:          ignored
         ))
     }
     
@@ -268,12 +270,6 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
                     // loadTime ≈ 0 for tab switches; semantics caveat in docs
                     "appeared":       NSNumber(value: false),
                     "agentName": "iOS",
-                    "crashCount":0,
-                    "hexCount": 0,
-                    "requestErrorCount": 0,
-                    "anrCount": 0,
-                    "requestCount": 0,
-                    "userActionCount": 0,
                 ])
             }
     }

@@ -68,6 +68,10 @@
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
+		ABCDE10010000000000001A1 /* MobileViewAttributesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */; };
+		ABCDE10010000000000001B1 /* MobileViewIgnoredDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */; };
+		ABCDE10010000000000001C1 /* MobileViewAttributesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */; };
+		ABCDE10010000000000001D1 /* MobileViewIgnoredViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
@@ -394,6 +398,10 @@
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
 		D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTestViewController.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesDemoView.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredDemoView.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesViewController.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredViewController.swift; sourceTree = "<group>"; };
 		D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CustomSwitch.swift; path = ../CustomSwitch.swift; sourceTree = "<group>"; };
 		D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToggleStyle.swift; sourceTree = "<group>"; };
 		F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS) Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -566,6 +574,8 @@
 				2BAE5C892E860C7D001D2B88 /* SteppersView.swift */,
 				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
 				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
+				ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */,
+				ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -749,6 +759,8 @@
 				F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
+				ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */,
+				ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1353,6 +1365,10 @@
 				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */,
+				ABCDE10010000000000001A1 /* MobileViewAttributesDemoView.swift in Sources */,
+				ABCDE10010000000000001B1 /* MobileViewIgnoredDemoView.swift in Sources */,
+				ABCDE10010000000000001C1 /* MobileViewAttributesViewController.swift in Sources */,
+				ABCDE10010000000000001D1 /* MobileViewIgnoredViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */,

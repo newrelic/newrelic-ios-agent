@@ -154,24 +154,51 @@ BOOL NRMA_ShouldSkipClass(Class cls) {
     return NRMA_ShouldSkipViewName(NSStringFromClass(cls));
 }
 
-// File-private — used only for a type-safe cast when calling the informal hook.
-// Developers never need to adopt this; it exists solely to avoid a compiler warning.
+// File-private — used only for a type-safe cast when calling the informal hooks.
+// Developers never need to adopt these; they exist solely to avoid compiler warnings.
 @protocol _NRMVNameHook <NSObject>
-- (NSString *)nrMobileViewName;
+- (nullable NSString *)nrMobileViewName;
+@end
+
+@protocol _NRMVAttrHook <NSObject>
+- (nullable NSDictionary<NSString *, id> *)nrMobileViewAttributes;
 @end
 
 #if !TARGET_OS_WATCH
 
-NS_INLINE NSString *NRMA_ViewNameForController(UIViewController *vc) {
-    // Informal protocol: if the VC implements nrMobileViewName (ObjC or @objc Swift),
-    // use it; otherwise fall back to the demangled class name.
+/**
+ * Resolves the display name for a view controller, honoring the optional
+ * nrMobileViewName hook.
+ *
+ * Returns nil to signal "ignore this view" — happens only when the VC implements
+ * nrMobileViewName and explicitly returns nil. Empty string falls back to the
+ * demangled class name (legacy behavior).
+ */
+NS_INLINE NSString * _Nullable NRMA_ViewNameForController(UIViewController *vc) {
     SEL sel = @selector(nrMobileViewName);
     if ([vc respondsToSelector:sel]) {
         NSString *custom = [(id<_NRMVNameHook>)vc nrMobileViewName];
+        if (custom == nil) {
+            // Explicit nil = caller wants this view ignored.
+            return nil;
+        }
         if (custom.length > 0) return custom;
+        // Empty string: fall through to class name.
     }
     // Demangled simple name, e.g. "ProductDetailViewController"
     return NRMA_DemangledName([vc class], NO);
+}
+
+/**
+ * Returns custom attributes from the optional nrMobileViewAttributes hook, or nil.
+ * Attributes are merged into emitted MobileView events; reserved keys win.
+ */
+NS_INLINE NSDictionary<NSString *, id> * _Nullable NRMA_AttributesForController(UIViewController *vc) {
+    SEL sel = @selector(nrMobileViewAttributes);
+    if ([vc respondsToSelector:sel]) {
+        return [(id<_NRMVAttrHook>)vc nrMobileViewAttributes];
+    }
+    return nil;
 }
 
 #pragma mark - Swizzled method implementations
@@ -182,8 +209,10 @@ static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
     if (NRMA_ShouldSkipClass([self class])) return;
 
     NSString *viewName  = NRMA_ViewNameForController(self);
+    // nil viewName = caller's nrMobileViewName returned nil → ignore this view.
+    if (viewName == nil) return;
     if (NRMA_ShouldSkipViewName(viewName)) return;
-    
+
     objc_setAssociatedObject(self, &kNRLoadTimestampKey,
                              @(CFAbsoluteTimeGetCurrent()),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -195,8 +224,9 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     if (NRMA_ShouldSkipClass([self class])) return;
 
     NSString *viewName  = NRMA_ViewNameForController(self);
+    if (viewName == nil) return;
     if (NRMA_ShouldSkipViewName(viewName)) return;
-    
+
     objc_setAssociatedObject(self, &kNRAppearTimestampKey,
                              @(CFAbsoluteTimeGetCurrent()),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -205,25 +235,23 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     objc_setAssociatedObject(self, &kNRViewInstanceIdKey,
                              uuid,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    
+
     NSString *viewClass = NRMA_DemangledName([self class], YES);
 
-    [NewRelic recordCustomEvent:kNRMobileViewEventType
-                     attributes:@{
+    NSDictionary<NSString *, id> *custom = NRMA_AttributesForController(self);
+    NSMutableDictionary<NSString *, id> *attrs =
+        [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
+    // Reserved keys win over caller-supplied ones to keep the event schema stable.
+    [attrs addEntriesFromDictionary:@{
         kNRAttr_viewClass:      viewClass,
         kNRAttr_viewName:       viewName,
         kNRAttr_viewInstanceId: uuid,
-        @"appeared": @YES,
-        @"uiPlatform":       @"UIKit",
-        @"agentName": @"iOS",
-//        @"crashCount": @0,
-//        @"hexCount": @0,
-//        @"requestErrorCount": @0,
-//        @"anrCount": @0,
-//        @"requestCount": @0,
-//        @"userActionCount": @0,
-
+        @"appeared":            @YES,
+        @"uiPlatform":          @"UIKit",
+        @"agentName":           @"iOS",
     }];
+
+    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 }
 
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
@@ -239,9 +267,14 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     NSNumber *hasAppearedBefore  = objc_getAssociatedObject(self, &kNRHasAppearedBeforeKey);
 
     if (!appearTimestamp || !instanceId) {
-        // viewDidAppear was never observed for this instance (agent started mid-session)
+        // viewDidAppear was never observed for this instance (agent started mid-session,
+        // or the view was ignored on appear).
         return;
     }
+
+    // viewName: simple demangled name (or custom override), e.g. "ProductDetailViewController"
+    NSString *viewName  = NRMA_ViewNameForController(self);
+    if (viewName == nil) return;
 
     double timeVisibleSec = (disappearTime - appearTimestamp.doubleValue); //* 1000.0;
     double loadTimeSec    = 0.0;
@@ -253,28 +286,23 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     BOOL isRestarted = (hasAppearedBefore != nil && hasAppearedBefore.boolValue);
     // viewClass: fully-qualified demangled name, e.g. "MyApp.ProductDetailViewController"
     NSString *viewClass = NRMA_DemangledName([self class], YES);
-    // viewName: simple demangled name (or custom override), e.g. "ProductDetailViewController"
-    NSString *viewName  = NRMA_ViewNameForController(self);
 
-    [NewRelic recordCustomEvent:kNRMobileViewEventType
-                     attributes:@{
+    NSDictionary<NSString *, id> *custom = NRMA_AttributesForController(self);
+    NSMutableDictionary<NSString *, id> *attrs =
+        [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
+    [attrs addEntriesFromDictionary:@{
         kNRAttr_viewClass:      viewClass,
         kNRAttr_viewName:       viewName,
         kNRAttr_viewInstanceId: instanceId,
         kNRAttr_restarted:      @(isRestarted),
         kNRAttr_loadTime:       @(loadTimeSec),
         kNRAttr_timeVisible:    @(timeVisibleSec),
-        @"appeared": @NO,
-        @"uiPlatform":       @"UIKit",
-        @"agentName": @"iOS",
-        @"crashCount": @0,
-        @"hexCount": @0,
-        @"requestErrorCount": @0,
-        @"anrCount": @0,
-        @"requestCount": @0,
-        @"userActionCount": @0,
-
+        @"appeared":            @NO,
+        @"uiPlatform":          @"UIKit",
+        @"agentName":           @"iOS",
     }];
+
+    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 
     //NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
     //                    viewName, loadTimeSec, timeVisibleSec, isRestarted ? @"YES" : @"NO");
