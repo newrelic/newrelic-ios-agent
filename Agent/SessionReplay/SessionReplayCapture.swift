@@ -15,6 +15,7 @@ import WebKit
 @objcMembers
 class SessionReplayCapture {
     private var layoutContainerViewCount: Int = 0
+    private var navigationStackDepth: Int = 0
 
     // Weak reference to session replay instance to access rrweb events
     weak var sessionReplay: NRMASessionReplay?
@@ -30,8 +31,9 @@ class SessionReplayCapture {
         var rootSwiftUIViewID: Int? = nil
         var rootThingy = findRecorderForView(view: rootView)
         
-        // Reset counter for this frame capture
+        // Reset counters for this frame capture
         layoutContainerViewCount = 0
+        navigationStackDepth = 0
         
         // Build tree using recursive approach to properly handle value semantics
         buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
@@ -39,30 +41,39 @@ class SessionReplayCapture {
         // Set nextId for all views after tree is built
         setNextIdRecursively(for: &rootThingy)
         
-        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size:  rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount)
+        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
-        
-        // Process UIKit subviews
-        for subview in currentView.subviews {
-            if shouldRecord(view: subview) {
-                var childThingy = findRecorderForView(view: subview)
-                if childThingy.viewDetails.isVisible {
-                    buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-                    parentThingy.subviews.append(childThingy)
+
+        // Process UIKit subviews only if current view should record subviews
+        if parentThingy.shouldRecordSubviewsComputed {
+            for subview in currentView.subviews {
+                if shouldRecord(view: subview) {
+                    var childThingy = findRecorderForView(view: subview)
+                    if childThingy.viewDetails.isVisible {
+                        buildViewTree(for: subview, into: &childThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+                        parentThingy.subviews.append(childThingy)
+                    }
+                } else {
+                    buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
                 }
-            } else {
-                buildViewTree(for: subview, into: &parentThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
             }
         }
         
-        // Handle SwiftUI hosting views
-        if let viewController = extractVC(from: currentView),
-           ControllerTypeDetector(from: NSStringFromClass(type(of: viewController))) == .hostingController {
+        // Handle SwiftUI hosting views.
+        if let viewController = extractVC(from: currentView) {
+            let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
+            if vcType == .hostingController || vcType == .navigationStackHostingController {
             let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") && className.contains("RootView") {
+            if className.contains("_UIHostingView") {
                 rootSwiftUIViewID = parentThingy.viewDetails.viewId
+                // Count each NavigationStack destination hosting view (one per pushed screen).
+                // This depth value is checked in SessionReplayFrameProcessor to force an
+                // immediate full snapshot on push or pop, matching layoutContainerViewCount's role.
+                if vcType == .navigationStackHostingController {
+                    navigationStackDepth += 1
+                }
             }
             
             let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
@@ -78,19 +89,38 @@ class SessionReplayCapture {
                                                        maskUserInputText: currentView.maskUserInputText,
                                                        maskAllImages: currentView.maskAllImages,
                                                        maskAllUserTouches: currentView.maskAllUserTouches,
+                                                       blockView: currentView.blockView,
                                                        sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
             )
             
             let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
             let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
-            
+
             if !thingys.isEmpty {
-                parentThingy.subviews.append(contentsOf: thingys)
+                // Separate color views (backgrounds) from other views
+                var colorViews: [any SessionReplayViewThingy] = []
+                var otherViews: [any SessionReplayViewThingy] = []
+
+                for thingy in thingys {
+                    if thingy.viewDetails.viewName == "SwiftUIColorView"
+                        || thingy.viewDetails.viewName == "SwiftUIPlatformView" {
+                        colorViews.append(thingy)
+                    } else {
+                        otherViews.append(thingy)
+                    }
+                }
+
+                // Insert color views first (they go to the back) then other views
+                if parentThingy.shouldRecordSubviewsComputed {
+                    parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
+                    parentThingy.subviews.append(contentsOf: otherViews)
+                }
             }
-        }
-        
+            } // if vcType == .hostingController || .navigationStackHostingController
+        } // if let viewController
+
         // Handle UITextField custom text overlay
-        if let textView = currentView as? UITextField {
+        if parentThingy.shouldRecordSubviewsComputed, let textView = currentView as? UITextField {
             let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
             parentThingy.subviews.append(textViewThingy)
         }
@@ -162,6 +192,15 @@ class SessionReplayCapture {
             
         case let visualEffectView as UIVisualEffectView:
             return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
+
+        #if os(iOS)
+        case let datePicker as UIDatePicker:
+            return UIDatePickerThingy(view: datePicker, viewDetails: ViewDetails(view: datePicker))
+
+        case let switchControl as UISwitch:
+            return UISwitchThingy(view: switchControl, viewDetails: ViewDetails(view: switchControl))
+        #endif
+
         case let webView as WKWebView:
             // Get rrweb events for this webview if available
             let rrwebEvents = sessionReplay?.getRRWebEvents(for: webView) ?? []
@@ -185,7 +224,16 @@ class SessionReplayCapture {
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
         
-        return !(areFramesTheSame && isClear)
+        if areFramesTheSame && isClear {
+            // Still record navigation bar internal views and SwiftUI platform view hosts.
+            let className = NSStringFromClass(type(of: view))
+            if className.contains("NavigationBar") || className.contains("LargeTitle")
+                || className.contains("UIKitPlatformViewHost") {
+                return true
+            }
+            return false
+        }
+        return true
     }
     
     private func setNextIdRecursively(for thingy: inout any SessionReplayViewThingy) {

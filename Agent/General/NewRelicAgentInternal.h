@@ -33,13 +33,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#if TARGET_OS_IOS
+@class JSErrorController;
+#endif
+
 // Defines the internal agent api.
 @interface NewRelicAgentInternal : NSObject
 
 @property (nonatomic, readonly, assign) BOOL enabled;
 @property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
-@property(atomic, strong) NRMAHandledExceptions* handledExceptionsController;
-@property(atomic, strong) NRMAUserActionFacade* gestureFacade;
+@property(atomic, strong, nullable) NRMAHandledExceptions* handledExceptionsController;
+#if TARGET_OS_IOS
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+#endif
+@property(atomic, strong, nullable) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
 @property(assign) double sessionReplaySampleSeed;
@@ -84,6 +91,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) collectNetworkErrors;
 + (BOOL) harvestNow;
 
+- (void) checkAndHandleSessionTimeout;
+
 // URLTransformer
 + (void)setURLTransformer:(NRMAURLTransformer *)urlTransformer;
 + (NRMAURLTransformer *)getURLTransformer;
@@ -93,6 +102,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) sessionReplayDisabled;
 
 - (void) sessionReplayEndSession;
+
+// Logging Collection - handles sampling check and log upload
+- (void) uploadLogsIfSampled;
 
 - (BOOL) isSessionReplaySampled;
 - (BOOL) isSessionReplayErrorSampled;

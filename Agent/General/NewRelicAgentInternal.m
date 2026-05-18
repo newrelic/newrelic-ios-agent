@@ -56,6 +56,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRAutoLogCollector.h"
 #import "NRMAAttributeValidator.h"
+#import "NRMAJSErrorHarvestAdapter.h"
 
 #import <NewRelic/NewRelic-Swift.h>
 
@@ -306,7 +307,9 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 - (BOOL) isDisabled {
-    return [[NRMAHarvestController harvestController] harvester].currentState == NRMA_HARVEST_DISABLED;
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    return harvester.currentState == NRMA_HARVEST_DISABLED;
 }
 
 - (void) destroyAgent {
@@ -607,6 +610,25 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
     }
 
+#if TARGET_OS_IOS
+    // Initialize JS Error Controller for Mobile Errors Protocol (iOS only - for React Native)
+    if ([NRMAFlags shouldEnableJSErrorEvents]) {
+        self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
+                                                                        sessionStartTime:self.appSessionStartDate
+                                                                      agentConfiguration:self.agentConfiguration
+                                                                                platform:@"reactnative"
+                                                                               sessionId:[self currentSessionId]
+                                                                      attributeValidator:[[NRMAAttributeValidator alloc] init]];
+
+        if (self.jsErrorController != nil) {
+
+            // Use adapter to bridge Swift controller with harvest protocol
+            NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
+            [NRMAHarvestController addHarvestListener:harvestAdapter];
+        }
+    }
+#endif
+
     [self.analyticsController setNRSessionAttribute:@"sessionId"
                                               value:self->_agentConfiguration.sessionIdentifier];
 
@@ -615,16 +637,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         if (status != NotReachable) { // Because we support offline mode check if we're online before sending the crash reports
             [[NRMAExceptionHandlerManager manager].uploader uploadCrashReports];
         }
-    }
-
-    if([NRMAFlags shouldEnableGestureInstrumentation])
-    {
-        self.gestureFacade = [[NRMAUserActionFacade alloc] initWithAnalyticsController:self.analyticsController];
-
-        NRMAUserAction* foregroundGesture = [NRMAUserActionBuilder buildWithBlock:^(NRMAUserActionBuilder *builder) {
-            [builder withActionType:kNRMAUserActionAppLaunch];
-        }];
-        [self.gestureFacade recordUserAction:foregroundGesture];
     }
 
     // appInstallMetricGenerator will receive the 'new install' notification
@@ -650,13 +662,39 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #endif
 }
 
+- (void) uploadLogsIfSampled {
+    NRMAHarvesterConfiguration* configuration = [NRMAHarvestController configuration];
+    if (configuration == nil) {
+        return;
+    }
+
+    BOOL isSampled = self.sampleSeed <= configuration.sampling_rate;
+    BOOL isEnabled = configuration.log_reporting_enabled;
+#if !TARGET_OS_TV && !TARGET_OS_WATCH
+    BOOL sessionReplayOverride = ([_sessionReplay isRunning] && ([_sessionReplay sessionReplayMode] == SessionReplayRecordingModeFull));
+#else
+    BOOL sessionReplayOverride = NO;
+#endif
+    // NRLOG_AGENT_VERBOSE(@"logging config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, self.sampleSeed, configuration.sampling_rate);
+    if (isEnabled && (isSampled || sessionReplayOverride) && [NRMAFlags shouldEnableLogReporting]) {
+        // Do log upload
+        [NRLogger enqueueLogUpload];
+    }
+}
+
+- (void) checkAndHandleSessionTimeout {
+    // Check for session timeout using SessionDurationManager
+    if ([[NRMASessionDurationManager shared] hasSessionExceeded]) {
+        NSTimeInterval elapsed = [[NRMASessionDurationManager shared] currentSessionDuration];
+        NSTimeInterval maxDuration = [[NRMASessionDurationManager shared] maxSessionDuration];
+        NRLOG_AGENT_INFO(@"HarvestTimer: Session duration reached limit (%.0f seconds / %.0f max). Triggering session restart.", elapsed, maxDuration);
+        [[NRMASessionDurationManager shared] updateSessionStartTime:[NSDate date]];
+        [self handle4HourSessionRestart];
+    }
+}
+
 - (void) sessionReplayStart {
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
-    // START ERROR MODE CHANGE
-    
-    // should isSampled matter when deciding to start or not in every case?
-    
-    BOOL isSampled = [self isSessionReplaySampled];
     // always start session replay if its error or full
     // ERROR MODE
     if ([self isSessionReplayEnabled]) {
@@ -667,8 +705,13 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         if (m != SessionReplayRecordingModeOff) {
             
             [_sessionReplay startFromManual:FALSE with:m];
-            @synchronized(kNRMAAnalyticsInitializationLock) {
-                [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+
+            // Only add hasReplay attribute if starting in full mode
+            // For error mode, the attribute will be added when an error occurs
+            if (m == SessionReplayRecordingModeFull) {
+                @synchronized(kNRMAAnalyticsInitializationLock) {
+                    [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+                }
             }
         }
     }
@@ -727,6 +770,9 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
     if (_sessionReplay != nil) {
         [_sessionReplay onError:error];
+        @synchronized(kNRMAAnalyticsInitializationLock) {
+            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+        }
     }
 #endif
 }
@@ -801,6 +847,11 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
                  */
                 [self sessionStartInitialization];
                 didFireEnterBackground = NO;
+                
+                NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+                [builder withActionType:kNRMAUserActionAppLaunch];
+                NRMAUserAction* backgroundGesture = [builder build];
+                [self.analyticsController recordUserAction:backgroundGesture];
             }
         }
     });
@@ -827,19 +878,42 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     [NRMAMeasurements initializeMeasurements];
     [NRMAHarvestController start];
 
+    // Update session duration manager with new session start time for 4-hour session timeout
+    [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
-    
-#if !TARGET_OS_TV && !TARGET_OS_WATCH
-    if (@available(iOS 13.0, *)) {
-       // ERROR MODE
-        // BOOL isSampled = [self isSessionReplaySampled];
-        if ([self isSessionReplayEnabled]) {
+}
 
-        //if (isSampled && [self isSessionReplayEnabled]) {
-            [self.analyticsController setNRSessionAttribute:kNRMA_RA_hasReplay value:[[NRMABool alloc] initWithBOOL:YES]];
+- (void) handle4HourSessionRestart {
+    NRLOG_AGENT_DEBUG(@"Executing 4-hour automatic session restart");
+
+    // End current session (adds sessionDuration attribute and Session event)
+    [self.analyticsController newSession];
+
+    // Create Session/Duration metric (matches background behavior)
+    NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
+    [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:@"Session/Duration"
+                                                    value:[NSNumber numberWithDouble:sessionLength]
+                                                    scope:nil]];
+    
+    // Add supportability metric for tracking
+    [NRMASupportMetricHelper enqueue4HourSessionRestartMetric];
+
+    // Trigger harvest to send all pending data before restart
+    [[NRMAHarvestController harvestController].harvester execute];
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
+
+    // Restart session: new session ID, new sample seeds, restart harvest
+    [self sessionStartInitialization];
+
+    // Restart session replay if enabled
+    #if !TARGET_OS_TV && !TARGET_OS_WATCH
+    if (@available(iOS 13.0, *)) {
+        if ([self isSessionReplayEnabled] && [self isSessionReplaySampled]) {
+            [self sessionReplayStart];
         }
     }
-#endif
+    #endif
 }
 
 #if !TARGET_OS_WATCH
@@ -866,7 +940,10 @@ static UIBackgroundTaskIdentifier background_task;
 #else
     _currentApplicationState = UIApplicationStateBackground;
 #endif
-    [[NRMAHarvestController harvestController].harvestTimer stop];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    if (controller) {
+        [controller.harvestTimer stop];
+    }
 
 
     // Disable observers.
@@ -934,7 +1011,11 @@ static UIBackgroundTaskIdentifier background_task;
             @try {
 #endif
                 NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
-                [[[NRMAHarvestController harvestController] harvester] execute];
+                NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+                NRMAHarvester* harvester = [controller harvester];
+                if (harvester) {
+                    [harvester execute];
+                }
 #ifndef DISABLE_NRMA_EXCEPTION_WRAPPER
             } @catch (NSException *exception) {
                 [NRMAExceptionHandler logException:exception
@@ -981,6 +1062,11 @@ static UIBackgroundTaskIdentifier background_task;
                     NSTimeInterval sessionLength = [[NSDate date] timeIntervalSinceDate:self.appSessionStartDate];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
                     @try {
+                        
+                        NRMAUserActionBuilder* builder = [[NRMAUserActionBuilder alloc] init];
+                        [builder withActionType:kNRMAUserActionAppBackground];
+                        NRMAUserAction* backgroundGesture = [builder build];
+                        [self.analyticsController recordUserAction:backgroundGesture];
 #endif
                         self.gestureFacade = nil;
                         [self.analyticsController sessionWillEnd];
@@ -1003,7 +1089,11 @@ static UIBackgroundTaskIdentifier background_task;
 
                     // Currently this is where the actual harvest occurs when we go to background
                     NRLOG_AGENT_VERBOSE(@"Harvesting data in background");
-                    [[[NRMAHarvestController harvestController] harvester] execute];
+                    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+                    NRMAHarvester* harvester = [controller harvester];
+                    if (harvester) {
+                        [harvester execute];
+                    }
 
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
                     [self sessionReplayEndSession];
@@ -1114,7 +1204,11 @@ void applicationDidEnterBackgroundCF(void) {
             }
         }];
 
-        [[[NRMAHarvestController harvestController] harvester] execute];
+        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+        NRMAHarvester* harvester = [controller harvester];
+        if (harvester) {
+            [harvester execute];
+        }
 
         [task setTaskCompletedWithSuccess:true];
     }
@@ -1143,7 +1237,12 @@ void applicationDidEnterBackgroundCF(void) {
         // * CLEAR EXISTING HARVESTABLE DATA *//
 
         // Clear harvestData
-        [[[[NRMAHarvestController harvestController] harvester] harvestData] clear];
+        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+        NRMAHarvester* harvester = [controller harvester];
+        NRMAHarvestData* harvestData = [harvester harvestData];
+        if (harvestData) {
+            [harvestData clear];
+        }
 
         // Clear activity traces
         [NRMATraceController cleanup];
@@ -1184,13 +1283,17 @@ void applicationDidEnterBackgroundCF(void) {
 #endif
 
         // Clear stored user defaults
-        [[[NRMAHarvestController harvestController] harvester] clearStoredConnectionInformation];
-        [[[NRMAHarvestController harvestController] harvester] clearStoredHarvesterConfiguration];
-        [[[NRMAHarvestController harvestController] harvester] clearStoredApplicationIdentifier];
+        if (harvester) {
+            [harvester clearStoredConnectionInformation];
+            [harvester clearStoredHarvesterConfiguration];
+            [harvester clearStoredApplicationIdentifier];
+        }
 
         [[NewRelicAgentInternal sharedInstance] agentShutdown];
 
-        [[NRMAHarvestController harvestController].harvestTimer stop];
+        if (controller) {
+            [controller.harvestTimer stop];
+        }
 
         // Disable observers.
         [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -1288,9 +1391,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isMasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers) {
-        isMasked = [[NRMAHarvestController configuration].session_replay_maskedAccessibilityIdentifiers containsObject:identifier];
+    @synchronized(config.session_replay_maskedAccessibilityIdentifiers) {
+        isMasked = [config.session_replay_maskedAccessibilityIdentifiers containsObject:identifier];
     }
     return isMasked;
 }
@@ -1300,9 +1408,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isMasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_maskedClassNames) {
-        isMasked = [[NRMAHarvestController configuration].session_replay_maskedClassNames containsObject:className];
+    @synchronized(config.session_replay_maskedClassNames) {
+        isMasked = [config.session_replay_maskedClassNames containsObject:className];
     }
     return isMasked;
 }
@@ -1314,9 +1427,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isUnmasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers) {
-        isUnmasked = [[NRMAHarvestController configuration].session_replay_unmaskedAccessibilityIdentifiers containsObject:identifier];
+    @synchronized(config.session_replay_unmaskedAccessibilityIdentifiers) {
+        isUnmasked = [config.session_replay_unmaskedAccessibilityIdentifiers containsObject:identifier];
     }
     return isUnmasked;
 }
@@ -1326,9 +1444,14 @@ void applicationDidEnterBackgroundCF(void) {
         return NO;
     }
 
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return NO;
+    }
+
     BOOL isUnmasked = NO;
-    @synchronized([NRMAHarvestController configuration].session_replay_unmaskedClassNames) {
-        isUnmasked = [[NRMAHarvestController configuration].session_replay_unmaskedClassNames containsObject:className];
+    @synchronized(config.session_replay_unmaskedClassNames) {
+        isUnmasked = [config.session_replay_unmaskedClassNames containsObject:className];
     }
     return isUnmasked;
 }

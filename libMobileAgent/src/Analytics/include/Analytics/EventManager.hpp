@@ -102,6 +102,7 @@ namespace NewRelic {
         void setMaxBufferSize(unsigned int size); //sets max buffer size
         bool didReachMaxQueueTime(unsigned long long currentTimestamp_ms); //checks if oldest event timestamp exceededs max queue time
         void empty(); //removes all events in _events;
+        void resetTimestamp(); //resets _oldest_event_timestamp_ms to 0 (for session clear)
     };
 }
 #endif

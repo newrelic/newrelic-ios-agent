@@ -677,6 +677,29 @@ extern "C" {
 + (BOOL) recordBreadcrumb:(NSString* _Nonnull)name
                attributes:(NSDictionary* _Nullable)attributes;
 
+/*!
+ * Records a JavaScript error as a MobileJSError custom event.
+ *
+ * This method is intended for use by hybrid frameworks (like React Native) to report JavaScript errors.
+ * These errors are routed to a new EventType: MobileJSError instead of the standard MobileHandledException pipeline.
+ *
+ * @param name The type of JS error (e.g., TypeError, ReferenceError).
+ * @param message The error message.
+ * @param stackTrace The full JS stack trace string.
+ * @param isFatal Boolean indicating if the error caused a crash/hang in the JS engine.
+ * @param additionalAttributes Optional dictionary of custom metadata to attach to the event.
+ *        Attributes should have NSString keys and NSString or NSNumber values.
+ * @return YES if successfully added event, NO if failed with error in log.
+ *
+ * @note Explicit parameters (name, message, stackTrace, isFatal) take precedence
+ *       over any identical keys found in additionalAttributes.
+ */
++ (BOOL) recordJavascriptError:(NSString* _Nonnull)name
+                       message:(NSString* _Nonnull)message
+                    stackTrace:(NSString* _Nonnull)stackTrace
+                       isFatal:(BOOL)isFatal
+          additionalAttributes:(NSDictionary* _Nullable)additionalAttributes;
+
 #pragma mark - Configuring event collection
 
 /*!
@@ -876,22 +899,22 @@ extern "C" {
 /*!
  * Manually start session replay recording.
  *
- * When called, session replay will begin recording regardless of remote configuration.
- * Manual mode takes precedence over automatic replay triggering. Recording will
- * continue until pauseReplay is called or the session ends. If called while already
- * recording in manual mode, this call is ignored.
+ * When called, session replay will begin recording regardless of sampling rate.
+ * Recording will continue until pauseReplay() is called or the session ends.
+ * If called while already recording this call is ignored.
  *
- * @return YES if recording was started, NO if already recording or replay is unavailable
+ * @return YES if recording was started, NO if already recording or replay is disabled
  */
 + (BOOL) recordReplay;
 
 /*!
  * Manually pause session replay recording.
  *
- * Stops the current recording session and harvests recorded data. If called while
- * not recording in manual mode, this call is ignored.
+ * Stops the current recording session. If called while not recording, this call is ignored.
+ * This pauses frame collection regardless of the sampling mode (including error-only sampling).
+ * To resume recording, call recordReplay().
  *
- * @return YES if recording was paused, NO if not recording or replay is unavailable
+ * @return YES if recording was paused, NO if not recording or replay is disabled
  */
 + (BOOL) pauseReplay;
 

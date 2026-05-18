@@ -45,6 +45,7 @@ extern NSString *const kNRMA_RET_mobileRequestError;
 extern NSString *const kNRMA_RET_mobileCrash;
 extern NSString *const kNRMA_RET_mobileBreadcrumb;
 extern NSString *const kNRMA_RET_mobileUserAction;
+extern NSString *const kNRMA_RET_userAction;
 
 extern NSString *const kNRMA_RA_methodExecuted;
 extern NSString *const kNRMA_RA_targetObject;
@@ -91,6 +92,7 @@ extern NSString *const kNRMA_Attrib_file_private;
 extern NSString *const  kNRMA_EventStoreFilename;
 
 extern NSString *const kNRMA_Offline_folder;
+extern NSString *const kNRMA_SessionReplayFrames_folder;
 
 extern NSString *const kNRMA_Collector_connect_url;
 extern NSString *const kNRMA_Collector_data_url;

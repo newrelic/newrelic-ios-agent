@@ -21,8 +21,12 @@ namespace NewRelic {
                             AttributeValidator& attributeValidator);
 
     public:
-
+        static const std::string& __category;
+        virtual const std::string& getCategory() const;
+        
         virtual void put(std::ostream& os) const;
+        virtual std::shared_ptr<NRJSON::JsonObject> generateJSONObject() const;
+
     };
 }
 

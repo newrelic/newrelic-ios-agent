@@ -286,5 +286,55 @@ TEST_F(EventManagerTest, testBadSerializedEvent) {
 
     ASSERT_THROW(manager.newEvent(strs2), std::runtime_error);
 }
+
+TEST_F(EventManagerTest, testEmptyDoesNotResetTimestamp) {
+    EventManager manager{store};
+
+    // Set max buffer time to 1 second
+    manager.setMaxBufferTime(1);
+
+    // Add events at timestamp 1000ms
+    auto event1 = manager.newCustomMobileEvent("custom1", 1000, 1, validator);
+    auto event2 = manager.newCustomMobileEvent("custom2", 1000, 1, validator);
+    auto event3 = manager.newCustomMobileEvent("custom3", 1000, 1, validator);
+
+    manager.addEvent(event1);
+    manager.addEvent(event2);
+    manager.addEvent(event3);
+
+    // Check at 2000ms - should have reached max queue time (1 second elapsed)
+    ASSERT_TRUE(manager.didReachMaxQueueTime(2000));
+
+    // Call empty() (simulating normal harvest)
+    manager.empty();
+
+    // Timestamp should persist (matching Android behavior)
+    ASSERT_TRUE(manager.didReachMaxQueueTime(2000));
+}
+
+TEST_F(EventManagerTest, testResetTimestampResetsTimestamp) {
+    EventManager manager{store};
+
+    // Set max buffer time to 1 second
+    manager.setMaxBufferTime(1);
+
+    // Add events at timestamp 1000ms
+    auto event1 = manager.newCustomMobileEvent("custom1", 1000, 1, validator);
+    auto event2 = manager.newCustomMobileEvent("custom2", 1000, 1, validator);
+    auto event3 = manager.newCustomMobileEvent("custom3", 1000, 1, validator);
+
+    manager.addEvent(event1);
+    manager.addEvent(event2);
+    manager.addEvent(event3);
+
+    // Check at 2000ms - should have reached max queue time (1 second elapsed)
+    ASSERT_TRUE(manager.didReachMaxQueueTime(2000));
+
+    // Call resetTimestamp() (simulating session clear)
+    manager.resetTimestamp();
+
+    // Timestamp should be reset
+    ASSERT_FALSE(manager.didReachMaxQueueTime(2000));
+}
 } // namespace NewRelic
 

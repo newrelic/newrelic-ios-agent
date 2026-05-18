@@ -55,6 +55,9 @@ var osName = "iOS"
 var platformName = "Native"
 var appVersionNumber = "1.2.3"
 
+// Maximum zipped source map size (in bytes) before falling back to telemetry upload (200 MB).
+let sourceMapSizeThreshold: UInt64 = 209_715_200
+
 enum SymbolToolError: Error {
     case failedToConvert
     case failedToUpload
@@ -313,24 +316,38 @@ func processDsym(_ path: String, _ apiKey: String, _ url: String) throws {
 
             if let archiveUrl = archiveUrl {
 
-                // get size @ archiveUrl 
-                guard let size = getSizeAtURL(archiveUrl) else { 
+                // get size @ archiveUrl
+                guard let size = getSizeAtURL(archiveUrl) else {
                     print("Failed to get fileSize. --failing")
-                    return 
+                    return
                 }
                 if debug {
-                    print("Detected zipped map file size = \(size). Uploading...")
-                }
-                // Now that we have archiveUrl with the combined map files zipped up, upload the map file.
-                let mapUploadResult = try uploadFile(archiveUrl.path, apiKey, url, false, size)
-                if mapUploadResult == "201" {
-                    print("Successfully uploaded map: \(archiveUrl.path)")
-                }
-                else {
-                    print("*** Failed w/ error: \(mapUploadResult ?? "NO ERROR") when upload \(archiveUrl.path)")
+                    print("Detected zipped map file size = \(size).")
                 }
 
-                // Remove moved map file and zipped map file and temporary folder.
+                // Check if the zipped source map exceeds the 200MB upload threshold.
+                // Because source maps are highly compressible, only the zipped size is evaluated.
+                if size > sourceMapSizeThreshold {
+                    // File is too large to upload directly; send telemetry metadata instead.
+                    if debug { print("Zipped map (\(size) bytes) exceeds 200MB threshold. Using telemetry fallback.") }
+                    let telemetryResult = try uploadViaTelemetry(archiveUrl.path, apiKey, url, size)
+                    if telemetryResult == "200" || telemetryResult == "201" {
+                        print("Successfully sent telemetry for oversized map: \(archiveUrl.path)")
+                    } else {
+                        print("*** Failed w/ error: \(telemetryResult ?? "NO ERROR") sending telemetry for \(archiveUrl.path)")
+                    }
+                } else {
+                    if debug { print("Uploading zipped map file (\(size) bytes)...") }
+                    // Now that we have archiveUrl with the combined map files zipped up, upload the map file.
+                    let mapUploadResult = try uploadFile(archiveUrl.path, apiKey, url, false, size)
+                    if mapUploadResult == "201" {
+                        print("Successfully uploaded map: \(archiveUrl.path)")
+                    } else {
+                        print("*** Failed w/ error: \(mapUploadResult ?? "NO ERROR") when upload \(archiveUrl.path)")
+                    }
+                }
+
+                // Remove moved map file, zipped map file, and temporary folder.
                 try fileManager.removeItem(at: tempDirURL)
             }
         } catch {
@@ -501,6 +518,29 @@ func uploadFile(_ path: String, _ apiKey: String, _ url: String, _ isDsym: Bool,
         throw SymbolToolError.failedToUpload
     }
 
+    return resultFromCurl
+}
+
+// Telemetry fallback: sends a Base64-encoded JSON metadata payload via the x-telemetry-data header
+// instead of uploading the source map file directly. Used when the zipped map exceeds 200MB.
+func uploadViaTelemetry(_ path: String, _ apiKey: String, _ url: String, _ size: UInt64) throws -> String? {
+    var resultFromCurl: String? = nil
+    do {
+        let jsonString = "{\"type\":\"sourcemap\",\"size\":\(size),\"appVersion\":\"\(appVersionNumber)\",\"agentVersion\":\"\(versionNumber)\",\"osName\":\"\(osName)\",\"platform\":\"\(platformName)\",\"reason\":\"file_size_exceeded\"}"
+        guard let jsonData = jsonString.data(using: .utf8) else {
+            print("Failed to encode telemetry JSON.")
+            throw SymbolToolError.failedToUpload
+        }
+        let telemetryB64 = jsonData.base64EncodedString()
+
+        let command = "curl --retry 3 --write-out %{http_code} --silent --output /dev/null -H \"x-app-license-key: \(apiKey)\" -H \"X-NewRelic-Agent-Version: \(versionNumber)\" -H \"X-NewRelic-OS-Name: \(osName)\" -H \"X-NewRelic-Platform: \(platformName)\" -H \"X-NewRelic-App-Version: \(appVersionNumber)\" -H \"X-File-Size: \(size)\" -H \"x-telemetry-data: \(telemetryB64)\" \(url)/\(symbolEndpointPath)"
+
+        if debug { print("Executing $ \(command)") }
+        resultFromCurl = try shell(command)
+    } catch {
+        print("curl telemetry \(error). Exiting upload process.")
+        throw SymbolToolError.failedToUpload
+    }
     return resultFromCurl
 }
 

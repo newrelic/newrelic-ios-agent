@@ -299,13 +299,13 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
         return;
     }
 
-    // http://developer.apple.com/library/ios/#documentation/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Constants/Reference/reference.html#//apple_ref/doc/uid/TP40003793-CH3g-SW40
-
-    NRLOG_AGENT_VERBOSE(@"%@\n\tDelay:   %.5lf\n\tError:   %lu\n\t%@",
-                  request.URL.description,
-                  timer.timeElapsedInSeconds,
-                  (unsigned long)error.code,
-                  error.description);
+//    // http://developer.apple.com/library/ios/#documentation/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Constants/Reference/reference.html#//apple_ref/doc/uid/TP40003793-CH3g-SW40
+//
+//    NRLOG_AGENT_VERBOSE(@"%@\n\tDelay:   %.5lf\n\tError:   %lu\n\t%@",
+//                  request.URL.description,
+//                  timer.timeElapsedInSeconds,
+//                  (unsigned long)error.code,
+//                  error.description);
 
 
     [NRMANetworkFacade noticeNetworkFailure:request

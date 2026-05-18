@@ -1002,6 +1002,10 @@ namespace NewRelic {
         _attributeDuplicationStore.clear();
     }
 
+    void AnalyticsController::resetEventTimestamp() {
+        _eventManager.resetTimestamp();
+    }
+
     const char *AnalyticsController::getPersistentAttributeStoreName() {
         return ATTRIBUTE_STORE_DB_FILENAME;
     }

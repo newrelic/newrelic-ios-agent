@@ -41,7 +41,7 @@ static const NSString* kDISABLE_STRING = @"DISABLE_NEW_RELIC";
 
 - (BOOL) isError
 {
-    return self.error != nil || self.statusCode >= 400;
+    return self.error != nil || self.statusCode == ZERO_STATUS_CODE || self.statusCode >= 400;
 }
 - (BOOL) isOK
 {

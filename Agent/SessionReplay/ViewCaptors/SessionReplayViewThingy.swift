@@ -13,6 +13,7 @@ protocol SessionReplayViewThingy: Hashable {
     var viewDetails: ViewDetails { get set }
     var shouldRecordSubviews: Bool { get }
     var isMasked: Bool { get set }
+    var isBlocked: Bool { get set }
 
     var subviews: [any SessionReplayViewThingy] { get set }
     
@@ -22,7 +23,12 @@ protocol SessionReplayViewThingy: Hashable {
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord]
 }
 
-extension SessionReplayViewThingy {    
+extension SessionReplayViewThingy {
+    /// Determines if subviews should be recorded. Blocked views should not record their subviews.
+    var shouldRecordSubviewsComputed: Bool {
+        return shouldRecordSubviews && !isBlocked
+    }
+
     func generateBaseCSSStyle() -> String {
         var cssStyle = """
             position: fixed; \
@@ -32,12 +38,23 @@ extension SessionReplayViewThingy {
             height: \(String(format: "%.2f", self.viewDetails.frame.size.height))px; \
             border-radius: \(String(format: "%.2f", self.viewDetails.cornerRadius))px;
             """
-        
+
+        // If the view is blocked, make it a solid black rectangle
+        if self.isBlocked {
+            cssStyle.append(" background-color: #000000 !important; opacity: 1.0 !important; overflow: hidden !important; z-index: 9999 !important;")
+            return cssStyle
+        }
+
+        // Add opacity if it's not fully opaque
+        if self.viewDetails.alpha < 1.0 {
+            cssStyle.append(" opacity: \(String(format: "%.3f", self.viewDetails.alpha));")
+        }
+
         if let backgroundColor = self.viewDetails.backgroundColor {
             let backgroundColorString = "background-color: \(backgroundColor.toHexString(includingAlpha: true));"
             cssStyle.append(backgroundColorString)
         }
-        
+
         if let borderColor = self.viewDetails.borderColor,
            self.viewDetails.borderWidth > 0 {
             let borderString = """
@@ -46,7 +63,7 @@ extension SessionReplayViewThingy {
             """
             cssStyle.append(borderString)
         }
-        
+
         return cssStyle
     }
     
@@ -63,7 +80,12 @@ extension SessionReplayViewThingy {
             styleDifferences["height"] = "\(String(format: "%.2f", other.viewDetails.frame.size.height))px"
             styleDifferences["border-radius"] = "\(String(format: "%.2f", other.viewDetails.cornerRadius))px"
         }
-        
+
+        // Check alpha/opacity changes
+        if viewDetails.alpha != other.viewDetails.alpha {
+            styleDifferences["opacity"] = "\(String(format: "%.3f", other.viewDetails.alpha))"
+        }
+
         // background color
         if let otherBackgroundColor = other.viewDetails.backgroundColor {
             if let backgroundColor = viewDetails.backgroundColor,

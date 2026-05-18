@@ -8,13 +8,13 @@
 
 import SwiftUI
 
-@available(iOS 16, *)
 public struct NRConditionalMaskView<Content: View>: View {
     private let maskApplicationText: Bool?
     private let maskUserInputText: Bool?
     private let maskAllImages: Bool?
     private let maskAllUserTouches: Bool?
-    
+    private let blockView: Bool?
+
     private let sessionReplayIdentifier: String?
     
     private let activated: Bool
@@ -25,26 +25,30 @@ public struct NRConditionalMaskView<Content: View>: View {
                 maskUserInputText: Bool? = nil,
                 maskAllImages: Bool? = nil,
                 maskAllUserTouches: Bool? = nil,
+                blockView: Bool? = nil,
                 sessionReplayIdentifier: String? = nil,
-                
+
                 activated: Bool = true,
                 @ViewBuilder content: @escaping () -> Content) {
         self.maskApplicationText = maskApplicationText
         self.maskUserInputText = maskUserInputText
         self.maskAllImages = maskAllImages
         self.maskAllUserTouches = maskAllUserTouches
+        self.blockView = blockView
         self.sessionReplayIdentifier = sessionReplayIdentifier
         self.activated = activated
         self.content = content
     }
     
     public var body: some View {
-        // TODO: Check conditions this should be evaaluated enabled? Previews?
-        if activated {
+
+        let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
+        if activated && !iOS15 {
             NRMaskedViewRepresentable(maskApplicationText: self.maskApplicationText,
                                       maskUserInputText: self.maskUserInputText,
                                       maskAllImages: self.maskAllImages,
                                       maskAllUserTouches: self.maskAllUserTouches,
+                                      blockView: self.blockView,
                                       activated: true,
                                       sessionReplayIdentifier: sessionReplayIdentifier,
                                       content: content

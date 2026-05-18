@@ -24,9 +24,16 @@ struct InfiniteImageCollectionView: View {
                 }
                 
                 if viewModel.isLoading {
-                    ProgressView()
-                        .frame(height: 50)
-                        .gridCellColumns(2)
+                    if #available(iOS 16.0, *) {
+                        ProgressView()
+                            .frame(height: 50)
+                            .gridCellColumns(2)
+                    } else {
+                        // Fallback on earlier versions
+                        ProgressView()
+                            .frame(height: 50)
+
+                    }
                 }
             }
             .padding()

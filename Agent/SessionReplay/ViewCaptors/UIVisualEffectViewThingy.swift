@@ -11,7 +11,8 @@ import UIKit
 
 class UIVisualEffectViewThingy: SessionReplayViewThingy {
     var isMasked: Bool
-    
+    var isBlocked: Bool
+
     var subviews = [any SessionReplayViewThingy]()
     
     var shouldRecordSubviews: Bool {
@@ -24,6 +25,7 @@ class UIVisualEffectViewThingy: SessionReplayViewThingy {
     init(view: UIVisualEffectView, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
+        self.isBlocked = viewDetails.blockView ?? false
         
         // Determine blur style and intensity based on the effect
         var intensity: CGFloat = 10.0

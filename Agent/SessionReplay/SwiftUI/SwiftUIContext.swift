@@ -12,7 +12,26 @@ import SwiftUI
 struct SwiftUIContext {
     var frame: CGRect
     var clip: CGRect
-    var tintColor: Color._ResFoundColor?
+    // Store tint color components directly for iOS version compatibility
+    var tintColorRed: Float?
+    var tintColorGreen: Float?
+    var tintColorBlue: Float?
+    var tintColorOpacity: Float?
+
+    var tintColor: UIColor? {
+        guard let r = tintColorRed, let g = tintColorGreen,
+              let b = tintColorBlue, let a = tintColorOpacity else {
+            return nil
+        }
+        return UIColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: CGFloat(a))
+    }
+
+    mutating func setTintColor(from color: Color._ResFoundColor?) {
+        self.tintColorRed = color?.linearRed
+        self.tintColorGreen = color?.linearGreen
+        self.tintColorBlue = color?.linearBlue
+        self.tintColorOpacity = color?.opacity
+    }
     
     // Internal convenience for current frame offset
     @inline(__always) private var _originOffset: CGPoint {

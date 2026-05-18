@@ -187,32 +187,65 @@
     XCTAssertEqual(emptyDecode.count, 0);
 }
 
-- (void)testEmptyEventsResetOldestEventTime {
+- (void)testEmptyEventsDoesNotResetOldestEventTime {
     // Given
     NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
                                                                        timestamp:1000
                                                      sessionElapsedTimeInSeconds:20
                                                           withAttributeValidator:agreeableAttributeValidator];
-    
+
     NRMACustomEvent *customEventTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
                                                                        timestamp:1000
                                                      sessionElapsedTimeInSeconds:20
                                                           withAttributeValidator:agreeableAttributeValidator];
-    
+
     NRMACustomEvent *customEventThree = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 3"
                                                                        timestamp:1000
                                                      sessionElapsedTimeInSeconds:20
                                                           withAttributeValidator:agreeableAttributeValidator];
     [sut setMaxEventBufferTimeInSeconds:1];
-    
+
     [sut addEvent:customEventOne];
     [sut addEvent:customEventTwo];
     [sut addEvent:customEventThree];
-    
+
     XCTAssertTrue([sut didReachMaxQueueTime:2000]);
 
+    // When - empty() is called (during normal harvest)
     [sut empty];
 
+    // Then - timestamp should persist (matching Android behavior)
+    XCTAssertTrue([sut didReachMaxQueueTime:2000]);
+}
+
+- (void)testResetTimestampResetsOldestEventTime {
+    // Given
+    NRMACustomEvent *customEventOne = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+
+    NRMACustomEvent *customEventTwo = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+
+    NRMACustomEvent *customEventThree = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 3"
+                                                                       timestamp:1000
+                                                     sessionElapsedTimeInSeconds:20
+                                                          withAttributeValidator:agreeableAttributeValidator];
+    [sut setMaxEventBufferTimeInSeconds:1];
+
+    [sut addEvent:customEventOne];
+    [sut addEvent:customEventTwo];
+    [sut addEvent:customEventThree];
+
+    XCTAssertTrue([sut didReachMaxQueueTime:2000]);
+
+    // When - resetTimestamp() is explicitly called (during session clear)
+    [sut resetTimestamp];
+
+    // Then - timestamp should be reset
     XCTAssertFalse([sut didReachMaxQueueTime:2000]);
 }
 

@@ -18,7 +18,7 @@
 #define kNRMAOfflineStorageCurrentSizeKey @"com.newrelic.offlineStorageCurrentSize"
 
 @implementation NRMAOfflineStorage {
-    NSUInteger maxOfflineStorageSize;
+    NSUInteger maxOfflineStorageSizeBytes;
 }
 static NSString* _name;
 
@@ -26,7 +26,7 @@ static NSString* _name;
     self = [super init];
     if (self) {
         _name = name;
-        maxOfflineStorageSize = [NRMAAgentConfiguration getMaxOfflineStorageSize];
+        maxOfflineStorageSizeBytes = [NRMAAgentConfiguration getMaxOfflineStorageSize]; // Already in bytes
     }
     return self;
 }
@@ -47,7 +47,7 @@ static NSString* _name;
         
         NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:kNRMAOfflineStorageCurrentSizeKey];
         currentOfflineStorageSize += data.length;
-        if(currentOfflineStorageSize > maxOfflineStorageSize){
+        if(currentOfflineStorageSize > maxOfflineStorageSizeBytes){
             NRLOG_AGENT_WARNING(@"Not saving to offline storage because max storage size has been reached.");
             return NO;
         }
@@ -136,8 +136,8 @@ static NSString* _name;
     return [NSString stringWithFormat:@"%@/%@%@",[self offlineDirectoryPath],date,@".txt"];
 }
 
-- (void) setMaxOfflineStorageSize:(NSUInteger) size {
-    maxOfflineStorageSize = (size * 1000000);
+- (void) setMaxOfflineStorageSize:(NSUInteger) megabytes {
+    maxOfflineStorageSizeBytes = megabytes * 1000000; // Convert MB to bytes (1 MB = 1,000,000 bytes)
 }
 
 + (BOOL)checkErrorToPersist:(NSError*) error {

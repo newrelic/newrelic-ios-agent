@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   deployS3:
     name: DeployS3
@@ -25,7 +28,12 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.2"
+          
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
 
       - name: Install the Apple certificate and provisioning profile
         env:
@@ -55,6 +63,9 @@ jobs:
           # # apply provisioning profile
           # mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           # cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update

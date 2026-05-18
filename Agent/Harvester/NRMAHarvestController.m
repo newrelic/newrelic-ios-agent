@@ -81,12 +81,18 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 
 + (void) setPeriod:(long long)period
 {
-    [[NRMAHarvestController harvestController] harvestTimer].period = period;
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    if (controller) {
+        controller.harvestTimer.period = period;
+    }
 }
 
 + (void) deinitialize
 {
-    [[NRMAHarvestController harvestController] deinitialize];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    if (controller) {
+        [controller deinitialize];
+    }
     [self setHarvestController:nil];
     [self setAgentConfiguration:nil];
 }
@@ -113,11 +119,21 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 
 + (void) recovery
 {
-    [NRMAHarvestController stop];
-
-    NSArray* harvestAwareList = [self harvestController].harvestAwareList;
+    // Capture the harvest-aware list and config BEFORE tearing down, since
+    // stop/deinitialize will nil out the controller.
+    NRMAHarvestController* oldController = [self harvestController];
+    NSArray* harvestAwareList = nil;
+    if (oldController != nil) {
+        harvestAwareList = [oldController.harvestAwareList copy];
+    }
     NRMAAgentConfiguration* config = [self agentConfiguration];
+
+    [NRMAHarvestController stop];
     [NRMAHarvestController deinitialize];
+
+    if (config == nil) {
+        return;
+    }
 
     [NRMAHarvestController initialize:config];
     for (id<NRMAHarvestAware> obj in harvestAwareList) {
@@ -141,13 +157,25 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
         @try {
 #endif
             NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+            if (controller == nil) {
+                return;
+            }
+            // Capture a strong local reference to the harvester so it cannot be
+            // deallocated mid-cycle if stop/recovery runs on another thread.
+            NRMAHarvester* harvester = nil;
+            @synchronized(controller) {
+                harvester = [controller harvester];
+            }
+            if (harvester == nil) {
+                return;
+            }
             @synchronized(controller) {
                 [[controller harvestTimer] start];
-                if ([[controller harvester] currentState] == NRMA_HARVEST_UNINITIALIZED) {
-                    [[controller harvester] execute];
+                if ([harvester currentState] == NRMA_HARVEST_UNINITIALIZED) {
+                    [harvester execute];
                 }
-                if ([[controller harvester] currentState] == NRMA_HARVEST_DISCONNECTED) {
-                    [[controller harvester] execute];
+                if ([harvester currentState] == NRMA_HARVEST_DISCONNECTED) {
+                    [harvester execute];
                 }
             }
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -206,17 +234,23 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 
 + (NRMAHarvesterConfiguration*) configuration
 {
-    return [[[NRMAHarvestController harvestController] harvester] harvesterConfiguration];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    return [harvester harvesterConfiguration];
 }
 
 + (NRMAHarvestData*) harvestData
 {
-    return [[[NRMAHarvestController harvestController] harvester] harvestData];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    return [harvester harvestData];
 }
 
 + (BOOL) shouldCollectTraces
 {
-    NRMAHarvestData* harvestData = [[[NRMAHarvestController harvestController] harvester] harvestData];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    NRMAHarvestData* harvestData = [harvester harvestData];
     NRMAHarvesterConfiguration* configuration = [NRMAHarvestController configuration];
 
     if (harvestData == nil || configuration == nil)
@@ -249,12 +283,18 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 
 + (void) addHarvestListener:(id<NRMAHarvestAware>)obj
 {
-    [[NRMAHarvestController harvestController] addHarvestAwareObject:obj];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    if (controller) {
+        [controller addHarvestAwareObject:obj];
+    }
 }
 
 + (void) removeHarvestListener:(id<NRMAHarvestAware>)obj
 {
-    [[NRMAHarvestController harvestController] removeHarvestAwareObject:obj];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    if (controller) {
+        [controller removeHarvestAwareObject:obj];
+    }
 }
 
 #pragma mark - private
@@ -271,6 +311,7 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 + (void) addHarvestableHTTPTransaction:(NRMAHarvestableHTTPTransaction*)transaction
 {
     NRMAHarvestData* harvestData = [[self class] harvestData];
+    if (harvestData == nil) return;
     @synchronized(harvestData) {
         [harvestData.httpTransactions add:transaction];
     }
@@ -279,6 +320,7 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 + (void) addNamedValue:(NRMANamedValueMeasurement*)measurement {
 
     NRMAHarvestData* harvestData = [[self class] harvestData];
+    if (harvestData == nil) return;
 
     NRMANamedValueMeasurement* namedValue = (NRMANamedValueMeasurement*)measurement;
 
@@ -305,6 +347,7 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 + (void) addHarvestableAnalytics:(NRMAHarvestableAnalytics*)analytics
 {
     NRMAHarvestData* harvestData = [[self class] harvestData];
+    if (harvestData == nil) return;
     @synchronized(harvestData) {
         [harvestData.analyticsEvents addEvents:analytics.events];
         harvestData.analyticsAttributes = analytics.sessionAttributes;
@@ -314,13 +357,18 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 + (void) addHarvestableActivity:(NRMAHarvestableActivity*)activity
 {
     NRMAHarvestData* harvestData = [[self class] harvestData];
+    if (harvestData == nil) return;
     @synchronized(harvestData) {
         [harvestData.activityTraces addActivityTraces:activity];
     }
 }
 
 + (void) setMaxOfflineStorageSize:(NSUInteger) size {
-    [[[NRMAHarvestController harvestController] harvester] setMaxOfflineStorageSize:size];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    if (harvester) {
+        [harvester setMaxOfflineStorageSize:size];
+    }
 }
 @end
 

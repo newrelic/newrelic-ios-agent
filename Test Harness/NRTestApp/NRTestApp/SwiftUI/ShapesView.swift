@@ -50,6 +50,7 @@ struct ShapesView: View {
             }
             .navigationBarTitle("Shapes", displayMode: .inline)
         }
+        .navigationViewStyle(.stack)
         .NRTrackView(name: "ShapesView")
     }
 }

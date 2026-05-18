@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   testIOS:
     name: TestIOS
@@ -24,12 +27,18 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.2"
 
       # - name: Install lcov
       #   run: |
       #     curl https://raw.githubusercontent.com/Homebrew/homebrew-core/e92d2ae54954ebf485b484d8522104700b144fee/Formula/lcov.rb > lcov.rb
       #     brew install ./lcov.rb
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update
@@ -52,10 +61,16 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
-
+          xcode-version: "26.2"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
       # - name: Install lcov
       #   run: brew install lcov
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update
@@ -78,10 +93,16 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
-
+          xcode-version: "26.2"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
       # - name: Install lcov
       #   run: brew install lcov
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update
@@ -108,7 +129,11 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.4"
+          xcode-version: "26.2"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
 
       - name: Install the Apple certificate and provisioning profile
         env:
@@ -138,6 +163,9 @@ jobs:
           # # apply provisioning profile
           # mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           # cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update
@@ -173,12 +201,22 @@ jobs:
   deployStagingSpecs:
     name: DeployStagingSpecs
     runs-on: macos-15
+    permissions:
+      contents: write
     needs: [deployS3]
     if: github.ref == 'refs/heads/staging'
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
+      
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
 
       - name: Update gem
         run: bundle update

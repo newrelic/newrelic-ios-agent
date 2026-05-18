@@ -13,9 +13,12 @@ class SessionReplayFrameProcessor {
     var useIncrementalDiffs = true
 
     var takeFullSnapshotNext = true
+
+    // Private queue for thread-safe tree operations
+    private let treeProcessingQueue = DispatchQueue(label: "com.newrelic.sessionreplay.tree.processing", qos: .userInitiated)
     
     
-    func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon {
+    func processFrame(_ frame: SessionReplayFrame) -> RRWebEventCommon? {
         guard useIncrementalDiffs else { // If useIncrementalDiffs is false, we only take full snapshots
             self.lastFullFrame = frame
             return processFullSnapshot(frame)
@@ -28,9 +31,12 @@ class SessionReplayFrameProcessor {
             return processFullSnapshot(frame)
         }
         
-        var rrwebCommon: any RRWebEventCommon
-        // If a full snapshot is needed, frame size changed, or UILayoutContainerView count increased
-        if takeFullSnapshotNext || frame.size != lastFullFrame.size || (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) {
+        var rrwebCommon: (any RRWebEventCommon)?
+        // If a full snapshot is needed, frame size changed, UILayoutContainerView count increased,
+        // or the NavigationStack depth changed.
+        if takeFullSnapshotNext || frame.size != lastFullFrame.size ||
+            (frame.layoutContainerViewCount > 1 && frame.layoutContainerViewCount > lastFullFrame.layoutContainerViewCount) ||
+            frame.navigationStackDepth != lastFullFrame.navigationStackDepth {
             rrwebCommon = processFullSnapshot(frame)
             takeFullSnapshotNext = false
         } else {
@@ -117,15 +123,27 @@ class SessionReplayFrameProcessor {
     }
     
     
-    private func processIncrementalSnapshot(newFrame: SessionReplayFrame, oldFrame: SessionReplayFrame) -> any RRWebEventCommon {
+    private func processIncrementalSnapshot(newFrame: SessionReplayFrame, oldFrame: SessionReplayFrame) -> (any RRWebEventCommon)? {
         // Validate input parameters
         guard newFrame.date >= oldFrame.date else {
             // If frames are out of order, fall back to full snapshot
             return processFullSnapshot(newFrame)
         }
         
-        let oldFlattenedThingies = flattenTree(rootThingy: oldFrame.views)
-        let newFlattenedThingies = flattenTree(rootThingy: newFrame.views)
+        // Safely flatten trees with thread safety and error handling
+        var oldFlattenedThingies: [any SessionReplayViewThingy] = []
+        var newFlattenedThingies: [any SessionReplayViewThingy] = []
+
+        treeProcessingQueue.sync {
+            oldFlattenedThingies = flattenTree(rootThingy: oldFrame.views)
+            newFlattenedThingies = flattenTree(rootThingy: newFrame.views)
+        }
+
+        // If flattening failed or returned empty results, fall back to full snapshot
+        guard !oldFlattenedThingies.isEmpty && !newFlattenedThingies.isEmpty else {
+            print("Warning: flattenTree returned empty results, falling back to full snapshot")
+            return processFullSnapshot(newFrame)
+        }
         
         let operations = generateDiff(old: oldFlattenedThingies, new: newFlattenedThingies)
         
@@ -157,6 +175,11 @@ class SessionReplayFrameProcessor {
         }
         
         let incrementalUpdate: RRWebIncrementalData = .mutation(RRWebMutationData(adds: adds, removes: removes, texts: texts, attributes: attributes))
+        
+        if adds.isEmpty && removes.isEmpty && texts.isEmpty && attributes.isEmpty {
+            return nil
+        }
+        
         let incrementalEvent = IncrementalEvent(timestamp: (newFrame.date.timeIntervalSince1970 * 1000).rounded(), data: incrementalUpdate)
         return incrementalEvent
         
@@ -260,12 +283,24 @@ class SessionReplayFrameProcessor {
     private func flattenTree(rootThingy: any SessionReplayViewThingy) -> [any SessionReplayViewThingy] {
         var thingies: [any SessionReplayViewThingy] = []
         var queue: [any SessionReplayViewThingy] = [rootThingy]
-        
+        var visited = Set<AnyHashable>() // Track visited nodes to prevent infinite loops
+
+        // Reserve capacity for better performance
+        thingies.reserveCapacity(100) // Conservative initial estimate
+        visited.reserveCapacity(100)
+
         while let thingy = queue.popLast() {
+            // Prevent infinite loops from circular references
+            guard !visited.contains(AnyHashable(thingy)) else {
+                continue
+            }
+
+            visited.insert(AnyHashable(thingy))
             thingies.append(thingy)
+
             queue.append(contentsOf: thingy.subviews)
         }
-        
+
         return thingies
     }
 }

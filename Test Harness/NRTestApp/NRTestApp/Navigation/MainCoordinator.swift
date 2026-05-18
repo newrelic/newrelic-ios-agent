@@ -73,6 +73,18 @@ class MainCoordinator: Coordinator {
         let diffTestViewController = ViewControllerProvider.diffTestViewController
         navigationController.pushViewController(diffTestViewController, animated: true)
     }
+    
+    func showSwiftUITabBar() {
+#if os(iOS)
+        if #available(iOS 18.0, *) {
+            let swiftUIView = SwiftUITabBar()
+            let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+            navigationController.pushViewController(swiftUIViewController, animated: true)
+        } else {
+            // Fallback on earlier versions
+        }
+#endif
+    }
 
     func showPerformanceContentView() {
 #if os(iOS)
@@ -103,6 +115,20 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
+    
+    func showSwiftUICustomerView() {
+#if os(iOS)
+        if #available(iOS 15.0, *) {
+            if #available(iOS 16.0, *) {
+                let swiftUIView = ClaimFormView()
+                let swiftUIViewController = UIHostingController(rootView: swiftUIView)
+                navigationController.pushViewController(swiftUIViewController, animated: true)
+            } else {
+                // Fallback on earlier versions
+            }
+        }
+#endif
+    }
 
     func showSwiftUIViewRepresentableTestView() {
 #if os(iOS)
@@ -113,5 +139,31 @@ class MainCoordinator: Coordinator {
         }
 #endif
     }
-        
+
+    func showAttributedTextTestViewController() {
+        let attributedTextTestViewController = ViewControllerProvider.attributedTextTestViewController
+        navigationController.pushViewController(attributedTextTestViewController, animated: true)
+    }
+
+    func showDateTimePickerViewController() {
+#if os(iOS)
+        let dateTimePickerViewController = ViewControllerProvider.dateTimePickerViewController
+        navigationController.pushViewController(dateTimePickerViewController, animated: true)
+#endif
+    }
+    
+    func showTintedImagesViewController() {
+#if os(iOS)
+        let tintedImagesViewController = ViewControllerProvider.tintedImagesViewController
+        navigationController.pushViewController(tintedImagesViewController, animated: true)
+#endif
+    }
+
+    func showSwitchTestViewController() {
+#if os(iOS)
+        let switchTestViewController = ViewControllerProvider.switchTestViewController
+        navigationController.pushViewController(switchTestViewController, animated: true)
+#endif
+    }
+
 }

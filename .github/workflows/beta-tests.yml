@@ -9,6 +9,9 @@ on:
         required: true
         default: "17.0"
 
+permissions:
+  contents: read
+
 jobs:
   testIOSBeta:
     name: TestIOSBeta
@@ -29,7 +32,9 @@ jobs:
 
       # - name: Install lcov
       #   run: brew install lcov
-
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+        
       - name: Update gem
         run: bundle update
 

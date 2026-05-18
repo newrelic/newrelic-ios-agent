@@ -43,11 +43,17 @@ final class UIHostingViewRecordOrchestrator {
         let seed: UInt16
         let identity: UInt32
         let contentType: String
-        
-        init(content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity) {
+        /// Ties this key to a specific _UIHostingView instance so that two different
+        /// hosting views (e.g. separate NavigationStack destination screens) never
+        /// share content IDs even when SwiftUI happens to assign the same seed/identity
+        /// values in their independent display lists.
+        let hostingViewId: ObjectIdentifier
+
+        init(content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity, hostingView: UIView) {
             self.seed = content.seed.value
             self.identity = identity.value
-            
+            self.hostingViewId = ObjectIdentifier(hostingView)
+
             // Create a type identifier based on the content value
             switch content.value {
             case .text(_, _):
@@ -67,9 +73,9 @@ final class UIHostingViewRecordOrchestrator {
             }
         }
     }
-    
-    private static func getContentId(for content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity) -> Int {
-        let cacheKey = ContentCacheKey(content: content, identity: identity)
+
+    private static func getContentId(for content: SwiftUIDisplayList.Content, identity: SwiftUIDisplayList.Identity, hostingView: UIView) -> Int {
+        let cacheKey = ContentCacheKey(content: content, identity: identity, hostingView: hostingView)
         
         return cacheQueue.sync {
             // Check if cleanup is needed
@@ -200,7 +206,7 @@ final class UIHostingViewRecordOrchestrator {
                     let clipRect = nextContext.convert(frame: path.boundingRect)
                     nextContext.clip = nextContext.clip.intersection(clipRect)
                 case .filter(.colorMultiply(let color)):
-                    nextContext.tintColor = color
+                    nextContext.setTintColor(from: color)
                 case .identify, .filter, .unknown:
                     break
                 }
@@ -236,67 +242,80 @@ final class UIHostingViewRecordOrchestrator {
         let frame = baseContext.convert(frame: item.frame)
         var viewName = "SwiftUIView"
 
-        func makeDetails() -> ViewDetails {
-            ViewDetails(frame: frame,
-                        clip: viewAttributes.clip,
-                        backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
-                        alpha: viewAttributes.alpha,
-                        isHidden: viewAttributes.isHidden,
-                        viewName: viewName,
-                        parentId: parentId,
-                        cornerRadius: viewAttributes.layerCornerRadius,
-                        borderWidth: viewAttributes.layerBorderWidth,
-                        borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),//Int(content.seed.value),
-                        viewId: contentId,
-                        view: originalView,
-                        maskApplicationText: viewAttributes.maskApplicationText,
-                        maskUserInputText: viewAttributes.maskUserInputText,
-                        maskAllImages: viewAttributes.maskAllImages,
-                        maskAllUserTouches: viewAttributes.maskAllUserTouches,
-                        sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier) // viewAttributes.maskUserInput
+        func makeDetails(widthOffset: CGFloat = 0) -> ViewDetails {
+                    let adjustedFrame = CGRect(x: frame.origin.x,
+                                               y: frame.origin.y,
+                                               width: frame.size.width + widthOffset,
+                                               height: frame.size.height)
+                    
+                    return ViewDetails(frame: adjustedFrame,
+                                clip: viewAttributes.clip,
+                                backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
+                                alpha: viewAttributes.alpha,
+                                isHidden: viewAttributes.isHidden,
+                                viewName: viewName,
+                                parentId: parentId,
+                                cornerRadius: viewAttributes.layerCornerRadius,
+                                borderWidth: viewAttributes.layerBorderWidth,
+                                borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
+                                viewId: contentId,
+                                view: originalView,
+                                maskApplicationText: viewAttributes.maskApplicationText,
+                                maskUserInputText: viewAttributes.maskUserInputText,
+                                maskAllImages: viewAttributes.maskAllImages,
+                                maskAllUserTouches: viewAttributes.maskAllUserTouches,
+                                blockView: viewAttributes.blockView,
+                                sessionReplayIdentifier: viewAttributes.sessionReplayIdentifier)
         }
         
         switch content.value {
-        case SwiftUIDisplayList.Content.Value.shape:
-            return nil // TODO: Shapes
+        case let SwiftUIDisplayList.Content.Value.shape(path, fillColor, fillStyle):
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
+            viewName = "SwiftUIShapeView"
+            var details = makeDetails()
+            details.backgroundColor = .clear // Shapes should not have a bg color by default
+
+            return SwiftUIShapeThingy(viewDetails: details,
+                                     path: path,
+                                     fillColor: fillColor,
+                                     fillStyle: fillStyle,
+                                     fallbackTintColor: baseContext.tintColor)
         case SwiftUIDisplayList.Content.Value.text(let textView, _):
             let storage = textView.text.storage
-
-            let foregroundColor =
-            storage.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? UIColor ?? .clear
-            let font =
-            storage.attribute(NSAttributedString.Key.font, at: 0, effectiveRange: nil) as? UIFont
-
-            var alignment: NSTextAlignment = .left
-            if let style = storage.attribute(NSAttributedString.Key.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle {
-                alignment = style.alignment
-                _ = style.lineSpacing
-                _ = style.lineBreakMode
-            }
+            let rawString = storage.string
+                
+            // 1. Split the string into lines
+            let lines = rawString.components(separatedBy: .newlines)
             
-            contentId = getContentId(for: content, identity: item.identity)
-            // Extract masking state from the view
+            // 2. Find the line with the maximum number of spaces
+            let maxSpacesOnOneLine = lines.map { line in
+                line.filter { $0 == " " }.count
+            }.max() ?? 0
+            // 3. Calculate offset (max spaces * 2)
+            let calculatedOffset = CGFloat(maxSpacesOnOneLine * 2)
+            
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUITextView"
-            let details = makeDetails()
-            
-            var outputText = ""
-            if details.isMasked ?? false {
-                outputText = String(repeating: "*", count: storage.string.count)
+            let details = makeDetails(widthOffset: calculatedOffset)
+
+            let iOS15 = ProcessInfo.processInfo.operatingSystemVersion.majorVersion <= 15
+            if iOS15 {
+                return UILabelThingy(viewDetails: details,
+                                     attributedText: storage, iOS15Override:true)
             }
             else {
-                outputText = storage.string
+                return UILabelThingy(viewDetails: details,
+                                     attributedText: storage)
             }
+
             
-            return UILabelThingy(viewDetails: details,
-                                 text: outputText,
-                                 textAlignment: alignment.stringValue(),
-                                 fontSize: font?.pointSize ?? 10,
-                                 fontName: font?.fontName ?? "SFUI-Bold",
-                                 fontFamily: font?.familyName ?? "AppleSystemUIFont",
-                                 textColor: foregroundColor)
-            
-        case SwiftUIDisplayList.Content.Value.color:
-            return nil // TODO: Colors
+        case let SwiftUIDisplayList.Content.Value.color(colorData):
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
+            viewName = "SwiftUIColorView"
+            var details = makeDetails()
+            // Convert the SwiftUI color data to UIColor for the background
+            details.backgroundColor = colorData.uiColor
+            return UIViewThingy(viewDetails: details)
         case let SwiftUIDisplayList.Content.Value.image(swiftUIImage):
             // Extract UIImage from SwiftUIGraphicsImage
             var image: CGImage?
@@ -307,8 +326,8 @@ final class UIHostingViewRecordOrchestrator {
                 break
             }
             
-            contentId = getContentId(for: content, identity: item.identity)
-            
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
+
             viewName = "SwiftUIImageView"
             var details = makeDetails()
             details.backgroundColor = .clear // Images should not have a bg color by default
@@ -317,16 +336,50 @@ final class UIHostingViewRecordOrchestrator {
                                      cgImage: image,
                                      swiftUIImage: swiftUIImage,
                                      contentMode: .scaleToFill)
-        case SwiftUIDisplayList.Content.Value.drawing:
-            return nil // TODO: Drawings
+        case SwiftUIDisplayList.Content.Value.drawing(let erasedDrawing):
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
+            viewName = "SwiftUIDrawingView"
+            var details = makeDetails()
+            details.backgroundColor = .clear
+
+            // Convert drawing to UIImage
+            guard let image = erasedDrawing.makeSwiftUIImage(),
+                  let cgImage = image.cgImage else {
+                return nil
+            }
+
+            // Get tint color from context (foreground color from colorMultiply filter)
+            let maskColor: Color._ResFoundColor? = if let tintColor = baseContext.tintColor {
+                Color._ResFoundColor(
+                    linearRed: Float(tintColor.cgColor.components?[0] ?? 0),
+                    linearGreen: Float(tintColor.cgColor.components?[1] ?? 0),
+                    linearBlue: Float(tintColor.cgColor.components?[2] ?? 0),
+                    opacity: Float(tintColor.cgColor.alpha)
+                )
+            } else {
+                nil
+            }
+
+            // Create SwiftUIGraphicsImage from the generated CGImage
+            let swiftUIImage = SwiftUIGraphicsImage(
+                contents: .cgImage(cgImage),
+                scale: image.scale,
+                maskClr: maskColor,
+                orientation: .up
+            )
+
+            return UIImageViewThingy(viewDetails: details,
+                                     cgImage: cgImage,
+                                     swiftUIImage: swiftUIImage,
+                                     contentMode: .scaleToFill)
         case SwiftUIDisplayList.Content.Value.platformView:
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             viewName = "SwiftUIPlatformView"
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)
         case SwiftUIDisplayList.Content.Value.unknown:
-            contentId = getContentId(for: content, identity: item.identity)
+            contentId = getContentId(for: content, identity: item.identity, hostingView: originalView)
             var details = makeDetails()
             details.backgroundColor = .clear
             return UIViewThingy(viewDetails: details)

@@ -147,7 +147,14 @@ extension SwiftUIDisplayList.Content.Value: XrayConvertible {
 
         if #available(iOS 26, tvOS 26, *) {
             let cView = try xray.xray(type: ColorView.self, col)
-            return SwiftUIDisplayList.Content.Value.color(cView.color.base)
+            // Convert ColorView to _ResFoundColor for compatibility
+            let color = Color._ResFoundColor(
+                linearRed: cView.linearRed,
+                linearGreen: cView.linearGreen,
+                linearBlue: cView.linearBlue,
+                opacity: cView.opacity
+            )
+            return SwiftUIDisplayList.Content.Value.color(color)
         }
         else {
             let resolution = try xray.xray(col) as Color._ResFoundColor

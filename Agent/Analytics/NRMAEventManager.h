@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
 - (void)empty;
+- (void)resetTimestamp;
 - (nullable NSString *)getEventJSONStringWithError:(NSError *__autoreleasing *)error clearEvents:(BOOL)clearEvents;
 
 + (nullable NSString *)getLastSessionEventsFromFilename:(NSString *)filename;

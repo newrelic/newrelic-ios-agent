@@ -22,5 +22,12 @@
 #import "NRMABool.h"
 #import "Constants.h"
 #import "NRMAExceptionMetaDataStore.h"
+#import "NRMAAnalytics.h"
+#import "NRMAAgentConfiguration.h"
+#import "NRMAConnectInformation.h"
+#import "NRMAHarvestableValue.h"
+#import "NRMAAttributeValidator.h"
+#import "NRMAAppToken.h"
+#import "NRMAHarvesterConfiguration.h"
 
 #endif /* APrivateHeader_h */

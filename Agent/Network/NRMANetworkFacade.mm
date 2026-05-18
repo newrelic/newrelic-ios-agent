@@ -92,6 +92,11 @@
     }
 
     NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+    
+    if (!traceParent || ![traceParent isKindOfClass:[NSString class]]) {
+        return;
+    }
+    
     NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
 
     if ([traceParentComponents count] > 2) {
@@ -111,6 +116,11 @@
     }
 
     NSString *traceParent = traceHeaders[W3C_DISTRIBUTED_TRACING_PARENT_HEADER_KEY];
+    
+    if (!traceParent || ![traceParent isKindOfClass:[NSString class]]) {
+        return;
+    }  
+    
     NSArray<NSString*> *traceParentComponents = [traceParent componentsSeparatedByString:@"-"];
 
     if ([traceParentComponents count] > 2) {
@@ -122,7 +132,6 @@
         NRLOG_AGENT_WARNING(@"Invalid traceComponents. Skipping distributed tracing.");
     }
 }
-
 
 + (void) noticeNetworkRequest:(NSURLRequest*)request
                      response:(NSURLResponse*)response
@@ -406,11 +415,17 @@
 }
 
 + (int) responseBodyCaptureSizeLimit {
-    return [NRMAHarvestController configuration].response_body_limit;
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return 0;
+    }
+    return config.response_body_limit;
 }
 
 - (NSString*) crossProcessId {
-    return [[[NRMAHarvestController harvestController] harvester] crossProcessID];
+    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+    NRMAHarvester* harvester = [controller harvester];
+    return harvester ? [harvester crossProcessID] : nil;
 }
 
 @end
