@@ -6,6 +6,9 @@ on:
       version:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   # The deployS3Production job copies the existing build from staging download location to the production download location.
   # The job relies on the existence of the xcframework desired for production promotion at the staging download location url: https://download.newrelic.com/ios-v5/${{ env.version }}.zip
@@ -55,6 +58,9 @@ jobs:
     runs-on: macos-14
     needs: [deployS3Production]
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout Main repo
         uses: actions/checkout@v3
