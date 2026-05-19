@@ -102,11 +102,13 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
 
 // Lightweight session delegate injected when the customer didn't supply one
 // (URLSession.shared and URLSession(configuration:)) so we can capture
-// resourceFetchType / wireStatusCode from didFinishCollectingMetrics: without
-// altering data delivery — completion handlers continue to receive bytes
-// because this delegate intentionally implements neither didReceiveData: nor
-// didCompleteWithError:.
-@interface NRMAURLSessionMetricsOnlyDelegate : NSObject <NSURLSessionTaskDelegate>
+// resourceFetchType / wireStatusCode from didFinishCollectingMetrics:.
+// Also implements didReceiveData: so the agent can capture the response body
+// for async/await calls on URLSession.shared (which otherwise has no public
+// hook for body bytes). didCompleteWithError: is deliberately NOT implemented
+// so customer completion handlers continue to receive bytes from Apple's
+// internal data path unchanged.
+@interface NRMAURLSessionMetricsOnlyDelegate : NSObject <NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 @end
 
 static NSString *NRMA__injectedFetchTypeName(NSURLSessionTaskMetricsResourceFetchType type) {
@@ -120,6 +122,28 @@ static NSString *NRMA__injectedFetchTypeName(NSURLSessionTaskMetricsResourceFetc
 }
 
 @implementation NRMAURLSessionMetricsOnlyDelegate
+
+- (void)URLSession:(NSURLSession *)session
+          dataTask:(NSURLSessionDataTask *)dataTask
+    didReceiveData:(NSData *)data
+{
+    if (data.length == 0) return;
+    @try {
+        NSData *existing = NRMA__getDataForSessionTask(dataTask);
+        if (existing.length > 0) {
+            NSMutableData *combined = [NSMutableData dataWithCapacity:existing.length + data.length];
+            [combined appendData:existing];
+            [combined appendData:data];
+            NRMA__setDataForSessionTask(dataTask, combined);
+        } else {
+            NRMA__setDataForSessionTask(dataTask, data);
+        }
+    } @catch (NSException *e) {
+        [NRMAExceptionHandler logException:e
+                                     class:NSStringFromClass([self class])
+                                  selector:@"URLSession:dataTask:didReceiveData:"];
+    }
+}
 
 - (void)URLSession:(NSURLSession *)session
               task:(NSURLSessionTask *)task
