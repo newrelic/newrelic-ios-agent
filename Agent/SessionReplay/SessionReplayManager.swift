@@ -20,7 +20,7 @@ public class SessionReplayManager: NSObject {
     private let sessionReplay: NRMASessionReplay
     private let sessionReplayReporter: SessionReplayReporter
     
-    public var harvestPeriod: Int64 = 15  // TEMP DIAGNOSTIC: shorter so we see the live-harvest path quickly
+    public var harvestPeriod: Int64 = 60
     private var harvestseconds = 0
     public var sessionReplayTimer: Timer?
     
@@ -279,14 +279,7 @@ public class SessionReplayManager: NSObject {
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
             lhs.base.timestamp < rhs.base.timestamp
         }
-        // TEMP DIAGNOSTIC: persist harvest container to caches dir for inspection.
-        if let dumpData = try? JSONEncoder().encode(container),
-           let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first {
-            let dumpURL = cachesDir.appendingPathComponent("nrtestapp_harvest.json")
-            try? dumpData.write(to: dumpURL)
-            NRLOG_DEBUG("🌐 [harvest] dumped \(container.count) events (\(dumpData.count) bytes) → \(dumpURL.path)")
-        }
-        
+
         let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
         let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
         
