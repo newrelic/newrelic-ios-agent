@@ -20,8 +20,58 @@
 #import "NRMAAssociate.h"
 #import "NRMAURLSessionTaskSearch.h"
 #import "NRMAFlags.h"
+#import "NRLogger.h"
 
 #define NRMASwizzledMethodPrefix @"_NRMAOverride__"
+
+// Phase-2 viability probe: try to read private NSURLSessionTaskMetrics on tasks
+// that have NO delegate (URLSession.shared completion-handler path, async/await path).
+// Diagnostic-only; never ship enabled.
+#define NR_DEBUG_FETCH_TYPE_PROBE 1
+
+#if NR_DEBUG_FETCH_TYPE_PROBE
+static NSString *NRMA__probeFetchTypeName(NSInteger type) {
+    switch (type) {
+        case 0: return @"unknown";
+        case 1: return @"networkLoad";
+        case 2: return @"serverPush";
+        case 3: return @"localCache";
+        default: return @"?";
+    }
+}
+
+static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
+    @try {
+        // _metrics is private SPI on NSURLSessionTask. KVC peek — diagnostic only.
+        NSURLSessionTaskMetrics *m = nil;
+        @try { m = [task valueForKey:@"_metrics"]; } @catch (...) {}
+        if (m == nil) {
+            @try { m = [task valueForKey:@"metrics"]; } @catch (...) {}
+        }
+        if (m == nil) {
+            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ metrics=nil",
+                             origin, task.originalRequest.URL.absoluteString);
+            return;
+        }
+        NSURLSessionTaskTransactionMetrics *last = m.transactionMetrics.lastObject;
+        NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
+        NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ txCount=%lu finalFetchType=%@(%ld) "
+                         @"finalWireStatus=%ld appVisibleStatus=%ld",
+                         origin,
+                         task.originalRequest.URL.absoluteString,
+                         (unsigned long)m.transactionMetrics.count,
+                         NRMA__probeFetchTypeName(last.resourceFetchType),
+                         (long)last.resourceFetchType,
+                         (long)wireStatus,
+                         (long)appVisibleStatus);
+    } @catch (NSException *e) {
+        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] exception: %@", origin, e);
+    }
+}
+#endif
 
 IMP NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue;
 
@@ -484,6 +534,9 @@ NSURLSessionUploadTask* NRMAOverride__uploadTaskWithRequest_fromData_completionH
 
 void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* response, NSError* error)
 {
+#if NR_DEBUG_FETCH_TYPE_PROBE
+    NRMA__probeTaskMetrics(task, @"recordTask");
+#endif
     @try {
         NRTimer* timer = NRMA__getTimerForSessionTask(task);
         // If there is no timer, let's not record this network activity. this could mean a session executed before task was instrumented or the request has already been instrumented by another handler.

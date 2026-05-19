@@ -17,6 +17,38 @@
 #import "NRMAFlags.h"
 #import "NRConstants.h"
 
+#define NR_DEBUG_FETCH_TYPE_PROBE 1
+#if NR_DEBUG_FETCH_TYPE_PROBE
+static void NRMA__probeAsyncTaskMetrics(NSURLSessionTask *task) {
+    @try {
+        NSURLSessionTaskMetrics *m = nil;
+        @try { m = [task valueForKey:@"_metrics"]; } @catch (...) {}
+        if (m == nil) {
+            @try { m = [task valueForKey:@"metrics"]; } @catch (...) {}
+        }
+        if (m == nil) {
+            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ metrics=nil",
+                             task.originalRequest.URL.absoluteString);
+            return;
+        }
+        NSURLSessionTaskTransactionMetrics *last = m.transactionMetrics.lastObject;
+        NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
+        NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+        NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ txCount=%lu fetchType=%ld "
+                         @"finalWireStatus=%ld appVisibleStatus=%ld",
+                         task.originalRequest.URL.absoluteString,
+                         (unsigned long)m.transactionMetrics.count,
+                         (long)last.resourceFetchType,
+                         (long)wireStatus,
+                         (long)appVisibleStatus);
+    } @catch (NSException *e) {
+        NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] exception: %@", e);
+    }
+}
+#endif
+
 static IMP NRMAOriginal__resume;
 static IMP NRMAOriginal__urlSessionTask_SetState;
 static Class __NRMAConcreteClass;
@@ -158,6 +190,9 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                     if (newState == NSURLSessionTaskStateCompleted) {
                         // NSLog(@"NRMAOverride NRMA__recordTask called because newState  == NSURLSessionTaskStateCompleted  newState: %ld, taskState:%ld  task: %@ data: %@", (long) newState, (long)task.state, task, data);
 
+#if NR_DEBUG_FETCH_TYPE_PROBE
+                        NRMA__probeAsyncTaskMetrics(task);
+#endif
                         NRMA__recordTask(task, data, task.response, task.error);
                     }
                 }

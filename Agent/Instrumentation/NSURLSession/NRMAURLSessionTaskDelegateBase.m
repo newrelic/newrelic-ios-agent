@@ -11,6 +11,17 @@
 #import "NRMAURLSessionTaskOverride.h"
 #import "NRMAURLSessionOverride.h"
 #import "NRMAExceptionHandler.h"
+#import "NRLogger.h"
+
+static NSString *NRMA__fetchTypeName(NSURLSessionTaskMetricsResourceFetchType type) {
+    switch (type) {
+        case NSURLSessionTaskMetricsResourceFetchTypeNetworkLoad: return @"networkLoad";
+        case NSURLSessionTaskMetricsResourceFetchTypeServerPush:  return @"serverPush";
+        case NSURLSessionTaskMetricsResourceFetchTypeLocalCache:  return @"localCache";
+        case NSURLSessionTaskMetricsResourceFetchTypeUnknown:
+        default:                                                  return @"unknown";
+    }
+}
 
 @implementation NRURLSessionTaskDelegateBase
 
@@ -82,6 +93,53 @@
         [self.realDelegate URLSession:session
                              dataTask:dataTask
                        didReceiveData:data];
+    }
+}
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
+{
+    @try {
+        NSURLSessionTaskTransactionMetrics *last = metrics.transactionMetrics.lastObject;
+        NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
+        NSInteger finalWireStatus  = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+
+        NRLOG_AGENT_INFO(@"[NRFetch] url=%@ txCount=%lu finalFetchType=%@(%ld) "
+                         @"finalWireStatus=%ld appVisibleStatus=%ld reusedConn=%d proxy=%d",
+                         task.originalRequest.URL.absoluteString,
+                         (unsigned long)metrics.transactionMetrics.count,
+                         NRMA__fetchTypeName(last.resourceFetchType),
+                         (long)last.resourceFetchType,
+                         (long)finalWireStatus,
+                         (long)appVisibleStatus,
+                         last.reusedConnection,
+                         last.proxyConnection);
+
+        NSUInteger i = 0;
+        for (NSURLSessionTaskTransactionMetrics *t in metrics.transactionMetrics) {
+            NSInteger wireStatus = [t.response isKindOfClass:[NSHTTPURLResponse class]]
+                ? [(NSHTTPURLResponse *)t.response statusCode] : -1;
+            NRLOG_AGENT_INFO(@"[NRFetch.tx %lu] fetchType=%@(%ld) wireStatus=%ld reusedConn=%d",
+                             (unsigned long)i,
+                             NRMA__fetchTypeName(t.resourceFetchType),
+                             (long)t.resourceFetchType,
+                             (long)wireStatus,
+                             t.reusedConnection);
+            i++;
+        }
+    } @catch (NSException *exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:@"URLSession:task:didFinishCollectingMetrics:"];
+    }
+
+    if ([self.realDelegate respondsToSelector:@selector(URLSession:task:didFinishCollectingMetrics:)]) {
+        [(id<NSURLSessionTaskDelegate>)self.realDelegate URLSession:session
+                                                              task:task
+                                       didFinishCollectingMetrics:metrics];
     }
 }
 
