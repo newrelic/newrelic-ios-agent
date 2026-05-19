@@ -12,6 +12,7 @@ import SwiftUI
 struct SwiftUIContext {
     var frame: CGRect
     var clip: CGRect
+    var cornerRadius: CGFloat = 0.0
     // Store tint color components directly for iOS version compatibility
     var tintColorRed: Float?
     var tintColorGreen: Float?
