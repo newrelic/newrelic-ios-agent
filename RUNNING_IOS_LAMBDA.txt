@@ -13,7 +13,17 @@ Build is available in
 ../newrelic-ios-agent/derived_path/Build/Products/Release-iphonesimulator
 ```
 
+
+Compress NRTestApp.app
+To 
+Rename to nrtestapp-ios.zip
+
 Build is manually copied to ../newrelic-ios-agent/builds/nrtestapp-ios.zip
+
+Do this
+
+export LT_USERNAME="xx"
+export LT_ACCESSKEY="xx"
 
 
 To upload the zip file to the LambdaTest virtualDevice endpoint... 
