@@ -64,6 +64,7 @@ static NSString *NRMA__fetchTypeName(NSURLSessionTaskMetricsResourceFetchType ty
                 NSData *data = NRMA__getDataForSessionTask(task);
                 NSString* fetchType = NRMA__getFetchTypeForSessionTask(task);
                 NSInteger wireStatus = NRMA__getWireStatusForSessionTask(task);
+                int64_t wireBytes = NRMA__getWireBytesForSessionTask(task);
 
                 [NRMANSURLConnectionSupport noticeResponse:task.response
                                                 forRequest:task.originalRequest
@@ -72,7 +73,8 @@ static NSString *NRMA__fetchTypeName(NSURLSessionTaskMetricsResourceFetchType ty
                                                  bytesSent:(NSUInteger)task.countOfBytesSent
                                              bytesReceived:(NSUInteger)task.countOfBytesReceived
                                          resourceFetchType:fetchType
-                                            wireStatusCode:wireStatus];
+                                            wireStatusCode:wireStatus
+                                         wireBytesReceived:wireBytes];
             }
             // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
             NRMA__setTimerForSessionTask(task, nil);
@@ -116,6 +118,9 @@ didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
         NRMA__setFetchTypeForSessionTask(task, NRMA__fetchTypeName(last.resourceFetchType));
         if (finalWireStatus > 0) {
             NRMA__setWireStatusForSessionTask(task, finalWireStatus);
+        }
+        if (last.countOfResponseBodyBytesReceived > 0) {
+            NRMA__setWireBytesForSessionTask(task, last.countOfResponseBodyBytesReceived);
         }
 
         NRLOG_AGENT_INFO(@"[NRFetch] url=%@ txCount=%lu finalFetchType=%@(%ld) "

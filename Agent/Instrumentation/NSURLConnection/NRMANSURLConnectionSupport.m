@@ -342,6 +342,27 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
      resourceFetchType:(NSString *)resourceFetchType
         wireStatusCode:(NSInteger)wireStatusCode
 {
+    [self noticeResponse:response
+              forRequest:request
+               withTimer:timer
+                 andBody:body
+               bytesSent:sent
+           bytesReceived:received
+       resourceFetchType:resourceFetchType
+          wireStatusCode:wireStatusCode
+       wireBytesReceived:0];
+}
+
++ (void)noticeResponse:(NSURLResponse *)response
+            forRequest:(NSURLRequest *)request
+             withTimer:(NRTimer *)timer
+               andBody:(NSData *)body
+             bytesSent:(NSUInteger)sent
+         bytesReceived:(NSUInteger)received
+     resourceFetchType:(NSString *)resourceFetchType
+        wireStatusCode:(NSInteger)wireStatusCode
+     wireBytesReceived:(int64_t)wireBytesReceived
+{
     // ignore self-instrumentation here, the agent records this stuff into Supportability metrics elsewhere
     if ([NRMANSURLConnectionSupport isNewRelicServiceRequest:request]) {
         return;
@@ -356,7 +377,8 @@ static SEL swizzleSelectors[swizzleCount] = {NULL, NULL};
                                traceHeaders:nil
                                      params:nil
                           resourceFetchType:resourceFetchType
-                             wireStatusCode:wireStatusCode];
+                             wireStatusCode:wireStatusCode
+                          wireBytesReceived:wireBytesReceived];
 }
 
 + (NRMANSURLConnectionDelegate*) generateProxyFromDelegate:(id<NSURLConnectionDelegate>)realDelegate

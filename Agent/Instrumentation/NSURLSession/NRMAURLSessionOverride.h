@@ -13,6 +13,7 @@
 #define kNRSessionDataAssociatedObject @"com.NewRelic.NRSessionTask.Data"
 #define kNRFetchTypeAssociatedObject @"com.NewRelic.NRSessionTask.FetchType"
 #define kNRWireStatusAssociatedObject @"com.NewRelic.NRSessionTask.WireStatus"
+#define kNRWireBytesAssociatedObject @"com.NewRelic.NRSessionTask.WireBytes"
 
 
 NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id self,SEL _cmd,NSURLSessionConfiguration* configuration,id<NSURLSessionDelegate>delegate,NSOperationQueue* queue);
@@ -41,6 +42,8 @@ NSString* NRMA__getFetchTypeForSessionTask(NSURLSessionTask* task);
 void NRMA__setFetchTypeForSessionTask(NSURLSessionTask* task, NSString* fetchType);
 NSInteger NRMA__getWireStatusForSessionTask(NSURLSessionTask* task);
 void NRMA__setWireStatusForSessionTask(NSURLSessionTask* task, NSInteger wireStatus);
+int64_t NRMA__getWireBytesForSessionTask(NSURLSessionTask* task);
+void NRMA__setWireBytesForSessionTask(NSURLSessionTask* task, int64_t wireBytes);
 
 @interface NRMAURLSessionOverride : NSObject
 + (void) beginInstrumentation;

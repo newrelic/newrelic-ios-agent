@@ -133,6 +133,9 @@ didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
         if (wire > 0) {
             NRMA__setWireStatusForSessionTask(task, wire);
         }
+        if (last.countOfResponseBodyBytesReceived > 0) {
+            NRMA__setWireBytesForSessionTask(task, last.countOfResponseBodyBytesReceived);
+        }
     } @catch (NSException *e) {
         [NRMAExceptionHandler logException:e
                                      class:NSStringFromClass([self class])
@@ -688,6 +691,7 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
 
             NSString* fetchType = NRMA__getFetchTypeForSessionTask(task);
             NSInteger wireStatus = NRMA__getWireStatusForSessionTask(task);
+            int64_t wireBytes = NRMA__getWireBytesForSessionTask(task);
 
             if (error) {
                 [NRMANSURLConnectionSupport noticeError:error
@@ -701,7 +705,8 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
                                                bytesSent:(NSUInteger)task.countOfBytesSent
                                            bytesReceived:(NSUInteger)task.countOfBytesReceived
                                        resourceFetchType:fetchType
-                                          wireStatusCode:wireStatus];
+                                          wireStatusCode:wireStatus
+                                       wireBytesReceived:wireBytes];
             }
             // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
             NRMA__setTimerForSessionTask(task, nil);
@@ -774,4 +779,17 @@ void NRMA__setWireStatusForSessionTask(NSURLSessionTask* task, NSInteger wireSta
 {
     if (task == nil) return;
     objc_setAssociatedObject(task, kNRWireStatusAssociatedObject, @(wireStatus), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+int64_t NRMA__getWireBytesForSessionTask(NSURLSessionTask* task)
+{
+    if (task == nil) return 0;
+    NSNumber* val = objc_getAssociatedObject(task, kNRWireBytesAssociatedObject);
+    return val ? [val longLongValue] : 0;
+}
+
+void NRMA__setWireBytesForSessionTask(NSURLSessionTask* task, int64_t wireBytes)
+{
+    if (task == nil) return;
+    objc_setAssociatedObject(task, kNRWireBytesAssociatedObject, @(wireBytes), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }

@@ -163,6 +163,30 @@
                        params:(NSDictionary*)params
             resourceFetchType:(NSString* _Nullable)resourceFetchType
                wireStatusCode:(NSInteger)wireStatusCode {
+    [self noticeNetworkRequest:request
+                      response:response
+                     withTimer:timer
+                     bytesSent:bytesSent
+                 bytesReceived:bytesReceived
+                  responseData:responseData
+                  traceHeaders:traceHeaders
+                        params:params
+             resourceFetchType:resourceFetchType
+                wireStatusCode:wireStatusCode
+             wireBytesReceived:0];
+}
+
++ (void) noticeNetworkRequest:(NSURLRequest*)request
+                     response:(NSURLResponse*)response
+                    withTimer:(NRTimer*)timer
+                    bytesSent:(NSUInteger)bytesSent
+                bytesReceived:(NSUInteger)bytesReceived
+                 responseData:(NSData*)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
+                       params:(NSDictionary*)params
+            resourceFetchType:(NSString* _Nullable)resourceFetchType
+               wireStatusCode:(NSInteger)wireStatusCode
+            wireBytesReceived:(int64_t)wireBytesReceived {
 
     [timer stopTimer];
     double startTime = timer.startTimeInMillis;
@@ -211,10 +235,19 @@
         }
 
         NSUInteger modifiedBytesReceived = bytesReceived;
-        if([response isKindOfClass:[NSHTTPURLResponse class]]) {
+        if (wireBytesReceived > 0) {
+            // URLSessionTaskTransactionMetrics.countOfResponseBodyBytesReceived is the
+            // authoritative wire byte count when available — prefer it over any local
+            // recompression estimate.
+            modifiedBytesReceived = (NSUInteger)wireBytesReceived;
+        } else if (responseData != nil && [response isKindOfClass:[NSHTTPURLResponse class]]) {
             NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
             NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
             if ([header isEqualToString:@"gzip"]) {
+                // Fallback for paths that don't have transaction metrics (legacy / no-delegate
+                // completion-handler paths): re-gzip the locally-decompressed body to estimate
+                // wire bytes. Only valid when responseData is non-nil — gzipping nil yields a
+                // ~20-byte empty-stream and corrupts the count.
                 modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
             }
         }
