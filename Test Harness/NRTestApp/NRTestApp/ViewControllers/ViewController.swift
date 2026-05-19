@@ -279,6 +279,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction()}))
 
+        options.append(UtilOption(title: "Map View (UIKit)", handler: { [self] in mapViewAction() }))
+
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
@@ -429,6 +431,10 @@ class ViewController: UIViewController {
 #if os(iOS)
         coordinator?.showTintedImagesViewController()
 #endif
+    }
+
+    func mapViewAction() {
+        coordinator?.showMapViewController()
     }
 }
 

@@ -77,5 +77,10 @@ enum ViewControllerProvider {
         return viewController
     }
 #endif
+
+    static var mapViewController: MapViewController {
+        let viewController = MapViewController()
+        return viewController
+    }
 }
 
