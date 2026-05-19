@@ -74,6 +74,8 @@ static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
 #endif
 
 IMP NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue;
+IMP NRMAOriginal__sessionWithConfiguration;
+IMP NRMAOriginal__sharedSession;
 
 IMP NRMAOriginal__dataTaskWithRequest;
 IMP NRMAOriginal__dataTaskWithRequest_completionHandler;
@@ -95,6 +97,70 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
 
 @implementation PayloadHolder
 @end
+
+#pragma mark - Metrics-only injected delegate
+
+// Lightweight session delegate injected when the customer didn't supply one
+// (URLSession.shared and URLSession(configuration:)) so we can capture
+// resourceFetchType / wireStatusCode from didFinishCollectingMetrics: without
+// altering data delivery — completion handlers continue to receive bytes
+// because this delegate intentionally implements neither didReceiveData: nor
+// didCompleteWithError:.
+@interface NRMAURLSessionMetricsOnlyDelegate : NSObject <NSURLSessionTaskDelegate>
+@end
+
+static NSString *NRMA__injectedFetchTypeName(NSURLSessionTaskMetricsResourceFetchType type) {
+    switch (type) {
+        case NSURLSessionTaskMetricsResourceFetchTypeNetworkLoad: return @"networkLoad";
+        case NSURLSessionTaskMetricsResourceFetchTypeServerPush:  return @"serverPush";
+        case NSURLSessionTaskMetricsResourceFetchTypeLocalCache:  return @"localCache";
+        case NSURLSessionTaskMetricsResourceFetchTypeUnknown:
+        default:                                                  return @"unknown";
+    }
+}
+
+@implementation NRMAURLSessionMetricsOnlyDelegate
+
+- (void)URLSession:(NSURLSession *)session
+              task:(NSURLSessionTask *)task
+didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
+{
+    @try {
+        NSURLSessionTaskTransactionMetrics *last = metrics.transactionMetrics.lastObject;
+        NRMA__setFetchTypeForSessionTask(task, NRMA__injectedFetchTypeName(last.resourceFetchType));
+        NSInteger wire = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+            ? [(NSHTTPURLResponse *)last.response statusCode] : 0;
+        if (wire > 0) {
+            NRMA__setWireStatusForSessionTask(task, wire);
+        }
+    } @catch (NSException *e) {
+        [NRMAExceptionHandler logException:e
+                                     class:NSStringFromClass([self class])
+                                  selector:@"URLSession:task:didFinishCollectingMetrics:"];
+    }
+}
+
+@end
+
+// Lazily-constructed session that the +sharedSession swizzle hands out. Built
+// directly via the original IMP so our wrap-the-delegate swizzle on
+// sessionWithConfiguration:delegate:delegateQueue: doesn't double-wrap.
+static NSURLSession *NRMA__injectedSharedSession(void) {
+    static NSURLSession *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        if (NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue == nil) return;
+        NRMAURLSessionMetricsOnlyDelegate *delegate = [NRMAURLSessionMetricsOnlyDelegate new];
+        Class sessionClass = objc_getClass("NSURLSession");
+        SEL sel = @selector(sessionWithConfiguration:delegate:delegateQueue:);
+        sharedInstance = ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(
+            sessionClass, sel,
+            [NSURLSessionConfiguration defaultSessionConfiguration],
+            delegate,
+            nil);
+    });
+    return sharedInstance;
+}
 
 @interface NRMAIMPContainer : NSObject
 @property(readonly) IMP imp;
@@ -155,12 +221,35 @@ void NRMA__instanceSwizzleIfNotSwizzled(Class clazz, SEL selector, IMP newImplem
     if ([NRMAFlags shouldEnableSwiftAsyncURLSessionSupport]) {
         [self swizzleURLSessionTask];
     }
+
+    if ([NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        Class baseSessionClass = objc_getClass("NSURLSession");
+        if (baseSessionClass) {
+            // Class methods live on the metaclass.
+            NRMAOriginal__sessionWithConfiguration = NRMASwapImplementations(baseSessionClass,
+                                                                             @selector(sessionWithConfiguration:),
+                                                                             (IMP)NRMAOverride__sessionWithConfiguration);
+            NRMAOriginal__sharedSession = NRMASwapImplementations(baseSessionClass,
+                                                                  @selector(sharedSession),
+                                                                  (IMP)NRMAOverride__sharedSession);
+        }
+    }
 }
 
 + (void) deinstrument
 {
     id clazz = objc_getClass("NSURLSession");
     if (clazz) {
+        // Reverse the delegate-injection swizzles first, before the metaclass shifts.
+        if (NRMAOriginal__sessionWithConfiguration != nil) {
+            NRMASwapImplementations(clazz, @selector(sessionWithConfiguration:), (IMP)NRMAOriginal__sessionWithConfiguration);
+            NRMAOriginal__sessionWithConfiguration = nil;
+        }
+        if (NRMAOriginal__sharedSession != nil) {
+            NRMASwapImplementations(clazz, @selector(sharedSession), (IMP)NRMAOriginal__sharedSession);
+            NRMAOriginal__sharedSession = nil;
+        }
+
         //session task overrides
         NRMASwapImplementations(clazz, @selector(sessionWithConfiguration:delegate:delegateQueue:), (IMP)NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue);
         
@@ -220,12 +309,65 @@ NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id s
                                                                           id<NSURLSessionDelegate> delegate,
                                                                           NSOperationQueue* queue)
 {
-    NSURLSession* session =  ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(self,
+    id wrappedDelegate = nil;
+    if (delegate != nil) {
+        // Don't wrap our own injected delegate.
+        if ([delegate isKindOfClass:[NRMAURLSessionMetricsOnlyDelegate class]]) {
+            wrappedDelegate = delegate;
+        } else {
+            wrappedDelegate = [[NRMAURLSessionTaskDelegate alloc] initWithOriginalDelegate:delegate];
+        }
+    } else if ([NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        wrappedDelegate = [NRMAURLSessionMetricsOnlyDelegate new];
+    }
+
+    NSURLSession* session = ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(self,
                                                                                          _cmd,
                                                                                          configuration,
-                                                                                         delegate?[[NRMAURLSessionTaskDelegate alloc] initWithOriginalDelegate:delegate]:nil,
+                                                                                         wrappedDelegate,
                                                                                          queue);
     return session;
+}
+
+NSURLSession* NRMAOverride__sessionWithConfiguration(id self, SEL _cmd, NSURLSessionConfiguration* configuration)
+{
+    if (NRMAOriginal__sessionWithConfiguration == nil) {
+        return nil;
+    }
+
+    if (![NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        return ((id(*)(id, SEL, id))NRMAOriginal__sessionWithConfiguration)(self, _cmd, configuration);
+    }
+
+    // Inject our metrics-only delegate by routing through the original
+    // sessionWithConfiguration:delegate:delegateQueue: IMP — bypassing our
+    // wrap-the-delegate swizzle so the delegate isn't double-wrapped.
+    if (NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue == nil) {
+        return ((id(*)(id, SEL, id))NRMAOriginal__sessionWithConfiguration)(self, _cmd, configuration);
+    }
+
+    NRMAURLSessionMetricsOnlyDelegate *delegate = [NRMAURLSessionMetricsOnlyDelegate new];
+    SEL fullSel = @selector(sessionWithConfiguration:delegate:delegateQueue:);
+    return ((id(*)(id, SEL, id, id, id))NRMAOriginal__sessionWithConfiguration_delegate_delegateQueue)(self,
+                                                                                                       fullSel,
+                                                                                                       configuration,
+                                                                                                       delegate,
+                                                                                                       nil);
+}
+
+NSURLSession* NRMAOverride__sharedSession(id self, SEL _cmd)
+{
+    if (![NRMAFlags shouldEnableURLSessionDelegateInjection]) {
+        if (NRMAOriginal__sharedSession == nil) return nil;
+        return ((id(*)(id, SEL))NRMAOriginal__sharedSession)(self, _cmd);
+    }
+
+    NSURLSession *injected = NRMA__injectedSharedSession();
+    if (injected != nil) return injected;
+
+    // Fall back to original if injection couldn't build a session.
+    if (NRMAOriginal__sharedSession == nil) return nil;
+    return ((id(*)(id, SEL))NRMAOriginal__sharedSession)(self, _cmd);
 }
 
 

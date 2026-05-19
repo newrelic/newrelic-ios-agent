@@ -16,6 +16,8 @@
 
 
 NSURLSession* NRMAOverride__sessionWithConfiguration_delegate_delegateQueue(id self,SEL _cmd,NSURLSessionConfiguration* configuration,id<NSURLSessionDelegate>delegate,NSOperationQueue* queue);
+NSURLSession* NRMAOverride__sessionWithConfiguration(id self, SEL _cmd, NSURLSessionConfiguration* configuration);
+NSURLSession* NRMAOverride__sharedSession(id self, SEL _cmd);
 
 NSURLSessionTask* NRMAOverride__dataTaskWithRequest(id self, SEL _cmd, NSURLRequest* request);
 NSURLSessionTask* NRMAOverride__dataTaskWithURL(id self, SEL _cmd, NSURL* url);
