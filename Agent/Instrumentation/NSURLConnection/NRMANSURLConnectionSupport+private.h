@@ -18,6 +18,15 @@ andBody:(NSData *)body
 bytesSent:(NSUInteger)sent
 bytesReceived:(NSUInteger)received;
 
++ (void)noticeResponse:(NSURLResponse *)response
+forRequest:(NSURLRequest *)request
+withTimer:(NRTimer *)timer
+andBody:(NSData *)body
+bytesSent:(NSUInteger)sent
+bytesReceived:(NSUInteger)received
+resourceFetchType:(NSString *)resourceFetchType
+wireStatusCode:(NSInteger)wireStatusCode;
+
 + (void)noticeError:(NSError*)error
          forRequest:(NSURLRequest *)request
           withTimer:(NRTimer *)timer;

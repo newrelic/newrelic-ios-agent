@@ -544,6 +544,9 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
 
             [timer stopTimer];
 
+            NSString* fetchType = NRMA__getFetchTypeForSessionTask(task);
+            NSInteger wireStatus = NRMA__getWireStatusForSessionTask(task);
+
             if (error) {
                 [NRMANSURLConnectionSupport noticeError:error
                                            forRequest:task.originalRequest
@@ -554,11 +557,14 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
                                                withTimer:timer
                                                  andBody:data
                                                bytesSent:(NSUInteger)task.countOfBytesSent
-                                           bytesReceived:(NSUInteger)task.countOfBytesReceived];
+                                           bytesReceived:(NSUInteger)task.countOfBytesReceived
+                                       resourceFetchType:fetchType
+                                          wireStatusCode:wireStatus];
             }
             // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
             NRMA__setTimerForSessionTask(task, nil);
             NRMA__setDataForSessionTask(task, nil);
+            NRMA__setFetchTypeForSessionTask(task, nil);
         }
 
     } @catch (NSException* exception) {
@@ -600,4 +606,30 @@ NSData* NRMA__getDataForSessionTask(NSURLSessionTask* task)
     if (task == nil) return nil;
 
     return objc_getAssociatedObject(task, kNRSessionDataAssociatedObject);
+}
+
+NSString* NRMA__getFetchTypeForSessionTask(NSURLSessionTask* task)
+{
+    if (task == nil) return nil;
+    return objc_getAssociatedObject(task, kNRFetchTypeAssociatedObject);
+}
+
+void NRMA__setFetchTypeForSessionTask(NSURLSessionTask* task, NSString* fetchType)
+{
+    if (task == nil) return;
+    objc_AssociationPolicy policy = fetchType ? OBJC_ASSOCIATION_RETAIN_NONATOMIC : OBJC_ASSOCIATION_ASSIGN;
+    objc_setAssociatedObject(task, kNRFetchTypeAssociatedObject, fetchType, policy);
+}
+
+NSInteger NRMA__getWireStatusForSessionTask(NSURLSessionTask* task)
+{
+    if (task == nil) return 0;
+    NSNumber* val = objc_getAssociatedObject(task, kNRWireStatusAssociatedObject);
+    return val ? [val integerValue] : 0;
+}
+
+void NRMA__setWireStatusForSessionTask(NSURLSessionTask* task, NSInteger wireStatus)
+{
+    if (task == nil) return;
+    objc_setAssociatedObject(task, kNRWireStatusAssociatedObject, @(wireStatus), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }

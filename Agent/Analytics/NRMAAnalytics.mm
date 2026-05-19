@@ -332,13 +332,21 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if (contentType.length > 0) {
             [event addAttribute:kNRMA_Attrib_contentType value:contentType];
         }
-        
+
+        if (responseData.resourceFetchType.length > 0) {
+            [event addAttribute:kNRMA_Attrib_resourceFetchType value:responseData.resourceFetchType];
+        }
+
+        if (responseData.wireStatusCode != 0) {
+            [event addAttribute:kNRMA_Attrib_wireStatusCode value:@(responseData.wireStatusCode)];
+        }
+
         if (requestData.trackedHeaders.count > 0) {
             for(NSString* key in requestData.trackedHeaders.allKeys) {
                 [event addAttribute:key value:requestData.trackedHeaders[key]];
             }
         }
-        
+
         return [_eventManager addEvent:[event autorelease]];
     } @catch (NSException *exception) {
         NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);
@@ -468,13 +476,21 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if (contentType.length > 0) {
             [event addAttribute:kNRMA_Attrib_contentType value:contentType];
         }
-        
+
+        if (responseData.resourceFetchType.length > 0) {
+            [event addAttribute:kNRMA_Attrib_resourceFetchType value:responseData.resourceFetchType];
+        }
+
+        if (responseData.wireStatusCode != 0) {
+            [event addAttribute:kNRMA_Attrib_wireStatusCode value:@(responseData.wireStatusCode)];
+        }
+
         if (requestData.trackedHeaders.count > 0) {
             for(NSString* key in requestData.trackedHeaders.allKeys) {
                 [event addAttribute:key value:requestData.trackedHeaders[key]];
             }
         }
-        
+
         return event;
     } @catch (NSException *exception) {
         NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);

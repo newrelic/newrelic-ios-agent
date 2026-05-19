@@ -62,17 +62,22 @@ static NSString *NRMA__fetchTypeName(NSURLSessionTaskMetricsResourceFetchType ty
                                               withTimer:timer];
             } else {
                 NSData *data = NRMA__getDataForSessionTask(task);
+                NSString* fetchType = NRMA__getFetchTypeForSessionTask(task);
+                NSInteger wireStatus = NRMA__getWireStatusForSessionTask(task);
 
                 [NRMANSURLConnectionSupport noticeResponse:task.response
                                                 forRequest:task.originalRequest
                                                  withTimer:timer
                                                    andBody:data
                                                  bytesSent:(NSUInteger)task.countOfBytesSent
-                                             bytesReceived:(NSUInteger)task.countOfBytesReceived];
+                                             bytesReceived:(NSUInteger)task.countOfBytesReceived
+                                         resourceFetchType:fetchType
+                                            wireStatusCode:wireStatus];
             }
             // Set the timer corresponding with this task to nil since we just stopped it and recorded the network request.
             NRMA__setTimerForSessionTask(task, nil);
             NRMA__setDataForSessionTask(task, nil);
+            NRMA__setFetchTypeForSessionTask(task, nil);
         }
 
     } @catch(NSException* exception) {
@@ -106,6 +111,12 @@ didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
             ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
         NSInteger finalWireStatus  = [last.response isKindOfClass:[NSHTTPURLResponse class]]
             ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+
+        // Stash on the task so didCompleteWithError: can attach them to the MobileRequest event.
+        NRMA__setFetchTypeForSessionTask(task, NRMA__fetchTypeName(last.resourceFetchType));
+        if (finalWireStatus > 0) {
+            NRMA__setWireStatusForSessionTask(task, finalWireStatus);
+        }
 
         NRLOG_AGENT_INFO(@"[NRFetch] url=%@ txCount=%lu finalFetchType=%@(%ld) "
                          @"finalWireStatus=%ld appVisibleStatus=%ld reusedConn=%d proxy=%d",
