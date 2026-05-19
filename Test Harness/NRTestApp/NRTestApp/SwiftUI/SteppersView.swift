@@ -37,6 +37,7 @@ struct SteppersView: View {
         .navigationTitle("Steppers")
         .padding()
         .NRTrackView(name: "SteppersView")
+        .NRMobileView(name: "SteppersView")
     }
 }
 

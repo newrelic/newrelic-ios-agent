@@ -255,6 +255,7 @@ struct AttributedTextView: View {
         }
         .navigationBarTitle("Attributed Text", displayMode: .inline)
         .NRTrackView(name: "AttributedTextView")
+        .NRMobileView(name: "AttributedTextView")
         .onAppear {
             startTimer()
         }

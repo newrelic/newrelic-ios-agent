@@ -60,6 +60,7 @@ struct StacksView: View {
         }
         .navigationViewStyle(.stack)
         .NRTrackView(name: "StacksView")
+        .NRMobileView(name: "StacksView")
     }
 }
 
