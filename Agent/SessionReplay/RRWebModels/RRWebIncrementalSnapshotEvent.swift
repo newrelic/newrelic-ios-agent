@@ -16,15 +16,31 @@ enum RRWebIncrementalSource: Int, Codable {
 typealias IncrementalEvent = RRWebEvent<RRWebIncrementalData>
 enum RRWebIncrementalData: RRWebEventData {
     static let eventType: RRWebEventType = .incrementalSnapshot
-    
+
     case mutation(RRWebMutationData)
     case mouseInteraction(RRWebMouseInteractionData)
     case touchMove(RRWebTouchMoveData)
-    
-//    enum CodingKeys: CodingKey {
-//        case source
-//    }
-    
+
+    /// rrweb encodes incremental data as a flat object with a `source` discriminator
+    /// (e.g. `{"source": 0, "adds": [...], ...}`), not as `{"mutation": {...}}`.
+    /// The auto-synthesized enum decoder can't parse that, so we dispatch on `source`
+    /// and decode the same JSON into the matching associated-value type.
+    private enum SourceKey: String, CodingKey { case source }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: SourceKey.self)
+        let source = try container.decode(RRWebIncrementalSource.self, forKey: .source)
+        let single = try decoder.singleValueContainer()
+        switch source {
+        case .mutation:
+            self = .mutation(try single.decode(RRWebMutationData.self))
+        case .mouseInteraction:
+            self = .mouseInteraction(try single.decode(RRWebMouseInteractionData.self))
+        case .touchMove:
+            self = .touchMove(try single.decode(RRWebTouchMoveData.self))
+        }
+    }
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {

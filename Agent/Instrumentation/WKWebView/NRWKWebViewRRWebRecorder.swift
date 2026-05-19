@@ -87,7 +87,10 @@ class NRWKWebViewScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
         // Pass the webview reference along with the JSON event
         if let webView = message.webView {
+            NRLOG_DEBUG("🌐 [rrwebEvent] received, len=\(jsonString.count), agent=\(agent != nil)")
             agent?.recordSessionReplayEvent(jsonString, from: webView)
+        } else {
+            NRLOG_DEBUG("🌐 [rrwebEvent] received with no webView reference")
         }
     }
 }

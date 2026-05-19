@@ -202,9 +202,17 @@ class SessionReplayCapture {
         #endif
 
         case let webView as WKWebView:
+            // First encounter of this WKWebView in the native tree? If so, request a
+            // FullSnapshot on the next frame so the player's nodeMap contains the
+            // container id before any stitched webview mutation references it.
+            let isNewWebView = (webView.sessionReplayIdentifier == nil)
+            let viewDetails = ViewDetails(view: webView)
+            if isNewWebView {
+                sessionReplay?.requestFullSnapshotOnNextFrame()
+            }
             // Get rrweb events for this webview if available
             let rrwebEvents = sessionReplay?.getRRWebEvents(for: webView) ?? []
-            return WKWebViewThingy(view: webView, viewDetails: ViewDetails(view: webView), rrwebEvents: rrwebEvents)
+            return WKWebViewThingy(view: webView, viewDetails: viewDetails, rrwebEvents: rrwebEvents)
 
         default:
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),

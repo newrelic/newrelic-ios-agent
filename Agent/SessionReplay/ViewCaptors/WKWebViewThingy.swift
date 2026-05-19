@@ -11,6 +11,8 @@ import UIKit
 import WebKit
 
 class WKWebViewThingy: SessionReplayViewThingy {
+    var isBlocked: Bool
+    
     var isMasked: Bool
 
     var subviews = [any SessionReplayViewThingy]()
@@ -28,12 +30,15 @@ class WKWebViewThingy: SessionReplayViewThingy {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
         self.rrwebEvents = rrwebEvents
+        self.isBlocked = viewDetails.blockView ?? false
     }
 
     init(viewDetails: ViewDetails, rrwebEvents: [String] = []) {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
         self.rrwebEvents = rrwebEvents
+        self.isBlocked = viewDetails.blockView ?? false
+
     }
 
     func cssDescription() -> String {

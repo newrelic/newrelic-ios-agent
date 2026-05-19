@@ -20,7 +20,7 @@ public class SessionReplayManager: NSObject {
     private let sessionReplay: NRMASessionReplay
     private let sessionReplayReporter: SessionReplayReporter
     
-    public var harvestPeriod: Int64 = 60
+    public var harvestPeriod: Int64 = 15  // TEMP DIAGNOSTIC: shorter so we see the live-harvest path quickly
     private var harvestseconds = 0
     public var sessionReplayTimer: Timer?
     
@@ -266,16 +266,25 @@ public class SessionReplayManager: NSObject {
         
         let frames = self.sessionReplay.getSessionReplayFrames()
         let touches = self.sessionReplay.getSessionReplayTouches()
-        
-        if frames.isEmpty && touches.isEmpty {
-            NRLOG_AGENT_DEBUG("No session replay frames or touches to harvest.")
+        let webViewEvents = self.sessionReplay.getAndClearAllWebViewEvents()
+
+        if frames.isEmpty && touches.isEmpty && webViewEvents.isEmpty {
+            NRLOG_AGENT_DEBUG("No session replay frames, touches, or webview events to harvest.")
             return
         }
-        
+
         var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
         container.append(contentsOf: touches.map(AnyRRWebEvent.init))
+        container.append(contentsOf: webViewEvents)
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
             lhs.base.timestamp < rhs.base.timestamp
+        }
+        // TEMP DIAGNOSTIC: persist harvest container to caches dir for inspection.
+        if let dumpData = try? JSONEncoder().encode(container),
+           let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            let dumpURL = cachesDir.appendingPathComponent("nrtestapp_harvest.json")
+            try? dumpData.write(to: dumpURL)
+            NRLOG_DEBUG("🌐 [harvest] dumped \(container.count) events (\(dumpData.count) bytes) → \(dumpURL.path)")
         }
         
         let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)

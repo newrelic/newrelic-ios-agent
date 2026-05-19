@@ -59,7 +59,22 @@ public class NRMASessionReplay: NSObject {
 
     /// Stores the latest webview and its rrweb events (single webview tracking)
     private weak var currentWebView: WKWebView?
-    private var currentWebViewEvents: [String] = []
+    private var currentWebViewEvents: [StoredWebViewEvent] = []
+
+    /// Stitcher that re-namespaces webview rrweb events into the native id space and
+    /// re-parents them under the WKWebView's container node. Lazily created the first
+    /// time we have both a buffered event and a known native parent id; reset when
+    /// `currentWebView` changes.
+    private var webViewStitcher: WebViewEventStitcher?
+
+    /// One buffered webview event. `isPersisted` flips to true once the event has
+    /// been written to the per-frame disk file, mirroring the touch persistence pattern.
+    /// The live harvest drains both persisted and unpersisted entries; the disk path
+    /// only consumes unpersisted ones.
+    private struct StoredWebViewEvent {
+        let jsonString: String
+        var isPersisted: Bool
+    }
 
     /// Lock for thread-safe access to webview events
     private let webViewEventsLock = NSLock()
@@ -150,6 +165,7 @@ public class NRMASessionReplay: NSObject {
         let webViewEventCount = currentWebViewEvents.count
         currentWebViewEvents.removeAll()
         currentWebView = nil
+        webViewStitcher = nil
         webViewEventsLock.unlock()
         if webViewEventCount > 0 {
             NRLOG_DEBUG("🧹 [clearAllData] Cleared \(webViewEventCount) webview events")
@@ -279,11 +295,11 @@ public class NRMASessionReplay: NSObject {
         var frames = [SessionReplayFrame]()
         frames = self.rawFrames
         
-        if frames.count > 0, let oldestFrame = frames.first, let newestFrame = frames.last {
-            let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
+        //if frames.count > 0, let oldestFrame = frames.first, let newestFrame = frames.last {
+            //let bufferSpan = newestFrame.date.timeIntervalSince(oldestFrame.date)
             //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Returning \(frames.count) frames spanning \(String(format: "%.2f", bufferSpan))s")
             //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Frame range: \(oldestFrame.date) to \(newestFrame.date)")
-        }
+        //}
         
         if clear {
             //NRLOG_AGENT_DEBUG("📤 [getAndClearFrames] Clearing buffer and files")
@@ -369,14 +385,6 @@ public class NRMASessionReplay: NSObject {
 
             return processedFrames
         }
-
-////        // Include WebView rrweb events if clear is true
-//        if clear {
-//            let webViewEvents = getAndClearAllWebViewEvents()
-//            processedFrames.append(webViewEvents)
-//        }
-
-        return processedFrames
     }
     
     func getSessionReplayTouches(clear: Bool = true) -> [IncrementalEvent] {
@@ -440,19 +448,29 @@ public class NRMASessionReplay: NSObject {
             NRLOG_AGENT_DEBUG("💾 [processFrameToFile] No frames in buffer, skipping")
             return
         }
-        
-        guard let processedFrame = processedFrame else {
+
+        // Collect WebView rrweb events that haven't been written to disk yet.
+        // Done before the early-return check so an "idle native + busy webview" frame
+        // still gets persisted. Events stay buffered (marked persisted) so the live
+        // harvest can also upload them.
+        let beforeBuffer = currentWebViewEvents.count
+        let webViewEvents = getUnpersistedWebViewEvents()
+        NRLOG_DEBUG("🌐 [processFrameToFile] frame_\(frameCounter) buffer=\(beforeBuffer) stitched=\(webViewEvents.count) processedFrame=\(processedFrame != nil)")
+
+        // Bail only if there is genuinely nothing to write.
+        if processedFrame == nil && processedTouches.isEmpty && webViewEvents.isEmpty {
             return
         }
-        
+
+        let frameMillis = TimeInterval(frame.date.timeIntervalSince1970 * 1000).rounded()
         let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000).rounded()
-        let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
-        
+        let lastTimestamp: TimeInterval = TimeInterval(processedFrame?.timestamp ?? frameMillis)
+
         var container: [AnyRRWebEvent] = []
-        
-        // Only add meta event for first frame or when frame size changes
-        if lastFrameSize != frame.size || isFullSnapshot {
-           // NRLOG_DEBUG("💾 [processFrameToFile] Size change detected - Adding meta event")
+
+        // Only add meta event for first frame or when frame size changes (and only
+        // when we have a native frame to anchor the size to).
+        if processedFrame != nil, lastFrameSize != frame.size || isFullSnapshot {
             let metaEventData = RRWebMetaData(
                 href: "http://newrelic.com",
                 width: Int(frame.size.width),
@@ -461,12 +479,11 @@ public class NRMASessionReplay: NSObject {
             let metaEvent = MetaEvent(timestamp: TimeInterval(lastTimestamp), data: metaEventData)
             container.append(AnyRRWebEvent(metaEvent))
         }
-        
-        container.append(AnyRRWebEvent(processedFrame))
-        container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
 
-        // Collect and merge WebView rrweb events
-        let webViewEvents = getAndClearAllWebViewEvents()
+        if let processedFrame = processedFrame {
+            container.append(AnyRRWebEvent(processedFrame))
+        }
+        container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
         container.append(contentsOf: webViewEvents)
 
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
@@ -560,7 +577,10 @@ public class NRMASessionReplay: NSObject {
     }
 
     public func addOutsideEvent(_ jsonString: String, from webView: WKWebView? = nil) {
-        guard recordingMode != .off else { return }
+        guard recordingMode != .off else {
+            NRLOG_DEBUG("🌐 [addOutsideEvent] dropped — recordingMode=off")
+            return
+        }
 
         DispatchQueue.global(qos: .background).async { [weak self] in
             guard let self = self else { return }
@@ -575,9 +595,10 @@ public class NRMASessionReplay: NSObject {
                     NRLOG_DEBUG("🌐 New webview detected, replacing previous webview")
                     self.currentWebView = webView
                     self.currentWebViewEvents.removeAll()
+                    self.webViewStitcher = nil
                 }
 
-                self.currentWebViewEvents.append(jsonString)
+                self.currentWebViewEvents.append(StoredWebViewEvent(jsonString: jsonString, isPersisted: false))
                 NRLOG_DEBUG("🌐 Stored rrweb event for webview (total: \(self.currentWebViewEvents.count))")
             }
         }
@@ -590,7 +611,7 @@ public class NRMASessionReplay: NSObject {
 
         // Return events only if this is the current webview
         if currentWebView === webView {
-            return currentWebViewEvents
+            return currentWebViewEvents.map { $0.jsonString }
         }
         return []
     }
@@ -603,62 +624,126 @@ public class NRMASessionReplay: NSObject {
         if currentWebView === webView {
             currentWebViewEvents.removeAll()
             currentWebView = nil
+            webViewStitcher = nil
         }
     }
 
-    /// Get all webview rrweb events and clear them (for continuous capture)
+    /// Returns stitched webview events that haven't been written to disk yet, marking
+    /// them persisted. Caller (the per-frame file writer) gets each event exactly once;
+    /// the live harvest still sees them via `getAndClearAllWebViewEvents()`.
+    /// If the WKWebView hasn't been picked up by a native frame capture yet (no
+    /// `sessionReplayIdentifier`), events stay buffered until a parent id is known.
+    func getUnpersistedWebViewEvents() -> [AnyRRWebEvent] {
+        webViewEventsLock.lock()
+        defer { webViewEventsLock.unlock() }
+
+        guard let stitcher = ensureStitcher() else { return [] }
+
+        var stitched: [AnyRRWebEvent] = []
+        for index in currentWebViewEvents.indices {
+            guard !currentWebViewEvents[index].isPersisted else { continue }
+            if let parsed = parseStoredWebViewEvent(currentWebViewEvents[index].jsonString) {
+                stitched.append(contentsOf: stitcher.stitch(parsed))
+            }
+            currentWebViewEvents[index].isPersisted = true
+        }
+        return stitched
+    }
+
+    /// Drains all buffered webview events through the stitcher and clears the buffer.
+    /// Used by the live harvest path. The stitcher itself is not reset, so subsequent
+    /// events from the same webview continue in the same id namespace and the player
+    /// keeps a coherent DOM.
     func getAndClearAllWebViewEvents() -> [AnyRRWebEvent] {
         webViewEventsLock.lock()
         defer { webViewEventsLock.unlock() }
 
-        var allEvents: [AnyRRWebEvent] = []
+        guard let stitcher = ensureStitcher() else { return [] }
 
-        // Parse events from the current webview
-        for jsonString in currentWebViewEvents {
-            guard let jsonData = jsonString.data(using: .utf8) else {
-                continue
-            }
-
-            do {
-                // Try to decode the JSON to determine event type
-                if let eventDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                   let eventType = eventDict["type"] as? Int {
-
-                    let decoder = JSONDecoder()
-
-                    switch eventType {
-                    case 2: // Full Snapshot
-                        if let fullSnapshotEvent = try? decoder.decode(FullSnapshotEvent.self, from: jsonData) {
-                            allEvents.append(AnyRRWebEvent(fullSnapshotEvent))
-                        }
-                    case 3: // Incremental Snapshot
-                        if let incrementalEvent = try? decoder.decode(IncrementalEvent.self, from: jsonData) {
-                            allEvents.append(AnyRRWebEvent(incrementalEvent))
-                        }
-                    case 4: // Meta Event
-                        if let metaEvent = try? decoder.decode(MetaEvent.self, from: jsonData) {
-                            // Meta events are commented out - uncomment if needed
-                            // allEvents.append(AnyRRWebEvent(metaEvent))
-                        }
-                    default:
-                        break
-                    }
-                }
-            } catch {
-                NRLOG_DEBUG("🌐 Failed to parse webview rrweb event: \(error)")
-                continue
+        var stitched: [AnyRRWebEvent] = []
+        for stored in currentWebViewEvents {
+            if let parsed = parseStoredWebViewEvent(stored.jsonString) {
+                stitched.append(contentsOf: stitcher.stitch(parsed))
             }
         }
 
-        // Clear events and reset current webview after processing
         currentWebViewEvents.removeAll()
-        currentWebView = nil
 
-        if allEvents.count > 0 {
-            NRLOG_DEBUG("🌐 Collected and cleared \(allEvents.count) WebView rrweb events")
+        if stitched.count > 0 {
+            NRLOG_DEBUG("🌐 Drained and stitched \(stitched.count) WebView rrweb events")
         }
 
-        return allEvents
+        return stitched
+    }
+
+    /// Tell the frame processor to emit a FullSnapshot for the next native frame.
+    /// Called when the capture path first encounters a WKWebView, so the player's
+    /// nodeMap is guaranteed to contain the container node id before any stitched
+    /// webview mutation references it.
+    func requestFullSnapshotOnNextFrame() {
+        sessionReplayFrameProcessor.takeFullSnapshotNext = true
+        NRLOG_DEBUG("🌐 [requestFullSnapshotOnNextFrame] forcing full snapshot for newly-encountered webview")
+    }
+
+    /// Lazily creates (or refreshes) the stitcher once the native side has assigned
+    /// a `sessionReplayIdentifier` to the current webview. Returns nil while we're
+    /// still waiting for the first native frame to see the webview.
+    /// Caller must hold `webViewEventsLock`.
+    private func ensureStitcher() -> WebViewEventStitcher? {
+        guard let parentNodeId = currentWebView?.sessionReplayIdentifier else {
+            if !currentWebViewEvents.isEmpty {
+                NRLOG_DEBUG("🌐 [ensureStitcher] \(currentWebViewEvents.count) events buffered, but webview has no sessionReplayIdentifier yet — leaving buffered")
+            }
+            return nil
+        }
+        if let existing = webViewStitcher {
+            existing.update(parentNodeId: parentNodeId)
+            return existing
+        }
+        NRLOG_DEBUG("🌐 [ensureStitcher] creating stitcher with parentNodeId=\(parentNodeId)")
+        let created = WebViewEventStitcher(parentNodeId: parentNodeId)
+        webViewStitcher = created
+        return created
+    }
+
+    private func parseStoredWebViewEvent(_ jsonString: String) -> AnyRRWebEvent? {
+        guard let jsonData = jsonString.data(using: .utf8) else {
+            return nil
+        }
+
+        do {
+            guard let eventDict = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+                  let eventType = eventDict["type"] as? Int else {
+                return nil
+            }
+
+            let decoder = JSONDecoder()
+            switch eventType {
+            case 2: // Full Snapshot
+                do {
+                    let fullSnapshotEvent = try decoder.decode(FullSnapshotEvent.self, from: jsonData)
+                    return AnyRRWebEvent(fullSnapshotEvent)
+                } catch {
+                    NRLOG_DEBUG("🌐 [parse] FullSnapshot decode failed: \(error)")
+                    return nil
+                }
+            case 3: // Incremental Snapshot
+                do {
+                    let incrementalEvent = try decoder.decode(IncrementalEvent.self, from: jsonData)
+                    return AnyRRWebEvent(incrementalEvent)
+                } catch {
+                    NRLOG_DEBUG("🌐 [parse] Incremental decode failed: \(error)")
+                    return nil
+                }
+            case 4: // Meta Event — intentionally dropped for now (frame meta events come from native size changes)
+                return nil
+            default:
+                return nil
+            }
+        } catch {
+            NRLOG_DEBUG("🌐 Failed to parse webview rrweb event: \(error)")
+        }
+        return nil
     }
         
     // MARK: - Error Sampling Mode Management
