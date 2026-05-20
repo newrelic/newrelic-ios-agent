@@ -407,7 +407,7 @@ public class JSErrorController: NSObject {
         }
 
         if let isFatal = errorData["isFatal"] as? Bool {
-            event["isFatalError"] = isFatal ? "true" : "false"
+            event["isFatalError"] = isFatal
         }
 
         if let timestamp = errorData["timestamp"] as? Int64 {
