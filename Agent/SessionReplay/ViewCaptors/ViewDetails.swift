@@ -107,21 +107,24 @@ struct ViewDetails {
             self.frame = view.frame
             self.clip = view.bounds
         }
-        // Validate the backing CGColor before holding the UIColor — when a layer
-        // is being torn down (e.g. rootViewController swap during sign-out), its
-        // CGColor can be a dangling pointer. NR-566282.
-        if let bg = view.backgroundColor, bg.cgColor.safeColor != nil {
-            backgroundColor = bg
-        } else {
-            backgroundColor = nil
-        }
+//        // Validate the backing CGColor before holding the UIColor — when a layer
+//        // is being torn down (e.g. rootViewController swap during sign-out), its
+//        // CGColor can be a dangling pointer. NR-566282.
+//        if let bg = view.backgroundColor, bg.cgColor.safeColor != nil {
+//            backgroundColor = bg
+//        } else {
+//            backgroundColor = nil
+//        }
+        backgroundColor = view.backgroundColor
+        
         alpha = view.alpha
         isHidden = view.isHidden
         cornerRadius = view.layer.cornerRadius
         borderWidth = view.layer.borderWidth
 
-        if view.layer.borderWidth > 0,
-           let borderColor = view.layer.borderColor?.safeColor {
+       // if view.layer.borderWidth > 0,
+           if view.layer.borderWidth > 0, let borderColor = view.layer.borderColor {
+            //    let borderColor = view.layer.borderColor?.safeColor {
             self.borderColor = UIColor(cgColor: borderColor)
         }
         else {
