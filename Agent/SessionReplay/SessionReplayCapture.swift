@@ -18,54 +18,31 @@ class SessionReplayCapture {
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
-//        // Bound the lifetime of every autoreleased UIKit / CF object touched
-//        // during the walk to a single frame so we don't drag stale references
-//        // across view-controller tear-downs. NR-566282.
-//        return autoreleasepool {
-//            let effectiveViewController = findRootViewController(rootView: rootView)
-//            var rootViewControllerID:String?
-//            if let rootViewController = effectiveViewController {
-//                rootViewControllerID = String(describing: type(of: rootViewController))
-//            }
-//
-//            var rootSwiftUIViewID: Int? = nil
-//            var rootThingy = findRecorderForView(view: rootView)
-//
-//            // Reset counters for this frame capture
-//            layoutContainerViewCount = 0
-//            navigationStackDepth = 0
-//
-//            // Build tree using recursive approach to properly handle value semantics
-//            buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-//
-//            // Set nextId for all views after tree is built
-//            setNextIdRecursively(for: &rootThingy)
-//
-//            return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
-//        }
+        
         let effectiveViewController = findRootViewController(rootView: rootView)
-         var rootViewControllerID:String?
-         if let rootViewController = effectiveViewController {
-             rootViewControllerID = String(describing: type(of: rootViewController))
-             
-             var rootSwiftUIViewID: Int? = nil
-             var rootThingy = findRecorderForView(view: rootView)
-             
-             // Reset counters for this frame capture
-             layoutContainerViewCount = 0
-             navigationStackDepth = 0
-             
-             // Build tree using recursive approach to properly handle value semantics
-             buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-             
-             // Set nextId for all views after tree is built
-             setNextIdRecursively(for: &rootThingy)
-             
-             return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
+        var rootViewControllerID:String?
+        if let rootViewController = effectiveViewController {
+            rootViewControllerID = String(describing: type(of: rootViewController))
+            
+        }
+        var rootSwiftUIViewID: Int? = nil
+        var rootThingy = findRecorderForView(view: rootView)
+        
+        // Reset counters for this frame capture
+        layoutContainerViewCount = 0
+        navigationStackDepth = 0
+        
+        // Build tree using recursive approach to properly handle value semantics
+        buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+        
+        // Set nextId for all views after tree is built
+        setNextIdRecursively(for: &rootThingy)
+        
+        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
-
+        
         // Process UIKit subviews only if current view should record subviews
         if parentThingy.shouldRecordSubviewsComputed {
             for subview in currentView.subviews {
@@ -85,62 +62,62 @@ class SessionReplayCapture {
         if let viewController = extractVC(from: currentView) {
             let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
             if vcType == .hostingController || vcType == .navigationStackHostingController {
-            let className = NSStringFromClass(type(of: currentView))
-            if className.contains("_UIHostingView") {
-                rootSwiftUIViewID = parentThingy.viewDetails.viewId
-                // Count each NavigationStack destination hosting view (one per pushed screen).
-                // This depth value is checked in SessionReplayFrameProcessor to force an
-                // immediate full snapshot on push or pop, matching layoutContainerViewCount's role.
-                if vcType == .navigationStackHostingController {
-                    navigationStackDepth += 1
-                }
-            }
-            
-            // Validate CGColor pointers up front — they can dangle during view
-            // tear-down (e.g. rootViewController swap on sign-out). NR-566282.
-            let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
-                                                       clip: parentThingy.viewDetails.clip,
-                                                       backgroundColor: currentView.backgroundColor?.cgColor,
-                                                       layerBorderColor: currentView.layer.borderColor,
-                                                       layerBorderWidth: currentView.layer.borderWidth,
-                                                       layerCornerRadius: currentView.layer.cornerRadius,
-                                                       alpha: currentView.alpha,
-                                                       isHidden: currentView.isHidden,
-                                                       intrinsicContentSize: currentView.intrinsicContentSize,
-                                                       maskApplicationText: currentView.maskApplicationText,
-                                                       maskUserInputText: currentView.maskUserInputText,
-                                                       maskAllImages: currentView.maskAllImages,
-                                                       maskAllUserTouches: currentView.maskAllUserTouches,
-                                                       blockView: currentView.blockView,
-                                                       sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
-            )
-            
-            let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
-            let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
-
-            if !thingys.isEmpty {
-                // Separate color views (backgrounds) from other views
-                var colorViews: [any SessionReplayViewThingy] = []
-                var otherViews: [any SessionReplayViewThingy] = []
-
-                for thingy in thingys {
-                    if thingy.viewDetails.viewName == "SwiftUIColorView"
-                        || thingy.viewDetails.viewName == "SwiftUIPlatformView" {
-                        colorViews.append(thingy)
-                    } else {
-                        otherViews.append(thingy)
+                let className = NSStringFromClass(type(of: currentView))
+                if className.contains("_UIHostingView") {
+                    rootSwiftUIViewID = parentThingy.viewDetails.viewId
+                    // Count each NavigationStack destination hosting view (one per pushed screen).
+                    // This depth value is checked in SessionReplayFrameProcessor to force an
+                    // immediate full snapshot on push or pop, matching layoutContainerViewCount's role.
+                    if vcType == .navigationStackHostingController {
+                        navigationStackDepth += 1
                     }
                 }
-
-                // Insert color views first (they go to the back) then other views
-                if parentThingy.shouldRecordSubviewsComputed {
-                    parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
-                    parentThingy.subviews.append(contentsOf: otherViews)
+                
+                // Validate CGColor pointers up front — they can dangle during view
+                // tear-down (e.g. rootViewController swap on sign-out). NR-566282.
+                let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
+                                                           clip: parentThingy.viewDetails.clip,
+                                                           backgroundColor: currentView.backgroundColor?.cgColor,
+                                                           layerBorderColor: currentView.layer.borderColor,
+                                                           layerBorderWidth: currentView.layer.borderWidth,
+                                                           layerCornerRadius: currentView.layer.cornerRadius,
+                                                           alpha: currentView.alpha,
+                                                           isHidden: currentView.isHidden,
+                                                           intrinsicContentSize: currentView.intrinsicContentSize,
+                                                           maskApplicationText: currentView.maskApplicationText,
+                                                           maskUserInputText: currentView.maskUserInputText,
+                                                           maskAllImages: currentView.maskAllImages,
+                                                           maskAllUserTouches: currentView.maskAllUserTouches,
+                                                           blockView: currentView.blockView,
+                                                           sessionReplayIdentifier: currentView.swiftUISessionReplayIdentifier
+                )
+                
+                let context = SwiftUIContext(frame: parentThingy.viewDetails.frame, clip: parentThingy.viewDetails.clip)
+                let thingys = UIHostingViewRecordOrchestrator.swiftUIViewThingys(currentView, context: context, viewAttributes: viewAttributes, parentId: parentThingy.viewDetails.viewId)
+                
+                if !thingys.isEmpty {
+                    // Separate color views (backgrounds) from other views
+                    var colorViews: [any SessionReplayViewThingy] = []
+                    var otherViews: [any SessionReplayViewThingy] = []
+                    
+                    for thingy in thingys {
+                        if thingy.viewDetails.viewName == "SwiftUIColorView"
+                            || thingy.viewDetails.viewName == "SwiftUIPlatformView" {
+                            colorViews.append(thingy)
+                        } else {
+                            otherViews.append(thingy)
+                        }
+                    }
+                    
+                    // Insert color views first (they go to the back) then other views
+                    if parentThingy.shouldRecordSubviewsComputed {
+                        parentThingy.subviews.insert(contentsOf: colorViews, at: 0)
+                        parentThingy.subviews.append(contentsOf: otherViews)
+                    }
                 }
-            }
             } // if vcType == .hostingController || .navigationStackHostingController
         } // if let viewController
-
+        
         // Handle UITextField custom text overlay
         if parentThingy.shouldRecordSubviewsComputed, let textView = currentView as? UITextField {
             let textViewThingy = CustomTextThingy(view: textView, viewDetails: ViewDetails(view: currentView))
@@ -214,15 +191,15 @@ class SessionReplayCapture {
             
         case let visualEffectView as UIVisualEffectView:
             return UIVisualEffectViewThingy(view: visualEffectView, viewDetails: ViewDetails(view: visualEffectView))
-
-        #if os(iOS)
+            
+#if os(iOS)
         case let datePicker as UIDatePicker:
             return UIDatePickerThingy(view: datePicker, viewDetails: ViewDetails(view: datePicker))
-
+            
         case let switchControl as UISwitch:
             return UISwitchThingy(view: switchControl, viewDetails: ViewDetails(view: switchControl))
-        #endif
-
+#endif
+            
         default:
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),
                originalView.isKind(of: rctParagraphClass) {
@@ -265,5 +242,6 @@ class SessionReplayCapture {
             nextId = thingy.subviews[i].viewDetails.viewId
         }
     }
+    
 }
 
