@@ -11,6 +11,7 @@
 
 #import "NRMAMetric.h"
 #import "NRMATaskQueue.h"
+#import "NRMAExceptionHandler.h"
 #import "NRMAAssociate.h"
 #import "NRMAMethodSwizzling.h"
 #import "NRMASupportMetricHelper.h"
