@@ -21,7 +21,7 @@
 #if NR_DEBUG_FETCH_TYPE_PROBE
 static void NRMA__probeAsyncTaskMetrics(NSURLSessionTask *task) {
     @try {
-        NSURLSessionTaskMetrics *m = nil;
+        id m = nil;
         @try { m = [task valueForKey:@"_metrics"]; } @catch (...) {}
         if (m == nil) {
             @try { m = [task valueForKey:@"metrics"]; } @catch (...) {}
@@ -31,17 +31,54 @@ static void NRMA__probeAsyncTaskMetrics(NSURLSessionTask *task) {
                              task.originalRequest.URL.absoluteString);
             return;
         }
-        NSURLSessionTaskTransactionMetrics *last = m.transactionMetrics.lastObject;
         NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
             ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
-        NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
-            ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
-        NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ txCount=%lu fetchType=%ld "
-                         @"finalWireStatus=%ld appVisibleStatus=%ld",
+
+        // Public path: m is NSURLSessionTaskMetrics on iOS < 26.
+        if ([m respondsToSelector:@selector(transactionMetrics)]) {
+            NSURLSessionTaskMetrics *pub = (NSURLSessionTaskMetrics *)m;
+            NSURLSessionTaskTransactionMetrics *last = pub.transactionMetrics.lastObject;
+            NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+                ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ txCount=%lu fetchType=%ld "
+                             @"finalWireStatus=%ld appVisibleStatus=%ld",
+                             task.originalRequest.URL.absoluteString,
+                             (unsigned long)pub.transactionMetrics.count,
+                             (long)last.resourceFetchType,
+                             (long)wireStatus,
+                             (long)appVisibleStatus);
+            return;
+        }
+
+        // Private path on iOS 26+: __CFN_TaskMetrics. resourceFetchType is unreachable;
+        // log what's available.
+        SEL daemonTxSel = NSSelectorFromString(@"_daemon_transactionMetrics");
+        if (![m respondsToSelector:daemonTxSel]) {
+            NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ unsupported metrics class=%@ appVisibleStatus=%ld",
+                             task.originalRequest.URL.absoluteString,
+                             NSStringFromClass([m class]),
+                             (long)appVisibleStatus);
+            return;
+        }
+        IMP imp = [m methodForSelector:daemonTxSel];
+        NSArray *txs = ((NSArray *(*)(id, SEL))imp)(m, daemonTxSel);
+        int64_t wireBodyBytes = -1;
+        SEL bodyBytesSel = NSSelectorFromString(@"_daemon_responseBodyTransferSize");
+        id lastTx = txs.lastObject;
+        if ([lastTx respondsToSelector:bodyBytesSel]) {
+            NSMethodSignature *sig = [lastTx methodSignatureForSelector:bodyBytesSel];
+            NSInvocation *inv = [NSInvocation invocationWithMethodSignature:sig];
+            inv.selector = bodyBytesSel;
+            [inv invokeWithTarget:lastTx];
+            [inv getReturnValue:&wireBodyBytes];
+        }
+        NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] url=%@ private=%@ txCount=%lu "
+                         @"wireBodyBytes=%lld appVisibleStatus=%ld "
+                         @"(fetchType requires delegate path)",
                          task.originalRequest.URL.absoluteString,
-                         (unsigned long)m.transactionMetrics.count,
-                         (long)last.resourceFetchType,
-                         (long)wireStatus,
+                         NSStringFromClass([m class]),
+                         (unsigned long)txs.count,
+                         (long long)wireBodyBytes,
                          (long)appVisibleStatus);
     } @catch (NSException *e) {
         NRLOG_AGENT_INFO(@"[NRFetchProbe asyncSetState] exception: %@", e);

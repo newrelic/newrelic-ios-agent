@@ -107,6 +107,18 @@ static NSString *NRMA__fetchTypeName(NSURLSessionTaskMetricsResourceFetchType ty
               task:(NSURLSessionTask *)task
 didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
 {
+    // Async/await fallback for response body capture (see NRMAURLSessionOverride.m).
+    // didReceiveData: doesn't fire for URLSession.shared.data(for:) etc. on iOS 15+.
+    // Apple buffers bytes in __NSCFLocalSessionTask's private _dataTaskData ivar.
+    // Read it as a fallback only when our didReceiveData: stash is empty.
+    if (NRMA__getDataForSessionTask(task) == nil) {
+        NSData *bufferedData = nil;
+        @try { bufferedData = [task valueForKey:@"_dataTaskData"]; } @catch (...) {}
+        if ([bufferedData isKindOfClass:[NSData class]] && bufferedData.length > 0) {
+            NRMA__setDataForSessionTask(task, bufferedData);
+        }
+    }
+
     @try {
         NSURLSessionTaskTransactionMetrics *last = metrics.transactionMetrics.lastObject;
         NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]

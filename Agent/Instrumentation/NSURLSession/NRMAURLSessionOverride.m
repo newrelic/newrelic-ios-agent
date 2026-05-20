@@ -43,7 +43,7 @@ static NSString *NRMA__probeFetchTypeName(NSInteger type) {
 static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
     @try {
         // _metrics is private SPI on NSURLSessionTask. KVC peek — diagnostic only.
-        NSURLSessionTaskMetrics *m = nil;
+        id m = nil;
         @try { m = [task valueForKey:@"_metrics"]; } @catch (...) {}
         if (m == nil) {
             @try { m = [task valueForKey:@"metrics"]; } @catch (...) {}
@@ -53,19 +53,66 @@ static void NRMA__probeTaskMetrics(NSURLSessionTask *task, NSString *origin) {
                              origin, task.originalRequest.URL.absoluteString);
             return;
         }
-        NSURLSessionTaskTransactionMetrics *last = m.transactionMetrics.lastObject;
+
         NSInteger appVisibleStatus = [task.response isKindOfClass:[NSHTTPURLResponse class]]
             ? [(NSHTTPURLResponse *)task.response statusCode] : -1;
-        NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
-            ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
-        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ txCount=%lu finalFetchType=%@(%ld) "
-                         @"finalWireStatus=%ld appVisibleStatus=%ld",
+
+        // Public path: m is a real NSURLSessionTaskMetrics.
+        if ([m respondsToSelector:@selector(transactionMetrics)]) {
+            NSURLSessionTaskMetrics *pub = (NSURLSessionTaskMetrics *)m;
+            NSURLSessionTaskTransactionMetrics *last = pub.transactionMetrics.lastObject;
+            NSInteger wireStatus = [last.response isKindOfClass:[NSHTTPURLResponse class]]
+                ? [(NSHTTPURLResponse *)last.response statusCode] : -1;
+            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ txCount=%lu finalFetchType=%@(%ld) "
+                             @"finalWireStatus=%ld appVisibleStatus=%ld",
+                             origin,
+                             task.originalRequest.URL.absoluteString,
+                             (unsigned long)pub.transactionMetrics.count,
+                             NRMA__probeFetchTypeName(last.resourceFetchType),
+                             (long)last.resourceFetchType,
+                             (long)wireStatus,
+                             (long)appVisibleStatus);
+            return;
+        }
+
+        // Private path: iOS 26+ stores metrics as __CFN_TaskMetrics, an NSObject-rooted
+        // CF-bridged type that exposes only _daemon_* selectors. The public properties
+        // (transactionMetrics, response, resourceFetchType) are NOT reachable here —
+        // Apple synthesizes them only when bridging to NSURLSessionTaskMetrics for
+        // didFinishCollectingMetrics: delivery. We log what we *can* read.
+        SEL daemonTxSel = NSSelectorFromString(@"_daemon_transactionMetrics");
+        if (![m respondsToSelector:daemonTxSel]) {
+            NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ unsupported metrics class=%@ appVisibleStatus=%ld",
+                             origin,
+                             task.originalRequest.URL.absoluteString,
+                             NSStringFromClass([m class]),
+                             (long)appVisibleStatus);
+            return;
+        }
+
+        // Cast through IMP to silence ARC's "no known method" warning.
+        IMP imp = [m methodForSelector:daemonTxSel];
+        NSArray *txs = ((NSArray *(*)(id, SEL))imp)(m, daemonTxSel);
+
+        int64_t wireBodyBytes = -1;
+        SEL bodyBytesSel = NSSelectorFromString(@"_daemon_responseBodyTransferSize");
+        id lastTx = txs.lastObject;
+        if ([lastTx respondsToSelector:bodyBytesSel]) {
+            NSMethodSignature *sig = [lastTx methodSignatureForSelector:bodyBytesSel];
+            NSInvocation *inv = [NSInvocation invocationWithMethodSignature:sig];
+            inv.selector = bodyBytesSel;
+            [inv invokeWithTarget:lastTx];
+            [inv getReturnValue:&wireBodyBytes];
+        }
+
+        NRLOG_AGENT_INFO(@"[NRFetchProbe %@] url=%@ private=%@ txCount=%lu "
+                         @"wireBodyBytes=%lld appVisibleStatus=%ld "
+                         @"(fetchType requires delegate path)",
                          origin,
                          task.originalRequest.URL.absoluteString,
-                         (unsigned long)m.transactionMetrics.count,
-                         NRMA__probeFetchTypeName(last.resourceFetchType),
-                         (long)last.resourceFetchType,
-                         (long)wireStatus,
+                         NSStringFromClass([m class]),
+                         (unsigned long)txs.count,
+                         (long long)wireBodyBytes,
                          (long)appVisibleStatus);
     } @catch (NSException *e) {
         NRLOG_AGENT_INFO(@"[NRFetchProbe %@] exception: %@", origin, e);
@@ -149,6 +196,23 @@ static NSString *NRMA__injectedFetchTypeName(NSURLSessionTaskMetricsResourceFetc
               task:(NSURLSessionTask *)task
 didFinishCollectingMetrics:(NSURLSessionTaskMetrics *)metrics
 {
+    // Async/await fallback for response body capture.
+    // On iOS 15+, URLSession.shared.data(for:) and friends do NOT call
+    // URLSession:dataTask:didReceiveData: on the session-level delegate —
+    // Apple buffers bytes inside __NSCFLocalSessionTask's private _dataTaskData
+    // ivar to feed the awaited continuation. By the time this metrics callback
+    // fires, the buffer is fully populated and the continuation has not yet
+    // drained it. KVC-read it as a fallback, but ONLY when our normal
+    // didReceiveData: stash is empty — so on paths where didReceiveData: did
+    // fire we keep using the canonical accumulated buffer.
+    if (NRMA__getDataForSessionTask(task) == nil) {
+        NSData *bufferedData = nil;
+        @try { bufferedData = [task valueForKey:@"_dataTaskData"]; } @catch (...) {}
+        if ([bufferedData isKindOfClass:[NSData class]] && bufferedData.length > 0) {
+            NRMA__setDataForSessionTask(task, bufferedData);
+        }
+    }
+
     @try {
         NSURLSessionTaskTransactionMetrics *last = metrics.transactionMetrics.lastObject;
         NRMA__setFetchTypeForSessionTask(task, NRMA__injectedFetchTypeName(last.resourceFetchType));
@@ -712,6 +776,20 @@ void NRMA__recordTask(NSURLSessionTask* task, NSData* data, NSURLResponse* respo
         if (timer) {
 
             [timer stopTimer];
+
+            // Last-resort body recovery for async paths: if no caller delivered data
+            // and the delegate's didFinishCollectingMetrics fallback didn't populate
+            // the stash either, KVC-read __NSCFLocalSessionTask's _dataTaskData.
+            // Apple's async data(for:)/data(from:) buffers the body there for the
+            // continuation; the buffer survives until the task is fully released.
+            if (data == nil || data.length == 0) {
+                @try {
+                    NSData *buffered = [task valueForKey:@"_dataTaskData"];
+                    if ([buffered isKindOfClass:[NSData class]] && buffered.length > 0) {
+                        data = buffered;
+                    }
+                } @catch (...) {}
+            }
 
             NSString* fetchType = NRMA__getFetchTypeForSessionTask(task);
             NSInteger wireStatus = NRMA__getWireStatusForSessionTask(task);
