@@ -28,6 +28,18 @@ class UtilViewModel {
 
     let taskProcessor = TaskProcessor()
     let taskProcessor2 = TaskProcessorNoDidRcvResp()
+
+    // Dedicated cache for fetch-type tests so the URLCache state is observable.
+    lazy var fetchTypeCache: URLCache = URLCache(memoryCapacity: 4 * 1024 * 1024,
+                                                 diskCapacity: 32 * 1024 * 1024,
+                                                 directory: nil)
+    lazy var fetchTypeSession: URLSession = {
+        let cfg = URLSessionConfiguration.default
+        cfg.urlCache = self.fetchTypeCache
+        cfg.requestCachePolicy = .useProtocolCachePolicy
+        return URLSession(configuration: cfg, delegate: self.taskProcessor, delegateQueue: nil)
+    }()
+    let fetchTypeURL = URL(string: "https://api.github.com/users/octocat")!
     
     init() {
         createUtilOptions()
@@ -68,6 +80,11 @@ class UtilViewModel {
         options.append(UtilOption(title: "Make 100 Special Character Logs", handler: { [self] in make100SpecialCharacterLogs()}))
 
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
+
+        options.append(UtilOption(title: "FetchType A: delegate session x2", handler: { [self] in fetchTypeDelegatePath() }))
+        options.append(UtilOption(title: "FetchType B: shared completion x2", handler: { [self] in fetchTypeSharedCompletionPath() }))
+        options.append(UtilOption(title: "FetchType C: async/await x2", handler: { [self] in fetchTypeAsyncAwaitPath() }))
+        options.append(UtilOption(title: "FetchType: clear URLCache", handler: { [self] in fetchTypeClearCaches() }))
         options.append(UtilOption(title: "Record JavaScript Error", handler: { [self] in recordJavascriptError()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
@@ -313,6 +330,64 @@ class UtilViewModel {
 
     func shutDown() {
         NewRelic.shutdown()
+    }
+
+    // MARK: - resourceFetchType viability tests
+
+    func fetchTypeDelegatePath() {
+        NewRelic.logInfo("[FetchTypeTest A] firing delegate-session request #1")
+        let t1 = self.fetchTypeSession.dataTask(with: self.fetchTypeURL)
+        t1.resume()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [self] in
+            NewRelic.logInfo("[FetchTypeTest A] firing delegate-session request #2")
+            let t2 = self.fetchTypeSession.dataTask(with: self.fetchTypeURL)
+            t2.resume()
+        }
+    }
+
+    func fetchTypeSharedCompletionPath() {
+        NewRelic.logInfo("[FetchTypeTest B] firing shared-session completion request #1")
+        URLSession.shared.dataTask(with: self.fetchTypeURL) { _, response, _ in
+            let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+            NewRelic.logInfo("[FetchTypeTest B] #1 completion appVisibleStatus=\(code)")
+        }.resume()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [self] in
+            NewRelic.logInfo("[FetchTypeTest B] firing shared-session completion request #2")
+            URLSession.shared.dataTask(with: self.fetchTypeURL) { _, response, _ in
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                NewRelic.logInfo("[FetchTypeTest B] #2 completion appVisibleStatus=\(code)")
+            }.resume()
+        }
+    }
+
+    func fetchTypeAsyncAwaitPath() {
+        let url = self.fetchTypeURL
+        NewRelic.logInfo("[FetchTypeTest C] firing async/await request #1")
+        Task {
+            do {
+                let (_, response) = try await URLSession.shared.data(from: url)
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                NewRelic.logInfo("[FetchTypeTest C] #1 await appVisibleStatus=\(code)")
+            } catch {
+                NewRelic.logInfo("[FetchTypeTest C] #1 error=\(error)")
+            }
+
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            NewRelic.logInfo("[FetchTypeTest C] firing async/await request #2")
+            do {
+                let (_, response) = try await URLSession.shared.data(from: url)
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                NewRelic.logInfo("[FetchTypeTest C] #2 await appVisibleStatus=\(code)")
+            } catch {
+                NewRelic.logInfo("[FetchTypeTest C] #2 error=\(error)")
+            }
+        }
+    }
+
+    func fetchTypeClearCaches() {
+        URLCache.shared.removeAllCachedResponses()
+        self.fetchTypeCache.removeAllCachedResponses()
+        NewRelic.logInfo("[FetchTypeTest] cleared URLCache.shared and fetchTypeCache")
     }
 }
 
