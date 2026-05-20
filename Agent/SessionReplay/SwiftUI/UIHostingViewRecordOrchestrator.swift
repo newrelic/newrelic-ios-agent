@@ -247,17 +247,26 @@ final class UIHostingViewRecordOrchestrator {
                                                y: frame.origin.y,
                                                width: frame.size.width + widthOffset,
                                                height: frame.size.height)
-                    
+
+                    // safeColor-validated bridges from CGColor → UIColor. If validation
+                    // fails the underlying CGColor was a dangling pointer (e.g. a
+                    // hosting view being torn down on sign-out) — fall back to .clear /
+                    // nil instead of crashing in CGColorSpaceGetModel. NR-566282.
+                    let bgUIColor: UIColor = (viewAttributes.backgroundColor?.safeColor)
+                        .map(UIColor.init(cgColor:)) ?? .clear
+                    let borderUIColor: UIColor? = (viewAttributes.layerBorderColor?.safeColor)
+                        .map(UIColor.init(cgColor:))
+
                     return ViewDetails(frame: adjustedFrame,
                                 clip: viewAttributes.clip,
-                                backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
+                                backgroundColor: bgUIColor,
                                 alpha: viewAttributes.alpha,
                                 isHidden: viewAttributes.isHidden,
                                 viewName: viewName,
                                 parentId: parentId,
                                 cornerRadius: viewAttributes.layerCornerRadius,
                                 borderWidth: viewAttributes.layerBorderWidth,
-                                borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
+                                borderColor: borderUIColor,
                                 viewId: contentId,
                                 view: originalView,
                                 maskApplicationText: viewAttributes.maskApplicationText,
