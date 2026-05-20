@@ -29,5 +29,7 @@
 #import "NRMAAttributeValidator.h"
 #import "NRMAAppToken.h"
 #import "NRMAHarvesterConfiguration.h"
+#import "NRMAFlags.h"
+#import "NRMAOfflineStorage.h"
 
 #endif /* APrivateHeader_h */

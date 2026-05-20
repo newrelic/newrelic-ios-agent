@@ -22,10 +22,19 @@ public class SessionReplayReporter: NSObject {
     private let url: NSString
     private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
     private var pendingUploads = 0
+    private let offlineStorage: NRMAOfflineStorage
 
     @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
         self.url = url
+        self.offlineStorage = NRMAOfflineStorage(endpoint: "sessionreplay")
+        super.init()
+
+        // Set max offline storage size if configured
+        if let config = NRMAAgentConfiguration.connectionInformation() {
+            let maxSize = NRMAAgentConfiguration.getMaxOfflineStorageSize()
+            self.offlineStorage.setMaxOfflineStorageSize(maxSize)
+        }
     }
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
@@ -97,14 +106,83 @@ public class SessionReplayReporter: NSObject {
 
              let session = URLSession(configuration: .default)
              let uploadTask = session.uploadTask(with: request, from: upload.sessionReplayFramesData) { data, response, error in
-                 self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count)
+                 self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count, upload: upload)
              }
 
              uploadTask.resume()
          }
      }
-    
-    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, dataSize: Int) {
+
+    private func sendOfflineStorage() {
+        // Check if offline storage is enabled
+        guard NRMAFlags.shouldEnableOfflineStorage() else {
+            // If disabled, clear any existing offline storage
+            _ = NRMAOfflineStorage.clearAllOfflineDirectories()
+            return
+        }
+
+        // Retrieve all offline data
+        guard let offlineDataArray = offlineStorage.getAllOfflineData(true) else { // true = clear after retrieval
+            return
+        }
+
+        guard !offlineDataArray.isEmpty else {
+            return
+        }
+
+        NRLOG_AGENT_DEBUG("Number of offline session replay data posts: \(offlineDataArray.count)")
+
+        var totalSize: Int = 0
+
+        for data in offlineDataArray {
+            // Decode the SessionReplayData object
+            guard let upload = try? JSONDecoder().decode(SessionReplayData.self, from: data) else {
+                NRLOG_AGENT_DEBUG("Failed to decode offline session replay data")
+                continue
+            }
+
+            // Create the upload request
+            var request = URLRequest(url: upload.url)
+            request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+            if upload.sessionReplayFramesData.isGzipped {
+                request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
+                request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+            }
+            request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
+            request.setValue(applicationToken, forHTTPHeaderField: "X-App-License-Key")
+            request.httpMethod = "POST"
+            request.httpBody = upload.sessionReplayFramesData
+
+            // Send synchronously to check for network errors
+            let semaphore = DispatchSemaphore(value: 0)
+            var uploadError: Error?
+            var uploadResponse: URLResponse?
+
+            let session = URLSession(configuration: .default)
+            let task = session.dataTask(with: request) { _, response, error in
+                uploadError = error
+                uploadResponse = response
+                semaphore.signal()
+            }
+            task.resume()
+            semaphore.wait()
+
+            // Check if we should persist again due to network error
+            if let error = uploadError as NSError?, NRMAOfflineStorage.checkError(toPersist: error) {
+                // Network error - persist back to offline storage
+                _ = offlineStorage.persistData(toDisk: data)
+            } else {
+                // Success or non-network error - count it as sent
+                totalSize += upload.sessionReplayFramesData.count
+            }
+        }
+
+        if totalSize > 0 {
+            NRMASupportMetricHelper.enqueueOfflinePayloadMetric(totalSize)
+        }
+    }
+
+    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, dataSize: Int, upload: SessionReplayData) {
        var errorCode = false
        var errorCodeInt = 0
 
@@ -119,6 +197,8 @@ public class SessionReplayReporter: NSObject {
            self.failureCount = 0
            self.pendingUploads -= 1
            NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
+           // Try to send any offline storage
+           self.sendOfflineStorage()
        } else if errorCodeInt == URL_TOO_LARGE {
            NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
            NRMASupportMetricHelper.enqueueSessionReplayURLTooLargeMetric()
@@ -131,7 +211,24 @@ public class SessionReplayReporter: NSObject {
 
        if self.failureCount > self.kNRMAMaxUploadRetry {
            NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
-           NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+
+           // Check if we should persist to offline storage
+           if NRMAFlags.shouldEnableOfflineStorage(),
+              let nsError = error as NSError?,
+              NRMAOfflineStorage.checkError(toPersist: nsError),
+              let encodedData = try? JSONEncoder().encode(upload) {
+               // Persist to offline storage for retry later
+               if self.offlineStorage.persistData(toDisk: encodedData) {
+                   NRLOG_AGENT_DEBUG("Session replay data persisted to offline storage due to network error")
+               } else {
+                   NRLOG_AGENT_DEBUG("Failed to persist session replay data to offline storage")
+                   NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+               }
+           } else {
+               // Not a network error or offline storage disabled - record as failed
+               NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+           }
+           
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
            self.pendingUploads -= 1
