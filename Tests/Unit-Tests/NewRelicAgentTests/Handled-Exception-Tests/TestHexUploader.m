@@ -25,6 +25,7 @@
 @property(strong) NSURLSession* session;
 @property(strong) NSMutableArray* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;
+@property(strong) NSMutableDictionary<NSURLRequest*, NSData*>* payloadByRequest;
 @end
 
 @interface TestHexUploader : NRMAAgentTestBase {
@@ -203,35 +204,44 @@
 }
 
 // Regression: previously sendData: nil'd the HTTPBody on the request before
-// passing it to uploadTaskWithRequest:fromData:. The retry path then read
-// HTTPBody back as nil and POSTed an empty body — burning network + FDs to
-// upload garbage. Verify the body survives so retries can resend.
+// passing it to uploadTaskWithRequest:fromData:, then the retry path tried
+// to read HTTPBody back and POSTed an empty body — burning sockets + FDs.
+// Now the payload is tracked in a parallel dictionary so retries can resend
+// the original bytes; the request itself MUST stay body-less because
+// NSURLSessionUploadTask warns + strips when a request has both a body and
+// `fromData:` bytes.
 - (void) testRetryPreservesPayload {
     self.hexUploader.applicationToken = @"TOKEN";
+    self.hexUploader.applicationVersion = @"1.0";
 
     const char* payload = "hello-world-handled-exception-bytes";
     NSData* data = [NSData dataWithBytes:payload length:strlen(payload)];
 
     [self.hexUploader sendData:data];
 
-    // Drain the in-flight upload to capture its originalRequest, then
-    // exercise the retry path. We pull via the session's tasks list rather
-    // than asserting on internal queue state.
-    XCTestExpectation* exp = [self expectationWithDescription:@"tasks listed"];
-    __block NSURLRequest* captured = nil;
-    [self.hexUploader.session getAllTasksWithCompletionHandler:^(NSArray<__kindof NSURLSessionTask*>* tasks) {
-        if (tasks.count > 0) {
-            captured = tasks.firstObject.originalRequest;
+    // Bookkeeping is synchronous: by the time sendData: returns, the upload
+    // has been launched and its payload recorded. The task may already have
+    // failed under the simulator (no listener), but the dict entry persists
+    // for the duration of any retry chain — so it must be present here.
+    NSDictionary<NSURLRequest*, NSData*>* snapshot = nil;
+    @synchronized(self.hexUploader.payloadByRequest) {
+        snapshot = [self.hexUploader.payloadByRequest copy];
+    }
+    XCTAssertGreaterThanOrEqual(snapshot.count, (NSUInteger)1,
+                                @"payload must be tracked for retry");
+
+    BOOL foundOriginalLength = NO;
+    for (NSURLRequest* key in snapshot) {
+        // The request itself must NOT carry HTTPBody — that would trip the
+        // iOS upload-task warning and strip the body.
+        XCTAssertNil(key.HTTPBody, @"upload-task request must have no HTTPBody");
+        if (snapshot[key].length == data.length) {
+            foundOriginalLength = YES;
         }
-        [exp fulfill];
-    }];
-    [self waitForExpectations:@[exp] timeout:5.0];
+    }
+    XCTAssertTrue(foundOriginalLength,
+                  @"a tracked payload must match the original byte length");
 
-    XCTAssertNotNil(captured, @"upload task should have been created");
-    XCTAssertNotNil(captured.HTTPBody, @"originalRequest must retain HTTPBody for retry");
-    XCTAssertEqual(captured.HTTPBody.length, data.length, @"retry body length must match original");
-
-    // Tear down to release sockets before the next test runs.
     [self.hexUploader invalidate];
 }
 

@@ -41,6 +41,14 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 // Concurrency control — guarded by @synchronized(self).
 @property(strong) NSMutableArray<NSData*>* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;
+
+// Tracks the upload payload for each in-flight / retryable request, keyed
+// by content-equal NSURLRequest. NSURLSessionUploadTask requires the payload
+// to come from `fromData:` (not from the request's HTTPBody — iOS warns and
+// strips it), so we cannot stash bytes on the request itself. This dictionary
+// is the parallel store that lets handledErroredRequest: rebuild the upload
+// with the original payload. Guarded by @synchronized(_payloadByRequest).
+@property(strong) NSMutableDictionary<NSURLRequest*, NSData*>* payloadByRequest;
 @end
 
 @implementation NRMAHexUploader
@@ -51,6 +59,7 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
         self.host = host;
         self.retryQueue = [NSMutableArray new];
         self.pendingPayloads = [NSMutableArray new];
+        self.payloadByRequest = [NSMutableDictionary new];
         self.inFlightCount = 0;
 
         NSURLSessionConfiguration* sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
@@ -119,16 +128,20 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
     [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
 
-    // Keep HTTPBody on the request so retry can resend the original bytes —
-    // see -handledErroredRequest:. Previously the body was nil'd here and
-    // the retry path uploaded an empty body.
-    [request setHTTPBody:data];
+    // Important: do NOT set HTTPBody on the request. NSURLSessionUploadTask
+    // requires the payload to come exclusively from `fromData:`, and iOS
+    // logs a warning + strips the body if both are present. Payload is
+    // tracked separately in payloadByRequest so retries can rebuild.
 
     NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
 
     NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:data];
+    NSURLRequest* key = uploadTask.originalRequest ?: request;
 
-    [self.taskStore track:uploadTask.originalRequest];
+    @synchronized(self.payloadByRequest) {
+        self.payloadByRequest[key] = data;
+    }
+    [self.taskStore track:key];
     [uploadTask resume];
 }
 
@@ -175,6 +188,11 @@ didCompleteWithError:(nullable NSError*)error {
         [self handledErroredRequest:task.originalRequest];
     } else {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
+        if (task.originalRequest) {
+            @synchronized(self.payloadByRequest) {
+                [self.payloadByRequest removeObjectForKey:task.originalRequest];
+            }
+        }
         [self.taskStore untrack:task.originalRequest];
     }
 
@@ -221,6 +239,9 @@ didCompleteWithError:(nullable NSError*)error {
     }
     if (offline) {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - offline, deferring retry");
+        @synchronized(self.payloadByRequest) {
+            [self.payloadByRequest removeObjectForKey:request];
+        }
         [self.taskStore untrack:request];
         return;
     }
@@ -228,20 +249,33 @@ didCompleteWithError:(nullable NSError*)error {
 
     if ([self.taskStore shouldRetryTask:request]) {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
-        NSData* body = [request HTTPBody];
+        NSData* body = nil;
+        @synchronized(self.payloadByRequest) {
+            body = self.payloadByRequest[request];
+        }
         if (body == nil || body.length == 0) {
-            // Defense-in-depth: should never happen now that sendData: leaves
-            // HTTPBody intact, but if it does, give up rather than POST garbage.
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry has no body, abandoning report");
+            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry has no payload, abandoning report");
             [self.taskStore untrack:request];
             return;
         }
         NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:body];
+        // The session may produce a fresh originalRequest copy on the new
+        // task — rekey the payload store so the next failure path can find
+        // the bytes again.
+        NSURLRequest* newKey = uploadTask.originalRequest;
+        if (newKey && ![newKey isEqual:request]) {
+            @synchronized(self.payloadByRequest) {
+                self.payloadByRequest[newKey] = body;
+            }
+        }
         @synchronized(self.retryQueue) {
             [self.retryQueue addObject:uploadTask];
         }
     } else {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
+        @synchronized(self.payloadByRequest) {
+            [self.payloadByRequest removeObjectForKey:request];
+        }
         [self.taskStore untrack:request];
     }
 }
