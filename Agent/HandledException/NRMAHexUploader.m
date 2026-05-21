@@ -12,14 +12,43 @@
 #include <libkern/OSAtomic.h>
 #import "NRMASupportMetricHelper.h"
 #import "NRConstants.h"
+#import "NewRelicInternalUtils.h"
+#import "NRMAReachability.h"
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
+
+// Bound how many uploads we hold in flight. Under low-bandwidth a default
+// session will queue tasks indefinitely; each task holds a socket FD until
+// the request completes or times out, exhausting the per-process FD limit.
+static const NSUInteger kNRMAHexMaxInFlight = 4;
+
+// Hard cap on the in-memory pending queue so a permanently-offline app
+// cannot grow RAM unboundedly when the caller keeps submitting reports.
+static const NSUInteger kNRMAHexMaxPending = 50;
+
+// Tighter than NSURLSession defaults (60s). Under low-bandwidth, the default
+// keeps sockets alive for a full minute per task — combined with concurrent
+// retries, that's how the customer hits "Too many open files".
+static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
+static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 
 @interface NRMAHexUploader()
 @property(strong) NSString* host;
 @property(strong) NSMutableArray* retryQueue;
 @property(strong) NSURLSession* session;
 @property(strong) NRMARetryTracker* taskStore;
+
+// Concurrency control — guarded by @synchronized(self).
+@property(strong) NSMutableArray<NSData*>* pendingPayloads;
+@property(assign) NSUInteger inFlightCount;
+
+// Tracks the upload payload for each in-flight / retryable request, keyed
+// by content-equal NSURLRequest. NSURLSessionUploadTask requires the payload
+// to come from `fromData:` (not from the request's HTTPBody — iOS warns and
+// strips it), so we cannot stash bytes on the request itself. This dictionary
+// is the parallel store that lets handledErroredRequest: rebuild the upload
+// with the original payload. Guarded by @synchronized(_payloadByRequest).
+@property(strong) NSMutableDictionary<NSURLRequest*, NSData*>* payloadByRequest;
 @end
 
 @implementation NRMAHexUploader
@@ -29,7 +58,16 @@
     if (self) {
         self.host = host;
         self.retryQueue = [NSMutableArray new];
+        self.pendingPayloads = [NSMutableArray new];
+        self.payloadByRequest = [NSMutableDictionary new];
+        self.inFlightCount = 0;
+
         NSURLSessionConfiguration* sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
+        sessionConfiguration.HTTPMaximumConnectionsPerHost = kNRMAHexMaxInFlight;
+        sessionConfiguration.timeoutIntervalForRequest = kNRMAHexRequestTimeout;
+        sessionConfiguration.timeoutIntervalForResource = kNRMAHexResourceTimeout;
+        sessionConfiguration.waitsForConnectivity = NO;
+
         self.session = [NSURLSession sessionWithConfiguration:sessionConfiguration
                                                      delegate:self
                                                 delegateQueue:nil];
@@ -39,35 +77,71 @@
 }
 
 - (void) sendData:(NSData*)data {
-
     if (data == nil) return;
 
-    NSMutableURLRequest* request = [self newPostWithURI:self.host];
-
-    if (request == nil) return;
-
-    request.HTTPMethod = @"POST";
-
-    [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
-    [request setValue:[NSString stringWithFormat:@"%lu",(unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
-    
-    if([data length] > kNRMAMaxPayloadSizeLimit) {
+    if ([data length] > kNRMAMaxPayloadSizeLimit) {
         NRLOG_AGENT_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
         return;
     }
-    
+
+    @synchronized(self) {
+        // Drop oldest first if pending grows beyond the soft cap. This is the
+        // memory-spike guard the customer reported — under permanent offline
+        // we'd otherwise hold every report in RAM forever.
+        while (self.pendingPayloads.count >= kNRMAHexMaxPending) {
+            [self.pendingPayloads removeObjectAtIndex:0];
+            NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - dropping oldest pending payload, queue full");
+        }
+        [self.pendingPayloads addObject:data];
+    }
+    [self drainPending];
+}
+
+// Caller must NOT hold @synchronized(self) when invoking. Drains as many
+// pending payloads as the in-flight cap allows; reentrant-safe.
+- (void) drainPending {
+    NSMutableArray<NSData*>* toSend = nil;
+    @synchronized(self) {
+        while (self.inFlightCount < kNRMAHexMaxInFlight && self.pendingPayloads.count > 0) {
+            if (toSend == nil) toSend = [NSMutableArray new];
+            [toSend addObject:self.pendingPayloads.firstObject];
+            [self.pendingPayloads removeObjectAtIndex:0];
+            self.inFlightCount++;
+        }
+    }
+    for (NSData* data in toSend) {
+        [self launchUpload:data];
+    }
+}
+
+- (void) launchUpload:(NSData*)data {
+    NSMutableURLRequest* request = [self newPostWithURI:self.host];
+    if (request == nil) {
+        @synchronized(self) {
+            if (self.inFlightCount > 0) self.inFlightCount--;
+        }
+        return;
+    }
+
+    request.HTTPMethod = @"POST";
+    [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
+    [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
+
+    // Important: do NOT set HTTPBody on the request. NSURLSessionUploadTask
+    // requires the payload to come exclusively from `fromData:`, and iOS
+    // logs a warning + strips the body if both are present. Payload is
+    // tracked separately in payloadByRequest so retries can rebuild.
+
     NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
 
-    NSMutableURLRequest *modifiedRequest = [request mutableCopy];
-    [modifiedRequest setHTTPBody:nil];
+    NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:data];
+    NSURLRequest* key = uploadTask.originalRequest ?: request;
 
-    NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:modifiedRequest fromData:data];
-
-    // Note: Previously the NRMAHexUploader used uploadTaskWithStreamedRequest
-    //NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithStreamedRequest:request];
-
-    [self.taskStore track:uploadTask.originalRequest];
+    @synchronized(self.payloadByRequest) {
+        self.payloadByRequest[key] = data;
+    }
+    [self.taskStore track:key];
     [uploadTask resume];
 }
 
@@ -75,7 +149,7 @@
     NSArray* localRetryQueue;
     @synchronized(self.retryQueue) {
         localRetryQueue = self.retryQueue;
-        // The following line prevents this temp local variable from being optimized out.
+        // Prevent this temp local from being optimized out.
         OSMemoryBarrier();
         self.retryQueue = [NSMutableArray new];
     }
@@ -90,7 +164,12 @@
 }
 
 - (void) dealloc {
-    
+    // Defense-in-depth: NSURLSession holds a strong ref to its delegate
+    // (self), so without an explicit invalidate the session + delegate +
+    // any in-flight tasks live forever. The publisher dtor normally
+    // invalidates first, but covering the dealloc path guarantees
+    // FDs and sockets are released even if ownership shifts.
+    [_session invalidateAndCancel];
 }
 
 - (void)  URLSession:(NSURLSession*)session
@@ -109,7 +188,18 @@ didCompleteWithError:(nullable NSError*)error {
         [self handledErroredRequest:task.originalRequest];
     } else {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
+        if (task.originalRequest) {
+            @synchronized(self.payloadByRequest) {
+                [self.payloadByRequest removeObjectForKey:task.originalRequest];
+            }
+        }
+        [self.taskStore untrack:task.originalRequest];
     }
+
+    @synchronized(self) {
+        if (self.inFlightCount > 0) self.inFlightCount--;
+    }
+    [self drainPending];
 }
 
 
@@ -117,12 +207,9 @@ didCompleteWithError:(nullable NSError*)error {
            dataTask:(NSURLSessionDataTask*)dataTask
  didReceiveResponse:(NSURLResponse*)response
   completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
-//    NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
-//
-//    NSInteger statusCode = httpResponse.statusCode;
 
     NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", response);
-    
+
     if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
         ((NSHTTPURLResponse*)response).statusCode >= 400) {
         NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
@@ -139,14 +226,56 @@ didCompleteWithError:(nullable NSError*)error {
 }
 
 - (void) handledErroredRequest:(NSURLRequest*)request {
+    if (request == nil) return;
+
+    // If we're offline, don't burn FDs/sockets cycling failed retries —
+    // queue the task and let the next harvest's retryFailedTasks fire it
+    // when reachability returns.
+#if !TARGET_OS_WATCH
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    BOOL offline = NO;
+    @synchronized(r) {
+        offline = ([r currentReachabilityStatus] == NotReachable);
+    }
+    if (offline) {
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - offline, deferring retry");
+        @synchronized(self.payloadByRequest) {
+            [self.payloadByRequest removeObjectForKey:request];
+        }
+        [self.taskStore untrack:request];
+        return;
+    }
+#endif
+
     if ([self.taskStore shouldRetryTask:request]) {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
-        NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:[request HTTPBody]];
+        NSData* body = nil;
+        @synchronized(self.payloadByRequest) {
+            body = self.payloadByRequest[request];
+        }
+        if (body == nil || body.length == 0) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry has no payload, abandoning report");
+            [self.taskStore untrack:request];
+            return;
+        }
+        NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:body];
+        // The session may produce a fresh originalRequest copy on the new
+        // task — rekey the payload store so the next failure path can find
+        // the bytes again.
+        NSURLRequest* newKey = uploadTask.originalRequest;
+        if (newKey && ![newKey isEqual:request]) {
+            @synchronized(self.payloadByRequest) {
+                self.payloadByRequest[newKey] = body;
+            }
+        }
         @synchronized(self.retryQueue) {
             [self.retryQueue addObject:uploadTask];
         }
     } else {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
+        @synchronized(self.payloadByRequest) {
+            [self.payloadByRequest removeObjectForKey:request];
+        }
         [self.taskStore untrack:request];
     }
 }
