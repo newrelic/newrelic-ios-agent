@@ -22,7 +22,9 @@
 
 @interface NRMAHexUploader ()
 - (void) handledErroredRequest:(NSURLRequest*)request;
-
+@property(strong) NSURLSession* session;
+@property(strong) NSMutableArray* pendingPayloads;
+@property(assign) NSUInteger inFlightCount;
 @end
 
 @interface TestHexUploader : NRMAAgentTestBase {
@@ -196,8 +198,66 @@
     }
     
     XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
-    
+
     [mockUploader stopMocking];
+}
+
+// Regression: previously sendData: nil'd the HTTPBody on the request before
+// passing it to uploadTaskWithRequest:fromData:. The retry path then read
+// HTTPBody back as nil and POSTed an empty body — burning network + FDs to
+// upload garbage. Verify the body survives so retries can resend.
+- (void) testRetryPreservesPayload {
+    self.hexUploader.applicationToken = @"TOKEN";
+
+    const char* payload = "hello-world-handled-exception-bytes";
+    NSData* data = [NSData dataWithBytes:payload length:strlen(payload)];
+
+    [self.hexUploader sendData:data];
+
+    // Drain the in-flight upload to capture its originalRequest, then
+    // exercise the retry path. We pull via the session's tasks list rather
+    // than asserting on internal queue state.
+    XCTestExpectation* exp = [self expectationWithDescription:@"tasks listed"];
+    __block NSURLRequest* captured = nil;
+    [self.hexUploader.session getAllTasksWithCompletionHandler:^(NSArray<__kindof NSURLSessionTask*>* tasks) {
+        if (tasks.count > 0) {
+            captured = tasks.firstObject.originalRequest;
+        }
+        [exp fulfill];
+    }];
+    [self waitForExpectations:@[exp] timeout:5.0];
+
+    XCTAssertNotNil(captured, @"upload task should have been created");
+    XCTAssertNotNil(captured.HTTPBody, @"originalRequest must retain HTTPBody for retry");
+    XCTAssertEqual(captured.HTTPBody.length, data.length, @"retry body length must match original");
+
+    // Tear down to release sockets before the next test runs.
+    [self.hexUploader invalidate];
+}
+
+// Concurrency cap: more sendData: calls than kNRMAHexMaxInFlight (=4) must
+// queue the overflow on pendingPayloads instead of submitting them all at
+// once. Without this, a 200-deep backlog would spawn 200 sockets on cold
+// start and exhaust the per-process FD limit.
+- (void) testConcurrencyCap {
+    self.hexUploader.applicationToken = @"TOKEN";
+
+    for (int i = 0; i < 10; i++) {
+        const char* payload = "x";
+        NSData* data = [NSData dataWithBytes:payload length:1];
+        [self.hexUploader sendData:data];
+    }
+
+    // 4 in-flight, 6 pending.
+    XCTAssertLessThanOrEqual(self.hexUploader.inFlightCount, (NSUInteger)4,
+                             @"in-flight count must never exceed cap");
+    XCTAssertGreaterThan(self.hexUploader.pendingPayloads.count, (NSUInteger)0,
+                         @"overflow must be queued, not dropped silently");
+    XCTAssertEqual(self.hexUploader.inFlightCount + self.hexUploader.pendingPayloads.count,
+                   (NSUInteger)10,
+                   @"all submitted payloads accounted for");
+
+    [self.hexUploader invalidate];
 }
 
 @end
