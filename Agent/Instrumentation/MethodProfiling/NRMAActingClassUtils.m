@@ -70,27 +70,39 @@ NSMutableArray* NRMA_actingClassArray(id self, NSString* selector)
         }
     }
 
-    NSString* threadId = [NSString stringWithFormat:@"%d",pthread_mach_thread_np(pthread_self())];
+    // Use NSNumber as the per-thread key instead of +stringWithFormat: — the variadic
+    // format path (vfprintf) was crashing under deep swizzling recursion (e.g. broken
+    // Xamarin/MAUI swizzling re-entering viewWillLayoutSubviews) when the stack was
+    // near exhaustion. NSNumber avoids the variadic machinery and the signed/unsigned
+    // mismatch with mach_port_t.
+    NSNumber* threadId = nil;
     NSMutableDictionary* actingClassStackDict = nil;
-    @synchronized(actingClassThreadsDict) {
-        actingClassStackDict = [actingClassThreadsDict objectForKey:threadId];
-
-        if (actingClassStackDict == nil) {
-            actingClassStackDict = [[NSMutableDictionary alloc] init];
-            [actingClassThreadsDict setObject:actingClassStackDict forKey:threadId];
+    @try {
+        threadId = @(pthread_mach_thread_np(pthread_self()));
+        if (threadId == nil) {
+            return nil;
         }
+        @synchronized(actingClassThreadsDict) {
+            actingClassStackDict = [actingClassThreadsDict objectForKey:threadId];
 
+            if (actingClassStackDict == nil) {
+                actingClassStackDict = [[NSMutableDictionary alloc] init];
+                [actingClassThreadsDict setObject:actingClassStackDict forKey:threadId];
+            }
+        }
+        NSMutableArray* actingClassStack = [actingClassStackDict objectForKey:selector];
+        if (!actingClassStack) {
+            /*
+             * the associatedObject will persist for the lifetime of the object
+             * but will be release after the object is dealloced.
+             */
+            actingClassStack = [[NSMutableArray alloc] init];
+            [actingClassStackDict setObject:actingClassStack forKey:selector];
+        }
+        return actingClassStack;
     }
-    NSMutableArray* actingClassStack = nil;
-    actingClassStack = [actingClassStackDict objectForKey:selector];
-    if (!actingClassStack) {
-        /*
-         * the associatedObject will persist for the lifetime of the object
-         * but will be release after the object is dealloced.
-         */
-        actingClassStack = [[NSMutableArray alloc] init];
-        [actingClassStackDict setObject:actingClassStack forKey:selector];
+    @catch (NSException* exception) {
+        return nil;
     }
-    return actingClassStack;
 }
 

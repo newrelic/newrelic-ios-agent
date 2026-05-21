@@ -18,26 +18,31 @@ class SessionReplayCapture {
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
-        let effectiveViewController = findRootViewController(rootView: rootView)
-        var rootViewControllerID:String?
-        if let rootViewController = effectiveViewController {
-            rootViewControllerID = String(describing: type(of: rootViewController))
+        // Bound the lifetime of every autoreleased UIKit / CF object touched
+        // during the walk to a single frame so we don't drag stale references
+        // across view-controller tear-downs. NR-566282.
+        return autoreleasepool {
+            let effectiveViewController = findRootViewController(rootView: rootView)
+            var rootViewControllerID:String?
+            if let rootViewController = effectiveViewController {
+                rootViewControllerID = String(describing: type(of: rootViewController))
+            }
+
+            var rootSwiftUIViewID: Int? = nil
+            var rootThingy = findRecorderForView(view: rootView)
+
+            // Reset counters for this frame capture
+            layoutContainerViewCount = 0
+            navigationStackDepth = 0
+
+            // Build tree using recursive approach to properly handle value semantics
+            buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+
+            // Set nextId for all views after tree is built
+            setNextIdRecursively(for: &rootThingy)
+
+            return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
         }
-        
-        var rootSwiftUIViewID: Int? = nil
-        var rootThingy = findRecorderForView(view: rootView)
-        
-        // Reset counters for this frame capture
-        layoutContainerViewCount = 0
-        navigationStackDepth = 0
-        
-        // Build tree using recursive approach to properly handle value semantics
-        buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-        
-        // Set nextId for all views after tree is built
-        setNextIdRecursively(for: &rootThingy)
-        
-        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
@@ -72,10 +77,12 @@ class SessionReplayCapture {
                 }
             }
             
+            // Validate CGColor pointers up front — they can dangle during view
+            // tear-down (e.g. rootViewController swap on sign-out). NR-566282.
             let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
                                                        clip: parentThingy.viewDetails.clip,
-                                                       backgroundColor: currentView.backgroundColor?.cgColor,
-                                                       layerBorderColor: currentView.layer.borderColor,
+                                                       backgroundColor: currentView.backgroundColor?.cgColor.safeColor,
+                                                       layerBorderColor: currentView.layer.borderColor?.safeColor,
                                                        layerBorderWidth: currentView.layer.borderWidth,
                                                        layerCornerRadius: currentView.layer.cornerRadius,
                                                        alpha: currentView.alpha,
@@ -98,7 +105,8 @@ class SessionReplayCapture {
                 var otherViews: [any SessionReplayViewThingy] = []
 
                 for thingy in thingys {
-                    if thingy.viewDetails.viewName == "SwiftUIColorView" {
+                    if thingy.viewDetails.viewName == "SwiftUIColorView"
+                        || thingy.viewDetails.viewName == "SwiftUIPlatformView" {
                         colorViews.append(thingy)
                     } else {
                         otherViews.append(thingy)
@@ -214,7 +222,16 @@ class SessionReplayCapture {
         let areFramesTheSame = CGRectEqualToRect(view.frame, superview.frame)
         let isClear = (view.alpha == 0)
         
-        return !(areFramesTheSame && isClear)
+        if areFramesTheSame && isClear {
+            // Still record navigation bar internal views and SwiftUI platform view hosts.
+            let className = NSStringFromClass(type(of: view))
+            if className.contains("NavigationBar") || className.contains("LargeTitle")
+                || className.contains("UIKitPlatformViewHost") {
+                return true
+            }
+            return false
+        }
+        return true
     }
     
     private func setNextIdRecursively(for thingy: inout any SessionReplayViewThingy) {
