@@ -99,7 +99,6 @@ enum DrawingConstants {
     static let maxSize = 1024
     static let targetClass: AnyClass? = {
         // XOR-encoded with key 0x5A; decoded at runtime so the literal
-        // "RBMovedDisplayListContents" never appears in __cstring.
         let key: UInt8 = 0x5A
         let encoded: [UInt8] = [
             0x08, 0x18, 0x17, 0x35, 0x2C, 0x3F, 0x3E, 0x1E,
