@@ -49,6 +49,7 @@
 - (void)tearDown {
     [NRMASupportMetricHelper processDeferredMetrics];
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
 
     [super tearDown];
 }
