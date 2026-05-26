@@ -707,14 +707,26 @@ void NRMA__wht_voidParamHandler(id self, SEL selector)
 void NRMA__voidParamHandler(id self, SEL selector, NRMAMethodColor methodColor)
 {
     if (self == nil) return;
-    
+
     BOOL isTargetColor =  NO;
 
     NRMATrace* trace = nil;
 
     IMP method = NRMA__beginMethod(self, selector, methodColor, &isTargetColor, &trace);
 
-    ((void(*)(id,SEL))method)(self,selector);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        ((void(*)(id,SEL))method)(self,selector);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(selector)];
+        NRMA__endMethod(self, selector, isTargetColor, trace);
+        return;
+    }
+#endif
 
     NRMA__endMethod(self, selector,isTargetColor,trace);
 }
@@ -746,7 +758,24 @@ id NRMA__ptrParamHandler(id self, SEL selector, NRMAMethodColor methodColor, id 
 
     IMP method = NRMA__beginMethod(self, selector, methodColor, &isTargetColor, &trace);
 
-    id retval = ((id(*)(id,SEL,id))method)(self, selector, p1);
+    id retval = nil;
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        retval = ((id(*)(id,SEL,id))method)(self, selector, p1);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(selector)];
+        if (isInitMethod) {
+            self = nil;
+        }
+        NRMA__endMethod(self, selector, isTargetColor, trace);
+        return nil;
+    }
+#endif
+
     if (isInitMethod && retval == nil) {
         //this will prevent a crash in NRMA_endMethod in the case where
         //self is dealloc in the init method, and we try to clear the
@@ -784,7 +813,23 @@ id NRMA__ptrFloatParamHandler(id self, SEL selector, NRMAMethodColor methodColor
 
     IMP method = NRMA__beginMethod(self, selector, methodColor, &isTargetColor, &trace);
 
-    id retval = ((id(*)(id,SEL,id,CGFloat))method)(self, selector, p1, p2);
+    id retval = nil;
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        retval = ((id(*)(id,SEL,id,CGFloat))method)(self, selector, p1, p2);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(selector)];
+        if (isInitMethod) {
+            self = nil;
+        }
+        NRMA__endMethod(self, selector, isTargetColor, trace);
+        return nil;
+    }
+#endif
 
     if (isInitMethod && retval == nil) {
         //this will prevent a crash in NRMA_endMethod in the case where
@@ -826,7 +871,23 @@ id NRMA__ptrIntPtrParamHandler(id self, SEL selector, NRMAMethodColor methodColo
 
     IMP method = NRMA__beginMethod(self, selector, methodColor, &isTargetColor, &trace);
 
-    id retval = ((id(*)(id,SEL,id,NSUInteger,id))method)(self, selector, p1, p2, p3);
+    id retval = nil;
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        retval = ((id(*)(id,SEL,id,NSUInteger,id))method)(self, selector, p1, p2, p3);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(selector)];
+        if (isInitMethod) {
+            self = nil;
+        }
+        NRMA__endMethod(self, selector, isTargetColor, trace);
+        return nil;
+    }
+#endif
 
     if (isInitMethod && retval == nil) {
         //this will prevent a crash in NRMA_endMethod in the case where
@@ -865,7 +926,20 @@ NSInteger NRMA__ptrPtrIntPtrParamHandler(id self, SEL selector, NRMAMethodColor 
 
     IMP method = NRMA__beginMethod(self, selector, methodColor, &isTargetColor, &trace);
 
-    NSUInteger retval = ((NSUInteger(*)(id,SEL,id,id,NSUInteger,id))method)(self, selector, p1, p2, p3, p4);
+    NSUInteger retval = 0;
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        retval = ((NSUInteger(*)(id,SEL,id,id,NSUInteger,id))method)(self, selector, p1, p2, p3, p4);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(selector)];
+        NRMA__endMethod(self, selector, isTargetColor, trace);
+        return 0;
+    }
+#endif
 
     NRMA__endMethod(self, selector,isTargetColor,trace);
 
@@ -895,7 +969,25 @@ id NRMA__ptrPtrParamHandler(id self, SEL selector, NRMAMethodColor methodColor, 
 
     IMP method = NRMA__beginMethod(self, selector, methodColor, &isTargetColor, &trace);
 
-    id retval = ((id(*)(id,SEL,id,id))method)(self, selector, p1, p2);
+    id retval = nil;
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        retval = ((id(*)(id,SEL,id,id))method)(self, selector, p1, p2);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        // An NSException raised by the swizzled method (or anything it triggers
+        // — including concurrent NSSet mutation) would otherwise crash the host
+        // and be misattributed to this frame. Log it, clean up the trace state
+        // so we don't leak, and swallow.
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(selector)];
+        self = nil;
+        NRMA__endMethod(self, selector, isTargetColor, trace);
+        return nil;
+    }
+#endif
 
     if (retval == nil) {
         //this will prevent a crash in NRMA_endMethod in the case where
@@ -925,14 +1017,26 @@ void NRMA__wht_boolParamHandler(id self, SEL selector, BOOL p1)
 void NRMA__boolParamHandler(id self, SEL selector, NRMAMethodColor targetColor, BOOL p1)
 {
     if (self == nil) return;
-    
+
     BOOL isTargetColor = NO;
 
     NRMATrace* trace = nil;
 
     IMP method = NRMA__beginMethod(self, selector, targetColor,&isTargetColor, &trace);
 
-    ((void(*)(id,SEL,BOOL))method)(self, selector, p1);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        ((void(*)(id,SEL,BOOL))method)(self, selector, p1);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(selector)];
+        NRMA__endMethod(self, selector, isTargetColor, trace);
+        return;
+    }
+#endif
 
     NRMA__endMethod(self, selector,isTargetColor,trace);
 }
