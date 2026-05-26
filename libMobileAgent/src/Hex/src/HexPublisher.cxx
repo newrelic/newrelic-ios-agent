@@ -22,25 +22,30 @@ std::string HexPublisher::lastPublishedFile() {
     return filename;
 }
 
+namespace {
+    struct FileCloser {
+        void operator()(FILE* f) const noexcept { if (f) std::fclose(f); }
+    };
+    using UniqueFile = std::unique_ptr<FILE, FileCloser>;
+}
+
 std::string HexPublisher::writeBytesToStore(uint8_t* bytes,
                                             size_t length) {
     auto filename = generateFilename();
-    FILE* file = fopen(filename.c_str(), "wb");
-    if (file == nullptr) {
+    UniqueFile file(std::fopen(filename.c_str(), "wb"));
+    if (!file) {
         LLOG_VERBOSE("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
         return std::string("");
     }
 
-    auto size = fwrite(bytes, sizeof(uint8_t), length, file);
+    auto size = std::fwrite(bytes, sizeof(uint8_t), length, file.get());
 
-    if (size < length) {
-        if (ferror(file)) {
-            LLOG_VERBOSE("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
-            fclose(file);
-            remove(filename.c_str());
-        }
+    if (size < length && std::ferror(file.get())) {
+        LLOG_VERBOSE("failed to write handled exception report.\nerror %d: %s", errno, strerror(errno));
+        file.reset();   // close before remove
+        std::remove(filename.c_str());
+        return std::string("");
     }
-    fclose(file);
     return filename;
 }
 

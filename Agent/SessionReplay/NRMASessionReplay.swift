@@ -193,9 +193,27 @@ public class NRMASessionReplay: NSObject {
                 NRLOG_AGENT_DEBUG("No key window found while trying to take a frame")
                 return
             }
-            
-            let frame = await sessionReplayCapture.recordFrom(rootView: window)
-            addFrame(frame)
+
+            // Backstop: a partially-deallocated view (rootViewController swap on
+            // sign-out, NR-566282) can raise an NSException deep inside UIKit /
+            // CoreGraphics that Swift can't catch. Wrap the capture so a single
+            // bad frame is dropped rather than taking the whole app down.
+            let captured: SessionReplayFrame? = await MainActor.run { () -> SessionReplayFrame? in
+                var result: SessionReplayFrame?
+                do {
+                    try NRMAExceptionHandler.safelyRun {
+                        result = self.sessionReplayCapture.recordFrom(rootView: window)
+                    }
+                } catch {
+                    NRLOG_AGENT_DEBUG("Session replay frame skipped after NSException: \(error.localizedDescription)")
+                    return nil
+                }
+                return result
+            }
+
+            if let frame = captured {
+                addFrame(frame)
+            }
         }
     }
     

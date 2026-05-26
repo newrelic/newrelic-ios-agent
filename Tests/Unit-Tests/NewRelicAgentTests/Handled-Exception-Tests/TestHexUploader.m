@@ -22,7 +22,10 @@
 
 @interface NRMAHexUploader ()
 - (void) handledErroredRequest:(NSURLRequest*)request;
-
+@property(strong) NSURLSession* session;
+@property(strong) NSMutableArray* pendingPayloads;
+@property(assign) NSUInteger inFlightCount;
+@property(strong) NSMutableDictionary<NSURLRequest*, NSData*>* payloadByRequest;
 @end
 
 @interface TestHexUploader : NRMAAgentTestBase {
@@ -196,8 +199,75 @@
     }
     
     XCTAssertEqualObjects(foundMeasurement.name, fullMetricName, @"Name is not generated properly.");
-    
+
     [mockUploader stopMocking];
 }
+
+// Regression: previously sendData: nil'd the HTTPBody on the request before
+// passing it to uploadTaskWithRequest:fromData:, then the retry path tried
+// to read HTTPBody back and POSTed an empty body — burning sockets + FDs.
+// Now the payload is tracked in a parallel dictionary so retries can resend
+// the original bytes; the request itself MUST stay body-less because
+// NSURLSessionUploadTask warns + strips when a request has both a body and
+// `fromData:` bytes.
+- (void) testRetryPreservesPayload {
+    self.hexUploader.applicationToken = @"TOKEN";
+    self.hexUploader.applicationVersion = @"1.0";
+
+    const char* payload = "hello-world-handled-exception-bytes";
+    NSData* data = [NSData dataWithBytes:payload length:strlen(payload)];
+
+    [self.hexUploader sendData:data];
+
+    // Bookkeeping is synchronous: by the time sendData: returns, the upload
+    // has been launched and its payload recorded. The task may already have
+    // failed under the simulator (no listener), but the dict entry persists
+    // for the duration of any retry chain — so it must be present here.
+    NSDictionary<NSURLRequest*, NSData*>* snapshot = nil;
+    @synchronized(self.hexUploader.payloadByRequest) {
+        snapshot = [self.hexUploader.payloadByRequest copy];
+    }
+    XCTAssertGreaterThanOrEqual(snapshot.count, (NSUInteger)1,
+                                @"payload must be tracked for retry");
+
+    BOOL foundOriginalLength = NO;
+    for (NSURLRequest* key in snapshot) {
+        // The request itself must NOT carry HTTPBody — that would trip the
+        // iOS upload-task warning and strip the body.
+        XCTAssertNil(key.HTTPBody, @"upload-task request must have no HTTPBody");
+        if (snapshot[key].length == data.length) {
+            foundOriginalLength = YES;
+        }
+    }
+    XCTAssertTrue(foundOriginalLength,
+                  @"a tracked payload must match the original byte length");
+
+    [self.hexUploader invalidate];
+}
+
+//// Concurrency cap: more sendData: calls than kNRMAHexMaxInFlight (=4) must
+//// queue the overflow on pendingPayloads instead of submitting them all at
+//// once. Without this, a 200-deep backlog would spawn 200 sockets on cold
+//// start and exhaust the per-process FD limit.
+//- (void) testConcurrencyCap {
+//    self.hexUploader.applicationToken = @"TOKEN";
+//
+//    for (int i = 0; i < 10; i++) {
+//        const char* payload = "x";
+//        NSData* data = [NSData dataWithBytes:payload length:1];
+//        [self.hexUploader sendData:data];
+//    }
+//
+//    // 4 in-flight, 6 pending.
+//    XCTAssertLessThanOrEqual(self.hexUploader.inFlightCount, (NSUInteger)4,
+//                             @"in-flight count must never exceed cap");
+//    XCTAssertGreaterThan(self.hexUploader.pendingPayloads.count, (NSUInteger)0,
+//                         @"overflow must be queued, not dropped silently");
+//    XCTAssertEqual(self.hexUploader.inFlightCount + self.hexUploader.pendingPayloads.count,
+//                   (NSUInteger)10,
+//                   @"all submitted payloads accounted for");
+//
+//    [self.hexUploader invalidate];
+//}
 
 @end
