@@ -19,8 +19,8 @@
 
 @implementation NRMAOfflineStorage {
     NSUInteger maxOfflineStorageSizeBytes;
+    NSString* _name;
 }
-static NSString* _name;
 
 - (id)initWithEndpoint:(NSString*) name {
     self = [super init];

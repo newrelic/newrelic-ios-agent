@@ -22,6 +22,8 @@ public class SessionReplayReporter: NSObject {
     private let url: NSString
     private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
     private var pendingUploads = 0
+    private var pendingOfflineUploads = 0
+    private var offlineUploadMetricSize: Int = 0
     private let offlineStorage: NRMAOfflineStorage
 
     @objc public init(applicationToken: String, url: NSString) {
@@ -87,7 +89,7 @@ public class SessionReplayReporter: NSObject {
                  self.pendingUploads -= 1
                  
                  // Check if we should end the background task
-                 if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+                 if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty && self.pendingOfflineUploads == 0 {
                      self.endBackgroundTaskIfNeeded()
                  }
                  return
@@ -106,7 +108,9 @@ public class SessionReplayReporter: NSObject {
 
              let session = URLSession(configuration: .default)
              let uploadTask = session.uploadTask(with: request, from: upload.sessionReplayFramesData) { data, response, error in
-                 self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count, upload: upload)
+                 self.uploadQueue.async {
+                     self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count, upload: upload)
+                 }
              }
 
              uploadTask.resume()
@@ -114,6 +118,11 @@ public class SessionReplayReporter: NSObject {
      }
 
     private func sendOfflineStorage() {
+        // Prevent concurrent offline storage uploads
+        guard pendingOfflineUploads == 0 else {
+            return
+        }
+
         // Check if offline storage is enabled
         guard NRMAFlags.shouldEnableOfflineStorage() else {
             // If disabled, clear any existing offline storage
@@ -132,16 +141,22 @@ public class SessionReplayReporter: NSObject {
 
         NRLOG_AGENT_DEBUG("Number of offline session replay data posts: \(offlineDataArray.count)")
 
-        var totalSize: Int = 0
+        // Set pending count immediately to prevent race condition
+        pendingOfflineUploads = offlineDataArray.count
+        beginBackgroundTaskIfNeeded()
+        processOfflineUploads(offlineDataArray)
+    }
 
+    private func processOfflineUploads(_ offlineDataArray: [Data]) {
         for data in offlineDataArray {
-            // Decode the SessionReplayData object
+            // Decode SessionReplayData
             guard let upload = try? JSONDecoder().decode(SessionReplayData.self, from: data) else {
                 NRLOG_AGENT_DEBUG("Failed to decode offline session replay data")
+                self.handleOfflineUploadComplete(size: 0)
                 continue
             }
 
-            // Create the upload request
+            // Create URLRequest with headers
             var request = URLRequest(url: upload.url)
             request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
             if upload.sessionReplayFramesData.isGzipped {
@@ -153,32 +168,44 @@ public class SessionReplayReporter: NSObject {
             request.httpMethod = "POST"
             request.httpBody = upload.sessionReplayFramesData
 
-            // Send synchronously to check for network errors
-            let semaphore = DispatchSemaphore(value: 0)
-            var uploadError: Error?
-            var uploadResponse: URLResponse?
-
+            // Send asynchronously
             let session = URLSession(configuration: .default)
-            let task = session.dataTask(with: request) { _, response, error in
-                uploadError = error
-                uploadResponse = response
-                semaphore.signal()
+            let task = session.dataTask(with: request) { [weak self] _, response, error in
+                guard let self = self else { return }
+
+                self.uploadQueue.async {
+                    if let error = error as NSError?, NRMAOfflineStorage.checkError(toPersist: error) {
+                        // Network error - persist back to storage
+                        _ = self.offlineStorage.persistData(toDisk: data)
+                        self.handleOfflineUploadComplete(size: 0)
+                    } else {
+                        // Success or non-network error - count as sent
+                        self.handleOfflineUploadComplete(size: upload.sessionReplayFramesData.count)
+                    }
+                }
             }
             task.resume()
-            semaphore.wait()
+        }
+    }
 
-            // Check if we should persist again due to network error
-            if let error = uploadError as NSError?, NRMAOfflineStorage.checkError(toPersist: error) {
-                // Network error - persist back to offline storage
-                _ = offlineStorage.persistData(toDisk: data)
-            } else {
-                // Success or non-network error - count it as sent
-                totalSize += upload.sessionReplayFramesData.count
+    private func handleOfflineUploadComplete(size: Int) {
+        self.pendingOfflineUploads -= 1
+
+        if size > 0 {
+            self.offlineUploadMetricSize += size
+        }
+
+        // When all offline uploads complete, report metric and reset flag
+        if self.pendingOfflineUploads == 0 {
+            if self.offlineUploadMetricSize > 0 {
+                NRMASupportMetricHelper.enqueueOfflinePayloadMetric(self.offlineUploadMetricSize)
+                self.offlineUploadMetricSize = 0
             }
         }
 
-        if totalSize > 0 {
-            NRMASupportMetricHelper.enqueueOfflinePayloadMetric(totalSize)
+        // Check if all uploads (regular + offline) are complete
+        if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty && self.pendingOfflineUploads == 0 {
+            self.endBackgroundTaskIfNeeded()
         }
     }
 
@@ -238,7 +265,7 @@ public class SessionReplayReporter: NSObject {
        self.processNextUploadTask()
        
        // End background task when all uploads are complete
-       if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+       if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty && self.pendingOfflineUploads == 0 {
            self.endBackgroundTaskIfNeeded()
        }
    }
