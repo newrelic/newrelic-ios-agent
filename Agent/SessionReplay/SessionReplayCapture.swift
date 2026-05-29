@@ -209,7 +209,14 @@ class SessionReplayCapture {
                originalView.isKind(of: rctParagraphClass) {
                 return UILabelThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
             } else {
-                return UIViewThingy(view: originalView, viewDetails: ViewDetails(view: originalView))
+                let viewDetails = ViewDetails(view: originalView)
+                // Rasterize unrecognized leaf views that draw pixels but have no
+                // extractable fill — otherwise UIViewThingy emits an invisible div.
+                if RasterizedViewThingy.shouldRasterize(view: originalView, viewDetails: viewDetails),
+                   let raster = RasterizedViewThingy.rasterize(view: originalView) {
+                    return RasterizedViewThingy(viewDetails: viewDetails, image: raster)
+                }
+                return UIViewThingy(view: originalView, viewDetails: viewDetails)
             }
         }
     }
