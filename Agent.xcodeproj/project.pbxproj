@@ -1589,6 +1589,9 @@
 		D48D551A2F4E46B2003BE3AB /* JSErrorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48D55172F4E46B2003BE3AB /* JSErrorController.swift */; };
 		D48D551D2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = D48D551C2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.m */; };
 		D48D551E2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = D48D551B2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.h */; };
+		D4C36C962FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
+		D4C36C972FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
+		D4C36C982FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -2703,6 +2706,7 @@
 		D48D55182F4E46B2003BE3AB /* MobileErrorsUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileErrorsUploader.swift; sourceTree = "<group>"; };
 		D48D551B2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAJSErrorHarvestAdapter.h; sourceTree = "<group>"; };
 		D48D551C2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAJSErrorHarvestAdapter.m; sourceTree = "<group>"; };
+		D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestGuidUniqueness.mm; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
 		F6E79C6E25A65346006277FB /* W3CTraceState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceState.h; sourceTree = "<group>"; };
 		F6E79C7025A65346006277FB /* W3CTraceParent.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceParent.mm; sourceTree = "<group>"; };
@@ -4302,6 +4306,7 @@
 		F6E79CFA25A7590B006277FB /* DistributedTesting-Tests */ = {
 			isa = PBXGroup;
 			children = (
+				D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */,
 				F6E79D0225A75E6E006277FB /* TestNRMATraceContext.mm */,
 				F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */,
 				F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */,
@@ -5656,6 +5661,7 @@
 				0209ACA224E7393300E45C90 /* NRThreadInfoTest.m in Sources */,
 				F8FBFA5F2A78336200CDC8C5 /* TestNRMAPayload.m in Sources */,
 				0209ABF524E706FA00E45C90 /* NRGCDOverrideTest.m in Sources */,
+				D4C36C962FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */,
 				D46F91C22F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */,
 				0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */,
 				0209ACA124E7393300E45C90 /* NRUncaughtExceptionhandlerTests.m in Sources */,
@@ -6102,6 +6108,7 @@
 				0256584B24EB19BF00FE3125 /* NRMethodProfilerTests.m in Sources */,
 				0256584C24EB19BF00FE3125 /* MachineMeasurementsTest.m in Sources */,
 				0256584D24EB19BF00FE3125 /* NRThreadInfoTests.m in Sources */,
+				D4C36C982FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */,
 				3431DD922BED4C9B00FF145F /* TestCustomEvents.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6401,6 +6408,7 @@
 				3431DD9A2BED8E5B00FF145F /* APINetworkNoticeTest.m in Sources */,
 				3431DD372BED383C00FF145F /* NRMAInternalTests.m in Sources */,
 				3431DD3E2BED385D00FF145F /* NRCPUVitalsTest.m in Sources */,
+				D4C36C972FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */,
 				3431DD362BED381600FF145F /* TestW3CTraceState.mm in Sources */,
 				3431DD3C2BED384D00FF145F /* ZZZCodeCoverageTest.m in Sources */,
 				3431DD3A2BED384700FF145F /* NRMAUUIDStoreTests.m in Sources */,
