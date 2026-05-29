@@ -26,6 +26,16 @@ public class SessionReplayReporter: NSObject {
     private var offlineUploadMetricSize: Int = 0
     private let offlineStorage: NRMAOfflineStorage
 
+    // HTTP Header Constants
+    private static let kContentTypeHeader = "Content-Type"
+    private static let kContentEncodingHeader = "Content-Encoding"
+    private static let kAcceptEncodingHeader = "Accept-Encoding"
+    private static let kContentLengthHeader = "Content-Length"
+    private static let kAppLicenseKeyHeader = "X-App-License-Key"
+    private static let kOctetStreamContentType = "application/octet-stream"
+    private static let kGzipEncoding = "gzip"
+    private static let kPostMethod = "POST"
+
     @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
         self.url = url
@@ -33,7 +43,7 @@ public class SessionReplayReporter: NSObject {
         super.init()
 
         // Set max offline storage size if configured
-        if let config = NRMAAgentConfiguration.connectionInformation() {
+        if let _ = NRMAAgentConfiguration.connectionInformation() {
             let maxSize = NRMAAgentConfiguration.getMaxOfflineStorageSize()
             self.offlineStorage.setMaxOfflineStorageSize(maxSize)
         }
@@ -96,15 +106,15 @@ public class SessionReplayReporter: NSObject {
              }
 
              var request = URLRequest(url: upload.url)
-             request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+             request.setValue(Self.kOctetStreamContentType, forHTTPHeaderField: Self.kContentTypeHeader)
              if upload.sessionReplayFramesData.isGzipped {
-                 request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
-                 request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+                 request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kContentEncodingHeader)
+                 request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kAcceptEncodingHeader)
              }
-             request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
-             request.setValue(applicationToken, forHTTPHeaderField:"X-App-License-Key")
+             request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: Self.kContentLengthHeader)
+             request.setValue(applicationToken, forHTTPHeaderField: Self.kAppLicenseKeyHeader)
 
-             request.httpMethod = "POST"
+             request.httpMethod = Self.kPostMethod
 
              let session = URLSession(configuration: .default)
              let uploadTask = session.uploadTask(with: request, from: upload.sessionReplayFramesData) { data, response, error in
@@ -158,14 +168,14 @@ public class SessionReplayReporter: NSObject {
 
             // Create URLRequest with headers
             var request = URLRequest(url: upload.url)
-            request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+            request.setValue(Self.kOctetStreamContentType, forHTTPHeaderField: Self.kContentTypeHeader)
             if upload.sessionReplayFramesData.isGzipped {
-                request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
-                request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+                request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kContentEncodingHeader)
+                request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kAcceptEncodingHeader)
             }
-            request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
-            request.setValue(applicationToken, forHTTPHeaderField: "X-App-License-Key")
-            request.httpMethod = "POST"
+            request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: Self.kContentLengthHeader)
+            request.setValue(applicationToken, forHTTPHeaderField: Self.kAppLicenseKeyHeader)
+            request.httpMethod = Self.kPostMethod
             request.httpBody = upload.sessionReplayFramesData
 
             // Send asynchronously
@@ -316,7 +326,7 @@ public class SessionReplayReporter: NSObject {
             "collector.name": NewRelicInternalUtils.agentName()
         ]
         if isGZipped {
-            attributes["content_encoding"] = "gzip"
+            attributes["content_encoding"] = Self.kGzipEncoding
         }
         do {
             if let agent = NewRelicAgentInternal.sharedInstance(), let analyticsController = agent.analyticsController, let sessionAttributes = analyticsController.sessionAttributeJSONString(),
