@@ -252,13 +252,17 @@ public class SessionReplayReporter: NSObject {
            // Check if we should persist to offline storage
            if NRMAFlags.shouldEnableOfflineStorage(),
               let nsError = error as NSError?,
-              NRMAOfflineStorage.checkError(toPersist: nsError),
-              let encodedData = try? JSONEncoder().encode(upload) {
-               // Persist to offline storage for retry later
-               if self.offlineStorage.persistData(toDisk: encodedData) {
-                   NRLOG_AGENT_DEBUG("Session replay data persisted to offline storage due to network error")
+              NRMAOfflineStorage.checkError(toPersist: nsError) {
+               if let encodedData = try? JSONEncoder().encode(upload) {
+                   // Persist to offline storage for retry later
+                   if self.offlineStorage.persistData(toDisk: encodedData) {
+                       NRLOG_AGENT_DEBUG("Session replay data persisted to offline storage due to network error")
+                   } else {
+                       NRLOG_AGENT_DEBUG("Failed to persist session replay data to offline storage")
+                       NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+                   }
                } else {
-                   NRLOG_AGENT_DEBUG("Failed to persist session replay data to offline storage")
+                   NRLOG_AGENT_DEBUG("Failed to encode session replay data for offline storage")
                    NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
                }
            } else {
