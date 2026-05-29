@@ -1648,6 +1648,8 @@
 		F87925662D441AC300576F5D /* NRMAAttributeValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = F87925642D441AC300576F5D /* NRMAAttributeValidator.m */; };
 		F87925672D441AC300576F5D /* NRMAAttributeValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = F87925642D441AC300576F5D /* NRMAAttributeValidator.m */; };
 		F87954D529E89D5F00319FCD /* NRMAWKWebViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABB324E704A600E45C90 /* NRMAWKWebViewTests.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		F88801D22FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */; };
+		F88801E72FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */; };
 		F88C2CF72A2FA7AC00373EFE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F89167372BC9D1270085BCFC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */; };
 		F89167442BCD8EA30085BCFC /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
@@ -2734,6 +2736,8 @@
 		F8728E562ACC9F840056F641 /* NRMANetworkMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMANetworkMonitor.h; sourceTree = "<group>"; };
 		F87925642D441AC300576F5D /* NRMAAttributeValidator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAAttributeValidator.m; sourceTree = "<group>"; };
 		F879257B2D441ACC00576F5D /* NRMAAttributeValidator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAAttributeValidator.h; sourceTree = "<group>"; };
+		F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporterOfflineStorageTests.swift; sourceTree = "<group>"; };
+		F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporterNetworkTests.swift; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F89167382BC9D1540085BCFC /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/WatchOS.platform/Developer/SDKs/WatchOS10.2.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRAutoLogCollector.m; sourceTree = "<group>"; };
@@ -3140,6 +3144,8 @@
 				2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */,
 				0209ACB524E747FA00E45C90 /* NewRelicAgentTests.h */,
 				F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */,
+				F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */,
+				F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */,
 				0209ACB424E747FA00E45C90 /* NewRelicAgentTests.m */,
 				F8BF154C2F3A37FB00EF5628 /* SwiftUIShapeThingyTests.swift */,
 				0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */,
@@ -5647,6 +5653,7 @@
 				F81E70682EC7A75C00698BF8 /* UIColorHexStringTests.swift in Sources */,
 				2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */,
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
+				F88801E72FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift in Sources */,
 				F8BF15382F3A37C200EF5628 /* SwiftUIShapeThingy.swift in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
 				C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */,
@@ -5678,6 +5685,7 @@
 				0209AC6624E7391F00E45C90 /* NRMAWKNavigationDelegateBaseTest.m in Sources */,
 				F81E707C2EC7AB4800698BF8 /* UIColor+HexString.swift in Sources */,
 				0209AC3024E7073800E45C90 /* NRMAHarvestableEventsTest.m in Sources */,
+				F88801D22FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift in Sources */,
 				34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */,
 				F8B30FC12EEB3D3A008E74FB /* UIImage+PngData.swift in Sources */,
 				0209AC0F24E7071500E45C90 /* NewRelicAPITest.m in Sources */,
