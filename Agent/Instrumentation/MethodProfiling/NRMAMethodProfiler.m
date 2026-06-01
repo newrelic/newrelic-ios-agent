@@ -591,6 +591,39 @@ BOOL NRMA__shouldCancelCurrentTrace(id __unsafe_unretained obj)
     return stopCurrentTrace;
 }
 
+// Tracks (className|methodName) pairs that have already been swizzled so the
+// swizzle is performed at most once per method for the lifetime of the process.
+//
+// Swizzling goes through NRMASwapOrReplace{Instance,Class}Method, whose fallback
+// path is method_exchangeImplementations — an involution. Running the swizzle a
+// second time for the same method therefore *un*-swizzles it, silently removing
+// our instrumentation (and, critically, the non-advancing-super recursion guard in
+// NRMA__beginMethod). startMethodReplacement is dispatch_once in production so this
+// can't happen there, but tests reset that token between cases; without this guard
+// the toggling un-instruments methods like viewWillLayoutSubviews and the Xamarin
+// recursion crash reappears. Making the swizzle idempotent is also defense-in-depth
+// against any future double-instrumentation in production.
+static NSMutableSet* __NRMASwizzledMethods = nil;
+static NSString* __NRMASwizzledMethodsLock = @"NRMASwizzledMethodsLock";
+
+static BOOL NRMA__markSwizzledIfNeeded(NSString* className, NSString* methodName)
+{
+    if (className == nil || methodName == nil) {
+        return NO;
+    }
+    NSString* key = [NSString stringWithFormat:@"%@|%@", className, methodName];
+    @synchronized(__NRMASwizzledMethodsLock) {
+        if (__NRMASwizzledMethods == nil) {
+            __NRMASwizzledMethods = [[NSMutableSet alloc] init];
+        }
+        if ([__NRMASwizzledMethods containsObject:key]) {
+            return NO;
+        }
+        [__NRMASwizzledMethods addObject:key];
+        return YES;
+    }
+}
+
 void NRMA__generateAndSwizzleMethod(NSString *className, NSString *methodName)
 {
     NRMAMethodColor color = NRMA__getMethodColor(className, methodName);
@@ -605,6 +638,12 @@ void NRMA__generateAndSwizzleMethod(NSString *className, NSString *methodName)
 
     if (m == NULL && (m = class_getClassMethod(klass, originalSelector)) == NULL) {
         //aint no method by that name.
+        return;
+    }
+
+    // Only swizzle a given (class, method) once. A repeat call would toggle the
+    // method_exchangeImplementations swizzle back off. See __NRMASwizzledMethods above.
+    if (!NRMA__markSwizzledIfNeeded(className, methodName)) {
         return;
     }
 
