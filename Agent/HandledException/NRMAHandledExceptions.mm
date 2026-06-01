@@ -44,6 +44,12 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
     NRMAAnalytics *analyticsParent;
     id<AttributeValidatorProtocol> _attributeValidator;
+
+    // Single-flight guard for processAndPublishPersistedReports. Without it,
+    // every harvest tick that sees the network reachable can spawn a fresh
+    // backlog flush even while the previous one is still draining — under
+    // low-bandwidth that races and creates duplicate uploads + FD pressure.
+    BOOL _persistFlushInFlight;
 }
 
 - (void) dealloc {
@@ -336,8 +342,22 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) processAndPublishPersistedReports {
+    @synchronized(self) {
+        if (_persistFlushInFlight) return;
+        _persistFlushInFlight = YES;
+    }
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        _persistenceManager->retrieveAndPublishReports();
+        @try {
+            _persistenceManager->retrieveAndPublishReports();
+        }
+        @catch (NSException* ex) {
+            NRLOG_AGENT_ERROR(@"persisted-report flush threw: %@", ex);
+        }
+        @finally {
+            @synchronized(self) {
+                _persistFlushInFlight = NO;
+            }
+        }
     });
 }
 

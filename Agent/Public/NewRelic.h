@@ -899,22 +899,22 @@ extern "C" {
 /*!
  * Manually start session replay recording.
  *
- * When called, session replay will begin recording regardless of remote configuration.
- * Manual mode takes precedence over automatic replay triggering. Recording will
- * continue until pauseReplay is called or the session ends. If called while already
- * recording in manual mode, this call is ignored.
+ * When called, session replay will begin recording regardless of sampling rate.
+ * Recording will continue until pauseReplay() is called or the session ends.
+ * If called while already recording this call is ignored.
  *
- * @return YES if recording was started, NO if already recording or replay is unavailable
+ * @return YES if recording was started, NO if already recording or replay is disabled
  */
 + (BOOL) recordReplay;
 
 /*!
  * Manually pause session replay recording.
  *
- * Stops the current recording session and harvests recorded data. If called while
- * not recording in manual mode, this call is ignored.
+ * Stops the current recording session. If called while not recording, this call is ignored.
+ * This pauses frame collection regardless of the sampling mode (including error-only sampling).
+ * To resume recording, call recordReplay().
  *
- * @return YES if recording was paused, NO if not recording or replay is unavailable
+ * @return YES if recording was paused, NO if not recording or replay is disabled
  */
 + (BOOL) pauseReplay;
 

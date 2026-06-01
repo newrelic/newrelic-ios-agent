@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   testIOS:
     name: TestIOS
@@ -198,6 +201,8 @@ jobs:
   deployStagingSpecs:
     name: DeployStagingSpecs
     runs-on: macos-15
+    permissions:
+      contents: write
     needs: [deployS3]
     if: github.ref == 'refs/heads/staging'
     steps:

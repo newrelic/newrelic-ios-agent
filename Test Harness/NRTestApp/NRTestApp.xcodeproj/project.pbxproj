@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
+		2552B1472FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
 		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
@@ -343,6 +345,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "NASAAPI-Info.plist"; sourceTree = "<group>"; };
 		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -687,6 +690,7 @@
 				F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */,
 				F8302B06296F5EFB003EC291 /* Info.plist */,
 				F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */,
+				2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */,
 				F825C6632C790F4F006062A5 /* readme.md */,
 			);
 			path = NRTestApp;
@@ -1152,6 +1156,7 @@
 			files = (
 				F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
+				2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1176,6 +1181,7 @@
 			files = (
 				F824A54E29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F824A30229A811E8000886A6 /* Assets.xcassets in Resources */,
+				2552B1472FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */,
 				F86428F72979CDB0002ABA01 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

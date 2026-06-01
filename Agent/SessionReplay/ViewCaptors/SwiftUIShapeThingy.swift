@@ -8,10 +8,13 @@
 
 import SwiftUI
 import UIKit
+@_implementationOnly import NewRelicPrivate
 
 @available(iOS 13.0, tvOS 13.0, *)
 class SwiftUIShapeThingy: SessionReplayViewThingy {
     var viewDetails: ViewDetails
+    let imagePlaceholderCSS = "background: #CCCCCC;"
+
     var isMasked: Bool
     var isBlocked: Bool
     let path: SwiftUI.Path
@@ -27,7 +30,15 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
 
     init(viewDetails: ViewDetails, path: SwiftUI.Path, fillColor: ResolvedColor, fillStyle: SwiftUI.FillStyle, fallbackTintColor: UIColor? = nil) {
         self.viewDetails = viewDetails
-        self.isMasked = viewDetails.isMasked ?? false
+        if let isMasked = viewDetails.isMasked {
+            self.isMasked = isMasked
+        }
+        else if let maskAllImages = viewDetails.maskAllImages {
+            self.isMasked = maskAllImages
+        }
+        else {
+            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskAllImages ?? true
+        }
         self.isBlocked = viewDetails.blockView ?? false
         self.path = path
         self.fillColor = fillColor
@@ -44,6 +55,13 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
     }
 
     func inlineCSSDescription() -> String {
+        return "\(generateBaseCSSStyle()) display: block;"
+    }
+
+    func shapeInlineCSSDescription() -> String {
+        if isMasked {
+            return "\(generateBaseCSSStyle()) \(imagePlaceholderCSS)"
+        }
         return "\(generateBaseCSSStyle()) overflow: hidden;"
     }
 
@@ -105,36 +123,83 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
     }
 
     func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {
-        let svgPathData = convertPathToSVGData()
-        let fillColorHex = getFillColorHex()
-        let fillRule = getFillRule()
-
-        // Create SVG path element
-        let pathNode = ElementNodeData(
-            id: viewDetails.viewId + 1000000,
-            tagName: .path,
-            attributes: [
-                "d": svgPathData,
-                "fill": fillColorHex,
-                "fill-rule": fillRule
-            ],
-            childNodes: [],
-            isSVG: true
+        // Create the shape container div element
+        let shapeNode = ElementNodeData(
+            id: viewDetails.viewId + 1000000, // Use offset to avoid ID conflicts
+            tagName: .div,
+            attributes: [:],
+            childNodes: []
         )
+        shapeNode.attributes["style"] = shapeInlineCSSDescription()
 
-        // Create SVG element with viewBox matching the frame
-        let svgNode = ElementNodeData(
-            id: viewDetails.viewId + 2000000,
-            tagName: .svg,
-            attributes: [
-                "viewBox": "0 0 \(viewDetails.frame.width) \(viewDetails.frame.height)",
-                "width": "100%",
-                "height": "100%",
-                "preserveAspectRatio": "none"
-            ],
-            childNodes: [],
-            isSVG: true
-        )
+        if isMasked {
+            shapeNode.attributes["data-nr-masked"] = "shape"
+        } else {
+            let svgPathData = convertPathToSVGData()
+            let fillColorHex = getFillColorHex()
+            let fillRule = getFillRule()
+
+            // Create SVG path element
+            let pathNode = ElementNodeData(
+                id: viewDetails.viewId + 2000000,
+                tagName: .path,
+                attributes: [
+                    "d": svgPathData,
+                    "fill": fillColorHex,
+                    "fill-rule": fillRule
+                ],
+                childNodes: [],
+                isSVG: true
+            )
+
+            // Create SVG element with viewBox matching the frame
+            let svgNode = ElementNodeData(
+                id: viewDetails.viewId + 3000000,
+                tagName: .svg,
+                attributes: [
+                    "viewBox": "0 0 \(viewDetails.frame.width) \(viewDetails.frame.height)",
+                    "width": "100%",
+                    "height": "100%",
+                    "preserveAspectRatio": "none"
+                ],
+                childNodes: [],
+                isSVG: true
+            )
+
+            // When not masked, add SVG structure to shape node
+            let addSvgNode: RRWebMutationData.AddRecord = .init(
+                parentId: viewDetails.viewId + 1000000,
+                nextId: nil,
+                node: .element(svgNode)
+            )
+            let addPathNode: RRWebMutationData.AddRecord = .init(
+                parentId: viewDetails.viewId + 3000000,
+                nextId: nil,
+                node: .element(pathNode)
+            )
+
+            // Create container div
+            let containerNode = ElementNodeData(
+                id: viewDetails.viewId,
+                tagName: .div,
+                attributes: ["id": viewDetails.cssSelector],
+                childNodes: []
+            )
+            containerNode.attributes["style"] = inlineCSSDescription()
+
+            let addContainerNode: RRWebMutationData.AddRecord = .init(
+                parentId: parentNodeId,
+                nextId: viewDetails.nextId,
+                node: .element(containerNode)
+            )
+            let addShapeNode: RRWebMutationData.AddRecord = .init(
+                parentId: viewDetails.viewId,
+                nextId: nil,
+                node: .element(shapeNode)
+            )
+
+            return [addContainerNode, addShapeNode, addSvgNode, addPathNode]
+        }
 
         // Create container div
         let containerNode = ElementNodeData(
@@ -145,68 +210,74 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
         )
         containerNode.attributes["style"] = inlineCSSDescription()
 
-        // Return separate AddRecords for each node (container, svg, path)
-        // rrweb requires each node to be added individually with parent references
         let addContainerNode: RRWebMutationData.AddRecord = .init(
             parentId: parentNodeId,
             nextId: viewDetails.nextId,
             node: .element(containerNode)
         )
-        let addSvgNode: RRWebMutationData.AddRecord = .init(
+        let addShapeNode: RRWebMutationData.AddRecord = .init(
             parentId: viewDetails.viewId,
             nextId: nil,
-            node: .element(svgNode)
-        )
-        let addPathNode: RRWebMutationData.AddRecord = .init(
-            parentId: viewDetails.viewId + 2000000,
-            nextId: nil,
-            node: .element(pathNode)
+            node: .element(shapeNode)
         )
 
-        return [addContainerNode, addSvgNode, addPathNode]
+        return [addContainerNode, addShapeNode]
     }
 
     func generateRRWebNode() -> ElementNodeData {
-        let svgPathData = convertPathToSVGData()
-        let fillColorHex = getFillColorHex()
-        let fillRule = getFillRule()
-
-        // Create SVG path element
-        let pathNode = ElementNodeData(
-            id: viewDetails.viewId + 1000000,
-            tagName: .path,
-            attributes: [
-                "d": svgPathData,
-                "fill": fillColorHex,
-                "fill-rule": fillRule
-            ],
-            childNodes: [],
-            isSVG: true
+        // Create the shape container div element
+        let shapeNode = ElementNodeData(
+            id: viewDetails.viewId + 1000000, // Use offset to avoid ID conflicts
+            tagName: .div,
+            attributes: [:],
+            childNodes: []
         )
+        shapeNode.attributes["style"] = shapeInlineCSSDescription()
 
-        // Create SVG element
-        let svgNode = ElementNodeData(
-            id: viewDetails.viewId + 2000000,
-            tagName: .svg,
-            attributes: [
-                "viewBox": "0 0 \(viewDetails.frame.width) \(viewDetails.frame.height)",
-                "width": "100%",
-                "height": "100%",
-                "preserveAspectRatio": "none"
-            ],
-            childNodes: [.element(pathNode)],
-            isSVG: true
-        )
+        if isMasked {
+            shapeNode.attributes["data-nr-masked"] = "image"
+        } else {
+            let svgPathData = convertPathToSVGData()
+            let fillColorHex = getFillColorHex()
+            let fillRule = getFillRule()
 
-        // Create and return container div
-        let containerNode = ElementNodeData(
+            // Create SVG path element
+            let pathNode = ElementNodeData(
+                id: viewDetails.viewId + 2000000,
+                tagName: .path,
+                attributes: [
+                    "d": svgPathData,
+                    "fill": fillColorHex,
+                    "fill-rule": fillRule
+                ],
+                childNodes: [],
+                isSVG: true
+            )
+
+            // Create SVG element
+            let svgNode = ElementNodeData(
+                id: viewDetails.viewId + 3000000,
+                tagName: .svg,
+                attributes: [
+                    "viewBox": "0 0 \(viewDetails.frame.width) \(viewDetails.frame.height)",
+                    "width": "100%",
+                    "height": "100%",
+                    "preserveAspectRatio": "none"
+                ],
+                childNodes: [.element(pathNode)],
+                isSVG: true
+            )
+
+            shapeNode.childNodes = [.element(svgNode)]
+        }
+
+        // Create and return the container div
+        return ElementNodeData(
             id: viewDetails.viewId,
             tagName: .div,
             attributes: ["id": viewDetails.cssSelector, "style": inlineCSSDescription()],
-            childNodes: [.element(svgNode)]
+            childNodes: [.element(shapeNode)]
         )
-
-        return containerNode
     }
 
     func generateDifference<T: SessionReplayViewThingy>(from other: T) -> [MutationRecord] {
@@ -216,38 +287,53 @@ class SwiftUIShapeThingy: SessionReplayViewThingy {
 
         var mutations = [MutationRecord]()
 
-        // Check if we need to update the container style
-        let newStyle = typedOther.inlineCSSDescription()
+        // Update container div attributes if needed
         var containerAttributes = [String: String]()
-        containerAttributes["style"] = newStyle
+        containerAttributes["style"] = typedOther.inlineCSSDescription()
 
         if !containerAttributes.isEmpty {
-            let containerRecord = RRWebMutationData.AttributeRecord(
+            let containerAttributeRecord = RRWebMutationData.AttributeRecord(
                 id: viewDetails.viewId,
                 attributes: containerAttributes
             )
-            mutations.append(containerRecord)
+            mutations.append(containerAttributeRecord)
         }
 
-        // Check if the path or fill changed
-        let oldPathData = convertPathToSVGData()
-        let newPathData = typedOther.convertPathToSVGData()
-        let oldFillColor = getFillColorHex()
-        let newFillColor = typedOther.getFillColorHex()
-        let oldFillRule = getFillRule()
-        let newFillRule = typedOther.getFillRule()
+        // Update shape div element attributes if needed
+        var shapeAttributes = [String: String]()
+        shapeAttributes["style"] = typedOther.shapeInlineCSSDescription()
 
-        if oldPathData != newPathData || oldFillColor != newFillColor || oldFillRule != newFillRule {
-            var pathAttributes = [String: String]()
-            pathAttributes["d"] = newPathData
-            pathAttributes["fill"] = newFillColor
-            pathAttributes["fill-rule"] = newFillRule
+        if !typedOther.isMasked {
+            // Check if the path or fill changed
+            let oldPathData = convertPathToSVGData()
+            let newPathData = typedOther.convertPathToSVGData()
+            let oldFillColor = getFillColorHex()
+            let newFillColor = typedOther.getFillColorHex()
+            let oldFillRule = getFillRule()
+            let newFillRule = typedOther.getFillRule()
 
-            let pathRecord = RRWebMutationData.AttributeRecord(
+            if oldPathData != newPathData || oldFillColor != newFillColor || oldFillRule != newFillRule {
+                var pathAttributes = [String: String]()
+                pathAttributes["d"] = newPathData
+                pathAttributes["fill"] = newFillColor
+                pathAttributes["fill-rule"] = newFillRule
+
+                let pathRecord = RRWebMutationData.AttributeRecord(
+                    id: viewDetails.viewId + 2000000,
+                    attributes: pathAttributes
+                )
+                mutations.append(pathRecord)
+            }
+        } else {
+            shapeAttributes["data-nr-masked"] = "image"
+        }
+
+        if !shapeAttributes.isEmpty {
+            let shapeAttributeRecord = RRWebMutationData.AttributeRecord(
                 id: viewDetails.viewId + 1000000,
-                attributes: pathAttributes
+                attributes: shapeAttributes
             )
-            mutations.append(pathRecord)
+            mutations.append(shapeAttributeRecord)
         }
 
         return mutations

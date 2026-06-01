@@ -120,6 +120,18 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueue4HourSessionRestartMetric {
+    NSString* nativePlatform = [NewRelicInternalUtils osName];
+    NSString* platform = [NewRelicInternalUtils stringFromNRMAApplicationPlatform:[NRMAAgentConfiguration connectionInformation].deviceInformation.platform];
+
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:kNRMAMaxDurationSessionRestartMetric,
+                                                                      nativePlatform, platform]
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
 + (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
 

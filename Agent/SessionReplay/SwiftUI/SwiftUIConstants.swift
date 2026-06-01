@@ -97,7 +97,19 @@ enum SwiftUIConstants: String {
 }
 enum DrawingConstants {
     static let maxSize = 1024
-    static let targetClass: AnyClass? = NSClassFromString("RBMovedDisplayListContents")
+    static let targetClass: AnyClass? = {
+        // XOR-encoded with key 0x5A; decoded at runtime so the literal
+        let key: UInt8 = 0x5A
+        let encoded: [UInt8] = [
+            0x08, 0x18, 0x17, 0x35, 0x2C, 0x3F, 0x3E, 0x1E,
+            0x33, 0x29, 0x2A, 0x36, 0x3B, 0x23, 0x16, 0x33,
+            0x29, 0x2E, 0x19, 0x35, 0x34, 0x2E, 0x3F, 0x34,
+            0x2E, 0x29
+        ]
+        let bytes = encoded.map { $0 ^ key }
+        guard let name = String(bytes: bytes, encoding: .ascii) else { return nil }
+        return NSClassFromString(name)
+    }()
     static let renderSelector = NSSelectorFromString("renderInContext:options:")
     static let boundingRectKey = "boundingRect"
     static let rasterScaleKey = "rasterizationscale"

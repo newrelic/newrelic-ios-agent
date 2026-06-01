@@ -22,10 +22,31 @@ public class SessionReplayReporter: NSObject {
     private let url: NSString
     private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
     private var pendingUploads = 0
+    private var pendingOfflineUploads = 0
+    private var offlineUploadMetricSize: Int = 0
+    private let offlineStorage: NRMAOfflineStorage
+
+    // HTTP Header Constants
+    private static let kContentTypeHeader = "Content-Type"
+    private static let kContentEncodingHeader = "Content-Encoding"
+    private static let kAcceptEncodingHeader = "Accept-Encoding"
+    private static let kContentLengthHeader = "Content-Length"
+    private static let kAppLicenseKeyHeader = "X-App-License-Key"
+    private static let kOctetStreamContentType = "application/octet-stream"
+    private static let kGzipEncoding = "gzip"
+    private static let kPostMethod = "POST"
 
     @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
         self.url = url
+        self.offlineStorage = NRMAOfflineStorage(endpoint: "sessionreplay")
+        super.init()
+
+        // Set max offline storage size if configured
+        if let _ = NRMAAgentConfiguration.connectionInformation() {
+            let maxSize = NRMAAgentConfiguration.getMaxOfflineStorageSize()
+            self.offlineStorage.setMaxOfflineStorageSize(maxSize)
+        }
     }
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
@@ -78,33 +99,127 @@ public class SessionReplayReporter: NSObject {
                  self.pendingUploads -= 1
                  
                  // Check if we should end the background task
-                 if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+                 if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty && self.pendingOfflineUploads == 0 {
                      self.endBackgroundTaskIfNeeded()
                  }
                  return
              }
 
              var request = URLRequest(url: upload.url)
-             request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+             request.setValue(Self.kOctetStreamContentType, forHTTPHeaderField: Self.kContentTypeHeader)
              if upload.sessionReplayFramesData.isGzipped {
-                 request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
-                 request.setValue("gzip", forHTTPHeaderField: "Accept-Encoding")
+                 request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kContentEncodingHeader)
+                 request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kAcceptEncodingHeader)
              }
-             request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: "Content-Length")
-             request.setValue(applicationToken, forHTTPHeaderField:"X-App-License-Key")
+             request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: Self.kContentLengthHeader)
+             request.setValue(applicationToken, forHTTPHeaderField: Self.kAppLicenseKeyHeader)
 
-             request.httpMethod = "POST"
+             request.httpMethod = Self.kPostMethod
 
              let session = URLSession(configuration: .default)
              let uploadTask = session.uploadTask(with: request, from: upload.sessionReplayFramesData) { data, response, error in
-                 self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count)
+                 self.uploadQueue.async {
+                     self.handleUploadResponse(data: data, response: response, error: error, dataSize: upload.sessionReplayFramesData.count, upload: upload)
+                 }
              }
 
              uploadTask.resume()
          }
      }
-    
-    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, dataSize: Int) {
+
+    private func sendOfflineStorage() {
+        // Prevent concurrent offline storage uploads
+        guard pendingOfflineUploads == 0 else {
+            return
+        }
+
+        // Check if offline storage is enabled
+        guard NRMAFlags.shouldEnableOfflineStorage() else {
+            // If disabled, clear any existing offline storage
+            _ = NRMAOfflineStorage.clearAllOfflineDirectories()
+            return
+        }
+
+        // Retrieve all offline data
+        guard let offlineDataArray = offlineStorage.getAllOfflineData(true) else { // true = clear after retrieval
+            return
+        }
+
+        guard !offlineDataArray.isEmpty else {
+            return
+        }
+
+        NRLOG_AGENT_DEBUG("Number of offline session replay data posts: \(offlineDataArray.count)")
+
+        // Set pending count immediately to prevent race condition
+        pendingOfflineUploads = offlineDataArray.count
+        beginBackgroundTaskIfNeeded()
+        processOfflineUploads(offlineDataArray)
+    }
+
+    private func processOfflineUploads(_ offlineDataArray: [Data]) {
+        for data in offlineDataArray {
+            // Decode SessionReplayData
+            guard let upload = try? JSONDecoder().decode(SessionReplayData.self, from: data) else {
+                NRLOG_AGENT_DEBUG("Failed to decode offline session replay data")
+                self.handleOfflineUploadComplete(size: 0)
+                continue
+            }
+
+            // Create URLRequest with headers
+            var request = URLRequest(url: upload.url)
+            request.setValue(Self.kOctetStreamContentType, forHTTPHeaderField: Self.kContentTypeHeader)
+            if upload.sessionReplayFramesData.isGzipped {
+                request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kContentEncodingHeader)
+                request.setValue(Self.kGzipEncoding, forHTTPHeaderField: Self.kAcceptEncodingHeader)
+            }
+            request.setValue(String(upload.sessionReplayFramesData.count), forHTTPHeaderField: Self.kContentLengthHeader)
+            request.setValue(applicationToken, forHTTPHeaderField: Self.kAppLicenseKeyHeader)
+            request.httpMethod = Self.kPostMethod
+            request.httpBody = upload.sessionReplayFramesData
+
+            // Send asynchronously
+            let session = URLSession(configuration: .default)
+            let task = session.dataTask(with: request) { [weak self] _, response, error in
+                guard let self = self else { return }
+
+                self.uploadQueue.async {
+                    if let error = error as NSError?, NRMAOfflineStorage.checkError(toPersist: error) {
+                        // Network error - persist back to storage
+                        _ = self.offlineStorage.persistData(toDisk: data)
+                        self.handleOfflineUploadComplete(size: 0)
+                    } else {
+                        // Success or non-network error - count as sent
+                        self.handleOfflineUploadComplete(size: upload.sessionReplayFramesData.count)
+                    }
+                }
+            }
+            task.resume()
+        }
+    }
+
+    private func handleOfflineUploadComplete(size: Int) {
+        self.pendingOfflineUploads -= 1
+
+        if size > 0 {
+            self.offlineUploadMetricSize += size
+        }
+
+        // When all offline uploads complete, report metric and reset flag
+        if self.pendingOfflineUploads == 0 {
+            if self.offlineUploadMetricSize > 0 {
+                NRMASupportMetricHelper.enqueueOfflinePayloadMetric(self.offlineUploadMetricSize)
+                self.offlineUploadMetricSize = 0
+            }
+        }
+
+        // Check if all uploads (regular + offline) are complete
+        if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty && self.pendingOfflineUploads == 0 {
+            self.endBackgroundTaskIfNeeded()
+        }
+    }
+
+    private func handleUploadResponse(data: Data?, response: URLResponse?, error: Error?, dataSize: Int, upload: SessionReplayData) {
        var errorCode = false
        var errorCodeInt = 0
 
@@ -119,6 +234,8 @@ public class SessionReplayReporter: NSObject {
            self.failureCount = 0
            self.pendingUploads -= 1
            NRMASupportMetricHelper.enqueueSessionReplaySuccessMetric(dataSize)
+           // Try to send any offline storage
+           self.sendOfflineStorage()
        } else if errorCodeInt == URL_TOO_LARGE {
            NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
            NRMASupportMetricHelper.enqueueSessionReplayURLTooLargeMetric()
@@ -131,7 +248,28 @@ public class SessionReplayReporter: NSObject {
 
        if self.failureCount > self.kNRMAMaxUploadRetry {
            NRLOG_AGENT_DEBUG("Session replay frames failed to upload. error: \(String(describing: error)), response: \(String(describing: response))")
-           NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+
+           // Check if we should persist to offline storage
+           if NRMAFlags.shouldEnableOfflineStorage(),
+              let nsError = error as NSError?,
+              NRMAOfflineStorage.checkError(toPersist: nsError) {
+               if let encodedData = try? JSONEncoder().encode(upload) {
+                   // Persist to offline storage for retry later
+                   if self.offlineStorage.persistData(toDisk: encodedData) {
+                       NRLOG_AGENT_DEBUG("Session replay data persisted to offline storage due to network error")
+                   } else {
+                       NRLOG_AGENT_DEBUG("Failed to persist session replay data to offline storage")
+                       NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+                   }
+               } else {
+                   NRLOG_AGENT_DEBUG("Failed to encode session replay data for offline storage")
+                   NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+               }
+           } else {
+               // Not a network error or offline storage disabled - record as failed
+               NRMASupportMetricHelper.enqueueSessionReplayFailedMetric()
+           }
+           
            self.sessionReplayFramesUploadArray.removeFirst()
            self.failureCount = 0
            self.pendingUploads -= 1
@@ -141,7 +279,7 @@ public class SessionReplayReporter: NSObject {
        self.processNextUploadTask()
        
        // End background task when all uploads are complete
-       if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty {
+       if self.pendingUploads == 0 && self.sessionReplayFramesUploadArray.isEmpty && self.pendingOfflineUploads == 0 {
            self.endBackgroundTaskIfNeeded()
        }
    }
@@ -151,8 +289,8 @@ public class SessionReplayReporter: NSObject {
             NRLOG_AGENT_DEBUG("Error accessing harvester configuration information")
             return nil
         }
-        guard let cStringAppVersion: UnsafePointer<CChar> = NRMA_getAppVersion(), let appVersion = String(validatingUTF8: cStringAppVersion) else {
-            NRLOG_AGENT_DEBUG("Error accessing app version information")
+        guard let connectionInfo = NRMAAgentConfiguration.connectionInformation() else {
+            NRLOG_AGENT_DEBUG("Error accessing connection information")
             return nil
         }
         var attributes: [String: String] = [
@@ -161,14 +299,20 @@ public class SessionReplayReporter: NSObject {
             "rrweb.version": "^2.0.0-alpha.17",
             "payload.type": "standard",
             "hasMeta": String(true),
+            "hasReplay": String(true),
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(Int(firstTimestamp)),
             "replay.lastTimestamp": String(Int(lastTimestamp)),
-            "appVersion": appVersion,
+            "appVersion": {
+                guard let applicationInformation = connectionInfo.applicationInformation,
+                      let appVersion = applicationInformation.appVersion as String? else {
+                    return "unknown"
+                }
+                return appVersion
+            }(),
             "instrumentation.provider": "mobile",
             "instrumentation.name": {
-                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
-                      let deviceInfo = connectionInfo.deviceInformation else {
+                guard let deviceInfo = connectionInfo.deviceInformation else {
                     return NewRelicInternalUtils.agentName()
                 }
                 let platform = deviceInfo.platform
@@ -177,8 +321,7 @@ public class SessionReplayReporter: NSObject {
                     : NewRelicInternalUtils.string(from: platform)
             }(),
             "instrumentation.version": {
-                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
-                      let deviceInfo = connectionInfo.deviceInformation,
+                guard let deviceInfo = connectionInfo.deviceInformation,
                       let platformVersion = deviceInfo.platformVersion as String? else {
                     return NewRelicInternalUtils.agentVersion()
                 }
@@ -187,7 +330,7 @@ public class SessionReplayReporter: NSObject {
             "collector.name": NewRelicInternalUtils.agentName()
         ]
         if isGZipped {
-            attributes["content_encoding"] = "gzip"
+            attributes["content_encoding"] = Self.kGzipEncoding
         }
         do {
             if let agent = NewRelicAgentInternal.sharedInstance(), let analyticsController = agent.analyticsController, let sessionAttributes = analyticsController.sessionAttributeJSONString(),

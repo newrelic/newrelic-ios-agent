@@ -141,7 +141,7 @@ struct NotificationsPlaceholderView: View {
     @Binding var badgeCount: Int?
 
     var body: some View {
-        NRConditionalMaskView(sessionReplayIdentifier: "public") {
+        NRConditionalMaskView(sessionReplayIdentifier: "private") {
             ZStack {
                 LinearGradient(
                     colors: [Color.orange.opacity(0.3), Color.red.opacity(0.2)],
