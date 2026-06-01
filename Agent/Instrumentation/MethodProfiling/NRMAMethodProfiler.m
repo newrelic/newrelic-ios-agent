@@ -1056,6 +1056,15 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
 {
     NSString* cleanSelector = NSStringFromSelector(selector);
 
+    // Track how deep we are re-entering this exact (self, selector) on this thread.
+    // A legitimate [super _cmd] call is detected below via a method-color mismatch
+    // and advances the acting class up the hierarchy. Some broken super dispatchers
+    // (notably Xamarin/MAUI's xamarin_dyn_objc_msgSendSuper) instead re-dispatch the
+    // super call back to the SAME dynamic class, so the color keeps matching, the
+    // acting class never advances, and the handler recurses until the stack overflows.
+    // The re-entry depth lets us recognize that case below.
+    NSInteger reentryDepth = NRMA_enterSelector(self, cleanSelector);
+
     Class actingClass = NRMA_actingClass(self,cleanSelector);
 
     NRMAMethodColor methodColor = NRMA__getMethodColor(NSStringFromClass(actingClass), NSStringFromSelector(selector));
@@ -1063,7 +1072,17 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
     (*isTargetColor) = (methodColor == targetColor);
     SEL originalSelector = NSSelectorFromString([NSString stringWithFormat:@"%@%@",NRMAMethodStoragePrefix,cleanSelector]);
     Method method = nil;
-    
+
+    // Matched color but we're already inside a handler for this (self, selector):
+    // the normal mismatch-based super detection can't fire because the color still
+    // matches, yet we are clearly re-entering via a [super _cmd] dispatch that failed
+    // to advance the class. Treat it as a super call so the acting class walks up the
+    // hierarchy and the recursion terminates at the parent's real implementation.
+    if ((*isTargetColor) && reentryDepth > 1) {
+        NRLOG_AGENT_VERBOSE(@"Detected non-advancing recursion for selector '%@' on '%@' (depth %ld); forcing super advance.", cleanSelector, NSStringFromClass(actingClass), (long)reentryDepth);
+        (*isTargetColor) = NO;
+    }
+
     if (!(*isTargetColor)) { //there was a discrepancy in the method color.
                              //this means that we are calling [super _cmd];
 
@@ -1089,6 +1108,8 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
             //this means that we have encounted a 3rd party sdk swizzle conflict and now the app will hang in the while loop below. to prevent this from happening
             //let's throw an exeption instead, so we can immediately identify the issue.
             NRLOG_AGENT_ERROR(@"Unable to find instrumented method. It's possible another framework has renamed the selector. Throwing Exception...");
+            // endMethod won't run on this throw path, so balance the depth counter here.
+            NRMA_exitSelector(self, cleanSelector);
             @throw [NSException exceptionWithName:@"NRInvalidArgumentException"
                                            reason:[NSString stringWithFormat:@"New Relic detected an unrecognized selector, '%@', sent to '%@'. It's possible _cmd was renamed by an unsafe method_exchangeImplementations().",cleanSelector,NSStringFromClass(actingClass)]
                                          userInfo:nil];
@@ -1183,8 +1204,14 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
 
 void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace)
 {
+    NSString* cleanSelector = [NSStringFromSelector(selector) stringByReplacingOccurrencesOfString:NRMAMethodStoragePrefix withString:@""];
+
+    // Balance the re-entry depth incremented in NRMA__beginMethod. Note we always
+    // pop the acting class when !isTargetColor, including the forced-super case where
+    // beginMethod set isTargetColor to NO after pushing the parent acting class.
+    NRMA_exitSelector(self, cleanSelector);
+
     if (!isTargetColor) {
-        NSString* cleanSelector = [NSStringFromSelector(selector) stringByReplacingOccurrencesOfString:NRMAMethodStoragePrefix withString:@""];
         NRMA_popActingClass(self,cleanSelector);
     }
 
