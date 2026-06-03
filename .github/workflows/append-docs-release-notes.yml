@@ -121,8 +121,6 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          # git config user.name  'nr-ios-release-bot'
-          # git config user.email 'nr-ios-release-bot@users.noreply.github.com'
           git add "$DOCS_FILE"
           if git diff --staged --quiet; then
             echo "No changes to commit."

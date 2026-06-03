@@ -227,8 +227,6 @@ jobs:
       - name: Commit and push finalized release notes
         run: |
           set -euo pipefail
-          git config user.name  'nr-ios-release-bot'
-          git config user.email 'nr-ios-release-bot@users.noreply.github.com'
           git add "$DOCS_FILE"
           if git diff --staged --quiet; then
             echo "No changes to commit (placeholders already filled)."
