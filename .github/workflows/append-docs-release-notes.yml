@@ -121,6 +121,8 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
+          git config user.name "newrelic-mobile-agent-bot"
+          git config user.email "${{ env.BOT_EMAIL }}"
           git add "$DOCS_FILE"
           if git diff --staged --quiet; then
             echo "No changes to commit."
