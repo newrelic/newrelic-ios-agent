@@ -116,14 +116,14 @@
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
-    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:testAction decisionHandler:^(WKNavigationActionPolicy policy){
+    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:(WKNavigationAction *)testAction decisionHandler:^(WKNavigationActionPolicy policy){
         [testAction decisionHandler:policy];
     }];
     
     XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
     
     if (@available(iOS 13.0, *)) {
-        [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
@@ -148,7 +148,7 @@
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
-    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationResponse:testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
+    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationResponse:(WKNavigationResponse *)testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
         [testResponse decisionHandler:policy];
     }];;
     
@@ -160,14 +160,14 @@
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction decisionHandler:^(WKNavigationActionPolicy policy){
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction decisionHandler:^(WKNavigationActionPolicy policy){
         [testAction decisionHandler:policy];
     }];
     
     XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
     
     if (@available(iOS 13.0, *)) {
-        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
@@ -180,7 +180,7 @@
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
     if (@available(iOS 13.0, *)) {
-        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyCancel);
@@ -205,7 +205,7 @@
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationResponse:testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationResponse:(WKNavigationResponse *)testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
         [testResponse decisionHandler:policy];
     }];;
     
