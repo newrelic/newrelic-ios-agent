@@ -137,3 +137,109 @@ jobs:
           title: "[${{ env.version }}] Production Release"
           branch: "auto-production-release-${{ env.version }}"
           base: main
+
+  # Creates a GitHub Release (and the matching git tag) on this repo using the
+  # release notes accumulated on the docs-website `next` branch as the body.
+  # `gh release create <tag>` creates the tag at the target commit if it does
+  # not already exist, satisfying both the "tag the repo" and "make a Release" asks.
+  createGithubRelease:
+    name: createGithubRelease
+    runs-on: ubuntu-latest
+    needs: [deployS3Production, deployProductionSpecs]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    env:
+      DOCS_REPO: newrelic/docs-website
+      DOCS_HEAD: next
+      # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
+      DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
+      VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
+    steps:
+      - name: Checkout docs-website (next branch) for release-notes body
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DOCS_REPO }}
+          token: ${{ secrets.DOCS_WEBSITE_PAT }}
+          ref: ${{ env.DOCS_HEAD }}
+          fetch-depth: 1
+          path: docs-website
+
+      - name: Build release body from release-notes mdx
+        run: |
+          set -euo pipefail
+          SRC="docs-website/${DOCS_FILE}"
+          # Strip the YAML frontmatter (everything up to and including the 2nd
+          # `---`), leaving the "New in this release" / "Fixed in this release"
+          # sections as the GitHub Release body.
+          awk 'done==1 {print} /^---[[:space:]]*$/ {c++; if (c==2) done=1}' "$SRC" > release-body.md
+          echo "----- release body -----"
+          cat release-body.md
+
+      - name: Create GitHub Release and tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release create "$VERSION_STRING" \
+            --repo "${{ github.repository }}" \
+            --target main \
+            --title "iOS Agent $VERSION_STRING" \
+            --notes-file release-body.md
+
+  # Finalizes the accumulated docs-website release notes: fills in the
+  # {VERSION-STRING} and {RELEASE-DATE} placeholders (sourced from the production
+  # `version` input and the current date), then marks the draft PR ready for review.
+  finalizeDocsReleaseNotes:
+    name: finalizeDocsReleaseNotes
+    runs-on: ubuntu-latest
+    needs: [deployS3Production, deployProductionSpecs]
+    if: github.ref == 'refs/heads/main'
+    env:
+      DOCS_REPO: newrelic/docs-website
+      DOCS_BASE: develop
+      DOCS_HEAD: next
+      # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
+      DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
+      VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
+    steps:
+      - name: Checkout docs-website (next branch)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DOCS_REPO }}
+          token: ${{ secrets.DOCS_WEBSITE_PAT }}
+          ref: ${{ env.DOCS_HEAD }}
+          fetch-depth: 0
+
+      - name: Set release date
+        run: echo "RELEASE_DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+
+      - name: Fill in version and release date placeholders
+        run: |
+          set -euo pipefail
+          sed -i \
+            -e "s/{VERSION-STRING}/${VERSION_STRING}/g" \
+            -e "s/{RELEASE-DATE}/${RELEASE_DATE}/g" \
+            "$DOCS_FILE"
+          echo "----- finalized frontmatter -----"
+          head -n 6 "$DOCS_FILE"
+
+      - name: Commit and push finalized release notes
+        run: |
+          set -euo pipefail
+          git config user.name "newrelic-mobile-agent-bot"
+          git config user.email "${{ env.BOT_EMAIL }}"
+          git add "$DOCS_FILE"
+          if git diff --staged --quiet; then
+            echo "No changes to commit (placeholders already filled)."
+          else
+            git commit -m "chore(release): finalize iOS agent ${VERSION_STRING} release notes"
+            git push origin "$DOCS_HEAD"
+          fi
+
+      - name: Mark docs release-notes PR ready for review
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_WEBSITE_PAT }}
+        run: |
+          set -euo pipefail
+          gh pr ready "$DOCS_HEAD" --repo "$DOCS_REPO"
