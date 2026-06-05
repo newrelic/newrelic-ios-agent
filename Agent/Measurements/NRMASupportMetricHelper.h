@@ -41,4 +41,6 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueJSErrorUploadThrottledMetric;
 + (void) enqueueJSErrorFailedUploadMetric;
 
++ (void) enqueueKMMDetectionMetric;
+
 @end
