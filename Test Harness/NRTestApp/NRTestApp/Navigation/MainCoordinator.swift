@@ -173,4 +173,9 @@ class MainCoordinator: Coordinator {
 #endif
     }
 
+    func showMapViewController() {
+        let mapViewController = ViewControllerProvider.mapViewController
+        navigationController.pushViewController(mapViewController, animated: true)
+    }
+
 }

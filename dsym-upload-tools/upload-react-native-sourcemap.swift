@@ -29,6 +29,13 @@
 //  /bin/sh "${SCRIPT}" "YOUR_INGEST_API_KEY" "YOUR_APP_TOKEN" --debug
 // ```
 //
+// Region:
+// The upload host is derived from the app token's region prefix:
+//   US (no prefix)  -> https://symbol-ingest-api.newrelic.com
+//   EU (eu01x...)   -> https://symbol-ingest-api.service.eu.newrelic.com
+//   JP (jp01x...)   -> https://symbol-ingest-api.service.jp.newrelic.com
+// Setting SOURCEMAP_UPLOAD_URL overrides the auto-detected host.
+//
 // Environment Variables (optional):
 // SOURCEMAP_UPLOAD_URL - Override the New Relic server hostname
 // SOURCEMAP_PATH - Override the default source map location (${DERIVED_FILE_DIR}/main.jsbundle.map)
@@ -101,7 +108,16 @@ func start() {
     }
 
     // Configure Environment Variables
-    var url = environment["SOURCEMAP_UPLOAD_URL"] ?? defaultURL
+    // SOURCEMAP_UPLOAD_URL (if set) takes precedence; otherwise derive from the app token's region prefix (EU/JP).
+    var url: String
+    if let override = environment["SOURCEMAP_UPLOAD_URL"] {
+        url = override
+    } else if let regionAwareURL = regionAwareURL(forAppToken: appToken) {
+        url = regionAwareURL
+        print("New Relic: Using region-aware URL: \(url)")
+    } else {
+        url = defaultURL
+    }
     sourcemapEndpointPath = environment["NEWRELIC_SOURCEMAP_ENDPOINT"] ?? "v1/react-native/sourcemaps"
 
     // Determine source map path
@@ -473,6 +489,39 @@ func uploadSourceMap(
     if let error = uploadError {
         throw error
     }
+}
+
+// MARK: - Region Parsing
+
+// Parses a region prefix (e.g. "eu01", "jp01") from a New Relic app token.
+// The token format is "<region>x...x<key>". Returns nil if no region prefix is present (US).
+func parseRegionFromAppToken(_ token: String) -> String? {
+    let range = NSRange(location: 0, length: token.utf16.count)
+    guard let regex = try? NSRegularExpression(pattern: "^.+?x"),
+          let match = regex.firstMatch(in: token, options: [], range: range),
+          let swiftRange = Range(match.range, in: token) else {
+        return nil
+    }
+    let raw = String(token[swiftRange])
+    guard let lastNonX = raw.lastIndex(where: { $0 != "x" }) else {
+        return nil
+    }
+    let trimmed = String(raw[...lastNonX])
+    return trimmed.isEmpty ? nil : trimmed
+}
+
+// Maps a parsed region prefix to the symbol-ingest-api host.
+// e.g. "eu01" -> https://symbol-ingest-api.service.eu.newrelic.com
+//      "jp01" -> https://symbol-ingest-api.service.jp.newrelic.com
+// The region family is the prefix stripped of trailing digits (eu01 -> eu).
+func regionAwareURL(forAppToken token: String) -> String? {
+    guard let region = parseRegionFromAppToken(token) else { return nil }
+    var regionFamily = region.lowercased()
+    while let last = regionFamily.last, last.isNumber {
+        regionFamily.removeLast()
+    }
+    guard !regionFamily.isEmpty else { return nil }
+    return "https://symbol-ingest-api.service.\(regionFamily).newrelic.com"
 }
 
 // MARK: - Extensions

@@ -21,12 +21,13 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DOCS_REPO: cdillard-NewRelic/docs-website
+  DOCS_REPO: newrelic/docs-website
   DOCS_BASE: develop
   DOCS_HEAD: next
   # TODO: replace with the real path agreed with the docs team.
   DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
   DOCS_PR_TITLE: "iOS agent — next release notes"
+  BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
 
 jobs:
   append:
@@ -119,10 +120,11 @@ jobs:
       - name: Commit and push
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
         run: |
           set -euo pipefail
-          git config user.name  'nr-ios-release-bot'
-          git config user.email 'nr-ios-release-bot@users.noreply.github.com'
+          git config user.name "newrelic-mobile-agent-bot"
+          git config user.email "${{ env.BOT_EMAIL }}"
           git add "$DOCS_FILE"
           if git diff --staged --quiet; then
             echo "No changes to commit."
