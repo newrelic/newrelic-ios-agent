@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
+		2552B1472FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
 		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
@@ -204,6 +206,10 @@
 		F8F5D8462BEBB86000CDC139 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
 		F8F5D8472BEBB86000CDC139 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
 		F8F5D8482BEBB86000CDC139 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
+		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
+		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
+		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
+		CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -344,6 +350,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "NASAAPI-Info.plist"; sourceTree = "<group>"; };
 		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -483,6 +490,8 @@
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
+		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
+		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -574,6 +583,7 @@
 				2BAE5C892E860C7D001D2B88 /* SteppersView.swift */,
 				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
 				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
+				CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */,
 				ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */,
 				ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */,
 			);
@@ -693,6 +703,7 @@
 				F8302B03296F5EFB003EC291 /* LaunchScreen.storyboard */,
 				F8302B06296F5EFB003EC291 /* Info.plist */,
 				F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */,
+				2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */,
 				F825C6632C790F4F006062A5 /* readme.md */,
 			);
 			path = NRTestApp;
@@ -759,6 +770,7 @@
 				F832CB0C2E5CDBC5007569CE /* InfiniteImageCollectionViewController.swift */,
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
+				CD0001001CD000000000CD00 /* MapViewController.swift */,
 				ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */,
 				ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */,
 			);
@@ -1159,6 +1171,7 @@
 			files = (
 				F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
+				2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1183,6 +1196,7 @@
 			files = (
 				F824A54E29BBB23D000886A6 /* NRAPI-Info.plist in Resources */,
 				F824A30229A811E8000886A6 /* Assets.xcassets in Resources */,
+				2552B1472FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */,
 				F86428F72979CDB0002ABA01 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1395,6 +1409,8 @@
 				F824A43C29AEAE2D000886A6 /* ImageFullScreen.swift in Sources */,
 				2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
+				CD0001011CD000000000CD00 /* MapViewController.swift in Sources */,
+				CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1451,6 +1467,8 @@
 				F86429422979CDFA002ABA01 /* ApodService.swift in Sources */,
 				2B8208C12E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
+				CD0001021CD000000000CD00 /* MapViewController.swift in Sources */,
+				CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

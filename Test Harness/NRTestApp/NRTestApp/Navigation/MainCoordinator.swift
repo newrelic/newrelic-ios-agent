@@ -159,11 +159,23 @@ class MainCoordinator: Coordinator {
 #endif
     }
 
+    func showSignOutCrashReproViewController() {
+#if os(iOS)
+        let signOutVC = ViewControllerProvider.signOutCrashReproViewController
+        navigationController.pushViewController(signOutVC, animated: true)
+#endif
+    }
+
     func showSwitchTestViewController() {
 #if os(iOS)
         let switchTestViewController = ViewControllerProvider.switchTestViewController
         navigationController.pushViewController(switchTestViewController, animated: true)
 #endif
+    }
+
+    func showMapViewController() {
+        let mapViewController = ViewControllerProvider.mapViewController
+        navigationController.pushViewController(mapViewController, animated: true)
     }
 
     func showMobileViewAttributesViewController() {

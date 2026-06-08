@@ -1,0 +1,149 @@
+name: append-docs-release-notes
+
+# When a PR merges into `develop`, append a one-line entry to the iOS agent
+# release notes draft PR on newrelic/docs-website (branch: next -> develop).
+#
+# Pre-merge setup required:
+#   1. Create a fine-grained PAT with contents:write + pull-requests:write on
+#      newrelic/docs-website, stored on this repo as the secret DOCS_WEBSITE_PAT.
+#   2. Replace the DOCS_FILE env below with the real path agreed with the docs team.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-next-append
+  cancel-in-progress: false
+
+env:
+  DOCS_REPO: newrelic/docs-website
+  DOCS_BASE: develop
+  DOCS_HEAD: next
+  # TODO: replace with the real path agreed with the docs team.
+  DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
+  DOCS_PR_TITLE: "iOS agent — next release notes"
+  BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
+
+jobs:
+  append:
+    if: >-
+      github.event.pull_request.merged == true
+      && !startsWith(github.event.pull_request.title, 'chore(release)')
+      && !startsWith(github.event.pull_request.title, 'chore: release')
+      && !contains(github.event.pull_request.body, '[skip-docs]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup temporary files
+        run: |
+          rm -rf ${{ runner.temp }}/*
+          # Or to clean the entire workspace
+          rm -rf $GITHUB_WORKSPACE/*
+        if: always() # Ensures cleanup runs even if previous steps fail
+
+      - name: Fetch release-notes template from ios-agent
+        uses: actions/checkout@v4
+        with:
+          path: ios-agent-src
+          sparse-checkout: ios-agent-next.mdx
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+
+      - name: Stash template to runner temp
+        # Later checkouts clean $GITHUB_WORKSPACE, so move the template out of the way first.
+        run: cp ios-agent-src/ios-agent-next.mdx "$RUNNER_TEMP/ios-agent-next.mdx"
+
+      - name: Checkout docs-website (next branch if it exists)
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          repository: ${{ env.DOCS_REPO }}
+          token: ${{ secrets.DOCS_WEBSITE_PAT }}
+          ref: ${{ env.DOCS_HEAD }}
+          fetch-depth: 0
+        continue-on-error: true
+        id: checkout_next
+
+      - name: Bootstrap — checkout base and create next branch
+        if: steps.checkout_next.outcome != 'success'
+        uses: actions/checkout@master
+        with:
+          repository: ${{ env.DOCS_REPO }}
+          token: ${{ secrets.DOCS_WEBSITE_PAT }}
+          ref: ${{ env.DOCS_BASE }}
+          fetch-depth: 0
+
+      - name: Create next branch if missing
+        if: steps.checkout_next.outcome != 'success'
+        run: git checkout -b "$DOCS_HEAD"
+
+      - name: Bootstrap release-notes file from template
+        run: |
+          set -euo pipefail
+          if [[ ! -f "$DOCS_FILE" ]]; then
+            mkdir -p "$(dirname "$DOCS_FILE")"
+            cp "$RUNNER_TEMP/ios-agent-next.mdx" "$DOCS_FILE"
+            echo "Bootstrapped $DOCS_FILE from template."
+          fi
+
+      - name: Append entry to Fixed section
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          set -euo pipefail
+
+          SECTION="### Fixed in this release"
+          # Double-quoted concatenation — any `(` or `)` in PR_TITLE is literal.
+          BULLET="* ${PR_TITLE} ([#${PR_NUMBER}](${PR_URL})) — @${PR_AUTHOR}"
+
+          # Insert the bullet at the end of the Fixed section (before the next
+          # `### ` heading or EOF). Trailing blank line keeps markdownlint (MD022) happy.
+          awk -v section="$SECTION" -v line="$BULLET" '
+            /^### / {
+              if (in_section && !inserted) { print line; print ""; inserted = 1 }
+              in_section = ($0 == section)
+              print
+              next
+            }
+            { print }
+            END { if (in_section && !inserted) { print line; print "" } }
+          ' "$DOCS_FILE" > "$DOCS_FILE.tmp"
+          mv "$DOCS_FILE.tmp" "$DOCS_FILE"
+
+      - name: Commit and push
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
+        run: |
+          set -euo pipefail
+          git config user.name "newrelic-mobile-agent-bot"
+          git config user.email "${{ env.BOT_EMAIL }}"
+          git add "$DOCS_FILE"
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: append ios-agent PR #${PR_NUMBER} to next release notes"
+          git push origin "$DOCS_HEAD"
+
+      - name: Ensure draft PR exists
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_WEBSITE_PAT }}
+        run: |
+          set -euo pipefail
+          if ! gh pr view "$DOCS_HEAD" --repo "$DOCS_REPO" >/dev/null 2>&1; then
+            gh pr create \
+              --repo "$DOCS_REPO" \
+              --base "$DOCS_BASE" \
+              --head "$DOCS_HEAD" \
+              --draft \
+              --title "$DOCS_PR_TITLE" \
+              --body "Auto-accumulating release notes for the next iOS agent release. Appended by newrelic/newrelic-ios-agent .github/workflows/append-docs-release-notes.yml on every PR merged to develop."
+          fi

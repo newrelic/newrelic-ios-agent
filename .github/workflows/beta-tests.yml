@@ -9,6 +9,9 @@ on:
         required: true
         default: "17.0"
 
+permissions:
+  contents: read
+
 jobs:
   testIOSBeta:
     name: TestIOSBeta

@@ -132,6 +132,11 @@ struct SwiftUIContentView: View {
                             Text("NavigationStack")
                         }
                     }
+                    if #available(iOS 14.0, *) {
+                        NavigationLink(destination: MapViewSwiftUI()) {
+                            Text("Map View")
+                        }
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
 

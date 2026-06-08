@@ -37,6 +37,10 @@ struct ViewDetails {
     // Custom identifier for the view (from NRMaskingView view)
     var viewIdentifier: String?
 
+    // True when the view is a map (MKMapView, including the MKMapView that backs a
+    // SwiftUI Map). Surfaced to the replay player as data-nr-component="map".
+    var isMapView: Bool = false
+
     var cssSelector: String {
         return "\(self.viewName)-\(self.viewId)"
     }
@@ -107,15 +111,21 @@ struct ViewDetails {
             self.frame = view.frame
             self.clip = view.bounds
         }
-        backgroundColor = view.backgroundColor
+        // Validate the backing CGColor before holding the UIColor — when a layer
+        // is being torn down (e.g. rootViewController swap during sign-out), its
+        // CGColor can be a dangling pointer. NR-566282.
+        if let bg = view.backgroundColor, bg.cgColor.safeColor != nil {
+            backgroundColor = bg
+        } else {
+            backgroundColor = nil
+        }
         alpha = view.alpha
         isHidden = view.isHidden
         cornerRadius = view.layer.cornerRadius
         borderWidth = view.layer.borderWidth
 
-        // Checking if we have a border, because asking for the layer's
-        // border color will always give us something
-        if view.layer.borderWidth > 0, let borderColor = view.layer.borderColor {
+        if view.layer.borderWidth > 0,
+           let borderColor = view.layer.borderColor?.safeColor {
             self.borderColor = UIColor(cgColor: borderColor)
         }
         else {
@@ -124,6 +134,8 @@ struct ViewDetails {
 
         let sanitizedViewName = ViewDetails.sanitizeViewNameForCSS(String(describing: type(of: view)))
         viewName = sanitizedViewName
+
+        self.isMapView = ViewDetails.checkIsMapView(view: view)
 
         if let identifier = view.sessionReplayIdentifier {
             viewId = identifier
@@ -219,6 +231,15 @@ struct ViewDetails {
     }
 
     
+    // MapKit is not linked by the agent, so resolve MKMapView dynamically once.
+    // isKind(of:) also matches the private MKMapView subclass that backs a SwiftUI Map.
+    private static let mapViewClass: AnyClass? = NSClassFromString("MKMapView")
+
+    private static func checkIsMapView(view: UIView) -> Bool {
+        guard let mapViewClass = mapViewClass else { return false }
+        return view.isKind(of: mapViewClass)
+    }
+
     // This function checks if there are any specfic masking rules assigned to a view. If it returns nils, the masking value will be assigned based on the value of the global based on it's type later.
     private static func checkIsMasked(view: UIView, viewName: String) -> Bool? {
         // Determine if this view should be masked
@@ -430,6 +451,7 @@ extension ViewDetails: Hashable {
         hasher.combine(maskAllUserTouches)
         hasher.combine(blockView)
         hasher.combine(viewIdentifier)
+        hasher.combine(isMapView)
 
         // Convert UIColors to hex strings before hashing to ensure thread safety
         if let bgColor = backgroundColor {

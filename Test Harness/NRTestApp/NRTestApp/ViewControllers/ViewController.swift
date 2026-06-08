@@ -283,6 +283,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction()}))
 
+        options.append(UtilOption(title: "Map View (UIKit)", handler: { [self] in mapViewAction() }))
+
         options.append(UtilOption(title: "MobileView · Custom Attrs (UIKit)", handler: { [self] in mobileViewAttributesAction()}))
 
         options.append(UtilOption(title: "MobileView · Ignored (UIKit)", handler: { [self] in mobileViewIgnoredAction()}))
@@ -295,6 +297,13 @@ class ViewController: UIViewController {
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
+
+        // NR-566282 — exercises the Session Replay sign-out / rootViewController-swap crash repro.
+        options.append(UtilOption(title: "Sign-Out Crash Repro", handler: { [self] in signOutCrashReproAction() }))
+    }
+
+    func signOutCrashReproAction() {
+        coordinator?.showSignOutCrashReproViewController()
     }
     
     func utilitiesAction() {
@@ -445,6 +454,10 @@ class ViewController: UIViewController {
 #if os(iOS)
         coordinator?.showTintedImagesViewController()
 #endif
+    }
+
+    func mapViewAction() {
+        coordinator?.showMapViewController()
     }
 }
 
