@@ -33,7 +33,6 @@
                                         NSData *_Nullable,
                                         NSError *_Nullable,
                                         NSInteger))completion {
-    NRLOG_AGENT_VERBOSE(@"NRMARetryOrchestrator: starting request (attempt 1/%ld)", (long)(maxRetries + 1));
     [self attemptRequest:executeRequest
            attemptNumber:0
              maxRetries:maxRetries
