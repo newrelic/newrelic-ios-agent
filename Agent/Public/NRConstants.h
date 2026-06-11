@@ -133,6 +133,9 @@ typedef NSString NRMetricUnit;
 
 #define kNRMAOfflineSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/OfflinePayload/bytes"
 
+// KMP Detection (Kotlin Multiplatform)
+#define kNRMAKMMDetectionMetric @"Supportability/Mobile/iOS/HybridPlatform/KMP"
+
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"
 #define kNRMABytesOutFAPIString           @"/f/Output/Bytes"
