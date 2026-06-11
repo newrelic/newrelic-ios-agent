@@ -37,6 +37,7 @@ class UtilViewModel {
         options.append(UtilOption(title: "Add Valid Breadcrumb", handler: { [self] in makeValidBreadcrumb()}))
         options.append(UtilOption(title: "Add Invalid Breadcrumb", handler: { [self] in makeInvalidBreadcrumb()}))
         options.append(UtilOption(title: "Set Attributes", handler: { [self] in setAttributes()}))
+        options.append(UtilOption(title: "Set Invalid Type Attribute", handler: { [self] in setInvalidTypeAttribute()}))
         options.append(UtilOption(title: "Remove Attributes", handler: { [self] in removeAttributes()}))
         options.append(UtilOption(title: "Crash Now!", handler: { [self] in crash()}))
         options.append(UtilOption(title: "Record Error", handler: { [self] in makeError()}))
@@ -85,6 +86,15 @@ class UtilViewModel {
     
     func setAttributes(){
         attributes = String(NewRelic.setAttribute("test1", value: 1))
+    }
+
+    // Exercises the attribute value-type validation fix: a value whose type is not
+    // NSString/NSNumber/BOOL (here an array) must be rejected. setAttribute returns
+    // false after the fix (PASS); before the fix the invalid type was accepted (FAIL).
+    func setInvalidTypeAttribute() {
+        let accepted = NewRelic.setAttribute("invalidType", value: ["an", "array"])
+        let result = accepted ? "FAIL: invalid-type attribute was accepted" : "PASS: invalid-type attribute was rejected"
+        print("setInvalidTypeAttribute -> \(result)")
     }
     
     func makeError(){
