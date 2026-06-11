@@ -10,6 +10,7 @@
 #import "NRMAHarvestController.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
+
 static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 #define NR_NEVER_TICKED -1
 
@@ -49,17 +50,24 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 - (void) harvest
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // Capture a strong local reference so the harvester cannot be
+        // deallocated if stop/recovery runs on another thread.
+        NRMAHarvester* harvester = self.harvester;
+        if (harvester == nil) {
+            return;
+        }
+
         long long lastTickDelta = [self timeSinceLastTick];
         if  (lastTickDelta < self.period && lastTickDelta != NR_NEVER_TICKED){
             NRLOG_AGENT_VERBOSE(@"HarvestTimer: Tick is too soon. Skipping.");
             return;
         }
-        
+
         long long startTick = (long long)NRMAMillisecondTimestamp();
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         @try {
             #endif
-            [self tick];
+            [self tickWithHarvester:harvester];
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         } @catch (NSException *exception) {
             NRLOG_AGENT_ERROR(@"Harvest tick threw an exception");
@@ -72,9 +80,17 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 
 - (void) tick
 {
+    [self tickWithHarvester:self.harvester];
+}
+
+- (void) tickWithHarvester:(NRMAHarvester*)harvester
+{
+    if (harvester == nil) {
+        return;
+    }
     NRLOG_AGENT_VERBOSE(@"Harvest: Tick");
     long long tick = (long long)NRMAMillisecondTimestamp();
-    [self.harvester execute];
+    [harvester execute];
     NRLOG_AGENT_VERBOSE(@"Harvest: executed");
     long long delta = (long long)(NRMAMillisecondTimestamp() - tick);
     NRLOG_AGENT_VERBOSE(@"HarvestTimer tick took %lld ms",delta);
@@ -83,10 +99,14 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 
 - (void) updateTimer
 {
-    if (self.period != ([NRMAHarvestController configuration].data_report_period*1000)) {
-        
+    NRMAHarvesterConfiguration* config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return;
+    }
+    if (self.period != (config.data_report_period*1000)) {
+
         [self stop];
-        self.period = [NRMAHarvestController configuration].data_report_period*1000;
+        self.period = config.data_report_period*1000;
         NRLOG_AGENT_VERBOSE(@"Updating harvest period to %lldms",self.period);
         [self start];
     }
@@ -116,7 +136,6 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 - (void) dealloc
 {
     NRLOG_AGENT_VERBOSE(@"HarvestTime: %@ deallocated", self);
-    self.harvester = nil;
     _timer = nil;
 }
 @end

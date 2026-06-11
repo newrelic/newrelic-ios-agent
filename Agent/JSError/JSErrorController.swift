@@ -29,6 +29,10 @@ public class JSErrorController: NSObject {
     private let errorQueueLock = NSLock()
     private var hasLoadedPersistedErrors = false
 
+    // Track pending uploads to clear persisted errors only after all succeed
+    private var pendingUploads = 0
+    private let pendingUploadsLock = NSLock()
+
     // MARK: - Initialization
 
     @objc public init?(analyticsController: AnyObject,
@@ -80,6 +84,15 @@ public class JSErrorController: NSObject {
             return nil
         }
 
+        // Set up upload completion callbacks
+        self.uploader?.onUploadSuccess = { [weak self] in
+            self?.handleUploadSuccess()
+        }
+
+        self.uploader?.onUploadFailed = { [weak self] in
+            self?.handleUploadFailure()
+        }
+
         NRLOG_AGENT_DEBUG("JS Error Controller initialized with collector: \(collectorHost)")
 
         // Load persisted errors from previous session (crash recovery)
@@ -115,23 +128,49 @@ public class JSErrorController: NSObject {
             "errorId": UUID().uuidString
         ]
 
-        // Add additional attributes if provided
-        if let additionalAttributes = additionalAttributes, !additionalAttributes.isEmpty {
-            var validatedAttributes: [String: Any] = [:]
+        // Initialize attributes dictionary
+        var allAttributes: [String: Any] = [:]
 
+        // Add session attributes (including appVersion) at the time of error
+        // Add sessionId
+        if let sessionId = sessionId {
+            allAttributes["sessionId"] = sessionId
+        }
+
+        // Add appVersion
+        let connectInfo = NRMAAgentConfiguration.connectionInformation()
+        if let appVersion = connectInfo?.applicationInformation.appVersion {
+            allAttributes["appVersion"] = appVersion
+            // Keep appVersion at top level for grouping in onHarvest
+            errorData["appVersion"] = appVersion
+        }
+
+        // Add all session attributes from analytics controller
+        if let sessionAttributesJSON = analyticsController.sessionAttributeJSONString(),
+           !sessionAttributesJSON.isEmpty,
+           let sessionData = sessionAttributesJSON.data(using: .utf8),
+           let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
+            for (key, value) in sessionAttributes {
+                allAttributes[key] = value
+            }
+        }
+
+        // Add additional attributes if provided (may override session attributes)
+        if let additionalAttributes = additionalAttributes, !additionalAttributes.isEmpty {
             for (key, value) in additionalAttributes {
                 // Validate attribute using validator
                 if let validator = attributeValidator as? AttributeValidatorProtocol,
                    validator.nameValidator(key) && validator.valueValidator(value) {
-                    validatedAttributes[key] = value
+                    allAttributes[key] = value
                 } else {
                     NRLOG_AGENT_DEBUG("Skipping invalid JS error attribute: \(key)")
                 }
             }
+        }
 
-            if !validatedAttributes.isEmpty {
-                errorData["attributes"] = validatedAttributes
-            }
+        // Store all attributes in the error data
+        if !allAttributes.isEmpty {
+            errorData["attributes"] = allAttributes
         }
 
         NRLOG_AGENT_DEBUG("Recording JS error: \(name)")
@@ -191,17 +230,32 @@ public class JSErrorController: NSObject {
 
         if !errors.isEmpty {
             NRLOG_AGENT_DEBUG("Harvesting \(errors.count) JS errors")
-            publishErrors(errors)
+
+            // Group errors by appVersion
+            var errorsByAppVersion: [String: [[String: Any]]] = [:]
+            for error in errors {
+                let appVersion = error["appVersion"] as? String ?? "unknown"
+                if errorsByAppVersion[appVersion] == nil {
+                    errorsByAppVersion[appVersion] = []
+                }
+                errorsByAppVersion[appVersion]?.append(error)
+            }
+
+            // Send one payload per app-version bucket
+            for (appVersion, errorsForVersion) in errorsByAppVersion {
+                NRLOG_AGENT_DEBUG("Publishing \(errorsForVersion.count) JS errors for appVersion: \(appVersion)")
+                publishErrors(errorsForVersion, appVersion: appVersion)
+            }
         }
     }
 
     @objc public func onHarvestComplete() {
-        // Clear persisted errors after successful harvest
-        clearPersistedErrors()
+        // Persisted errors will be cleared after all uploads succeed (see handleUploadSuccess)
+        NRLOG_AGENT_DEBUG("Harvest complete - waiting for uploads to finish")
     }
 
     @objc public func onHarvestError() {
-        // Retry failed uploads
+        // Retry failed uploads (upload completion is tracked via callbacks)
         uploader?.retryFailedUploads()
     }
 
@@ -222,7 +276,7 @@ public class JSErrorController: NSObject {
 
     // MARK: - Private Methods
 
-    private func publishErrors(_ errors: [[String: Any]]) {
+    private func publishErrors(_ errors: [[String: Any]], appVersion: String) {
         guard let uploader = uploader else {
             NRLOG_AGENT_DEBUG("Cannot publish JS errors: uploader is nil")
             return
@@ -243,11 +297,16 @@ public class JSErrorController: NSObject {
             agentConfigToken = requestHeaderMap["NR-AgentConfiguration"] as? String
         }
 
-        // Format payload
-        let payload = formatPayload(errors)
+        // Format payload (session attributes are now per-error, not at payload level)
+        let payload = formatPayload(errors, appVersion: appVersion)
 
         // Get connection info
         let connectInfo = NRMAAgentConfiguration.connectionInformation()
+
+        // Track this upload
+        pendingUploadsLock.lock()
+        pendingUploads += 1
+        pendingUploadsLock.unlock()
 
         // Send to uploader
         uploader.sendPayload(payload,
@@ -259,7 +318,37 @@ public class JSErrorController: NSObject {
                            agentConfigToken: agentConfigToken)
     }
 
-    private func formatPayload(_ errors: [[String: Any]]) -> [String: Any] {
+    private func handleUploadSuccess() {
+        pendingUploadsLock.lock()
+        pendingUploads -= 1
+        let remaining = pendingUploads
+        pendingUploadsLock.unlock()
+
+        NRLOG_AGENT_DEBUG("Upload succeeded. Remaining uploads: \(remaining)")
+
+        // Clear persisted errors only after all uploads succeed
+        if remaining == 0 {
+            NRLOG_AGENT_DEBUG("All uploads complete - clearing persisted errors")
+            clearPersistedErrors()
+        }
+    }
+
+    private func handleUploadFailure() {
+        pendingUploadsLock.lock()
+        pendingUploads -= 1
+        let remaining = pendingUploads
+        pendingUploadsLock.unlock()
+
+        NRLOG_AGENT_DEBUG("Upload failed permanently. Remaining uploads: \(remaining)")
+
+        // Clear persisted errors even if some uploads failed, once all attempts are done
+        if remaining == 0 {
+            NRLOG_AGENT_DEBUG("All upload attempts complete (some may have failed) - clearing persisted errors")
+            clearPersistedErrors()
+        }
+    }
+
+    private func formatPayload(_ errors: [[String: Any]], appVersion: String) -> [String: Any] {
         // Get connection info for device data
         let connectInfo = NRMAAgentConfiguration.connectionInformation()
 
@@ -285,34 +374,14 @@ public class JSErrorController: NSObject {
 
         payload["appInfo"] = [
             "appName": connectInfo?.applicationInformation.appName ?? "unknown",
-            "appVersion": connectInfo?.applicationInformation.appVersion ?? "unknown",
+            "appVersion": appVersion,
             "appBuild": connectInfo?.applicationInformation.appBuild ?? "unknown",
             "bundleId": Bundle.main.bundleIdentifier ?? "unknown"
         ]
 
         payload["deviceInfo"] = getDeviceInfo()
 
-        // Session attributes (same as log endpoint)
-        var sessionAttrs: [String: Any] = [
-            "sessionId": sessionId ?? ""
-        ]
-
-        // Add all session attributes from analytics controller
-        if let sessionAttributesJSON = analyticsController.sessionAttributeJSONString(),
-           !sessionAttributesJSON.isEmpty,
-           let sessionData = sessionAttributesJSON.data(using: .utf8),
-           let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
-            for (key, value) in sessionAttributes {
-                // Don't override sessionId if it's already set
-                if sessionAttrs[key] == nil {
-                    sessionAttrs[key] = value
-                }
-            }
-        }
-
-        payload["sessionAttributes"] = sessionAttrs
-
-        // Format events
+        // Format events (session attributes are now serialized per error, not at payload level)
         let events = errors.map { formatErrorAsEvent($0) }
         payload["analyticsEvents"] = events
 
@@ -330,15 +399,15 @@ public class JSErrorController: NSObject {
         }
 
         if let message = errorData["message"] as? String {
-            event["description"] = message
+            event["errorMessage"] = message
         }
 
         if let name = errorData["name"] as? String {
-            event["errorType"] = name
+            event["errorName"] = name
         }
 
         if let isFatal = errorData["isFatal"] as? Bool {
-            event["isFatalError"] = isFatal ? "true" : "false"
+            event["isFatalError"] = isFatal
         }
 
         if let timestamp = errorData["timestamp"] as? Int64 {
@@ -510,5 +579,12 @@ public class JSErrorController: NSObject {
     /// Internal method for testing: clears persisted errors from disk
     @objc public func clearPersistedErrorsForTesting() {
         clearPersistedErrors()
+    }
+
+    /// Internal method for testing: formats an error as it would appear in the wire format
+    /// - Parameter errorData: The raw error data from the queue
+    /// - Returns: The formatted event as it would be sent over the wire
+    @objc public func formatErrorAsEventForTesting(_ errorData: [String: Any]) -> [String: Any] {
+        return formatErrorAsEvent(errorData)
     }
 }

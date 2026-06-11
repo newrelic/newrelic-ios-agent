@@ -60,6 +60,7 @@ struct ExpenseEntryView: View {
                 presentationMode.wrappedValue.dismiss()
             })
         }
+        .navigationViewStyle(.stack)
     }
     
     private func saveExpense() {

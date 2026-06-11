@@ -36,8 +36,8 @@ class SwiftUIShapeThingyTests: XCTestCase {
             view: nil,
             maskApplicationText: nil,
             maskUserInputText: nil,
-            maskAllImages: nil,
-            maskAllUserTouches: isMasked, blockView: nil,
+            maskAllImages: isMasked,
+            maskAllUserTouches: nil, blockView: nil,
             sessionReplayIdentifier: nil
         )
     }
@@ -64,7 +64,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     // MARK: - Initialization Tests
 
     func testInit() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -87,7 +87,8 @@ class SwiftUIShapeThingyTests: XCTestCase {
     func testCSSDescription() {
         let details = makeViewDetails(
             frame: CGRect(x: 10, y: 20, width: 100, height: 50),
-            viewId: 42
+            viewId: 42,
+            isMasked: false
         )
         let path = makeTestPath()
         let color = makeTestColor()
@@ -110,7 +111,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testInlineCSSDescription() {
-        let details = makeViewDetails(frame: CGRect(x: 10, y: 20, width: 100, height: 50))
+        let details = makeViewDetails(frame: CGRect(x: 10, y: 20, width: 100, height: 50), isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -123,15 +124,19 @@ class SwiftUIShapeThingyTests: XCTestCase {
         )
 
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("overflow: hidden"))
+        XCTAssertTrue(css.contains("display: block"))
         XCTAssertTrue(css.contains("position: fixed"))
         XCTAssertTrue(css.contains("background-color: #00000000"))
+
+        // Test shape inline CSS
+        let shapeCss = thingy.shapeInlineCSSDescription()
+        XCTAssertTrue(shapeCss.contains("overflow: hidden"))
     }
 
     // MARK: - SVG Path Conversion Tests
 
     func testConvertPathToSVGData_Rectangle() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         var path = SwiftUI.Path()
         path.move(to: CGPoint(x: 0, y: 0))
         path.addLine(to: CGPoint(x: 10, y: 0))
@@ -151,25 +156,23 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         // Use reflection or the node generation to verify path data
         let node = thingy.generateRRWebNode()
-        // The SVG should be a child of the container
-        if case .element(let svgElement) = node.childNodes.first {
-            if case .element(let pathElement) = svgElement.childNodes.first {
-                let pathData = pathElement.attributes["d"] ?? ""
-                XCTAssertTrue(pathData.contains("M 0.0 0.0"))
-                XCTAssertTrue(pathData.contains("L 10.0 0.0"))
-                XCTAssertTrue(pathData.contains("L 10.0 10.0"))
-                XCTAssertTrue(pathData.contains("L 0.0 10.0"))
-                XCTAssertTrue(pathData.contains("Z"))
-            } else {
-                XCTFail("Expected path element in SVG")
-            }
+        // The structure is: container > shape div > SVG > path
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first,
+           case .element(let pathElement) = svgElement.childNodes.first {
+            let pathData = pathElement.attributes["d"] ?? ""
+            XCTAssertTrue(pathData.contains("M 0.0 0.0"))
+            XCTAssertTrue(pathData.contains("L 10.0 0.0"))
+            XCTAssertTrue(pathData.contains("L 10.0 10.0"))
+            XCTAssertTrue(pathData.contains("L 0.0 10.0"))
+            XCTAssertTrue(pathData.contains("Z"))
         } else {
-            XCTFail("Expected SVG element in container")
+            XCTFail("Expected path element in SVG")
         }
     }
 
     func testConvertPathToSVGData_Curve() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         var path = SwiftUI.Path()
         path.move(to: CGPoint(x: 0, y: 0))
         path.addCurve(
@@ -189,23 +192,21 @@ class SwiftUIShapeThingyTests: XCTestCase {
         )
 
         let node = thingy.generateRRWebNode()
-        if case .element(let svgElement) = node.childNodes.first {
-            if case .element(let pathElement) = svgElement.childNodes.first {
-                let pathData = pathElement.attributes["d"] ?? ""
-                XCTAssertTrue(pathData.contains("M 0.0 0.0"))
-                XCTAssertTrue(pathData.contains("C"))
-            } else {
-                XCTFail("Expected path element in SVG")
-            }
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first,
+           case .element(let pathElement) = svgElement.childNodes.first {
+            let pathData = pathElement.attributes["d"] ?? ""
+            XCTAssertTrue(pathData.contains("M 0.0 0.0"))
+            XCTAssertTrue(pathData.contains("C"))
         } else {
-            XCTFail("Expected SVG element in container")
+            XCTFail("Expected path element in SVG")
         }
     }
 
     // MARK: - Fill Color Tests
 
     func testGetFillColorHex_Red() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
         let fillStyle = SwiftUI.FillStyle()
@@ -218,21 +219,19 @@ class SwiftUIShapeThingyTests: XCTestCase {
         )
 
         let node = thingy.generateRRWebNode()
-        if case .element(let svgElement) = node.childNodes.first {
-            if case .element(let pathElement) = svgElement.childNodes.first {
-                let fillColor = pathElement.attributes["fill"] ?? ""
-                XCTAssertTrue(fillColor.hasPrefix("#"))
-                XCTAssertEqual(fillColor.count, 9) // #RRGGBBAA format
-            } else {
-                XCTFail("Expected path element in SVG")
-            }
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first,
+           case .element(let pathElement) = svgElement.childNodes.first {
+            let fillColor = pathElement.attributes["fill"] ?? ""
+            XCTAssertTrue(fillColor.hasPrefix("#"))
+            XCTAssertEqual(fillColor.count, 9) // #RRGGBBAA format
         } else {
-            XCTFail("Expected SVG element in container")
+            XCTFail("Expected path element in SVG")
         }
     }
 
     func testGetFillColorHex_Transparent() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
         let fillStyle = SwiftUI.FillStyle()
@@ -245,22 +244,20 @@ class SwiftUIShapeThingyTests: XCTestCase {
         )
 
         let node = thingy.generateRRWebNode()
-        if case .element(let svgElement) = node.childNodes.first {
-            if case .element(let pathElement) = svgElement.childNodes.first {
-                let fillColor = pathElement.attributes["fill"] ?? ""
-                XCTAssertTrue(fillColor.hasSuffix("00")) // Alpha should be 00
-            } else {
-                XCTFail("Expected path element in SVG")
-            }
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first,
+           case .element(let pathElement) = svgElement.childNodes.first {
+            let fillColor = pathElement.attributes["fill"] ?? ""
+            XCTAssertTrue(fillColor.hasSuffix("00")) // Alpha should be 00
         } else {
-            XCTFail("Expected SVG element in container")
+            XCTFail("Expected path element in SVG")
         }
     }
 
     // MARK: - Fill Rule Tests
 
     func testGetFillRule_NonZero() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle(eoFill: false)
@@ -273,20 +270,18 @@ class SwiftUIShapeThingyTests: XCTestCase {
         )
 
         let node = thingy.generateRRWebNode()
-        if case .element(let svgElement) = node.childNodes.first {
-            if case .element(let pathElement) = svgElement.childNodes.first {
-                let fillRule = pathElement.attributes["fill-rule"] ?? ""
-                XCTAssertEqual(fillRule, "nonzero")
-            } else {
-                XCTFail("Expected path element in SVG")
-            }
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first,
+           case .element(let pathElement) = svgElement.childNodes.first {
+            let fillRule = pathElement.attributes["fill-rule"] ?? ""
+            XCTAssertEqual(fillRule, "nonzero")
         } else {
-            XCTFail("Expected SVG element in container")
+            XCTFail("Expected path element in SVG")
         }
     }
 
     func testGetFillRule_EvenOdd() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle(eoFill: true)
@@ -299,22 +294,20 @@ class SwiftUIShapeThingyTests: XCTestCase {
         )
 
         let node = thingy.generateRRWebNode()
-        if case .element(let svgElement) = node.childNodes.first {
-            if case .element(let pathElement) = svgElement.childNodes.first {
-                let fillRule = pathElement.attributes["fill-rule"] ?? ""
-                XCTAssertEqual(fillRule, "evenodd")
-            } else {
-                XCTFail("Expected path element in SVG")
-            }
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first,
+           case .element(let pathElement) = svgElement.childNodes.first {
+            let fillRule = pathElement.attributes["fill-rule"] ?? ""
+            XCTAssertEqual(fillRule, "evenodd")
         } else {
-            XCTFail("Expected SVG element in container")
+            XCTFail("Expected path element in SVG")
         }
     }
 
     // MARK: - RRWeb Node Generation Tests (Full Snapshot)
 
     func testGenerateRRWebNode_ContainerStructure() {
-        let details = makeViewDetails(viewId: 42)
+        let details = makeViewDetails(viewId: 42, isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -339,7 +332,8 @@ class SwiftUIShapeThingyTests: XCTestCase {
     func testGenerateRRWebNode_SVGStructure() {
         let details = makeViewDetails(
             frame: CGRect(x: 0, y: 0, width: 100, height: 50),
-            viewId: 42
+            viewId: 42,
+            isMasked: false
         )
         let path = makeTestPath()
         let color = makeTestColor()
@@ -354,9 +348,10 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let node = thingy.generateRRWebNode()
 
-        // Verify SVG element
-        if case .element(let svgElement) = node.childNodes.first {
-            XCTAssertEqual(svgElement.id, 42 + 2000000)
+        // Verify shape div and SVG element
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first {
+            XCTAssertEqual(svgElement.id, 42 + 3000000)
             XCTAssertEqual(svgElement.tagName, .svg)
             XCTAssertEqual(svgElement.attributes["viewBox"], "0 0 100.0 50.0")
             XCTAssertEqual(svgElement.attributes["width"], "100%")
@@ -365,12 +360,12 @@ class SwiftUIShapeThingyTests: XCTestCase {
             XCTAssertEqual(svgElement.isSVG, true)
             XCTAssertEqual(svgElement.childNodes.count, 1)
         } else {
-            XCTFail("Expected SVG element in container")
+            XCTFail("Expected SVG element in shape div")
         }
     }
 
     func testGenerateRRWebNode_PathStructure() {
-        let details = makeViewDetails(viewId: 42)
+        let details = makeViewDetails(viewId: 42, isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -385,9 +380,10 @@ class SwiftUIShapeThingyTests: XCTestCase {
         let node = thingy.generateRRWebNode()
 
         // Verify path element
-        if case .element(let svgElement) = node.childNodes.first,
+        if case .element(let shapeDiv) = node.childNodes.first,
+           case .element(let svgElement) = shapeDiv.childNodes.first,
            case .element(let pathElement) = svgElement.childNodes.first {
-            XCTAssertEqual(pathElement.id, 42 + 1000000)
+            XCTAssertEqual(pathElement.id, 42 + 2000000)
             XCTAssertEqual(pathElement.tagName, .path)
             XCTAssertNotNil(pathElement.attributes["d"])
             XCTAssertNotNil(pathElement.attributes["fill"])
@@ -402,7 +398,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     // MARK: - RRWeb Addition Node Tests (Mutations)
 
     func testGenerateRRWebAdditionNode_ReturnsSeparateRecords() {
-        let details = makeViewDetails(viewId: 42, parentId: 10)
+        let details = makeViewDetails(viewId: 42, parentId: 10, isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -416,12 +412,12 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Should return 3 separate AddRecords: container, svg, path
-        XCTAssertEqual(records.count, 3)
+        // Should return 4 separate AddRecords: container, shape, svg, path
+        XCTAssertEqual(records.count, 4)
     }
 
     func testGenerateRRWebAdditionNode_ContainerRecord() {
-        var details = makeViewDetails(viewId: 42, parentId: 10)
+        var details = makeViewDetails(viewId: 42, parentId: 10, isMasked: false)
         details.nextId = 99
         let path = makeTestPath()
         let color = makeTestColor()
@@ -451,11 +447,41 @@ class SwiftUIShapeThingyTests: XCTestCase {
         }
     }
 
+    func testGenerateRRWebAdditionNode_ShapeRecord() {
+        let details = makeViewDetails(viewId: 42, parentId: 10, isMasked: false)
+        let path = makeTestPath()
+        let color = makeTestColor()
+        let fillStyle = SwiftUI.FillStyle()
+
+        let thingy = SwiftUIShapeThingy(
+            viewDetails: details,
+            path: path,
+            fillColor: color,
+            fillStyle: fillStyle
+        )
+
+        let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
+
+        // Second record should be the shape div
+        XCTAssertEqual(records[1].parentId, 42) // Parent is container
+        XCTAssertNil(records[1].nextId)
+
+        if case .element(let shapeNode) = records[1].node {
+            XCTAssertEqual(shapeNode.id, 42 + 1000000)
+            XCTAssertEqual(shapeNode.tagName, .div)
+            XCTAssertNotNil(shapeNode.attributes["style"])
+            XCTAssertTrue(shapeNode.childNodes.isEmpty) // Should be empty, not nested
+        } else {
+            XCTFail("Expected element node")
+        }
+    }
+
     func testGenerateRRWebAdditionNode_SVGRecord() {
         let details = makeViewDetails(
             frame: CGRect(x: 0, y: 0, width: 100, height: 50),
             viewId: 42,
-            parentId: 10
+            parentId: 10,
+            isMasked: false
         )
         let path = makeTestPath()
         let color = makeTestColor()
@@ -470,12 +496,12 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Second record should be the SVG element
-        XCTAssertEqual(records[1].parentId, 42) // Parent is container
-        XCTAssertNil(records[1].nextId)
+        // Third record should be the SVG element
+        XCTAssertEqual(records[2].parentId, 42 + 1000000) // Parent is shape div
+        XCTAssertNil(records[2].nextId)
 
-        if case .element(let svgNode) = records[1].node {
-            XCTAssertEqual(svgNode.id, 42 + 2000000)
+        if case .element(let svgNode) = records[2].node {
+            XCTAssertEqual(svgNode.id, 42 + 3000000)
             XCTAssertEqual(svgNode.tagName, .svg)
             XCTAssertEqual(svgNode.attributes["viewBox"], "0 0 100.0 50.0")
             XCTAssertEqual(svgNode.isSVG, true)
@@ -486,7 +512,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testGenerateRRWebAdditionNode_PathRecord() {
-        let details = makeViewDetails(viewId: 42, parentId: 10)
+        let details = makeViewDetails(viewId: 42, parentId: 10, isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -500,12 +526,12 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
 
-        // Third record should be the path element
-        XCTAssertEqual(records[2].parentId, 42 + 2000000) // Parent is SVG
-        XCTAssertNil(records[2].nextId)
+        // Fourth record should be the path element
+        XCTAssertEqual(records[3].parentId, 42 + 3000000) // Parent is SVG
+        XCTAssertNil(records[3].nextId)
 
-        if case .element(let pathNode) = records[2].node {
-            XCTAssertEqual(pathNode.id, 42 + 1000000)
+        if case .element(let pathNode) = records[3].node {
+            XCTAssertEqual(pathNode.id, 42 + 2000000)
             XCTAssertEqual(pathNode.tagName, .path)
             XCTAssertNotNil(pathNode.attributes["d"])
             XCTAssertNotNil(pathNode.attributes["fill"])
@@ -520,7 +546,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     // MARK: - Difference Generation Tests
 
     func testGenerateDifference_NoChanges() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -541,13 +567,13 @@ class SwiftUIShapeThingyTests: XCTestCase {
 
         let mutations = thingy1.generateDifference(from: thingy2)
 
-        // No changes should result in no mutations
-        XCTAssertTrue(mutations.count == 1)
+        // Should have mutations for container and shape div styles
+        XCTAssertTrue(mutations.count == 2)
     }
 
     func testGenerateDifference_FrameChange() {
-        let details1 = makeViewDetails(frame: CGRect(x: 10, y: 20, width: 100, height: 50))
-        let details2 = makeViewDetails(frame: CGRect(x: 20, y: 30, width: 100, height: 50))
+        let details1 = makeViewDetails(frame: CGRect(x: 10, y: 20, width: 100, height: 50), isMasked: false)
+        let details2 = makeViewDetails(frame: CGRect(x: 20, y: 30, width: 100, height: 50), isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -573,7 +599,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testGenerateDifference_ColorChange() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color1 = makeTestColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
         let color2 = makeTestColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
@@ -600,7 +626,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testGenerateDifference_PathChange() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
 
         var path1 = SwiftUI.Path()
         path1.addRect(CGRect(x: 0, y: 0, width: 10, height: 10))
@@ -632,7 +658,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testGenerateDifference_FillStyleChange() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle1 = SwiftUI.FillStyle(eoFill: false)
@@ -659,7 +685,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testGenerateDifference_WrongType() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -682,7 +708,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     // MARK: - Equality Tests
 
     func testEquality_SameProperties() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -705,7 +731,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testEquality_DifferentPath() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
 
         var path1 = SwiftUI.Path()
         path1.addRect(CGRect(x: 0, y: 0, width: 10, height: 10))
@@ -734,7 +760,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testEquality_DifferentColor() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color1 = makeTestColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
         let color2 = makeTestColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
@@ -757,10 +783,69 @@ class SwiftUIShapeThingyTests: XCTestCase {
         XCTAssertNotEqual(thingy1, thingy2)
     }
 
+    // MARK: - Masking Tests
+
+    func testMaskedShape_GenerateRRWebNode() {
+        let details = makeViewDetails(viewId: 42, isMasked: true)
+        let path = makeTestPath()
+        let color = makeTestColor()
+        let fillStyle = SwiftUI.FillStyle()
+
+        let thingy = SwiftUIShapeThingy(
+            viewDetails: details,
+            path: path,
+            fillColor: color,
+            fillStyle: fillStyle
+        )
+
+        let node = thingy.generateRRWebNode()
+
+        // Verify container div
+        XCTAssertEqual(node.id, 42)
+        XCTAssertEqual(node.childNodes.count, 1)
+
+        // Verify shape div is masked
+        if case .element(let shapeDiv) = node.childNodes.first {
+            XCTAssertEqual(shapeDiv.id, 42 + 1000000)
+            XCTAssertEqual(shapeDiv.attributes["data-nr-masked"], "image")
+            XCTAssertTrue(shapeDiv.childNodes.isEmpty) // No SVG when masked
+            XCTAssertTrue(shapeDiv.attributes["style"]?.contains("background: #CCCCCC;") ?? false)
+        } else {
+            XCTFail("Expected shape div in container")
+        }
+    }
+
+    func testMaskedShape_GenerateRRWebAdditionNode() {
+        let details = makeViewDetails(viewId: 42, parentId: 10, isMasked: true)
+        let path = makeTestPath()
+        let color = makeTestColor()
+        let fillStyle = SwiftUI.FillStyle()
+
+        let thingy = SwiftUIShapeThingy(
+            viewDetails: details,
+            path: path,
+            fillColor: color,
+            fillStyle: fillStyle
+        )
+
+        let records = thingy.generateRRWebAdditionNode(parentNodeId: 10)
+
+        // Should return only 2 records when masked: container, shape
+        XCTAssertEqual(records.count, 2)
+
+        // Verify shape record is masked
+        if case .element(let shapeNode) = records[1].node {
+            XCTAssertEqual(shapeNode.attributes["data-nr-masked"], "shape")
+            XCTAssertTrue(shapeNode.childNodes.isEmpty)
+        } else {
+            XCTFail("Expected element node")
+        }
+    }
+
     // MARK: - Hashable Tests
 
     func testHashable_SameProperties() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color = makeTestColor()
         let fillStyle = SwiftUI.FillStyle()
@@ -783,7 +868,7 @@ class SwiftUIShapeThingyTests: XCTestCase {
     }
 
     func testHashable_DifferentProperties() {
-        let details = makeViewDetails()
+        let details = makeViewDetails(isMasked: false)
         let path = makeTestPath()
         let color1 = makeTestColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
         let color2 = makeTestColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)

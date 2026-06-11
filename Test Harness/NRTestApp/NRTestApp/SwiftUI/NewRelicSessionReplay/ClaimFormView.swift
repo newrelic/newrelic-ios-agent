@@ -240,8 +240,9 @@ struct ClaimFormView: View {
                 //            .onChange(of: selectedPhotos) { newItems in
                 //                loadPhotoNames(from: newItems)
                 //            }
-          
+
         }
+        .navigationViewStyle(.stack)
     }
     
     private func deleteExpense(_ expense: Expense) {

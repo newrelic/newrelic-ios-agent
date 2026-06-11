@@ -24,6 +24,7 @@ struct ListsView: View {
             .navigationBarTitle("Lists")
             .NRTrackView(name: "ListsView")
         }
+        .navigationViewStyle(.stack)
     }
 }
 

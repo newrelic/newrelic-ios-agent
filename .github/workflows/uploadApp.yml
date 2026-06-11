@@ -7,6 +7,10 @@
 
 name: Upload iOS NRTestApp to LambdaTest
 
+permissions:
+  contents: read
+  actions: read
+
 on:
  # enables option for workflow to be manually executed in Github UI
  workflow_dispatch:

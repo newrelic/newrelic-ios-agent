@@ -287,7 +287,7 @@ withTimestamp:(NSNumber *) timestamp {
                     if (self->lastFileSize > (kNRMAMaxLogPayloadSizeLimit)) {
                         // NSLog(@"logs fileSize exceeds kNRMAMaxLogPayloadSizeLimit , split logs and enqueue upload task");
                         
-                        [self enqueueLogUpload];
+                        [[NewRelicAgentInternal sharedInstance] uploadLogsIfSampled];
                     }
                     [handleForReadingAtPath closeFile];
                 }

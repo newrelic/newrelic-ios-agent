@@ -192,14 +192,73 @@
 
 - (void) configureHarvester:(NRMAHarvesterConfiguration*)harvestConfiguration
 {
-    NewRelic::Application::getInstance().setContext(NewRelic::ApplicationContext([[NSString stringWithFormat:@"%lld", harvestConfiguration.account_id] cStringUsingEncoding:NSUTF8StringEncoding],
-                                                                                 [[NSString stringWithFormat:@"%lld", harvestConfiguration.application_id] cStringUsingEncoding:NSUTF8StringEncoding],
-                                                                                 [[NSString stringWithFormat:@"%@", harvestConfiguration.trusted_account_key] cStringUsingEncoding:NSUTF8StringEncoding]));
+    if (![harvestConfiguration isKindOfClass:[NRMAHarvesterConfiguration class]]) {
+        NRLOG_AGENT_ERROR(@"configureHarvester: invalid configuration; skipping.");
+        return;
+    }
 
-    self.harvestData.dataToken = harvestConfiguration.data_token;
-    connection.serverTimestamp = harvestConfiguration.server_timestamp;
-    connection.crossProcessID  = harvestConfiguration.cross_process_id;
-    connection.requestHeadersMap = harvestConfiguration.request_header_map;
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        // Snapshot values into strong locals up front. Several object-typed properties on
+        // NRMAHarvesterConfiguration are declared 'assign' (e.g. request_header_map), so the
+        // backing object can be deallocated while the property still holds the pointer. Pulling
+        // values once and copying object types up front contains that risk to one wrapped block.
+        long long accountId = harvestConfiguration.account_id;
+        long long applicationId = harvestConfiguration.application_id;
+        NSString* trustedAccountKey = harvestConfiguration.trusted_account_key;
+        NRMADataToken* dataToken = harvestConfiguration.data_token;
+        long long serverTimestamp = harvestConfiguration.server_timestamp;
+        NSString* crossProcessID = harvestConfiguration.cross_process_id;
+
+        NSDictionary* requestHeaders = nil;
+        @try {
+            id rawHeaders = harvestConfiguration.request_header_map;
+            if ([rawHeaders isKindOfClass:[NSDictionary class]]) {
+                requestHeaders = [(NSDictionary*)rawHeaders copy];
+            }
+        } @catch (NSException* exception) {
+            NRLOG_AGENT_ERROR(@"configureHarvester: invalid request_header_map; ignoring.");
+            requestHeaders = nil;
+        }
+
+        // Keep the NSStrings alive for the lifetime of the setContext call so the C string
+        // pointers we hand to ApplicationContext remain valid.
+        NSString* accountIdString = [NSString stringWithFormat:@"%lld", accountId];
+        NSString* applicationIdString = [NSString stringWithFormat:@"%lld", applicationId];
+        NSString* trustedAccountKeyString = [NSString stringWithFormat:@"%@", trustedAccountKey ?: @""];
+
+        const char* accountIdCStr = [accountIdString cStringUsingEncoding:NSUTF8StringEncoding] ?: "";
+        const char* applicationIdCStr = [applicationIdString cStringUsingEncoding:NSUTF8StringEncoding] ?: "";
+        const char* trustedAccountKeyCStr = [trustedAccountKeyString cStringUsingEncoding:NSUTF8StringEncoding] ?: "";
+
+        NewRelic::Application::getInstance().setContext(NewRelic::ApplicationContext(accountIdCStr,
+                                                                                     applicationIdCStr,
+                                                                                     trustedAccountKeyCStr));
+
+        NRMAHarvestData* localHarvestData = self.harvestData;
+        if (localHarvestData != nil) {
+            localHarvestData.dataToken = dataToken;
+        } else {
+            NRLOG_AGENT_ERROR(@"configureHarvester: harvestData is nil; skipping data_token assignment.");
+        }
+
+        NRMAHarvesterConnection* localConnection = connection;
+        if (localConnection != nil) {
+            localConnection.serverTimestamp = serverTimestamp;
+            localConnection.crossProcessID  = crossProcessID ?: @"";
+            localConnection.requestHeadersMap = requestHeaders;
+        } else {
+            NRLOG_AGENT_ERROR(@"configureHarvester: connection is nil; skipping connection updates.");
+        }
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        NRLOG_AGENT_ERROR(@"configureHarvester: caught exception %@: %@", exception.name, exception.reason);
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
+    }
+#endif
 }
 
 - (NSString *) applicationIdentifierAsString
@@ -479,6 +538,9 @@
         [self saveHarvesterConfiguration:configuration];
 
         [NRMASupportMetricHelper processDeferredMetrics];
+        
+        [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:@"Remote configuration changed"
+                                                                   withAttributes:nil];
 
         [self transitionToConnected:configuration];
         
@@ -541,15 +603,32 @@
 
 - (void) transitionToConnected:(NRMAHarvesterConfiguration*)_configuration
 {
-     NRLOG_AGENT_VERBOSE(@"config: transitionToConnected");
+    NRLOG_AGENT_VERBOSE(@"config: transitionToConnected");
 
-    // Called from disconnected.
-    [self configureHarvester:_configuration];
-    
-    [self transition:NRMA_HARVEST_CONNECTED];
-    // Function will immediately send data.
-    [self execute];
-    return;
+    // Validate the inbound configuration before touching it. Sending messages to a
+    // freed/corrupt object here is the suspected root cause of crashes seen at this site.
+    if (![_configuration isKindOfClass:[NRMAHarvesterConfiguration class]]) {
+        NRLOG_AGENT_ERROR(@"transitionToConnected: invalid configuration; aborting transition.");
+        return;
+    }
+
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        // Called from disconnected.
+        [self configureHarvester:_configuration];
+
+        [self transition:NRMA_HARVEST_CONNECTED];
+        // Function will immediately send data.
+        [self execute];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        NRLOG_AGENT_ERROR(@"transitionToConnected: caught exception %@: %@", exception.name, exception.reason);
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
+    }
+#endif
 }
 
 - (NRMAHarvesterConfiguration*) configureFromCollector:(NRMAHarvestResponse*)response
@@ -623,6 +702,8 @@
                 [self fireOnHarvestBefore];
                 [self fireOnHarvest];
                 [self connected];
+
+                [[NewRelicAgentInternal sharedInstance] checkAndHandleSessionTimeout];
                 break;
             case NRMA_HARVEST_DISABLED:
                 [self disabled];
@@ -676,14 +757,8 @@
 #endif
             }
         }
-
-
-        BOOL isSampled = [[NewRelicAgentInternal sharedInstance] sampleSeed] <= [configuration sampling_rate];
-        // NRLOG_AGENT_VERBOSE(@"logging config: Sampling decision: %d, because seed <= rate: %f <= %f", isSampled, [[NewRelicAgentInternal sharedInstance] sampleSeed], [configuration sampling_rate]);
-        if (isSampled && [NRMAFlags shouldEnableLogReporting]) {
-            // Do log upload
-            [NRLogger enqueueLogUpload];
-        }
+        
+        [[NewRelicAgentInternal sharedInstance] uploadLogsIfSampled];
     }
 }
 

@@ -253,6 +253,8 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
 
         options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
+        
+        options.append(UtilOption(title: "SwiftUI UITabBar", handler: { [self] in showSwiftUITabBar()}))
 
 #if os(iOS)
         options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
@@ -285,6 +287,13 @@ class ViewController: UIViewController {
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
+
+        // NR-566282 — exercises the Session Replay sign-out / rootViewController-swap crash repro.
+        options.append(UtilOption(title: "Sign-Out Crash Repro", handler: { [self] in signOutCrashReproAction() }))
+    }
+
+    func signOutCrashReproAction() {
+        coordinator?.showSignOutCrashReproViewController()
     }
     
     func utilitiesAction() {
@@ -400,6 +409,12 @@ class ViewController: UIViewController {
 #if os(iOS)
         let hostingController = BlockViewSwiftUIHostingController()
         navigationController?.pushViewController(hostingController, animated: true)
+#endif
+    }
+    
+    func showSwiftUITabBar() {
+#if os(iOS)
+        coordinator?.showSwiftUITabBar()
 #endif
     }
 

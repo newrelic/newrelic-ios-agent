@@ -94,9 +94,10 @@ struct ProviderSearchView: View {
                    }
                    
                }
-               
+
                .navigationTitle("Search Providers")
            }
+           .navigationViewStyle(.stack)
        }
 
        func submitClaimAsProviderNotListed() {

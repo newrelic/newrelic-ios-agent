@@ -9,6 +9,8 @@
 import Foundation
 import UIKit
 
+let DestOutView = "DestOutView"
+
 class UIViewThingy: SessionReplayViewThingy {
     var isMasked: Bool
     var isBlocked: Bool
@@ -25,6 +27,12 @@ class UIViewThingy: SessionReplayViewThingy {
         self.viewDetails = viewDetails
         self.isMasked = viewDetails.isMasked ?? false
         self.isBlocked = viewDetails.blockView ?? false
+        
+        #if os(iOS)
+        if #available(iOS 26.0, *), self.viewDetails.viewName.contains(DestOutView) {
+            self.viewDetails.backgroundColor = .clear
+        }
+        #endif
     }
 
     init(viewDetails: ViewDetails) {
