@@ -1,11 +1,19 @@
 ---
 name: session-replay-pii-verifier
-description: "Verify New Relic Session Replay masking redacts PII in the serialized frame on disk, using Pepper to drive NRTestApp. Proves masked content never leaks into the replay stream."
+description: "Use when verifying New Relic Session Replay masking redacts PII in the serialized frame on disk of any iOS app driven by the device-interaction skill — checking masked content is absent from the replay stream, auditing replay frames for leaked text/images, or validating masking after a Session Replay change."
 ---
 # Session Replay PII-Leak Verifier
 
-TRIGGER when: user asks to verify Session Replay masking, check that PII is redacted/masked in replay, confirm masking works, audit replay frames for leaked text/images, or validate masking after a Session Replay code change.
+TRIGGER when: user asks to verify Session Replay masking, check that PII is redacted/masked in replay, confirm masking works, audit replay frames for leaked text/images, or validate masking after a Session Replay code change — in any iOS app that embeds the New Relic agent.
 DO NOT TRIGGER when: user asks about non-replay features, unit tests only, build-only requests, or UI changes unrelated to Session Replay masking.
+
+This skill is app-agnostic. It hardcodes nothing about a specific test app: build coordinates and the masked screen are **discovered per run** (steps 0 and 1). The New Relic agent writes frames to the same on-disk location regardless of which app embeds it, so the read/assert protocol is identical everywhere.
+
+**REQUIRED SUB-SKILL:** drive the app with `device-interaction`
+(`xcode-skills/device-interaction/SKILL.md`) — `DeviceInteractionStartSession`,
+`DeviceInteractionInstallAndRun`, `DeviceEventSynthesize`,
+`DeviceInteractionEndSession`. Read the on-disk frame with `xcrun simctl`. No
+other UI-driver is used.
 
 ---
 
@@ -17,51 +25,71 @@ Session Replay masks content **in-memory before serialization**: masked text bec
 
 This skill reads that file and asserts masked PII is redacted and absent, while unmasked content survives verbatim (control group). It is the highest-stakes Session Replay failure (PII silently flowing into replays) and the one no consumer can eyeball.
 
-## Build coordinates (verified 2026-06-12)
+## The masked/unmasked oracle
 
-- Workspace: `Agent.xcworkspace`
-- Scheme: `NRTestApp`
-- Simulator: iPhone 17 Pro Max — `AEE66BA5-E99F-487C-8A6C-F9BE8B6A7CE4`
+A real pass requires **both** directions to hold on the same screen:
 
-## Fixture
+- **Masked content** (PII, or anything the app marks for masking) must be redacted in the frame.
+- **Unmasked content** (a control element known to be safe) must survive verbatim.
 
-`Test Harness/NRTestApp/NRTestApp/ViewControllers/TextMaskingViewController.swift` ("Text Masking" screen). It renders **Masked Fields** and **Unmasked Fields** sections from deterministic static text, driven by `nr-mask` / `nr-unmask` accessibility identifiers, plus a Credentials section (Password / Credit Card / CVV). The masked/unmasked symmetry is a built-in oracle: a real pass requires masked text redacted AND unmasked text intact.
+If everything is redacted, masking is *blanket*, not *selective* — and a blanket-redact run cannot distinguish working masking from a broken serializer that drops all content. So the target screen must contain at least one masked element and one unmasked control. Identify masked vs unmasked content by, in order of preference:
+
+1. **Explicit masking markers** — New Relic's `nr-mask` / `nr-unmask` accessibility identifiers on the views (visible in the device-interaction hierarchy capture).
+2. **Source masking config** — the app's Session Replay masking rules in code (masked classes / masked view selectors).
+3. **Known-PII heuristic** — fields that obviously hold PII (password, credit card, SSN, email) are expected masked; static chrome/labels are expected unmasked.
+
+If a screen has masked content but **no** unmasked control, you can still assert masked-redacted + leak-absent, but the selective-vs-blanket verdict is INCONCLUSIVE — say so.
 
 ## Protocol
 
+### 0. Discover build coordinates
+- **Workspace/project**: the `.xcworkspace` (preferred) or `.xcodeproj` at the repo root — `ls *.xcworkspace *.xcodeproj`.
+- **Scheme**: the runnable app target's shared scheme — `xcodebuild -list -workspace <ws>`, or list `*.xcscheme` under `xcshareddata/xcschemes/`. Pick the app scheme, not framework/test schemes.
+- **Bundle id**: `xcodebuild -showBuildSettings -workspace <ws> -scheme <scheme> | grep PRODUCT_BUNDLE_IDENTIFIER` — needed to locate the app container in step 3.
+- **Simulator**: a booted simulator UDID — `xcrun simctl list devices booted`. `DeviceInteractionStartSession` selects the device; note the UDID it targets.
+
 ### 1. Arrange
-- `app_build` workspace `Agent.xcworkspace`, scheme `NRTestApp`, onto the booted simulator. This replaces `DeviceInteractionInstallAndRun`.
-- `app_look` to confirm launch. Navigate to **Text Masking**: from the main menu scroll down and `ui_tap text="Text Masking"`.
+- `DeviceInteractionStartSession` early (runs in the background). Pass a device identifier, or a bogus value to list available targets.
+- `DeviceInteractionInstallAndRun` with the discovered workspace + scheme (this builds, installs, and launches). Use `commandLineArguments` / `environmentVariables` to enable Session Replay recording for the run if the app needs a flag — prefer these over editing the scheme.
+- Capture the UI hierarchy + screenshot via `DeviceEventSynthesize` (empty `interactionCommand`). Navigate to a screen that satisfies the masked/unmasked oracle by tapping element **center coordinates** from the hierarchy (`DeviceEventSynthesize interactionCommand="t <cx> <cy>"`). If you don't know which screen masks content, scan the hierarchy for `nr-mask`/`nr-unmask` identifiers or PII-form screens (login, payment, profile, claim).
 
 ### 2. Capture ground truth
-- `app_look visual=true verbose=true` — screenshot + structured element list.
-- `ui_query find predicate="visible == YES"` — accessibility tree with coordinates/types.
-- Record the on-screen masked labels (`Masked Fields UILabel 1..4`) and unmasked labels (`Unmasked Fields UILabel 1..4`).
+- `DeviceEventSynthesize` with an empty `interactionCommand` → UI hierarchy file (element labels, frames, center coords) + screenshot. This is the "what the user sees" record.
+- Record the on-screen masked elements and the unmasked control element(s), by their text/label, so you can match them in the frame.
 
 ### 3. Read the serialized frame
-- `state_tools sandbox action=list path="Documents/SessionReplayFrames"` → find the active session directory.
-- List that directory, read the latest `frame_N.json` (`state_tools sandbox action=read`).
+- Resolve the app's data container on the simulator:
+  `xcrun simctl get_app_container <udid> <bundle-id> data` → `<container>`.
+- `ls "<container>/Documents/SessionReplayFrames"` → find the active session directory; read the latest `frame_N.json` with the Read tool (read immediately — frames prune/upload quickly).
 - Parse the `type: 2` (full snapshot) event. Extract text nodes (id + textContent, skip `isStyle`), `<img>` tags + inline `style`, `<span>` overlays.
-- If no frame exists or it was pruned: navigate away (`nav_back`) and back to the screen to force a fresh snapshot, then re-read.
+- If no frame exists or it was pruned: navigate away and back (tap the back-button center coords, then re-enter the screen) to force a fresh snapshot via `DeviceEventSynthesize`, then re-resolve the container and re-read.
 
 ### 4. Assert (all three must hold)
-1. **Masked redacted** — each `Masked Fields UILabel N` resolves in the frame to asterisks (length-matched, no real characters). Masked image regions carry `#CCCCCC`, no base64.
-2. **Leak-absent (negative)** — full-text search the frame JSON for the literal masked strings (`"Masked Fields UILabel 1"`, etc.). They must appear **nowhere**.
-3. **Control verbatim** — `Unmasked Fields UILabel N` strings appear in the frame verbatim. (If these are also redacted, masking is blanket, not selective — report as INCONCLUSIVE.)
+1. **Masked redacted** — each masked element resolves in the frame to asterisks (length-matched, no real characters). Masked image regions carry `#CCCCCC`, no base64.
+2. **Leak-absent (negative)** — full-text search the frame JSON for the literal masked strings (the actual on-screen text of each masked element). They must appear **nowhere**.
+3. **Control verbatim** — the unmasked control strings appear in the frame verbatim. (If these are also redacted, masking is blanket, not selective — report as INCONCLUSIVE.)
 
 ### 5. Report
 Emit a table:
 
 | Element | On screen | In frame | Expected | Verdict |
 
-Flag any assertion-2 failure loudly as **PII LEAK** with the leaked string and frame node id. End with PASS / FAIL / INCONCLUSIVE.
+Flag any assertion-2 failure loudly as **PII LEAK** with the leaked string and frame node id. End with PASS / FAIL / INCONCLUSIVE. Close the session with `DeviceInteractionEndSession`.
 
-## Known pitfalls (this codebase)
+## Known pitfalls
 
 - **Frame pruning** — frames upload/prune quickly; read immediately or force a fresh snapshot (step 3 fallback).
-- **Empty text fields** — text-field placeholders may not serialize; assert against the UILabels (known static text), not placeholders.
-- **Pepper layer-walk crash** — `ElementDiscoveryBridge.walkLayerTree` can EXC_BREAKPOINT on complex animation layers. The Text Masking screen is plain UIKit and is safe; if a crash occurs, fall back to `sim_raw cmd=tap params={"text":"...","skip_look":true}` + simctl screenshots.
+- **Container UUID changes** — the data-container path changes on reinstall; re-resolve it with `simctl get_app_container` each run rather than caching the path.
+- **Empty text fields** — text-field placeholders may not serialize; assert against rendered labels with known static text, not placeholders.
+- **No unmasked control on screen** — you lose the selective-vs-blanket signal; downgrade the verdict to INCONCLUSIVE rather than reporting PASS.
 
 ## Recording mode
 
-Session Replay must be in a recording mode that produces frames. If no frames appear in the sandbox after navigating the screen, confirm recording is on (check `state_vars` for the Session Replay manager mode, or app launch args) before concluding FAIL.
+Session Replay must be in a recording mode that produces frames. If no frames appear in the container after navigating the screen, confirm recording is on — pass the enabling launch argument/environment variable via `DeviceInteractionInstallAndRun`, or check the app's runtime logs — before concluding FAIL.
+
+## Example: this repo (NRTestApp)
+
+Concrete coordinates that satisfy the discovery steps in the New Relic iOS agent repo, as one worked example:
+
+- Workspace `Agent.xcworkspace`, scheme `NRTestApp`.
+- Fixture screen: `Test Harness/NRTestApp/NRTestApp/ViewControllers/TextMaskingViewController.swift` ("Text Masking"), which renders **Masked Fields** and **Unmasked Fields** sections (driven by `nr-mask` / `nr-unmask` identifiers) plus a Credentials section — a built-in masked/unmasked oracle. Navigate: from the main menu, scroll down (`DeviceEventSynthesize interactionCommand="t 200 600 f 200 200 0.3"`) and tap the "Text Masking" row at its hierarchy center coords.
