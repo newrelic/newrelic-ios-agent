@@ -1,0 +1,22 @@
+{
+  "name": "session-replay-masking",
+  "description": "Find and mask PII in iOS app source, then verify New Relic Session Replay redacts it in the on-disk replay frames at runtime. Bundles the source-side masking skill, the runtime PII-leak verifier, and the device-interaction driver they depend on.",
+  "version": "0.1.0",
+  "author": {
+    "name": "New Relic iOS Agent"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "ios",
+    "new-relic",
+    "session-replay",
+    "pii",
+    "masking",
+    "privacy"
+  ],
+  "skills": [
+    "./xcode-skills/session-replay-masking-from-source/",
+    "./xcode-skills/session-replay-pii-verifier/",
+    "./xcode-skills/device-interaction/"
+  ]
+}
