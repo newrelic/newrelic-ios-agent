@@ -95,3 +95,23 @@ hypotheses (e.g., "navigation bar internal views not traversed",
 
 Keep the report factual and concise. Do not speculate about fixes unless asked.
 Close the session with `DeviceInteractionEndSession` when done.
+
+### Full-app scour
+To audit a whole app rather than one screen, run steps 1–5 across every
+navigable screen — discover them at runtime, hardcode no screen list:
+- **Enumerate.** From the launch screen, treat every navigable
+  row/button/tab/cell in the hierarchy as an edge. Visit depth-first (tap
+  center coords → capture → recurse → tap back-button center coords to
+  return); scroll (`t 200 600 f 200 200 0.3`) to reveal off-screen targets;
+  track visited screens by title/identity to avoid loops.
+- **Classify each screen.** If it carries masked or PII-shaped content (any
+  `nr-mask` marker, or fields like password / credit card / SSN / email), run
+  the masked/unmasked oracle from the `session-replay-pii-verifier` skill (each
+  masked string redacted to length-matched asterisks / masked images `#CCCCCC`
+  with no base64; the literal on-screen string appears nowhere in the frame —
+  flag any hit as **PII LEAK** with string + node id; unmasked controls survive
+  verbatim, else INCONCLUSIVE). Otherwise run the PRESENT/PARTIAL/MISSING
+  coverage comparison above.
+- **Report ordering.** Per screen: a verdict table + one-line
+  PASS / FAIL / INCONCLUSIVE. Overall summary lists every **PII LEAK** first,
+  then masking gaps, then fidelity gaps.

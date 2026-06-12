@@ -1,6 +1,6 @@
 ---
 name: session-replay-pii-verifier
-description: "Use when verifying New Relic Session Replay masking redacts PII in the serialized frame on disk of any iOS app driven by the device-interaction skill — checking masked content is absent from the replay stream, auditing replay frames for leaked text/images, or validating masking after a Session Replay change."
+description: "Use when verifying New Relic Session Replay masking redacts PII in the serialized frame on disk of any iOS app driven by the device-interaction skill — checking masked content is absent from the replay stream, auditing replay frames for leaked text/images, scouring an entire app screen-by-screen for masking leaks and frame fidelity gaps, or validating masking after a Session Replay change."
 ---
 # Session Replay PII-Leak Verifier
 
@@ -75,6 +75,17 @@ Emit a table:
 | Element | On screen | In frame | Expected | Verdict |
 
 Flag any assertion-2 failure loudly as **PII LEAK** with the leaked string and frame node id. End with PASS / FAIL / INCONCLUSIVE. Close the session with `DeviceInteractionEndSession`.
+
+## Scour mode (full-app sweep)
+
+To audit an entire app rather than one screen, run the single-screen protocol across every navigable screen — no screen list is hardcoded; discover them at runtime.
+
+1. **Enumerate screens.** From the launch screen, capture the hierarchy (`DeviceEventSynthesize`, empty command) and treat every navigable row/button/tab/cell as an edge. Visit depth-first: tap a target's center coords, capture, recurse into newly revealed screens, then return (tap the back-button center coords) and continue. Scroll (`t 200 600 f 200 200 0.3`) to reveal off-screen targets. Track visited screens by title/identity to avoid loops.
+2. **Classify each screen.** Does it carry masked or PII-shaped content — any `nr-mask` marker, or fields like password / credit card / SSN / email?
+   - **Yes** → run the masked/unmasked oracle (step 4 assertions 1–3).
+   - **No** → run the PRESENT / PARTIAL / MISSING coverage comparison instead (CLAUDE.md Frame Verification Protocol, steps 3–4).
+3. **Force a fresh frame per screen** (navigate away and back, then re-resolve the container) before reading — frames prune fast.
+4. **Report** per screen (verdict table + one-line PASS / FAIL / INCONCLUSIVE), then an overall summary ordered: every **PII LEAK** first (leaked string + frame node id), then masking gaps, then fidelity gaps. Stay factual; do not propose fixes unless asked. `DeviceInteractionEndSession` when done.
 
 ## Known pitfalls
 
