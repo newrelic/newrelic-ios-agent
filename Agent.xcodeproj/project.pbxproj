@@ -2687,7 +2687,7 @@
 		34A929172912D721001449B6 /* Hex.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Hex.xcodeproj; path = libMobileAgent/src/Hex/Hex.xcodeproj; sourceTree = "<group>"; };
 		34A9291D2912D726001449B6 /* Analytics.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Analytics.xcodeproj; path = libMobileAgent/src/Analytics/Analytics.xcodeproj; sourceTree = "<group>"; };
 		34A929232912D72A001449B6 /* Connectivity.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Connectivity.xcodeproj; path = libMobileAgent/src/Connectivity/Connectivity.xcodeproj; sourceTree = "<group>"; };
-		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/JSON.xcodeproj; sourceTree = "<group>"; };
+		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/json.xcodeproj; sourceTree = "<group>"; };
 		34A9292F2912D736001449B6 /* Utilities.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Utilities.xcodeproj; path = libMobileAgent/src/Utilities/Utilities/Utilities.xcodeproj; sourceTree = "<group>"; };
 		34D0401D2D86036D007BE92D /* UIColor+HexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+HexString.swift"; sourceTree = "<group>"; };
 		34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLTransformer.h; sourceTree = "<group>"; };
