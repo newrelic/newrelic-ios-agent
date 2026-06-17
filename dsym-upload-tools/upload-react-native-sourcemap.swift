@@ -183,7 +183,7 @@ func start() {
         exit(1)
     }
 
-    // jsBundleId is the same as appVersionId (CFBundleShortVersionString)
+    // jsBundleId is the same as appVersion (CFBundleShortVersionString)
     let jsBundleId = appVersion
 
     let sourcemapName = "main.jsbundle.map"
@@ -207,7 +207,7 @@ func start() {
             url: uploadURL,
             sourcemapPath: sourcemapPath,
             jsBundleId: jsBundleId,
-            appVersionId: appVersion,
+            appVersion: appVersion,
             sourcemapName: sourcemapName
         )
         print("New Relic: ✓ Source map uploaded successfully!")
@@ -226,7 +226,7 @@ func uploadSourceMap(
     url: String,
     sourcemapPath: String,
     jsBundleId: String,
-    appVersionId: String,
+    appVersion: String,
     sourcemapName: String
 ) throws {
 
@@ -247,7 +247,7 @@ func uploadSourceMap(
     // Add text fields
     let textFields = [
         "jsBundleId": jsBundleId,
-        "appVersionId": appVersionId,
+        "appVersion": appVersion,
         "sourcemapName": sourcemapName
     ]
 
@@ -392,7 +392,7 @@ func uploadSourceMap(
                 }
                 print("Common causes:")
                 print("  • Source map version must be 3")
-                print("  • Missing required fields (jsBundleId, appVersionId, sourcemapName)")
+                print("  • Missing required fields (jsBundleId, appVersion, sourcemapName)")
                 print("  • Invalid JSON format")
                 print("  • ZIP file issues (no valid files, multiple files, or invalid extension)")
 
@@ -472,7 +472,7 @@ func uploadSourceMap(
             if let jsBundleId = metadata["JSBundleId"] as? String {
                 print("  JS Bundle ID: \(jsBundleId)")
             }
-            if let appVersion = metadata["appVersionId"] as? String {
+            if let appVersion = metadata["appVersion"] as? String {
                 print("  App Version: \(appVersion)")
             }
             if let createdAt = metadata["createdAt"] as? String {
