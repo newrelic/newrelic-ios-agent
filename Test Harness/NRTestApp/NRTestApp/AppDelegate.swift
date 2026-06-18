@@ -35,9 +35,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
         // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
         
-        NewRelic.saltDeviceUUID(true)
-
-       // NewRelic.replaceDeviceIdentifier("myDeviceId")
         
         NewRelic.addSessionReplayMaskedAccessibilityIdentifier("my-secret-id")
         NewRelic.addSessionReplayMaskedAccessibilityIdentifier("masked-1")
@@ -56,6 +53,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         startNewRelicAgent()
 
+        NewRelic.saltDeviceUUID(true)
+
+        //NewRelic.replaceDeviceIdentifier("myDeviceId")
+
+        
         NewRelic.logVerbose("NewRelic.start was called.")
         return true
     }

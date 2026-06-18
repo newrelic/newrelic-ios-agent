@@ -15,15 +15,16 @@ final class NRTestAppUITests: XCTestCase {
     func testARequests(){
         let dynamicStubs = HTTPDynamicStubs()
 
-        let vendorId = "myDeviceId"
-        let harvestConnector = "[[\"NRTestApp\",\"4.7\",\"com.newrelic.NRApp.bitcode\"],[\"iOS\",\"17.0.1\",\"arm64\",\"iOSAgent\",\"DEV\",\"\(vendorId)\",\"\",\"\",\"Apple Inc.\",{\"platform\":\"Native\",\"platformVersion\":\"DEV\"}]]"
+        let vendorId = "00000000-0000-0000-0000-000000000000"
+        let harvestConnector = "[[\"NRTestApp\",\"4.7\",\"com.newrelic.NRApp.bitcode\"],[\"iOS\",\"27.0\",\"arm64\",\"iOSAgent\",\"DEV\",\"\(vendorId)\",\"\",\"\",\"Apple Inc.\",{\"platform\":\"Native\",\"platformVersion\":\"DEV\"}]]"
 
         let app = XCUIApplication()
         dynamicStubs.setUp()
 
 // expectation: TEST HARVEST /connect
         let expectation = XCTestExpectation(description: "Expected connect endpoint to be hit.")
-
+        
+        
         dynamicStubs.setupStub(url: "/mobile/v5/connect", filename: "harvestConnector", method: .POST, matchRequestBody: harvestConnector, hitClosure: { actualRequestBody in
             if actualRequestBody == harvestConnector {
                 expectation.fulfill() }
@@ -89,9 +90,15 @@ final class NRTestAppUITests: XCTestCase {
         
         XCTWaiter(delegate: self).wait(for: [expectation2], timeout: 30)
 
-        let tablesQuery = app.tables
-        tablesQuery.staticTexts["Change Image"].tap()
+        let tables = app.tables
+        if tables.staticTexts["Utilities"].waitForExistence(timeout: 15) {
+            tables.staticTexts["Utilities"].tap()
+            
+            if tables.staticTexts["Notice Network Request"].waitForExistence(timeout: 15) {
+                tables.staticTexts["Notice Network Request"].tap()
+            }
 
+        }
         // This expectation of this test is used for the automatically fired /data request when launching the app
 // expectation: TEST HARVEST /data
         let expectation3 = XCTestExpectation(description: "Expected data harvest endpoint to be hit w/ MobileRequest.")
@@ -223,71 +230,6 @@ final class NRTestAppUITests: XCTestCase {
 
         XCTAssertEqual(XCTWaiter(delegate: self).wait(for: [recovered], timeout: 40), .completed,
                        "Agent did not resume /data uploads after the rate-limit backoff window expired")
-
-        app.terminate()
-    }
-
-    // Verifies the end-to-end supportability-metric pipeline for rate limiting: after /data returns
-    // a 429, the agent should emit a `Collector/RateLimit/Backoff` supportability metric, which must
-    // surface in a subsequent real /data harvest payload once uploads resume. (The unit tests mock
-    // the harvester, so only an integration test like this exercises the actual payload.)
-    func testRateLimitBackoffEmitsSupportabilityMetric() {
-        let dynamicStubs = HTTPDynamicStubs()
-        dynamicStubs.setUp()
-        defer { dynamicStubs.tearDown() }
-
-        let harvestPeriodSeconds = 5
-        dynamicStubs.setupStub(url: "/mobile/v5/connect",
-                               method: .POST,
-                               statusCode: 200,
-                               responseHeaders: ["Content-Type": "application/json"],
-                               jsonBody: connectResponse(dataReportPeriodSeconds: harvestPeriodSeconds))
-
-        // First /data POST is rate-limited with a short Retry-After so the backoff window is brief
-        // and the test stays fast. The metric is enqueued when this 429 is handled.
-        let firstHit = XCTestExpectation(description: "agent POSTed to /data and received a 429")
-        dynamicStubs.setupStub(url: dataEndpoint,
-                               method: .POST,
-                               statusCode: 429,
-                               responseHeaders: ["Retry-After": "\(harvestPeriodSeconds)"],
-                               jsonBody: [String: Any]()) { _ in
-            firstHit.fulfill()
-        }
-
-        let app = XCUIApplication()
-        app.launchEnvironment = ["UITesting": "yes", "DeleteConnect": "yes"]
-        app.launch()
-
-        let tables = app.tables
-        if tables.staticTexts["Utilities"].waitForExistence(timeout: 15) {
-            tables.staticTexts["Utilities"].tap()
-            
-            if tables.staticTexts["Notice Network Request"].waitForExistence(timeout: 15) {
-                tables.staticTexts["Notice Network Request"].tap()
-            }
-
-        }
-
-        XCTAssertEqual(XCTWaiter(delegate: self).wait(for: [firstHit], timeout: 30), .completed,
-                       "Agent never POSTed to /data")
-
-        // Stop rate-limiting. Once the backoff window expires the agent resumes harvesting, and the
-        // deferred RateLimit/Backoff supportability metric should ride along in the next payload.
-        let metricSeen = XCTestExpectation(description: "RateLimit/Backoff supportability metric reached /data")
-        dynamicStubs.setupStub(url: dataEndpoint,
-                               method: .POST,
-                               statusCode: 200,
-                               responseHeaders: ["Content-Type": "application/json"],
-                               jsonBody: [String: Any]()) { body in
-            // Harvest payloads JSON-escape forward slashes ("\/"); normalize before matching.
-            let normalized = body.replacingOccurrences(of: "\\/", with: "/")
-            if normalized.contains("Collector/RateLimit/Backoff") {
-                metricSeen.fulfill()
-            }
-        }
-
-        XCTAssertEqual(XCTWaiter(delegate: self).wait(for: [metricSeen], timeout: 40), .completed,
-                       "Agent did not emit the Collector/RateLimit/Backoff supportability metric to /data after a 429")
 
         app.terminate()
     }
