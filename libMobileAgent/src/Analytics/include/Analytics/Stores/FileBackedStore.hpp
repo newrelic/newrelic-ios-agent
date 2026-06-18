@@ -5,7 +5,10 @@
 #include <Utilities/libLogger.hpp>
 #include <Utilities/WorkQueue.hpp>
 #include <Analytics/AnalyticEvent.hpp>
+#include <atomic>
 #include <chrono>
+#include <future>
+#include <memory>
 #include <sstream>
 
 
@@ -27,8 +30,15 @@ private:
                         std::shared_ptr<T> t);
 
     std::chrono::time_point<std::chrono::system_clock> lastWriteTime;
-    bool dirtyFlag = false;
+    std::atomic<bool> dirtyFlag{false};
     WorkQueue workQueue;
+    std::shared_future<void> _initialLoadFuture;
+
+    void waitForInitialLoad() const {
+        if (_initialLoadFuture.valid()) {
+            _initialLoadFuture.wait();
+        }
+    }
 
 public:
     static const inline std::chrono::time_point<std::chrono::system_clock>::duration writeThrottle() {
@@ -61,8 +71,20 @@ public:
               _validator(validator),
               lastWriteTime(),
               workQueue() {
-        loadFromFile();
         clearBackup();
+        // Run the initial file load on the work queue so the constructor doesn't block
+        // the calling thread. Reads via get()/getCache()/load() wait on _initialLoadFuture;
+        // writes via store()/remove() naturally serialize behind this work item.
+        auto loadPromise = std::make_shared<std::promise<void>>();
+        _initialLoadFuture = loadPromise->get_future().share();
+        workQueue.enqueue([this, loadPromise] {
+            try {
+                loadFromFile();
+            } catch (...) {
+                LLOG_VERBOSE("Initial async load failed: %s", _fullPath.c_str());
+            }
+            loadPromise->set_value();
+        });
     };
 
     void synchronize() {
@@ -75,15 +97,13 @@ public:
 
 
     virtual ~FileBackedStore() {
-        // Use non-blocking terminate with 500ms timeout to avoid blocking main thread
-        // If timeout occurs, thread will be detached and finish asynchronously
         bool completed = workQueue.terminate(500);
         if (!completed) {
             LLOG_VERBOSE("WorkQueue terminate timed out in FileBackedStore destructor - thread detached");
         }
 
         std::lock_guard<std::mutex> lk(_fileMutex);
-        if (dirtyFlag) {
+        if (dirtyFlag.load()) {
             flush();
         }
         if (_fO.is_open())
@@ -108,8 +128,14 @@ public:
 
     virtual void store(K key,
                        std::shared_ptr<T> obj) {
-        CacheBackedStore<K, T>::store(key, obj);
-        dirtyFlag = true;
+        {
+            // Set dirtyFlag inside the cache lock so an async loadFromFile()
+            // running on the work queue can't read it as "clean" between our
+            // map mutation and our flag set.
+            std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
+            CacheBackedStore<K, T>::map[key] = obj;
+            dirtyFlag = true;
+        }
         workQueue.enqueue([this] {
             try {
                 std::lock_guard<std::mutex> lk(_fileMutex);
@@ -130,8 +156,11 @@ public:
     }
 
     virtual void remove(K key) {
-        CacheBackedStore<K, T>::remove(key);
-        dirtyFlag = true;
+        {
+            std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
+            CacheBackedStore<K, T>::map.erase(key);
+            dirtyFlag = true;
+        }
         workQueue.enqueue([this] {
             try {
                 std::lock_guard<std::mutex> lk(_fileMutex);
@@ -145,9 +174,11 @@ public:
     }
 
     virtual std::map<K, std::shared_ptr<T>> load() {
+        waitForInitialLoad();
         std::lock_guard<std::mutex> lk(_fileMutex);
         CacheBackedStore<K, T>::clear();
         loadFromFile();
+        std::lock_guard<std::mutex> mlk(CacheBackedStore<K, T>::m);
         return CacheBackedStore<K, T>::map;
     }
 
@@ -156,8 +187,10 @@ public:
     }
 
     virtual std::shared_ptr<T> get(K key) {
-        auto map = CacheBackedStore<K, T>::map;
-        return map[key];
+        waitForInitialLoad();
+        std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
+        auto it = CacheBackedStore<K, T>::map.find(key);
+        return it == CacheBackedStore<K, T>::map.end() ? nullptr : it->second;
     }
 
     virtual const char* getFullStorePath() const {
@@ -165,6 +198,11 @@ public:
     }
 
     const std::map<K, std::shared_ptr<T>> swap() {
+        // Must wait for the initial async load BEFORE taking any locks. The
+        // worker thread needs m to finish the load, so holding m here while
+        // waiting on _initialLoadFuture would deadlock.
+        waitForInitialLoad();
+
         std::lock_guard<std::mutex> flk(_fileMutex);
         std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
         if (_fO.is_open()) {
@@ -181,14 +219,17 @@ public:
             LLOG_VERBOSE("failed to create backup store: %s", backupStorePath.c_str());
         }
 
-        // save cache data as return result, but clear the internal cache
-        auto map = getCache();
+        // Read the map directly under the lock we already hold. Do NOT call
+        // getCache() here — it would re-take m on a non-recursive mutex.
+        auto map = CacheBackedStore<K, T>::map;
         CacheBackedStore<K, T>::map.clear();
 
         return map;
     }
 
     virtual std::map<K, std::shared_ptr<T>> getCache() {
+        waitForInitialLoad();
+        std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
         return CacheBackedStore<K, T>::map;
     }
 
@@ -200,33 +241,83 @@ protected:
     }
 
     void loadFromFile() {
+        // Read the entire file into a local map BEFORE taking the cache mutex.
+        // Holding CacheBackedStore::m during file I/O is what froze callers:
+        // every store()/remove() also takes m, so a slow file read on the
+        // work queue blocked the calling thread for the duration.
         std::ifstream _fI;
-        std::string key;
-        std::string value;
-
-        std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
         _fI.open(_fullPath);
-        const std::streamoff offset = std::streamoff(0);
-        _fI.seekg(offset, std::ios_base::beg);
 
+        if (!_fI.is_open()) {
+            std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
+            if (!dirtyFlag.load()) {
+                // No file and no pending writes: cache matches "disk" (empty).
+                dirtyFlag = false;
+            }
+            return;
+        }
+
+        _fI.seekg(0, std::ios::end);
+        std::streampos fileSize = _fI.tellg();
+        _fI.seekg(0, std::ios::beg);
+
+        const std::streampos MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+        if (fileSize > MAX_FILE_SIZE) {
+            LLOG_VERBOSE("FileBackedStore file too large (%lld bytes), skipping load: %s",
+                        static_cast<long long>(fileSize), _fullPath.c_str());
+            _fI.close();
+            return;
+        }
+
+        std::map<K, std::shared_ptr<T>> tmp;
         try {
-            while (std::getline(_fI, key)) {
-                std::getline(_fI, value);
+            const int MAX_ENTRIES = 10000;
+            int entryCount = 0;
+            std::string key;
+            std::string value;
+
+            while (std::getline(_fI, key) && entryCount < MAX_ENTRIES) {
+                if (!std::getline(_fI, value)) {
+                    LLOG_VERBOSE("Malformed file, missing value for key: %s", _fullPath.c_str());
+                    break;
+                }
+
                 K k{key};
                 std::stringstream is{value};
 
                 std::shared_ptr<T> t = _factory(is);
                 if (_validator(k, t)) {
-                    CacheBackedStore<K, T>::map[k] = t;
+                    tmp[k] = t;
                 }
+
+                entryCount++;
+            }
+
+            if (entryCount >= MAX_ENTRIES) {
+                LLOG_VERBOSE("FileBackedStore exceeded max entries (%d), truncating: %s",
+                            MAX_ENTRIES, _fullPath.c_str());
             }
         } catch (...) {
-            const std::streamoff offset = std::streamoff(0);
-            _fI.seekg(offset, std::ios_base::beg);
-            CacheBackedStore<K, T>::map.clear();
+            LLOG_VERBOSE("Exception during file load, dropping partial result: %s", _fullPath.c_str());
+            _fI.close();
+            return;
         }
         _fI.close();
-        dirtyFlag = false;
+
+        // Brief lock to merge into the cache. emplace() preserves any keys
+        // that were store()d concurrently while we were reading the file —
+        // those represent newer values than what's on disk.
+        std::lock_guard<std::mutex> lk(CacheBackedStore<K, T>::m);
+        bool wasClean = !dirtyFlag.load();
+        for (auto& kv : tmp) {
+            CacheBackedStore<K, T>::map.emplace(kv.first, kv.second);
+        }
+        if (wasClean) {
+            // No concurrent writes happened during the read, so cache now
+            // matches disk. If wasClean was false, leave dirtyFlag set so
+            // the queued flush will write the concurrent store(s) out.
+            dirtyFlag = false;
+        }
     }
 
     void writeToFile() {
