@@ -134,19 +134,26 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                 NSURL *url = [currentRequest URL];
                 if (url != nil) {
 
-                    // Added this section to add Distributed Tracing traceId\trace.id, guid,id and payload.
-                    //1
-                    NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:currentRequest];
-                    mutableRequest = [NRMAHTTPUtilities addConnectivityHeaderAndPayload:mutableRequest];
-                    // 2
-                    if([NRMAFlags shouldEnableNewEventSystem]){
-                        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-                        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                                      to:task.originalRequest];
-                    } else {
-                        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-                        [NRMAHTTPUtilities attachPayload:payload
-                                                      to:task.originalRequest];
+                    // Attach a distributed tracing payload for the recorded span ONLY if an
+                    // earlier instrumentation point (e.g. the NSURLSession-level override at
+                    // task creation) has not already attached one. Regenerating here used to
+                    // overwrite that payload - whose traceparent was already injected onto the
+                    // wire - so the recorded span's trace.id no longer matched the header the
+                    // backend continues, breaking mobile -> backend trace linking
+                    // (newrelic/newrelic-ios-agent#772). This also drops the redundant second
+                    // payload generation (addConnectivityHeaderAndPayload created a payload on a
+                    // throwaway request that was immediately discarded).
+                    if (![NRMAHTTPUtilities hasAttachedPayload:task.originalRequest]) {
+                        NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:currentRequest];
+                        if([NRMAFlags shouldEnableNewEventSystem]){
+                            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+                            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                                          to:task.originalRequest];
+                        } else {
+                            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+                            [NRMAHTTPUtilities attachPayload:payload
+                                                          to:task.originalRequest];
+                        }
                     }
 
 

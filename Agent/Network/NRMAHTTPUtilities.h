@@ -33,5 +33,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (void) addTrackedHeaders:(NSDictionary *)headers to:(NRMANetworkRequestData*)requestData;
 + (void) attachPayload:(NRMAPayloadContainer*)payload to:(id)object;
 + (NRMAPayloadContainer*) addConnectivityHeader:(NSMutableURLRequest*)request;
+// Non-destructive check (does not remove the association) for whether a
+// distributed tracing payload has already been attached to `object`. Used to
+// avoid regenerating/overwriting a payload an earlier instrumentation point
+// already attached (newrelic/newrelic-ios-agent#772). Covers both event systems
+// (NRMAPayload and NRMAPayloadContainer share the association key).
++ (BOOL) hasAttachedPayload:(id)object;
 @end
 NS_ASSUME_NONNULL_END

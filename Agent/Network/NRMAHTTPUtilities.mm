@@ -245,6 +245,13 @@ NSString* currentParentId = @"";
     [NRMAAssociate attach:payload to:object with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
 }
 
++ (BOOL) hasAttachedPayload:(id)object {
+    // Peek without removing the association. Both event systems attach under the
+    // same key (NRMAPayload for the new system, NRMAPayloadContainer for the old),
+    // so a non-nil result means a payload is already present (newrelic/newrelic-ios-agent#772).
+    return [NRMAAssociate retrieveFrom:object with:kNRMA_ASSOCIATED_PAYLOAD_KEY] != nil;
+}
+
 + (NRMAPayload*) retrieveNRMAPayload:(id)object {
     id associatedObject = [NRMAAssociate retrieveFrom:object
                                     with:kNRMA_ASSOCIATED_PAYLOAD_KEY];
