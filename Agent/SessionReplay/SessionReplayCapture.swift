@@ -9,12 +9,16 @@
 import Foundation
 import UIKit
 import SwiftUI
+import WebKit
 
 @available(iOS 13.0, *)
 @objcMembers
 class SessionReplayCapture {
     private var layoutContainerViewCount: Int = 0
     private var navigationStackDepth: Int = 0
+
+    // Weak reference to session replay instance to access rrweb events
+    weak var sessionReplay: NRMASessionReplay?
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
@@ -203,6 +207,19 @@ class SessionReplayCapture {
         case let switchControl as UISwitch:
             return UISwitchThingy(view: switchControl, viewDetails: ViewDetails(view: switchControl))
         #endif
+
+        case let webView as WKWebView:
+            // First encounter of this WKWebView in the native tree? If so, request a
+            // FullSnapshot on the next frame so the player's nodeMap contains the
+            // container id before any stitched webview mutation references it.
+            let isNewWebView = (webView.sessionReplayIdentifier == nil)
+            let viewDetails = ViewDetails(view: webView)
+            if isNewWebView {
+                sessionReplay?.requestFullSnapshotOnNextFrame()
+            }
+            // Get rrweb events for this webview if available
+            let rrwebEvents = sessionReplay?.getRRWebEvents(for: webView) ?? []
+            return WKWebViewThingy(view: webView, viewDetails: viewDetails, rrwebEvents: rrwebEvents)
 
         default:
             if let rctParagraphClass = NSClassFromString(RCTParagraphComponentView),

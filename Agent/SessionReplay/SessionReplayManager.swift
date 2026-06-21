@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import WebKit
 @_implementationOnly import NewRelicPrivate
 
 @available(iOS 13.0, *)
@@ -148,6 +149,22 @@ public class SessionReplayManager: NSObject {
         return self.sessionReplayTimer != nil && self.sessionReplayTimer!.isValid
     }
     
+    @objc public func recordWebViewEvent(_ jsonString: String) {
+        sessionReplayQueue.async { [self] in
+             if self.sessionReplayMode != .off {
+                 self.sessionReplay.addOutsideEvent(jsonString)
+             }
+        }
+    }
+
+    @objc public func recordWebViewEvent(_ jsonString: String, from webView: WKWebView) {
+        sessionReplayQueue.async { [self] in
+             if self.sessionReplayMode != .off {
+                 self.sessionReplay.addOutsideEvent(jsonString, from: webView)
+             }
+        }
+    }
+    
     // This function is to handle a session change created by a change in userId
     @objc public func endSession(harvest: Bool = true) {
         stop()
@@ -249,18 +266,20 @@ public class SessionReplayManager: NSObject {
         
         let frames = self.sessionReplay.getSessionReplayFrames()
         let touches = self.sessionReplay.getSessionReplayTouches()
-        
-        if frames.isEmpty && touches.isEmpty {
-            NRLOG_AGENT_DEBUG("No session replay frames or touches to harvest.")
+        let webViewEvents = self.sessionReplay.getAndClearAllWebViewEvents()
+
+        if frames.isEmpty && touches.isEmpty && webViewEvents.isEmpty {
+            NRLOG_AGENT_DEBUG("No session replay frames, touches, or webview events to harvest.")
             return
         }
-        
+
         var container: [AnyRRWebEvent] = frames.map(AnyRRWebEvent.init)
         container.append(contentsOf: touches.map(AnyRRWebEvent.init))
+        container.append(contentsOf: webViewEvents)
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
             lhs.base.timestamp < rhs.base.timestamp
         }
-        
+
         let firstTimestamp = TimeInterval(container.first?.base.timestamp ?? 0)
         let lastTimestamp  = TimeInterval(container.last?.base.timestamp ?? 0)
         

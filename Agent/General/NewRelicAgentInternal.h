@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <WebKit/WebKit.h>
 #import "NewRelicFeatureFlags.h"
 #import "NRMAMeasurements.h"
 #import "NRMAHandledExceptions.h"
@@ -141,6 +142,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) pauseReplay;
 // Notify Session Replay of an error
 - (void)sessionReplayOnError:(NSError *_Nullable)error;
+
+// Record a session replay event from an external source (e.g. WebView)
+- (void) recordSessionReplayEvent:(NSString*)jsonEvent from:(WKWebView*)webView;
 
 // END SESSION REPLAY SECTION Methods to start and pause SessionReplay
 
