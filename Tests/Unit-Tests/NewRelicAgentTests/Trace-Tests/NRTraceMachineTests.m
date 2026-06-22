@@ -22,6 +22,8 @@
 #import "NRMATaskQueue.h"
 #import "NRMAThreadLocalStore.h"
 #import "NewRelic.h"
+#import "NewRelicAgentInternal.h"
+#import "NRMAFlags.h"
 #import "NRGCDOverride.h"
 
 @interface NRMATaskQueue ()
@@ -45,6 +47,15 @@
 - (void) setUp
 {
     [NRLogger setLogLevels:NRLogLevelNone];
+
+    // Other test classes can leave the shared agent in a shutdown state (e.g. tests
+    // that call [NewRelic shutdown], which sets isShutdown permanently for the process).
+    // Once shutdown, NRMATraceController refuses to start or complete traces, so activity
+    // traces are never captured and helper.result stays nil. Reset the flag and ensure
+    // interaction tracing is enabled so these tests are self-contained and order-independent.
+    [NewRelicAgentInternal sharedInstance].isShutdown = NO;
+    [NRMAFlags enableFeatures:NRFeatureFlag_InteractionTracing];
+
     helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_Activity];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:helper];
@@ -84,68 +95,129 @@
 
 }
 
+#pragma mark - Wait helpers
 
+// Waits until `condition` returns YES or `timeoutSeconds` elapses, returning whether the
+// condition was met. This replaces the old unbounded `while (cond) {}` busy-spins.
+//
+// Two important properties, both deliberate:
+//   1. It is BOUNDED. A condition that never becomes true fails the test (via the caller's
+//      assertion) instead of spinning a CPU core forever and hanging the whole suite — the
+//      exact failure that happened on Xcode test retries in CI.
+//   2. It does NOT pump the main run loop. The agent schedules its trace-timeout timers on
+//      the main run loop, so pumping here would fire them and prematurely expire the
+//      activity trace under test. The flags these waits watch are flipped from background
+//      GCD queues, so a short main-thread sleep between checks is sufficient.
+- (BOOL) waitForCondition:(BOOL (^)(void))condition timeout:(NSTimeInterval)timeoutSeconds
+{
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:timeoutSeconds];
+    while (!condition()) {
+        if ([deadline timeIntervalSinceNow] <= 0) {
+            return NO;
+        }
+        [NSThread sleepForTimeInterval:0.01];
+    }
+    return YES;
+}
+
+// Like -waitForCondition:timeout: but DOES pump the main run loop on each iteration.
+// Some traces (e.g. the activity trace in -testThreadCapture) are only completed when the
+// trace machine's main-run-loop timers get a chance to fire, so those tests need the main
+// thread to keep servicing its run loop while they wait. Bounded by `timeoutSeconds` so a
+// trace that never completes fails the test instead of hanging the whole suite.
+- (BOOL) pumpMainRunLoopUntilCondition:(BOOL (^)(void))condition timeout:(NSTimeInterval)timeoutSeconds
+{
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:timeoutSeconds];
+    while (!condition()) {
+        if ([deadline timeIntervalSinceNow] <= 0) {
+            return NO;
+        }
+        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    return YES;
+}
+
+
+// Verifies that, while an activity trace is active, traced work performed on three different
+// execution contexts is all captured as child segments of that trace:
+//   1. a detached NSThread        -> "NRMATraceMachineTests#tracedThreadWork"
+//   2. a GCD dispatch_async block -> "dispatch_async"
+//   3. the main thread itself     -> "NRMATraceMachineTests#testThreadCapture"
 - (void) testThreadCapture
 {
-   //wait for trace to complete
-    __block bool done = NO;
-    dispatch_queue_t queue = dispatch_queue_create("blah", NULL);
-//    [NRMATraceController startTracing:YES];
     [NRMATraceController startTracing:YES];
 
-    [NSThread detachNewThreadSelector:@selector(thread1) toTarget:self withObject:nil];
+    __block BOOL backgroundWorkDone = NO;
+    dispatch_queue_t queue = dispatch_queue_create("com.newrelic.test.threadCapture", NULL);
+
+    // 1. Detached NSThread that opens and closes its own traced method.
+    [NSThread detachNewThreadSelector:@selector(tracedThreadWork) toTarget:self withObject:nil];
+
+    // 3. Traced segment on the main thread.
     NR_TRACE_METHOD_START(NRTraceTypeNone);
 
-    dispatch_async(queue, ^{ //we need to not block on the main thread or else nothing will happen.
-
-        [self function];
-
-        done = YES;
-
+    // 2. Traced work dispatched onto a GCD queue. We dispatch rather than run inline so the
+    //    main thread stays free to pump its run loop, which lets the trace machine complete
+    //    the activity trace automatically.
+    dispatch_async(queue, ^{
+        [self busyWork];
+        backgroundWorkDone = YES;
     });
 
     NR_TRACE_METHOD_STOP
-    while (CFRunLoopGetCurrent() && !done) {
-        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
-    }; //wait for tracing to finish
 
-}
+    // Wait (pumping the main run loop) for the background work to finish and the activity
+    // trace to be captured. Bounded so a stuck trace fails fast instead of hanging the suite.
+    BOOL captured = [self pumpMainRunLoopUntilCondition:^BOOL{
+        return backgroundWorkDone && helper.result != nil;
+    } timeout:20.0];
 
-- (void) function {
-    while (CFRunLoopGetCurrent() && helper.result == nil) {
-        [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:.1]];
-    }; //wait for tracing to finish
+    XCTAssertTrue(captured, @"timed out waiting for the activity trace to be captured");
+    XCTAssertNotNil(helper.result, @"an activity trace should have been created");
+    XCTAssertTrue([helper.result isKindOfClass:[NRMAActivityTraceMeasurement class]],
+                  @"the captured measurement should be an activity trace");
 
-    XCTAssertNotNil(helper.result, @"a trace should be created");
-    XCTAssertTrue([helper.result isKindOfClass:[NRMAActivityTraceMeasurement class]], @"it should be an Activity measurement");
+    NRMAActivityTraceMeasurement* measurement = (NRMAActivityTraceMeasurement*)helper.result;
 
-//    NRMATrace* trace = [((NRMAActivityTraceMeasurement*)helper.result).rootTrace.children.allObjects objectAtIndex:0];
-
-    for (NRMATrace* trace in ((NRMAActivityTraceMeasurement*)helper.result).rootTrace.children.allObjects) {
-        XCTAssertTrue([trace.name isEqualToString:@"NRMATraceMachineTests#thread1"] || [trace.name isEqualToString:@"dispatch_async"] || [trace.name isEqualToString:@"NRMATraceMachineTests#testThreadCapture"], @"failed test with %@",trace.name);
+    // Every captured child segment should correspond to one of the three contexts above.
+    NSSet* expectedNames = [NSSet setWithArray:@[
+        @"NRMATraceMachineTests#tracedThreadWork",
+        @"dispatch_async",
+        @"NRMATraceMachineTests#testThreadCapture",
+    ]];
+    for (NRMATrace* trace in measurement.rootTrace.children.allObjects) {
+        XCTAssertTrue([expectedNames containsObject:trace.name],
+                      @"unexpected captured trace name: %@", trace.name);
     }
 
-//    XCTAssertEqualObjects(trace.name,@"NRMATraceMachineTests#thread1", @"should have a name of the class and selector.");
-    NRMAActivityTraceMeasurement* measurement = (NRMAActivityTraceMeasurement*)helper.result;
+    // The captured trace should serialize to JSON without throwing.
     NRMAHarvestableActivity* harvestableActivity = [[NRMAHarvestableActivity alloc] init];
     harvestableActivity.name = measurement.traceName;
     harvestableActivity.startTime = measurement.startTime;
     harvestableActivity.endTime = measurement.endTime;
     [harvestableActivity.childSegments addObject:[[NRMAHarvestableTrace alloc] initWithTrace:measurement.rootTrace]];
-
-    (void)[harvestableActivity JSONObject];
+    XCTAssertNoThrow((void)[harvestableActivity JSONObject], @"the captured trace should serialize to JSON");
 }
 
-- (void) thread1
+// Short burst of CPU work, run on a background GCD queue, so the dispatch_async block
+// produces a measurable traced segment.
+- (void) busyWork
 {
+    for (int i = 1; i < 10000; i++) {
+        volatile int w = 1;
+        w += i;
+    }
+}
 
+// Traced work performed on a detached NSThread.
+- (void) tracedThreadWork
+{
     NR_TRACE_METHOD_START(NRTraceTypeNone);
     @autoreleasepool {
-        //look busy
+        // Stay busy briefly so the segment is captured with a measurable duration.
         sleep(1);
-        for (int i = 1; i < 10000;i++)
-        {
-            int w = 1;
+        for (int i = 1; i < 10000; i++) {
+            volatile int w = 1;
             w += i;
         }
     }
@@ -157,17 +229,28 @@
     [NRMATraceController startTracing:YES];
     helper.result = nil;
     [NewRelic startInteractionWithName:@"Test"];
+
+    // Let the interaction accrue for ~1s before completing it, while keeping the main
+    // thread busy. This mirrors the original test, which relied on a hot main thread so
+    // background harvest work wouldn't complete/expire the activity trace early — replacing
+    // the spin with a plain sleep() makes this test fail with a nil result.
+    //
+    // The original code gated the 1s delay behind a *static* dispatch_once_t and then spun
+    // on the flag it set. Because the token is per-process but the flag is recreated every
+    // call, a second run of this test in the same process (e.g. an Xcode retry of a failed
+    // run) skipped the block, never cleared the flag, and spun a CPU core forever — hanging
+    // the whole suite. Dispatching the delay every time fixes that, and the deadline caps
+    // the spin so it can never hang again.
     __block BOOL wait = YES;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        //nop
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         sleep(1);
         wait = NO;
     });
-    while (CFRunLoopGetCurrent() && wait) {}
+    NSDate* spinDeadline = [NSDate dateWithTimeIntervalSinceNow:10.0];
+    while (wait && [spinDeadline timeIntervalSinceNow] > 0) {}
+
     [NRMATraceController completeActivityTrace];
     [NRMATaskQueue synchronousDequeue];
-    NSLog(@"%@",helper);
     XCTAssertEqualObjects(((NRMAActivityTraceMeasurement*)helper.result).traceName, @"Test", @"");
 }
 
@@ -260,7 +343,8 @@
 
     [NRMATraceController startTracing:YES];
 
-    while (CFRunLoopGetCurrent() && !finished2) {};
+    // Bounded wait for the background work to finish (was an unbounded non-pumping spin).
+    [self waitForCondition:^BOOL{ return finished2; } timeout:15.0];
     sleep(4);
     [NRMATraceController completeActivityTrace];
 }
@@ -278,7 +362,8 @@
         done = YES;
     });
 
-    while (CFRunLoopGetCurrent() && !done) {}
+    XCTAssertTrue([self waitForCondition:^BOOL{ return done; } timeout:10.0],
+                  @"timed out waiting for the dispatched block to run");
     sleep(1); // give the dispatch async to actually run "completion" code
 
     [NRMATraceController completeActivityTrace];
@@ -304,10 +389,13 @@
     dispatch_async(queue, ^{
         started = YES;
         pid = [NSString stringWithFormat:@"%d",pthread_mach_thread_np(pthread_self())];
+        // Keep this background "trace" open until the main thread releases it below, so we
+        // can verify a new activity doesn't adopt work started under the old one.
         while (CFRunLoopGetCurrent() && wait) { }
     });
 
-    while (CFRunLoopGetCurrent() && !started) {}
+    XCTAssertTrue([self waitForCondition:^BOOL{ return started; } timeout:10.0],
+                  @"timed out waiting for the background trace to start");
     [NRMATraceController completeActivityTrace];
     [NRMATaskQueue synchronousDequeue];
 
