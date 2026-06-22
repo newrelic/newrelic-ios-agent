@@ -234,6 +234,77 @@ final class NRTestAppUITests: XCTestCase {
         app.terminate()
     }
 
+    // Verifies the agent still backs off when the collector returns a 429 with NO Retry-After header.
+    // This exercises the exponential branch of -handleRateLimitResponse: where the backoff window is
+    // derived from kNRMARateLimitBaseBackoffSeconds (60s) rather than a server-provided interval. The
+    // agent must post once, get the 429, then pause uploads for the base window instead of re-POSTing
+    // every harvest period. (Recovery is not asserted here because the 60s base window would make the
+    // test slow; resumption is covered by testRateLimitBackoffOn429.)
+    func testRateLimitBackoffOn429WithoutRetryAfter() {
+        let dynamicStubs = HTTPDynamicStubs()
+        dynamicStubs.setUp()
+        defer { dynamicStubs.tearDown() }
+
+        // Shared, lock-guarded counter — Swifter serves requests off the main thread.
+        let hitLock = NSLock()
+        var dataHitCount = 0
+        func recordDataHit() -> Int {
+            hitLock.lock(); defer { hitLock.unlock() }
+            dataHitCount += 1
+            return dataHitCount
+        }
+        func currentDataHitCount() -> Int {
+            hitLock.lock(); defer { hitLock.unlock() }
+            return dataHitCount
+        }
+
+        let harvestPeriodSeconds = 5
+        dynamicStubs.setupStub(url: "/mobile/v5/connect",
+                               method: .POST,
+                               statusCode: 200,
+                               responseHeaders: ["Content-Type": "application/json"],
+                               jsonBody: connectResponse(dataReportPeriodSeconds: harvestPeriodSeconds))
+
+        // /data rate-limits the agent but provides no Retry-After header, forcing the agent to fall
+        // back on its own base backoff window (~60s) rather than a server-specified one.
+        let firstHit = XCTestExpectation(description: "agent POSTed to /data and received a 429")
+        dynamicStubs.setupStub(url: dataEndpoint,
+                               method: .POST,
+                               statusCode: 429,
+                               responseHeaders: [:],
+                               jsonBody: [String: Any]()) { _ in
+            _ = recordDataHit()
+            firstHit.fulfill()
+        }
+
+        let app = XCUIApplication()
+        app.launchEnvironment = ["UITesting": "yes", "DeleteConnect": "yes"]
+        app.launch()
+
+        // Generate some data worth harvesting.
+        let tables = app.tables
+        if tables.staticTexts["Utilities"].waitForExistence(timeout: 15) {
+            tables.staticTexts["Utilities"].tap()
+
+            if tables.staticTexts["Notice Network Request"].waitForExistence(timeout: 15) {
+                tables.staticTexts["Notice Network Request"].tap()
+            }
+        }
+
+        // The first /data POST should arrive within a couple of harvest periods and get a 429.
+        XCTAssertEqual(XCTWaiter(delegate: self).wait(for: [firstHit], timeout: 30), .completed,
+                       "Agent never POSTed to /data")
+
+        // Several harvest periods elapse, all well inside the ~60s base backoff window. Without backoff
+        // the agent would re-POST every harvestPeriodSeconds; with it, the count must stay at 1.
+        Thread.sleep(forTimeInterval: TimeInterval(harvestPeriodSeconds * 3))
+        let countDuringBackoff = currentDataHitCount()
+        XCTAssertEqual(countDuringBackoff, 1,
+                       "Agent should pause /data uploads during the 429 base backoff window, but posted \(countDuringBackoff) times")
+
+        app.terminate()
+    }
+
     // Loads the canned connect response and overrides the harvest period so tests can speed up the
     // harvest loop. Falls back to a minimal valid configuration if the stub file can't be read.
     private func connectResponse(dataReportPeriodSeconds: Int) -> [String: Any] {
