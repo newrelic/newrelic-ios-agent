@@ -150,6 +150,9 @@ typedef NSString NRMetricUnit;
 
 #define kNRMAConfigurationUpdated        @"Supportability/Mobile/%@/%@/Configuration/Updated"
 
+// NativePlatform, Platform — emitted when a 429/rate-limit response triggers harvest upload backoff.
+#define kNRMARateLimitBackoffMetricFormatString @"Supportability/Mobile/%@/%@/Collector/RateLimit/Backoff"
+
 //Network info cache constants
 #define kNRCarrierNameCacheLifetime     50 // milliseconds
 #define kNRWanTypeCacheLifetime         25 // milliseconds

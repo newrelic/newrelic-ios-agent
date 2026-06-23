@@ -7,6 +7,7 @@
 //
 
 #import "NRMAHarvester.h"
+#import <math.h>
 #import "NRLogger.h"
 #import "NRMAMeasurements.h"
 #import "NRTimer.h"
@@ -26,6 +27,11 @@
 #import "NRAutoLogCollector.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
+
+// Rate-limit (HTTP 429) backoff bounds. When the collector does not provide a
+// Retry-After header we escalate exponentially from the base, capped at the max.
+static const NSTimeInterval kNRMARateLimitBaseBackoffSeconds = 60.0;
+static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 
 @interface NRMAHarvester (privateMethods)
 
@@ -366,6 +372,16 @@
     }
     
     NRLOG_AGENT_VERBOSE(@"Harvester: connected");
+
+    // If we are inside a rate-limit (429) backoff window, pause harvest uploads:
+    // skip the upload entirely and retain the buffered data for after the window,
+    // rather than blindly resending payloads the collector just rejected.
+    NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+    if (self.rateLimitBackoffUntil > now) {
+        NRLOG_AGENT_VERBOSE(@"Harvester: rate-limit backoff active, skipping upload for %.0f more seconds.", self.rateLimitBackoffUntil - now);
+        return;
+    }
+
     NRMAHarvestResponse* response = nil;
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
@@ -407,7 +423,12 @@
 
             // Send Supportability metric when received 409 to indicate that a config update should happen or send it when actual /connect call finishes which refreshes the data.
             [NRMASupportMetricHelper enqueueConfigurationUpdateMetric];
-            
+
+            break;
+        case TOO_MANY_REQUESTS:
+            // The collector is rate-limiting us. Arm a backoff window so the next
+            // harvest cycles pause instead of resending the just-rejected payload.
+            [self handleRateLimitResponse:response];
             break;
         default:
             break;
@@ -419,10 +440,14 @@
             // If the harvest was persisted for offline storage clear the harvest.
             [self.harvestData clear];
         } else {
+            // On a 429 we deliberately retain the buffer so it can be sent after
+            // the backoff window; the backoff guard above prevents an immediate resend.
             [self fireOnHarvestFailure];
         }
     } else {
         // success
+        // A successful (2xx) harvest clears any active rate-limit backoff.
+        [self resetRateLimitBackoff];
         [self.harvestData clear];
         // If there was a successful harvest upload send the persisted offline payloads.
         [connection sendOfflineStorage];
@@ -457,6 +482,33 @@
     }
 #endif
     [self fireOnHarvestComplete];
+}
+
+- (void) handleRateLimitResponse:(NRMAHarvestResponse*)response {
+    NSTimeInterval backoff;
+    if (response.retryAfterSeconds > 0) {
+        // Honor the server-provided Retry-After interval, bounded by our cap.
+        backoff = MIN(response.retryAfterSeconds, kNRMARateLimitMaxBackoffSeconds);
+    } else {
+        // No Retry-After: escalate exponentially from the base, capped at the max.
+        backoff = kNRMARateLimitBaseBackoffSeconds * pow(2.0, (double)self.rateLimitBackoffCount);
+        backoff = MIN(backoff, kNRMARateLimitMaxBackoffSeconds);
+    }
+
+    self.rateLimitBackoffUntil = [NSDate timeIntervalSinceReferenceDate] + backoff;
+    self.rateLimitBackoffCount += 1;
+
+    NRLOG_AGENT_WARNING(@"Harvester: received 429 rate-limit response; pausing harvest uploads for %.0f seconds (attempt %ld).", backoff, (long)self.rateLimitBackoffCount);
+
+    [NRMASupportMetricHelper enqueueRateLimitBackoffMetric:backoff];
+}
+
+- (void) resetRateLimitBackoff {
+    if (self.rateLimitBackoffUntil != 0 || self.rateLimitBackoffCount != 0) {
+        NRLOG_AGENT_VERBOSE(@"Harvester: successful harvest, clearing rate-limit backoff.");
+    }
+    self.rateLimitBackoffUntil = 0;
+    self.rateLimitBackoffCount = 0;
 }
 
 - (BOOL) checkOfflineAndPersist:(NRMAHarvestResponse*) response {
