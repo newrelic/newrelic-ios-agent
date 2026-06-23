@@ -81,6 +81,79 @@ class UILabelThingyTests: XCTestCase {
         XCTAssertEqual(thingy.textAlignment, "center")
     }
 
+    // MARK: - Default masking strategy guard (SwiftUI / NRConditionalMaskView)
+
+    private func makeSwiftUIViewDetails(maskApplicationText: Bool? = nil,
+                                        maskUserInputText: Bool? = nil,
+                                        maskAllImages: Bool? = nil,
+                                        maskAllUserTouches: Bool? = nil,
+                                        isDefaultMaskingMode: Bool) -> ViewDetails {
+        return ViewDetails(
+            frame: .zero,
+            clip: .zero,
+            backgroundColor: .clear,
+            alpha: 1.0,
+            isHidden: false,
+            viewName: "UILabel",
+            parentId: 0,
+            cornerRadius: 0,
+            borderWidth: 0,
+            borderColor: nil,
+            viewId: 1,
+            view: nil,
+            maskApplicationText: maskApplicationText,
+            maskUserInputText: maskUserInputText,
+            maskAllImages: maskAllImages,
+            maskAllUserTouches: maskAllUserTouches,
+            blockView: nil,
+            sessionReplayIdentifier: nil,
+            isDefaultMaskingMode: isDefaultMaskingMode
+        )
+    }
+
+    // Under the Default strategy, an NRConditionalMaskView(maskApplicationText: false)
+    // unmask override must be dropped so the global default (mask) governs.
+    func testDefaultStrategyDropsUnmaskTextOverride() {
+        let details = makeSwiftUIViewDetails(maskApplicationText: false, isDefaultMaskingMode: true)
+        XCTAssertNil(details.maskApplicationText)
+    }
+
+    // Custom strategy continues to honor the unmask override (text visible).
+    func testCustomStrategyKeepsUnmaskTextOverride() {
+        let details = makeSwiftUIViewDetails(maskApplicationText: false, isDefaultMaskingMode: false)
+        XCTAssertEqual(details.maskApplicationText, false)
+    }
+
+    // Overrides that *increase* masking (true) are still honored under Default.
+    func testDefaultStrategyKeepsMaskTrueOverride() {
+        let details = makeSwiftUIViewDetails(maskApplicationText: true, isDefaultMaskingMode: true)
+        XCTAssertEqual(details.maskApplicationText, true)
+    }
+
+    // The guard applies to every unmask-capable override field under Default.
+    func testDefaultStrategyDropsAllUnmaskOverrides() {
+        let details = makeSwiftUIViewDetails(maskApplicationText: false,
+                                             maskUserInputText: false,
+                                             maskAllImages: false,
+                                             maskAllUserTouches: false,
+                                             isDefaultMaskingMode: true)
+        XCTAssertNil(details.maskApplicationText)
+        XCTAssertNil(details.maskUserInputText)
+        XCTAssertNil(details.maskAllImages)
+        XCTAssertNil(details.maskAllUserTouches)
+    }
+
+    // End-to-end: a SwiftUI label that tried to unmask itself stays masked (asterisks)
+    // under the Default strategy.
+    func testDefaultStrategyMasksLabelDespiteUnmaskOverride() {
+        let label = UILabel()
+        label.text = "SecretText"
+        let details = makeSwiftUIViewDetails(maskApplicationText: false, isDefaultMaskingMode: true)
+        let thingy = UILabelThingy(view: label, viewDetails: details)
+        XCTAssertTrue(thingy.isMasked)
+        XCTAssertEqual(thingy.labelText, String(repeating: "*", count: label.text!.count))
+    }
+
     func testExtractLabelAttributes_withAttributedText() {
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.red
