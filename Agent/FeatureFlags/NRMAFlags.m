@@ -48,7 +48,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
                               NRFeatureFlag_AppStartMetrics |
+                              NRFeatureFlag_MobileViews |
                               NRFeatureFlag_JSErrorEvents;
+
                   });
     return __flags;
 }
@@ -184,6 +186,10 @@ static NSString* __deviceIdentifierReplacement = NULL;
 
 + (BOOL) shouldEnableAutoCollectLogs {
     return ([NRMAFlags featureFlags] & NRFeatureFlag_AutoCollectLogs) != 0;
+}
+
++ (BOOL) shouldEnableMobileViews {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_MobileViews) != 0;
 }
 
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {

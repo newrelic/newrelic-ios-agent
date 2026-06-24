@@ -41,6 +41,7 @@
 		2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C7E2E860C7D001D2B88 /* ContentView.swift */; };
 		2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */; };
 		2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */; };
+		ABCDE0001000000000000001 /* ModalsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE0001000000000000002 /* ModalsDemoView.swift */; };
 		2BD05DD42ADF323A00C0C972 /* NRTestAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DD32ADF323A00C0C972 /* NRTestAppUITests.swift */; };
 		2BD05DDC2ADF324D00C0C972 /* HTTPDynamicStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DCB2ADF2F4000C0C972 /* HTTPDynamicStubs.swift */; };
 		2BD05DDD2ADF326A00C0C972 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
@@ -69,6 +70,10 @@
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
+		ABCDE10010000000000001A1 /* MobileViewAttributesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */; };
+		ABCDE10010000000000001B1 /* MobileViewIgnoredDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */; };
+		ABCDE10010000000000001C1 /* MobileViewAttributesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */; };
+		ABCDE10010000000000001D1 /* MobileViewIgnoredViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
@@ -372,6 +377,7 @@
 		2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextFieldsView.swift; sourceTree = "<group>"; };
 		2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TogglesView.swift; sourceTree = "<group>"; };
 		2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalReproView.swift; sourceTree = "<group>"; };
+		ABCDE0001000000000000002 /* ModalsDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalsDemoView.swift; sourceTree = "<group>"; };
 		2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerformanceContentView.swift; sourceTree = "<group>"; };
 		2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scopes.swift; sourceTree = "<group>"; };
 		2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebSockets.swift; sourceTree = "<group>"; };
@@ -399,6 +405,10 @@
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
 		D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTestViewController.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesDemoView.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredDemoView.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesViewController.swift; sourceTree = "<group>"; };
+		ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredViewController.swift; sourceTree = "<group>"; };
 		D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CustomSwitch.swift; path = ../CustomSwitch.swift; sourceTree = "<group>"; };
 		D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToggleStyle.swift; sourceTree = "<group>"; };
 		F802EE902BE0218600AB956F /* NRTestApp (watchOS) Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "NRTestApp (watchOS) Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -547,6 +557,7 @@
 				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
 				2BCDE5B22ECEA133008EE3B9 /* MinimalReproView.swift */,
+				ABCDE0001000000000000002 /* ModalsDemoView.swift */,
 				F8BF16362F3F6D9F00EF5628 /* NewRelicSessionReplay */,
 				2BCDE5B32ECEA133008EE3B9 /* PerformanceContentView.swift */,
 				2B3493692E8EF15A006DE9D0 /* MaskingView.swift */,
@@ -573,6 +584,8 @@
 				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
 				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
 				CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */,
+				ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */,
+				ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -758,6 +771,8 @@
 				F86428402971BD5B002ABA01 /* UtilitiesViewController.swift */,
 				F864284E2971E254002ABA01 /* WebViewController.swift */,
 				CD0001001CD000000000CD00 /* MapViewController.swift */,
+				ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */,
+				ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1351,6 +1366,7 @@
 				F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				2BCDE5B42ECEA133008EE3B9 /* PerformanceContentView.swift in Sources */,
 				2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */,
+				ABCDE0001000000000000001 /* ModalsDemoView.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
@@ -1363,6 +1379,10 @@
 				2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */,
 				F86428412971BD5B002ABA01 /* UtilitiesViewController.swift in Sources */,
 				D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */,
+				ABCDE10010000000000001A1 /* MobileViewAttributesDemoView.swift in Sources */,
+				ABCDE10010000000000001B1 /* MobileViewIgnoredDemoView.swift in Sources */,
+				ABCDE10010000000000001C1 /* MobileViewAttributesViewController.swift in Sources */,
+				ABCDE10010000000000001D1 /* MobileViewIgnoredViewController.swift in Sources */,
 				F864284F2971E254002ABA01 /* WebViewController.swift in Sources */,
 				F84EEFB72E21B19C000E2A5A /* SecureLabel.swift in Sources */,
 				F8EACAE22F69F1FA00385075 /* TintedSymbolsView.swift in Sources */,

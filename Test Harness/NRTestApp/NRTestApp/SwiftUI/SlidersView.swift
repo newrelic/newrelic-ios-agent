@@ -31,6 +31,8 @@ struct SlidersView: View {
         .padding()
         .navigationBarTitle("Sliders", displayMode: .inline)
         .NRTrackView(name: "SlidersView")
+        .NRMobileView(name: "SlidersView")
+
     }
 }
 

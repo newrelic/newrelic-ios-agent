@@ -27,6 +27,10 @@ class ViewController: UIViewController {
     private var appStartDate = Date()
     private var timer: Timer?
 
+    @objc func nrMobileViewName() -> String? {
+        "Main ViewController"
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -281,6 +285,10 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Map View (UIKit)", handler: { [self] in mapViewAction() }))
 
+        options.append(UtilOption(title: "MobileView · Custom Attrs (UIKit)", handler: { [self] in mobileViewAttributesAction()}))
+
+        options.append(UtilOption(title: "MobileView · Ignored (UIKit)", handler: { [self] in mobileViewIgnoredAction()}))
+
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
@@ -370,6 +378,14 @@ class ViewController: UIViewController {
 
     func switchTestAction() {
         coordinator?.showSwitchTestViewController()
+    }
+
+    func mobileViewAttributesAction() {
+        coordinator?.showMobileViewAttributesViewController()
+    }
+
+    func mobileViewIgnoredAction() {
+        coordinator?.showMobileViewIgnoredViewController()
     }
 
     func makeButton(title: String) -> UIButton {

@@ -27,6 +27,7 @@
 #import "NRMATaskQueue.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMAMethodProfiler.h"
+#import "NRMAMobileViewTracker.h"
 #import "NRMACPUVitals.h"
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAExceptionMetaDataStore.h"
@@ -336,6 +337,12 @@ static NewRelicAgentInternal* _sharedInstance;
 
     if ([NRMAFlags shouldEnableInteractionTracing]) {
         [[NRMAMethodProfiler sharedInstance] startMethodReplacement];
+    }
+
+    if ([NRMAFlags shouldEnableMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] start];
+#endif
     }
 
     if ([NRMAFlags shouldEnableCrashReporting]) {
