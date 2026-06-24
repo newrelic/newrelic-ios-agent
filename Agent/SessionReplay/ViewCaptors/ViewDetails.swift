@@ -185,7 +185,8 @@ struct ViewDetails {
           maskAllImages: Bool?,
           maskAllUserTouches: Bool?,
           blockView: Bool?,
-          sessionReplayIdentifier: String?) {
+          sessionReplayIdentifier: String?,
+          isDefaultMaskingMode: Bool = ViewDetails.currentMaskingModeIsDefault()) {
         
         let visibleFrame = frame.intersection(clip)
         
@@ -211,23 +212,49 @@ struct ViewDetails {
 
         self.parentId = parentId
         
-        self.maskApplicationText = maskApplicationText
-        self.maskUserInputText = maskUserInputText
-        self.maskAllImages = maskAllImages
-        self.maskAllUserTouches = maskAllUserTouches
+        // Under the Default masking strategy the agent masks everything and per-view
+        // UNMASK overrides are not honored — "even if you accidentally add unmasking
+        // code, the default strategy will always mask everything." Overrides that
+        // *increase* masking (a `true` value, or blockView) are still applied. This
+        // mirrors the Default-mode guard in checkIsMasked() so the SwiftUI
+        // NRConditionalMaskView path enforces the same contract as the UIKit path.
+        self.maskApplicationText = ViewDetails.honoringDefaultStrategy(maskApplicationText, isDefaultMode: isDefaultMaskingMode)
+        self.maskUserInputText = ViewDetails.honoringDefaultStrategy(maskUserInputText, isDefaultMode: isDefaultMaskingMode)
+        self.maskAllImages = ViewDetails.honoringDefaultStrategy(maskAllImages, isDefaultMode: isDefaultMaskingMode)
+        self.maskAllUserTouches = ViewDetails.honoringDefaultStrategy(maskAllUserTouches, isDefaultMode: isDefaultMaskingMode)
         self.blockView = blockView
 
         if let sessionReplayIdentifier = sessionReplayIdentifier {
             guard let agent = NewRelicAgentInternal.sharedInstance() else { return }
-            // Check for accessibility identifier in the unmasking list
-            if agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
+            // Identifier-based UNMASK overrides are ignored under the Default strategy.
+            if !isDefaultMaskingMode, agent.isAccessibilityIdentifierUnmasked(sessionReplayIdentifier) {
                 self.isMasked = false
             }
-            // Check for accessibility identifier in the masking list
+            // Identifier-based MASK overrides are always honored (they only add masking).
             if agent.isAccessibilityIdentifierMasked(sessionReplayIdentifier) {
                 self.isMasked = true
             }
         }
+    }
+
+    // True when the active session replay masking strategy is "Default". Under the
+    // Default strategy the agent masks everything and per-view unmask overrides are
+    // not honored. Returns false when no harvest configuration is available yet.
+    static func currentMaskingModeIsDefault() -> Bool {
+        guard let mode = NRMAHarvestController.configuration()?.session_replay_mode else {
+            return false
+        }
+        return (mode as SessionReplayMaskingMode) == SessionReplayMaskingMode.default
+    }
+
+    // Applies the Default-strategy guard to a per-view masking override. Under the
+    // Default strategy an UNMASK override (`false`) is dropped so the global default
+    // governs; overrides that increase masking (`true`) are left untouched.
+    static func honoringDefaultStrategy(_ override: Bool?, isDefaultMode: Bool) -> Bool? {
+        if isDefaultMode && override == false {
+            return nil
+        }
+        return override
     }
 
     
