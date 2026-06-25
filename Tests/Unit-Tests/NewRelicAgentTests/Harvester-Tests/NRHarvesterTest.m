@@ -55,6 +55,19 @@
 }
 @end
 
+// Bounded, run-loop-pumping wait used in place of empty `while (state == X) {};` spin loops.
+// A busy spin on the test (main) thread starves the main queue, so if a harvester state
+// transition is dispatched asynchronously (e.g. the 429/rate-limit backoff path) it can
+// never run and the test hangs forever. Pumping the run loop lets queued work execute, and
+// the deadline guarantees we fail fast instead of freezing the whole suite.
+static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger fromState) {
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:10.0];
+    while ((NSInteger)harvester.currentState == fromState && [deadline timeIntervalSinceNow] > 0) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode
+                                 beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
+}
+
 @implementation NRMAHarvesterTest
 
 - (void) setUp
@@ -274,12 +287,12 @@
     XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
     [harvester execute];
 
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
     
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
     [harvester execute];
 
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 
     //at this point there should be stored data
@@ -473,12 +486,12 @@
 //    XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
 //    [harvester execute];
 //
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+//    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
 //
 //    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
 //    [harvester execute];
 //
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+//    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
 //    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 //
 //    //at this point there should be stored data
@@ -589,13 +602,13 @@
     //uninitialized -> disconnected
     [harvester execute];
     
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
 
     //Disconnected -> connected
     [harvester execute];
 
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 }
 
@@ -608,12 +621,12 @@
    [harvester execute];
 
 
-   while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+   NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
 
    [harvester execute];
 
-   while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+   NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISABLED, @"expected disabled");
 }
 

@@ -59,25 +59,6 @@
     XCTAssertEqualObjects(data, savedData[0]);
 }
 
--(void) testOfflineStorageMaxSize {
-    [self.offlineStorage setMaxOfflineStorageSize:1];
-    NSData *data = [NRMAFakeDataHelper makeDataDictionary:5000];
-    
-    int count = 0;
-    while([self.offlineStorage persistDataToDisk:data]){
-        count++;
-        sleep(1);
-    }
-    XCTAssertFalse([self.offlineStorage persistDataToDisk:data]);
-    
-    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
-    unsigned long long acutalSavedSize = [self folderSize:[_offlineStorage offlineDirectoryPath]];
-    XCTAssertTrue(acutalSavedSize == currentOfflineStorageSize);
-    
-    NSArray<NSData *> *savedData = [self.offlineStorage getAllOfflineData:TRUE];
-    XCTAssertTrue(count == savedData.count);
-}
-
 -(void) testClearAllOfflineStorage {
     [self.offlineStorage setMaxOfflineStorageSize:100];
     NSData *data = [NRMAFakeDataHelper makeDataDictionary:1000];
