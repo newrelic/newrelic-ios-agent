@@ -67,11 +67,22 @@ namespace NewRelic {
     }
 
     bool AnalyticEvent::insertAttribute(std::shared_ptr<AttributeBase> attribute) {
-        auto mappedObj = (_attributes[attribute->getName()] = attribute);
+        const std::string& name = attribute->getName();
+
+        // An empty name serializes as two consecutive '\t' delimiters, which
+        // puts the deserializer's per-attribute loop into the failbit-only
+        // state that spins on the CPU. AttributeBase already escapes raw
+        // delimiter characters in names (see AttributeBase.cxx), so emptiness
+        // is the only remaining write-side hazard.
+        if (name.empty()) {
+            throw std::invalid_argument("Invalid attribute name: empty.");
+        }
+
+        auto mappedObj = (_attributes[name] = attribute);
         // map operator[] returns the object inserted, or the object that prevented the insertion
         // we can validate with this information.
         if (&(*mappedObj) != &(*attribute)) {
-            const std::string error = std::string(std::string("Inserted duplicate attribute: { \"") + attribute->getName() + std::string("\" } into event."));
+            const std::string error = std::string(std::string("Inserted duplicate attribute: { \"") + name + std::string("\" } into event."));
             throw std::invalid_argument(error);
         }
 

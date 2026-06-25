@@ -27,6 +27,14 @@
 @interface NRMAWKNavigationDelegateWithOldDelegateFunction : NSObject <WKNavigationDelegate>
 @end
 
+// Implements the optional webViewWebContentProcessDidTerminate: callback. Used to
+// reproduce the crash that occurs when WebKit caches respondsToSelector: == YES while
+// this delegate is alive, the delegate is then deallocated (the proxy holds it weakly),
+// and WebKit later fires the cached callback against the orphaned proxy.
+@interface NRMAWKNavigationDelegateWithTerminateFunction : NSObject <WKNavigationDelegate>
+@property(nonatomic) BOOL didTerminateCalled;
+@end
+
 @interface NRWKNavigationDelegateBase ()
 - (instancetype) initWithOriginalDelegate:(NSObject<WKNavigationDelegate>* __nullable __weak)delegate;
 + (NSURL*) navigationURL:(WKNavigation*) nav;
@@ -212,6 +220,41 @@
     XCTAssertEqual(testResponse.receivedPolicy, WKNavigationResponsePolicyAllow);
 }
 
+// Reproduces NR-414430 / the 7.7.0 crash:
+// "-[NRMAWKWebViewNavigationDelegate webViewWebContentProcessDidTerminate:]: unrecognized selector".
+// WebKit caches respondsToSelector: == YES while the real delegate is alive, the real
+// delegate is later deallocated (the proxy holds it weakly), and WebKit fires the cached
+// callback against the orphaned proxy. The proxy must absorb the message, not crash.
+- (void) testWebContentProcessDidTerminateAfterRealDelegateDeallocated {
+    NRMAWKWebViewNavigationDelegate* proxy;
+    @autoreleasepool {
+        NRMAWKNavigationDelegateWithTerminateFunction* realDelegate = [[NRMAWKNavigationDelegateWithTerminateFunction alloc] init];
+        proxy = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:realDelegate];
+        // WebKit caches this == YES at delegate-assignment time, while realDelegate is alive.
+        XCTAssertTrue([proxy respondsToSelector:@selector(webViewWebContentProcessDidTerminate:)]);
+        realDelegate = nil;
+    }
+
+    // The weak realDelegate has now been zeroed by the deallocation above.
+    XCTAssertNil(proxy.realDelegate);
+
+    // WebKit fires the cached callback. With the bug this throws an unrecognized-selector
+    // NSInvalidArgumentException via the message-forwarding fall-through.
+    id<WKNavigationDelegate> nav = (id<WKNavigationDelegate>)proxy;
+    XCTAssertNoThrow([nav webViewWebContentProcessDidTerminate:self.webView]);
+}
+
+// Guards the happy path: while the real delegate is alive, an optional callback that only
+// the real delegate implements must still be forwarded to it.
+- (void) testWebContentProcessDidTerminateForwardsToLiveDelegate {
+    NRMAWKNavigationDelegateWithTerminateFunction* realDelegate = [[NRMAWKNavigationDelegateWithTerminateFunction alloc] init];
+    NRMAWKWebViewNavigationDelegate* proxy = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:realDelegate];
+
+    id<WKNavigationDelegate> nav = (id<WKNavigationDelegate>)proxy;
+    XCTAssertNoThrow([nav webViewWebContentProcessDidTerminate:self.webView]);
+    XCTAssertTrue(realDelegate.didTerminateCalled);
+}
+
 - (void)testWebViewLoadTimeMetric {
     [self startWebKitLoad];
     
@@ -323,6 +366,15 @@
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
     decisionHandler(WKNavigationActionPolicyCancel);
+}
+
+@end
+
+@implementation NRMAWKNavigationDelegateWithTerminateFunction
+#pragma mark Delegate Functions
+
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
+    self.didTerminateCalled = YES;
 }
 
 @end
