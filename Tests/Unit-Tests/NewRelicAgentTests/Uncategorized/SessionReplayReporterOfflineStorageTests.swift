@@ -225,6 +225,157 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
     }
 }
 
+// MARK: - TTL + LRU Eviction Tests
+
+// Mirrors the Android agent's OfflineStorageTest TTL/LRU coverage (NR-577137 / PR #574).
+// Stale offline payloads (older than the TTL) must be deleted instead of re-uploaded forever,
+// and the size cap must evict the oldest payloads rather than dropping current data.
+class NRMAOfflineStorageTTLTests: XCTestCase {
+
+    let sizeKey = "com.newrelic.offlineStorageCurrentSize"
+    var storage: NRMAOfflineStorage!
+
+    override func setUp() {
+        super.setUp()
+        // Unique endpoint per test run avoids cross-test file collisions.
+        let endpoint = "ttl_test_\(Int(Date().timeIntervalSince1970 * 1000))"
+        storage = NRMAOfflineStorage(endpoint: endpoint)
+        _ = storage.clearAllOfflineFiles()
+        UserDefaults.standard.set(0, forKey: sizeKey)
+        UserDefaults.standard.synchronize()
+        NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
+    }
+
+    override func tearDown() {
+        _ = storage.clearAllOfflineFiles()
+        UserDefaults.standard.set(0, forKey: sizeKey)
+        UserDefaults.standard.synchronize()
+        // TTL is a process-wide setting; restore the default so other tests aren't affected.
+        NRMAOfflineStorage.setOfflineStorageTTL(NRMAOfflineStorage.defaultOfflineStorageTTL())
+        storage = nil
+        super.tearDown()
+    }
+
+    // MARK: Helpers
+
+    // Files use second-resolution timestamps (yyyy-MM-dd-HH-mm-ss). Wait for a new second
+    // so consecutive persists produce distinct files instead of overwriting each other.
+    private func waitForNewSecond() {
+        let startSecond = Calendar.current.component(.second, from: Date())
+        while Calendar.current.component(.second, from: Date()) == startSecond {
+            usleep(50_000)
+        }
+        usleep(50_000)
+    }
+
+    // Returns this endpoint's offline files sorted oldest-modified first.
+    private func offlineFilesSortedByDate() -> [String] {
+        guard let dir = storage.offlineDirectoryPath() else { return [] }
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? []
+        let paths = names.map { "\(dir)/\($0)" }
+        return paths.sorted { lhs, rhs in
+            let a = modificationDate(ofPath: lhs)
+            let b = modificationDate(ofPath: rhs)
+            return a < b
+        }
+    }
+
+    private func modificationDate(ofPath path: String) -> Date {
+        let attrs = try? FileManager.default.attributesOfItem(atPath: path)
+        return (attrs?[.modificationDate] as? Date) ?? .distantPast
+    }
+
+    private func backdateFile(atPath path: String, byDays days: Double) {
+        let oldDate = Date().addingTimeInterval(-days * 24 * 60 * 60)
+        try? FileManager.default.setAttributes([.modificationDate: oldDate], ofItemAtPath: path)
+    }
+
+    // MARK: TTL configuration
+
+    func testDefaultTTLIsSevenDays() {
+        XCTAssertEqual(NRMAOfflineStorage.defaultOfflineStorageTTL(), 7 * 24 * 60 * 60,
+                       "Default TTL should be 7 days in seconds")
+        XCTAssertEqual(NRMAOfflineStorage.offlineStorageTTL(), NRMAOfflineStorage.defaultOfflineStorageTTL(),
+                       "TTL should default to defaultOfflineStorageTTL")
+    }
+
+    func testSetGetTTL() {
+        let customTTL: TimeInterval = 14 * 24 * 60 * 60
+        NRMAOfflineStorage.setOfflineStorageTTL(customTTL)
+        XCTAssertEqual(NRMAOfflineStorage.offlineStorageTTL(), customTTL)
+    }
+
+    // MARK: TTL expiry on read
+
+    func testExpiredFilesAreDeletedOnRead() {
+        let data = "{\"expired\":\"data\"}".data(using: .utf8)!
+        XCTAssertTrue(storage.persistData(toDisk: data))
+
+        let files = offlineFilesSortedByDate()
+        XCTAssertEqual(files.count, 1)
+        backdateFile(atPath: files[0], byDays: 8) // past the 7-day TTL
+
+        let result = storage.getAllOfflineData(false)
+        XCTAssertEqual(result?.count, 0, "Expired payloads should not be returned for upload")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: files[0]),
+                       "Expired file should be deleted from disk")
+    }
+
+    func testNonExpiredFilesAreReturned() {
+        let data = "{\"fresh\":\"data\"}".data(using: .utf8)!
+        XCTAssertTrue(storage.persistData(toDisk: data))
+
+        let result = storage.getAllOfflineData(false)
+        XCTAssertEqual(result?.count, 1, "Fresh payloads should be returned for upload")
+    }
+
+    func testMixedExpiredAndValidFiles() {
+        XCTAssertTrue(storage.persistData(toDisk: "{\"expired\":\"data\"}".data(using: .utf8)!))
+        waitForNewSecond()
+        XCTAssertTrue(storage.persistData(toDisk: "{\"fresh\":\"data\"}".data(using: .utf8)!))
+
+        let files = offlineFilesSortedByDate()
+        XCTAssertEqual(files.count, 2)
+        backdateFile(atPath: files[0], byDays: 8) // expire the oldest
+
+        let result = storage.getAllOfflineData(false)
+        XCTAssertEqual(result?.count, 1, "Only the fresh payload should be returned")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: files[0]), "Expired file should be deleted")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: files[1]), "Fresh file should be retained")
+    }
+
+    // MARK: LRU eviction on persist
+
+    func testLruEvictionEvictsOldestFile() {
+        // Cap of 1 MB. Each ~400KB payload: two fit, the third triggers eviction of the oldest.
+        storage.setMaxOfflineStorageSize(1)
+        let payload = String(repeating: "x", count: 400_000).data(using: .utf8)!
+
+        XCTAssertTrue(storage.persistData(toDisk: payload))
+        waitForNewSecond()
+        XCTAssertTrue(storage.persistData(toDisk: payload))
+
+        let filesBefore = offlineFilesSortedByDate()
+        XCTAssertEqual(filesBefore.count, 2)
+        let oldest = filesBefore[0]
+
+        waitForNewSecond()
+        XCTAssertTrue(storage.persistData(toDisk: payload),
+                      "New payload should be saved after evicting the oldest")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: oldest),
+                       "Oldest file should have been evicted")
+    }
+
+    func testPersistReturnsFalseWhenEvictionCannotFreeEnoughSpace() {
+        // A single payload larger than the entire cap — eviction can never make room.
+        storage.setMaxOfflineStorageSize(1) // 1 MB
+        let payload = String(repeating: "x", count: 1_500_000).data(using: .utf8)!
+
+        XCTAssertFalse(storage.persistData(toDisk: payload),
+                       "Should return false when the payload exceeds the cap and eviction can't help")
+    }
+}
+
 // MARK: - Mock Classes
 
 class MockNRMAOfflineStorage: NRMAOfflineStorage {
