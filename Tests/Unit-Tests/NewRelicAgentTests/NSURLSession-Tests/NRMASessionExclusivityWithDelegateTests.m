@@ -12,19 +12,11 @@
 #import "NRMANetworkFacade.h"
 #import "NRMAURLSessionOverride.h"
 #import "NewRelicAgentInternal.h"
-#import "NRMAAppToken.h"
-#import "NRMAHarvestController.h"
-#import "NRMAFlags.h"
-#import "NRTestConstants.h"
 @interface NRMASessionExclusivityWithDelegateTests : XCTestCase <NSURLSessionDelegate,NSURLSessionDataDelegate,NSURLSessionTaskDelegate>
 @property(strong) id mockSession;
 @property(strong) id mockNetwork;
 @property(strong) NSOperationQueue* queue;
 @property(nonatomic) BOOL networkFinished;
-// Set when the agent's instrumentation captures the request via either the
-// success path (noticeNetworkRequest) or the failure path (noticeNetworkFailure),
-// as opposed to the test simply timing out.
-@property(nonatomic) BOOL didCaptureRequest;
 @end
 
 @implementation NRMASessionExclusivityWithDelegateTests
@@ -37,14 +29,12 @@
     NSURLSession* session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:self.queue];
     self.mockSession = [OCMockObject partialMockForObject:session];
     self.networkFinished = NO;
-    self.didCaptureRequest = NO;
     self.mockNetwork = [OCMockObject mockForClass:[NRMANetworkFacade class]];
     [[[[[self.mockNetwork expect] ignoringNonObjectArgs] classMethod] andDo:^(NSInvocation* invoke) {
         if (self.networkFinished == YES) {
             XCTFail(@"called notice network request too many times!");
         }
         self.networkFinished = YES;
-        self.didCaptureRequest = YES;
     }] noticeNetworkRequest:OCMOCK_ANY
      response:OCMOCK_ANY
      withTimer:OCMOCK_ANY
@@ -81,22 +71,6 @@
     [[self.mockSession reject] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
-
-    // Distributed-trace headers are only injected when the connectivity layer has a
-    // valid account/application id (Connectivity::Facade::startTrip() returns nil
-    // otherwise). That global state is normally established by agent startup in other
-    // tests, which made this test order-dependent. Configure it here so the test is
-    // self-contained.
-    [NRMAFlags enableFeatures:NRFeatureFlag_DistributedTracing];
-    NRMAAgentConfiguration *config = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
-                                                                     collectorAddress:KNRMA_TEST_COLLECTOR_HOST
-                                                                         crashAddress:nil];
-    [NRMAHarvestController initialize:config];
-    NRMAHarvesterConfiguration* harvesterConfig = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
-    [harvesterConfig setTrusted_account_key:@"777"];
-    harvesterConfig.account_id = 1234567;
-    harvesterConfig.application_id = 1234567;
-    [[[NRMAHarvestController harvestController] harvester] configureHarvester:harvesterConfig];
 
     NSURLRequest *urlRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://www.google.com"]];
     NSURLSessionDataTask* task = [self.mockSession dataTaskWithRequest:urlRequest];
@@ -238,16 +212,6 @@
     [[[self.mockSession reject] andForwardToRealObject] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[[self.mockSession reject] andForwardToRealObject] uploadTaskWithStreamedRequest:OCMOCK_ANY];
 
-    // The request below hits a live endpoint, so depending on network conditions it may
-    // either succeed (noticeNetworkRequest) or fail (e.g. a TLS/connection error ->
-    // noticeNetworkFailure). Either way the agent's delegate instrumentation should
-    // capture it, so accept the failure path too instead of only the success path.
-    [[[[self.mockNetwork stub] classMethod] andDo:^(NSInvocation* invoke) {
-        self.networkFinished = YES;
-        self.didCaptureRequest = YES;
-    }] noticeNetworkFailure:OCMOCK_ANY
-     withTimer:OCMOCK_ANY
-     withError:OCMOCK_ANY];
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://api.imgur.com/3/image"]];
     [request addValue:@"Client-ID 3e81eb4ece83db7" forHTTPHeaderField:@"Authorization"];
@@ -266,7 +230,7 @@
     });
 
     while (CFRunLoopGetCurrent() && !self.networkFinished) {}
-    XCTAssertTrue(self.didCaptureRequest, @"did not capture network data via the success or failure path");
+    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
 }
 
 - (void) testUploadTaskWithRequestFromDataCompletionHandler {
@@ -280,17 +244,6 @@
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
-
-    // The request below hits a live endpoint, so depending on network conditions it may
-    // either succeed (noticeNetworkRequest) or fail (e.g. a TLS/connection error ->
-    // noticeNetworkFailure). Either way the agent's instrumentation should capture it,
-    // so accept the failure path too instead of only the success path.
-    [[[[self.mockNetwork stub] classMethod] andDo:^(NSInvocation* invoke) {
-        self.networkFinished = YES;
-        self.didCaptureRequest = YES;
-    }] noticeNetworkFailure:OCMOCK_ANY
-     withTimer:OCMOCK_ANY
-     withError:OCMOCK_ANY];
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://api.imgur.com/3/image"]];
 
@@ -315,7 +268,7 @@
     });
 
     while (CFRunLoopGetCurrent() && !self.networkFinished) {}
-    XCTAssertTrue(self.didCaptureRequest, @"did not capture network data via the success or failure path");
+    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
 }
 - (void) testUploadTaskWithRequestFromFile {
 
@@ -329,17 +282,6 @@
     [[[self.mockSession expect] andForwardToRealObject] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
-
-    // The request below hits a live endpoint, so depending on network conditions it may
-    // either succeed (noticeNetworkRequest) or fail (e.g. a TLS/connection error ->
-    // noticeNetworkFailure). Either way the agent's instrumentation should capture it,
-    // so accept the failure path too instead of only the success path.
-    [[[[self.mockNetwork stub] classMethod] andDo:^(NSInvocation* invoke) {
-        self.networkFinished = YES;
-        self.didCaptureRequest = YES;
-    }] noticeNetworkFailure:OCMOCK_ANY
-     withTimer:OCMOCK_ANY
-     withError:OCMOCK_ANY];
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://api.imgur.com/3/image"]];
 
@@ -360,7 +302,7 @@
     });
 
     while (CFRunLoopGetCurrent() && !self.networkFinished) {}
-    XCTAssertTrue(self.didCaptureRequest, @"did not capture network data via the success or failure path");
+    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
 }
 
 
@@ -376,17 +318,6 @@
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY];
     [[[self.mockSession expect] andForwardToRealObject] uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[self.mockSession reject]  uploadTaskWithStreamedRequest:OCMOCK_ANY];
-
-    // The request below hits a live endpoint, so depending on network conditions it may
-    // either succeed (noticeNetworkRequest) or fail (e.g. a TLS/connection error ->
-    // noticeNetworkFailure). Either way the agent's instrumentation should capture it,
-    // so accept the failure path too instead of only the success path.
-    [[[[self.mockNetwork stub] classMethod] andDo:^(NSInvocation* invoke) {
-        self.networkFinished = YES;
-        self.didCaptureRequest = YES;
-    }] noticeNetworkFailure:OCMOCK_ANY
-     withTimer:OCMOCK_ANY
-     withError:OCMOCK_ANY];
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://api.imgur.com/3/image"]];
 
@@ -408,7 +339,7 @@
     });
 
     while (CFRunLoopGetCurrent() && !self.networkFinished) {}
-    XCTAssertTrue(self.didCaptureRequest, @"did not capture network data via the success or failure path");
+    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
 }
 
 - (void) testUploadTaskWithStreamedRequest {
@@ -424,16 +355,6 @@
     [[self.mockSession reject]  uploadTaskWithRequest:OCMOCK_ANY fromFile:OCMOCK_ANY completionHandler:OCMOCK_ANY];
     [[[self.mockSession expect] andForwardToRealObject] uploadTaskWithStreamedRequest:OCMOCK_ANY];
 
-    // The request below hits a live endpoint, so depending on network conditions it may
-    // either succeed (noticeNetworkRequest) or fail (e.g. a TLS/connection error ->
-    // noticeNetworkFailure). Either way the agent's instrumentation should capture it,
-    // so accept the failure path too instead of only the success path.
-    [[[[self.mockNetwork stub] classMethod] andDo:^(NSInvocation* invoke) {
-        self.networkFinished = YES;
-        self.didCaptureRequest = YES;
-    }] noticeNetworkFailure:OCMOCK_ANY
-     withTimer:OCMOCK_ANY
-     withError:OCMOCK_ANY];
 
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://api.imgur.com/3/image"]];
 
@@ -451,7 +372,7 @@
     });
 
     while (CFRunLoopGetCurrent() && !self.networkFinished) {}
-    XCTAssertTrue(self.didCaptureRequest, @"did not capture network data via the success or failure path");
+    XCTAssertNoThrow([self.mockNetwork verify], @"did not capture network data");
 }
 
 /* Sent as the last message related to a specific task.  Error may be
