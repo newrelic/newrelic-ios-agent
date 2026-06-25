@@ -82,6 +82,8 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
         _ = NRMAOfflineStorage.clearAllOfflineDirectories()
         UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
         UserDefaults.standard.synchronize()
+        // Disable the offline-storage flag so it doesn't leak into subsequent test classes.
+        NewRelic.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
         super.tearDown()
     }
 
@@ -252,6 +254,9 @@ class NRMAOfflineStorageTTLTests: XCTestCase {
         UserDefaults.standard.synchronize()
         // TTL is a process-wide setting; restore the default so other tests aren't affected.
         NRMAOfflineStorage.setOfflineStorageTTL(NRMAOfflineStorage.defaultOfflineStorageTTL())
+        // Don't leak the offline-storage feature flag into later test classes — a stuck-on
+        // flag pushes the agent down the async offline/backoff path and can hang other tests.
+        NewRelic.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
         storage = nil
         super.tearDown()
     }
