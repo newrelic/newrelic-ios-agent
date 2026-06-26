@@ -176,10 +176,11 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception];
     
-    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordHandledException:(NSException*)exception
@@ -189,11 +190,11 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
-                                                                                    attributes:attributes];
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
+                                                                                    attributes:attributes];
 }
 
 + (void)recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
@@ -202,24 +203,23 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-
-    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
 }
 
 + (void) recordError:(NSError* _Nonnull)error {
-
+    
     // If Agent is shutdown we shouldn't respond.
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-
-    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
-                                                                         attributes:nil];
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
+    
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
+                                                                         attributes:nil];
 }
 
 + (void) recordError:(NSError* _Nonnull)error
@@ -229,11 +229,11 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:attributes];
-    
-    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) setPlatform:(NRMAApplicationPlatform)platform {

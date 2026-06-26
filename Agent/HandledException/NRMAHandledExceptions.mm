@@ -150,25 +150,9 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) onHarvest {
-    if([NRMAFlags shouldEnableOfflineStorage]) {
-        NRMAReachability* r = [NewRelicInternalUtils reachability];
-        @synchronized(r) {
-#if TARGET_OS_WATCH
-            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
-#else
-            NRMANetworkStatus status = [r currentReachabilityStatus];
-#endif
-            if (status != NotReachable) {
-                [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
-                _controller->resetKeyContext();
-                _publisher->retry();
-            }
-        }
-    } else {
-        _controller->publish();
-        _store->clear();
-        _publisher->retry();
-    }
+    _controller->publish();
+    _store->clear();
+    _publisher->retry();
 }
 
 - (fbs::Platform) fbsPlatformFromString:(NSString*)platform {

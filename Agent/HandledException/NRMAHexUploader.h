@@ -27,6 +27,13 @@
 
 - (instancetype) initWithHost:(NSString*)host;
 
+// Process-wide shared uploader. A background NSURLSession allows only one session per
+// identifier per process and the identifier must be stable across launches, so the uploader
+// (which owns that session) must be a singleton. Refreshes host/token/version on reuse.
++ (instancetype) sharedUploaderWithHost:(NSString*)host
+                       applicationToken:(NSString*)applicationToken
+                     applicationVersion:(NSString*)applicationVersion;
+
 - (void) sendData:(NSData*)data;
 
 - (void) retryFailedTasks;
