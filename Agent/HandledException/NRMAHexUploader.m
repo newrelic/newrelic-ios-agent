@@ -13,9 +13,6 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRConstants.h"
 #import "NewRelicInternalUtils.h"
-#import "NRMAReachability.h"
-#import "NRMAOfflineStorage.h"
-#import "NRMAFlags.h"
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
 
@@ -50,12 +47,6 @@ static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
 // is the parallel store that lets handledErroredRequest: rebuild the upload
 // with the original payload. Guarded by @synchronized(_payloadByRequest).
 @property(strong) NSMutableDictionary<NSURLRequest*, NSData*>* payloadByRequest;
-
-// Disk-backed retry for uploads that fail because the device is offline (or hit a
-// persist-worthy network error). Mirrors SessionReplayReporter / NRMAHarvesterConnection:
-// persist the payload on a network-error failure, then drain + re-send on a later
-// successful upload. Only used when [NRMAFlags shouldEnableOfflineStorage] is on.
-@property(strong) NRMAOfflineStorage* offlineStorage;
 @end
 
 @implementation NRMAHexUploader
@@ -68,9 +59,6 @@ static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
         self.pendingPayloads = [NSMutableArray new];
         self.payloadByRequest = [NSMutableDictionary new];
         self.inFlightCount = 0;
-        // initWithEndpoint: seeds the cap from [NRMAAgentConfiguration getMaxOfflineStorageSize]
-        // (bytes); do not call setMaxOfflineStorageSize: (it expects MB and would re-scale).
-        self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"hex"];
 
         // Background session: once a task is resumed, the OS finishes the transfer
         // out-of-process even if the app is force-closed, and reports the result on the
@@ -256,33 +244,49 @@ didCompleteWithError:(nullable NSError*)error {
         [[NSFileManager defaultManager] removeItemAtPath:tempBodyPath error:nil];
     }
 
+    // Background sessions don't reliably invoke the data delegate for upload tasks, so the
+    // terminal decision is made here from the final HTTP status (an HTTP 4xx/5xx is not an
+    // NSError, so it can't be judged from `error` alone).
+    NSInteger statusCode = 0;
+    if ([task.response isKindOfClass:[NSHTTPURLResponse class]]) {
+        statusCode = ((NSHTTPURLResponse*)task.response).statusCode;
+    }
+
     if (error) {
-#if !TARGET_OS_WATCH
-        if (error.code == kCFURLErrorCancelled) {
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload cancelled: %@", error);
-        }
-        else {
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
-        }
-#endif
+        // Transport failure. The background session already waits for connectivity and retries
+        // within its resource window, so reaching here means the OS gave up on this task —
+        // try our own bounded retry, otherwise drop.
+        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
         [self handledErroredRequest:task.originalRequest error:error];
-    } else {
+    } else if (statusCode >= 200 && statusCode < 300) {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
-        if (task.originalRequest) {
-            @synchronized(self.payloadByRequest) {
-                [self.payloadByRequest removeObjectForKey:task.originalRequest];
-            }
-        }
-        [self.taskStore untrack:task.originalRequest];
-        // A successful upload means we're online — drain any reports we persisted while
-        // offline and re-send them.
-        [self sendOfflineStorage];
+        [self forgetRequest:task.originalRequest];
+        [NRMASupportMetricHelper enqueueDataUseMetric:@"f"
+                                                 size:(long)task.countOfBytesSent
+                                             received:(long)task.countOfBytesReceived];
+    } else if (statusCode >= 500) {
+        // Server error — retryable (bounded; gives up after the retry limit).
+        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - server error %ld uploading handled exception report", (long)statusCode);
+        [self handledErroredRequest:task.originalRequest error:nil];
+    } else {
+        // 4xx (or any other non-2xx, non-5xx): the request itself is bad — give up.
+        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - giving up on handled exception report (status %ld)", (long)statusCode);
+        [self forgetRequest:task.originalRequest];
     }
 
     @synchronized(self) {
         if (self.inFlightCount > 0) self.inFlightCount--;
     }
     [self drainPending];
+}
+
+// Drop a request's in-memory tracking on a terminal outcome (success or give-up).
+- (void) forgetRequest:(NSURLRequest*)request {
+    if (request == nil) return;
+    @synchronized(self.payloadByRequest) {
+        [self.payloadByRequest removeObjectForKey:request];
+    }
+    [self.taskStore untrack:request];
 }
 
 
@@ -292,46 +296,17 @@ didCompleteWithError:(nullable NSError*)error {
   completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
 
     NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", response);
-
-    if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
-        ((NSHTTPURLResponse*)response).statusCode >= 400) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
-        // An HTTP status is not a persist-worthy network error (checkErrorToPersist:nil is
-        // false), so this path never persists to offline storage.
-        [self handledErroredRequest:dataTask.originalRequest error:nil];
-    }
-    else {
-        // Enqueue Data Usage Supportability Metric for /f if request is successful.
-        [NRMASupportMetricHelper enqueueDataUseMetric:@"f"
-                                                 size:[[[dataTask originalRequest] HTTPBody] length]
-                                             received:response.expectedContentLength];
-    }
-
+    // Terminal handling and the data-use metric are done in didCompleteWithError: from
+    // task.response — background sessions don't reliably call this data delegate for upload
+    // tasks.
     completionHandler(NSURLSessionResponseAllow);
 }
 
+// A retryable failure (transport error or 5xx). Re-send via our own bounded retry tracker;
+// once exhausted, drop. The background session already waits for connectivity and retries
+// within its resource window, so there's no offline hand-off to a separate store.
 - (void) handledErroredRequest:(NSURLRequest*)request error:(NSError*)error {
     if (request == nil) return;
-
-    // If we're offline, don't burn FDs/sockets cycling failed retries —
-    // persist the payload to offline storage (when enabled) so it survives until
-    // connectivity returns, then drop the in-memory tracking.
-#if !TARGET_OS_WATCH
-    NRMAReachability* r = [NewRelicInternalUtils reachability];
-    BOOL offline = NO;
-    @synchronized(r) {
-        offline = ([r currentReachabilityStatus] == NotReachable);
-    }
-    if (offline) {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - offline, persisting report for later");
-        [self persistPayloadForRequestToOfflineStorage:request];
-        @synchronized(self.payloadByRequest) {
-            [self.payloadByRequest removeObjectForKey:request];
-        }
-        [self.taskStore untrack:request];
-        return;
-    }
-#endif
 
     if ([self.taskStore shouldRetryTask:request]) {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
@@ -341,70 +316,30 @@ didCompleteWithError:(nullable NSError*)error {
         }
         if (body == nil || body.length == 0) {
             NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry has no payload, abandoning report");
-            [self.taskStore untrack:request];
+            [self forgetRequest:request];
             return;
         }
         NSURLSessionUploadTask* uploadTask = [self uploadTaskForRequest:request data:body];
         if (uploadTask == nil) {
             NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry could not build upload, abandoning report");
-            [self.taskStore untrack:request];
+            [self forgetRequest:request];
             return;
         }
-        // The session may produce a fresh originalRequest copy on the new
-        // task — rekey the payload store so the next failure path can find
-        // the bytes again.
+        // The session may produce a fresh originalRequest copy on the new task — rekey the
+        // payload store (and drop the old key) so the next failure path can find the bytes.
         NSURLRequest* newKey = uploadTask.originalRequest;
         if (newKey && ![newKey isEqual:request]) {
             @synchronized(self.payloadByRequest) {
                 self.payloadByRequest[newKey] = body;
+                [self.payloadByRequest removeObjectForKey:request];
             }
         }
         @synchronized(self.retryQueue) {
             [self.retryQueue addObject:uploadTask];
         }
     } else {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
-        // Retries exhausted: if this was a persist-worthy network error (timeout,
-        // connection lost, etc.), keep the report in offline storage to retry later.
-        if ([NRMAOfflineStorage checkErrorToPersist:error]) {
-            [self persistPayloadForRequestToOfflineStorage:request];
-        }
-        @synchronized(self.payloadByRequest) {
-            [self.payloadByRequest removeObjectForKey:request];
-        }
-        [self.taskStore untrack:request];
-    }
-}
-
-// Persists the request's payload to offline storage when offline storage is enabled.
-- (void) persistPayloadForRequestToOfflineStorage:(NSURLRequest*)request {
-    if (![NRMAFlags shouldEnableOfflineStorage]) return;
-    NSData* body = nil;
-    @synchronized(self.payloadByRequest) {
-        body = self.payloadByRequest[request];
-    }
-    if (body.length == 0) return;
-    if ([self.offlineStorage persistDataToDisk:body]) {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - persisted handled exception report to offline storage");
-    }
-}
-
-// Drains offline storage and re-sends each persisted report. Called after a successful
-// upload (i.e. when we know we're online). Mirrors NRMAHarvesterConnection.
-- (void) sendOfflineStorage {
-    if (![NRMAFlags shouldEnableOfflineStorage]) {
-        [NRMAOfflineStorage clearAllOfflineDirectories];
-        return;
-    }
-    NSArray<NSData*>* offlineData = [self.offlineStorage getAllOfflineData:YES];
-    if (offlineData.count == 0) {
-        return;
-    }
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - re-sending %lu offline handled exception report(s)", (unsigned long)offlineData.count);
-    for (NSData* data in offlineData) {
-        // Re-enter the normal pipeline; a payload that fails again is re-persisted by
-        // the failure path above.
-        [self sendData:data];
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached, abandoning report.");
+        [self forgetRequest:request];
     }
 }
 
