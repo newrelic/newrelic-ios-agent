@@ -198,6 +198,11 @@ typedef NSString NRMetricUnit;
 #define kNRMAJSErrorMetricUploadThrottled   kNRMAJSError @"/UploadThrottled"
 #define kNRMAJSErrorMetricFailedUpload      kNRMAJSError @"/FailedUpload"
 
+// Permanent-rejection metrics (HTTP 400 / 403). The collector will never accept
+// the payload, so it is discarded rather than retried every cycle.
+#define kNRMACrashMetricRejected            kNRSupportabilityPrefix @"/Crash/Rejected"
+#define kNRMAHandledExceptionMetricRejected kNRSupportabilityPrefix @"/HandledException/Rejected"
+
 #define NRMAHandledRequestKey @"NRMAHandledRequest"
 
 // Network Failure Codes

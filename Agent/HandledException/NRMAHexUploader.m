@@ -212,8 +212,18 @@ didCompleteWithError:(nullable NSError*)error {
 
     if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
         ((NSHTTPURLResponse*)response).statusCode >= 400) {
+        NSInteger statusCode = ((NSHTTPURLResponse*)response).statusCode;
         NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
-        [self handledErroredRequest:dataTask.originalRequest];
+        if (statusCode == 400 || statusCode == 403) {
+            // Permanent rejection: the collector will never accept this payload.
+            // Discard it now instead of consuming retry attempts on a report that
+            // can never succeed.
+            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - handled exception report permanently rejected (HTTP %ld), discarding.", (long)statusCode);
+            [NRMASupportMetricHelper enqueueHandledExceptionRejectedMetric];
+            [self discardRequest:dataTask.originalRequest];
+        } else {
+            [self handledErroredRequest:dataTask.originalRequest];
+        }
     }
     else {
         // Enqueue Data Usage Supportability Metric for /f if request is successful.
@@ -223,6 +233,16 @@ didCompleteWithError:(nullable NSError*)error {
     }
 
     completionHandler(NSURLSessionResponseAllow);
+}
+
+// Drop a request and its buffered payload without retrying. Used for permanent
+// rejections (HTTP 400 / 403) where re-uploading would never succeed.
+- (void) discardRequest:(NSURLRequest*)request {
+    if (request == nil) return;
+    @synchronized(self.payloadByRequest) {
+        [self.payloadByRequest removeObjectForKey:request];
+    }
+    [self.taskStore untrack:request];
 }
 
 - (void) handledErroredRequest:(NSURLRequest*)request {

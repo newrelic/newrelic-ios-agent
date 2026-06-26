@@ -289,6 +289,25 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 
 // End JS Error
 
+// Permanent rejection (HTTP 400 / 403)
++ (void) enqueueCrashRejectedMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMACrashMetricRejected
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
++ (void) enqueueHandledExceptionRejectedMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAHandledExceptionMetricRejected
+                                                              value:@1
+                                                              scope:nil]];
+    }
+}
+
+// End permanent rejection
+
 // KMP Detection (Kotlin Multiplatform)
 + (void) enqueueKMMDetectionMetric {
     @synchronized (deferredMetrics) {
