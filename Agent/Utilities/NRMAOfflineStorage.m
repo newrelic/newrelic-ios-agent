@@ -23,14 +23,6 @@
 // Android agent's static offlineStorageTTL.
 static NSTimeInterval __NRMA__offlineStorageTTLSeconds = kNRMADefaultOfflineStorageTTLSeconds;
 
-// Default time-to-live for persisted offline payloads: 7 days, in seconds.
-// Aligned with the shortest applicable New Relic data-retention window (Session Replay ~8 days).
-#define kNRMADefaultOfflineStorageTTLSeconds (7 * 24 * 60 * 60)
-
-// Shared across all endpoints so the TTL can be configured globally, mirroring the
-// Android agent's static offlineStorageTTL.
-static NSTimeInterval __NRMA__offlineStorageTTLSeconds = kNRMADefaultOfflineStorageTTLSeconds;
-
 @implementation NRMAOfflineStorage {
     NSUInteger maxOfflineStorageSizeBytes;
     NSString* _name;
@@ -75,8 +67,7 @@ static NSTimeInterval __NRMA__offlineStorageTTLSeconds = kNRMADefaultOfflineStor
         NSError *error = nil;
         if (data) {
             if ([data writeToFile:[self newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {
-                [[NSUserDefaults standardUserDefaults] setInteger:newOfflineStorageSize forKey:kNRMAOfflineStorageCurrentSizeKey]; // If we successfully save the data save the new current total size
-                NRLOG_AGENT_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %ld", (long)newOfflineStorageSize);
+                NRLOG_AGENT_VERBOSE(@"Successfully persisted failed upload data to disk for offline storage. Current offline storage: %lu", (unsigned long)(currentOfflineStorageSize + data.length));
                 return YES;
             }
         }
@@ -104,7 +95,7 @@ static NSTimeInterval __NRMA__offlineStorageTTLSeconds = kNRMADefaultOfflineStor
             NSDate *modificationDate = attributes[NSFileModificationDate];
             if (modificationDate && [modificationDate compare:expiryDate] == NSOrderedAscending) {
                 NRLOG_AGENT_DEBUG(@"Deleting expired offline storage file: %@", filename);
-                [self removeOfflineFileAtPath:filePath size:[attributes[NSFileSize] unsignedIntegerValue]];
+                [self removeOfflineFileAtPath:filePath];
                 return;
             }
 
