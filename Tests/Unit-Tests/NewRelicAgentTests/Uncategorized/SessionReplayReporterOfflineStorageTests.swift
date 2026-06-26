@@ -38,8 +38,6 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
     // Helper to prepare storage with cleanup and filesystem sync
     func prepareStorage(_ storage: NRMAOfflineStorage) {
         _ = storage.clearAllOfflineFiles()
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
-        UserDefaults.standard.synchronize()
         // Delay to let file system settle after clearing - this is critical
         // for directory enumeration to return accurate results
         usleep(150000) // 0.15 seconds
@@ -56,11 +54,6 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
 
         // Aggressively clear all offline storage before each test
         _ = NRMAOfflineStorage.clearAllOfflineDirectories()
-
-        // Reset the global size counter AFTER clearing directories
-        // (clearAllOfflineDirectories also resets this, but do it again to be sure)
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
-        UserDefaults.standard.synchronize()
 
         // Create test data
         testData = "test session replay data".data(using: .utf8)!
@@ -80,8 +73,6 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
         reporter = nil
         mockOfflineStorage = nil
         _ = NRMAOfflineStorage.clearAllOfflineDirectories()
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
-        UserDefaults.standard.synchronize()
         // Disable the offline-storage flag so it doesn't leak into subsequent test classes.
         NewRelic.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
         super.tearDown()
