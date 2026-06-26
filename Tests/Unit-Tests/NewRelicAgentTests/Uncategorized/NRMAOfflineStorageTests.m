@@ -21,7 +21,6 @@
     [super setUp];
     self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"Test"];
     [self.offlineStorage clearAllOfflineFiles];
-    [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:@"com.newrelic.offlineStorageCurrentSize"];
 }
 
 -(void) tearDown {
@@ -48,9 +47,8 @@
     NSData *data = [NRMAFakeDataHelper makeDataDictionary:1000];
     
     XCTAssertTrue([self.offlineStorage persistDataToDisk:data]);
-    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
-    XCTAssertTrue(currentOfflineStorageSize == data.length);
-    
+
+    // Size is now derived from what's actually on disk rather than a cached counter.
     unsigned long long acutalSavedSize = [self folderSize:[_offlineStorage offlineDirectoryPath]];
     XCTAssertTrue(acutalSavedSize == data.length);
 

@@ -360,20 +360,16 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     [mockHarvester connected];
    
-    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
     XCTAssertTrue(offlineData.count > 0);
-    XCTAssertTrue(currentOfflineStorageSize > 0);
 
     mockNSURLSession = [self makeMockURLSession];
     newHarvester.connection.harvestSession = mockNSURLSession;
-    
+
     [mockHarvester connected];
-    
+
     offlineData = [newHarvester.connection getOfflineData];
-    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     XCTAssertTrue(offlineData.count == 0);
-    XCTAssertTrue(currentOfflineStorageSize == 0);
 
     [mockHarvester stopMocking];
     [connectionMock stopMocking];
@@ -417,20 +413,16 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
 
     [mockHarvester connected];
    
-    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
     XCTAssertTrue(offlineData.count == 0);
-    XCTAssertTrue(currentOfflineStorageSize == 0);
 
     mockNSURLSession = [self makeMockURLSession];
     newHarvester.connection.harvestSession = mockNSURLSession;
-    
+
     [mockHarvester connected];
-    
+
     offlineData = [newHarvester.connection getOfflineData];
-    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     XCTAssertTrue(offlineData.count == 0);
-    XCTAssertTrue(currentOfflineStorageSize == 0);
 
     [mockHarvester stopMocking];
     [connectionMock stopMocking];

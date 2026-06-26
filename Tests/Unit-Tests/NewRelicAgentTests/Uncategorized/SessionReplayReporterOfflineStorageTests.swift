@@ -38,8 +38,6 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
     // Helper to prepare storage with cleanup and filesystem sync
     func prepareStorage(_ storage: NRMAOfflineStorage) {
         _ = storage.clearAllOfflineFiles()
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
-        UserDefaults.standard.synchronize()
         // Delay to let file system settle after clearing - this is critical
         // for directory enumeration to return accurate results
         usleep(150000) // 0.15 seconds
@@ -56,11 +54,6 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
 
         // Aggressively clear all offline storage before each test
         _ = NRMAOfflineStorage.clearAllOfflineDirectories()
-
-        // Reset the global size counter AFTER clearing directories
-        // (clearAllOfflineDirectories also resets this, but do it again to be sure)
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
-        UserDefaults.standard.synchronize()
 
         // Create test data
         testData = "test session replay data".data(using: .utf8)!
@@ -80,8 +73,6 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
         reporter = nil
         mockOfflineStorage = nil
         _ = NRMAOfflineStorage.clearAllOfflineDirectories()
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
-        UserDefaults.standard.synchronize()
         // Disable the offline-storage flag so it doesn't leak into subsequent test classes.
         NewRelic.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
         super.tearDown()
@@ -234,7 +225,6 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
 // and the size cap must evict the oldest payloads rather than dropping current data.
 class NRMAOfflineStorageTTLTests: XCTestCase {
 
-    let sizeKey = "com.newrelic.offlineStorageCurrentSize"
     var storage: NRMAOfflineStorage!
 
     override func setUp() {
@@ -243,15 +233,11 @@ class NRMAOfflineStorageTTLTests: XCTestCase {
         let endpoint = "ttl_test_\(Int(Date().timeIntervalSince1970 * 1000))"
         storage = NRMAOfflineStorage(endpoint: endpoint)
         _ = storage.clearAllOfflineFiles()
-        UserDefaults.standard.set(0, forKey: sizeKey)
-        UserDefaults.standard.synchronize()
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
     }
 
     override func tearDown() {
         _ = storage.clearAllOfflineFiles()
-        UserDefaults.standard.set(0, forKey: sizeKey)
-        UserDefaults.standard.synchronize()
         // TTL is a process-wide setting; restore the default so other tests aren't affected.
         NRMAOfflineStorage.setOfflineStorageTTL(NRMAOfflineStorage.defaultOfflineStorageTTL())
         // Don't leak the offline-storage feature flag into later test classes — a stuck-on
@@ -331,11 +317,11 @@ class NRMAOfflineStorageTTLTests: XCTestCase {
     func testLruEvictionEvictsOldestFile() {
         // Cap of 1 MB. Two ~400KB files already fit; persisting a third triggers eviction
         // of the oldest. Files are seeded with explicit modification dates so ordering is
-        // deterministic, and the tracked size counter is set to match what they occupy.
+        // deterministic. The occupied size is read straight from disk, so no counter setup
+        // is needed — the two seeded files report 800KB on their own.
         storage.setMaxOfflineStorageSize(1) // 1 MB
         let oldest = writeOfflineFile(named: "oldest.txt", bytes: 400_000, daysOld: 2)
         let newer = writeOfflineFile(named: "newer.txt", bytes: 400_000, daysOld: 1)
-        UserDefaults.standard.set(800_000, forKey: sizeKey)
 
         let payload = Data(repeating: 0x78, count: 400_000)
         XCTAssertTrue(storage.persistData(toDisk: payload),
