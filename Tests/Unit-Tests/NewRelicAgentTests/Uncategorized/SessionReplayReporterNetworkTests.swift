@@ -22,7 +22,6 @@ class SessionReplayReporterNetworkTests: XCTestCase {
 
         // Clear offline storage
         _ = NRMAOfflineStorage.clearAllOfflineDirectories()
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
 
         // Enable offline storage
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
@@ -46,7 +45,6 @@ class SessionReplayReporterNetworkTests: XCTestCase {
         mockURLSession = nil
         _ = NRMAOfflineStorage.clearAllOfflineDirectories()
         NewRelic.disableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
-        UserDefaults.standard.set(0, forKey: "com.newrelic.offlineStorageCurrentSize")
         super.tearDown()
     }
 
