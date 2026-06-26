@@ -151,11 +151,18 @@ static NSTimeInterval __NRMA__offlineStorageTTLSeconds = kNRMADefaultOfflineStor
 }
 
 - (NSString*) newOfflineFilePath {
+    // Append millisecond precision and a UUID so rapid successive persists never collide.
+    // The replay loop in sendOfflineStorage re-persists every payload back-to-back while the
+    // device is still offline; with a second-resolution name those writes landed on the same
+    // path and silently overwrote each other, dropping all but the last buffered payload.
+    // Eviction and TTL order by file modification date, not by name, so the extra suffix is
+    // purely for uniqueness and doesn't affect ordering.
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss"];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd-HH-mm-ss-SSS"];
     NSString *date = [dateFormatter stringFromDate:[NSDate date]];
+    NSString *unique = [[NSUUID UUID] UUIDString];
 
-    return [NSString stringWithFormat:@"%@/%@%@",[self offlineDirectoryPath],date,@".txt"];
+    return [NSString stringWithFormat:@"%@/%@-%@%@",[self offlineDirectoryPath],date,unique,@".txt"];
 }
 
 - (void) setMaxOfflineStorageSize:(NSUInteger) megabytes {

@@ -250,11 +250,9 @@ class NRMAOfflineStorageTTLTests: XCTestCase {
     // MARK: Helpers
 
     // Writes a file straight into the offline directory with a controlled byte size and
-    // modification date. Production filenames are second-resolution, so persisting twice
-    // within the same second collides — and busy-waiting for the next wall-clock second
-    // hangs CI. Seeding files directly keeps every test deterministic and instant, while
-    // still exercising the real read/evict code paths (which key off file attributes, not
-    // filename format).
+    // modification date. Seeding files directly (rather than persisting and sleeping to age
+    // them) keeps every TTL/LRU test deterministic and instant, while still exercising the
+    // real read/evict code paths, which key off file attributes rather than the filename.
     @discardableResult
     private func writeOfflineFile(named name: String, bytes: Int, daysOld: Double) -> String {
         let dir = storage.offlineDirectoryPath() ?? ""
