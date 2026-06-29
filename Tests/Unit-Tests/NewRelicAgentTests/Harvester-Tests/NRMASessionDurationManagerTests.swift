@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import NewRelic
+import NewRelic
 
 class NRMASessionDurationManagerTests: XCTestCase {
 
