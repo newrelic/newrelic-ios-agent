@@ -17,8 +17,8 @@ static NRMAHarvestController* __harvestController;
 static NRMAAgentConfiguration* __agentConfiguration;
 
 static NSString* NRMAHarvestConfigAccessorLock = @"LOCK";
-static NSString* NRMAHarvestControllerInitializationLock = @"LOCK";
-static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
+static NSString* NRMAHarvestControllerInitializationLock = @"LOCK_INIT";
+static NSString* NRMAHarvestControllerAccessorLock = @"LOCK_ACCESS";
 
 @interface NRMAHarvestController()
 @property(strong, atomic) NSMutableArray* harvestAwareList;
