@@ -16,9 +16,20 @@ extern "C" {
 static NRMAHarvestController* __harvestController;
 static NRMAAgentConfiguration* __agentConfiguration;
 
-static NSString* NRMAHarvestConfigAccessorLock = @"LOCK";
-static NSString* NRMAHarvestControllerInitializationLock = @"LOCK_INIT";
-static NSString* NRMAHarvestControllerAccessorLock = @"LOCK_ACCESS";
+// Dedicated lock objects for the three independent critical sections below. These
+// must be distinct, private instances rather than NSString literals: identical
+// compile-time string literals are coalesced into a single shared object across the
+// entire binary, so a literal-based lock can silently collide with the same literal
+// used anywhere else (and previously all three shared one literal). They are created
+// once in +initialize, before any other message to this class can use them.
+//
+// Lock ordering invariant: the initialization lock is always the OUTERMOST lock.
+// Any method that needs both acquires NRMAHarvestControllerInitializationLock first,
+// then an accessor lock (or a controller-instance lock) — never the reverse. The
+// accessor locks are leaf locks and are never held across acquisition of another.
+static NSObject* NRMAHarvestConfigAccessorLock;
+static NSObject* NRMAHarvestControllerInitializationLock;
+static NSObject* NRMAHarvestControllerAccessorLock;
 
 @interface NRMAHarvestController()
 @property(strong, atomic) NSMutableArray* harvestAwareList;
@@ -27,6 +38,20 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK_ACCESS";
 @end
 
 @implementation NRMAHarvestController
+
+// Objective-C runtime class initializer. This is distinct from +initialize: below
+// (a different selector, the agent's harvest-controller setup entry point). The
+// runtime guarantees this runs exactly once, before the class receives any other
+// message, so the lock objects are always non-nil by the time a critical section
+// references them.
++ (void) initialize
+{
+    if (self == [NRMAHarvestController class]) {
+        NRMAHarvestConfigAccessorLock = [[NSObject alloc] init];
+        NRMAHarvestControllerInitializationLock = [[NSObject alloc] init];
+        NRMAHarvestControllerAccessorLock = [[NSObject alloc] init];
+    }
+}
 
 - (instancetype) init
 {
@@ -89,12 +114,19 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK_ACCESS";
 
 + (void) deinitialize
 {
-    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-    if (controller) {
-        [controller deinitialize];
+    // Serialize teardown on the initialization lock so it cannot interleave with
+    // +initialize: (which holds the same lock). +stop calls this while already
+    // holding the lock and @synchronized is recursive, so the reentrant acquire is
+    // safe; meanwhile +recovery's direct call now gets the same mutual exclusion
+    // against a concurrent +initialize: that the single shared lock used to provide.
+    @synchronized(NRMAHarvestControllerInitializationLock) {
+        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+        if (controller) {
+            [controller deinitialize];
+        }
+        [self setHarvestController:nil];
+        [self setAgentConfiguration:nil];
     }
-    [self setHarvestController:nil];
-    [self setAgentConfiguration:nil];
 }
 
 + (void) initialize:(NRMAAgentConfiguration*)configuration
