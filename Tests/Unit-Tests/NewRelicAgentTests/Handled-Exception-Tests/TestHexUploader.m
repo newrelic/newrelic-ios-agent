@@ -25,7 +25,8 @@
 @property(strong) NSURLSession* session;
 @property(strong) NSMutableArray* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;
-@property(strong) NSMutableDictionary<NSURLRequest*, NSData*>* payloadByRequest;
+// Values are NRMAHexPayload (private to NRMAHexUploader.m); accessed here via KVC.
+@property(strong) NSMutableDictionary* payloadByRequest;
 @end
 
 @interface TestHexUploader : NRMAAgentTestBase {
@@ -78,17 +79,33 @@
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
     [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
 
+    // A >= 400 response is recorded against the in-flight payload, but the
+    // terminal retry/abandon decision is made in didCompleteWithError so it
+    // happens exactly once per attempt. Register a payload + a task carrying a
+    // matching originalRequest so the flow can find it.
+    NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://localhost/f"]];
+    id payload = [NSClassFromString(@"NRMAHexPayload") new];
+    [payload setValue:[@"x" dataUsingEncoding:NSUTF8StringEncoding] forKey:@"data"];
+    @synchronized(self.hexUploader.payloadByRequest) {
+        self.hexUploader.payloadByRequest[request] = payload;
+    }
+
+    id mockTask = [OCMockObject niceMockForClass:[NSURLSessionDataTask class]];
+    [[[mockTask stub] andReturn:request] originalRequest];
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
-    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:nil
+    NSHTTPURLResponse* response = [[NSHTTPURLResponse alloc] initWithURL:request
                                                               statusCode:400
                                                              HTTPVersion:@"1.1"
                                                             headerFields:nil];
 
     [mockUploader URLSession:nil
-                    dataTask:nil
+                    dataTask:mockTask
           didReceiveResponse:response
            completionHandler:^(NSURLSessionResponseDisposition d){}];
+    // Completion of the task is where the recorded HTTP error is acted on.
+    [mockUploader URLSession:nil task:mockTask didCompleteWithError:nil];
 #pragma clang diagnostic pop
 
     XCTAssertNoThrow([mockUploader verify]);
@@ -223,7 +240,7 @@
     // has been launched and its payload recorded. The task may already have
     // failed under the simulator (no listener), but the dict entry persists
     // for the duration of any retry chain — so it must be present here.
-    NSDictionary<NSURLRequest*, NSData*>* snapshot = nil;
+    NSDictionary* snapshot = nil;
     @synchronized(self.hexUploader.payloadByRequest) {
         snapshot = [self.hexUploader.payloadByRequest copy];
     }
@@ -235,7 +252,9 @@
         // The request itself must NOT carry HTTPBody — that would trip the
         // iOS upload-task warning and strip the body.
         XCTAssertNil(key.HTTPBody, @"upload-task request must have no HTTPBody");
-        if (snapshot[key].length == data.length) {
+        // Values are NRMAHexPayload; the original bytes live on its `data` property.
+        NSData* trackedData = [snapshot[key] valueForKey:@"data"];
+        if (trackedData.length == data.length) {
             foundOriginalLength = YES;
         }
     }

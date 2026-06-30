@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include <mutex>
+#include <unordered_set>
 #include "Hex/HexStore.hpp"
 #include <Utilities/libLogger.hpp>
 #include <cstddef>
@@ -22,6 +24,25 @@
 #include "jserror_generated.h"
 
 namespace {
+    // Process-global set of report paths currently handed to a publisher whose upload
+    // has not yet resolved. It is intentionally NOT per-HexStore: the agent can create
+    // more than one NRMAHandledExceptions (hence more than one HexStore) over the SAME
+    // on-disk directory during startup (e.g. initial start + the foreground-transition
+    // session restart both run onSessionStart). A per-instance set would let each store
+    // read and upload the same .fbad file. Keying a single process-wide set by absolute
+    // file path guarantees each report is published at most once per process, regardless
+    // of how many HexStore instances exist. Function-local statics avoid static-init-order
+    // issues. The set is in-memory, so a fresh process starts empty and re-reads any file
+    // still on disk (the desired crash/termination recovery).
+    std::mutex& inFlightMutex() {
+        static std::mutex m;
+        return m;
+    }
+    std::unordered_set<std::string>& inFlightSet() {
+        static std::unordered_set<std::string> s;
+        return s;
+    }
+
     // Max number of persisted .fbad reports we keep on disk. Beyond this we evict
     // the oldest by mtime. Bounds disk + FD pressure when uploads cannot drain.
     constexpr std::size_t kMaxBacklog = 100;
@@ -123,7 +144,7 @@ namespace NewRelic {
             // file closed by UniqueFile dtor on every exit path.
         }
 
-        std::future<bool> HexStore::readAll(std::function<void(uint8_t*,std::size_t)> callback) {
+        std::future<bool> HexStore::readAll(std::function<void(uint8_t*,std::size_t,const std::string&)> callback) {
 
             std::string path = storePath;
             return std::async(std::launch::async, [callback, path, this]() {
@@ -154,6 +175,17 @@ namespace NewRelic {
                     }
 
                     std::string fullPath = path + "/" + filename;
+
+                    // Skip reports whose upload from a prior pass (or a concurrent
+                    // HexStore instance over the same directory) has not yet resolved,
+                    // so a pending report is not read and uploaded twice.
+                    {
+                        std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
+                        if (inFlightSet().count(fullPath)) {
+                            continue;
+                        }
+                    }
+
                     std::ifstream file{fullPath.c_str(), std::ios::binary | std::ios::ate};
                     if (!file.good()) {
                         file.close();
@@ -165,7 +197,8 @@ namespace NewRelic {
                     if (size <= 0) {
                         // Corrupt / empty file — log, drop, and skip. Previously the code
                         // fell through to `new uint8_t[size]` with size == -1, allocating
-                        // ~SIZE_MAX bytes (crash).
+                        // ~SIZE_MAX bytes (crash). Corrupt files can never upload, so they
+                        // are still removed inline.
                         LLOG_ERROR("dropping handled exception report (size %lld): %s",
                                    static_cast<long long>(size), filename.c_str());
                         file.close();
@@ -182,25 +215,69 @@ namespace NewRelic {
                         continue;
                     }
                     if (file.read(reinterpret_cast<char*>(buf.get()), size)) {
+                        // Claim the report BEFORE handing off so an upload that resolves
+                        // synchronously (or a concurrent pass / another HexStore instance)
+                        // can't double-process it. Claim + skip-check share inFlightMutex,
+                        // so the claim is atomic with respect to other readers.
+                        {
+                            std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
+                            if (!inFlightSet().insert(fullPath).second) {
+                                // Another reader claimed it between the skip-check above
+                                // and here; leave it to them.
+                                file.close();
+                                continue;
+                            }
+                        }
                         try {
-                            callback(buf.get(), static_cast<std::size_t>(size));
+                            callback(buf.get(), static_cast<std::size_t>(size), fullPath);
                             ++flushed;
                         } catch (...) {
                             // Never let a publisher exception leak the DIR* / buffer.
+                            // The upload was never queued, so release the claim
+                            // and leave the file for the next pass.
                             LLOG_ERROR("publisher threw while consuming %s — continuing",
                                        filename.c_str());
+                            std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
+                            inFlightSet().erase(fullPath);
                         }
                     } else {
                         LLOG_ERROR("failed to read file %s", filename.c_str());
                     }
                     file.close();
-                    std::remove(fullPath.c_str());
+                    // NOTE: the report is intentionally NOT removed here. It is deleted
+                    // only once its upload is confirmed via markUploaded().
                 }
                 return true;
             });
         }
 
+        void HexStore::markUploaded(const std::string& reportId) {
+            std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
+            std::remove(reportId.c_str());
+            inFlightSet().erase(reportId);
+        }
+
+        void HexStore::markFailed(const std::string& reportId) {
+            std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
+            // Leave the file on disk; just release the claim so the next readAll()
+            // pass re-reads and re-uploads it.
+            inFlightSet().erase(reportId);
+        }
+
         void HexStore::clear() {
+            {
+                // Release only this store's in-flight claims (the global set may hold
+                // claims for other directories).
+                std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
+                auto& s = inFlightSet();
+                for (auto it = s.begin(); it != s.end(); ) {
+                    if (it->rfind(storePath, 0) == 0) {
+                        it = s.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
+            }
             std::string path = storePath;
             // Honor the original async intent without the std::async-discarded-future
             // gotcha (~future() of a launch::async future blocks). Use a detached

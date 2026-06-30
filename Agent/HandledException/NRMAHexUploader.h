@@ -15,9 +15,10 @@
  * It is currently used in tandem with the HexUploadPublisher, which is a C++ class passed to the libMobileAgent to
  * manage Hex Report publication.
  *
- * This is the simpler version of the hex uploader (contrasting the NRMAHexBackgroundUploader) and only manages upload
- * data in memory. This means if the app catastrophically fails the last minute worth of Hex reports will be lost.
- * It is intended to replace this uploader variant with one that saves reports to disk to protect against that loss.
+ * This uploader manages the in-flight upload + retry of reports in memory. Reports are
+ * persisted on disk by the HexStore; sendData:reportId:completion: reports the terminal
+ * upload outcome back through `completion` so the store can delete a report only after
+ * its upload is confirmed (and keep it for retry / next launch otherwise).
  *
  * To replace this object in use look to the HExUploadPublisher where this NRMAHexUploader is injected as a PIMPL
  * object.
@@ -28,6 +29,14 @@
 - (instancetype) initWithHost:(NSString*)host;
 
 - (void) sendData:(NSData*)data;
+
+// Uploads a persisted report identified by `reportId` (its on-disk path). `reportId`'s
+// filename is sent as a stable de-dupe identifier so the collector can drop a report
+// already delivered in a prior session. `completion` is invoked exactly once with
+// shouldRemove=YES when the persisted report should be deleted (upload confirmed, an
+// oversized payload, or the in-memory retries were exhausted), or shouldRemove=NO to
+// keep it for a later attempt. `completion` may be nil.
+- (void) sendData:(NSData*)data reportId:(NSString*)reportId completion:(void(^)(BOOL shouldRemove))completion;
 
 - (void) retryFailedTasks;
 
