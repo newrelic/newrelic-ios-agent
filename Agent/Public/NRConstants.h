@@ -133,6 +133,9 @@ typedef NSString NRMetricUnit;
 
 #define kNRMAOfflineSupportabilityFormatString  @"Supportability/Mobile/%@/%@/%@/OfflinePayload/bytes"
 
+// KMP Detection (Kotlin Multiplatform)
+#define kNRMAKMMDetectionMetric @"Supportability/Mobile/iOS/HybridPlatform/KMP"
+
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"
 #define kNRMABytesOutFAPIString           @"/f/Output/Bytes"
@@ -146,6 +149,9 @@ typedef NSString NRMetricUnit;
 #define kNRMAExceptionHandlerHijackedMetric kNRAgentHealthPrefix @"/Hijacked/ExceptionHandler"
 
 #define kNRMAConfigurationUpdated        @"Supportability/Mobile/%@/%@/Configuration/Updated"
+
+// NativePlatform, Platform — emitted when a 429/rate-limit response triggers harvest upload backoff.
+#define kNRMARateLimitBackoffMetricFormatString @"Supportability/Mobile/%@/%@/Collector/RateLimit/Backoff"
 
 //Network info cache constants
 #define kNRCarrierNameCacheLifetime     50 // milliseconds

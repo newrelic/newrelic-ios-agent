@@ -27,6 +27,7 @@ env:
   # TODO: replace with the real path agreed with the docs team.
   DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
   DOCS_PR_TITLE: "iOS agent — next release notes"
+  BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
 
 jobs:
   append:
@@ -119,6 +120,7 @@ jobs:
       - name: Commit and push
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
         run: |
           set -euo pipefail
           git config user.name "newrelic-mobile-agent-bot"

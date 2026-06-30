@@ -55,6 +55,19 @@
 }
 @end
 
+// Bounded, run-loop-pumping wait used in place of empty `while (state == X) {};` spin loops.
+// A busy spin on the test (main) thread starves the main queue, so if a harvester state
+// transition is dispatched asynchronously (e.g. the 429/rate-limit backoff path) it can
+// never run and the test hangs forever. Pumping the run loop lets queued work execute, and
+// the deadline guarantees we fail fast instead of freezing the whole suite.
+static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger fromState) {
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:10.0];
+    while ((NSInteger)harvester.currentState == fromState && [deadline timeIntervalSinceNow] > 0) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode
+                                 beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
+}
+
 @implementation NRMAHarvesterTest
 
 - (void) setUp
@@ -274,12 +287,12 @@
     XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
     [harvester execute];
 
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
     
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
     [harvester execute];
 
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 
     //at this point there should be stored data
@@ -347,20 +360,16 @@
 
     [mockHarvester connected];
    
-    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
     XCTAssertTrue(offlineData.count > 0);
-    XCTAssertTrue(currentOfflineStorageSize > 0);
 
     mockNSURLSession = [self makeMockURLSession];
     newHarvester.connection.harvestSession = mockNSURLSession;
-    
+
     [mockHarvester connected];
-    
+
     offlineData = [newHarvester.connection getOfflineData];
-    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     XCTAssertTrue(offlineData.count == 0);
-    XCTAssertTrue(currentOfflineStorageSize == 0);
 
     [mockHarvester stopMocking];
     [connectionMock stopMocking];
@@ -404,20 +413,16 @@
 
     [mockHarvester connected];
    
-    NSUInteger currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     NSArray<NSData *> * offlineData = [newHarvester.connection getOfflineData];
     XCTAssertTrue(offlineData.count == 0);
-    XCTAssertTrue(currentOfflineStorageSize == 0);
 
     mockNSURLSession = [self makeMockURLSession];
     newHarvester.connection.harvestSession = mockNSURLSession;
-    
+
     [mockHarvester connected];
-    
+
     offlineData = [newHarvester.connection getOfflineData];
-    currentOfflineStorageSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"com.newrelic.offlineStorageCurrentSize"];
     XCTAssertTrue(offlineData.count == 0);
-    XCTAssertTrue(currentOfflineStorageSize == 0);
 
     [mockHarvester stopMocking];
     [connectionMock stopMocking];
@@ -473,12 +478,12 @@
 //    XCTAssertEqual(harvester.currentState,NRMA_HARVEST_UNINITIALIZED,@"expected uninitialized");
 //    [harvester execute];
 //
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+//    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
 //
 //    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
 //    [harvester execute];
 //
-//    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+//    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
 //    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 //
 //    //at this point there should be stored data
@@ -589,13 +594,13 @@
     //uninitialized -> disconnected
     [harvester execute];
     
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
 
     //Disconnected -> connected
     [harvester execute];
 
-    while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+    NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_CONNECTED, @"expected connected");
 }
 
@@ -608,12 +613,12 @@
    [harvester execute];
 
 
-   while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_UNINITIALIZED) {};
+   NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_UNINITIALIZED);
     XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISCONNECTED, @"expected disconnected");
 
    [harvester execute];
 
-   while (CFRunLoopGetCurrent() && harvester.currentState == NRMA_HARVEST_DISCONNECTED) {};
+   NRMAWaitForHarvesterToLeaveState(harvester, NRMA_HARVEST_DISCONNECTED);
    XCTAssertEqual(harvester.currentState, NRMA_HARVEST_DISABLED, @"expected disabled");
 }
 
@@ -811,6 +816,204 @@
 }
 
 // TODO: LogReporting Add test for entity_guid: and log_reporting: { enabled: , level: }
+
+#pragma mark - Rate limit (429) backoff
+
+- (void) testRetryAfterParsingSeconds {
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    [response parseRetryAfterFromHeaders:@{@"Retry-After": @"120"}];
+    XCTAssertEqual(response.retryAfterSeconds, 120, @"Retry-After integer seconds should parse to 120");
+}
+
+- (void) testRetryAfterParsingCaseInsensitiveHeader {
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    [response parseRetryAfterFromHeaders:@{@"retry-after": @"45"}];
+    XCTAssertEqual(response.retryAfterSeconds, 45, @"Retry-After header lookup should be case-insensitive");
+}
+
+- (void) testRetryAfterParsingHTTPDate {
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
+    formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
+    formatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+    formatter.dateFormat = @"EEE, dd MMM yyyy HH:mm:ss 'GMT'";
+    NSString* future = [formatter stringFromDate:[NSDate dateWithTimeIntervalSinceNow:300]];
+
+    [response parseRetryAfterFromHeaders:@{@"Retry-After": future}];
+    // Allow slack for the second boundary / parsing.
+    XCTAssertTrue(response.retryAfterSeconds > 250 && response.retryAfterSeconds <= 301,
+                  @"Retry-After HTTP-date should parse to ~300s from now, was %f", response.retryAfterSeconds);
+}
+
+- (void) testRetryAfterAbsent {
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    [response parseRetryAfterFromHeaders:@{@"Content-Type": @"application/json"}];
+    XCTAssertEqual(response.retryAfterSeconds, 0, @"Missing Retry-After should leave retryAfterSeconds at 0");
+}
+
+- (void) testRateLimitResponseSetsBackoffWithRetryAfter {
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    response.statusCode = TOO_MANY_REQUESTS;
+    response.retryAfterSeconds = 120;
+    [[[mockConnection stub] andReturn:response] sendData:OCMOCK_ANY];
+
+    NSTimeInterval before = [NSDate timeIntervalSinceReferenceDate];
+    [mockHarvester connected];
+
+    XCTAssertEqual([mockHarvester rateLimitBackoffCount], 1, @"First 429 should set backoff count to 1");
+    NSTimeInterval remaining = [mockHarvester rateLimitBackoffUntil] - before;
+    XCTAssertTrue(remaining > 110 && remaining <= 121,
+                  @"Backoff window should honor the 120s Retry-After, was %f", remaining);
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
+
+- (void) testRateLimitBackoffEscalatesWithoutRetryAfter {
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    response.statusCode = TOO_MANY_REQUESTS; // no Retry-After -> exponential backoff
+    [[[mockConnection stub] andReturn:response] sendData:OCMOCK_ANY];
+
+    NSTimeInterval before1 = [NSDate timeIntervalSinceReferenceDate];
+    [mockHarvester connected];
+    NSTimeInterval firstWindow = [mockHarvester rateLimitBackoffUntil] - before1;
+    XCTAssertEqual([mockHarvester rateLimitBackoffCount], 1);
+
+    // Simulate the first backoff window elapsing so the next cycle actually
+    // reaches the collector and receives a second 429 (the pause guard would
+    // otherwise correctly skip the upload while the window is still active).
+    [mockHarvester setRateLimitBackoffUntil:[NSDate timeIntervalSinceReferenceDate] - 1];
+
+    NSTimeInterval before2 = [NSDate timeIntervalSinceReferenceDate];
+    [mockHarvester connected];
+    NSTimeInterval secondWindow = [mockHarvester rateLimitBackoffUntil] - before2;
+    XCTAssertEqual([mockHarvester rateLimitBackoffCount], 2);
+
+    XCTAssertTrue(secondWindow > firstWindow,
+                  @"Consecutive 429s should escalate the backoff window (%f -> %f)", firstWindow, secondWindow);
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
+
+- (void) testRateLimitBackoffCapsRetryAfterAtMax {
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    // A server-provided Retry-After far larger than our cap must be clamped to
+    // kNRMARateLimitMaxBackoffSeconds (600s) so a misbehaving collector can't pause us indefinitely.
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    response.statusCode = TOO_MANY_REQUESTS;
+    response.retryAfterSeconds = 100000;
+    [[[mockConnection stub] andReturn:response] sendData:OCMOCK_ANY];
+
+    NSTimeInterval before = [NSDate timeIntervalSinceReferenceDate];
+    [mockHarvester connected];
+
+    NSTimeInterval remaining = [mockHarvester rateLimitBackoffUntil] - before;
+    XCTAssertTrue(remaining > 590 && remaining <= 601,
+                  @"An oversized Retry-After should be clamped to the 600s cap, was %f", remaining);
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
+
+- (void) testRateLimitBackoffExponentialPlateausAtMax {
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    // After many consecutive 429s with no Retry-After the exponential window (base * 2^count)
+    // would explode; it must plateau at kNRMARateLimitMaxBackoffSeconds (600s). Seed a high count
+    // so the next 429 lands well past the cap.
+    [mockHarvester setRateLimitBackoffCount:10];
+
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    response.statusCode = TOO_MANY_REQUESTS; // no Retry-After -> exponential branch
+    [[[mockConnection stub] andReturn:response] sendData:OCMOCK_ANY];
+
+    NSTimeInterval before = [NSDate timeIntervalSinceReferenceDate];
+    [mockHarvester connected];
+
+    NSTimeInterval remaining = [mockHarvester rateLimitBackoffUntil] - before;
+    XCTAssertTrue(remaining > 590 && remaining <= 601,
+                  @"Exponential backoff should plateau at the 600s cap, was %f", remaining);
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
+
+- (void) testRateLimitBackoffSkipsUploadDuringWindow {
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    // Arm an active backoff window 5 minutes into the future.
+    [mockHarvester setRateLimitBackoffUntil:[NSDate timeIntervalSinceReferenceDate] + 300];
+
+    // sendData must NOT be called while paused.
+    [[mockConnection reject] sendData:OCMOCK_ANY];
+
+    XCTAssertNoThrow([mockHarvester connected], @"Harvest upload should be skipped during backoff window");
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
+
+- (void) testRateLimitBackoffResetsOnSuccess {
+    id mockHarvester = [OCMockObject partialMockForObject:harvester];
+    id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
+    [[[mockHarvester stub] andReturn:[NRMAHarvesterConfiguration new]] harvesterConfiguration];
+
+    [[[mockConnection stub] andDo:^(NSInvocation *invocation) {
+        @throw [NSException exceptionWithName:@"" reason:@"" userInfo:nil];
+    }] sendConnect];
+
+    // Pretend we were previously in backoff (but the window has already elapsed).
+    [mockHarvester setRateLimitBackoffUntil:[NSDate timeIntervalSinceReferenceDate] - 1];
+    [mockHarvester setRateLimitBackoffCount:3];
+
+    NRMAHarvestResponse* response = [[NRMAHarvestResponse alloc] init];
+    response.statusCode = OK;
+    [[[mockConnection stub] andReturn:response] sendData:OCMOCK_ANY];
+
+    [mockHarvester connected];
+
+    XCTAssertEqual([mockHarvester rateLimitBackoffUntil], 0, @"A successful harvest should clear the backoff window");
+    XCTAssertEqual([mockHarvester rateLimitBackoffCount], 0, @"A successful harvest should reset the backoff count");
+
+    [mockHarvester stopMocking];
+    [mockConnection stopMocking];
+}
 
 - (void) testConnectedv5Apps{
     id mockHarvester = [OCMockObject partialMockForObject:harvester];

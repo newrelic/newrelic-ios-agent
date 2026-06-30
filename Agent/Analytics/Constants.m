@@ -99,6 +99,10 @@ NSString * const kNRMA_EventStoreFilename    = @"eventsStore.txt";
 
 NSString * const kNRMA_Offline_folder          = @"offlineStorage";
 NSString * const kNRMA_SessionReplayFrames_folder = @"SessionReplayFrames";
+// Marker file written into the SessionReplayFrames folder while recording in error mode.
+// Its presence at next launch (with no crash) indicates the previous session left a stale
+// error-mode buffer that should be cleared.
+NSString * const kNRMA_SessionReplayErrorMode_marker = @".errorMode";
 
 NSString * const kNRMA_Collector_connect_url   = @"/mobile/v5/connect";
 NSString * const kNRMA_Collector_data_url      = @"/mobile/v3/data";

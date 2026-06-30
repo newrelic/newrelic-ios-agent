@@ -154,7 +154,9 @@ static NewRelicAgentInternal* _sharedInstance;
                                withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
                           andFailureCode:-1];
 
-    while(CFRunLoopGetCurrent() && !helper.result) {}
+    while(CFRunLoopGetCurrent() && !helper.result) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
 
     NRMAHTTPTransactionMeasurement* result = (NRMAHTTPTransactionMeasurement*)helper.result;
 

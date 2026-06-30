@@ -62,7 +62,9 @@
                                traceHeaders:nil
                                      params:nil];
 
-    while(CFRunLoopGetCurrent() && !helper.result) {}
+    while(CFRunLoopGetCurrent() && !helper.result) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
 
     NRMAHTTPTransactionMeasurement* result = (NRMAHTTPTransactionMeasurement*)helper.result;
     XCTAssertEqualObjects(result.url, @"google.com", @"result url matches recorded url");
@@ -108,7 +110,9 @@
                                traceHeaders:nil 
                                      params:nil];
 
-    while(CFRunLoopGetCurrent() && !helper.result) {}
+    while(CFRunLoopGetCurrent() && !helper.result) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
 
     NRMAHTTPTransactionMeasurement* result = (NRMAHTTPTransactionMeasurement*)helper.result;
 
@@ -133,7 +137,9 @@
                                   withTimer:[[NRTimer alloc] initWithStartTime:startTime andEndTime:endTime]
                                   withError:error];
 
-    while(CFRunLoopGetCurrent() && !helper.result) {}
+    while(CFRunLoopGetCurrent() && !helper.result) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
 
     NRMAHTTPTransactionMeasurement* result = (NRMAHTTPTransactionMeasurement*)helper.result;
 
@@ -162,7 +168,9 @@
                                traceHeaders:@{@"traceparent":@"parent-awesomeid-verycool"}
                                      params:nil];
 
-    while(CFRunLoopGetCurrent() && !helper.result) {}
+    while(CFRunLoopGetCurrent() && !helper.result) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
 
     NRMAHTTPTransactionMeasurement* result = (NRMAHTTPTransactionMeasurement*)helper.result;
 
@@ -223,7 +231,9 @@
                                traceHeaders:@{@"traceparent":@"parent-awesomeid-verycool"}
                                      params:nil];
 
-    while(CFRunLoopGetCurrent() && !helper.result) {}
+    while(CFRunLoopGetCurrent() && !helper.result) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
 
     NRMAHTTPTransactionMeasurement* result = (NRMAHTTPTransactionMeasurement*)helper.result;
 

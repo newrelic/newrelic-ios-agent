@@ -2,17 +2,19 @@
 
 #ifndef LIBMOBILEAGENT_IGUIDGENERATOR_HPP
 #define LIBMOBILEAGENT_IGUIDGENERATOR_HPP
-#include <random>
+#include <stdlib.h>
 namespace NewRelic {
 namespace Connectivity {
 template<typename T>
 class IGuidGenerator {
 public:
+    // Uses arc4random_buf (CSPRNG) instead of an LCG seeded by a 32-bit-truncated
+    // timestamp, which produced colliding trace/span IDs across processes that
+    // generated GUIDs in the same clock tick.
     static T generateGuid() {
-        unsigned seed = static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count());
-        std::default_random_engine generator{seed};
-        std::uniform_int_distribution<T> distribution{}; //default constructor does 0 - type_max
-        return distribution(generator);
+        T value = 0;
+        arc4random_buf(&value, sizeof(value));
+        return value;
     }
 };
 }

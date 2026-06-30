@@ -64,7 +64,10 @@ namespace NewRelic {
                                                       session_elapsed_time_sec,
                                                       validator);
 
-        while (!is.eof()) {
+        // Also check fail() — istream::get(streambuf&, delim) sets failbit
+        // (not eofbit) when the next char already is the delimiter and zero
+        // chars are extracted. Without this guard the loop spins forever.
+        while (!is.eof() && !is.fail()) {
             auto attribute = AttributeDeserializer::deserializeAttributes(is);
             if(attribute == nullptr) continue;
             event->insertAttribute(attribute);
@@ -92,7 +95,8 @@ namespace NewRelic {
             throw std::runtime_error("unrecognized event type in stream.");
         }
 
-        while (!is.eof()) {
+        // See deserializeUserActionEvent for the failbit-vs-eofbit explanation.
+        while (!is.eof() && !is.fail()) {
             auto attribute = AttributeDeserializer::deserializeAttributes(is);
             if (attribute == nullptr) continue;
             event->insertAttribute(attribute);
