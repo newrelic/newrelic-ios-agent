@@ -92,11 +92,9 @@
                 NRLOG_AGENT_DEBUG(@"Not writing file because it's not dirty");
                 return;
             }
-            // Reset before writing so any _dirty=YES set concurrently by another
-            // thread (e.g. removeObjectForKey:) is preserved for the next write.
-            self->_dirty = NO;
         }
         [self saveToFile];
+        self->_dirty = NO;
     }];
 }
 
@@ -114,9 +112,9 @@
                 NRLOG_AGENT_DEBUG(@"Not writing removed item file because it's not dirty");
                 return;
             }
-            self->_dirty = NO;
         }
         [self saveToFile];
+        self->_dirty = NO;
     });
 }
 
@@ -138,9 +136,9 @@
               //  NRLOG_AGENT_DEBUG(@"Not writing cleared file because it's not dirty");
                 return;
             }
-            self->_dirty = NO;
         }
         [self saveToFile];
+        self->_dirty = NO;
     });
 }
 
