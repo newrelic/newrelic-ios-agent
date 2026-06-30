@@ -56,7 +56,12 @@ class ViewController: UIViewController {
             }
         }
         
-        viewModel.loadApodData()
+        // Delay the initial image load slightly so the view hierarchy and
+        // networking stack are fully set up first. This makes the initial
+        // space image load more reliably on every launch.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.viewModel.loadApodData()
+        }
         
         NotificationCenter.default.addObserver(self,
             selector: #selector(appDidBecomeActive),

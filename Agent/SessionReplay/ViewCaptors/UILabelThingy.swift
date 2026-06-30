@@ -38,24 +38,69 @@ class UILabelThingy: SessionReplayViewThingy {
     let letterSpacing: CGFloat?
 
     let widthOffset = 1.0
+
+    /// Resolves whether this text element should be masked.
+    ///
+    /// Precedence:
+    ///   1. An explicit per-view `isMasked` override wins outright.
+    ///   2. Otherwise the element is masked if EITHER masking rule asks for it:
+    ///      - the application-text rule (per-view `maskApplicationText`, falling
+    ///        back to the `session_replay_maskApplicationText` config, default on), or
+    ///      - an *explicit* user-input mask request for this subtree
+    ///        (e.g. `NRConditionalMaskView(maskUserInputText: true)`).
+    ///
+    /// This captor backs SwiftUI text, where an editable `TextField`/`SecureField`
+    /// is indistinguishable from a static `Text` in the display list. Honoring an
+    /// explicit user-input mask request lets such fields be masked even when
+    /// application-text masking is disabled. We deliberately do NOT consult the
+    /// global `session_replay_maskUserInputText` default here: it defaults to on,
+    /// and applying it would force-mask every ordinary label and defeat the
+    /// "show application text" configuration. Only an explicit `true` adds masking,
+    /// so this can never expose text that was masked before. NR-566XXX.
+    /// - Parameter isInputControlLabel: true when this label belongs to a text
+    ///   input control (e.g. a `UITextFieldLabel` rendering a `TextField`'s
+    ///   placeholder or unfocused value). For such labels an UNMASK override is
+    ///   only honored in Custom masking mode — under the Default strategy the
+    ///   override is dropped so the placeholder/value stays masked, matching how
+    ///   the control's text content is treated. NR-566XXX.
+    static func resolveIsMasked(_ viewDetails: ViewDetails, isInputControlLabel: Bool = false) -> Bool {
+        if let isMasked = viewDetails.isMasked {
+            return isMasked
+        }
+
+        var applicationTextOverride = viewDetails.maskApplicationText
+        if isInputControlLabel {
+            applicationTextOverride = ViewDetails.honoringDefaultStrategy(applicationTextOverride,
+                                                                          isDefaultMode: ViewDetails.currentMaskingModeIsDefault())
+        }
+
+        let applicationTextMasked = applicationTextOverride
+            ?? (NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true)
+
+        let userInputMaskRequested = (viewDetails.maskUserInputText == true)
+
+        return applicationTextMasked || userInputMaskRequested
+    }
+
+    /// True when a `UILabel` is the private label UIKit uses to render a
+    /// `UITextField`'s placeholder or unfocused value (`UITextFieldLabel`).
+    /// SwiftUI `TextField`/`SecureField` are backed by `UITextField`, so their
+    /// placeholder/value flows through this label.
+    static func isTextInputLabel(_ view: UIView) -> Bool {
+        return NSStringFromClass(type(of: view)) == "UITextFieldLabel"
+    }
+
     init(view: UILabel, viewDetails: ViewDetails) {
         self.viewDetails = viewDetails
         var frame = self.viewDetails.frame
         frame.size.width = frame.size.width + widthOffset
         self.viewDetails.frame = frame
 
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        }
-        else if let maskApplicationText = viewDetails.maskApplicationText {
-            self.isMasked = maskApplicationText
-        }
-        else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
-        }
+        self.isMasked = UILabelThingy.resolveIsMasked(viewDetails,
+                                                       isInputControlLabel: UILabelThingy.isTextInputLabel(view))
 
         self.isBlocked = viewDetails.blockView ?? false
-        
+
         if self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
@@ -138,13 +183,7 @@ class UILabelThingy: SessionReplayViewThingy {
             }
         }
 
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        } else if let maskApplicationText = viewDetails.maskApplicationText {
-            self.isMasked = maskApplicationText
-        } else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
-        }
+        self.isMasked = UILabelThingy.resolveIsMasked(viewDetails)
 
         self.isBlocked = viewDetails.blockView ?? false
 
@@ -198,16 +237,8 @@ class UILabelThingy: SessionReplayViewThingy {
         let lineBreakMode = extracted.lineBreakMode
         let kern = extracted.kern
         
-        if let isMasked = viewDetails.isMasked {
-            self.isMasked = isMasked
-        }
-        else if let maskApplicationText = viewDetails.maskApplicationText {
-            self.isMasked = maskApplicationText
-        }
-        else {
-            self.isMasked = NRMAHarvestController.configuration()?.session_replay_maskApplicationText ?? true
-        }
-        
+        self.isMasked = UILabelThingy.resolveIsMasked(viewDetails)
+
         if iOS15Override || self.isMasked {
             // If the view is masked, we should not record the text.
             // instead replace it with the number of asterisks as were characters in label
