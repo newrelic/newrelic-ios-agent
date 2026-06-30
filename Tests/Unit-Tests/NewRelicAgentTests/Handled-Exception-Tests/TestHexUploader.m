@@ -71,6 +71,11 @@
     [NRMAFlags setFeatureFlags:_originalFlags];
     [NRMAOfflineStorage clearAllOfflineDirectories];
 
+    // Invalidate the session to break the uploader↔session retain cycle and ensure
+    // a clean teardown with no lingering network resources between tests.
+    [self.hexUploader invalidate];
+    self.hexUploader = nil;
+
     [super tearDown];
 }
 
@@ -309,56 +314,5 @@
                    @"disabled offline storage must be cleared");
 }
 
-// Background uploads send their body from a temp file; when the task completes the temp
-// file must be removed (the path travels in taskDescription so this also works across an
-// app relaunch).
-- (void) testCompletionRemovesTempBodyFile {
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent:@"nr-hex-upload"];
-    [[NSFileManager defaultManager] createDirectoryAtPath:dir
-                              withIntermediateDirectories:YES
-                                               attributes:nil
-                                                    error:nil];
-    NSString* tempPath = [dir stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
-    [[@"body" dataUsingEncoding:NSUTF8StringEncoding] writeToFile:tempPath atomically:YES];
-    XCTAssertTrue([[NSFileManager defaultManager] fileExistsAtPath:tempPath]);
-
-    id task = [OCMockObject niceMockForClass:[NSURLSessionTask class]];
-    [[[task stub] andReturn:tempPath] taskDescription];
-    [[[task stub] andReturn:nil] originalRequest];
-    [[[task stub] andReturn:nil] response];
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wnonnull"
-    [self.hexUploader URLSession:self.hexUploader.session task:task didCompleteWithError:nil];
-#pragma clang diagnostic pop
-
-    XCTAssertFalse([[NSFileManager defaultManager] fileExistsAtPath:tempPath],
-                   @"temp upload body must be removed when its task completes");
-}
-
-//// Concurrency cap: more sendData: calls than kNRMAHexMaxInFlight (=4) must
-//// queue the overflow on pendingPayloads instead of submitting them all at
-//// once. Without this, a 200-deep backlog would spawn 200 sockets on cold
-//// start and exhaust the per-process FD limit.
-//- (void) testConcurrencyCap {
-//    self.hexUploader.applicationToken = @"TOKEN";
-//
-//    for (int i = 0; i < 10; i++) {
-//        const char* payload = "x";
-//        NSData* data = [NSData dataWithBytes:payload length:1];
-//        [self.hexUploader sendData:data];
-//    }
-//
-//    // 4 in-flight, 6 pending.
-//    XCTAssertLessThanOrEqual(self.hexUploader.inFlightCount, (NSUInteger)4,
-//                             @"in-flight count must never exceed cap");
-//    XCTAssertGreaterThan(self.hexUploader.pendingPayloads.count, (NSUInteger)0,
-//                         @"overflow must be queued, not dropped silently");
-//    XCTAssertEqual(self.hexUploader.inFlightCount + self.hexUploader.pendingPayloads.count,
-//                   (NSUInteger)10,
-//                   @"all submitted payloads accounted for");
-//
-//    [self.hexUploader invalidate];
-//}
 
 @end

@@ -11,13 +11,13 @@
 #import "NRMAConnection.h"
 
 /*
- * This class manages the upload and retry of binary data to the specified endpoint
+ * This class manages the upload and retry of binary data to the specified endpoint.
  * It is currently used in tandem with the HexUploadPublisher, which is a C++ class passed to the libMobileAgent to
  * manage Hex Report publication.
  *
- * This is the simpler version of the hex uploader (contrasting the NRMAHexBackgroundUploader) and only manages upload
- * data in memory. This means if the app catastrophically fails the last minute worth of Hex reports will be lost.
- * It is intended to replace this uploader variant with one that saves reports to disk to protect against that loss.
+ * Uploads are sent via a default NSURLSession with bounded concurrency. Failed uploads that meet the persist-worthy
+ * criteria (offline / network error) are written to NRMAOfflineStorage and re-sent on the next successful upload,
+ * ensuring payloads survive transient connectivity loss.
  *
  * To replace this object in use look to the HExUploadPublisher where this NRMAHexUploader is injected as a PIMPL
  * object.
@@ -27,9 +27,9 @@
 
 - (instancetype) initWithHost:(NSString*)host;
 
-// Process-wide shared uploader. A background NSURLSession allows only one session per
-// identifier per process and the identifier must be stable across launches, so the uploader
-// (which owns that session) must be a singleton. Refreshes host/token/version on reuse.
+// Process-wide shared uploader. Keeps a single connection pool and pending queue so
+// that uploads from different callers are serialised through a single session.
+// Refreshes host/token/version on reuse.
 + (instancetype) sharedUploaderWithHost:(NSString*)host
                        applicationToken:(NSString*)applicationToken
                      applicationVersion:(NSString*)applicationVersion;

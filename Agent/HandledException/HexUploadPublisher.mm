@@ -19,9 +19,8 @@ namespace NewRelic {
                 : HexPublisher::HexPublisher(storePath),
                   uploader(new UploaderImpl) {
             // Here we handle the collector address param.
-            // Shared process-wide uploader — its background NSURLSession is a singleton
-            // (one per identifier per process). Retain our reference; the shared instance
-            // also keeps itself alive.
+            // Shared process-wide uploader keeps a single connection pool and pending queue
+            // across all callers. Retain our reference; the shared instance also keeps itself alive.
             uploader->wrapper = [[NRMAHexUploader sharedUploaderWithHost:[NSString stringWithUTF8String:collectorAddress]
                                                        applicationToken:[NSString stringWithUTF8String:appToken]
                                                      applicationVersion:[NSString stringWithUTF8String:appVersion]] retain];
@@ -45,9 +44,8 @@ namespace NewRelic {
         }
 
         HexUploadPublisher::~HexUploadPublisher() {
-            // The uploader is a shared singleton with a process-wide background session — do
-            // NOT invalidate it (that would cancel in-flight background uploads). Just release
-            // our retained reference.
+            // The uploader is a shared singleton — just release our retained reference.
+            // The session will be cleaned up when the singleton is eventually deallocated.
             [uploader->wrapper release];
             delete uploader;
         }

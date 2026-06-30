@@ -72,10 +72,10 @@ static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
         // (bytes); do not call setMaxOfflineStorageSize: (it expects MB and would re-scale).
         self.offlineStorage = [[NRMAOfflineStorage alloc] initWithEndpoint:@"hex"];
 
-        // Background session: once a task is resumed, the OS finishes the transfer
-        // out-of-process even if the app is force-closed, and reports the result on the
-        // next launch. Shared per-process (see ensureBackgroundSession).
-        self.session = [self ensureBackgroundSession];
+        NSURLSessionConfiguration* cfg = [NSURLSessionConfiguration defaultSessionConfiguration];
+        cfg.HTTPMaximumConnectionsPerHost = kNRMAHexMaxInFlight;
+        cfg.timeoutIntervalForRequest = kNRMAHexRequestTimeout;
+        self.session = [NSURLSession sessionWithConfiguration:cfg delegate:self delegateQueue:nil];
         self.taskStore = [[NRMARetryTracker alloc] initWithRetryLimit:kNRMARetryLimit];
     }
     return self;
@@ -97,28 +97,6 @@ static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
     return shared;
 }
 
-// Lazily creates the single process-wide background session and returns it. A background
-// session allows only one instance per identifier per process — creating a second would
-// throw — so every uploader shares this one. The first instance to call this becomes its
-// delegate; in production that is the shared uploader.
-- (NSURLSession*) ensureBackgroundSession {
-    static NSURLSession* session = nil;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        NSString* identifier = [NSString stringWithFormat:@"com.newrelic.hex.upload.%@",
-                                [[NSBundle mainBundle] bundleIdentifier] ?: @"agent"];
-        NSURLSessionConfiguration* cfg = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:identifier];
-        cfg.HTTPMaximumConnectionsPerHost = kNRMAHexMaxInFlight;
-        cfg.timeoutIntervalForRequest = kNRMAHexRequestTimeout;
-        // We don't register the app-delegate handleEventsForBackgroundURLSession hook, so
-        // don't have the OS relaunch the app purely in the background to flush events; the
-        // transfer still completes and is reconciled on the next normal launch.
-        cfg.sessionSendsLaunchEvents = NO;
-        cfg.discretionary = NO;
-        session = [NSURLSession sessionWithConfiguration:cfg delegate:self delegateQueue:nil];
-    });
-    return session;
-}
 
 - (void) sendData:(NSData*)data {
     if (data == nil) return;
@@ -172,10 +150,6 @@ static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
     [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
 
-    // Important: do NOT set HTTPBody on the request. A background NSURLSession upload task
-    // takes its body exclusively from a file (see uploadTaskForRequest:data:); the payload
-    // is also tracked in payloadByRequest so retries can rebuild a fresh body file.
-
     NSURLSessionUploadTask* uploadTask = [self uploadTaskForRequest:request data:data];
     if (uploadTask == nil) {
         @synchronized(self) {
@@ -193,30 +167,8 @@ static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
     [uploadTask resume];
 }
 
-// Background sessions require the body to come from a file. Writes the payload to a temp
-// file and builds an upload task from it; the temp path is stored in taskDescription so it
-// can be removed once the task completes (including after an app relaunch).
 - (NSURLSessionUploadTask*) uploadTaskForRequest:(NSURLRequest*)request data:(NSData*)data {
-    NSURL* bodyURL = [self writeTempBody:data];
-    if (bodyURL == nil) return nil;
-    NSURLSessionUploadTask* task = [self.session uploadTaskWithRequest:request fromFile:bodyURL];
-    task.taskDescription = bodyURL.path;
-    return task;
-}
-
-- (NSURL*) writeTempBody:(NSData*)data {
-    NSString* dir = [NSTemporaryDirectory() stringByAppendingPathComponent:@"nr-hex-upload"];
-    [[NSFileManager defaultManager] createDirectoryAtPath:dir
-                              withIntermediateDirectories:YES
-                                               attributes:nil
-                                                    error:nil];
-    NSString* path = [dir stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
-    NSError* error = nil;
-    if (![data writeToFile:path options:NSDataWritingAtomic error:&error]) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to write temp upload body: %@", error);
-        return nil;
-    }
-    return [NSURL fileURLWithPath:path];
+    return [self.session uploadTaskWithRequest:request fromData:data];
 }
 
 - (void) retryFailedTasks {
@@ -234,27 +186,16 @@ static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
 }
 
 - (void) invalidate {
-    // No-op: the background session is a process-wide singleton shared across uploader
-    // instances and must stay alive to receive completions — including across an app
-    // relaunch. Tearing it down here would cancel in-flight background uploads.
+    [self.session finishTasksAndInvalidate];
 }
 
 - (void) dealloc {
-    // Intentionally do NOT invalidate/cancel the shared background session here; it is
-    // process-wide and outlives any individual uploader instance.
+    [self.session finishTasksAndInvalidate];
 }
 
 - (void)  URLSession:(NSURLSession*)session
                 task:(NSURLSessionTask*)task
 didCompleteWithError:(nullable NSError*)error {
-
-    // Remove the temp body file backing this task. taskDescription survives an app relaunch,
-    // so this also cleans up tasks that completed while the app was dead. A retry rebuilds a
-    // fresh temp file from the in-memory payload, so deleting this one here is safe.
-    NSString* tempBodyPath = task.taskDescription;
-    if (tempBodyPath.length) {
-        [[NSFileManager defaultManager] removeItemAtPath:tempBodyPath error:nil];
-    }
 
     if (error) {
 #if !TARGET_OS_WATCH
