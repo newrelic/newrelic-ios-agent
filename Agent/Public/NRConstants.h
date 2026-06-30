@@ -198,6 +198,14 @@ typedef NSString NRMetricUnit;
 #define kNRMAJSErrorMetricUploadThrottled   kNRMAJSError @"/UploadThrottled"
 #define kNRMAJSErrorMetricFailedUpload      kNRMAJSError @"/FailedUpload"
 
+// Crash
+// Emitted when a cached crash report is permanently rejected by the collector
+// (HTTP 400/403) and therefore deleted instead of being retried. Uses the
+// AgentHealth prefix so the full name matches the Android agent's
+// SUPPORTABILITY_CRASH_UPLOAD_REJECTED_DEVICE_OFFLINE metric
+// ("Supportability/AgentHealth/Crash/Offline/Rejected") for cross-platform parity.
+#define kNRMACrashOfflineRejectedMetric     kNRAgentHealthPrefix @"/Crash/Offline/Rejected"
+
 #define NRMAHandledRequestKey @"NRMAHandledRequest"
 
 // Network Failure Codes
