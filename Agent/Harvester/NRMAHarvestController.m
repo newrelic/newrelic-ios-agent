@@ -100,19 +100,51 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 + (void) initialize:(NRMAAgentConfiguration*)configuration
 {
     @synchronized(NRMAHarvestControllerInitializationLock) {
-        [self setHarvestController:[[NRMAHarvestController alloc] init]];
-        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-        [self setAgentConfiguration:configuration];
-        @synchronized(controller) {
-            [controller createHarvester];
-            [[controller harvester] setAgentConfiguration:configuration];
-            NRMAHarvesterConfiguration* harvestConfiguration = [[controller harvester] fetchHarvestConfiguration];
-            if(harvestConfiguration == nil) {
-                harvestConfiguration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
-                NRLOG_AGENT_VERBOSE(@"config: defaultHarvesterConfiguration set.");
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+        @try {
+#endif
+            [self setHarvestController:[[NRMAHarvestController alloc] init]];
+            NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+            [self setAgentConfiguration:configuration];
+
+            // Guard against an unexpected allocation failure. Messaging nil is
+            // harmless in Objective-C, but bailing out keeps the intent explicit
+            // and avoids silently building a half-initialized harvest pipeline.
+            if (controller == nil) {
+                NRLOG_AGENT_ERROR(@"initialize: harvest controller is nil; skipping harvester configuration.");
+                return;
             }
-            [[controller harvester] configureHarvester:harvestConfiguration];
+
+            @synchronized(controller) {
+                [controller createHarvester];
+
+                // Capture a single strong local reference to the harvester so it
+                // cannot be deallocated mid-configuration if stop/recovery runs on
+                // another thread, and so every message below targets the same live
+                // object instead of re-reading the property (which could otherwise
+                // return a stale/torn-down pointer and crash in objc_msgSend).
+                // This mirrors the hardening already in place in +start.
+                NRMAHarvester* harvester = [controller harvester];
+                if (harvester == nil) {
+                    NRLOG_AGENT_ERROR(@"initialize: harvester is nil after createHarvester; skipping configuration.");
+                    return;
+                }
+
+                [harvester setAgentConfiguration:configuration];
+                NRMAHarvesterConfiguration* harvestConfiguration = [harvester fetchHarvestConfiguration];
+                if (harvestConfiguration == nil) {
+                    harvestConfiguration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+                    NRLOG_AGENT_VERBOSE(@"config: defaultHarvesterConfiguration set.");
+                }
+                [harvester configureHarvester:harvestConfiguration];
+            }
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+        } @catch (NSException* exception) {
+            [NRMAExceptionHandler logException:exception
+                                         class:NSStringFromClass([self class])
+                                      selector:NSStringFromSelector(_cmd)];
         }
+#endif
     }
 }
 
