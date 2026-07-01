@@ -17,6 +17,35 @@
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
 
+// Couples an upload payload with the completion that reports its terminal outcome
+// back to the persisted store, plus the per-attempt HTTP-error flag. The completion
+// is fired exactly once at the terminal outcome (retries do not fire it). Its BOOL
+// means "remove the persisted report?": YES when the upload is confirmed or we have
+// permanently given up, NO to keep it for a later retry.
+@interface NRMAHexPayload : NSObject
+@property(strong) NSData* data;
+// Persisted report path; nil for non-persisted (live) uploads. Used as the stable
+// de-dupe identifier sent to the collector.
+@property(strong) NSString* reportId;
+@property(copy) void(^completion)(BOOL shouldRemove);
+// Set when a >= 400 HTTP response is seen for the current attempt; reset on retry.
+@property(assign) BOOL httpError;
+- (void) finishWith:(BOOL)shouldRemove;
+@end
+
+@implementation NRMAHexPayload
+- (void) finishWith:(BOOL)shouldRemove {
+    void(^c)(BOOL) = nil;
+    @synchronized (self) {
+        c = self.completion;
+        self.completion = nil; // guarantee exactly-once
+    }
+    if (c) {
+        c(shouldRemove);
+    }
+}
+@end
+
 // Bound how many uploads we hold in flight. Under low-bandwidth a default
 // session will queue tasks indefinitely; each task holds a socket FD until
 // the request completes or times out, exhausting the per-process FD limit.
@@ -39,7 +68,7 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 @property(strong) NRMARetryTracker* taskStore;
 
 // Concurrency control — guarded by @synchronized(self).
-@property(strong) NSMutableArray<NSData*>* pendingPayloads;
+@property(strong) NSMutableArray<NRMAHexPayload*>* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;
 
 // Tracks the upload payload for each in-flight / retryable request, keyed
@@ -47,8 +76,8 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 // to come from `fromData:` (not from the request's HTTPBody — iOS warns and
 // strips it), so we cannot stash bytes on the request itself. This dictionary
 // is the parallel store that lets handledErroredRequest: rebuild the upload
-// with the original payload. Guarded by @synchronized(_payloadByRequest).
-@property(strong) NSMutableDictionary<NSURLRequest*, NSData*>* payloadByRequest;
+// with the original payload and fire its completion. Guarded by @synchronized(_payloadByRequest).
+@property(strong) NSMutableDictionary<NSURLRequest*, NRMAHexPayload*>* payloadByRequest;
 @end
 
 @implementation NRMAHexUploader
@@ -77,23 +106,47 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 }
 
 - (void) sendData:(NSData*)data {
-    if (data == nil) return;
+    [self sendData:data reportId:nil completion:nil];
+}
+
+- (void) sendData:(NSData*)data reportId:(NSString*)reportId completion:(void(^)(BOOL shouldRemove))completion {
+    if (data == nil) {
+        // Nothing to upload; keep any persisted report untouched.
+        if (completion) completion(NO);
+        return;
+    }
 
     if ([data length] > kNRMAMaxPayloadSizeLimit) {
         NRLOG_AGENT_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
+        // Can never be uploaded — remove it so we don't retry it every harvest
+        // (matches the crash uploader's handling of oversized reports).
+        if (completion) completion(YES);
         return;
     }
 
+    NRMAHexPayload* payload = [NRMAHexPayload new];
+    payload.data = data;
+    payload.reportId = reportId;
+    payload.completion = completion;
+
+    NSMutableArray<NRMAHexPayload*>* dropped = nil;
     @synchronized(self) {
         // Drop oldest first if pending grows beyond the soft cap. This is the
         // memory-spike guard the customer reported — under permanent offline
         // we'd otherwise hold every report in RAM forever.
         while (self.pendingPayloads.count >= kNRMAHexMaxPending) {
+            if (dropped == nil) dropped = [NSMutableArray new];
+            [dropped addObject:self.pendingPayloads.firstObject];
             [self.pendingPayloads removeObjectAtIndex:0];
             NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - dropping oldest pending payload, queue full");
         }
-        [self.pendingPayloads addObject:data];
+        [self.pendingPayloads addObject:payload];
+    }
+    // Report dropped payloads as not-confirmed outside the lock so their reports
+    // stay on disk for a later attempt.
+    for (NRMAHexPayload* d in dropped) {
+        [d finishWith:NO];
     }
     [self drainPending];
 }
@@ -101,7 +154,7 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 // Caller must NOT hold @synchronized(self) when invoking. Drains as many
 // pending payloads as the in-flight cap allows; reentrant-safe.
 - (void) drainPending {
-    NSMutableArray<NSData*>* toSend = nil;
+    NSMutableArray<NRMAHexPayload*>* toSend = nil;
     @synchronized(self) {
         while (self.inFlightCount < kNRMAHexMaxInFlight && self.pendingPayloads.count > 0) {
             if (toSend == nil) toSend = [NSMutableArray new];
@@ -110,17 +163,20 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
             self.inFlightCount++;
         }
     }
-    for (NSData* data in toSend) {
-        [self launchUpload:data];
+    for (NRMAHexPayload* payload in toSend) {
+        [self launchUpload:payload];
     }
 }
 
-- (void) launchUpload:(NSData*)data {
+- (void) launchUpload:(NRMAHexPayload*)payload {
+    NSData* data = payload.data;
     NSMutableURLRequest* request = [self newPostWithURI:self.host];
     if (request == nil) {
         @synchronized(self) {
             if (self.inFlightCount > 0) self.inFlightCount--;
         }
+        // Couldn't build the request; not confirmed — keep the report for a later attempt.
+        [payload finishWith:NO];
         return;
     }
 
@@ -138,8 +194,9 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
     NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:data];
     NSURLRequest* key = uploadTask.originalRequest ?: request;
 
+    payload.httpError = NO;
     @synchronized(self.payloadByRequest) {
-        self.payloadByRequest[key] = data;
+        self.payloadByRequest[key] = payload;
     }
     [self.taskStore track:key];
     [uploadTask resume];
@@ -176,24 +233,36 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
                 task:(NSURLSessionTask*)task
 didCompleteWithError:(nullable NSError*)error {
 
-    if (error) {
+    NSURLRequest* key = task.originalRequest;
+    NRMAHexPayload* payload = nil;
+    @synchronized(self.payloadByRequest) {
+        payload = key ? self.payloadByRequest[key] : nil;
+    }
+    // A >= 400 response (recorded in didReceiveResponse) completes without a
+    // transport error, so fold that into the failure decision here — this is
+    // the single terminal handler for the attempt.
+    BOOL httpError = payload.httpError;
+
+    if (error || httpError) {
 #if !TARGET_OS_WATCH
         if (error.code == kCFURLErrorCancelled) {
             NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload cancelled: %@", error);
         }
-        else {
+        else if (error) {
             NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
         }
 #endif
-        [self handledErroredRequest:task.originalRequest];
+        [self handledErroredRequest:key];
     } else {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
-        if (task.originalRequest) {
+        if (key) {
             @synchronized(self.payloadByRequest) {
-                [self.payloadByRequest removeObjectForKey:task.originalRequest];
+                [self.payloadByRequest removeObjectForKey:key];
             }
         }
-        [self.taskStore untrack:task.originalRequest];
+        [self.taskStore untrack:key];
+        // Upload confirmed — let the store delete the persisted report (shouldRemove = YES).
+        [payload finishWith:YES];
     }
 
     @synchronized(self) {
@@ -213,7 +282,14 @@ didCompleteWithError:(nullable NSError*)error {
     if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
         ((NSHTTPURLResponse*)response).statusCode >= 400) {
         NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
-        [self handledErroredRequest:dataTask.originalRequest];
+        // Record the HTTP failure; the terminal retry/abandon decision (and the
+        // payload completion) is made in didCompleteWithError so it happens
+        // exactly once per attempt.
+        NSURLRequest* key = dataTask.originalRequest;
+        @synchronized(self.payloadByRequest) {
+            NRMAHexPayload* payload = key ? self.payloadByRequest[key] : nil;
+            payload.httpError = YES;
+        }
     }
     else {
         // Enqueue Data Usage Supportability Metric for /f if request is successful.
@@ -228,9 +304,13 @@ didCompleteWithError:(nullable NSError*)error {
 - (void) handledErroredRequest:(NSURLRequest*)request {
     if (request == nil) return;
 
+    NRMAHexPayload* payload = nil;
+    @synchronized(self.payloadByRequest) {
+        payload = self.payloadByRequest[request];
+    }
+
     // If we're offline, don't burn FDs/sockets cycling failed retries —
-    // queue the task and let the next harvest's retryFailedTasks fire it
-    // when reachability returns.
+    // keep the report on disk and let the next harvest retry when reachable.
 #if !TARGET_OS_WATCH
     NRMAReachability* r = [NewRelicInternalUtils reachability];
     BOOL offline = NO;
@@ -243,29 +323,34 @@ didCompleteWithError:(nullable NSError*)error {
             [self.payloadByRequest removeObjectForKey:request];
         }
         [self.taskStore untrack:request];
+        [payload finishWith:NO];
         return;
     }
 #endif
 
     if ([self.taskStore shouldRetryTask:request]) {
         NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
-        NSData* body = nil;
-        @synchronized(self.payloadByRequest) {
-            body = self.payloadByRequest[request];
-        }
+        NSData* body = payload.data;
         if (body == nil || body.length == 0) {
             NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry has no payload, abandoning report");
+            @synchronized(self.payloadByRequest) {
+                [self.payloadByRequest removeObjectForKey:request];
+            }
             [self.taskStore untrack:request];
+            [payload finishWith:NO];
             return;
         }
         NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:body];
-        // The session may produce a fresh originalRequest copy on the new
-        // task — rekey the payload store so the next failure path can find
-        // the bytes again.
+        // The session may produce a fresh originalRequest copy on the new task.
+        // Requests with identical content are -isEqual:, so the retried task's
+        // originalRequest maps to the same payloadByRequest / retry-tracker slot;
+        // re-keying just ensures the payload is found again. Reset the per-attempt
+        // HTTP-error flag so the retry starts clean.
+        payload.httpError = NO;
         NSURLRequest* newKey = uploadTask.originalRequest;
-        if (newKey && ![newKey isEqual:request]) {
+        if (newKey) {
             @synchronized(self.payloadByRequest) {
-                self.payloadByRequest[newKey] = body;
+                self.payloadByRequest[newKey] = payload;
             }
         }
         @synchronized(self.retryQueue) {
@@ -277,6 +362,8 @@ didCompleteWithError:(nullable NSError*)error {
             [self.payloadByRequest removeObjectForKey:request];
         }
         [self.taskStore untrack:request];
+        // Retries exhausted — not confirmed; remove the report on disk
+        [payload finishWith:YES];
     }
 }
 

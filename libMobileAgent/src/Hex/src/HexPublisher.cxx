@@ -18,6 +18,18 @@ void NewRelic::Hex::HexPublisher::publish(std::shared_ptr<NewRelic::Hex::HexCont
     filename = writeBytesToStore(bufPointer, size);
 }
 
+void NewRelic::Hex::HexPublisher::publish(std::shared_ptr<NewRelic::Hex::HexContext> const& context,
+                                          const std::string& reportId,
+                                          std::function<void(bool shouldRemove)> onComplete) {
+    // Base publisher has no asynchronous upload to await; publish and tell the caller
+    // it is safe to remove the persisted report.
+    (void)reportId;
+    publish(context);
+    if (onComplete) {
+        onComplete(true);
+    }
+}
+
 std::string HexPublisher::lastPublishedFile() {
     return filename;
 }

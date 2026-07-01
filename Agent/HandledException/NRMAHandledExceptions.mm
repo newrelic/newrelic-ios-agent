@@ -150,24 +150,27 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) onHarvest {
-    if([NRMAFlags shouldEnableOfflineStorage]) {
-        NRMAReachability* r = [NewRelicInternalUtils reachability];
-        @synchronized(r) {
+    // Always upload handled exceptions from the on-disk store. Reports are persisted
+    // by HexController::submit on the record path, and the persisted-report flush
+    // deletes each report only once its upload is confirmed (see
+    // HexStore::markUploaded). This keeps unconfirmed reports on disk across
+    // launches / termination, and does not depend on the offline-storage flag —
+    // a report is never destroyed before we know it was uploaded.
+    NRMAReachability* r = [NewRelicInternalUtils reachability];
+    @synchronized(r) {
 #if TARGET_OS_WATCH
-            NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
+        NRMANetworkStatus status = [NewRelicInternalUtils currentReachabilityStatusTo:[NSURL URLWithString:[NewRelicInternalUtils collectorHostHexURL]]];
 #else
-            NRMANetworkStatus status = [r currentReachabilityStatus];
+        NRMANetworkStatus status = [r currentReachabilityStatus];
 #endif
-            if (status != NotReachable) {
-                [self processAndPublishPersistedReports]; // When using offline we always want to send from persisted because the keyContext doesn't persist.
-                _controller->resetKeyContext();
-                _publisher->retry();
-            }
+        if (status != NotReachable) {
+            [self processAndPublishPersistedReports];
+            // The in-memory keyContext is only a transient mirror of what submit()
+            // already persisted to disk; reset it so reports are uploaded from disk
+            // (the source of truth) without double-sending.
+            _controller->resetKeyContext();
+            _publisher->retry();
         }
-    } else {
-        _controller->publish();
-        _store->clear();
-        _publisher->retry();
     }
 }
 
