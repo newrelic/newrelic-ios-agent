@@ -37,6 +37,33 @@ namespace NewRelic {
             }
         }
 
+        void HexUploadPublisher::publish(std::shared_ptr<NewRelic::Hex::HexContext>const& context,
+                                         const std::string& reportId,
+                                         std::function<void(bool shouldRemove)> onComplete) {
+
+            auto buf = context->getBuilder()->GetBufferPointer();
+            auto size = context->getBuilder()->GetSize();
+
+            @autoreleasepool {
+                NSData* report = [NSData dataWithBytes:buf
+                                                length:size];
+                NSString* nsReportId = [NSString stringWithUTF8String:reportId.c_str()];
+
+                // Bridge the C++ completion to an Obj-C block the uploader fires once
+                // the upload terminally resolves. shouldRemove==YES => delete the
+                // persisted report (confirmed, or gave up after the retry limit).
+                __block std::function<void(bool)> cb = onComplete;
+                [uploader->wrapper sendData:report
+                                   reportId:nsReportId
+                                 completion:^(BOOL shouldRemove) {
+                    if (cb) {
+                        cb(shouldRemove);
+                    }
+                    cb = nullptr;
+                }];
+            }
+        }
+
         void HexUploadPublisher::retry(){
             [uploader->wrapper retryFailedTasks];
         }

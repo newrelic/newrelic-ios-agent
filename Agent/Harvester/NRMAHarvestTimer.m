@@ -28,22 +28,37 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 
 - (void) start
 {
-    if ([self isRunning]) {
-        NRLOG_AGENT_VERBOSE(@"HarvestTimer: Attempting to start while already running.");
-        return;
-    }
-    if (self.period <= 0) {
-        NRLOG_AGENT_ERROR(@"HarvestTimer: Refusing to start with a period of 0 ms");
-        return;
-    }
-    
-    NRLOG_AGENT_INFO(@"HarvestTimer: starting with a period of %lld ms",self.period);
-    self.timer = [NSTimer timerWithTimeInterval:((double)self.period) / (double)1000.0
-                                           target:self
-                                         selector:@selector(harvest)
-                                         userInfo:nil
-                                          repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:self.timer forMode:NSDefaultRunLoopMode];
+    // NSTimer scheduling/invalidation must happen on the thread that owns the run
+    // loop the timer is attached to. +[NRMAHarvestController start] and -updateTimer
+    // can call -start/-stop from a background queue, and NSRunLoop is not thread-safe,
+    // so marshal the timer state changes onto the main run loop. Routing through the
+    // main queue also serializes concurrent start/stop calls (the isRunning guard then
+    // reliably prevents double-scheduling) and guarantees -stop can actually invalidate
+    // the timer the run loop is retaining (otherwise it leaks and keeps firing).
+    __weak __typeof__(self) weakSelf = self;
+    [self runOnMainThread:^{
+        __strong __typeof__(self) strongSelf = weakSelf;
+        if (strongSelf == nil) {
+            return;
+        }
+        if ([strongSelf isRunning]) {
+            NRLOG_AGENT_VERBOSE(@"HarvestTimer: Attempting to start while already running.");
+            return;
+        }
+        if (strongSelf.period <= 0) {
+            NRLOG_AGENT_ERROR(@"HarvestTimer: Refusing to start with a period of 0 ms");
+            return;
+        }
+
+        NRLOG_AGENT_INFO(@"HarvestTimer: starting with a period of %lld ms", strongSelf.period);
+        strongSelf.timer = [NSTimer timerWithTimeInterval:((double)strongSelf.period) / (double)1000.0
+                                                   target:strongSelf
+                                                 selector:@selector(harvest)
+                                                 userInfo:nil
+                                                  repeats:YES];
+        [[NSRunLoop mainRunLoop] addTimer:strongSelf.timer forMode:NSDefaultRunLoopMode];
+    }];
+
     [self.harvester fireOnHarvestStart];
 }
 
@@ -114,12 +129,37 @@ static long long NR_DEFAULT_HARVEST_PERIOD = 60 * 1000; //milliseconds
 
 - (void) stop
 {
-    if (![self isRunning]) {
-        NRLOG_AGENT_VERBOSE(@"HarvestTimer: attempting to stop when not running.");
+    // Invalidate on the main run loop (where the timer was scheduled); see -start.
+    __weak __typeof__(self) weakSelf = self;
+    [self runOnMainThread:^{
+        __strong __typeof__(self) strongSelf = weakSelf;
+        if (strongSelf == nil) {
+            return;
+        }
+        if (![strongSelf isRunning]) {
+            NRLOG_AGENT_VERBOSE(@"HarvestTimer: attempting to stop when not running.");
+            return;
+        }
+
+        [strongSelf.timer invalidate];
+        strongSelf.timer = nil;
+    }];
+}
+
+// Runs the block on the main thread: synchronously if already on the main thread
+// (preserving call ordering for callers that are already on main), otherwise
+// asynchronously. Async is used off-main to avoid any risk of deadlocking against
+// locks the caller may hold (e.g. the harvest controller lock).
+- (void) runOnMainThread:(void (^)(void))block
+{
+    if (block == nil) {
         return;
     }
-    
-    [self.timer invalidate];
+    if ([NSThread isMainThread]) {
+        block();
+    } else {
+        dispatch_async(dispatch_get_main_queue(), block);
+    }
 }
 
 - (BOOL) isRunning
