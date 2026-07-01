@@ -1,7 +1,8 @@
 import Foundation
-import XCTest
+import Testing
+import UIKit
 
-class UILabelThingyTests: XCTestCase {
+struct UILabelThingyTests {
     func makeViewDetails(isMasked: Bool? = nil) -> ViewDetails {
         // Provide a minimal ViewDetails stub for testing
         return ViewDetails(
@@ -25,25 +26,25 @@ class UILabelThingyTests: XCTestCase {
         )
     }
 
-    func testInitWithUILabelMasked() {
+    @Test func `Init with UILabel masked`() {
         let label = UILabel()
         label.text = "SecretText"
         let details = makeViewDetails(isMasked: true)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.labelText, String(repeating: "*", count: label.text!.count))
-        XCTAssertTrue(thingy.isMasked)
+        #expect(thingy.labelText == String(repeating: "*", count: label.text!.count))
+        #expect(thingy.isMasked)
     }
 
-    func testInitWithUILabelUnmasked() {
+    @Test func `Init with UILabel unmasked`() {
         let label = UILabel()
         label.text = "VisibleText"
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.labelText, label.text)
-        XCTAssertFalse(thingy.isMasked)
+        #expect(thingy.labelText == label.text)
+        #expect(!thingy.isMasked)
     }
 
-    func testInitWithViewDetailsMasked() {
+    @Test func `Init with view details masked`() {
         let details = makeViewDetails(isMasked: true)
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.red
@@ -55,14 +56,14 @@ class UILabelThingyTests: XCTestCase {
             .paragraphStyle: paragraph
         ])
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertEqual(thingy.labelText, "***")
-        XCTAssertTrue(thingy.isMasked)
-        XCTAssertEqual(thingy.fontSize, 15)
-        XCTAssertEqual(thingy.textColor, color)
-        XCTAssertEqual(thingy.textAlignment, "center")
+        #expect(thingy.labelText == "***")
+        #expect(thingy.isMasked)
+        #expect(thingy.fontSize == 15)
+        #expect(thingy.textColor == color)
+        #expect(thingy.textAlignment == "center")
     }
 
-    func testInitWithViewDetailsUnmasked() {
+    @Test func `Init with view details unmasked`() {
         let details = makeViewDetails(isMasked: false)
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.black
@@ -74,11 +75,11 @@ class UILabelThingyTests: XCTestCase {
             .paragraphStyle: paragraph
         ])
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertEqual(thingy.labelText, "abc")
-        XCTAssertFalse(thingy.isMasked)
-        XCTAssertEqual(thingy.fontSize, 15)
-        XCTAssertEqual(thingy.textColor, color)
-        XCTAssertEqual(thingy.textAlignment, "center")
+        #expect(thingy.labelText == "abc")
+        #expect(!thingy.isMasked)
+        #expect(thingy.fontSize == 15)
+        #expect(thingy.textColor == color)
+        #expect(thingy.textAlignment == "center")
     }
 
     // MARK: - Default masking strategy guard (SwiftUI / NRConditionalMaskView)
@@ -113,48 +114,116 @@ class UILabelThingyTests: XCTestCase {
 
     // Under the Default strategy, an NRConditionalMaskView(maskApplicationText: false)
     // unmask override must be dropped so the global default (mask) governs.
-    func testDefaultStrategyDropsUnmaskTextOverride() {
+    @Test func `Default strategy drops unmask text override`() {
         let details = makeSwiftUIViewDetails(maskApplicationText: false, isDefaultMaskingMode: true)
-        XCTAssertNil(details.maskApplicationText)
+        #expect(details.maskApplicationText == nil)
     }
 
     // Custom strategy continues to honor the unmask override (text visible).
-    func testCustomStrategyKeepsUnmaskTextOverride() {
+    @Test func `Custom strategy keeps unmask text override`() {
         let details = makeSwiftUIViewDetails(maskApplicationText: false, isDefaultMaskingMode: false)
-        XCTAssertEqual(details.maskApplicationText, false)
+        #expect(details.maskApplicationText == false)
     }
 
     // Overrides that *increase* masking (true) are still honored under Default.
-    func testDefaultStrategyKeepsMaskTrueOverride() {
+    @Test func `Default strategy keeps mask true override`() {
         let details = makeSwiftUIViewDetails(maskApplicationText: true, isDefaultMaskingMode: true)
-        XCTAssertEqual(details.maskApplicationText, true)
+        #expect(details.maskApplicationText == true)
     }
 
     // The guard applies to every unmask-capable override field under Default.
-    func testDefaultStrategyDropsAllUnmaskOverrides() {
+    @Test func `Default strategy drops all unmask overrides`() {
         let details = makeSwiftUIViewDetails(maskApplicationText: false,
                                              maskUserInputText: false,
                                              maskAllImages: false,
                                              maskAllUserTouches: false,
                                              isDefaultMaskingMode: true)
-        XCTAssertNil(details.maskApplicationText)
-        XCTAssertNil(details.maskUserInputText)
-        XCTAssertNil(details.maskAllImages)
-        XCTAssertNil(details.maskAllUserTouches)
+        #expect(details.maskApplicationText == nil)
+        #expect(details.maskUserInputText == nil)
+        #expect(details.maskAllImages == nil)
+        #expect(details.maskAllUserTouches == nil)
     }
 
     // End-to-end: a SwiftUI label that tried to unmask itself stays masked (asterisks)
     // under the Default strategy.
-    func testDefaultStrategyMasksLabelDespiteUnmaskOverride() {
+    @Test func `Default strategy masks label despite unmask override`() {
         let label = UILabel()
         label.text = "SecretText"
         let details = makeSwiftUIViewDetails(maskApplicationText: false, isDefaultMaskingMode: true)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertTrue(thingy.isMasked)
-        XCTAssertEqual(thingy.labelText, String(repeating: "*", count: label.text!.count))
+        #expect(thingy.isMasked)
+        #expect(thingy.labelText == String(repeating: "*", count: label.text!.count))
     }
 
-    func testExtractLabelAttributes_withAttributedText() {
+    // MARK: - Default masking strategy guard (UIKit direct sets)
+
+    // A UIKit view that tried to unmask itself via a direct `maskApplicationText =
+    // false` set must have that override dropped under the Default strategy, so the
+    // global default (mask) governs. This is the UIKit analogue of the SwiftUI guard.
+    @Test func `UIKit direct-set unmask text override dropped under Default`() {
+        let view = UIView()
+        view.maskApplicationText = false
+        let overrides = ViewDetails.directSetMaskingOverrides(view: view, isDefaultMode: true)
+        #expect(overrides.maskApplicationText == nil)
+    }
+
+    // The guard covers every unmask-capable direct-set field under Default.
+    @Test func `UIKit direct-set drops all unmask overrides under Default`() {
+        let view = UIView()
+        view.maskApplicationText = false
+        view.maskUserInputText = false
+        view.maskAllImages = false
+        view.maskAllUserTouches = false
+        let overrides = ViewDetails.directSetMaskingOverrides(view: view, isDefaultMode: true)
+        #expect(overrides.maskApplicationText == nil)
+        #expect(overrides.maskUserInputText == nil)
+        #expect(overrides.maskAllImages == nil)
+        #expect(overrides.maskAllUserTouches == nil)
+    }
+
+    // Custom strategy continues to honor a direct-set unmask override.
+    @Test func `UIKit direct-set unmask override honored under Custom`() {
+        let view = UIView()
+        view.maskApplicationText = false
+        view.maskAllImages = false
+        let overrides = ViewDetails.directSetMaskingOverrides(view: view, isDefaultMode: false)
+        #expect(overrides.maskApplicationText == false)
+        #expect(overrides.maskAllImages == false)
+    }
+
+    // Overrides that *increase* masking (true) are still honored under Default.
+    @Test func `UIKit direct-set mask true override honored under Default`() {
+        let view = UIView()
+        view.maskAllImages = true
+        view.maskApplicationText = true
+        let overrides = ViewDetails.directSetMaskingOverrides(view: view, isDefaultMode: true)
+        #expect(overrides.maskAllImages == true)
+        #expect(overrides.maskApplicationText == true)
+    }
+
+    // A direct-set unmask on an ancestor is inherited by the child and likewise
+    // dropped under Default (checkMask* walks the superview chain).
+    @Test func `UIKit inherited unmask override dropped under Default`() {
+        let parent = UIView()
+        parent.maskAllImages = false
+        let child = UIView()
+        parent.addSubview(child)
+        let overrides = ViewDetails.directSetMaskingOverrides(view: child, isDefaultMode: true)
+        #expect(overrides.maskAllImages == nil)
+    }
+
+    // End-to-end: a masked ViewDetails (as produced when the guard forces masking)
+    // renders a UILabel's text as asterisks.
+    @Test func `Masked view details renders label as asterisks`() {
+        let label = UILabel()
+        label.text = "SecretText"
+        let details = makeViewDetails(isMasked: true)
+        let thingy = UILabelThingy(view: label, viewDetails: details)
+        #expect(thingy.isMasked)
+        #expect(thingy.labelText == String(repeating: "*", count: label.text!.count))
+    }
+
+    @Test func `Extract label attributes with attributed text`() {
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.red
         let paragraph = NSMutableParagraphStyle()
@@ -166,15 +235,15 @@ class UILabelThingyTests: XCTestCase {
             .paragraphStyle: paragraph
         ])
         let (text, extractedFont, extractedColor, extractedAlignment, extractedLineBreakMode, _) = TextHelper.extractLabelAttributes(from: attrString)
-        XCTAssertEqual(text, "Hello")
-        XCTAssertEqual(extractedFont.fontName, font.fontName)
-        XCTAssertEqual(extractedFont.pointSize, font.pointSize)
-        XCTAssertEqual(extractedColor, color)
-        XCTAssertEqual(extractedAlignment, "center")
-        XCTAssertEqual(extractedLineBreakMode, .byWordWrapping)
+        #expect(text == "Hello")
+        #expect(extractedFont.fontName == font.fontName)
+        #expect(extractedFont.pointSize == font.pointSize)
+        #expect(extractedColor == color)
+        #expect(extractedAlignment == "center")
+        #expect(extractedLineBreakMode == .byWordWrapping)
     }
-    
-    func testExtractLabelAttributes_withEmptyAttributedText() {
+
+    @Test func `Extract label attributes with empty attributed text`() {
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.red
         let paragraph = NSMutableParagraphStyle()
@@ -185,10 +254,10 @@ class UILabelThingyTests: XCTestCase {
             .paragraphStyle: paragraph
         ])
         let (text, _, _, _, _, _) = TextHelper.extractLabelAttributes(from: attrString)
-        XCTAssertEqual(text, "")
+        #expect(text == "")
     }
 
-    func testInitWithAttributedTextMasked() {
+    @Test func `Init with attributed text masked`() {
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.black
         let paragraph = NSMutableParagraphStyle()
@@ -200,14 +269,14 @@ class UILabelThingyTests: XCTestCase {
         ])
         let details = makeViewDetails(isMasked: true)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertEqual(thingy.labelText, String(repeating: "*", count: attrString.string.count))
-        XCTAssertTrue(thingy.isMasked)
-        XCTAssertEqual(thingy.fontSize, 15)
-        XCTAssertEqual(thingy.textColor, color)
-        XCTAssertEqual(thingy.textAlignment, "center")
+        #expect(thingy.labelText == String(repeating: "*", count: attrString.string.count))
+        #expect(thingy.isMasked)
+        #expect(thingy.fontSize == 15)
+        #expect(thingy.textColor == color)
+        #expect(thingy.textAlignment == "center")
     }
 
-    func testInitWithAttributedTextUnmasked() {
+    @Test func `Init with attributed text unmasked`() {
         let font = UIFont(name: "Arial", size: 15) ?? UIFont.systemFont(ofSize: 15)
         let color = UIColor.blue
         let paragraph = NSMutableParagraphStyle()
@@ -219,88 +288,88 @@ class UILabelThingyTests: XCTestCase {
         ])
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertEqual(thingy.labelText, "VisibleText")
-        XCTAssertFalse(thingy.isMasked)
-        XCTAssertEqual(thingy.fontSize, 15)
-        XCTAssertEqual(thingy.textColor, color)
-        XCTAssertEqual(thingy.textAlignment, "right")
+        #expect(thingy.labelText == "VisibleText")
+        #expect(!thingy.isMasked)
+        #expect(thingy.fontSize == 15)
+        #expect(thingy.textColor == color)
+        #expect(thingy.textAlignment == "right")
     }
 
-    func testInitWithAttributedTextEmpty() {
+    @Test func `Init with attributed text empty`() {
         let attrString = NSAttributedString(string: "")
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertEqual(thingy.labelText, "")
-        XCTAssertFalse(thingy.isMasked)
+        #expect(thingy.labelText == "")
+        #expect(!thingy.isMasked)
     }
 
     // MARK: - Word Wrap Tests
 
-    func testUILabelWithNumberOfLines() {
+    @Test func `UILabel with number of lines`() {
         let label = UILabel()
         label.text = "Test text"
         label.numberOfLines = 2
         label.lineBreakMode = .byWordWrapping
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.numberOfLines, 2)
-        XCTAssertEqual(thingy.lineBreakMode, .byWordWrapping)
+        #expect(thingy.numberOfLines == 2)
+        #expect(thingy.lineBreakMode == .byWordWrapping)
     }
 
-    func testUILabelSingleLine() {
+    @Test func `UILabel single line`() {
         let label = UILabel()
         label.text = "Test text"
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.numberOfLines, 1)
-        XCTAssertEqual(thingy.lineBreakMode, .byTruncatingTail)
+        #expect(thingy.numberOfLines == 1)
+        #expect(thingy.lineBreakMode == .byTruncatingTail)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("white-space: nowrap"))
-        XCTAssertTrue(css.contains("text-overflow: ellipsis"))
+        #expect(css.contains("white-space: nowrap"))
+        #expect(css.contains("text-overflow: ellipsis"))
     }
 
-    func testUILabelMultilineWordWrapping() {
+    @Test func `UILabel multiline word wrapping`() {
         let label = UILabel()
         label.text = "Test text with word wrapping"
         label.numberOfLines = 0
         label.lineBreakMode = .byWordWrapping
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.numberOfLines, 0)
-        XCTAssertEqual(thingy.lineBreakMode, .byWordWrapping)
+        #expect(thingy.numberOfLines == 0)
+        #expect(thingy.lineBreakMode == .byWordWrapping)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("white-space: pre-wrap"))
-        XCTAssertTrue(css.contains("word-wrap: break-word"))
+        #expect(css.contains("white-space: pre-wrap"))
+        #expect(css.contains("word-wrap: break-word"))
     }
 
-    func testUILabelCharWrapping() {
+    @Test func `UILabel char wrapping`() {
         let label = UILabel()
         label.text = "Test text"
         label.numberOfLines = 0
         label.lineBreakMode = .byCharWrapping
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.lineBreakMode, .byCharWrapping)
+        #expect(thingy.lineBreakMode == .byCharWrapping)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("word-break: break-all"))
+        #expect(css.contains("word-break: break-all"))
     }
 
-    func testUILabelClipping() {
+    @Test func `UILabel clipping`() {
         let label = UILabel()
         label.text = "Test text"
         label.numberOfLines = 0
         label.lineBreakMode = .byClipping
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.lineBreakMode, .byClipping)
+        #expect(thingy.lineBreakMode == .byClipping)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("overflow: hidden"))
-        XCTAssertTrue(css.contains("white-space: nowrap"))
+        #expect(css.contains("overflow: hidden"))
+        #expect(css.contains("white-space: nowrap"))
     }
 
-    func testAttributedTextLineBreakMode() {
+    @Test func `Attributed text line break mode`() {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .left
         paragraph.lineBreakMode = .byCharWrapping
@@ -309,117 +378,117 @@ class UILabelThingyTests: XCTestCase {
         ])
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertEqual(thingy.lineBreakMode, .byCharWrapping)
-        XCTAssertEqual(thingy.numberOfLines, 0) // SwiftUI defaults to multiline
+        #expect(thingy.lineBreakMode == .byCharWrapping)
+        #expect(thingy.numberOfLines == 0) // SwiftUI defaults to multiline
     }
 
-    func testMultilineTruncation() {
+    @Test func `Multiline truncation`() {
         let label = UILabel()
         label.text = "Test text with truncation"
         label.numberOfLines = 3
         label.lineBreakMode = .byTruncatingTail
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.numberOfLines, 3)
-        XCTAssertEqual(thingy.lineBreakMode, .byTruncatingTail)
+        #expect(thingy.numberOfLines == 3)
+        #expect(thingy.lineBreakMode == .byTruncatingTail)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("-webkit-line-clamp: 3"))
-        XCTAssertTrue(css.contains("display: -webkit-box"))
+        #expect(css.contains("-webkit-line-clamp: 3"))
+        #expect(css.contains("display: -webkit-box"))
     }
 
     // MARK: - Font Traits Tests
 
-    func testBoldFont() {
+    @Test func `Bold font`() {
         let label = UILabel()
         label.text = "Bold text"
         label.font = UIFont.boldSystemFont(ofSize: 17)
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.fontWeight, .bold)
+        #expect(thingy.fontWeight == .bold)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("700"))
+        #expect(css.contains("700"))
     }
 
-    func testRegularFont() {
+    @Test func `Regular font`() {
         let label = UILabel()
         label.text = "Regular text"
         label.font = UIFont.systemFont(ofSize: 17)
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.fontWeight, .regular)
+        #expect(thingy.fontWeight == .regular)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("400"))
+        #expect(css.contains("400"))
     }
 
-    func testItalicFont() {
+    @Test func `Italic font`() {
         let label = UILabel()
         label.text = "Italic text"
         label.font = UIFont.italicSystemFont(ofSize: 17)
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertTrue(thingy.isItalic)
+        #expect(thingy.isItalic)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("italic"))
+        #expect(css.contains("italic"))
     }
 
-    func testLightFont() {
+    @Test func `Light font`() {
         let lightFont = UIFont.systemFont(ofSize: 17, weight: .light)
         let label = UILabel()
         label.text = "Light text"
         label.font = lightFont
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.fontWeight, .light)
+        #expect(thingy.fontWeight == .light)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("200"))
+        #expect(css.contains("200"))
     }
 
-    func testHeavyFont() {
+    @Test func `Heavy font`() {
         let heavyFont = UIFont.systemFont(ofSize: 17, weight: .heavy)
         let label = UILabel()
         label.text = "Heavy text"
         label.font = heavyFont
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        XCTAssertEqual(thingy.fontWeight, .bold)
+        #expect(thingy.fontWeight == .bold)
         let css = thingy.inlineCSSDescription()
-        XCTAssertTrue(css.contains("700"))
+        #expect(css.contains("700"))
     }
 
-    func testExtractFontTraitsBold() {
+    @Test func `Extract font traits bold`() {
         let boldFont = UIFont.boldSystemFont(ofSize: 17)
         let (weight, isItalic) = TextHelper.extractFontTraits(from: boldFont)
-        XCTAssertEqual(weight, .bold)
-        XCTAssertFalse(isItalic)
+        #expect(weight == .bold)
+        #expect(!isItalic)
     }
 
-    func testExtractFontTraitsItalic() {
+    @Test func `Extract font traits italic`() {
         let italicFont = UIFont.italicSystemFont(ofSize: 17)
         let (_, isItalic) = TextHelper.extractFontTraits(from: italicFont)
-        XCTAssertTrue(isItalic)
+        #expect(isItalic)
     }
 
-    func testExtractFontTraitsRegular() {
+    @Test func `Extract font traits regular`() {
         let regularFont = UIFont.systemFont(ofSize: 17)
         let (weight, isItalic) = TextHelper.extractFontTraits(from: regularFont)
-        XCTAssertEqual(weight, .regular)
-        XCTAssertFalse(isItalic)
+        #expect(weight == .regular)
+        #expect(!isItalic)
     }
 
-    func testAttributedTextWithBoldFont() {
+    @Test func `Attributed text with bold font`() {
         let boldFont = UIFont.boldSystemFont(ofSize: 17)
         let attrString = NSAttributedString(string: "Bold", attributes: [.font: boldFont])
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertEqual(thingy.fontWeight, .bold)
-        XCTAssertFalse(thingy.isItalic)
+        #expect(thingy.fontWeight == .bold)
+        #expect(!thingy.isItalic)
     }
 
-    func testAttributedTextWithItalicFont() {
+    @Test func `Attributed text with italic font`() {
         let italicFont = UIFont.italicSystemFont(ofSize: 17)
         let attrString = NSAttributedString(string: "Italic", attributes: [.font: italicFont])
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
-        XCTAssertTrue(thingy.isItalic)
+        #expect(thingy.isItalic)
     }
 }

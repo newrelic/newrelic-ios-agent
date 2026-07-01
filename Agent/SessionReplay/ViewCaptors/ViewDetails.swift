@@ -147,22 +147,30 @@ struct ViewDetails {
         
         self.parentId = view.superview?.sessionReplayIdentifier
         
-        if let maskApplicationText = ViewDetails.checkMaskApplicationText(view: view) {
+        // Under the Default masking strategy, per-view UNMASK overrides (a `false`
+        // value) set directly on a UIKit view are dropped so the global default
+        // governs — the Default strategy always masks and cannot be unmasked, even
+        // via these custom direct sets. Overrides that *increase* masking (`true`)
+        // are still honored. This mirrors the guard in the SwiftUI init(frame:) path.
+        let overrides = ViewDetails.directSetMaskingOverrides(view: view,
+                                                              isDefaultMode: ViewDetails.currentMaskingModeIsDefault())
+
+        if let maskApplicationText = overrides.maskApplicationText {
             self.maskApplicationText = maskApplicationText
             view.maskApplicationText = maskApplicationText
         }
 
-        if let maskUserInputText = ViewDetails.checkMaskUserInputText(view: view) {
+        if let maskUserInputText = overrides.maskUserInputText {
             self.maskUserInputText = maskUserInputText
             view.maskUserInputText = maskUserInputText
         }
-        
-        if let maskAllImages = ViewDetails.checkMaskAllImages(view: view) {
+
+        if let maskAllImages = overrides.maskAllImages {
             self.maskAllImages = maskAllImages
             view.maskAllImages = maskAllImages
         }
-        
-        if let maskAllUserTouches = ViewDetails.checkMaskAllUserTouches(view: view) {
+
+        if let maskAllUserTouches = overrides.maskAllUserTouches {
             self.maskAllUserTouches = maskAllUserTouches
             view.maskAllUserTouches = maskAllUserTouches
         }
@@ -255,6 +263,22 @@ struct ViewDetails {
             return nil
         }
         return override
+    }
+
+    // Resolves the per-view masking overrides set directly on a UIKit view (via the
+    // maskApplicationText / maskUserInputText / maskAllImages / maskAllUserTouches
+    // properties), including values inherited from an ancestor. Each override is run
+    // through the Default-strategy guard so a direct UNMASK (`false`) can never
+    // unmask content while the Default strategy is active. Extracted so the UIKit
+    // init(view:) path is unit-testable with an explicit isDefaultMode.
+    static func directSetMaskingOverrides(view: UIView, isDefaultMode: Bool)
+        -> (maskApplicationText: Bool?, maskUserInputText: Bool?, maskAllImages: Bool?, maskAllUserTouches: Bool?) {
+        return (
+            honoringDefaultStrategy(checkMaskApplicationText(view: view), isDefaultMode: isDefaultMode),
+            honoringDefaultStrategy(checkMaskUserInputText(view: view), isDefaultMode: isDefaultMode),
+            honoringDefaultStrategy(checkMaskAllImages(view: view), isDefaultMode: isDefaultMode),
+            honoringDefaultStrategy(checkMaskAllUserTouches(view: view), isDefaultMode: isDefaultMode)
+        )
     }
 
     
