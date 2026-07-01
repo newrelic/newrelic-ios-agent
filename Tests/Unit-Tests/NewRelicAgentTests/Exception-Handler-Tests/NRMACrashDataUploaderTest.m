@@ -18,6 +18,8 @@
 #import "NRMANamedValueMeasurement.h"
 #import "NRMATaskQueue.h"
 #import "NRMASupportMetricHelper.h"
+#import "NRMAExceptionhandlerConstants.h"
+#import "NRConstants.h"
 
 @interface NRMACrashDataUploader ()
 
@@ -31,6 +33,8 @@
 - (BOOL) shouldUploadFileWithUniqueIdentifier:(NSString*)path;
 
 - (NSURLRequest*) buildPost;
+
+- (NSArray*) crashReportURLs:(NSError* __autoreleasing*)error;
 
 @end
 @interface NRMACrashDataUploaderTest : NRMAAgentTestBase
@@ -65,8 +69,12 @@
 }
 
 - (id) makeMockURLSession {
-    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://google.com"] statusCode:200 HTTPVersion:@"1.1" headerFields:nil];
-    
+    return [self makeMockURLSessionWithStatusCode:200];
+}
+
+- (id) makeMockURLSessionWithStatusCode:(NSInteger)statusCode {
+    __block NSURLResponse* bresponse = [[NSHTTPURLResponse alloc] initWithURL:[NSURL URLWithString:@"https://google.com"] statusCode:statusCode HTTPVersion:@"1.1" headerFields:nil];
+
     id mockNSURLSession = [OCMockObject mockForClass:NSURLSession.class];
     [[[mockNSURLSession stub] classMethod] andReturn:mockNSURLSession];
 
@@ -81,8 +89,146 @@
     [[[mockUploadTask stub] andDo:^(NSInvocation *invoke) {
         completionHandler(nil, bresponse, nil);
     }] resume];
-    
+
     return mockNSURLSession;
+}
+
+// Remove any crash report files left on disk so each test starts from a clean
+// slate (uploadCrashReports drains the whole directory, so a retained report
+// from a prior test would otherwise leak into the next one).
+- (void) clearCrashReports {
+    NSString* reportPath = [NSString stringWithFormat:@"%@/%@", NSTemporaryDirectory(), kNRMA_CR_ReportPath];
+    [[NSFileManager defaultManager] removeItemAtPath:reportPath error:nil];
+}
+
+- (NSUInteger) remainingCrashReportCountForUploader:(NRMACrashDataUploader*)uploader {
+    NSError* error = nil;
+    return [[uploader crashReportURLs:&error] count];
+}
+
+- (BOOL) consumedMeasurementsContainMetricNamed:(NSString*)name {
+    for (id measurement in helper.consumedMeasurements) {
+        if ([((NRMANamedValueMeasurement*)measurement).name isEqualToString:name]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (NRMACrashDataUploader*) makeUploaderWithMockStatusCode:(NSInteger)statusCode {
+    NRMACrashDataUploader* uploader = [[NRMACrashDataUploader alloc] initWithCrashCollectorURL:@"google.com"
+                                                                              applicationToken:@"token"
+                                                                         connectionInformation:[NRMAAgentConfiguration connectionInformation]
+                                                                                        useSSL:YES];
+    uploader.uploadSession = [self makeMockURLSessionWithStatusCode:statusCode];
+    return uploader;
+}
+
+// A permanently-rejected (403) crash report must be deleted, not retained for
+// pointless retries, and must bump the Crash/Rejected supportability metric.
+- (void) testPermanentlyRejectedCrashReportDeletedOn403 {
+    [self clearCrashReports];
+    [helper.consumedMeasurements removeAllObjects];
+
+    NRMACrashDataUploader* uploader = [self makeUploaderWithMockStatusCode:403];
+    [NRMAFakeDataHelper makeFakeCrashReport:1000];
+
+    XCTAssertNoThrow([uploader uploadCrashReports]);
+
+    XCTAssertEqual([self remainingCrashReportCountForUploader:uploader], 0,
+                   @"403-rejected crash report should be deleted, not retained.");
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([self consumedMeasurementsContainMetricNamed:kNRMACrashOfflineRejectedMetric],
+                  @"Crash/Rejected supportability metric should be emitted on 403.");
+}
+
+// 400 Bad Request is also a permanent rejection -> delete.
+- (void) testPermanentlyRejectedCrashReportDeletedOn400 {
+    [self clearCrashReports];
+    [helper.consumedMeasurements removeAllObjects];
+
+    NRMACrashDataUploader* uploader = [self makeUploaderWithMockStatusCode:400];
+    [NRMAFakeDataHelper makeFakeCrashReport:1000];
+
+    XCTAssertNoThrow([uploader uploadCrashReports]);
+
+    XCTAssertEqual([self remainingCrashReportCountForUploader:uploader], 0,
+                   @"400-rejected crash report should be deleted, not retained.");
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([self consumedMeasurementsContainMetricNamed:kNRMACrashOfflineRejectedMetric],
+                  @"Crash/Rejected supportability metric should be emitted on 400.");
+}
+
+// Transient server errors (5xx) must be retained for retry and must NOT emit
+// the permanent-reject metric.
+- (void) testTransientServerErrorCrashReportRetainedOn503 {
+    [self clearCrashReports];
+    [helper.consumedMeasurements removeAllObjects];
+
+    NRMACrashDataUploader* uploader = [self makeUploaderWithMockStatusCode:503];
+    [NRMAFakeDataHelper makeFakeCrashReport:1000];
+
+    XCTAssertNoThrow([uploader uploadCrashReports]);
+
+    XCTAssertEqual([self remainingCrashReportCountForUploader:uploader], 1,
+                   @"5xx server error should retain the crash report for a later retry.");
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertFalse([self consumedMeasurementsContainMetricNamed:kNRMACrashOfflineRejectedMetric],
+                   @"Crash/Rejected metric must NOT be emitted for a retryable 5xx.");
+
+    [self clearCrashReports];
+}
+
+// 429 (rate limited) is transient -> retain, no permanent-reject metric.
+- (void) testRateLimitedCrashReportRetainedOn429 {
+    [self clearCrashReports];
+    [helper.consumedMeasurements removeAllObjects];
+
+    NRMACrashDataUploader* uploader = [self makeUploaderWithMockStatusCode:429];
+    [NRMAFakeDataHelper makeFakeCrashReport:1000];
+
+    XCTAssertNoThrow([uploader uploadCrashReports]);
+
+    XCTAssertEqual([self remainingCrashReportCountForUploader:uploader], 1,
+                   @"429 rate-limit should retain the crash report for a later retry.");
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertFalse([self consumedMeasurementsContainMetricNamed:kNRMACrashOfflineRejectedMetric],
+                   @"Crash/Rejected metric must NOT be emitted for a retryable 429.");
+
+    [self clearCrashReports];
+}
+
+// Regression: 500 is the collector's "accepted, will not return" code and must
+// still delete (existing success-branch behavior) without emitting the reject metric.
+- (void) testServerError500CrashReportDeleted {
+    [self clearCrashReports];
+    [helper.consumedMeasurements removeAllObjects];
+
+    NRMACrashDataUploader* uploader = [self makeUploaderWithMockStatusCode:500];
+    [NRMAFakeDataHelper makeFakeCrashReport:1000];
+
+    XCTAssertNoThrow([uploader uploadCrashReports]);
+
+    XCTAssertEqual([self remainingCrashReportCountForUploader:uploader], 0,
+                   @"500 should still delete the crash report (existing behavior).");
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertFalse([self consumedMeasurementsContainMetricNamed:kNRMACrashOfflineRejectedMetric],
+                   @"Crash/Rejected metric is for permanent rejects only, not 500.");
 }
 
 - (void) testHeaderGeneration {
