@@ -90,6 +90,7 @@ class ViewController: UIViewController {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
         spaceImageView.isUserInteractionEnabled = true
         spaceImageView.addGestureRecognizer(tapGestureRecognizer)
+        spaceImageView.maskAllImages = false
         
         //Text Label
         spaceLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
@@ -97,6 +98,7 @@ class ViewController: UIViewController {
         spaceLabel.textAlignment = .center
         spaceLabel.numberOfLines = 0
         spaceLabel.accessibilityIdentifier = "public" // Because this is a SecureLabel this should stay masked.
+        spaceLabel.maskApplicationText = false
         
         //Text Label
         privateHelloLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
