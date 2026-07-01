@@ -184,14 +184,6 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
     [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
 
-    // Stable per-report de-dupe identifier (the report's persisted filename). It is
-    // identical when the same persisted report is re-uploaded after a termination, so
-    // the collector can drop the duplicate — the equivalent of the crash report's uuid
-    // (which cannot live in the handled-exception flatbuffer payload without a schema change).
-    if (payload.reportId.length) {
-        [request setValue:payload.reportId.lastPathComponent forHTTPHeaderField:@"X-NewRelic-HexReport-Id"];
-    }
-
     // Important: do NOT set HTTPBody on the request. NSURLSessionUploadTask
     // requires the payload to come exclusively from `fromData:`, and iOS
     // logs a warning + strips the body if both are present. Payload is

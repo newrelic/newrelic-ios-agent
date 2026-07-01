@@ -31,11 +31,9 @@
 - (void) sendData:(NSData*)data;
 
 // Uploads a persisted report identified by `reportId` (its on-disk path). `reportId`'s
-// filename is sent as a stable de-dupe identifier so the collector can drop a report
-// already delivered in a prior session. `completion` is invoked exactly once with
-// shouldRemove=YES when the persisted report should be deleted (upload confirmed, an
-// oversized payload, or the in-memory retries were exhausted), or shouldRemove=NO to
-// keep it for a later attempt. `completion` may be nil.
+// `completion` is invoked exactly once with shouldRemove=YES when the persisted report
+// should be deleted (upload confirmed, an oversized payload, or the in-memory retries
+// were exhausted), or shouldRemove=NO to keep it for a later attempt. `completion` may be nil.
 - (void) sendData:(NSData*)data reportId:(NSString*)reportId completion:(void(^)(BOOL shouldRemove))completion;
 
 - (void) retryFailedTasks;

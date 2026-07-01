@@ -270,8 +270,12 @@ namespace NewRelic {
                 // claims for other directories).
                 std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
                 auto& s = inFlightSet();
+                // Match the store dir followed by a separator so sibling stores
+                // sharing a prefix (e.g. "/hex" vs "/hex2") don't get erased.
+                // Every claim is keyed as storePath + "/" + filename.
+                std::string prefix = storePath + "/";
                 for (auto it = s.begin(); it != s.end(); ) {
-                    if (it->rfind(storePath, 0) == 0) {
+                    if (it->rfind(prefix, 0) == 0) {
                         it = s.erase(it);
                     } else {
                         ++it;
