@@ -443,7 +443,7 @@
     XCTAssertNotNil(wireFormat[@"errorId"], @"errorId should be present");
     XCTAssertEqualObjects(wireFormat[@"errorMessage"], @"Cannot read property 'x' of null", @"errorMessage should contain message");
     XCTAssertEqualObjects(wireFormat[@"errorName"], @"TypeError", @"errorName should contain error name");
-    XCTAssertEqualObjects(wireFormat[@"isFatalError"], @"true", @"isFatalError should be true");
+    XCTAssertTrue(wireFormat[@"isFatalError"], @"isFatalError should be true");
     XCTAssertNotNil(wireFormat[@"timestamp"], @"timestamp should be present");
     XCTAssertNotNil(wireFormat[@"threads"], @"threads should be present");
 

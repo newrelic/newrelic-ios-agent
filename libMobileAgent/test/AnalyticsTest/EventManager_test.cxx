@@ -287,6 +287,38 @@ TEST_F(EventManagerTest, testBadSerializedEvent) {
     ASSERT_THROW(manager.newEvent(strs2), std::runtime_error);
 }
 
+// Regression: an empty attribute name in a serialized event used to spin the
+// deserializer forever. istream::get(streambuf&, delim) sets failbit (not
+// eofbit) when the very next character already is the delimiter, so the loop
+// in EventDeserializer::deserializeUserActionEvent / deserializeMobileEvent
+// — which checked only !is.eof() — never terminated. The fix added a
+// !is.fail() guard. Without that guard these tests will hang until CI kills
+// the run.
+TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameUserAction) {
+    EventManager manager{store};
+
+    // "MobileUserAction" routes to deserializeUserActionEvent. After ts and
+    // elapsed are consumed, the remaining "\t" is exactly the trap: zero
+    // chars extracted, failbit-only state, !is.eof() stays true.
+    std::stringstream strs;
+    strs << "MobileUserAction\t1\t1\t\t";
+
+    ASSERT_NO_THROW(manager.newEvent(strs));
+}
+
+TEST_F(EventManagerTest, testDeserializeDoesNotSpinOnEmptyAttributeNameMobileEvent) {
+    EventManager manager{store};
+
+    // Same trap as above, routed through deserializeMobileEvent instead of
+    // deserializeUserActionEvent. Mobile / Interaction / name / ts / elapsed
+    // is the well-formed prefix; the trailing "\t" leaves the per-attribute
+    // loop staring at a delimiter with non-EOF state.
+    std::stringstream strs;
+    strs << "Mobile\tInteraction\tn\t1\t1\t\t";
+
+    ASSERT_NO_THROW(manager.newEvent(strs));
+}
+
 TEST_F(EventManagerTest, testEmptyDoesNotResetTimestamp) {
     EventManager manager{store};
 
