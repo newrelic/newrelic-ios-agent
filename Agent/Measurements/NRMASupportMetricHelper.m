@@ -108,6 +108,17 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueueRateLimitBackoffMetric:(NSTimeInterval)backoffSeconds {
+    NSString* metricString = [NSString stringWithFormat:kNRMARateLimitBackoffMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
+                                                              value:[NSNumber numberWithDouble:backoffSeconds]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
 + (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
 
@@ -277,6 +288,19 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 }
 
 // End JS Error
+
+// KMP Detection (Kotlin Multiplatform)
++ (void) enqueueKMMDetectionMetric {
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAKMMDetectionMetric
+                                                              value:@1
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
+// End KMP Detection
 
 + (void) processDeferredMetrics {
     // Handle any deferred app start metrics

@@ -83,5 +83,10 @@ enum ViewControllerProvider {
         return SignOutCrashReproViewController()
     }
 #endif
+
+    static var mapViewController: MapViewController {
+        let viewController = MapViewController()
+        return viewController
+    }
 }
 

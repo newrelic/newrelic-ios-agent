@@ -202,6 +202,7 @@ jobs:
       # Keep in sync with append-docs-release-notes.yml DOCS_FILE.
       DOCS_FILE: src/content/docs/release-notes/mobile-release-notes/ios-release-notes/ios-agent-next.mdx
       VERSION_STRING: ${{ needs.deployS3Production.outputs.version }}
+      BOT_EMAIL: ${{ secrets.BOT_EMAIL }}
     steps:
       - name: Checkout docs-website (next branch)
         uses: actions/checkout@v4

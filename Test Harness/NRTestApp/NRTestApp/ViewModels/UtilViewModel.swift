@@ -23,6 +23,7 @@ class UtilViewModel {
     var badAttribute = false
     var attributes = ""
     var events = 0 
+    var count: Int = 0
 
     var uniqueInteractionTraceIdentifier: String? =  nil
 
@@ -91,8 +92,8 @@ class UtilViewModel {
         do {
             try errorMethod()
         } catch {
-            NewRelic.recordError(error)
-            
+            NewRelic.recordError(error, attributes: ["id": count])
+            count += 1
         }
     }
     

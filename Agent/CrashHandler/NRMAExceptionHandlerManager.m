@@ -131,8 +131,13 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
             }
         }
         else {
-            // Clear saved crashed sessions from Mobile Session Replay
-            [self clearSessionReplayFrames];
+            if ([self previousSessionWasInSessionReplayErrorMode]) {
+                // No crash occurred and the previous session was recording session replay in
+                // error mode, where frames are only buffered to disk and uploaded when an
+                // error/crash happens. With no crash, those buffered frames are now stale and
+                // can be cleared.
+                [self clearSessionReplayFrames];
+            }
         }
         self.handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:_crashReporter];
 #endif
@@ -245,6 +250,20 @@ static const NSString* __memoryUsageLock = @"Lock";
             NRMA_setMemoryUsage(memoryUsageMB.UTF8String);
         }
     }
+}
+
+// Determines whether the previous session left a stale error-mode session replay buffer.
+// While recording in error mode, session replay drops a marker file into the frames folder
+// (see NRMASessionReplay.processFrameToFile) and removes it when it leaves error mode. So the
+// marker's presence here means the previous session ended while still in error mode.
+- (BOOL) previousSessionWasInSessionReplayErrorMode
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *markerPath = [[documentsDirectory stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder]
+                            stringByAppendingPathComponent:kNRMA_SessionReplayErrorMode_marker];
+
+    return [[NSFileManager defaultManager] fileExistsAtPath:markerPath];
 }
 
 - (BOOL) hasSessionReplayFrames
