@@ -281,16 +281,17 @@
 {
     NSString* url = @"http://google.com";
 
-    // The dangerous work: any DT header injection mutates/copies the request. It must
-    // never happen on the completion transition.
-    id mockHTTPUtils = [OCMockObject mockForClass:[NRMAHTTPUtilities class]];
-    [[[mockHTTPUtils reject] classMethod] addCrossProcessIdentifier:OCMOCK_ANY];
-    [[[mockHTTPUtils reject] classMethod] addConnectivityHeaderAndPayload:OCMOCK_ANY];
+    // Count any request-mutating DT header injection. At completion it must stay zero.
+    __block int mutationCount = 0;
+    id mockHTTPUtils = [OCMockObject niceMockForClass:[NRMAHTTPUtilities class]];
+    [[[[mockHTTPUtils stub] classMethod] andDo:^(NSInvocation* inv) {
+        mutationCount++;
+    }] addCrossProcessIdentifier:OCMOCK_ANY];
 
     // Recording must still occur at completion.
     __block BOOL recorded = NO;
-    id mockConn = [OCMockObject mockForClass:[NRMANSURLConnectionSupport class]];
-    [[[[[mockConn expect] ignoringNonObjectArgs] classMethod] andDo:^(NSInvocation* inv) {
+    id mockURLConnectionSupport = [OCMockObject mockForClass:[NRMANSURLConnectionSupport class]];
+    [[[[[mockURLConnectionSupport expect] ignoringNonObjectArgs] classMethod] andDo:^(NSInvocation* inv) {
         recorded = YES;
     }] noticeResponse:OCMOCK_ANY
           forRequest:OCMOCK_ANY
@@ -299,57 +300,66 @@
            bytesSent:0
        bytesReceived:0];
 
+    // Deinstrument so the session factory does not mark the task "already handled"
+    // (that marker would make the override early-return before our branch). We still
+    // invoke the setState override directly below to exercise the async-URLSession path.
+    [NRMAURLSessionOverride deinstrument];
     NSURLSessionDataTask* task = [self.session dataTaskWithURL:[NSURL URLWithString:url]];
-    // Clear the "already handled" marker set by the instrumented session so that the
-    // setState override exercises the async-URLSession branch (not the early return).
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    XCTAssertNotNil(task.currentRequest, @"precondition: task must expose a currentRequest");
+    // A task that has not been resumed exposes a nil currentRequest, so stub it to drive
+    // the override's async-URLSession branch deterministically (no real networking).
+    id taskMock = [OCMockObject partialMockForObject:task];
+    [[[taskMock stub] andReturn:[NSURLRequest requestWithURL:[NSURL URLWithString:url]]] currentRequest];
     NRMA__setTimerForSessionTask(task, [NRTimer new]);
 
     NRMAOverride__urlSessionTask_SetState(task, @selector(setState:), NSURLSessionTaskStateCompleted);
 
+    XCTAssertNoThrow([mockURLConnectionSupport verify], @"NoticeResponse was not called at completion!");
     XCTAssertTrue(recorded, @"completed task was not recorded");
-    XCTAssertNoThrow([mockHTTPUtils verify], @"request was mutated (DT headers injected) at completion — reintroduces the CFNetwork cache-write race");
-    XCTAssertNoThrow([mockConn verify], @"noticeResponse was not called at completion");
+    XCTAssertEqual(mutationCount, 0, @"request was mutated at completion — reintroduces the CFNetwork cache-write race");
 
+    [taskMock stopMocking];
+    [mockURLConnectionSupport stopMocking];
     [mockHTTPUtils stopMocking];
-    [mockConn stopMocking];
 }
 
 // Companion to the above: on a *starting* (non-completed) transition it is still safe
 // and correct to inject Distributed Tracing headers, because the task is not yet being
-// torn down / cached by CFNetwork.
+// torn down / cached by CFNetwork — and it must NOT record the task yet.
 - (void) testSetStateRunningStillInjectsDistributedTracingHeaders
 {
     NSString* url = @"http://google.com";
 
-    __block BOOL injected = NO;
+    // Count DT header injection; it must happen on the running transition.
+    __block int injectionCount = 0;
     id mockHTTPUtils = [OCMockObject niceMockForClass:[NRMAHTTPUtilities class]];
-    [[[[mockHTTPUtils expect] classMethod] andDo:^(NSInvocation* inv) {
-        injected = YES;
+    [[[[mockHTTPUtils stub] classMethod] andDo:^(NSInvocation* inv) {
+        injectionCount++;
     }] addCrossProcessIdentifier:OCMOCK_ANY];
 
     // Recording must NOT occur for a non-completed transition.
-    id mockConn = [OCMockObject mockForClass:[NRMANSURLConnectionSupport class]];
-    [[[[mockConn reject] ignoringNonObjectArgs] classMethod] noticeResponse:OCMOCK_ANY
-                                                                forRequest:OCMOCK_ANY
-                                                                 withTimer:OCMOCK_ANY
-                                                                   andBody:OCMOCK_ANY
-                                                                 bytesSent:0
-                                                             bytesReceived:0];
+    id mockURLConnectionSupport = [OCMockObject mockForClass:[NRMANSURLConnectionSupport class]];
+    [[[[mockURLConnectionSupport reject] ignoringNonObjectArgs] classMethod] noticeResponse:OCMOCK_ANY
+                                                                                 forRequest:OCMOCK_ANY
+                                                                                  withTimer:OCMOCK_ANY
+                                                                                    andBody:OCMOCK_ANY
+                                                                                  bytesSent:0
+                                                                              bytesReceived:0];
 
+    // See note in the completed-state test: deinstrument so the task is not marked handled.
+    [NRMAURLSessionOverride deinstrument];
     NSURLSessionDataTask* task = [self.session dataTaskWithURL:[NSURL URLWithString:url]];
-    objc_setAssociatedObject(task, NRMAHandledRequestKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    XCTAssertNotNil(task.currentRequest, @"precondition: task must expose a currentRequest");
+    id taskMock = [OCMockObject partialMockForObject:task];
+    [[[taskMock stub] andReturn:[NSURLRequest requestWithURL:[NSURL URLWithString:url]]] currentRequest];
     NRMA__setTimerForSessionTask(task, [NRTimer new]);
 
     NRMAOverride__urlSessionTask_SetState(task, @selector(setState:), NSURLSessionTaskStateRunning);
 
-    XCTAssertTrue(injected, @"DT headers were not injected on the running transition");
-    XCTAssertNoThrow([mockConn verify], @"a non-completed transition must not record the task");
+    XCTAssertTrue(injectionCount > 0, @"DT headers were not injected on the running transition");
+    XCTAssertNoThrow([mockURLConnectionSupport verify], @"a non-completed transition must not record the task");
 
+    [taskMock stopMocking];
     [mockHTTPUtils stopMocking];
-    [mockConn stopMocking];
+    [mockURLConnectionSupport stopMocking];
 }
 
 @end
