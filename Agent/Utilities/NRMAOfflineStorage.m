@@ -63,6 +63,7 @@ static NSTimeInterval __NRMA__offlineStorageTTLSeconds = kNRMADefaultOfflineStor
             }
         }
 
+        NSInteger newOfflineStorageSize = currentOfflineStorageSize + (NSInteger)data.length;
         NSError *error = nil;
         if (data) {
             if ([data writeToFile:[self newOfflineFilePath] options:NSDataWritingAtomic error:&error]) {

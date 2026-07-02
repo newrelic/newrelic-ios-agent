@@ -815,7 +815,7 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [mockConnection stopMocking];
 }
 
-// TODO: LogReporting Add test for entity_guid: and log_reporting: { enabled: , level: }
+
 
 #pragma mark - Rate limit (429) backoff
 
@@ -1014,6 +1014,10 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [mockHarvester stopMocking];
     [mockConnection stopMocking];
 }
+
+
+
+// TODO: LogReporting Add test for entity_guid: and log_reporting: { enabled: , level: }
 
 - (void) testConnectedv5Apps{
     id mockHarvester = [OCMockObject partialMockForObject:harvester];

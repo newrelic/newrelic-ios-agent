@@ -2687,7 +2687,7 @@
 		34A929172912D721001449B6 /* Hex.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Hex.xcodeproj; path = libMobileAgent/src/Hex/Hex.xcodeproj; sourceTree = "<group>"; };
 		34A9291D2912D726001449B6 /* Analytics.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Analytics.xcodeproj; path = libMobileAgent/src/Analytics/Analytics.xcodeproj; sourceTree = "<group>"; };
 		34A929232912D72A001449B6 /* Connectivity.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Connectivity.xcodeproj; path = libMobileAgent/src/Connectivity/Connectivity.xcodeproj; sourceTree = "<group>"; };
-		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/JSON.xcodeproj; sourceTree = "<group>"; };
+		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/json.xcodeproj; sourceTree = "<group>"; };
 		34A9292F2912D736001449B6 /* Utilities.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Utilities.xcodeproj; path = libMobileAgent/src/Utilities/Utilities/Utilities.xcodeproj; sourceTree = "<group>"; };
 		34D0401D2D86036D007BE92D /* UIColor+HexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+HexString.swift"; sourceTree = "<group>"; };
 		34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLTransformer.h; sourceTree = "<group>"; };
@@ -6783,7 +6783,8 @@
 				DYLIB_CURRENT_VERSION = 7.7.3;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -6838,7 +6839,8 @@
 				DYLIB_CURRENT_VERSION = 7.7.3;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}",
@@ -6919,7 +6921,7 @@
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -6997,7 +6999,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -7050,7 +7052,8 @@
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = NO;
@@ -7112,6 +7115,8 @@
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = NO;
@@ -7361,7 +7366,8 @@
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/**",
@@ -7413,6 +7419,8 @@
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					.,
@@ -7590,7 +7598,8 @@
 					"$(inherited)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -7648,6 +7657,8 @@
 					"$(inherited)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
