@@ -37,6 +37,21 @@ public class SessionReplayManager: NSObject {
             sessionReplay.recordingMode = sessionReplayMode
         }
     }
+
+    /// When true, an external source (e.g. the New Relic Flutter agent) supplies
+    /// session-replay frames via `recordSessionReplayEvents`, so the native
+    /// capture loop must NOT run — otherwise it records the opaque host view
+    /// (e.g. `FlutterView`) as blank frames that pollute the replay. Ingest and
+    /// upload stay active. Setting this true while native capture is already
+    /// running tears the capture loop down.
+    @objc public var externalCaptureSource: Bool = false {
+        didSet {
+            if externalCaptureSource && isRunning() {
+                NRLOG_AGENT_DEBUG("Session replay: external capture source enabled — stopping native capture.")
+                stop()
+            }
+        }
+    }
     
     @objc public init(reporter: SessionReplayReporter, url: NSString) {
         self.url = url
@@ -102,12 +117,19 @@ public class SessionReplayManager: NSObject {
             
             
             // SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
-            
+
             self.setRecordingMode(newMode)
-            
+
             // END SESSION REPLAY ERRORED SESSION SAMPLING HANDLING
-            
-            
+
+            // Ingest-only: an external source (e.g. Flutter) provides frames, so
+            // skip the native capture engine + timer. The recording mode is still
+            // set above, and `recordSessionReplayEvents` ingest/upload is unaffected.
+            guard !externalCaptureSource else {
+                NRLOG_AGENT_DEBUG("Session replay: external capture source active — skipping native capture (ingest-only).")
+                return
+            }
+
             guard !isRunning() else {
                 NRLOG_AGENT_DEBUG("Session replay harvest timer attempting to start while already running.")
                 return
@@ -371,7 +393,7 @@ public class SessionReplayManager: NSObject {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
 
-        var jsonData: Data
+        let jsonData: Data
         do {
             jsonData = try encoder.encode(container)
         } catch {
@@ -379,16 +401,24 @@ public class SessionReplayManager: NSObject {
             return nil
         }
 
+        return compressReplayPayload(jsonData)
+    }
+
+    /// Gzips an already-serialized rrweb-event JSON payload, returning the bytes
+    /// to upload plus the pre-gzip size. Shared by native-captured frames and
+    /// externally-supplied events; falls back to the uncompressed bytes if gzip
+    /// fails.
+    func compressReplayPayload(_ jsonData: Data) -> (data: Data, uncompressedSize: Int) {
         let uncompressedDataSize = jsonData.count
 
+        var payload = jsonData
         do {
-            let gzippedData = try jsonData.gzipped()
-            jsonData = gzippedData
+            payload = try jsonData.gzipped()
         } catch {
             NRLOG_AGENT_DEBUG("Failed to gzip session replay data: \(error.localizedDescription)")
         }
 
-        return (jsonData, uncompressedDataSize)
+        return (payload, uncompressedDataSize)
     }
 
     /// Merges WebView events into the native merge order.
@@ -487,19 +517,80 @@ public class SessionReplayManager: NSObject {
     private func createReplayUpload(encoded: (data: Data, uncompressedSize: Int), firstTimestamp: TimeInterval, lastTimestamp: TimeInterval) -> SessionReplayData? {
         let (jsonData, uncompressedDataSize) = encoded
 
-        // Construct upload URL
+        return buildUpload(payload: jsonData,
+                           uncompressedDataSize: uncompressedDataSize,
+                           firstTimestamp: firstTimestamp,
+                           lastTimestamp: lastTimestamp,
+                           isFirstChunk: self.sessionReplay.isFirstChunk)
+    }
+
+    /// Shared upload tail: build the upload URL via the reporter and wrap an
+    /// already-encoded payload in SessionReplayData. Reused by both
+    /// native-captured frames and externally-supplied events.
+    private func buildUpload(payload: Data,
+                             uncompressedDataSize: Int,
+                             firstTimestamp: TimeInterval,
+                             lastTimestamp: TimeInterval,
+                             isFirstChunk: Bool) -> SessionReplayData? {
         guard let url = sessionReplayReporter.uploadURL(
             uncompressedDataSize: uncompressedDataSize,
             firstTimestamp: firstTimestamp,
             lastTimestamp: lastTimestamp,
-            isFirstChunk: self.sessionReplay.isFirstChunk,
-            isGZipped: jsonData.isGzipped
+            isFirstChunk: isFirstChunk,
+            isGZipped: payload.isGzipped
         ) else {
             NRLOG_AGENT_DEBUG("Failed to construct upload URL for session replay.")
             return nil
         }
 
-        return SessionReplayData(sessionReplayFramesData: jsonData, url: url)
+        return SessionReplayData(sessionReplayFramesData: payload, url: url)
+    }
+
+    /// Ingests already-serialized rrweb events produced off-agent (e.g. by the
+    /// New Relic Flutter agent) into the existing native uploader. `eventsJSON`
+    /// must be a JSON array of rrweb events. Skipped when the recording mode is
+    /// off. The gzip + enqueue happen asynchronously so the caller's thread is
+    /// never blocked.
+    /// - Returns: true if the batch was accepted for processing.
+    @objc public func recordSessionReplayEvents(_ eventsJSON: String) -> Bool {
+        // The enable/sampling gate lives in the caller
+        // (NewRelicAgentInternal.recordSessionReplayEvents), which drops events
+        // unless the config-resolved recording mode is not off. We deliberately
+        // do NOT gate on `sessionReplayMode` here: that reflects whether the
+        // *native* capture loop is running, which is independent of — and, for
+        // externally-produced (e.g. Flutter) frames, intentionally decoupled
+        // from — the config-driven decision to record.
+        guard let jsonData = eventsJSON.data(using: .utf8), !jsonData.isEmpty else {
+            NRLOG_AGENT_DEBUG("recordSessionReplayEvents: empty or invalid JSON.")
+            return false
+        }
+
+        sessionReplayQueue.async { [self] in
+            let bounds = SessionReplayManager.timestampBounds(jsonData)
+            let now = Date().timeIntervalSince1970 * 1000
+            let (payload, uncompressedDataSize) = compressReplayPayload(jsonData)
+            guard let upload = buildUpload(payload: payload,
+                                           uncompressedDataSize: uncompressedDataSize,
+                                           firstTimestamp: bounds?.0 ?? now,
+                                           lastTimestamp: bounds?.1 ?? now,
+                                           isFirstChunk: sessionReplay.isFirstChunk) else {
+                return
+            }
+            sessionReplayReporter.enqueueSessionReplayUpload(upload: upload)
+            sessionReplay.isFirstChunk = false
+        }
+        return true
+    }
+
+    /// Extracts the min/max `timestamp` (ms) from a serialized rrweb event array,
+    /// used to stamp the upload URL. Returns nil if the JSON isn't a non-empty
+    /// array of timestamped objects.
+    private static func timestampBounds(_ data: Data) -> (TimeInterval, TimeInterval)? {
+        guard let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+              !arr.isEmpty else { return nil }
+        let ts = arr.compactMap { ($0["timestamp"] as? NSNumber)?.doubleValue }
+        guard let lo = ts.min(), let hi = ts.max() else { return nil }
+        return (lo, hi)
     }
     
     // REPLAY PERSISTENCE

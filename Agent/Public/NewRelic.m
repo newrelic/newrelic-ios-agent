@@ -931,6 +931,21 @@
     return [[NewRelicAgentInternal sharedInstance] pauseReplay];
 }
 
++ (BOOL) recordSessionReplayEvents:(NSString*) eventsJSON {
+    if (eventsJSON.length == 0) {
+        return NO;
+    }
+    return [[NewRelicAgentInternal sharedInstance] recordSessionReplayEvents:eventsJSON];
+}
+
++ (NSDictionary*) sessionReplayConfiguration {
+    return [[NewRelicAgentInternal sharedInstance] sessionReplayConfiguration];
+}
+
++ (void) setSessionReplayExternalCaptureSource:(BOOL) external {
+    [[NewRelicAgentInternal sharedInstance] setSessionReplayExternalCaptureSource:external];
+}
+
 
 #pragma mark - Hidden APIs
 
