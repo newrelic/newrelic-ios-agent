@@ -134,31 +134,38 @@ void NRMAOverride__urlSessionTask_SetState(NSURLSessionTask* task, SEL _cmd, NSU
                 NSURL *url = [currentRequest URL];
                 if (url != nil) {
 
-                    // Added this section to add Distributed Tracing traceId\trace.id, guid,id and payload.
-                    //1
-                    NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:currentRequest];
-                    mutableRequest = [NRMAHTTPUtilities addConnectivityHeaderAndPayload:mutableRequest];
-                    // 2
-                    if([NRMAFlags shouldEnableNewEventSystem]){
-                        NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
-                        [NRMAHTTPUtilities attachNRMAPayload:payload
-                                                      to:task.originalRequest];
-                    } else {
-                        NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
-                        [NRMAHTTPUtilities attachPayload:payload
-                                                      to:task.originalRequest];
-                    }
-
-
-                    NSData *data = NRMA__getDataForSessionTask(task);
-
-                    // log the task and data that we will record
-                    //NSLog(@"NRMAOverride__urlSessionTask_SetState newState: %ld, taskState:%ld  task: %@ data: %@", (long) newState, (long)task.state, task, data);
-
                     if (newState == NSURLSessionTaskStateCompleted) {
-                        // NSLog(@"NRMAOverride NRMA__recordTask called because newState  == NSURLSessionTaskStateCompleted  newState: %ld, taskState:%ld  task: %@ data: %@", (long) newState, (long)task.state, task, data);
+                        // The task has finished. Do NOT create a mutable copy of, or attach
+                        // associated objects to, the task's request here. At completion CFNetwork
+                        // may be concurrently serializing that same request's header dictionary
+                        // into the shared URL cache (com.apple.CFNetwork.CacheDB-write queue).
+                        // NSURLRequest header dictionaries are not thread-safe, so mutating/copying
+                        // them here races with CFNetwork's cache write and can leave a dangling
+                        // object that CFNetwork later walks into (CFGetTypeID crash). Injecting
+                        // distributed-tracing headers at completion is also pointless because the
+                        // request has already been sent. Only read immutable snapshots to record.
+                        NSData *data = NRMA__getDataForSessionTask(task);
+                        NSURLResponse *response = task.response;
+                        NSError *taskError = task.error;
 
-                        NRMA__recordTask(task, data, task.response, task.error);
+                        NRMA__recordTask(task, data, response, taskError);
+                    } else {
+                        // The task is starting. Add Distributed Tracing traceId\trace.id, guid, id
+                        // and payload before the request goes out. This is safe because the task
+                        // is not yet being torn down / cached by CFNetwork.
+                        //1
+                        NSMutableURLRequest* mutableRequest = [NRMAHTTPUtilities addCrossProcessIdentifier:currentRequest];
+                        mutableRequest = [NRMAHTTPUtilities addConnectivityHeaderAndPayload:mutableRequest];
+                        // 2
+                        if([NRMAFlags shouldEnableNewEventSystem]){
+                            NRMAPayload* payload = [NRMAHTTPUtilities addConnectivityHeaderNRMAPayload:mutableRequest];
+                            [NRMAHTTPUtilities attachNRMAPayload:payload
+                                                          to:task.originalRequest];
+                        } else {
+                            NRMAPayloadContainer* payload = [NRMAHTTPUtilities addConnectivityHeader:mutableRequest];
+                            [NRMAHTTPUtilities attachPayload:payload
+                                                          to:task.originalRequest];
+                        }
                     }
                 }
             }
