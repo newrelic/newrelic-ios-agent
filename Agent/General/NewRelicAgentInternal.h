@@ -140,6 +140,16 @@ NS_ASSUME_NONNULL_BEGIN
 // Start a session replay recording
 - (BOOL) recordReplay;
 
+// Ingest externally-produced rrweb events (e.g. from the Flutter agent)
+- (BOOL) recordSessionReplayEvents:(NSString *_Nonnull)eventsJSON;
+
+// Resolved session replay configuration (remote config + recording mode)
+- (NSDictionary *_Nonnull) sessionReplayConfiguration;
+
+// Suppress the native capture loop because an external source (e.g. Flutter)
+// supplies session-replay frames. Ingest + upload remain active.
+- (void) setSessionReplayExternalCaptureSource:(BOOL)external;
+
 // Pause a session replay recording
 - (BOOL) pauseReplay;
 // Notify Session Replay of an error
