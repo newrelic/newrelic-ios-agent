@@ -161,11 +161,13 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 
                 [self removeCrashLogAtpath:path];
             } else if(statusCode == 400 || statusCode == 403) {
-                // Permanent rejection: the collector will never accept this payload.
-                // Discard it now instead of re-uploading every launch until the retry
-                // limit evicts it.
+                // Permanent rejection: the collector will never accept this payload, so
+                // retrying it on every harvest until the retry cap just wastes bandwidth and
+                // battery. Delete it now and record a supportability metric instead.
                 NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - crash log permanently rejected (HTTP %ld), discarding: %@", (long)statusCode, path.path);
-                [NRMASupportMetricHelper enqueueCrashRejectedMetric];
+                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRMACrashOfflineRejectedMetric
+                                                                value:@1
+                                                                scope:nil]];
                 [self removeCrashLogAtpath:path];
             } else {
                 NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - failed to upload crash log: %@, to try again later.",path.path);

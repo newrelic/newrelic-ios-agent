@@ -284,7 +284,6 @@ didCompleteWithError:(nullable NSError*)error {
 
     if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
         ((NSHTTPURLResponse*)response).statusCode >= 400) {
-        NSInteger statusCode = ((NSHTTPURLResponse*)response).statusCode;
         NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
         // Record the HTTP failure; the terminal retry/abandon decision (and the
         // payload completion) is made in didCompleteWithError so it happens
@@ -304,18 +303,10 @@ didCompleteWithError:(nullable NSError*)error {
     completionHandler(NSURLSessionResponseAllow);
 }
 
-// Drop a request and its buffered payload without retrying. Used for permanent
-// rejections (HTTP 400 / 403) where re-uploading would never succeed.
-- (void) discardRequest:(NSURLRequest*)request {
-    if (request == nil) return;
-    @synchronized(self.payloadByRequest) {
-        [self.payloadByRequest removeObjectForKey:request];
-    }
-    [self.taskStore untrack:request];
-}
+- (void) handledErroredTask:(NSURLSessionTask*)task payload:(NRMAHexPayload*)payload {
+    if (task == nil) return;
 
-- (void) handledErroredRequest:(NSURLRequest*)request {
-    if (request == nil) return;
+    NSNumber* oldKey = @(task.taskIdentifier);
 
     // If we're offline, don't burn FDs/sockets cycling failed retries —
     // keep the report on disk and let the next harvest retry when reachable.
