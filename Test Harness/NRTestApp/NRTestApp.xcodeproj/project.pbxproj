@@ -150,6 +150,8 @@
 		F8BF14362F3268E900EF5628 /* DrawingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14352F3268E900EF5628 /* DrawingsView.swift */; };
 		F8BF14882F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */; };
 		F8BF14892F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */; };
+		CD0A001B2F50000100000001 /* URLCacheTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0A001A2F50000100000001 /* URLCacheTestViewController.swift */; };
+		CD0A001C2F50000100000001 /* URLCacheTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0A001A2F50000100000001 /* URLCacheTestViewController.swift */; };
 		F8BF14A42F35345500EF5628 /* AttributedTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF14A32F35345500EF5628 /* AttributedTextView.swift */; };
 		F8BF16382F3F6D9F00EF5628 /* ClaimFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF162A2F3F6D9F00EF5628 /* ClaimFormView.swift */; };
 		F8BF16392F3F6D9F00EF5628 /* MUIToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BF16302F3F6D9F00EF5628 /* MUIToken.swift */; };
@@ -455,6 +457,7 @@
 		F8ACFA282EA019BF00E6692B /* InfiniteImageCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteImageCollectionView.swift; sourceTree = "<group>"; };
 		F8BF14352F3268E900EF5628 /* DrawingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingsView.swift; sourceTree = "<group>"; };
 		F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedTextTestViewController.swift; sourceTree = "<group>"; };
+		CD0A001A2F50000100000001 /* URLCacheTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCacheTestViewController.swift; sourceTree = "<group>"; };
 		F8BF14A32F35345500EF5628 /* AttributedTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedTextView.swift; sourceTree = "<group>"; };
 		F8BF16292F3F6D9F00EF5628 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		F8BF162A2F3F6D9F00EF5628 /* ClaimFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaimFormView.swift; sourceTree = "<group>"; };
@@ -751,6 +754,7 @@
 				F81061F72E16C13F00B8CC81 /* ScrollableCollectionViewController.swift */,
 				F8EACAE72F6AE2BC00385075 /* TintedImagesViewController.swift */,
 				F8BF14872F35112100EF5628 /* AttributedTextTestViewController.swift */,
+				CD0A001A2F50000100000001 /* URLCacheTestViewController.swift */,
 				F8EAB9732EE09E040008B092 /* ConfidentialViewController.swift */,
 				F8E278412E3BEACD00D6F04C /* DiffTestViewController.swift */,
 				F81062172E1724FF00B8CC81 /* InfiniteScrollViewController.swift */,
@@ -1346,6 +1350,7 @@
 				F8EACABE2F688F7300385075 /* DateTimePickerViewController.swift in Sources */,
 				2BAE5C9A2E860C7D001D2B88 /* ScrollViewsView.swift in Sources */,
 				F8BF14882F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */,
+				CD0A001B2F50000100000001 /* URLCacheTestViewController.swift in Sources */,
 				2BAE5C9B2E860C7D001D2B88 /* SlidersView.swift in Sources */,
 				2BAE5C9C2E860C7D001D2B88 /* ContentView.swift in Sources */,
 				F8E278492E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
@@ -1434,6 +1439,7 @@
 				F8E2784A2E3BEADA00D6F04C /* DiffTestViewController.swift in Sources */,
 				F86429382979CDFA002ABA01 /* AppDelegate.swift in Sources */,
 				F8BF14892F35112100EF5628 /* AttributedTextTestViewController.swift in Sources */,
+				CD0A001C2F50000100000001 /* URLCacheTestViewController.swift in Sources */,
 				F8D7C6052B45C38700170F79 /* AppDelegate+UITest.swift in Sources */,
 				F86429392979CDFA002ABA01 /* SceneDelegate.swift in Sources */,
 				F864293A2979CDFA002ABA01 /* ViewControllerProvider.swift in Sources */,

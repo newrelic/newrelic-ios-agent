@@ -79,6 +79,12 @@
  
  - NRFeatureFlag_OfflineStorage
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
+
+ - NRFeatureFlag_URLSessionDelegateInjection
+    Disabled by default. When enabled, the agent injects a metrics-only delegate into URLSession.shared
+    and URLSession(configuration:) instances created without a delegate, so resourceFetchType and
+    wireStatusCode can be captured for those sessions. May affect customer code that relies on
+    URLSession.shared having no delegate.
 */
 
 
@@ -106,5 +112,6 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_OfflineStorage                        = 1 << 21, // Disabled by default
     NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
     NRFeatureFlag_AutoCollectLogs                       = 1 << 23, // Disabled by default
-    NRFeatureFlag_JSErrorEvents                         = 1 << 24  // Enabled by default
+    NRFeatureFlag_JSErrorEvents                         = 1 << 24, // Enabled by default
+    NRFeatureFlag_URLSessionDelegateInjection           = 1 << 25  // Disabled by default
 };

@@ -282,6 +282,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
 
+        options.append(UtilOption(title: "URL Cache Test", handler: { [self] in urlCacheTestAction()}))
+
         options.append(UtilOption(title: "Date Time Picker", handler: { [self] in dateTimePickerAction()}))
 
         options.append(UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction()}))
@@ -369,6 +371,10 @@ class ViewController: UIViewController {
 
     func attributedTextTestAction() {
         coordinator?.showAttributedTextTestViewController()
+    }
+
+    func urlCacheTestAction() {
+        coordinator?.showURLCacheTestViewController()
     }
 
     func dateTimePickerAction() {

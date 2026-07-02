@@ -141,6 +141,52 @@
                  responseData:(NSData*)responseData
                  traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
                        params:(NSDictionary*)params {
+    [self noticeNetworkRequest:request
+                      response:response
+                     withTimer:timer
+                     bytesSent:bytesSent
+                 bytesReceived:bytesReceived
+                  responseData:responseData
+                  traceHeaders:traceHeaders
+                        params:params
+             resourceFetchType:nil
+                wireStatusCode:0];
+}
+
++ (void) noticeNetworkRequest:(NSURLRequest*)request
+                     response:(NSURLResponse*)response
+                    withTimer:(NRTimer*)timer
+                    bytesSent:(NSUInteger)bytesSent
+                bytesReceived:(NSUInteger)bytesReceived
+                 responseData:(NSData*)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
+                       params:(NSDictionary*)params
+            resourceFetchType:(NSString* _Nullable)resourceFetchType
+               wireStatusCode:(NSInteger)wireStatusCode {
+    [self noticeNetworkRequest:request
+                      response:response
+                     withTimer:timer
+                     bytesSent:bytesSent
+                 bytesReceived:bytesReceived
+                  responseData:responseData
+                  traceHeaders:traceHeaders
+                        params:params
+             resourceFetchType:resourceFetchType
+                wireStatusCode:wireStatusCode
+             wireBytesReceived:0];
+}
+
++ (void) noticeNetworkRequest:(NSURLRequest*)request
+                     response:(NSURLResponse*)response
+                    withTimer:(NRTimer*)timer
+                    bytesSent:(NSUInteger)bytesSent
+                bytesReceived:(NSUInteger)bytesReceived
+                 responseData:(NSData*)responseData
+                 traceHeaders:(NSDictionary<NSString*,NSString*>* _Nullable)traceHeaders
+                       params:(NSDictionary*)params
+            resourceFetchType:(NSString* _Nullable)resourceFetchType
+               wireStatusCode:(NSInteger)wireStatusCode
+            wireBytesReceived:(int64_t)wireBytesReceived {
 
     [timer stopTimer];
     double startTime = timer.startTimeInMillis;
@@ -189,10 +235,19 @@
         }
 
         NSUInteger modifiedBytesReceived = bytesReceived;
-        if([response isKindOfClass:[NSHTTPURLResponse class]]) {
+        if (wireBytesReceived > 0) {
+            // URLSessionTaskTransactionMetrics.countOfResponseBodyBytesReceived is the
+            // authoritative wire byte count when available — prefer it over any local
+            // recompression estimate.
+            modifiedBytesReceived = (NSUInteger)wireBytesReceived;
+        } else if (responseData != nil && [response isKindOfClass:[NSHTTPURLResponse class]]) {
             NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*) response;
             NSString* header = httpResponse.allHeaderFields[@"Content-Encoding"];
             if ([header isEqualToString:@"gzip"]) {
+                // Fallback for paths that don't have transaction metrics (legacy / no-delegate
+                // completion-handler paths): re-gzip the locally-decompressed body to estimate
+                // wire bytes. Only valid when responseData is non-nil — gzipping nil yields a
+                // ~20-byte empty-stream and corrupts the count.
                 modifiedBytesReceived = [[NRMAHarvesterConnection gzipData:responseData] length];
             }
         }
@@ -206,8 +261,11 @@
                     [NRMANetworkFacade configureNRMAPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
                 }
 
+                NRMANetworkResponseData* errResponseData = [[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]];
+                errResponseData.resourceFetchType = resourceFetchType;
+                errResponseData.wireStatusCode = wireStatusCode;
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
-                                                                                   withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
+                                                                                   withResponse:errResponseData
                                                                                 withNRMAPayload:retrievedPayload];
             } else {
                 std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
@@ -218,8 +276,11 @@
                     [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
                 }
 
+                NRMANetworkResponseData* errResponseData = [[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]];
+                errResponseData.resourceFetchType = resourceFetchType;
+                errResponseData.wireStatusCode = wireStatusCode;
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addHTTPErrorEvent:networkRequestData
-                                                                                   withResponse:[[NRMANetworkResponseData alloc] initWithHttpError:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds] networkErrorMessage:nil encodedResponseBody:[NRMANetworkFacade responseBodyForEvents:responseData] appDataHeader:[NRMANetworkFacade getAppDataHeader:response]]
+                                                                                   withResponse:errResponseData
                                                                                     withPayload:std::move(retrievedPayload)];
             }
         // Success case
@@ -232,8 +293,11 @@
                     [NRMANetworkFacade configureNRMAPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
                 }
 
+                NRMANetworkResponseData* okResponseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]];
+                okResponseData.resourceFetchType = resourceFetchType;
+                okResponseData.wireStatusCode = wireStatusCode;
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
-                                                                                        withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]]
+                                                                                        withResponse:okResponseData
                                                                                      withNRMAPayload: retrievedPayload];
             } else {
                 std::unique_ptr<NewRelic::Connectivity::Payload> retrievedPayload = [NRMAHTTPUtilities retrievePayload:request];
@@ -244,8 +308,11 @@
                     [NRMANetworkFacade configureCppPayloadWithTraceHeaders:retrievedPayload traceHeaders:traceHeaders];
                 }
 
+                NRMANetworkResponseData* okResponseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]];
+                okResponseData.resourceFetchType = resourceFetchType;
+                okResponseData.wireStatusCode = wireStatusCode;
                 [[[NewRelicAgentInternal sharedInstance] analyticsController] addNetworkRequestEvent:networkRequestData
-                                                                                        withResponse:[[NRMANetworkResponseData alloc] initWithSuccessfulResponse:[NRMANetworkFacade statusCode:response] bytesReceived:modifiedBytesReceived responseTime:[timer timeElapsedInSeconds]]
+                                                                                        withResponse:okResponseData
                                                                                          withPayload:std::move(retrievedPayload)];
             }
         }
