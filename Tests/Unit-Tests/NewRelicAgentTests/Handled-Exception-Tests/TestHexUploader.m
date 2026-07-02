@@ -21,12 +21,13 @@
 #import "NRMASupportMetricHelper.h"
 
 @interface NRMAHexUploader ()
-- (void) handledErroredRequest:(NSURLRequest*)request;
+- (void) handledErroredTask:(NSURLSessionTask*)task payload:(id)payload;
 @property(strong) NSURLSession* session;
 @property(strong) NSMutableArray* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;
-// Values are NRMAHexPayload (private to NRMAHexUploader.m); accessed here via KVC.
-@property(strong) NSMutableDictionary* payloadByRequest;
+// Keyed by @(task.taskIdentifier); values are NRMAHexPayload (private to
+// NRMAHexUploader.m), accessed here via KVC.
+@property(strong) NSMutableDictionary* payloadByTaskId;
 @end
 
 @interface TestHexUploader : NRMAAgentTestBase {
@@ -77,21 +78,23 @@
 
 - (void) testHandledNetworkError {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
 
     // A >= 400 response is recorded against the in-flight payload, but the
     // terminal retry/abandon decision is made in didCompleteWithError so it
-    // happens exactly once per attempt. Register a payload + a task carrying a
-    // matching originalRequest so the flow can find it.
+    // happens exactly once per attempt. Register a payload under the task's
+    // identifier so the response/completion handlers can find it.
     NSURLRequest* request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://localhost/f"]];
     id payload = [NSClassFromString(@"NRMAHexPayload") new];
     [payload setValue:[@"x" dataUsingEncoding:NSUTF8StringEncoding] forKey:@"data"];
-    @synchronized(self.hexUploader.payloadByRequest) {
-        self.hexUploader.payloadByRequest[request] = payload;
-    }
 
     id mockTask = [OCMockObject niceMockForClass:[NSURLSessionDataTask class]];
     [[[mockTask stub] andReturn:request] originalRequest];
+    // The nice mock returns 0 for the unstubbed -taskIdentifier; register the
+    // payload under that same identifier so lookups resolve to it.
+    @synchronized(self.hexUploader.payloadByTaskId) {
+        self.hexUploader.payloadByTaskId[@(0)] = payload;
+    }
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
@@ -115,7 +118,7 @@
 
 - (void) testNoRetryOnSuccess {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
@@ -138,7 +141,7 @@
 
 - (void) testRetryOnFailure {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
 
     NSError* error = [NSError errorWithDomain:(NSString*)kCFErrorDomainCFNetwork
                                          code:kCFURLErrorDNSLookupFailed
@@ -156,7 +159,7 @@
 
 - (void) testSuccessSupportMetric {
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wnonnull"
@@ -192,7 +195,7 @@
 
     self.hexUploader.applicationToken = @"IMTHETOKENNOW";
     id mockUploader = [OCMockObject partialMockForObject:self.hexUploader];
-    [[mockUploader expect] handledErroredRequest:OCMOCK_ANY];
+    [[mockUploader expect] handledErroredTask:OCMOCK_ANY payload:OCMOCK_ANY];
     
     XCTAssertThrows([mockUploader verify]);
 
@@ -239,20 +242,18 @@
     // Bookkeeping is synchronous: by the time sendData: returns, the upload
     // has been launched and its payload recorded. The task may already have
     // failed under the simulator (no listener), but the dict entry persists
-    // for the duration of any retry chain — so it must be present here.
+    // for the duration of any retry chain — so it must be present here. The
+    // dictionary is now keyed by @(task.taskIdentifier), and the original
+    // bytes live on the tracked NRMAHexPayload's `data` property.
     NSDictionary* snapshot = nil;
-    @synchronized(self.hexUploader.payloadByRequest) {
-        snapshot = [self.hexUploader.payloadByRequest copy];
+    @synchronized(self.hexUploader.payloadByTaskId) {
+        snapshot = [self.hexUploader.payloadByTaskId copy];
     }
     XCTAssertGreaterThanOrEqual(snapshot.count, (NSUInteger)1,
                                 @"payload must be tracked for retry");
 
     BOOL foundOriginalLength = NO;
-    for (NSURLRequest* key in snapshot) {
-        // The request itself must NOT carry HTTPBody — that would trip the
-        // iOS upload-task warning and strip the body.
-        XCTAssertNil(key.HTTPBody, @"upload-task request must have no HTTPBody");
-        // Values are NRMAHexPayload; the original bytes live on its `data` property.
+    for (NSNumber* key in snapshot) {
         NSData* trackedData = [snapshot[key] valueForKey:@"data"];
         if (trackedData.length == data.length) {
             foundOriginalLength = YES;
