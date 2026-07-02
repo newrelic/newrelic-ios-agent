@@ -21,7 +21,7 @@
 #import "NRMASupportMetricHelper.h"
 
 @interface NRMAHexUploader ()
-- (void) handledErroredRequest:(NSURLRequest*)request;
+- (BOOL) handledErroredRequest:(NSURLRequest*)request;
 @property(strong) NSURLSession* session;
 @property(strong) NSMutableArray* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;

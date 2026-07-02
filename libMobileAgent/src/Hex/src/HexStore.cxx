@@ -149,9 +149,10 @@ namespace NewRelic {
             std::string path = storePath;
             return std::async(std::launch::async, [callback, path, this]() {
                 std::lock_guard<std::mutex> storeLock(_storeMutex);
+                LLOG_VERBOSE("[HexDelete] readAll: begin pass over store dir \"%s\"", path.c_str());
                 UniqueDir dirp(::opendir(path.c_str()));
                 if (!dirp) {
-                    LLOG_ERROR("failed to open handled exception store dir: \"%s\".\nerror %d: %s",
+                    LLOG_ERROR("[HexDelete] readAll: failed to open handled exception store dir: \"%s\".\nerror %d: %s",
                                path.c_str(), errno, std::strerror(errno));
                     return false;
                 }
@@ -161,6 +162,8 @@ namespace NewRelic {
                     if (flushed >= kMaxReportsPerFlush) {
                         // Remaining files stay on disk; next harvest cycle picks them up.
                         // Prevents 100s of concurrent uploads when a backlog drains.
+                        LLOG_VERBOSE("[HexDelete] readAll: per-pass flush cap (%zu) reached; "
+                                     "remaining reports deferred to next pass", kMaxReportsPerFlush);
                         break;
                     }
                     std::string filename{dp->d_name};
@@ -182,12 +185,16 @@ namespace NewRelic {
                     {
                         std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
                         if (inFlightSet().count(fullPath)) {
+                            LLOG_VERBOSE("[HexDelete] readAll: skipping report already in-flight: %s",
+                                         fullPath.c_str());
                             continue;
                         }
                     }
 
                     std::ifstream file{fullPath.c_str(), std::ios::binary | std::ios::ate};
                     if (!file.good()) {
+                        LLOG_ERROR("[HexDelete] readAll: report not readable, removing inline: %s",
+                                   fullPath.c_str());
                         file.close();
                         std::remove(fullPath.c_str());
                         continue;
@@ -199,7 +206,7 @@ namespace NewRelic {
                         // fell through to `new uint8_t[size]` with size == -1, allocating
                         // ~SIZE_MAX bytes (crash). Corrupt files can never upload, so they
                         // are still removed inline.
-                        LLOG_ERROR("dropping handled exception report (size %lld): %s",
+                        LLOG_ERROR("[HexDelete] readAll: dropping corrupt/empty handled exception report (size %lld): %s",
                                    static_cast<long long>(size), filename.c_str());
                         file.close();
                         std::remove(fullPath.c_str());
@@ -224,44 +231,71 @@ namespace NewRelic {
                             if (!inFlightSet().insert(fullPath).second) {
                                 // Another reader claimed it between the skip-check above
                                 // and here; leave it to them.
+                                LLOG_VERBOSE("[HexDelete] readAll: lost claim race for %s, "
+                                             "leaving to other reader", fullPath.c_str());
                                 file.close();
                                 continue;
                             }
+                            LLOG_VERBOSE("[HexDelete] readAll: claimed report in-flight (%zu bytes): %s "
+                                         "(in-flight set size now %zu)",
+                                         static_cast<std::size_t>(size), fullPath.c_str(),
+                                         inFlightSet().size());
                         }
                         try {
+                            LLOG_VERBOSE("[HexDelete] readAll: handing report to publisher: %s", fullPath.c_str());
                             callback(buf.get(), static_cast<std::size_t>(size), fullPath);
                             ++flushed;
                         } catch (...) {
                             // Never let a publisher exception leak the DIR* / buffer.
                             // The upload was never queued, so release the claim
                             // and leave the file for the next pass.
-                            LLOG_ERROR("publisher threw while consuming %s — continuing",
-                                       filename.c_str());
+                            LLOG_ERROR("[HexDelete] readAll: publisher threw while consuming %s — "
+                                       "releasing claim, keeping file for next pass", filename.c_str());
                             std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
                             inFlightSet().erase(fullPath);
                         }
                     } else {
-                        LLOG_ERROR("failed to read file %s", filename.c_str());
+                        LLOG_ERROR("[HexDelete] readAll: failed to read file %s", filename.c_str());
                     }
                     file.close();
                     // NOTE: the report is intentionally NOT removed here. It is deleted
                     // only once its upload is confirmed via markUploaded().
                 }
+                LLOG_VERBOSE("[HexDelete] readAll: pass complete over \"%s\": handed %zu report(s) to publisher",
+                             path.c_str(), flushed);
                 return true;
             });
         }
 
         void HexStore::markUploaded(const std::string& reportId) {
             std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
-            std::remove(reportId.c_str());
-            inFlightSet().erase(reportId);
+            int rc = std::remove(reportId.c_str());
+            std::size_t erased = inFlightSet().erase(reportId);
+            if (rc != 0) {
+                LLOG_ERROR("[HexDelete] markUploaded: std::remove failed (rc=%d, errno=%d: %s) for %s "
+                           "— file may already be gone or path mismatch", rc, errno,
+                           std::strerror(errno), reportId.c_str());
+            } else {
+                LLOG_VERBOSE("[HexDelete] markUploaded: deleted confirmed report %s", reportId.c_str());
+            }
+            if (erased == 0) {
+                LLOG_WARNING("[HexDelete] markUploaded: reportId was NOT in the in-flight set: %s "
+                             "(double-resolve or unmatched key?)", reportId.c_str());
+            }
         }
 
         void HexStore::markFailed(const std::string& reportId) {
             std::lock_guard<std::mutex> inFlightLock(inFlightMutex());
             // Leave the file on disk; just release the claim so the next readAll()
             // pass re-reads and re-uploads it.
-            inFlightSet().erase(reportId);
+            std::size_t erased = inFlightSet().erase(reportId);
+            if (erased == 0) {
+                LLOG_WARNING("[HexDelete] markFailed: reportId was NOT in the in-flight set: %s "
+                             "(double-resolve or unmatched key?)", reportId.c_str());
+            } else {
+                LLOG_VERBOSE("[HexDelete] markFailed: kept report on disk for retry, released claim: %s",
+                             reportId.c_str());
+            }
         }
 
         void HexStore::clear() {
@@ -274,13 +308,17 @@ namespace NewRelic {
                 // sharing a prefix (e.g. "/hex" vs "/hex2") don't get erased.
                 // Every claim is keyed as storePath + "/" + filename.
                 std::string prefix = storePath + "/";
+                std::size_t released = 0;
                 for (auto it = s.begin(); it != s.end(); ) {
                     if (it->rfind(prefix, 0) == 0) {
                         it = s.erase(it);
+                        ++released;
                     } else {
                         ++it;
                     }
                 }
+                LLOG_VERBOSE("[HexDelete] clear: released %zu in-flight claim(s) for prefix \"%s\" "
+                             "and will delete all persisted reports", released, prefix.c_str());
             }
             std::string path = storePath;
             // Honor the original async intent without the std::async-discarded-future

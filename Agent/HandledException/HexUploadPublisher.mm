@@ -49,6 +49,9 @@ namespace NewRelic {
                                                 length:size];
                 NSString* nsReportId = [NSString stringWithUTF8String:reportId.c_str()];
 
+                NRLOG_AGENT_VERBOSE(@"[HexDelete] HexUploadPublisher::publish: bridging upload for report %@ (%lu bytes)",
+                                    nsReportId, (unsigned long)report.length);
+
                 // Bridge the C++ completion to an Obj-C block the uploader fires once
                 // the upload terminally resolves. shouldRemove==YES => delete the
                 // persisted report (confirmed, or gave up after the retry limit).
@@ -56,8 +59,13 @@ namespace NewRelic {
                 [uploader->wrapper sendData:report
                                    reportId:nsReportId
                                  completion:^(BOOL shouldRemove) {
+                    NRLOG_AGENT_VERBOSE(@"[HexDelete] HexUploadPublisher: completion for report %@ shouldRemove=%@",
+                                        nsReportId, shouldRemove ? @"YES" : @"NO");
                     if (cb) {
                         cb(shouldRemove);
+                    } else {
+                        NRLOG_AGENT_WARNING(@"[HexDelete] HexUploadPublisher: completion fired MORE THAN ONCE "
+                                            @"for report %@ (ignored) — store already resolved", nsReportId);
                     }
                     cb = nullptr;
                 }];

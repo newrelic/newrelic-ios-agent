@@ -23,7 +23,8 @@ void NewRelic::Hex::HexPublisher::publish(std::shared_ptr<NewRelic::Hex::HexCont
                                           std::function<void(bool shouldRemove)> onComplete) {
     // Base publisher has no asynchronous upload to await; publish and tell the caller
     // it is safe to remove the persisted report.
-    (void)reportId;
+    LLOG_VERBOSE("[HexDelete] HexPublisher(base)::publish: no upload confirmation available, "
+                 "completing with remove=true for %s", reportId.c_str());
     publish(context);
     if (onComplete) {
         onComplete(true);

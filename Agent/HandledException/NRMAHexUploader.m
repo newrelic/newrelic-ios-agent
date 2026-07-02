@@ -8,6 +8,7 @@
 
 #import "NRMAHexUploader.h"
 #import "NRMARetryTracker.h"
+#import "NRMAPersistentRetryTracker.h"
 #import "NRLogger.h"
 #include <libkern/OSAtomic.h>
 #import "NRMASupportMetricHelper.h"
@@ -17,6 +18,13 @@
 
 #define kNRMARetryLimit 2 // this will result in 2 additional upload attempts.
 
+// Cross-launch retry budget for a PERSISTED report, keyed by its (unique, timestamped)
+// filename and tracked on disk by NRMAPersistentRetryTracker. Unlike kNRMARetryLimit
+// (per-request, in memory, resets each launch), this bounds the TOTAL number of failed
+// server attempts a single persisted report may accrue across app restarts before it is
+// dropped — so a permanently-un-uploadable report is not retried forever every launch.
+#define kNRMAHexPersistedRetryLimit 5
+
 // Couples an upload payload with the completion that reports its terminal outcome
 // back to the persisted store, plus the per-attempt HTTP-error flag. The completion
 // is fired exactly once at the terminal outcome (retries do not fire it). Its BOOL
@@ -24,8 +32,10 @@
 // permanently given up, NO to keep it for a later retry.
 @interface NRMAHexPayload : NSObject
 @property(strong) NSData* data;
-// Persisted report path; nil for non-persisted (live) uploads. Used as the stable
-// de-dupe identifier sent to the collector.
+// Persisted report path (its on-disk file path); nil for non-persisted (live) uploads.
+// Used as the key for the cross-launch retry budget (NRMAPersistentRetryTracker).
+// NOTE: not yet sent to the collector as a de-dupe/idempotency identifier — that wire
+// contract is still to be confirmed with the collector.
 @property(strong) NSString* reportId;
 @property(copy) void(^completion)(BOOL shouldRemove);
 // Set when a >= 400 HTTP response is seen for the current attempt; reset on retry.
@@ -41,7 +51,16 @@
         self.completion = nil; // guarantee exactly-once
     }
     if (c) {
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] payload finishWith:%@ for report %@ — invoking store completion",
+                            shouldRemove ? @"REMOVE" : @"KEEP", self.reportId ?: @"(live/no-reportId)");
         c(shouldRemove);
+    } else {
+        // No completion means either a live (non-persisted) upload OR this payload's
+        // terminal outcome was already reported. If it had a reportId, the second
+        // path means the persisted store never hears about this resolution.
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] payload finishWith:%@ for report %@ — no completion to fire "
+                            @"(live upload or already resolved)",
+                            shouldRemove ? @"REMOVE" : @"KEEP", self.reportId ?: @"(live/no-reportId)");
     }
 }
 @end
@@ -66,6 +85,8 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 @property(strong) NSMutableArray* retryQueue;
 @property(strong) NSURLSession* session;
 @property(strong) NRMARetryTracker* taskStore;
+// Cross-launch retry budget for persisted reports, keyed by report filename.
+@property(strong) NRMAPersistentRetryTracker* persistentRetryTracker;
 
 // Concurrency control — guarded by @synchronized(self).
 @property(strong) NSMutableArray<NRMAHexPayload*>* pendingPayloads;
@@ -101,6 +122,7 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
                                                      delegate:self
                                                 delegateQueue:nil];
         self.taskStore = [[NRMARetryTracker alloc] initWithRetryLimit:kNRMARetryLimit];
+        self.persistentRetryTracker = [[NRMAPersistentRetryTracker alloc] initWithRetryLimit:kNRMAHexPersistedRetryLimit];
     }
     return self;
 }
@@ -112,12 +134,15 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 - (void) sendData:(NSData*)data reportId:(NSString*)reportId completion:(void(^)(BOOL shouldRemove))completion {
     if (data == nil) {
         // Nothing to upload; keep any persisted report untouched.
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] sendData: nil data for report %@ — completion(KEEP)",
+                            reportId ?: @"(live)");
         if (completion) completion(NO);
         return;
     }
 
     if ([data length] > kNRMAMaxPayloadSizeLimit) {
-        NRLOG_AGENT_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
+        NRLOG_AGENT_ERROR(@"[HexDelete] sendData: payload for report %@ is greater than 1 MB (%lu bytes), "
+                          @"discarding and completion(REMOVE)", reportId ?: @"(live)", (unsigned long)data.length);
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
         // Can never be uploaded — remove it so we don't retry it every harvest
         // (matches the crash uploader's handling of oversized reports).
@@ -137,11 +162,17 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
         // we'd otherwise hold every report in RAM forever.
         while (self.pendingPayloads.count >= kNRMAHexMaxPending) {
             if (dropped == nil) dropped = [NSMutableArray new];
-            [dropped addObject:self.pendingPayloads.firstObject];
+            NRMAHexPayload* victim = self.pendingPayloads.firstObject;
+            [dropped addObject:victim];
             [self.pendingPayloads removeObjectAtIndex:0];
-            NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - dropping oldest pending payload, queue full");
+            NRLOG_AGENT_WARNING(@"[HexDelete] sendData: pending queue full (%lu), dropping oldest pending "
+                                @"report %@ (will be KEPT on disk for a later attempt)",
+                                (unsigned long)kNRMAHexMaxPending, victim.reportId ?: @"(live)");
         }
         [self.pendingPayloads addObject:payload];
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] sendData: queued report %@ (pending=%lu, inFlight=%lu)",
+                            reportId ?: @"(live)", (unsigned long)self.pendingPayloads.count,
+                            (unsigned long)self.inFlightCount);
     }
     // Report dropped payloads as not-confirmed outside the lock so their reports
     // stay on disk for a later attempt.
@@ -176,6 +207,8 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
             if (self.inFlightCount > 0) self.inFlightCount--;
         }
         // Couldn't build the request; not confirmed — keep the report for a later attempt.
+        NRLOG_AGENT_ERROR(@"[HexDelete] launchUpload: failed to build request for report %@ — completion(KEEP)",
+                          payload.reportId ?: @"(live)");
         [payload finishWith:NO];
         return;
     }
@@ -189,7 +222,8 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
     // logs a warning + strips the body if both are present. Payload is
     // tracked separately in payloadByRequest so retries can rebuild.
 
-    NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
+    NRLOG_AGENT_VERBOSE(@"[HexDelete] launchUpload: starting upload for report %@: %@",
+                        payload.reportId ?: @"(live)", request);
 
     NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:data];
     NSURLRequest* key = uploadTask.originalRequest ?: request;
@@ -243,32 +277,76 @@ didCompleteWithError:(nullable NSError*)error {
     // the single terminal handler for the attempt.
     BOOL httpError = payload.httpError;
 
+    // HOLE WATCH: if we cannot find the payload for this completed task, we can
+    // neither confirm nor defer the persisted report — its completion never
+    // fires, so the C++ in-flight claim is never released and the file is stuck
+    // in-flight for the rest of this process (recovered only on relaunch). This
+    // also means a >= 400 for an untracked task is silently treated as success.
+    if (payload == nil) {
+        NRLOG_AGENT_WARNING(@"[HexDelete] didCompleteWithError: NO payload found for completed task "
+                            @"(key=%@, error=%@). Persisted report (if any) cannot be resolved this "
+                            @"session and stays in-flight until relaunch.", key, error);
+    } else {
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] didCompleteWithError: report %@ error=%@ httpError=%@ inFlight=%lu",
+                            payload.reportId ?: @"(live)", error ? error.localizedDescription : @"nil",
+                            httpError ? @"YES" : @"NO", (unsigned long)self.inFlightCount);
+    }
+
+    // A logical upload occupies exactly one in-flight slot from launchUpload until
+    // it TERMINALLY resolves. A retry is a continuation of the same logical upload,
+    // so when handledErroredRequest queues a retry we must NOT release the slot here
+    // — otherwise the retry (resumed later by retryFailedTasks) runs uncounted and
+    // this handler double-decrements, driving inFlightCount to 0 and defeating the
+    // kNRMAHexMaxInFlight FD/socket cap (hole #5).
+    BOOL slotReleased = NO;
     if (error || httpError) {
 #if !TARGET_OS_WATCH
         if (error.code == kCFURLErrorCancelled) {
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - Handled exception upload cancelled: %@", error);
+            NRLOG_AGENT_ERROR(@"[HexDelete] Handled exception upload cancelled (report %@): %@",
+                              payload.reportId ?: @"(live)", error);
         }
         else if (error) {
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", [error localizedDescription]);
+            NRLOG_AGENT_ERROR(@"[HexDelete] failed to upload handled exception report %@: %@",
+                              payload.reportId ?: @"(live)", [error localizedDescription]);
+        }
+        else {
+            NRLOG_AGENT_ERROR(@"[HexDelete] handled exception report %@ received an HTTP >= 400 response",
+                              payload.reportId ?: @"(live)");
         }
 #endif
-        [self handledErroredRequest:key];
+        BOOL willRetry = [self handledErroredRequest:key];
+        if (!willRetry) {
+            // Terminal failure (offline defer, abandon, or retries exhausted) —
+            // release the slot now.
+            @synchronized(self) {
+                if (self.inFlightCount > 0) self.inFlightCount--;
+            }
+            slotReleased = YES;
+        }
+        // willRetry == YES: keep the slot; the retried task's completion releases it.
     } else {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] Handled exception upload completed successfully for report %@",
+                            payload.reportId ?: @"(live)");
         if (key) {
             @synchronized(self.payloadByRequest) {
                 [self.payloadByRequest removeObjectForKey:key];
             }
         }
         [self.taskStore untrack:key];
-        // Upload confirmed — let the store delete the persisted report (shouldRemove = YES).
+        // Confirmed upload: clear the cross-launch retry counter and let the store
+        // delete the persisted report (shouldRemove = YES).
+        [self.persistentRetryTracker clearReportId:payload.reportId];
         [payload finishWith:YES];
+        @synchronized(self) {
+            if (self.inFlightCount > 0) self.inFlightCount--;
+        }
+        slotReleased = YES;
     }
 
-    @synchronized(self) {
-        if (self.inFlightCount > 0) self.inFlightCount--;
+    if (slotReleased) {
+        // A freed slot may let a queued report launch.
+        [self drainPending];
     }
-    [self drainPending];
 }
 
 
@@ -281,13 +359,26 @@ didCompleteWithError:(nullable NSError*)error {
 
     if ([response isKindOfClass:[NSHTTPURLResponse class]] &&
         ((NSHTTPURLResponse*)response).statusCode >= 400) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - failed to upload handled exception report: %@", response.description);
+        NRLOG_AGENT_ERROR(@"[HexDelete] didReceiveResponse: HTTP %ld for handled exception report: %@",
+                          (long)((NSHTTPURLResponse*)response).statusCode, response.description);
         // Record the HTTP failure; the terminal retry/abandon decision (and the
         // payload completion) is made in didCompleteWithError so it happens
         // exactly once per attempt.
         NSURLRequest* key = dataTask.originalRequest;
         @synchronized(self.payloadByRequest) {
             NRMAHexPayload* payload = key ? self.payloadByRequest[key] : nil;
+            if (payload == nil) {
+                // HOLE WATCH: the >= 400 cannot be recorded against a payload, so
+                // didCompleteWithError will see httpError=NO and treat this failed
+                // upload as a success (no retry). If the task also has no payload
+                // there, the persisted report is neither retried nor deleted.
+                NRLOG_AGENT_WARNING(@"[HexDelete] didReceiveResponse: HTTP >= 400 but NO payload tracked "
+                                    @"for key=%@ — failure will not be recorded, upload may be mistaken "
+                                    @"for success", key);
+            } else {
+                NRLOG_AGENT_VERBOSE(@"[HexDelete] didReceiveResponse: recorded httpError on report %@",
+                                    payload.reportId ?: @"(live)");
+            }
             payload.httpError = YES;
         }
     }
@@ -301,12 +392,28 @@ didCompleteWithError:(nullable NSError*)error {
     completionHandler(NSURLSessionResponseAllow);
 }
 
-- (void) handledErroredRequest:(NSURLRequest*)request {
-    if (request == nil) return;
+// Resolves a failed upload attempt: either queues a retry (returns YES, meaning the
+// logical upload keeps its in-flight slot) or terminally resolves it — offline defer,
+// abandon, or retries exhausted — (returns NO, meaning the caller should release the
+// slot). For persisted reports (payload.reportId != nil) the retry budget is the
+// cross-launch NRMAPersistentRetryTracker, so the limit survives app restarts and a
+// permanently-un-uploadable report is eventually dropped instead of retried forever.
+- (BOOL) handledErroredRequest:(NSURLRequest*)request {
+    if (request == nil) {
+        NRLOG_AGENT_WARNING(@"[HexDelete] handledErroredRequest: nil request — cannot resolve any "
+                            @"persisted report for this failure");
+        return NO;
+    }
 
     NRMAHexPayload* payload = nil;
     @synchronized(self.payloadByRequest) {
         payload = self.payloadByRequest[request];
+    }
+    if (payload == nil) {
+        // HOLE WATCH: no payload for this errored request means no completion can
+        // be fired — the persisted report's in-flight claim is never released.
+        NRLOG_AGENT_WARNING(@"[HexDelete] handledErroredRequest: NO payload for errored request %@ — "
+                            @"persisted report cannot be retried or removed this session", request);
     }
 
     // If we're offline, don't burn FDs/sockets cycling failed retries —
@@ -318,27 +425,40 @@ didCompleteWithError:(nullable NSError*)error {
         offline = ([r currentReachabilityStatus] == NotReachable);
     }
     if (offline) {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - offline, deferring retry");
+        // Offline is not a server attempt, so it does NOT consume the retry budget.
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] handledErroredRequest: offline, deferring retry for report %@ "
+                            @"(KEEP on disk, retry budget untouched)", payload.reportId ?: @"(live)");
         @synchronized(self.payloadByRequest) {
             [self.payloadByRequest removeObjectForKey:request];
         }
         [self.taskStore untrack:request];
         [payload finishWith:NO];
-        return;
+        return NO;
     }
 #endif
 
-    if ([self.taskStore shouldRetryTask:request]) {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - retrying handled exception report upload");
+    // Persisted reports use the cross-launch budget; live (reportId == nil) uploads
+    // keep the in-memory per-request counter.
+    BOOL shouldRetry;
+    if (payload.reportId.length) {
+        shouldRetry = ![self.persistentRetryTracker recordAttemptAndShouldDrop:payload.reportId];
+    } else {
+        shouldRetry = [self.taskStore shouldRetryTask:request];
+    }
+
+    if (shouldRetry) {
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] handledErroredRequest: retrying upload for report %@",
+                            payload.reportId ?: @"(live)");
         NSData* body = payload.data;
         if (body == nil || body.length == 0) {
-            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry has no payload, abandoning report");
+            NRLOG_AGENT_ERROR(@"[HexDelete] handledErroredRequest: retry has no payload for report %@, "
+                              @"abandoning attempt (KEEP on disk)", payload.reportId ?: @"(live)");
             @synchronized(self.payloadByRequest) {
                 [self.payloadByRequest removeObjectForKey:request];
             }
             [self.taskStore untrack:request];
             [payload finishWith:NO];
-            return;
+            return NO;
         }
         NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:body];
         // The session may produce a fresh originalRequest copy on the new task.
@@ -356,14 +476,24 @@ didCompleteWithError:(nullable NSError*)error {
         @synchronized(self.retryQueue) {
             [self.retryQueue addObject:uploadTask];
         }
+        NRLOG_AGENT_VERBOSE(@"[HexDelete] handledErroredRequest: report %@ queued for retry on next "
+                            @"retryFailedTasks (retryQueue size=%lu)", payload.reportId ?: @"(live)",
+                            (unsigned long)self.retryQueue.count);
+        return YES;
     } else {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
+        NRLOG_AGENT_WARNING(@"[HexDelete] handledErroredRequest: retry budget exhausted for report %@ "
+                            @"— abandoning and completion(REMOVE) (report deleted despite never confirming "
+                            @"upload)", payload.reportId ?: @"(live)");
         @synchronized(self.payloadByRequest) {
             [self.payloadByRequest removeObjectForKey:request];
         }
         [self.taskStore untrack:request];
-        // Retries exhausted — not confirmed; remove the report on disk
+        // Retry budget exhausted — clear the cross-launch counter so a future report
+        // reusing the (timestamped, so effectively unique) name starts clean.
+        [self.persistentRetryTracker clearReportId:payload.reportId];
+        // Not confirmed; give up and remove the report on disk.
         [payload finishWith:YES];
+        return NO;
     }
 }
 
