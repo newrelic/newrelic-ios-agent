@@ -46,10 +46,14 @@ class UIViewThingy: SessionReplayViewThingy {
     }
     
     func generateRRWebNode() -> ElementNodeData {
-        return ElementNodeData(id: viewDetails.viewId,
-                               tagName: .div,
-                               attributes: ["id":viewDetails.cssSelector],
-                               childNodes: [])
+        let node = ElementNodeData(id: viewDetails.viewId,
+                                   tagName: .div,
+                                   attributes: ["id":viewDetails.cssSelector],
+                                   childNodes: [])
+        if viewDetails.isMapView {
+            node.attributes["data-nr-component-type"] = "map"
+        }
+        return node
     }
     
     func generateRRWebAdditionNode(parentNodeId: Int) -> [RRWebMutationData.AddRecord] {

@@ -147,12 +147,12 @@ The following data is sent with each source map upload:
 |-------|-------------|---------|
 | `sourcemap` | The source map file | `main.jsbundle.map` |
 | `jsBundleId` | Unique identifier for this build (CFBundleShortVersionString) | `1.2.3` |
-| `appVersionId` | App marketing version (CFBundleShortVersionString) | `1.2.3` |
+| `appVersion` | App marketing version (CFBundleShortVersionString) | `1.2.3` |
 | `sourcemapName` | Name of the source map | `main.jsbundle.map` |
 
 ### JS Bundle ID
 
-The `jsBundleId` and `appVersionId` are both set to your app's `CFBundleShortVersionString` from `Info.plist`. This ensures that source maps are correctly matched to error reports from your React Native app.
+The `jsBundleId` and `appVersion` are both set to your app's `CFBundleShortVersionString` from `Info.plist`. This ensures that source maps are correctly matched to error reports from your React Native app.
 
 **Important:** When recording JavaScript errors in your React Native app, pass the same version string as the `jsAppVersion` parameter to `NewRelic.recordJavascriptError()`.
 
@@ -167,7 +167,7 @@ The upload script provides detailed error messages for all API responses:
 
 **Common causes:**
 - Source map version must be 3 (not version 1 or 2)
-- Missing required fields (`jsBundleId`, `appVersionId`, `sourcemapName`)
+- Missing required fields (`jsBundleId`, `appVersion`, `sourcemapName`)
 - Invalid JSON format in the source map file
 - ZIP file contains no valid files or multiple files
 - Invalid file extension (must be `.map`, `.js.map`, `.json`, or `.zip`)

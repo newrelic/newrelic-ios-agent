@@ -27,6 +27,14 @@
 @interface NRMAWKNavigationDelegateWithOldDelegateFunction : NSObject <WKNavigationDelegate>
 @end
 
+// Implements the optional webViewWebContentProcessDidTerminate: callback. Used to
+// reproduce the crash that occurs when WebKit caches respondsToSelector: == YES while
+// this delegate is alive, the delegate is then deallocated (the proxy holds it weakly),
+// and WebKit later fires the cached callback against the orphaned proxy.
+@interface NRMAWKNavigationDelegateWithTerminateFunction : NSObject <WKNavigationDelegate>
+@property(nonatomic) BOOL didTerminateCalled;
+@end
+
 @interface NRWKNavigationDelegateBase ()
 - (instancetype) initWithOriginalDelegate:(NSObject<WKNavigationDelegate>* __nullable __weak)delegate;
 + (NSURL*) navigationURL:(WKNavigation*) nav;
@@ -116,14 +124,14 @@
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
-    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:testAction decisionHandler:^(WKNavigationActionPolicy policy){
+    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:(WKNavigationAction *)testAction decisionHandler:^(WKNavigationActionPolicy policy){
         [testAction decisionHandler:policy];
     }];
     
     XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
     
     if (@available(iOS 13.0, *)) {
-        [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
@@ -148,7 +156,7 @@
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
-    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationResponse:testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
+    [self.webView.navigationDelegate webView:self.webView decidePolicyForNavigationResponse:(WKNavigationResponse *)testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
         [testResponse decisionHandler:policy];
     }];;
     
@@ -160,14 +168,14 @@
     
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction decisionHandler:^(WKNavigationActionPolicy policy){
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction decisionHandler:^(WKNavigationActionPolicy policy){
         [testAction decisionHandler:policy];
     }];
     
     XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
     
     if (@available(iOS 13.0, *)) {
-        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyAllow);
@@ -180,7 +188,7 @@
     NRMAWKFakeNavigationAction *testAction = [[NRMAWKFakeNavigationAction alloc] initWith:url];
     
     if (@available(iOS 13.0, *)) {
-        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
+        [self.webViewWithOldDelegateFunction.navigationDelegate webView:self.webViewWithOldDelegateFunction decidePolicyForNavigationAction:(WKNavigationAction *)testAction preferences:[[WKWebpagePreferences alloc] init] decisionHandler:^(WKNavigationActionPolicy policy, WKWebpagePreferences* preference){
             [testAction decisionHandler:policy];
         }];
         XCTAssertEqual(testAction.receivedPolicy, WKNavigationActionPolicyCancel);
@@ -205,11 +213,46 @@
     
     NRMAWKFakeNavigationResponse *testResponse = [[NRMAWKFakeNavigationResponse alloc] initWith:url];
     
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationResponse:testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
+    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction decidePolicyForNavigationResponse:(WKNavigationResponse *)testResponse decisionHandler:^(WKNavigationResponsePolicy policy){
         [testResponse decisionHandler:policy];
     }];;
     
     XCTAssertEqual(testResponse.receivedPolicy, WKNavigationResponsePolicyAllow);
+}
+
+// Reproduces NR-414430 / the 7.7.0 crash:
+// "-[NRMAWKWebViewNavigationDelegate webViewWebContentProcessDidTerminate:]: unrecognized selector".
+// WebKit caches respondsToSelector: == YES while the real delegate is alive, the real
+// delegate is later deallocated (the proxy holds it weakly), and WebKit fires the cached
+// callback against the orphaned proxy. The proxy must absorb the message, not crash.
+- (void) testWebContentProcessDidTerminateAfterRealDelegateDeallocated {
+    NRMAWKWebViewNavigationDelegate* proxy;
+    @autoreleasepool {
+        NRMAWKNavigationDelegateWithTerminateFunction* realDelegate = [[NRMAWKNavigationDelegateWithTerminateFunction alloc] init];
+        proxy = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:realDelegate];
+        // WebKit caches this == YES at delegate-assignment time, while realDelegate is alive.
+        XCTAssertTrue([proxy respondsToSelector:@selector(webViewWebContentProcessDidTerminate:)]);
+        realDelegate = nil;
+    }
+
+    // The weak realDelegate has now been zeroed by the deallocation above.
+    XCTAssertNil(proxy.realDelegate);
+
+    // WebKit fires the cached callback. With the bug this throws an unrecognized-selector
+    // NSInvalidArgumentException via the message-forwarding fall-through.
+    id<WKNavigationDelegate> nav = (id<WKNavigationDelegate>)proxy;
+    XCTAssertNoThrow([nav webViewWebContentProcessDidTerminate:self.webView]);
+}
+
+// Guards the happy path: while the real delegate is alive, an optional callback that only
+// the real delegate implements must still be forwarded to it.
+- (void) testWebContentProcessDidTerminateForwardsToLiveDelegate {
+    NRMAWKNavigationDelegateWithTerminateFunction* realDelegate = [[NRMAWKNavigationDelegateWithTerminateFunction alloc] init];
+    NRMAWKWebViewNavigationDelegate* proxy = [[NRMAWKWebViewNavigationDelegate alloc] initWithOriginalDelegate:realDelegate];
+
+    id<WKNavigationDelegate> nav = (id<WKNavigationDelegate>)proxy;
+    XCTAssertNoThrow([nav webViewWebContentProcessDidTerminate:self.webView]);
+    XCTAssertTrue(realDelegate.didTerminateCalled);
 }
 
 - (void)testWebViewLoadTimeMetric {
@@ -323,6 +366,15 @@
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
     decisionHandler(WKNavigationActionPolicyCancel);
+}
+
+@end
+
+@implementation NRMAWKNavigationDelegateWithTerminateFunction
+#pragma mark Delegate Functions
+
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
+    self.didTerminateCalled = YES;
 }
 
 @end

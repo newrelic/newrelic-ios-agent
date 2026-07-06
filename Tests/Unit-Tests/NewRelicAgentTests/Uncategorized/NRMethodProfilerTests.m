@@ -9,6 +9,7 @@
 
 #import <OCMock/OCMock.h>
 #import <objc/runtime.h>
+#import <objc/message.h>
 #import <UIKit/UIKit.h>
 
 #import "NRMethodProfilerTests.h"
@@ -171,6 +172,39 @@ id NRMA__blk_ptrParamHandler(id self, SEL selector, id p1);
 
 @end
 
+// Mimics a .NET MAUI/Xamarin dynamic class hierarchy where the child's
+// [super _cmd] dispatch is broken: xamarin_dyn_objc_msgSendSuper re-dispatches
+// the super call back to the SAME class instead of the real superclass. We
+// reproduce that exactly with an objc_super struct whose super_class points at
+// the child class itself, so the (NR-swizzled) method re-enters on the same
+// class and the acting class never advances up the hierarchy.
+@interface NRMAXamarinSuper : NSObject
+@property (nonatomic) NSInteger parentCallCount;
+- (void) xamarinLayout;
+@end
+
+@implementation NRMAXamarinSuper
+- (void) xamarinLayout
+{
+    // Real parent implementation — terminates the chain. The fix must land here.
+    self.parentCallCount++;
+}
+@end
+
+@interface NRMAXamarinChild : NRMAXamarinSuper
+@end
+
+@implementation NRMAXamarinChild
+- (void) xamarinLayout
+{
+    // What this "should" be is [super xamarinLayout]. Xamarin's trampoline instead
+    // builds a super struct whose super_class is THIS class, so objc_msgSendSuper
+    // restarts lookup at NRMAXamarinChild and re-enters the swizzled method.
+    struct objc_super sup = { self, [NRMAXamarinChild class] };
+    ((void(*)(struct objc_super*, SEL))objc_msgSendSuper)(&sup, @selector(xamarinLayout));
+}
+@end
+
 //NRMAMethodProfiler methods
 NSDictionary* ClassesGetSubclasses(NSSet* parents);
 NSMutableDictionary* NRMA__generateClassTrees(NSSet* parents);
@@ -201,6 +235,8 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
                           @"DummyControllerChild",
                           @"DummyControllerSubChild",
                           @"NRMAImage",
+                          @"NRMAXamarinSuper",
+                          @"NRMAXamarinChild",
                           nil];
         
     });
@@ -215,7 +251,8 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
         __traceMethodList = @{
                               @"SwizzleParent":@[@"swizzleMe:", @"callMe:", @"callMe:withBlock:"],
                               @"UIViewController":@[@"viewWillAppear:"],
-                              @"UIImage":@[@"imageWithData:"]
+                              @"UIImage":@[@"imageWithData:"],
+                              @"NRMAXamarinSuper":@[@"xamarinLayout"]
                             };
     });
     
@@ -406,6 +443,29 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
 {
     DummyControllerSubChild* c = [[DummyControllerSubChild alloc] initWithCollectionViewLayout:[[UICollectionViewLayout alloc] init]];
     [c viewWillAppear:NO];
+}
+
+- (void) testXamarinStyleNonAdvancingSuperDoesNotRecurseInfinitely
+{
+    // Regression test for the Xamarin/MAUI infinite-recursion crash.
+    //
+    // NRMAXamarinChild.xamarinLayout dispatches a [super xamarinLayout] whose
+    // objc_super.super_class points back at NRMAXamarinChild itself (exactly what
+    // xamarin_dyn_objc_msgSendSuper does). After NR swizzles xamarinLayout, that
+    // dispatch re-enters the swizzled handler on the same class with a matching
+    // method color, so the acting class never advances.
+    //
+    // On unfixed code this recurses until the stack overflows and the test process
+    // is killed. With the non-advancing-recursion guard in NRMA__beginMethod, the
+    // forced super-advance reaches NRMAXamarinSuper's real implementation once and
+    // the chain terminates.
+    NRMAMethodProfiler* methodProfiler = [[NRMAMethodProfiler alloc] init];
+    [methodProfiler startMethodReplacement];
+
+    NRMAXamarinChild* child = [[NRMAXamarinChild alloc] init];
+    [child xamarinLayout];
+
+    XCTAssertEqual(child.parentCallCount, 1, @"forced super-advance should reach the parent implementation exactly once");
 }
 
 - (void) testClassGetSubclasses

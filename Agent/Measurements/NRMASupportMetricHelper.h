@@ -19,6 +19,7 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueUpgradeMetric;
 + (void) enqueueStopAgentMetric;
 + (void) enqueueConfigurationUpdateMetric;
++ (void) enqueueRateLimitBackoffMetric:(NSTimeInterval)backoffSeconds;
 + (void) enqueueBufferPoolSizeConfiguration:(unsigned int)size;
 + (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds;
 + (void) enqueue4HourSessionRestartMetric;
@@ -40,5 +41,7 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueJSErrorUploadTimeoutMetric;
 + (void) enqueueJSErrorUploadThrottledMetric;
 + (void) enqueueJSErrorFailedUploadMetric;
+
++ (void) enqueueKMMDetectionMetric;
 
 @end

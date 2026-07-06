@@ -166,11 +166,33 @@ class MainCoordinator: Coordinator {
 #endif
     }
 
+    func recordEventBatchWithInvalidAttributes() {
+        enum SomeEnum {
+            case someCase
+        }
+        NewRelic.enableFeatures([.NRFeatureFlag_NewEventSystem])
+
+        let didRecordInvalid = NewRelic.recordCustomEvent("invalidEvent", attributes: [
+            "attribute": SomeEnum.someCase
+        ])
+        let didRecordValid = NewRelic.recordCustomEvent("validEvent", attributes: [
+            "attribute": "good attribute"
+        ])
+
+        print("Did drecord invalid? \(didRecordInvalid ? "Y" : "N")")
+        print("Did drecord valid? \(didRecordValid ? "Y" : "N")")
+    }
+
     func showSwitchTestViewController() {
 #if os(iOS)
         let switchTestViewController = ViewControllerProvider.switchTestViewController
         navigationController.pushViewController(switchTestViewController, animated: true)
 #endif
+    }
+
+    func showMapViewController() {
+        let mapViewController = ViewControllerProvider.mapViewController
+        navigationController.pushViewController(mapViewController, animated: true)
     }
 
 }

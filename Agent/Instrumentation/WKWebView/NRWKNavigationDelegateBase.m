@@ -229,15 +229,24 @@ didFailNavigation:(WKNavigation*)navigation
 }
 
 -(void)invokeMethod:(NSMethodSignature*) methodSignature selector:(SEL)selector parameters:(NSArray*)parameters {
-    NSInvocation *inv = [NSInvocation invocationWithMethodSignature:[self.realDelegate methodSignatureForSelector:selector]];
+    // realDelegate is weak and may have been deallocated since the caller's
+    // respondsToSelector: check (it lives only as long as the host app keeps it).
+    // Snapshot it once and bail if it is gone or no longer responds, otherwise
+    // +invocationWithMethodSignature: would receive a nil signature and throw.
+    NSObject* delegate = self.realDelegate;
+    if (![delegate respondsToSelector:selector]) {
+        return;
+    }
+
+    NSInvocation *inv = [NSInvocation invocationWithMethodSignature:[delegate methodSignatureForSelector:selector]];
     [inv setSelector:selector];
-    [inv setTarget:self.realDelegate];
+    [inv setTarget:delegate];
 
     for(int i = 0; i < parameters.count; i++) {
         NSValue *value = [parameters objectAtIndex:i];
         [inv setArgument:[value pointerValue] atIndex:i+2];//arguments 0 and 1 are self.realDelegate and _cmd respectively, automatically set by NSInvocation
     }
-    
+
     [inv invoke];
 }
 

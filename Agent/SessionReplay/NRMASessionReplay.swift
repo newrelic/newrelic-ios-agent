@@ -523,7 +523,16 @@ public class NRMASessionReplay: NSObject {
             if recordingMode == .error {
                 let attributes = [FileAttributeKey.creationDate: Date()]
                 try FileManager.default.setAttributes(attributes, ofItemAtPath: frameURL.path)
-                
+
+                // Drop a marker so that, if this session ends without a crash, the next
+                // launch knows these buffered frames are a stale error-mode buffer and can
+                // clear them (see NRMAExceptionHandlerManager). The marker lives alongside
+                // the frames and is removed when the frames folder is cleared.
+                let errorModeMarker = self.framesDirectory.appendingPathComponent(kNRMA_SessionReplayErrorMode_marker)
+                if !FileManager.default.fileExists(atPath: errorModeMarker.path) {
+                    FileManager.default.createFile(atPath: errorModeMarker.path, contents: nil)
+                }
+
                 //NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Mode: ERROR - Checking if pruning needed")
                 // Prune old files if in ERROR mode
                 pruneBufferedFiles(in: frameFolder)
@@ -584,6 +593,7 @@ public class NRMASessionReplay: NSObject {
         }
         else if mode == .full {
             NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Transitioning to FULL mode")
+            removeErrorModeMarker()
         }
         
         NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] ====================================================")
@@ -610,11 +620,22 @@ public class NRMASessionReplay: NSObject {
         
         // Transition to full mode
         recordingMode = .full
-        
+
+        // The buffered frames are now headed for upload rather than being a stale
+        // error-mode buffer, so drop the error-mode marker.
+        removeErrorModeMarker()
+
         // Force next frame to be a full snapshot for clean transition
         sessionReplayFrameProcessor.takeFullSnapshotNext = true
         NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] Next frame will be a full snapshot")
         NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] =========================================================")
+    }
+
+    /// Removes the error-mode marker file, if present. Called when leaving error mode so a
+    /// later non-crashing launch does not treat the frames as a stale error-mode buffer.
+    private func removeErrorModeMarker() {
+        let errorModeMarker = self.framesDirectory.appendingPathComponent(kNRMA_SessionReplayErrorMode_marker)
+        try? FileManager.default.removeItem(at: errorModeMarker)
     }
     
     /// Checks if a full snapshot should be forced (every 15 seconds)

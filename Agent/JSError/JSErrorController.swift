@@ -179,6 +179,11 @@ public class JSErrorController: NSObject {
         errorQueueLock.lock()
         errorQueue.add(errorData)
         errorQueueLock.unlock()
+        
+        // Notify Session Replay of the error
+        if let agent = NewRelicAgentInternal.sharedInstance() {
+            agent.sessionReplay(onError: nil)
+        }
 
         // Persist to disk
         persistError(errorData)

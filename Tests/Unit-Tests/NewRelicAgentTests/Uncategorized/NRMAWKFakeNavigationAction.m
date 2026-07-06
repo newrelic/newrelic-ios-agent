@@ -53,6 +53,7 @@
 
 @implementation NRMAWKFakeURLAuthenticationChallenge
 - (instancetype)initWith:(NSURLRequest*) request {
+    self = [super init];
     if (self) {
         self.urlRequest = request;
     }
