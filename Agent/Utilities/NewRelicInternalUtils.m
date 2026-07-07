@@ -568,7 +568,7 @@ static NSString* __mach_model;
     // Use the simulated device's model identifier (e.g. iPhone15,2) instead.
     NSString* simulatorModel = [[[NSProcessInfo processInfo] environment] objectForKey:@"SIMULATOR_MODEL_IDENTIFIER"];
     if ([simulatorModel length]) {
-        return simulatorModel;
+        return [@"simulator-" stringByAppendingString:simulatorModel];
     }
 #endif
     size_t size;
