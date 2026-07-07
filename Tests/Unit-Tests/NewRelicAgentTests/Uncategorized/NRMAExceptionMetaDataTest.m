@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #import "NRMAInteractionHistory.h"
+#import "NewRelicInternalUtils.h"
 
 @interface NRMAExceptionMetaDataTest : XCTestCase
 
@@ -48,12 +49,11 @@
     
     NSLog(@"tempfile path: %s",tempFile);
 
-    const char* machineName = nil;
-    struct utsname sysName;
-    int error = uname(&sysName);
-    if (error == 0) {
-        machineName = sysName.machine;
-    }
+    // The metadata store records the model number via +[NewRelicInternalUtils deviceModel],
+    // which on the simulator returns the simulated device identifier with "simulator-"
+    // appended (rather than the host arch from uname). Derive the expected value from the
+    // same source so this test stays correct on both simulators and real devices.
+    const char* machineName = [NewRelicInternalUtils deviceModel].UTF8String;
 
     remove(tempFile);
 
