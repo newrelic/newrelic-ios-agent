@@ -320,12 +320,6 @@ static NewRelicAgentInternal* _sharedInstance;
     // Update old files (no more files in the docs folder)
     [NRMAFileCleanup updateDocFileLocations];
 
-    // Detect KMP (Kotlin Multiplatform) frameworks for supportability metrics
-    BOOL kmpDetected = [NewRelicInternalUtils detectKMMFrameworks];
-    if (kmpDetected) {
-        [NRMASupportMetricHelper enqueueKMMDetectionMetric];
-    }
-
     NRMAExceptionHandlerStartupManager* exceptionHandlerStartupManager = [[NRMAExceptionHandlerStartupManager alloc] init];
 
     // Last session's analytics must be fetched (asynchronously) before instrumentation
