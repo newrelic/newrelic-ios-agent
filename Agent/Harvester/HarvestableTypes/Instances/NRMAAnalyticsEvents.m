@@ -50,6 +50,9 @@
 - (void) onHarvestBefore {
    NSMutableArray* removalArray = [NSMutableArray new];
     NRMAHarvesterConfiguration *config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return;
+    }
     int maxSendAttempts = config.activity_trace_max_send_attempts;
 
     @synchronized(_events) {
@@ -68,7 +71,11 @@
 - (void)onHarvestError
 {
     NSMutableArray *removalArray = [NSMutableArray array];
-    int maxSendAttempts = [NRMAHarvestController configuration].activity_trace_max_send_attempts;
+    NRMAHarvesterConfiguration *config = [NRMAHarvestController configuration];
+    if (config == nil) {
+        return;
+    }
+    int maxSendAttempts = config.activity_trace_max_send_attempts;
 
     @synchronized(_events) {
         for (NRMAHarvestableEvent* event in _events) {
