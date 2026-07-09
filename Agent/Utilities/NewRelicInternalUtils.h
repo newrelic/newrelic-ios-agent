@@ -105,7 +105,7 @@ NSTimeInterval NRMAMillisecondTimestamp(void);
 + (NRMAReachability*) reachability;
 
 // Returns YES if KMP (Kotlin Multiplatform) frameworks are detected in the app
-+ (BOOL) detectKMMFrameworks;
++ (BOOL) detectKMPFrameworks;
 
 @end
 
