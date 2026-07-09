@@ -83,11 +83,16 @@
     NSMutableArray* removalArray = [[NSMutableArray alloc] init];
     NSTimeInterval currentTimeSec = [[NSDate date] timeIntervalSince1970];
     NRMAHarvesterConfiguration *config = [NRMAHarvestController configuration];
+    int maxSendAttempts;
+    int maxTransactionAge;
     if (config == nil) {
-        return;
+        maxSendAttempts = NRMA_DEFAULT_ACTIVITY_TRACE_MAX_SEND_ATTEMPTS;
+        maxTransactionAge = NRMA_DEFAULT_MAX_TRANSACTION_AGE;
+    } else {
+        maxSendAttempts = config.activity_trace_max_send_attempts;
+        maxTransactionAge = config.report_max_transaction_age;
     }
-    NSTimeInterval oldestAllowedTraceAge = (currentTimeSec - config.report_max_transaction_age);
-    int maxSendAttempts = config.activity_trace_max_send_attempts;
+    NSTimeInterval oldestAllowedTraceAge = (currentTimeSec - maxTransactionAge);
 
     @synchronized(_activityTraces) {
         for (NRMAHarvestableActivity* trace in self.activityTraces) {
