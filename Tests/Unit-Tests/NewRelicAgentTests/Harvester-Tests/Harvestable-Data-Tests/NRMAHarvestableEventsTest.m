@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <OCMock/OCMock.h>
 #import "NRMAAnalyticsEvents.h"
 #import "NRMAHarvesterConfiguration.h"
 #import "NRMAHarvestController.h"
@@ -18,6 +19,8 @@
     NSArray * expectedJSON;
 }
 @property(strong) NRMAAnalyticsEvents* events;
+@property(strong) id mockHarvestController;
+@property(strong) NRMAHarvesterConfiguration* harvesterConfiguration;
 @end
 
 @implementation NRMAHarvestableEventsTest
@@ -27,9 +30,21 @@
     self.events = [NRMAAnalyticsEvents new];
     expectedJSON = @[@{@"blah":@"blah"},@{@"pewpew":@4.4},@{@"event":@10,@"asdf":@"asdf",@"123":@123}];
     [self.events addEvents:expectedJSON];
+
+    // The aging tests rely on a non-nil configuration; without one the production
+    // code falls back to default/guard behavior and data never ages out on the
+    // first pass. Mock +[NRMAHarvestController configuration] so the tests exercise
+    // the real (non-nil) aging path with a known max_send_attempts of 0.
+    self.harvesterConfiguration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+    self.harvesterConfiguration.activity_trace_max_send_attempts = 0;
+    self.mockHarvestController = [OCMockObject mockForClass:[NRMAHarvestController class]];
+    [[[[self.mockHarvestController stub] classMethod] andReturn:self.harvesterConfiguration] configuration];
 }
 
 - (void)tearDown {
+    [self.mockHarvestController stopMocking];
+    self.mockHarvestController = nil;
+    self.harvesterConfiguration = nil;
     self.events = nil;
     [super tearDown];
 }
