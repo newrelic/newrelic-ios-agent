@@ -999,6 +999,12 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
     // Update session duration manager with new session start time for 4-hour session timeout
     [[NRMASessionDurationManager shared] updateSessionStartTime:self.appSessionStartDate];
     [self onSessionStart];
+
+    // Notify external session-replay sources (e.g. the New Relic Flutter agent) that
+    // a new session started, so they can re-emit a fresh FullSnapshot. Fires on
+    // session restarts (background timeout / 4-hour / setUserId) and the initial
+    // start; consumers not yet recording ignore the initial one.
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"com.newrelic.sessionStart" object:nil];
 }
 
 - (void) startNewSessionForUserId:(NSString* _Nullable)userId {
