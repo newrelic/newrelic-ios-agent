@@ -60,7 +60,12 @@ class ViewController: UIViewController {
             }
         }
         
-        viewModel.loadApodData()
+        // Delay the initial image load slightly so the view hierarchy and
+        // networking stack are fully set up first. This makes the initial
+        // space image load more reliably on every launch.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.viewModel.loadApodData()
+        }
         
         NotificationCenter.default.addObserver(self,
             selector: #selector(appDidBecomeActive),
@@ -89,6 +94,7 @@ class ViewController: UIViewController {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
         spaceImageView.isUserInteractionEnabled = true
         spaceImageView.addGestureRecognizer(tapGestureRecognizer)
+        spaceImageView.maskAllImages = false
         
         //Text Label
         spaceLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
@@ -96,6 +102,7 @@ class ViewController: UIViewController {
         spaceLabel.textAlignment = .center
         spaceLabel.numberOfLines = 0
         spaceLabel.accessibilityIdentifier = "public" // Because this is a SecureLabel this should stay masked.
+        spaceLabel.maskApplicationText = false
         
         //Text Label
         privateHelloLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true

@@ -150,6 +150,9 @@ typedef NSString NRMetricUnit;
 
 #define kNRMAConfigurationUpdated        @"Supportability/Mobile/%@/%@/Configuration/Updated"
 
+// NativePlatform, Platform — emitted when a 429/rate-limit response triggers harvest upload backoff.
+#define kNRMARateLimitBackoffMetricFormatString @"Supportability/Mobile/%@/%@/Collector/RateLimit/Backoff"
+
 //Network info cache constants
 #define kNRCarrierNameCacheLifetime     50 // milliseconds
 #define kNRWanTypeCacheLifetime         25 // milliseconds
@@ -194,6 +197,14 @@ typedef NSString NRMetricUnit;
 #define kNRMAJSErrorMetricUploadTimeout     kNRMAJSError @"/UploadTimeOut"
 #define kNRMAJSErrorMetricUploadThrottled   kNRMAJSError @"/UploadThrottled"
 #define kNRMAJSErrorMetricFailedUpload      kNRMAJSError @"/FailedUpload"
+
+// Crash
+// Emitted when a cached crash report is permanently rejected by the collector
+// (HTTP 400/403) and therefore deleted instead of being retried. Uses the
+// AgentHealth prefix so the full name matches the Android agent's
+// SUPPORTABILITY_CRASH_UPLOAD_REJECTED_DEVICE_OFFLINE metric
+// ("Supportability/AgentHealth/Crash/Offline/Rejected") for cross-platform parity.
+#define kNRMACrashOfflineRejectedMetric     kNRAgentHealthPrefix @"/Crash/Offline/Rejected"
 
 #define NRMAHandledRequestKey @"NRMAHandledRequest"
 

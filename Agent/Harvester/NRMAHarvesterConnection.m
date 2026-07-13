@@ -167,6 +167,7 @@
 
     harvestResponse.statusCode = (int)response.statusCode;
     harvestResponse.responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    [harvestResponse parseRetryAfterFromHeaders:response.allHeaderFields];
     NRLOG_AGENT_VERBOSE(@"NEWRELIC CONNECT - RESPONSE DATA: %@", harvestResponse.responseBody);
     return harvestResponse;
 }

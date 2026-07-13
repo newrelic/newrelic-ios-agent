@@ -209,7 +209,7 @@ static long long _accountId;
                 self.session_replay_mode =  innerDict[kNRMA_SESSION_REPLAY_CONFIG_MODE_KEY];
             }
             else {
-                self.session_replay_mode = SessionReplayMaskingModeCustom;
+                self.session_replay_mode = SessionReplayMaskingModeDefault;
             }
 
 

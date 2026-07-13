@@ -5,8 +5,8 @@
     "@wdio/cli": "^9.24.0",
     "@wdio/local-runner": "^9.24.0",
     "@wdio/mocha-framework": "^9.24.0",
-    "appium": "^3.4.0",
-    "basic-ftp": "^5.3.0",
+    "appium": "^3.5.2",
+    "basic-ftp": "^5.3.1",
     "body-parser": "^2.2.2",
     "dayjs": "^1.11.19",
     "diff": "^5.2.2",
@@ -21,7 +21,7 @@
     "webdriverio": "^9.24.0"
   },
   "overrides": {
-    "ajv": "^8.17.1",
+    "ajv": "^8.18.0",
     "serialize-javascript": "^7.0.3",
     "axios": "^1.13.5"
   }

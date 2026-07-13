@@ -19,4 +19,11 @@
 - (NSString*) offlineDirectoryPath;
 + (NSString*) allOfflineDirectorysPath;
 
+// Time-to-live (in seconds) after which a persisted offline payload is considered
+// stale and is deleted instead of re-uploaded. Defaults to +defaultOfflineStorageTTL
+// (7 days), aligned with the shortest applicable backend retention window.
++ (NSTimeInterval) defaultOfflineStorageTTL;
++ (NSTimeInterval) offlineStorageTTL;
++ (void) setOfflineStorageTTL:(NSTimeInterval) seconds;
+
 @end

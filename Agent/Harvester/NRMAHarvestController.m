@@ -16,9 +16,20 @@ extern "C" {
 static NRMAHarvestController* __harvestController;
 static NRMAAgentConfiguration* __agentConfiguration;
 
-static NSString* NRMAHarvestConfigAccessorLock = @"LOCK";
-static NSString* NRMAHarvestControllerInitializationLock = @"LOCK";
-static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
+// Dedicated lock objects for the three independent critical sections below. These
+// must be distinct, private instances rather than NSString literals: identical
+// compile-time string literals are coalesced into a single shared object across the
+// entire binary, so a literal-based lock can silently collide with the same literal
+// used anywhere else (and previously all three shared one literal). They are created
+// once in +initialize, before any other message to this class can use them.
+//
+// Lock ordering invariant: the initialization lock is always the OUTERMOST lock.
+// Any method that needs both acquires NRMAHarvestControllerInitializationLock first,
+// then an accessor lock (or a controller-instance lock) — never the reverse. The
+// accessor locks are leaf locks and are never held across acquisition of another.
+static NSObject* NRMAHarvestConfigAccessorLock;
+static NSObject* NRMAHarvestControllerInitializationLock;
+static NSObject* NRMAHarvestControllerAccessorLock;
 
 @interface NRMAHarvestController()
 @property(strong, atomic) NSMutableArray* harvestAwareList;
@@ -27,6 +38,20 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 @end
 
 @implementation NRMAHarvestController
+
+// Objective-C runtime class initializer. This is distinct from +initialize: below
+// (a different selector, the agent's harvest-controller setup entry point). The
+// runtime guarantees this runs exactly once, before the class receives any other
+// message, so the lock objects are always non-nil by the time a critical section
+// references them.
++ (void) initialize
+{
+    if (self == [NRMAHarvestController class]) {
+        NRMAHarvestConfigAccessorLock = [[NSObject alloc] init];
+        NRMAHarvestControllerInitializationLock = [[NSObject alloc] init];
+        NRMAHarvestControllerAccessorLock = [[NSObject alloc] init];
+    }
+}
 
 - (instancetype) init
 {
@@ -89,30 +114,69 @@ static NSString* NRMAHarvestControllerAccessorLock = @"LOCK";
 
 + (void) deinitialize
 {
-    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-    if (controller) {
-        [controller deinitialize];
+    // Serialize teardown on the initialization lock so it cannot interleave with
+    // +initialize: (which holds the same lock). +stop calls this while already
+    // holding the lock and @synchronized is recursive, so the reentrant acquire is
+    // safe; meanwhile +recovery's direct call now gets the same mutual exclusion
+    // against a concurrent +initialize: that the single shared lock used to provide.
+    @synchronized(NRMAHarvestControllerInitializationLock) {
+        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+        if (controller) {
+            [controller deinitialize];
+        }
+        [self setHarvestController:nil];
+        [self setAgentConfiguration:nil];
     }
-    [self setHarvestController:nil];
-    [self setAgentConfiguration:nil];
 }
 
 + (void) initialize:(NRMAAgentConfiguration*)configuration
 {
     @synchronized(NRMAHarvestControllerInitializationLock) {
-        [self setHarvestController:[[NRMAHarvestController alloc] init]];
-        NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-        [self setAgentConfiguration:configuration];
-        @synchronized(controller) {
-            [controller createHarvester];
-            [[controller harvester] setAgentConfiguration:configuration];
-            NRMAHarvesterConfiguration* harvestConfiguration = [[controller harvester] fetchHarvestConfiguration];
-            if(harvestConfiguration == nil) {
-                harvestConfiguration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
-                NRLOG_AGENT_VERBOSE(@"config: defaultHarvesterConfiguration set.");
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+        @try {
+#endif
+            [self setHarvestController:[[NRMAHarvestController alloc] init]];
+            NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+            [self setAgentConfiguration:configuration];
+
+            // Guard against an unexpected allocation failure. Messaging nil is
+            // harmless in Objective-C, but bailing out keeps the intent explicit
+            // and avoids silently building a half-initialized harvest pipeline.
+            if (controller == nil) {
+                NRLOG_AGENT_ERROR(@"initialize: harvest controller is nil; skipping harvester configuration.");
+                return;
             }
-            [[controller harvester] configureHarvester:harvestConfiguration];
+
+            @synchronized(controller) {
+                [controller createHarvester];
+
+                // Capture a single strong local reference to the harvester so it
+                // cannot be deallocated mid-configuration if stop/recovery runs on
+                // another thread, and so every message below targets the same live
+                // object instead of re-reading the property (which could otherwise
+                // return a stale/torn-down pointer and crash in objc_msgSend).
+                // This mirrors the hardening already in place in +start.
+                NRMAHarvester* harvester = [controller harvester];
+                if (harvester == nil) {
+                    NRLOG_AGENT_ERROR(@"initialize: harvester is nil after createHarvester; skipping configuration.");
+                    return;
+                }
+
+                [harvester setAgentConfiguration:configuration];
+                NRMAHarvesterConfiguration* harvestConfiguration = [harvester fetchHarvestConfiguration];
+                if (harvestConfiguration == nil) {
+                    harvestConfiguration = [NRMAHarvesterConfiguration defaultHarvesterConfiguration];
+                    NRLOG_AGENT_VERBOSE(@"config: defaultHarvesterConfiguration set.");
+                }
+                [harvester configureHarvester:harvestConfiguration];
+            }
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+        } @catch (NSException* exception) {
+            [NRMAExceptionHandler logException:exception
+                                         class:NSStringFromClass([self class])
+                                      selector:NSStringFromSelector(_cmd)];
         }
+#endif
     }
 }
 

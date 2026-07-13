@@ -108,6 +108,17 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
++ (void) enqueueRateLimitBackoffMetric:(NSTimeInterval)backoffSeconds {
+    NSString* metricString = [NSString stringWithFormat:kNRMARateLimitBackoffMetricFormatString, [NewRelicInternalUtils osName], kPlatformPlaceholder];
+    @synchronized (deferredMetrics) {
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:metricString
+                                                              value:[NSNumber numberWithDouble:backoffSeconds]
+                                                              scope:@""
+                                                    produceUnscoped:YES
+                                                    additionalValue:nil]];
+    }
+}
+
 + (void) enqueueMaxBufferTimeConfiguration:(unsigned int)seconds {
     NSString* nativePlatform = [NewRelicInternalUtils osName];
 
