@@ -225,6 +225,7 @@ class SessionReplayReporterOfflineStorageTests: XCTestCase {
 // and the size cap must evict the oldest payloads rather than dropping current data.
 class NRMAOfflineStorageTTLTests: XCTestCase {
 
+    let sizeKey = "com.newrelic.offlineStorageCurrentSize"
     var storage: NRMAOfflineStorage!
 
     override func setUp() {
@@ -233,11 +234,15 @@ class NRMAOfflineStorageTTLTests: XCTestCase {
         let endpoint = "ttl_test_\(Int(Date().timeIntervalSince1970 * 1000))"
         storage = NRMAOfflineStorage(endpoint: endpoint)
         _ = storage.clearAllOfflineFiles()
+        UserDefaults.standard.set(0, forKey: sizeKey)
+        UserDefaults.standard.synchronize()
         NewRelic.enableFeatures(NRMAFeatureFlags.NRFeatureFlag_OfflineStorage)
     }
 
     override func tearDown() {
         _ = storage.clearAllOfflineFiles()
+        UserDefaults.standard.set(0, forKey: sizeKey)
+        UserDefaults.standard.synchronize()
         // TTL is a process-wide setting; restore the default so other tests aren't affected.
         NRMAOfflineStorage.setOfflineStorageTTL(NRMAOfflineStorage.defaultOfflineStorageTTL())
         // Don't leak the offline-storage feature flag into later test classes — a stuck-on
@@ -250,9 +255,11 @@ class NRMAOfflineStorageTTLTests: XCTestCase {
     // MARK: Helpers
 
     // Writes a file straight into the offline directory with a controlled byte size and
-    // modification date. Seeding files directly (rather than persisting and sleeping to age
-    // them) keeps every TTL/LRU test deterministic and instant, while still exercising the
-    // real read/evict code paths, which key off file attributes rather than the filename.
+    // modification date. Production filenames are second-resolution, so persisting twice
+    // within the same second collides — and busy-waiting for the next wall-clock second
+    // hangs CI. Seeding files directly keeps every test deterministic and instant, while
+    // still exercising the real read/evict code paths (which key off file attributes, not
+    // filename format).
     @discardableResult
     private func writeOfflineFile(named name: String, bytes: Int, daysOld: Double) -> String {
         let dir = storage.offlineDirectoryPath() ?? ""
@@ -315,11 +322,11 @@ class NRMAOfflineStorageTTLTests: XCTestCase {
     func testLruEvictionEvictsOldestFile() {
         // Cap of 1 MB. Two ~400KB files already fit; persisting a third triggers eviction
         // of the oldest. Files are seeded with explicit modification dates so ordering is
-        // deterministic. The occupied size is read straight from disk, so no counter setup
-        // is needed — the two seeded files report 800KB on their own.
+        // deterministic, and the tracked size counter is set to match what they occupy.
         storage.setMaxOfflineStorageSize(1) // 1 MB
         let oldest = writeOfflineFile(named: "oldest.txt", bytes: 400_000, daysOld: 2)
         let newer = writeOfflineFile(named: "newer.txt", bytes: 400_000, daysOld: 1)
+        UserDefaults.standard.set(800_000, forKey: sizeKey)
 
         let payload = Data(repeating: 0x78, count: 400_000)
         XCTAssertTrue(storage.persistData(toDisk: payload),

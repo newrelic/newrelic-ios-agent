@@ -16,7 +16,11 @@ class HTTPDynamicStubs {
     
     var server = HttpServer()
     func setUp() {
-        try! server.start()
+        do {
+            try server.start()
+        } catch {
+            print(error)
+        }
     }
     
     func tearDown() {
@@ -43,6 +47,30 @@ class HTTPDynamicStubs {
         }
     }
     
+    /// Stubs an endpoint with an explicit HTTP status code, response headers, and an inline JSON
+    /// body. Unlike the file-based `setupStub`, this can express non-200 responses (e.g. a 429 with
+    /// a `Retry-After` header) so tests can exercise the agent's rate-limit backoff handling.
+    /// `hitClosure` is invoked with the request body string on every hit.
+    public func setupStub(url: String,
+                          method: HTTPMethod = .POST,
+                          statusCode: Int,
+                          responseHeaders: [String: String] = [:],
+                          jsonBody: Any = [String: Any](),
+                          hitClosure: ((String) -> ())? = nil) {
+        let bodyData = (try? JSONSerialization.data(withJSONObject: jsonBody)) ?? Data()
+        let reasonPhrase = HTTPURLResponse.localizedString(forStatusCode: statusCode)
+        let response: ((HttpRequest) -> HttpResponse) = { request in
+            hitClosure?(String(bytes: request.body, encoding: .utf8) ?? "")
+            return HttpResponse.raw(statusCode, reasonPhrase, responseHeaders) { writer in
+                try writer.write(bodyData)
+            }
+        }
+        switch method {
+        case .GET: server.GET[url] = response
+        case .POST: server.POST[url] = response
+        }
+    }
+
     func dataToJSON(data: Data) -> Any? {
         do {
             return try JSONSerialization.jsonObject(with: data, options: .mutableContainers)

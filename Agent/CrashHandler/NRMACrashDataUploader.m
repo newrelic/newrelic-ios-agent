@@ -160,7 +160,7 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
                                                      received:response.expectedContentLength];
 
                 [self removeCrashLogAtpath:path];
-            } else if (statusCode == 400 || statusCode == 403) {
+            } else if(statusCode == 400 || statusCode == 403) {
                 // Permanent rejection: the collector will never accept this payload, so
                 // retrying it on every harvest until the retry cap just wastes bandwidth and
                 // battery. Delete it now and record a supportability metric instead.
