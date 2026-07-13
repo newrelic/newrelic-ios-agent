@@ -562,6 +562,15 @@ static NSString* __mach_model;
 }
 
 + (NSString*) deviceModelViaSysCtrl {
+#if TARGET_OS_SIMULATOR
+    // On the simulator, hw.machine returns the host architecture (e.g. x86_64 or arm64)
+    // rather than a device model identifier, which ingest cannot map to a real device.
+    // Use the simulated device's model identifier (e.g. iPhone15,2) instead.
+    NSString* simulatorModel = [[[NSProcessInfo processInfo] environment] objectForKey:@"SIMULATOR_MODEL_IDENTIFIER"];
+    if ([simulatorModel length]) {
+        return [@"simulator-" stringByAppendingString:simulatorModel];
+    }
+#endif
     size_t size;
     NSString* model = nil;
     if (sysctlbyname("hw.machine", NULL, &size, NULL, 0) == 0) {
@@ -691,7 +700,8 @@ static NSString* __mach_model;
     return simulator != nil;
 }
 
-+ (BOOL) detectKMMFrameworks {
+// NR-588325: This function can cause issues with demangledName on other hybrid platforms
++ (BOOL) detectKMPFrameworks {
     // Scan runtime for Kotlin/Native framework classes
     // Kotlin frameworks register classes with names like "{FrameworkName}Kotlin{ClassName}"
     // Common examples: SharedKotlinEnum, MyFrameworkKotlinArray, KotlinBase, etc.
