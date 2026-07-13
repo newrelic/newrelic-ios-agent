@@ -93,6 +93,7 @@ public class NRMASessionReplay: NSObject {
         //NRLOG_AGENT_DEBUG("▶️ [start] Prune interval: \(pruneInterval)s")
         //NRLOG_AGENT_DEBUG("▶️ [start] ====================================================")
         
+        clearAllData()
         sessionReplayFrameProcessor.lastFullFrame = nil // We want to start a new session with no last Frame tracked
         Task{
             await MainActor.run {
