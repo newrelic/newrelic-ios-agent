@@ -563,11 +563,7 @@ public class NRMASessionReplay: NSObject {
         let oldMode = recordingMode
 
         recordingMode = mode
-
-        // NOTE: rawFrames is owned by frameQueue and must not be read here — this
-        // runs on sessionReplayQueue under bufferLock, and a frameQueue.sync while
-        // holding bufferLock would deadlock (frame processing also takes bufferLock).
-        // The former buffer-count/span debug logging was dropped for that reason.
+        
         NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] ==================== MODE CHANGE ====================")
         NRLOG_AGENT_DEBUG("🎬 [transistionToRecordingMode] Old mode: \(oldMode) → New mode: \(mode)")
 
@@ -596,10 +592,6 @@ public class NRMASessionReplay: NSObject {
         bufferLock.lock()
         defer { bufferLock.unlock() }
         
-        
-        // NOTE: rawFrames is owned by frameQueue and must not be read here — see
-        // transistionToRecordingMode. The former buffer-count/span debug logging
-        // was dropped to avoid an off-queue read of the frame buffer.
         NRLOG_AGENT_DEBUG("🚨 [transitionToFullModeOnError] ==================== ERROR DETECTED ====================")
 
         // Transition to full mode
