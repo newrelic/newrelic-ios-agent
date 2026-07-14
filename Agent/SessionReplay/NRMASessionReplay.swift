@@ -103,7 +103,7 @@ public class NRMASessionReplay: NSObject {
         frameQueue.async { [weak self] in
             guard let self = self else { return }
             if self.rawFrames.count > 0 {
-                self.clearFrameStateLocked()
+                self.resetFrameBufferLocked()
             }
             self.sessionReplayFrameProcessor.lastFullFrame = nil // Start a new session with no last frame tracked
         }
@@ -135,7 +135,13 @@ public class NRMASessionReplay: NSObject {
         // frameQueue. Do every part of the clear there so we never free a frame's
         // UIViewThingy tree while another queue is still reading it.
         frameQueue.async { [weak self] in
-            self?.clearFrameStateLocked()
+            guard let self = self else { return }
+            self.resetFrameBufferLocked()
+            do {
+                try self.clearFramesDirectory() // full wipe: every session
+            } catch {
+                NRLOG_AGENT_DEBUG("🧹 [clearAllData] ❌ Failed to clear frames directory: \(error)")
+            }
         }
 
         if let touchCapture = sessionReplayTouchCapture {
@@ -144,16 +150,21 @@ public class NRMASessionReplay: NSObject {
         }
     }
 
-    /// Clears the in-memory frame buffer, resets the frame counters and removes the
-    /// on-disk frame files. MUST be called on `frameQueue` — it touches the frame
-    /// object graph and the frame counters, which are only safe to mutate there.
-    private func clearFrameStateLocked() {
+    /// Resets the in-memory frame buffer and frame counters. MUST be called on
+    /// `frameQueue` — it touches the frame object graph and counters, which are
+    /// only safe to mutate there.
+    private func resetFrameBufferLocked() {
         rawFrames.removeAll()
         fullSnapshotFrameIndices.removeAll()
         frameCounter = 0
         uncompressedDataSize = 0
+    }
 
-        // clear the frames directory
+    /// Resets the in-memory buffer and clears on-disk
+    /// frames. MUST be called on `frameQueue`.
+    private func clearFrameStateLocked() {
+        resetFrameBufferLocked()
+
         do {
             try clearFramesDirectory()
         } catch {
