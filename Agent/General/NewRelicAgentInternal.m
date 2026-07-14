@@ -782,14 +782,15 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     // capture loop is running, so externally-produced (e.g. Flutter) frames
     // upload whenever the remote config says to record.
     //
-    // Full-mode only for now: externally-produced frames have no error-mode
-    // buffer (error mode buffers until an error, then uploads), so we accept
-    // only FULL and drop otherwise. Revisit when external error buffering lands.
+    // Accept both FULL and ERROR. In error mode the external source (the Flutter
+    // agent) buffers a rolling window on its side and forwards it — as a normal
+    // immediate upload — only when an error occurs, so by the time events reach
+    // here they should be uploaded regardless of full/error. Only OFF is dropped.
     SessionReplayRecordingMode mode = [self isSessionReplayEnabled]
         ? [self determineRecordingMode]
         : SessionReplayRecordingModeOff;
-    if(mode != SessionReplayRecordingModeFull){
-        NRLOG_AGENT_WARNING(@"Session replay is not in full recording mode; dropping externally-produced events.");
+    if(mode == SessionReplayRecordingModeOff){
+        NRLOG_AGENT_WARNING(@"Session replay recording mode is off (disabled or not sampled); dropping externally-produced events.");
         return false;
     }
     if(_sessionReplay != nil){
