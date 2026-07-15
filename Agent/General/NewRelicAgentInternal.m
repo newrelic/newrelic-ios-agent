@@ -612,7 +612,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 
 #if TARGET_OS_IOS
     // Initialize JS Error Controller for Mobile Errors Protocol (iOS only - for React Native)
-    if ([NRMAFlags shouldEnableJSErrorEvents]) {
+    if ([NRMAFlags shouldEnableMobileErrorEvents]) {
         self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
                                                                         sessionStartTime:self.appSessionStartDate
                                                                       agentConfiguration:self.agentConfiguration

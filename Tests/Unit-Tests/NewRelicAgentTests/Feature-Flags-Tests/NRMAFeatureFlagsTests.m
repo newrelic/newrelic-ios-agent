@@ -51,7 +51,7 @@ static NRMAFeatureFlags __originalFlags;
     XCTAssertTrue(featureFlag & NRFeatureFlag_RequestErrorEvents, @"request error events should be enabled by default!!");
     XCTAssertTrue(featureFlag & NRFeatureFlag_DistributedTracing, @"distributed tracing should be enabled by default!!");
     XCTAssertTrue(featureFlag & NRFeatureFlag_AppStartMetrics, @"app start metrics should be enabled by default!!");
-    XCTAssertTrue(featureFlag & NRFeatureFlag_JSErrorEvents, @"JS error events should be enabled by default!!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_MobileErrorEvents, @"mobile error events should be enabled by default!!");
 }
 
 - (void) testNetworkRequestEventsFlags {
@@ -290,42 +290,42 @@ static NRMAFeatureFlags __originalFlags;
     XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
 }
 
-- (void) testJSErrorEventsFlags {
+- (void) testMobileErrorEventsFlags {
     NRMAFeatureFlags flags = [NRMAFlags featureFlags];
     XCTAssertFalse(flags, @"flags should be empty");
 
-    [NRMAFlags enableFeatures:NRFeatureFlag_JSErrorEvents];
+    [NRMAFlags enableFeatures:NRFeatureFlag_MobileErrorEvents];
     flags = [NRMAFlags featureFlags];
 
-    XCTAssertTrue(flags & NRFeatureFlag_JSErrorEvents, @"JSErrorEvents should be enabled.");
-    XCTAssertFalse(flags & ~NRFeatureFlag_JSErrorEvents, @"no other bits should be enabled.");
+    XCTAssertTrue(flags & NRFeatureFlag_MobileErrorEvents, @"MobileErrorEvents should be enabled.");
+    XCTAssertFalse(flags & ~NRFeatureFlag_MobileErrorEvents, @"no other bits should be enabled.");
 
-    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+    [NRMAFlags disableFeatures:NRFeatureFlag_MobileErrorEvents];
     flags = [NRMAFlags featureFlags];
-    XCTAssertFalse(flags & NRFeatureFlag_JSErrorEvents, @"JSErrorEvents should be disabled.");
+    XCTAssertFalse(flags & NRFeatureFlag_MobileErrorEvents, @"MobileErrorEvents should be disabled.");
     XCTAssertFalse(flags, @"flags should be empty");
 }
 
-- (void) testShouldEnableJSErrorEvents {
-    XCTAssertFalse([NRMAFlags shouldEnableJSErrorEvents], @"since no flags have been set this should be false!");
+- (void) testShouldEnableMobileErrorEvents {
+    XCTAssertFalse([NRMAFlags shouldEnableMobileErrorEvents], @"since no flags have been set this should be false!");
 
-    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+    [NRMAFlags disableFeatures:NRFeatureFlag_MobileErrorEvents];
 
-    XCTAssertFalse([NRMAFlags shouldEnableJSErrorEvents], @"this should now be disabled");
+    XCTAssertFalse([NRMAFlags shouldEnableMobileErrorEvents], @"this should now be disabled");
 
-    [NRMAFlags enableFeatures:NRFeatureFlag_JSErrorEvents];
+    [NRMAFlags enableFeatures:NRFeatureFlag_MobileErrorEvents];
 
-    XCTAssertTrue([NRMAFlags shouldEnableJSErrorEvents], @"this should now be enabled!");
+    XCTAssertTrue([NRMAFlags shouldEnableMobileErrorEvents], @"this should now be enabled!");
 
-    [NRMAFlags disableFeatures:NRFeatureFlag_JSErrorEvents];
+    [NRMAFlags disableFeatures:NRFeatureFlag_MobileErrorEvents];
 
     XCTAssertTrue([NRMAFlags featureFlags] == 0, @"feature flags should be back at 0");
 }
 
-- (void) testJSErrorEventsEnabledByDefault {
+- (void) testMobileErrorEventsEnabledByDefault {
     // Use fresh flags to check defaults
     NRMAFeatureFlags featureFlag = __originalFlags;
-    XCTAssertTrue(featureFlag & NRFeatureFlag_JSErrorEvents, @"JS Error reporting should be enabled by default!");
+    XCTAssertTrue(featureFlag & NRFeatureFlag_MobileErrorEvents, @"Mobile Error reporting should be enabled by default!");
 }
 
 

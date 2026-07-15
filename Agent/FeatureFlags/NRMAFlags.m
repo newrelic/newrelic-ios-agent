@@ -48,7 +48,7 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
                               NRFeatureFlag_AppStartMetrics |
-                              NRFeatureFlag_JSErrorEvents;
+                              NRFeatureFlag_MobileErrorEvents;
                   });
     return __flags;
 }
@@ -104,8 +104,8 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_HandledExceptionEvents) != 0;
 }
 
-+ (BOOL) shouldEnableJSErrorEvents {
-    return ([NRMAFlags featureFlags] & NRFeatureFlag_JSErrorEvents) != 0;
++ (BOOL) shouldEnableMobileErrorEvents {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_MobileErrorEvents) != 0;
 }
 
 + (BOOL) shouldEnableGestureInstrumentation {

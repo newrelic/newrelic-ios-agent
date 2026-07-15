@@ -17,7 +17,7 @@
 
 + (BOOL) shouldEnableHandledExceptionEvents;
 
-+ (BOOL) shouldEnableJSErrorEvents;
++ (BOOL) shouldEnableMobileErrorEvents;
 
 + (BOOL) shouldEnableGestureInstrumentation;
 

@@ -762,7 +762,7 @@
     }
 
     // Check if JSError feature flag is enabled
-    if (![NRMAFlags shouldEnableJSErrorEvents]) {
+    if (![NRMAFlags shouldEnableMobileErrorEvents]) {
         NRLOG_AGENT_VERBOSE(@"JS Error reporting is disabled via feature flag. Cannot record JS error.");
         return false;
     }
