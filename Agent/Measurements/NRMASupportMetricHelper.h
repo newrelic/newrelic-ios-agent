@@ -37,10 +37,10 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueSessionReplayConfigSamplingRateMetric:(double)samplingRate;
 + (void) enqueueSessionReplayConfigErrorSamplingRateMetric:(double)errorSamplingRate;
 
-+ (void) enqueueJSErrorUploadTimeMetric:(double)milliseconds;
-+ (void) enqueueJSErrorUploadTimeoutMetric;
-+ (void) enqueueJSErrorUploadThrottledMetric;
-+ (void) enqueueJSErrorFailedUploadMetric;
++ (void) enqueueMobileErrorUploadTimeMetric:(double)milliseconds;
++ (void) enqueueMobileErrorUploadTimeoutMetric;
++ (void) enqueueMobileErrorUploadThrottledMetric;
++ (void) enqueueMobileErrorFailedUploadMetric;
 
 + (void) enqueueKMMDetectionMetric;
 

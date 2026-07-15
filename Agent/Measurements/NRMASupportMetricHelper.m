@@ -252,10 +252,10 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
 
 // End Session Replay
 
-// JS Error
-+ (void) enqueueJSErrorUploadTimeMetric:(double)milliseconds {
+// Mobile Error
++ (void) enqueueMobileErrorUploadTimeMetric:(double)milliseconds {
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricUploadTime
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAMobileErrorMetricUploadTime
                                                               value:[NSNumber numberWithDouble:milliseconds]
                                                               scope:@""
                                                     produceUnscoped:YES
@@ -263,31 +263,31 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
-+ (void) enqueueJSErrorUploadTimeoutMetric {
++ (void) enqueueMobileErrorUploadTimeoutMetric {
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricUploadTimeout
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAMobileErrorMetricUploadTimeout
                                                               value:@1
                                                               scope:nil]];
     }
 }
 
-+ (void) enqueueJSErrorUploadThrottledMetric {
++ (void) enqueueMobileErrorUploadThrottledMetric {
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricUploadThrottled
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAMobileErrorMetricUploadThrottled
                                                               value:@1
                                                               scope:nil]];
     }
 }
 
-+ (void) enqueueJSErrorFailedUploadMetric {
++ (void) enqueueMobileErrorFailedUploadMetric {
     @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAJSErrorMetricFailedUpload
+        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:kNRMAMobileErrorMetricFailedUpload
                                                               value:@1
                                                               scope:nil]];
     }
 }
 
-// End JS Error
+// End Mobile Error
 
 // KMP Detection (Kotlin Multiplatform)
 + (void) enqueueKMMDetectionMetric {

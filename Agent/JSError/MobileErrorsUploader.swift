@@ -316,28 +316,28 @@ class MobileErrorsUploader: NSObject {
             handleSuccessfulRequest(request)
         } else if statusCode == 408 {
             // Timeout - don't retry
-            NRMASupportMetricHelper.enqueueJSErrorUploadTimeoutMetric()
+            NRMASupportMetricHelper.enqueueMobileErrorUploadTimeoutMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Request timeout (\(statusCode))")
             removeFromRetryTracker(request)
             onUploadFailed?()
         } else if statusCode == 429 {
             // Throttled
-            NRMASupportMetricHelper.enqueueJSErrorUploadThrottledMetric()
+            NRMASupportMetricHelper.enqueueMobileErrorUploadThrottledMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Request throttled (\(statusCode)), will retry")
             handleFailedRequest(request, error: nil)
         } else if statusCode >= 400 && statusCode < 500 {
             // Client error - don't retry
-            NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
+            NRMASupportMetricHelper.enqueueMobileErrorFailedUploadMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Client error (\(statusCode)), not retrying")
             removeFromRetryTracker(request)
             onUploadFailed?()
         } else if statusCode >= 500 && statusCode < 600 {
             // Server error - retry
-            NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
+            NRMASupportMetricHelper.enqueueMobileErrorFailedUploadMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Server error (\(statusCode)), will retry")
             handleFailedRequest(request, error: nil)
         } else {
-            NRMASupportMetricHelper.enqueueJSErrorFailedUploadMetric()
+            NRMASupportMetricHelper.enqueueMobileErrorFailedUploadMetric()
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Unexpected status code: \(statusCode)")
             handleFailedRequest(request, error: nil)
         }
@@ -363,7 +363,7 @@ class MobileErrorsUploader: NSObject {
 
         if let startTime = startTime {
             let elapsedTime = Date().timeIntervalSince(startTime) * 1000 // Convert to milliseconds
-            NRMASupportMetricHelper.enqueueJSErrorUploadTimeMetric(elapsedTime)
+            NRMASupportMetricHelper.enqueueMobileErrorUploadTimeMetric(elapsedTime)
             NRLOG_AGENT_DEBUG("Mobile Errors Uploader: Recorded upload time: \(elapsedTime)ms")
         }
     }

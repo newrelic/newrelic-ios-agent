@@ -191,12 +191,12 @@ typedef NSString NRMetricUnit;
 #define kNRMASessionReplayConfigSamplingRate         @"Supportability/Mobile/iOS/Config/SessionReplay/SamplingRate/Value"
 #define kNRMASessionReplayConfigErrorSamplingRate    @"Supportability/Mobile/iOS/Config/SessionReplay/ErrorSamplingRate/Value"
 
-// JS Error
-#define kNRMAJSError kNRAgentHealthPrefix @"/JSError"
-#define kNRMAJSErrorMetricUploadTime        kNRMAJSError @"/UploadTime"
-#define kNRMAJSErrorMetricUploadTimeout     kNRMAJSError @"/UploadTimeOut"
-#define kNRMAJSErrorMetricUploadThrottled   kNRMAJSError @"/UploadThrottled"
-#define kNRMAJSErrorMetricFailedUpload      kNRMAJSError @"/FailedUpload"
+// Mobile Error
+#define kNRMAMobileError kNRAgentHealthPrefix @"/MobileError"
+#define kNRMAMobileErrorMetricUploadTime        kNRMAMobileError @"/UploadTime"
+#define kNRMAMobileErrorMetricUploadTimeout     kNRMAMobileError @"/UploadTimeOut"
+#define kNRMAMobileErrorMetricUploadThrottled   kNRMAMobileError @"/UploadThrottled"
+#define kNRMAMobileErrorMetricFailedUpload      kNRMAMobileError @"/FailedUpload"
 
 // Crash
 // Emitted when a cached crash report is permanently rejected by the collector
