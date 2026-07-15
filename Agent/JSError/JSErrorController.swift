@@ -391,7 +391,7 @@ public class JSErrorController: NSObject {
     private func formatErrorAsEvent(_ errorData: [String: Any]) -> [String: Any] {
         var event: [String: Any] = [:]
 
-        event["eventType"] = "MobileJSError"
+        event["eventType"] = "MobileError"
 
         // Required fields from error data
         if let errorId = errorData["errorId"] as? String {

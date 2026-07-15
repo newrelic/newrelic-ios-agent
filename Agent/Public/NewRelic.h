@@ -678,10 +678,10 @@ extern "C" {
                attributes:(NSDictionary* _Nullable)attributes;
 
 /*!
- * Records a JavaScript error as a MobileJSError custom event.
+ * Records a JavaScript error as a MobileError custom event.
  *
  * This method is intended for use by hybrid frameworks (like React Native) to report JavaScript errors.
- * These errors are routed to a new EventType: MobileJSError instead of the standard MobileHandledException pipeline.
+ * These errors are routed to a new EventType: MobileError instead of the standard MobileHandledException pipeline.
  *
  * @param name The type of JS error (e.g., TypeError, ReferenceError).
  * @param message The error message.

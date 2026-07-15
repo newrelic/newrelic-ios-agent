@@ -439,7 +439,7 @@
     NSDictionary* wireFormat = [controller formatErrorAsEventForTesting:error];
 
     // Verify all expected attributes are present with correct names
-    XCTAssertEqualObjects(wireFormat[@"eventType"], @"MobileJSError", @"eventType should be MobileJSError");
+    XCTAssertEqualObjects(wireFormat[@"eventType"], @"MobileError", @"eventType should be MobileError");
     XCTAssertNotNil(wireFormat[@"errorId"], @"errorId should be present");
     XCTAssertEqualObjects(wireFormat[@"errorMessage"], @"Cannot read property 'x' of null", @"errorMessage should contain message");
     XCTAssertEqualObjects(wireFormat[@"errorName"], @"TypeError", @"errorName should contain error name");
