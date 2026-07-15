@@ -1,5 +1,5 @@
 //
-//  JSErrorController.swift
+//  MobileErrorController.swift
 //  NewRelicAgent
 //
 //  Created by New Relic Mobile Agent Team
@@ -9,10 +9,10 @@
 import Foundation
 @_implementationOnly import NewRelicPrivate
 
-let kJSErrorBackupStoreFolder = "nr_js_error_store"
+let kMobileErrorBackupStoreFolder = "nr_mobile_error_store"
 
 @objc @objcMembers
-public class JSErrorController: NSObject {
+public class MobileErrorController: NSObject {
 
     // MARK: - Properties
 
@@ -45,18 +45,18 @@ public class JSErrorController: NSObject {
         // Cast to internal types
         guard let config = agentConfiguration as? NRMAAgentConfiguration,
               let validator = attributeValidator as? AttributeValidatorProtocol else {
-            NRLOG_AGENT_DEBUG("Failed to create JS error controller. Invalid parameters.")
+            NRLOG_AGENT_DEBUG("Failed to create mobile error controller. Invalid parameters.")
             return nil
         }
 
         // Validate required parameters
         guard let appToken = config.applicationToken else {
-            NRLOG_AGENT_DEBUG("Failed to create JS error controller. appToken is nil.")
+            NRLOG_AGENT_DEBUG("Failed to create mobile error controller. appToken is nil.")
             return nil
         }
 
         guard !platform.isEmpty && !sessionId.isEmpty else {
-            NRLOG_AGENT_DEBUG("Failed to create JS error controller. platform or sessionId is empty.")
+            NRLOG_AGENT_DEBUG("Failed to create mobile error controller. platform or sessionId is empty.")
             return nil
         }
 
@@ -93,7 +93,7 @@ public class JSErrorController: NSObject {
             self?.handleUploadFailure()
         }
 
-        NRLOG_AGENT_DEBUG("JS Error Controller initialized with collector: \(collectorHost)")
+        NRLOG_AGENT_DEBUG("Mobile Error Controller initialized with collector: \(collectorHost)")
 
         // Load persisted errors from previous session (crash recovery)
         loadPersistedErrorsOnStartup()
@@ -101,7 +101,7 @@ public class JSErrorController: NSObject {
 
     // MARK: - Public Methods
 
-    @objc public func recordJSError(_ name: String,
+    @objc public func recordError(_ name: String,
                       message: String,
                       stackTrace: String,
                       isFatal: Bool,
@@ -109,12 +109,12 @@ public class JSErrorController: NSObject {
 
         // Validate required parameters
         guard !name.isEmpty else {
-            NRLOG_AGENT_DEBUG("Cannot record JS error: name is required")
+            NRLOG_AGENT_DEBUG("Cannot record mobile error: name is required")
             return
         }
 
         guard !message.isEmpty else {
-            NRLOG_AGENT_DEBUG("Cannot record JS error: message is required")
+            NRLOG_AGENT_DEBUG("Cannot record mobile error: message is required")
             return
         }
 
@@ -163,7 +163,7 @@ public class JSErrorController: NSObject {
                    validator.nameValidator(key) && validator.valueValidator(value) {
                     allAttributes[key] = value
                 } else {
-                    NRLOG_AGENT_DEBUG("Skipping invalid JS error attribute: \(key)")
+                    NRLOG_AGENT_DEBUG("Skipping invalid mobile error attribute: \(key)")
                 }
             }
         }
@@ -173,7 +173,7 @@ public class JSErrorController: NSObject {
             errorData["attributes"] = allAttributes
         }
 
-        NRLOG_AGENT_DEBUG("Recording JS error: \(name)")
+        NRLOG_AGENT_DEBUG("Recording mobile error: \(name)")
 
         // Add to queue
         errorQueueLock.lock()
@@ -194,7 +194,7 @@ public class JSErrorController: NSObject {
         let persistedErrors = loadPersistedErrors()
 
         if !persistedErrors.isEmpty {
-            NRLOG_AGENT_DEBUG("Loading \(persistedErrors.count) persisted JS errors from previous session")
+            NRLOG_AGENT_DEBUG("Loading \(persistedErrors.count) persisted mobile errors from previous session")
 
             errorQueueLock.lock()
             for error in persistedErrors {
@@ -207,7 +207,7 @@ public class JSErrorController: NSObject {
             // Don't clear persisted errors yet - wait until after successful send
             // They will be cleared in onHarvestComplete
         } else {
-            NRLOG_AGENT_DEBUG("No persisted JS errors found")
+            NRLOG_AGENT_DEBUG("No persisted mobile errors found")
             hasLoadedPersistedErrors = true
         }
     }
@@ -229,7 +229,7 @@ public class JSErrorController: NSObject {
         errorQueueLock.unlock()
 
         if !errors.isEmpty {
-            NRLOG_AGENT_DEBUG("Harvesting \(errors.count) JS errors")
+            NRLOG_AGENT_DEBUG("Harvesting \(errors.count) mobile errors")
 
             // Group errors by appVersion
             var errorsByAppVersion: [String: [[String: Any]]] = [:]
@@ -243,7 +243,7 @@ public class JSErrorController: NSObject {
 
             // Send one payload per app-version bucket
             for (appVersion, errorsForVersion) in errorsByAppVersion {
-                NRLOG_AGENT_DEBUG("Publishing \(errorsForVersion.count) JS errors for appVersion: \(appVersion)")
+                NRLOG_AGENT_DEBUG("Publishing \(errorsForVersion.count) mobile errors for appVersion: \(appVersion)")
                 publishErrors(errorsForVersion, appVersion: appVersion)
             }
         }
@@ -278,13 +278,13 @@ public class JSErrorController: NSObject {
 
     private func publishErrors(_ errors: [[String: Any]], appVersion: String) {
         guard let uploader = uploader else {
-            NRLOG_AGENT_DEBUG("Cannot publish JS errors: uploader is nil")
+            NRLOG_AGENT_DEBUG("Cannot publish mobile errors: uploader is nil")
             return
         }
 
         // Get harvest configuration for tokens
         guard let configuration = NRMAHarvestController.configuration() else {
-            NRLOG_AGENT_DEBUG("Cannot publish JS errors: harvest configuration is nil")
+            NRLOG_AGENT_DEBUG("Cannot publish mobile errors: harvest configuration is nil")
             return
         }
 
@@ -466,32 +466,32 @@ public class JSErrorController: NSObject {
 
     private func persistError(_ errorData: [String: Any]) {
         guard let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first else {
-            NRLOG_AGENT_DEBUG("Cannot persist JS error: unable to get documents directory")
+            NRLOG_AGENT_DEBUG("Cannot persist mobile error: unable to get documents directory")
             return
         }
 
-        let storePath = (documentsPath as NSString).appendingPathComponent(kJSErrorBackupStoreFolder)
+        let storePath = (documentsPath as NSString).appendingPathComponent(kMobileErrorBackupStoreFolder)
 
         // Create directory if needed
         do {
             try FileManager.default.createDirectory(atPath: storePath, withIntermediateDirectories: true, attributes: nil)
         } catch {
-            NRLOG_AGENT_DEBUG("Failed to create JS error storage directory: \(error)")
+            NRLOG_AGENT_DEBUG("Failed to create mobile error storage directory: \(error)")
             return
         }
 
         // Generate unique filename
         let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
-        let fileName = "js_error_\(timestamp).json"
+        let fileName = "mobile_error_\(timestamp).json"
         let filePath = (storePath as NSString).appendingPathComponent(fileName)
 
         // Serialize to JSON and write
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: errorData, options: .prettyPrinted)
             try jsonData.write(to: URL(fileURLWithPath: filePath), options: .atomic)
-            NRLOG_AGENT_DEBUG("Persisted JS error to: \(fileName)")
+            NRLOG_AGENT_DEBUG("Persisted mobile error to: \(fileName)")
         } catch {
-            NRLOG_AGENT_DEBUG("Failed to persist JS error: \(error)")
+            NRLOG_AGENT_DEBUG("Failed to persist mobile error: \(error)")
         }
     }
 
@@ -500,7 +500,7 @@ public class JSErrorController: NSObject {
             return []
         }
 
-        let storePath = (documentsPath as NSString).appendingPathComponent(kJSErrorBackupStoreFolder)
+        let storePath = (documentsPath as NSString).appendingPathComponent(kMobileErrorBackupStoreFolder)
 
         guard FileManager.default.fileExists(atPath: storePath) else {
             return []
@@ -520,7 +520,7 @@ public class JSErrorController: NSObject {
                 }
             }
         } catch {
-            NRLOG_AGENT_DEBUG("Failed to load persisted JS errors: \(error)")
+            NRLOG_AGENT_DEBUG("Failed to load persisted mobile errors: \(error)")
         }
 
         return errors
@@ -531,19 +531,19 @@ public class JSErrorController: NSObject {
             return
         }
 
-        let storePath = (documentsPath as NSString).appendingPathComponent(kJSErrorBackupStoreFolder)
+        let storePath = (documentsPath as NSString).appendingPathComponent(kMobileErrorBackupStoreFolder)
 
         // Check if folder exists before trying to delete
         guard FileManager.default.fileExists(atPath: storePath) else {
-            NRLOG_AGENT_DEBUG("No persisted JS errors to clear")
+            NRLOG_AGENT_DEBUG("No persisted mobile errors to clear")
             return
         }
 
         do {
             try FileManager.default.removeItem(atPath: storePath)
-            NRLOG_AGENT_DEBUG("Cleared persisted JS errors")
+            NRLOG_AGENT_DEBUG("Cleared persisted mobile errors")
         } catch {
-            NRLOG_AGENT_DEBUG("Failed to clear persisted JS errors: \(error)")
+            NRLOG_AGENT_DEBUG("Failed to clear persisted mobile errors: \(error)")
         }
     }
 

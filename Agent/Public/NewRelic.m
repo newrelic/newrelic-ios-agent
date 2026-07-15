@@ -750,7 +750,7 @@
                                                                       withAttributes:attributes];
 }
 
-+ (BOOL) recordJavascriptError:(NSString* __nonnull)name
++ (BOOL) recordError:(NSString* __nonnull)name
                        message:(NSString* __nonnull)message
                     stackTrace:(NSString* __nonnull)stackTrace
                        isFatal:(BOOL)isFatal
@@ -761,25 +761,25 @@
         return false;
     }
 
-    // Check if JSError feature flag is enabled
+    // Check if MobileError feature flag is enabled
     if (![NRMAFlags shouldEnableMobileErrorEvents]) {
-        NRLOG_AGENT_VERBOSE(@"JS Error reporting is disabled via feature flag. Cannot record JS error.");
+        NRLOG_AGENT_VERBOSE(@"Mobile Error reporting is disabled via feature flag. Cannot record mobile error.");
         return false;
     }
 
 #if TARGET_OS_IOS
-    // Get the JS Error Controller (iOS only - for React Native)
-    JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
+    // Get the Mobile Error Controller (iOS only - for React Native)
+    MobileErrorController* mobileErrorController = [NewRelicAgentInternal sharedInstance].mobileErrorController;
 
-    if (jsErrorController == nil) {
-        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
+    if (mobileErrorController == nil) {
+        NRLOG_AGENT_ERROR(@"Mobile Error Controller is not initialized. Cannot record mobile error.");
         return false;
     }
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
-    // Route to JS Error Controller for Mobile Errors Protocol
-    [jsErrorController recordJSError:name
+    // Route to Mobile Error Controller for Mobile Errors Protocol
+    [mobileErrorController recordError:name
                              message:message
                           stackTrace:stackTrace
                              isFatal:isFatal
@@ -787,8 +787,8 @@
 
     return true;
 #else
-    // JS Error reporting is only available on iOS (for React Native)
-    NRLOG_AGENT_ERROR(@"JS Error reporting is only available on iOS. Cannot record JS error.");
+    // Mobile Error reporting is only available on iOS (for React Native)
+    NRLOG_AGENT_ERROR(@"Mobile Error reporting is only available on iOS. Cannot record mobile error.");
     return false;
 #endif
 }

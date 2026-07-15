@@ -1,24 +1,24 @@
 //
-//  NRMAJSErrorHarvestAdapter.m
+//  NRMAMobileErrorHarvestAdapter.m
 //  NewRelicAgent
 //
 //  Created by New Relic Mobile Agent Team
 //  Copyright © 2026 New Relic. All rights reserved.
 //
 
-#import "NRMAJSErrorHarvestAdapter.h"
+#import "NRMAMobileErrorHarvestAdapter.h"
 
 #if TARGET_OS_IOS
 
 #import <NewRelic/NewRelic-Swift.h>
 
-@interface NRMAJSErrorHarvestAdapter ()
-@property (nonatomic, strong) JSErrorController* controller;
+@interface NRMAMobileErrorHarvestAdapter ()
+@property (nonatomic, strong) MobileErrorController* controller;
 @end
 
-@implementation NRMAJSErrorHarvestAdapter
+@implementation NRMAMobileErrorHarvestAdapter
 
-- (instancetype)initWithController:(JSErrorController*)controller {
+- (instancetype)initWithController:(MobileErrorController*)controller {
     self = [super init];
     if (self) {
         _controller = controller;

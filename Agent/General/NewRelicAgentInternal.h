@@ -33,7 +33,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 #if TARGET_OS_IOS
-@class JSErrorController;
+@class MobileErrorController;
 #endif
 
 // Defines the internal agent api.
@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
 @property(atomic, strong, nullable) NRMAHandledExceptions* handledExceptionsController;
 #if TARGET_OS_IOS
-@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+@property(atomic, strong, nullable) MobileErrorController* mobileErrorController;
 #endif
 @property(atomic, strong, nullable) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;

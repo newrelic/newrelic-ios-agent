@@ -683,7 +683,7 @@ extern "C" {
  * This method is intended for use by hybrid frameworks (like React Native) to report JavaScript errors.
  * These errors are routed to a new EventType: MobileError instead of the standard MobileHandledException pipeline.
  *
- * @param name The type of JS error (e.g., TypeError, ReferenceError).
+ * @param name The type of mobile error (e.g., TypeError, ReferenceError).
  * @param message The error message.
  * @param stackTrace The full JS stack trace string.
  * @param isFatal Boolean indicating if the error caused a crash/hang in the JS engine.
@@ -694,7 +694,7 @@ extern "C" {
  * @note Explicit parameters (name, message, stackTrace, isFatal) take precedence
  *       over any identical keys found in additionalAttributes.
  */
-+ (BOOL) recordJavascriptError:(NSString* _Nonnull)name
++ (BOOL) recordError:(NSString* _Nonnull)name
                        message:(NSString* _Nonnull)message
                     stackTrace:(NSString* _Nonnull)stackTrace
                        isFatal:(BOOL)isFatal

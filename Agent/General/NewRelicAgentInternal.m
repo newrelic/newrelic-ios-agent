@@ -56,7 +56,7 @@
 #import "NRMASupportMetricHelper.h"
 #import "NRAutoLogCollector.h"
 #import "NRMAAttributeValidator.h"
-#import "NRMAJSErrorHarvestAdapter.h"
+#import "NRMAMobileErrorHarvestAdapter.h"
 
 #import <NewRelic/NewRelic-Swift.h>
 
@@ -611,19 +611,19 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 
 #if TARGET_OS_IOS
-    // Initialize JS Error Controller for Mobile Errors Protocol (iOS only - for React Native)
+    // Initialize Mobile Error Controller for Mobile Errors Protocol (iOS only - for React Native)
     if ([NRMAFlags shouldEnableMobileErrorEvents]) {
-        self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
+        self.mobileErrorController = [[MobileErrorController alloc] initWithAnalyticsController:self.analyticsController
                                                                         sessionStartTime:self.appSessionStartDate
                                                                       agentConfiguration:self.agentConfiguration
                                                                                 platform:@"reactnative"
                                                                                sessionId:[self currentSessionId]
                                                                       attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
-        if (self.jsErrorController != nil) {
+        if (self.mobileErrorController != nil) {
 
             // Use adapter to bridge Swift controller with harvest protocol
-            NRMAJSErrorHarvestAdapter* harvestAdapter = [[NRMAJSErrorHarvestAdapter alloc] initWithController:self.jsErrorController];
+            NRMAMobileErrorHarvestAdapter* harvestAdapter = [[NRMAMobileErrorHarvestAdapter alloc] initWithController:self.mobileErrorController];
             [NRMAHarvestController addHarvestListener:harvestAdapter];
         }
     }
