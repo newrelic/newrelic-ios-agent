@@ -154,7 +154,7 @@ The following data is sent with each source map upload:
 
 The `jsBundleId` and `appVersion` are both set to your app's `CFBundleShortVersionString` from `Info.plist`. This ensures that source maps are correctly matched to error reports from your React Native app.
 
-**Important:** When recording JavaScript errors in your React Native app, pass the same version string as the `jsAppVersion` parameter to `NewRelic.recordJavascriptError()`.
+**Important:** When recording JavaScript errors in your React Native app, pass the same version string as the `jsAppVersion` parameter to `NewRelic.recordError()`.
 
 ## Troubleshooting
 
@@ -275,7 +275,7 @@ import { NativeModules } from 'react-native';
 // Get the native app version (CFBundleShortVersionString)
 const appVersion = NativeModules.RNDeviceInfo?.appVersion || '1.0.0';
 
-NewRelic.recordJavascriptError(
+NewRelic.recordError(
   error.name,
   error.message,
   error.stack,
