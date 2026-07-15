@@ -31,7 +31,7 @@
    Enabled by default. Controls capture of handled exceptions via 'recordHandledException:' API.
 
 - NRFeatureFlag_MobileErrorEvents
-   Enabled by default. Controls capture of JavaScript errors via 'recordError:' API.
+   Enabled by default. Controls capture of mobile errors via 'recordError:' API.
 
 - NRFeatureFlag_NSURLSessionInstrumentation
    Enable (default) or disable flag for instrumentation of NSURLSessions.

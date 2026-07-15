@@ -678,15 +678,15 @@ extern "C" {
                attributes:(NSDictionary* _Nullable)attributes;
 
 /*!
- * Records a JavaScript error as a MobileError custom event.
+ * Records a mobile error as a MobileError custom event.
  *
- * This method is intended for use by hybrid frameworks (like React Native) to report JavaScript errors.
+ * This method is intended for use by hybrid frameworks (like React Native) to report mobile errors.
  * These errors are routed to a new EventType: MobileError instead of the standard MobileHandledException pipeline.
  *
  * @param name The type of mobile error (e.g., TypeError, ReferenceError).
  * @param message The error message.
- * @param stackTrace The full JS stack trace string.
- * @param isFatal Boolean indicating if the error caused a crash/hang in the JS engine.
+ * @param stackTrace The full mobile error stack trace string.
+ * @param isFatal Boolean indicating if the error caused a crash/hang in the JavaScript engine.
  * @param additionalAttributes Optional dictionary of custom metadata to attach to the event.
  *        Attributes should have NSString keys and NSString or NSNumber values.
  * @return YES if successfully added event, NO if failed with error in log.
