@@ -1,5 +1,5 @@
 //
-//  JSErrorControllerTests.m
+//  MobileErrorControllerTests.m
 //  NewRelicAgentTests
 //
 //  Copyright © 2026 New Relic. All rights reserved.
@@ -15,10 +15,10 @@
 // Import Swift classes from main NewRelic module (same as NewRelicAgentInternal.m does)
 #import <NewRelic/NewRelic-Swift.h>
 
-@interface JSErrorControllerTests : XCTestCase
+@interface MobileErrorControllerTests : XCTestCase
 @end
 
-@implementation JSErrorControllerTests
+@implementation MobileErrorControllerTests
 
 // MARK: - Initialization Tests
 
@@ -30,7 +30,7 @@
         crashAddress:nil];
     agentConfig.sessionIdentifier = @"test-session-id";
 
-    JSErrorController* controller = [[JSErrorController alloc]
+    MobileErrorController* controller = [[MobileErrorController alloc]
         initWithAnalyticsController:analytics
         sessionStartTime:[NSDate new]
         agentConfiguration:agentConfig
@@ -43,7 +43,7 @@
 
 - (void)testInitWithNilParameters {
     // Test nil analytics
-    JSErrorController* controller = [[JSErrorController alloc]
+    MobileErrorController* controller = [[MobileErrorController alloc]
         initWithAnalyticsController:nil
         sessionStartTime:[NSDate new]
         agentConfiguration:nil
@@ -61,7 +61,7 @@
         collectorAddress:nil
         crashAddress:nil];
 
-    JSErrorController* controller = [[JSErrorController alloc]
+    MobileErrorController* controller = [[MobileErrorController alloc]
         initWithAnalyticsController:analytics
         sessionStartTime:[NSDate new]
         agentConfiguration:agentConfig
@@ -79,7 +79,7 @@
         collectorAddress:nil
         crashAddress:nil];
 
-    JSErrorController* controller = [[JSErrorController alloc]
+    MobileErrorController* controller = [[MobileErrorController alloc]
         initWithAnalyticsController:analytics
         sessionStartTime:[NSDate new]
         agentConfiguration:agentConfig
@@ -97,7 +97,7 @@
         collectorAddress:nil
         crashAddress:nil];
 
-    JSErrorController* controller = [[JSErrorController alloc]
+    MobileErrorController* controller = [[MobileErrorController alloc]
         initWithAnalyticsController:analytics
         sessionStartTime:[NSDate new]
         agentConfiguration:agentConfig
@@ -110,11 +110,11 @@
 
 // MARK: - Error Recording Tests
 
-- (void)testRecordJSErrorWithValidParameters {
-    JSErrorController* controller = [self createTestController];
+- (void)testRecordMobileErrorWithValidParameters {
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
-    XCTAssertNoThrow([controller recordJSError:@"TypeError"
+    XCTAssertNoThrow([controller recordError:@"TypeError"
                                        message:@"Cannot read property 'foo' of undefined"
                                     stackTrace:@"at testFunction (app.js:123:45)"
                                        isFatal:NO
@@ -130,11 +130,11 @@
     XCTAssertEqual([error[@"isFatal"] boolValue], NO);
 }
 
-- (void)testRecordJSErrorWithNilAdditionalAttributes {
-    JSErrorController* controller = [self createTestController];
+- (void)testRecordMobileErrorWithNilAdditionalAttributes {
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
-    XCTAssertNoThrow([controller recordJSError:@"ReferenceError"
+    XCTAssertNoThrow([controller recordError:@"ReferenceError"
                                        message:@"x is not defined"
                                     stackTrace:@"at <anonymous>:1:1"
                                        isFatal:NO
@@ -145,11 +145,11 @@
 }
 
 - (void)testRecordMultipleErrors {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     for (int i = 0; i < 5; i++) {
-        [controller recordJSError:[NSString stringWithFormat:@"Error%d", i]
+        [controller recordError:[NSString stringWithFormat:@"Error%d", i]
                           message:[NSString stringWithFormat:@"Message %d", i]
                        stackTrace:[NSString stringWithFormat:@"Stack %d", i]
                           isFatal:NO
@@ -163,7 +163,7 @@
 // MARK: - Collision Handling Tests
 
 - (void)testNameParameterTakesPrecedenceOverAdditionalAttributes {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     NSString* explicitName = @"ExplicitErrorName";
@@ -174,7 +174,7 @@
         @"customKey": @"customValue"
     };
 
-    [controller recordJSError:explicitName
+    [controller recordError:explicitName
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
@@ -201,7 +201,7 @@
 }
 
 - (void)testMessageParameterTakesPrecedenceOverAdditionalAttributes {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     NSString* explicitMessage = @"Explicit error message";
@@ -212,7 +212,7 @@
         @"customKey": @"customValue"
     };
 
-    [controller recordJSError:@"TestError"
+    [controller recordError:@"TestError"
                       message:explicitMessage
                    stackTrace:@"test stack"
                       isFatal:NO
@@ -232,7 +232,7 @@
 }
 
 - (void)testBothNameAndMessageParametersTakePrecedence {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     NSDictionary* additionalAttributes = @{
@@ -241,7 +241,7 @@
         @"customKey": @"customValue"
     };
 
-    [controller recordJSError:@"ExplicitName"
+    [controller recordError:@"ExplicitName"
                       message:@"ExplicitMessage"
                    stackTrace:@"test stack"
                       isFatal:NO
@@ -262,18 +262,18 @@
 // MARK: - Fatal Error Tests
 
 - (void)testFatalErrorFlag {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     // Record fatal error
-    [controller recordJSError:@"FatalError"
+    [controller recordError:@"FatalError"
                       message:@"Critical failure"
                    stackTrace:@"stack"
                       isFatal:YES
          additionalAttributes:nil];
 
     // Record non-fatal error
-    [controller recordJSError:@"NonFatalError"
+    [controller recordError:@"NonFatalError"
                       message:@"Recoverable error"
                    stackTrace:@"stack"
                       isFatal:NO
@@ -297,10 +297,10 @@
 // MARK: - Data Parity Tests (Similar to MobileHandledException)
 
 - (void)testErrorDataStructure {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
-    [controller recordJSError:@"TypeError"
+    [controller recordError:@"TypeError"
                       message:@"Test error"
                    stackTrace:@"at function (file.js:10:5)"
                       isFatal:NO
@@ -325,12 +325,12 @@
 
 // MARK: - Validation Tests
 
-- (void)testRecordJSErrorWithEmptyName {
-    JSErrorController* controller = [self createTestController];
+- (void)testRecordMobileErrorWithEmptyName {
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     // Should not record with empty name
-    [controller recordJSError:@""
+    [controller recordError:@""
                       message:@"Test message"
                    stackTrace:@"stack"
                       isFatal:NO
@@ -340,12 +340,12 @@
     XCTAssertEqual(errors.count, 0, @"Should not record error with empty name");
 }
 
-- (void)testRecordJSErrorWithEmptyMessage {
-    JSErrorController* controller = [self createTestController];
+- (void)testRecordMobileErrorWithEmptyMessage {
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     // Should not record with empty message
-    [controller recordJSError:@"TestError"
+    [controller recordError:@"TestError"
                       message:@""
                    stackTrace:@"stack"
                       isFatal:NO
@@ -358,11 +358,11 @@
 // MARK: - Wire Format Tests
 
 - (void)testWireFormatContainsErrorMessage {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     NSString* testMessage = @"Cannot read property 'foo' of undefined";
-    [controller recordJSError:@"TypeError"
+    [controller recordError:@"TypeError"
                       message:testMessage
                    stackTrace:@"at testFunction (app.js:123:45)"
                       isFatal:NO
@@ -381,11 +381,11 @@
 }
 
 - (void)testWireFormatContainsErrorName {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
     NSString* testName = @"TypeError";
-    [controller recordJSError:testName
+    [controller recordError:testName
                       message:@"Test error message"
                    stackTrace:@"at testFunction (app.js:123:45)"
                       isFatal:NO
@@ -397,14 +397,14 @@
 
     // errorName should be present and contain the error name
     XCTAssertNotNil(wireFormat[@"errorName"], @"errorName should be present in wire format");
-    XCTAssertEqualObjects(wireFormat[@"errorName"], testName, @"errorName should contain the JS error name");
+    XCTAssertEqualObjects(wireFormat[@"errorName"], testName, @"errorName should contain the mobile error name");
 }
 
 - (void)testWireFormatErrorIdRemainsCamelCase {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
-    [controller recordJSError:@"TestError"
+    [controller recordError:@"TestError"
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
@@ -425,10 +425,10 @@
 }
 
 - (void)testWireFormatCompleteStructure {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
     XCTAssertNotNil(controller);
 
-    [controller recordJSError:@"TypeError"
+    [controller recordError:@"TypeError"
                       message:@"Cannot read property 'x' of null"
                    stackTrace:@"at function (file.js:10:5)"
                       isFatal:YES
@@ -464,11 +464,11 @@
     // For duplicate prevention tests, see testOnHarvestConnected and testNoDuplicates tests.
 
     // Setup: Create controller and clear any old persisted errors
-    JSErrorController* firstController = [self createTestController];
+    MobileErrorController* firstController = [self createTestController];
     [firstController clearPersistedErrorsForTesting];
 
     // Record error → goes to memory + disk
-    [firstController recordJSError:@"TestError"
+    [firstController recordError:@"TestError"
                           message:@"Test message"
                        stackTrace:@"test stack"
                           isFatal:NO
@@ -482,7 +482,7 @@
                    @"Queue should be empty after harvest");
 
     // Create new instance (simulates app restart)
-    JSErrorController* secondController =
+    MobileErrorController* secondController =
         [self createTestControllerWithSessionId:@"test-session-id-2" clearQueue:NO];
 
     // Should load from disk
@@ -495,9 +495,9 @@
 
 - (void)testOnHarvestConnectedDoesNotReloadPersistedErrors {
     // Setup: Create a controller with a persisted error
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
 
-    [controller recordJSError:@"TestError"
+    [controller recordError:@"TestError"
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
@@ -524,10 +524,10 @@
     // Scenario: Error recorded → network drops → network reconnects → harvest
     // Expected: Only 1 error sent, not 2
 
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
 
     // Step 1: Record error (goes to memory + disk)
-    [controller recordJSError:@"TestError"
+    [controller recordError:@"TestError"
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
@@ -557,10 +557,10 @@
 }
 
 - (void)testPersistedErrorsClearedAfterSuccessfulHarvest {
-    JSErrorController* controller = [self createTestController];
+    MobileErrorController* controller = [self createTestController];
 
     // Record error
-    [controller recordJSError:@"TestError"
+    [controller recordError:@"TestError"
                       message:@"Test message"
                    stackTrace:@"test stack"
                       isFatal:NO
@@ -573,7 +573,7 @@
     [controller onHarvestComplete];
 
     // Create new controller to check if persisted errors are gone
-    JSErrorController* newController = [self createTestController];
+    MobileErrorController* newController = [self createTestController];
     NSInteger queueSize = [newController errorQueueSizeForTesting];
 
     XCTAssertEqual(queueSize, 0, @"Persisted errors should be cleared after successful harvest");
@@ -581,15 +581,15 @@
 
 // MARK: - Helper Methods
 
-- (JSErrorController*)createTestController {
+- (MobileErrorController*)createTestController {
     return [self createTestControllerWithClearQueue:YES];
 }
 
-- (JSErrorController*)createTestControllerWithClearQueue:(BOOL)shouldClear {
+- (MobileErrorController*)createTestControllerWithClearQueue:(BOOL)shouldClear {
     return [self createTestControllerWithSessionId:@"test-session-id" clearQueue:shouldClear];
 }
 
-- (JSErrorController*)createTestControllerWithSessionId:(NSString*)sessionId clearQueue:(BOOL)shouldClear {
+- (MobileErrorController*)createTestControllerWithSessionId:(NSString*)sessionId clearQueue:(BOOL)shouldClear {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc]
         initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:@"test-token-12345"]
@@ -597,7 +597,7 @@
         crashAddress:nil];
     agentConfig.sessionIdentifier = sessionId;
 
-    JSErrorController* controller = [[JSErrorController alloc]
+    MobileErrorController* controller = [[MobileErrorController alloc]
         initWithAnalyticsController:analytics
         sessionStartTime:[NSDate new]
         agentConfiguration:agentConfig
