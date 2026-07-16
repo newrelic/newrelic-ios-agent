@@ -75,6 +75,12 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 @property(strong) NSMutableArray<NRMAHexPayload*>* pendingPayloads;
 @property(assign) NSUInteger inFlightCount;
 
+// Set once the session has been (or is being) invalidated via -invalidate or
+// -dealloc. Creating a task on an invalidated NSURLSession raises an
+// NSGenericException ("Task created in a session that has been invalidated"),
+// so every task-creation site checks this first. Guarded by @synchronized(self).
+@property(assign) BOOL invalidated;
+
 // Maps an in-flight / retryable task to its payload, keyed by the task's
 // -taskIdentifier (unique within an NSURLSession). It CANNOT be keyed by the
 // NSURLRequest: NSURLSessionUploadTask requires the payload to come from
@@ -199,7 +205,34 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 
     NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
 
-    NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:request fromData:data];
+    // The session may have been invalidated (publisher dtor / dealloc) between
+    // this payload being dequeued and now. Fast-path bail so we don't even
+    // attempt to create a task on a dead session.
+    BOOL isInvalidated = NO;
+    @synchronized(self) {
+        isInvalidated = self.invalidated;
+        if (isInvalidated && self.inFlightCount > 0) self.inFlightCount--;
+    }
+    if (isInvalidated) {
+        // Not confirmed — keep the report on disk for a later attempt.
+        [payload finishWith:NO];
+        return;
+    }
+
+    // Belt-and-suspenders: if invalidation wins the race between the check above
+    // and task creation, -uploadTaskWithRequest:fromData: raises an
+    // NSGenericException. Catch it and preserve the report rather than crash.
+    NSURLSessionUploadTask* uploadTask = nil;
+    @try {
+        uploadTask = [self.session uploadTaskWithRequest:request fromData:data];
+    } @catch (NSException* exception) {
+        NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - upload task creation failed: %@", exception.reason);
+        @synchronized(self) {
+            if (self.inFlightCount > 0) self.inFlightCount--;
+        }
+        [payload finishWith:NO];
+        return;
+    }
 
     payload.httpError = NO;
     @synchronized(self.payloadByTaskId) {
@@ -217,12 +250,30 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
         self.retryQueue = [NSMutableArray new];
     }
 
+    BOOL isInvalidated = NO;
+    @synchronized(self) {
+        isInvalidated = self.invalidated;
+    }
     for (NSURLSessionUploadTask* task in localRetryQueue) {
-        [task resume];
+        // Resuming a task from an invalidated session is pointless; skip it and
+        // let the report be retried on next launch. Guard defensively so a
+        // resume never crashes the app.
+        if (isInvalidated) break;
+        @try {
+            [task resume];
+        } @catch (NSException* exception) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry resume failed: %@", exception.reason);
+        }
     }
 }
 
 - (void) invalidate {
+    // Mark invalidated before tearing the session down so task-creation sites
+    // (launchUpload:, handledErroredTask:) see it and bail instead of raising
+    // "Task created in a session that has been invalidated".
+    @synchronized(self) {
+        self.invalidated = YES;
+    }
     [self.session finishTasksAndInvalidate];
 }
 
@@ -232,6 +283,7 @@ static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
     // any in-flight tasks live forever. The publisher dtor normally
     // invalidates first, but covering the dealloc path guarantees
     // FDs and sockets are released even if ownership shifts.
+    _invalidated = YES;
     [_session invalidateAndCancel];
 }
 
@@ -338,10 +390,36 @@ didCompleteWithError:(nullable NSError*)error {
             [payload finishWith:NO];
             return;
         }
+        // If the session has been invalidated we cannot create a retry task
+        // (it would raise NSGenericException). Drop the in-memory retry and keep
+        // the report on disk for the next launch.
+        BOOL isInvalidated = NO;
+        @synchronized(self) {
+            isInvalidated = self.invalidated;
+        }
+        if (isInvalidated) {
+            @synchronized(self.payloadByTaskId) {
+                [self.payloadByTaskId removeObjectForKey:oldKey];
+            }
+            [payload finishWith:NO];
+            return;
+        }
+
         // Rebuild the upload from the original request. The new task gets its own
         // -taskIdentifier, so move the payload from the old key to the new one and
         // reset the per-attempt HTTP-error flag so the retry starts clean.
-        NSURLSessionUploadTask* uploadTask = [self.session uploadTaskWithRequest:task.originalRequest fromData:body];
+        // Guarded against a create/invalidate race the same way as launchUpload:.
+        NSURLSessionUploadTask* uploadTask = nil;
+        @try {
+            uploadTask = [self.session uploadTaskWithRequest:task.originalRequest fromData:body];
+        } @catch (NSException* exception) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC HEX UPLOADER - retry task creation failed: %@", exception.reason);
+            @synchronized(self.payloadByTaskId) {
+                [self.payloadByTaskId removeObjectForKey:oldKey];
+            }
+            [payload finishWith:NO];
+            return;
+        }
         payload.httpError = NO;
         @synchronized(self.payloadByTaskId) {
             [self.payloadByTaskId removeObjectForKey:oldKey];
