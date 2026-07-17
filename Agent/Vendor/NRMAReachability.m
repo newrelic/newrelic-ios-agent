@@ -50,6 +50,7 @@
 #import <arpa/inet.h>
 #import <ifaddrs.h>
 #import <netdb.h>
+#include <stdatomic.h>
 
 #import <CoreFoundation/CoreFoundation.h>
 
@@ -58,11 +59,28 @@
 #import "NRLogger.h"
 #import "NRConstants.h"
 
-@interface NRMAReachability ()
+@interface NRMAReachability () {
+#if !TARGET_OS_WATCH
+    _Atomic(int) _cachedStatus;
+#endif
+}
 #if !TARGET_OS_TV && !TARGET_OS_WATCH
 @property(strong, atomic) CTTelephonyNetworkInfo *networkInfo;
 #endif
+#if !TARGET_OS_WATCH
+- (NRMANetworkStatus)networkStatusForFlags:(SCNetworkReachabilityFlags)flags;
+- (void)updateCachedStatus:(NRMANetworkStatus)status;
+#endif
 @end
+
+#if !TARGET_OS_WATCH
+static void NRMAReachabilityCallback(SCNetworkReachabilityRef __unused target,
+                                     SCNetworkReachabilityFlags flags,
+                                     void *info) {
+    NRMAReachability *r = (__bridge NRMAReachability *)info;
+    [r updateCachedStatus:[r networkStatusForFlags:flags]];
+}
+#endif
 
 @implementation NRMAReachability
 
@@ -163,6 +181,8 @@
 - (void)dealloc {
 #if !TARGET_OS_WATCH
     if (reachabilityRef != NULL) {
+        SCNetworkReachabilitySetDispatchQueue(reachabilityRef, NULL);
+        SCNetworkReachabilitySetCallback(reachabilityRef, NULL, NULL);
         CFRelease(reachabilityRef);
     }
 #endif
@@ -190,6 +210,19 @@
         retVal = [[self alloc] init];
         if (retVal != NULL) {
             retVal->reachabilityRef = reachability;
+
+            // Prime the cache with one synchronous read at startup.
+            SCNetworkReachabilityFlags initialFlags = 0;
+            NRMANetworkStatus initialStatus = NotReachable;
+            if (SCNetworkReachabilityGetFlags(reachability, &initialFlags)) {
+                initialStatus = [retVal networkStatusForFlags:initialFlags];
+            }
+            [retVal updateCachedStatus:initialStatus];
+
+            // Keep the cache current via async callback instead of blocking on every read.
+            SCNetworkReachabilityContext ctx = {0, (__bridge void *)retVal, NULL, NULL, NULL};
+            SCNetworkReachabilitySetCallback(reachability, NRMAReachabilityCallback, &ctx);
+            SCNetworkReachabilitySetDispatchQueue(reachability, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0));
         }
     }
 #endif
@@ -245,13 +278,12 @@
 #endif
 
 #if !TARGET_OS_WATCH
+- (void)updateCachedStatus:(NRMANetworkStatus)status {
+    atomic_store_explicit(&_cachedStatus, (int)status, memory_order_relaxed);
+}
+
 - (NRMANetworkStatus)currentReachabilityStatus {
-    NRMANetworkStatus retVal = NotReachable;
-    SCNetworkReachabilityFlags flags;
-    if (SCNetworkReachabilityGetFlags(reachabilityRef, &flags)) {
-        retVal = [self networkStatusForFlags:flags];
-    }
-    return retVal;
+    return (NRMANetworkStatus)atomic_load_explicit(&_cachedStatus, memory_order_relaxed);
 }
 #endif
 
