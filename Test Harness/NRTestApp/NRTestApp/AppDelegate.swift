@@ -29,15 +29,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 #endif
 
         NewRelic.addHTTPHeaderTracking(for: ["Test"])
+        
+        // FEATURE FLAG ENABLEMENT
         NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_SwiftAsyncURLSessionSupport,
                                  NRMAFeatureFlags.NRFeatureFlag_NewEventSystem,
-                                 NRMAFeatureFlags.NRFeatureFlag_OfflineStorage])
+                                 NRMAFeatureFlags.NRFeatureFlag_OfflineStorage,
+                                 // MobileViews: automatic UIKit/SwiftUI tracking + the manual
+                                 // setCurrentView API (both disabled by default in the agent).
+                                 NRMAFeatureFlags.NRFeatureFlag_AutomaticMobileViews,
+                                 NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews])
+        
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
-        // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
-        NewRelic.disableFeatures([
-            NRMAFeatureFlags.NRFeatureFlag_InteractionTracing,
-            NRMAFeatureFlags.NRFeatureFlag_DefaultInteractions
-        ])
+//        // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])
+        
+//        NewRelic.disableFeatures([
+//            NRMAFeatureFlags.NRFeatureFlag_InteractionTracing,
+//            NRMAFeatureFlags.NRFeatureFlag_DefaultInteractions
+//        ])
         NewRelic.saltDeviceUUID(true)
 
        // NewRelic.replaceDeviceIdentifier("myDeviceId")

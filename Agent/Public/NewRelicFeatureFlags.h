@@ -80,11 +80,18 @@
  - NRFeatureFlag_OfflineStorage
     Enabled by default. Enable (default) or disable flag to enable the storage of offline payloads.
 
- - NRFeatureFlag_MobileViews
+ - NRFeatureFlag_AutomaticViews
     Disabled by default. Enables automatic capture of MobileView events for UIViewController lifecycle
     (viewDidLoad → viewDidAppear → viewDidDisappear) and SwiftUI onAppear/onDisappear.
     Each visible appearance of a view emits a MobileView event with viewClass, viewName,
-    viewInstanceId, restarted, loadTime (ms), and timeVisible (ms) attributes.
+    viewInstanceId, restarted, previousView (referrer), loadTime (ms), and timeVisible (ms) attributes.
+
+ - NRFeatureFlag_ManualViews
+    Disabled by default. Enables the manual [NewRelic setCurrentView:attributes:] API for recording
+    custom view lifecycles — e.g. renaming views for business reasons, or naming React Native screens
+    that would otherwise collapse to a single generic host controller. Independent of
+    NRFeatureFlag_AutomaticViews; enabling either flag activates the breadcrumb/MobileView referrer
+    attributes (currentView, previousView).
 */
 
 
@@ -113,5 +120,6 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_BackgroundReporting                   = 1 << 22, // Disabled by default
     NRFeatureFlag_AutoCollectLogs                       = 1 << 23, // Disabled by default
     NRFeatureFlag_JSErrorEvents                         = 1 << 24,  // Enabled by default
-    NRFeatureFlag_MobileViews                           = 1 << 25,
+    NRFeatureFlag_AutomaticMobileViews                  = 1 << 25, // Disabled by default
+    NRFeatureFlag_ManualMobileViews                     = 1 << 26, // Disabled by default
 };

@@ -2,7 +2,9 @@
 //  NRMAMobileViewTracker.m
 //  NewRelicAgent
 //
-//  POC: MobileViews feature — automatic UIViewController lifecycle tracking.
+//  MobileViews: automatic UIViewController lifecycle tracking. Emits "MobileView" custom events
+//  with timing and identity attributes, and updates NRMAViewContext so breadcrumbs and MobileView
+//  events carry a consistent currentView / previousView referrer.
 //
 //  Copyright © 2024 New Relic. All rights reserved.
 //
@@ -14,6 +16,7 @@
 #import "NewRelic.h"
 #import "NRLogger.h"
 #import "NRMAMethodSwizzling.h"
+#import "NRMAViewContext.h"
 
 // Associated-object keys (pointer address acts as unique key)
 static const char kNRLoadTimestampKey;
@@ -227,8 +230,9 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     if (viewName == nil) return;
     if (NRMA_ShouldSkipViewName(viewName)) return;
 
+    CFAbsoluteTime appearTime = CFAbsoluteTimeGetCurrent();
     objc_setAssociatedObject(self, &kNRAppearTimestampKey,
-                             @(CFAbsoluteTimeGetCurrent()),
+                             @(appearTime),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     NSString *uuid = [[NSUUID UUID] UUIDString];
     // Fresh UUID for this single visible-lifetime instance
@@ -236,11 +240,17 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
                              uuid,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
+    // Make this view current in the shared context so it becomes the referrer for the next view
+    // and for breadcrumbs recorded while it is visible.
+    [[NRMAViewContext sharedInstance] transitionToView:viewName instanceId:uuid appearTime:appearTime];
+
     NSString *viewClass = NRMA_DemangledName([self class], YES);
 
     NSDictionary<NSString *, id> *custom = NRMA_AttributesForController(self);
     NSMutableDictionary<NSString *, id> *attrs =
         [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
+    // Referrer for this appearance (previousView / previousViewInstanceId).
+    [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] previousViewAttributes]];
     // Reserved keys win over caller-supplied ones to keep the event schema stable.
     [attrs addEntriesFromDictionary:@{
         kNRAttr_viewClass:      viewClass,
@@ -276,11 +286,10 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     NSString *viewName  = NRMA_ViewNameForController(self);
     if (viewName == nil) return;
 
-    double timeVisibleSec = (disappearTime - appearTimestamp.doubleValue); //* 1000.0;
-    double loadTimeSec    = 0.0;
+    double timeVisibleMs = [NRMAViewContext millisecondsBetween:appearTimestamp.doubleValue and:disappearTime];
+    double loadTimeMs    = 0.0;
     if (loadTimestamp) {
-        double raw = (appearTimestamp.doubleValue - loadTimestamp.doubleValue); //* 1000.0;
-        loadTimeSec = MAX(raw, 0.0);
+        loadTimeMs = [NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue and:appearTimestamp.doubleValue];
     }
 
     BOOL isRestarted = (hasAppearedBefore != nil && hasAppearedBefore.boolValue);
@@ -295,8 +304,8 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         kNRAttr_viewName:       viewName,
         kNRAttr_viewInstanceId: instanceId,
         kNRAttr_restarted:      @(isRestarted),
-        kNRAttr_loadTime:       @(loadTimeSec),
-        kNRAttr_timeVisible:    @(timeVisibleSec),
+        kNRAttr_loadTime:       @(loadTimeMs),
+        kNRAttr_timeVisible:    @(timeVisibleMs),
         @"appeared":            @NO,
         @"uiPlatform":          @"UIKit",
         @"agentName":           @"iOS",

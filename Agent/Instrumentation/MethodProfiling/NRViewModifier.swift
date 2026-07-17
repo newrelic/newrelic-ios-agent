@@ -43,7 +43,7 @@ public extension SwiftUI.View {
     }
 }
 
-// MARK: - MobileViews POC: SwiftUI support
+// MARK: - MobileViews: SwiftUI support
 
 /// NRMobileViewModifier emits a MobileView custom event on appear and disappear.
 /// Tracks loadTime (onAppear - modifier init), timeVisible (disappear - appear), and
@@ -74,16 +74,25 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 appearTime = now
                 instanceId = id
 
-                // loadTime: modifier creation (≈ view body evaluation) → onAppear
-                let loadTimeSec = now.timeIntervalSince(modifierCreatedAt)
+                // Make this view current in the shared context so it becomes the referrer for the
+                // next view and for breadcrumbs recorded while it is visible.
+                NRMAViewContext.sharedInstance().transition(
+                    toView: viewName, instanceId: id, appearTime: now.timeIntervalSinceReferenceDate)
+
+                // loadTime (ms): modifier creation (≈ view body evaluation) → onAppear
+                let loadTimeMs = NRMAViewContext.millisecondsBetween(
+                    modifierCreatedAt.timeIntervalSinceReferenceDate,
+                    and: now.timeIntervalSinceReferenceDate)
 
                 var attrs: [String: Any] = customAttributes ?? [:]
+                // Referrer for this appearance (previousView / previousViewInstanceId).
+                attrs.merge(NRMAViewContext.sharedInstance().previousViewAttributes()) { _, new in new }
                 // Reserved keys overwrite any caller-supplied values to keep the event schema stable.
                 attrs["viewClass"]      = viewClass
                 attrs["viewName"]       = viewName
                 attrs["viewInstanceId"] = id
                 attrs["restarted"]      = NSNumber(value: hasAppearedBefore)
-                attrs["loadTime"]       = NSNumber(value: max(loadTimeSec, 0.0))
+                attrs["loadTime"]       = NSNumber(value: loadTimeMs)
                 attrs["appeared"]       = NSNumber(value: true)
                 attrs["uiPlatform"]     = "SwiftUI"
                 attrs["agentName"]      = "iOS"
@@ -96,16 +105,17 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 let disappearTime = Date()
                 guard let appeared = appearTime, let id = instanceId else { return }
 
-                let timeVisibleSec = disappearTime.timeIntervalSince(appeared)
-                // loadTime is currently only included in appeared = true
-               // let loadTimeSec    = appeared.timeIntervalSince(modifierCreatedAt)
+                // timeVisible (ms): onAppear → onDisappear. loadTime is only included on appear.
+                let timeVisibleMs = NRMAViewContext.millisecondsBetween(
+                    appeared.timeIntervalSinceReferenceDate,
+                    and: disappearTime.timeIntervalSinceReferenceDate)
 
                 var attrs: [String: Any] = customAttributes ?? [:]
                 attrs["viewClass"]      = viewClass
                 attrs["viewName"]       = viewName
                 attrs["viewInstanceId"] = id
                 attrs["restarted"]      = NSNumber(value: hasAppearedBefore)
-                attrs["timeVisible"]    = NSNumber(value: max(timeVisibleSec, 0.0))
+                attrs["timeVisible"]    = NSNumber(value: timeVisibleMs)
                 attrs["uiPlatform"]     = "SwiftUI"
                 attrs["appeared"]       = NSNumber(value: false)
                 attrs["agentName"]      = "iOS"
@@ -119,7 +129,7 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 }
 
 /// Attach this modifier to SwiftUI views to emit MobileView events.
-/// Enable via NRFeatureFlag_MobileViews.
+/// Enable via NRFeatureFlag_AutomaticMobileViews.
 ///
 /// - Parameters:
 ///   - name: Display name for the view. Defaults to the SwiftUI view type name.

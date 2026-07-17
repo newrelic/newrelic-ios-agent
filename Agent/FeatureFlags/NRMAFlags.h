@@ -59,7 +59,9 @@
 
 + (BOOL) shouldEnableAutoCollectLogs;
 
-+ (BOOL) shouldEnableMobileViews;
++ (BOOL) shouldEnableAutomaticMobileViews;
+
++ (BOOL) shouldEnableManualMobileViews;
 
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 

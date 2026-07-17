@@ -28,6 +28,7 @@
 #import "NRMAExceptionHandler.h"
 #import "NRMAMethodProfiler.h"
 #import "NRMAMobileViewTracker.h"
+#import "NRMAViewContext.h"
 #import "NRMACPUVitals.h"
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAExceptionMetaDataStore.h"
@@ -333,7 +334,7 @@ static NewRelicAgentInternal* _sharedInstance;
         [[NRMAMethodProfiler sharedInstance] startMethodReplacement];
     }
 
-    if ([NRMAFlags shouldEnableMobileViews]) {
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
 #if !TARGET_OS_WATCH
         [[NRMAMobileViewTracker sharedInstance] start];
 #endif
@@ -948,6 +949,11 @@ static UIBackgroundTaskIdentifier background_task;
     // We are leaving the background.
     didFireEnterForeground = NO;
     didFireEnterBackground = YES;
+
+    // Flush the current manual view (if any) so its timeVisible is recorded before backgrounding.
+    if ([NRMAFlags shouldEnableManualMobileViews]) {
+        [[NRMAViewContext sharedInstance] flushCurrentManualViewOnBackground];
+    }
 
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateBackground;
