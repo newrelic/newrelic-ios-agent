@@ -678,6 +678,29 @@ extern "C" {
                attributes:(NSDictionary* _Nullable)attributes;
 
 /*!
+ * Manually set the currently-displayed view (screen).
+ *
+ * Records a "MobileView" event for `name` and marks it as the current view using a browser
+ * route-change model: the previously set current view is closed out first (emitting its
+ * timeVisible), then `name` becomes current with the prior view recorded as its referrer
+ * (previousView). Breadcrumbs and MobileView events recorded while `name` is current carry it as
+ * currentView.
+ *
+ * Use this when automatic instrumentation does not capture a view correctly, to rename views for
+ * business reasons, or to name cross-platform (e.g. React Native) screens that would otherwise
+ * collapse to a single generic host view controller.
+ *
+ * Requires NRFeatureFlag_ManualViews to be enabled. Independent of NRFeatureFlag_AutomaticViews.
+ *
+ * @param name The display name of the view (screen). Must be a non-empty string.
+ * @param attributes Optional custom attributes merged into the MobileView event. Reserved keys
+ *        (viewClass, viewName, viewInstanceId, previousView, appeared, timeVisible, uiPlatform,
+ *        agentName) are not overridden.
+ */
++ (void) setCurrentView:(NSString* _Nonnull)name
+             attributes:(NSDictionary* _Nullable)attributes;
+
+/*!
  * Records a JavaScript error as a MobileJSError custom event.
  *
  * This method is intended for use by hybrid frameworks (like React Native) to report JavaScript errors.

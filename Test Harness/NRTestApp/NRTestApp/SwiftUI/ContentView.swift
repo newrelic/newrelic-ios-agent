@@ -125,6 +125,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: MobileViewIgnoredDemoView()) {
                         Text("MobileView · Ignored")
                     }
+                    NavigationLink(destination: ManualViewsDemoView()) {
+                        Text("MobileView · Manual (setCurrentView + referrer)")
+                    }
                     if #available(iOS 16.0, *) {
                         NRMobileNavigationLink(name: "NavigationStackView") {
                             NavigationStackView()

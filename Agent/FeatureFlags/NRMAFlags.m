@@ -48,8 +48,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
                               NRFeatureFlag_RequestErrorEvents |
                               NRFeatureFlag_DistributedTracing |
                               NRFeatureFlag_AppStartMetrics |
-                              NRFeatureFlag_MobileViews |
                               NRFeatureFlag_JSErrorEvents;
+                              // NRFeatureFlag_AutomaticViews and NRFeatureFlag_ManualViews
+                              // are disabled by default; opt in via enableFeatures:.
 
                   });
     return __flags;
@@ -188,8 +189,12 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_AutoCollectLogs) != 0;
 }
 
-+ (BOOL) shouldEnableMobileViews {
-    return ([NRMAFlags featureFlags] & NRFeatureFlag_MobileViews) != 0;
++ (BOOL) shouldEnableAutomaticViews {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_AutomaticViews) != 0;
+}
+
++ (BOOL) shouldEnableManualViews {
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_ManualViews) != 0;
 }
 
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
@@ -257,7 +262,13 @@ static NSString* __deviceIdentifierReplacement = NULL;
     if ((flags & NRFeatureFlag_AutoCollectLogs) == NRFeatureFlag_AutoCollectLogs) {
         [retArray addObject:@"AutoCollectLogs"];
     }
-    
+    if ((flags & NRFeatureFlag_AutomaticViews) == NRFeatureFlag_AutomaticViews) {
+        [retArray addObject:@"AutomaticViews"];
+    }
+    if ((flags & NRFeatureFlag_ManualViews) == NRFeatureFlag_ManualViews) {
+        [retArray addObject:@"ManualViews"];
+    }
+
     return retArray;
 }
 

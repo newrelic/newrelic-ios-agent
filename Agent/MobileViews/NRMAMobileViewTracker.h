@@ -2,7 +2,7 @@
 //  NRMAMobileViewTracker.h
 //  NewRelicAgent
 //
-//  POC: MobileViews feature — automatic UIViewController lifecycle tracking.
+//  MobileViews: automatic UIViewController lifecycle tracking.
 //  Emits "MobileView" custom events with timing and identity attributes.
 //
 //  Copyright © 2024 New Relic. All rights reserved.
