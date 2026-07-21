@@ -110,14 +110,19 @@ static NSTimeInterval __healthyTraceTimeout;
 #pragma mark - Static Functions
 + (NSString*) getCurrentActivityName
 {
-    NRMATraceMachine* localTraceMachine = [self traceMachine];
     NSString* scope = @"";
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif
-
-        if (localTraceMachine) {
-            scope = localTraceMachine.activityTrace.name;
+        // Snapshot each object into a local strong reference before dereferencing further.
+        // traceMachine and activityTrace are atomic; name is atomic (see NRMAActivityTrace.h),
+        // so each getter returns a retained+autoreleased value that a concurrent setter on
+        // another thread cannot free before we copy it. Defensively copy to fully detach.
+        NRMATraceMachine* localTraceMachine = [self traceMachine];
+        NRMAActivityTrace* activityTrace = localTraceMachine.activityTrace;
+        NSString* name = activityTrace.name;
+        if (name.length) {
+            scope = [name copy];
         }
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
@@ -126,7 +131,7 @@ static NSTimeInterval __healthyTraceTimeout;
                                 selector:NSStringFromSelector(@selector(getCurrentActivityName))];
     }
 #endif
-    return scope;
+    return scope ?: @"";
 }
 
 
