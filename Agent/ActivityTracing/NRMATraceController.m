@@ -494,6 +494,13 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         return;
     }
 
+    // Serialize trace completion against the trace lifecycle (startTracing*/completeActivityTrace*/
+    // cleanup), which mutate and tear down the trace machine under this same lock. Without it,
+    // completion (invoked by the method profiler on an arbitrary thread) races a concurrent
+    // teardown, dereferencing freed trace state and corrupting the heap (SIGTRAP in libsystem_malloc).
+    // The validity check below MUST run inside the lock to close the time-of-check/time-of-use window.
+    @synchronized(kNRMAStartAndEndTracingLock) {
+
     NRMATraceMachine *localTraceMachine = [self traceMachine];
 
     if (localTraceMachine == nil || ![NRMATraceController isTracingActive] || localTraceMachine != trace.traceMachine) {
@@ -578,6 +585,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         [localTraceMachine.activityTrace.missingChildren removeObject:trace];
         localTraceMachine.activityTrace.lastUpdated = NRMAMillisecondTimestamp();
     }
+    } // @synchronized(kNRMAStartAndEndTracingLock)
 }
 
 
