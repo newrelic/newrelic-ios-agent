@@ -14,10 +14,14 @@
 @interface NRMATrace : NSObject <NRMAConsumerProtocol>
 @property(nonatomic,assign) double entryTimestamp;
 @property(nonatomic,assign) double exitTimestamp;
-@property(nonatomic,strong) NSString* name;
-@property(nonatomic,strong) NSString* classLabel;
-@property(nonatomic,strong) NSString* methodLabel;
-@property(nonatomic,strong) NRMAThreadInfo* threadInfo;
+// atomic: name/classLabel/methodLabel feed -metricName, which is read on background
+// trace-completion threads while these are set on other threads. A nonatomic getter
+// would hand back an unretained pointer a concurrent setter can free before ARC retains it.
+@property(atomic,strong) NSString* name;
+@property(atomic,strong) NSString* classLabel;
+@property(atomic,strong) NSString* methodLabel;
+// atomic: threadInfo.identity is read on background trace-completion threads (completeTrace:).
+@property(atomic,strong) NRMAThreadInfo* threadInfo;
 @property(nonatomic,strong) NSMutableDictionary* parameters;
 @property(nonatomic,assign) BOOL      persistent;
 @property(nonatomic,strong) NSMutableSet* children; 

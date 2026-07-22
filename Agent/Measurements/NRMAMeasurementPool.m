@@ -195,12 +195,16 @@
 {
     for (NSNumber* key in dictionary2) {
         id value2 = [dictionary2 objectForKey:key];
-        if (value2) {
-            if ([dictionary1.allKeys containsObject:key]) {
-                [[dictionary1 objectForKey:key] unionSet:value2];
-            } else {
-                [dictionary1 setObject:value2 forKey:key];
-            }
+        if (![value2 isKindOfClass:[NSSet class]]) {
+            continue;
+        }
+        NSMutableSet* existing = [dictionary1 objectForKey:key];
+        if (existing) {
+            [existing unionSet:value2];
+        } else {
+            // Own a private mutable set; never alias the producer's drained set instance,
+            // so the combined dictionary handed to consumers can't be mutated elsewhere.
+            [dictionary1 setObject:[value2 mutableCopy] forKey:key];
         }
     }
 }
