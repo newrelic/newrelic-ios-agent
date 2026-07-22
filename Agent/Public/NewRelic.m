@@ -665,12 +665,7 @@
 
     if (newSession) {
         // userId changed — end the current session and harvest its data under the previous userId,
-        // then start a new session and apply the new userId to it. The restart is dispatched off
-        // the main thread to avoid blocking the caller and to avoid making XPC calls (e.g.
-        // UIDevice.identifierForVendor) during sensitive lifecycle transitions such as
-        // sceneWillResignActive. userId is set synchronously here so getUserId() is consistent
-        // before the async restart completes. Returns YES to indicate the restart was enqueued;
-        // callers cannot depend on the restart completing before this method returns.
+        // then start a new session and apply the new userId to it. userId is set synchronously here so getUserId() is consistent.
         agent.userId = userId;
         [agent startNewSessionForUserId:userId];
         return YES;

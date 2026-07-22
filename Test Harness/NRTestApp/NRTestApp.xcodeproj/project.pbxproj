@@ -9,10 +9,8 @@
 /* Begin PBXBuildFile section */
 		2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
 		2552B1472FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
-		2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
-		2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
@@ -68,6 +66,10 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
+		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
+		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
+		CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
@@ -201,10 +203,6 @@
 		F8F5D8462BEBB86000CDC139 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
 		F8F5D8472BEBB86000CDC139 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
 		F8F5D8482BEBB86000CDC139 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
-		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
-		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
-		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
-		CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -398,6 +396,8 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
+		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
+		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
 		D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTestViewController.swift; sourceTree = "<group>"; };
 		D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CustomSwitch.swift; path = ../CustomSwitch.swift; sourceTree = "<group>"; };
 		D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToggleStyle.swift; sourceTree = "<group>"; };
@@ -480,8 +480,6 @@
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
-		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
-		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1295,8 +1293,6 @@
 				F802EED52BE12E5700AB956F /* UtilViewModel.swift in Sources */,
 				F802EED12BE023E000AB956F /* triggerException.m in Sources */,
 				F84EEFB52E21B19C000E2A5A /* SecureLabel.swift in Sources */,
-				2B16DF922F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */,
-				2B131C732F7C5BAF00748ACB /* NavigationStackView.swift in Sources */,
 				F802EECD2BE023CB00AB956F /* plistHelper.swift in Sources */,
 				F802EECF2BE023D200AB956F /* Variable.swift in Sources */,
 				F802EED02BE023D700AB956F /* Date.swift in Sources */,
