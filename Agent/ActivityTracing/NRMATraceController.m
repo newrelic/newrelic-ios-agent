@@ -352,18 +352,23 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     if ([NewRelicAgentInternal sharedInstance].isShutdown) {
         return NO;
     }
-    if (![NRMATraceController isTracingActive]) {
-        return NO;
-    }
-    NRMATrace* childTrace = [NRMATraceController registerNewTrace:newTraceName withParent:parentTrace];
-    if (!childTrace) {
-        return NO;
-    }
-    childTrace.entryTimestamp = NRMAMillisecondTimestamp();
-    
-    return [NRMATraceController newTraceSetup:childTrace
-                             parentTrace:parentTrace];
+    // Serialize against the trace lifecycle (see completeTrace:). Without this lock a stale
+    // method-entry on one thread can keep mutating an activity trace that completeActivityTrace
+    // has already queued for harvest and torn down, corrupting the heap. isTracingActive is
+    // re-checked inside the lock to close the time-of-check/time-of-use window.
+    @synchronized(kNRMAStartAndEndTracingLock) {
+        if (![NRMATraceController isTracingActive]) {
+            return NO;
+        }
+        NRMATrace* childTrace = [NRMATraceController registerNewTrace:newTraceName withParent:parentTrace];
+        if (!childTrace) {
+            return NO;
+        }
+        childTrace.entryTimestamp = NRMAMillisecondTimestamp();
 
+        return [NRMATraceController newTraceSetup:childTrace
+                                 parentTrace:parentTrace];
+    }
 }
 
 + (NRMATrace*) enterMethod:(SEL)selector
@@ -388,6 +393,11 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     if ([NewRelicAgentInternal sharedInstance].isShutdown) {
         return nil;
     }
+
+    // Serialize against the trace lifecycle (see completeTrace:). Re-check isTracingActive
+    // inside the lock so a concurrent completeActivityTrace/cleanup can't leave us mutating
+    // a torn-down, already-harvested activity trace (heap corruption).
+    @synchronized(kNRMAStartAndEndTracingLock) {
 
     if (![NRMATraceController isTracingActive]) {
         return nil;
@@ -433,6 +443,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 #endif
 
     return childTrace;
+    } // @synchronized(kNRMAStartAndEndTracingLock)
 }
 
 + (NRMATrace*) registerNewTrace:(NSString *)name

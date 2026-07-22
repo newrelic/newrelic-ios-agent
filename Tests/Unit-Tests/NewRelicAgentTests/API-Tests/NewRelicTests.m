@@ -342,20 +342,37 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 - (void) testSetUserIdSessionBehavior {
-    // set userId to testId
+    // Stub startNewSessionForUserId: to apply the userId attribute synchronously without
+    // triggering the full infrastructure restart (which requires a fully initialized agent).
+    id partialMock = [OCMockObject partialMockForObject:_sharedInstance];
+    [[[partialMock stub] andDo:^(NSInvocation* invocation) {
+        NSString* uid = nil;
+        [invocation getArgument:&uid atIndex:2];
+        if (uid) {
+            [_sharedInstance.analyticsController setSessionAttribute:@"userId" value:uid persistent:YES];
+        } else {
+            [_sharedInstance.analyticsController removeSessionAttributeNamed:@"userId"];
+        }
+    }] startNewSessionForUserId:OCMOCK_ANY];
+
+    // First call — previousUserId is nil, so the current session continues and userId is set.
     BOOL success = [NewRelic setUserId:@"testId"];
     XCTAssertTrue(success);
-    // set userId to Bob
+
+    // Second call — userId changed, so a new session is started and @"Bob" is applied to it.
     success = [NewRelic setUserId:@"Bob"];
     XCTAssertTrue(success);
-    NSString* attributes = [[NewRelicAgentInternal sharedInstance].analyticsController sessionAttributeJSONString];
+    NSString* attributes = [_sharedInstance.analyticsController sessionAttributeJSONString];
     NSDictionary* decode = [NSJSONSerialization JSONObjectWithData:[attributes dataUsingEncoding:NSUTF8StringEncoding]
                                                            options:0
                                                              error:nil];
-    XCTAssertTrue([decode[@"userId"] isEqualToString:@"Bob"]);
-    // set userId to NULL
+    XCTAssertEqualObjects(decode[@"userId"], @"Bob");
+
+    // Third call — userId set to nil, so another new session is started.
     success = [NewRelic setUserId:NULL];
     XCTAssertTrue(success);
+
+    [partialMock stopMocking];
     [self.mockNewRelicInternals stopMocking];
 }
 
