@@ -19,9 +19,9 @@ on:
 #    branches:
 #      - main
 
-#  # Runs on the 1st of every month
-#  schedule:
-#    - cron: "0 0 1 * *"
+ # Runs daily to build, upload, and refresh the LambdaTest app (which otherwise expires after 60 days)
+ schedule:
+   - cron: "13 6 * * *"
 
 jobs:
 
