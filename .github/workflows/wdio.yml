@@ -27,16 +27,13 @@ jobs:
   ios-data:
     name: Generate iOS data
     runs-on: ubuntu-latest
-    # Only run if manually triggered from develop, or if trusted uploadApp workflow_run succeeded from develop
-    # (uploadApp.yml is triggered by workflow_dispatch/push/schedule, so we don't gate on the upstream event type)
-    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop') }}
+    # Only run if manually triggered from main, or if trusted uploadApp workflow_run succeeded from main
+    if: ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.event == 'push') }}
     env:
       LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
-        with:
-          ref: develop
       - name: Setup environment
         uses: ./.github/actions/env-setup
 
