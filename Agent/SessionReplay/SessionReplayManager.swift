@@ -49,6 +49,11 @@ public class SessionReplayManager: NSObject {
         self.sessionReplayMode = .off
     }
     
+    deinit {
+        sessionReplayTimer?.cancel()
+        sessionReplayTimer = nil
+    }
+    
     // ERROR MODE
     
     // MARK: - Error Sampling Mode Management
