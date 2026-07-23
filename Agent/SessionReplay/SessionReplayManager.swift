@@ -21,7 +21,7 @@ public class SessionReplayManager: NSObject {
     
     public var harvestPeriod: Int64 = 60
     private var harvestseconds = 0
-    public var sessionReplayTimer: Timer?
+    private var sessionReplayTimer: DispatchSourceTimer?
     
     private let url: NSString
     
@@ -114,10 +114,11 @@ public class SessionReplayManager: NSObject {
             self.isManuallyRecording = fromManual
             
             NRLOG_AGENT_DEBUG("Session replay harvest timer starting with a period of \(harvestPeriod) s")
-            self.sessionReplayTimer = Timer(timeInterval: 1.0, target: self, selector: #selector(self.sessionReplayTick), userInfo: nil, repeats: true)
-            
-            RunLoop.current.add(self.sessionReplayTimer!, forMode: .default)
-            RunLoop.current.run()
+            let timer = DispatchSource.makeTimerSource(flags: [], queue: sessionReplayQueue)
+            timer.schedule(deadline: .now() + 1.0, repeating: 1.0)
+            timer.setEventHandler { [weak self] in self?.sessionReplayTick() }
+            timer.resume()
+            self.sessionReplayTimer = timer
         }
     }
     
@@ -129,7 +130,7 @@ public class SessionReplayManager: NSObject {
             }
             
             sessionReplay.stop()
-            sessionReplayTimer?.invalidate()
+            sessionReplayTimer?.cancel()
             sessionReplayTimer = nil
             
            // NRLOG_AGENT_DEBUG("Session replay has shut down and is no longer running.")
@@ -145,7 +146,7 @@ public class SessionReplayManager: NSObject {
     }
     
     @objc public func isRunning() -> Bool {
-        return self.sessionReplayTimer != nil && self.sessionReplayTimer!.isValid
+        return sessionReplayTimer != nil
     }
     
     // This function is to handle a session change created by a change in userId
