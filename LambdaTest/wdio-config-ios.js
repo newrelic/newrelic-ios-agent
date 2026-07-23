@@ -72,5 +72,17 @@ exports.config = {
     ui: "bdd",
     timeout: 60000, // Reduced from 100000ms to 60000ms
   },
+
+  // Writes a pass/fail summary so the CI workflow can report it to Slack
+  onComplete: function (exitCode, config, capabilities, results) {
+    fs.writeFileSync(
+      path.join(__dirname, "test-results.json"),
+      JSON.stringify({
+        passed: results.passed || 0,
+        failed: results.failed || 0,
+        finished: results.finished || 0,
+      })
+    );
+  },
 };
   
