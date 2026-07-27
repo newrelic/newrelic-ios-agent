@@ -300,17 +300,6 @@ static NSMutableArray<NRMAMetric *> *deferredMetrics;
     }
 }
 
-+ (void) enqueueInstrumentationConflictMetric {
-    NSString* nativePlatform = [NewRelicInternalUtils osName];
-    @synchronized (deferredMetrics) {
-        [deferredMetrics addObject:[[NRMAMetric alloc] initWithName:[NSString stringWithFormat:@"Supportability/Mobile/%@/Instrumentation/RecoveredUnresolvedSelector", nativePlatform]
-                                                              value:@1
-                                                              scope:@""
-                                                    produceUnscoped:YES
-                                                    additionalValue:nil]];
-    }
-}
-
 // End KMP Detection
 
 + (void) processDeferredMetrics {

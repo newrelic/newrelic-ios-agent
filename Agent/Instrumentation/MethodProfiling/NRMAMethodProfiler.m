@@ -1184,11 +1184,11 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
             // this call site, OUTSIDE the @try that each *ParamHandler wraps around the actual
             // method invocation, so it unwinds straight into the app and terminates the process.
             // An APM agent must never crash its host. Instead, run the receiver's real
-            // implementation (untraced) so the app's method still works, and record a
-            // supportability metric so the conflict stays visible in the field.
+            // implementation (untraced) so the app's method still works.
             NRLOG_AGENT_ERROR(@"Unable to resolve instrumented method for selector '%@' on '%@'. Another framework may have renamed the selector; running the original implementation untraced.", cleanSelector, NSStringFromClass(actingClass));
-            [NRMASupportMetricHelper enqueueInstrumentationConflictMetric];
 
+            // * Could Record Instrumentation Conflict Support Metric Here*.
+            
             // We neither push an acting class nor create a trace on this path, and
             // NRMA__endMethod still runs in the caller (balancing NRMA_enterSelector above),
             // so mark this as target-color to keep endMethod from popping an acting class we
