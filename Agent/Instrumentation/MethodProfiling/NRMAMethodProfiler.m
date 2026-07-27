@@ -24,6 +24,7 @@
 #import "NewRelicCustomInteractionInterface.h"
 #import "NRMAClassDataContainer.h"
 #import "NRMAFlags.h"
+#import "NRMASupportMetricHelper.h"
 
 #define NRMAMethodStoragePrefix @"NRMAMethodOverride_"
 #define CONFIGURATION_FILE_NAME @"newrelic_profiler"
@@ -1091,9 +1092,27 @@ Method NRMA__getMethod(Class class, SEL selector){
     return method;
 }
 
+// Resolves a safe implementation to run when NRMA__beginMethod cannot otherwise
+// determine the instrumented original for a call (e.g. a swizzle conflict where the
+// receiver's effective class carries no method color and the super-walk overshoots the
+// class that owns the instrumentation). Returns the receiver's real, renamed original
+// (NRMAMethodOverride_<selector>) so the app's method still executes — just without a
+// New Relic trace. Never returns NULL: if the original is genuinely absent,
+// class_getMethodImplementation yields _objc_msgForward, reproducing the app's own
+// "unrecognized selector" behavior instead of an agent-induced crash.
+static IMP NRMA__unresolvedInstrumentationFallbackIMP(id self, SEL originalSelector)
+{
+    Method original = NRMA__getMethod([self class], originalSelector);
+    if (original != nil) {
+        return method_getImplementation(original);
+    }
+    return class_getMethodImplementation([self class], originalSelector);
+}
+
 IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* isTargetColor, NRMATrace** createdTracePtr)
 {
     NSString* cleanSelector = NSStringFromSelector(selector);
+    SEL originalSelector = NSSelectorFromString([NSString stringWithFormat:@"%@%@",NRMAMethodStoragePrefix,cleanSelector]);
 
     // Track how deep we are re-entering this exact (self, selector) on this thread.
     // A legitimate [super _cmd] call is detected below via a method-color mismatch
@@ -1104,12 +1123,20 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
     // The re-entry depth lets us recognize that case below.
     NSInteger reentryDepth = NRMA_enterSelector(self, cleanSelector);
 
+    // Defense-in-depth: an APM agent must never let an exception escape into its host's
+    // call stack. Any NSException raised while resolving the instrumented method (for
+    // example NRMA_pushActingClass rejecting a nil class) is caught at the bottom of this
+    // function and converted into the safe, untraced fallback implementation instead of
+    // crashing the host app. NRMA_enterSelector above is always balanced by NRMA__endMethod
+    // in the caller, so it stays outside this guard.
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
     Class actingClass = NRMA_actingClass(self,cleanSelector);
 
     NRMAMethodColor methodColor = NRMA__getMethodColor(NSStringFromClass(actingClass), NSStringFromSelector(selector));
 
     (*isTargetColor) = (methodColor == targetColor);
-    SEL originalSelector = NSSelectorFromString([NSString stringWithFormat:@"%@%@",NRMAMethodStoragePrefix,cleanSelector]);
     Method method = nil;
 
     // Matched color but we're already inside a handler for this (self, selector):
@@ -1143,15 +1170,31 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
         method = NRMA__getMethod(actingClass,originalSelector);
 
         if (method == nil) {
-            //if method is nil, this means we've instrumented a method, but the selector we are getting passed doesn't match the selector when when instrumented this method.
-            //this means that we have encounted a 3rd party sdk swizzle conflict and now the app will hang in the while loop below. to prevent this from happening
-            //let's throw an exeption instead, so we can immediately identify the issue.
-            NRLOG_AGENT_ERROR(@"Unable to find instrumented method. It's possible another framework has renamed the selector. Throwing Exception...");
-            // endMethod won't run on this throw path, so balance the depth counter here.
-            NRMA_exitSelector(self, cleanSelector);
-            @throw [NSException exceptionWithName:@"NRInvalidArgumentException"
-                                           reason:[NSString stringWithFormat:@"New Relic detected an unrecognized selector, '%@', sent to '%@'. It's possible _cmd was renamed by an unsafe method_exchangeImplementations().",cleanSelector,NSStringFromClass(actingClass)]
-                                         userInfo:nil];
+            // We were routed into the [super _cmd] branch but no class at or above the
+            // walked-up acting class implements the renamed original (NRMAMethodOverride_<sel>).
+            // This happens when the receiver's effective class was never color-tagged by the
+            // profiler — e.g. a KVO/dynamic subclass, or a 3rd-party swizzle that renamed _cmd —
+            // so the color-mismatch heuristic sent us up the hierarchy past the class that owns
+            // the instrumentation. (A direct NSObject subclass such as NSManagedObjectContext
+            // overshoots to NSObject in a single step, which is exactly the CoreData
+            // executeFetchRequest:error: crash.)
+            //
+            // Historically the agent @threw an NRInvalidArgumentException here "to immediately
+            // identify the issue." But that exception is uncaught in the host: it originates at
+            // this call site, OUTSIDE the @try that each *ParamHandler wraps around the actual
+            // method invocation, so it unwinds straight into the app and terminates the process.
+            // An APM agent must never crash its host. Instead, run the receiver's real
+            // implementation (untraced) so the app's method still works, and record a
+            // supportability metric so the conflict stays visible in the field.
+            NRLOG_AGENT_ERROR(@"Unable to resolve instrumented method for selector '%@' on '%@'. Another framework may have renamed the selector; running the original implementation untraced.", cleanSelector, NSStringFromClass(actingClass));
+            [NRMASupportMetricHelper enqueueInstrumentationConflictMetric];
+
+            // We neither push an acting class nor create a trace on this path, and
+            // NRMA__endMethod still runs in the caller (balancing NRMA_enterSelector above),
+            // so mark this as target-color to keep endMethod from popping an acting class we
+            // never pushed.
+            (*isTargetColor) = YES;
+            return NRMA__unresolvedInstrumentationFallbackIMP(self, originalSelector);
             }
 
         while (method == NRMA__getMethod(class_getSuperclass(actingClass), originalSelector)) {
@@ -1185,7 +1228,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
             @try {
                #endif
                 [NRMATraceController completeActivityTrace];
-#ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
             } @catch (NSException* exception) {
                 [NRMAExceptionHandler logException:exception
                                            class:@"NRMATraceMachine"
@@ -1195,7 +1238,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
             #endif
         }
         if (![NRMATraceController isTracingActive]) {
-#ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
             @try {
                 #endif
                 NSString* interactionName = [NRMAActivityNameGenerator generateActivityNameFromClass:[self class] selector:selector];
@@ -1207,7 +1250,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
                 }
                 [NRMATraceController startTracingWithName:interactionName
                                      interactionObject:self];
-#ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
             } @catch (NSException* exception) {
                 [NRMAExceptionHandler logException:exception
                                            class:@"NRMATraceMachine"
@@ -1220,7 +1263,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
 
 
     if ([NRMATraceController isTracingActive]) {
-#ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {
             #endif
             NRMATrace* trace = [NRMATraceController currentTrace];
@@ -1228,7 +1271,7 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
                                                    fromObjectNamed:NSStringFromClass(actingClass)
                                                        parentTrace:trace
                                                      traceCategory:[NRMAMethodProfiler categoryForSelector:selector]] retain];
-#ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         } @catch (NSException* exception) {
             [NRMAExceptionHandler logException:exception
                                        class:@"NRMATraceMachine"
@@ -1239,6 +1282,20 @@ IMP NRMA__beginMethod(id self, SEL selector, NRMAMethodColor targetColor, BOOL* 
     }
 
     return method_getImplementation(method);
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        // Last-resort guard: never let an exception from method resolution reach the host
+        // app's call stack. Degrade to the receiver's real implementation (untraced). We may
+        // not have pushed an acting class before the throw, so mark target-color to keep
+        // NRMA__endMethod from popping one we never pushed; NRMA_enterSelector remains
+        // balanced by endMethod in the caller.
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:cleanSelector];
+        (*isTargetColor) = YES;
+        return NRMA__unresolvedInstrumentationFallbackIMP(self, originalSelector);
+    }
+#endif
 }
 
 void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace)
@@ -1254,13 +1311,13 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
         NRMA_popActingClass(self,cleanSelector);
     }
 
-    #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+    #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
     #endif
         if (trace != nil && [NRMATraceController isTracingActive] && trace.traceMachine == [NRMATraceController currentTrace].traceMachine) {
             [NRMATraceController exitMethod];
         }
-    #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+    #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
         [NRMAExceptionHandler logException:exception
                                      class:@"NRMATraceMachine"
@@ -1268,7 +1325,7 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
     } @finally {
     #endif
         [trace release];
-    #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
+    #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     }
     #endif
 }

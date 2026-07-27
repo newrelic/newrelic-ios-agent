@@ -205,6 +205,32 @@ id NRMA__blk_ptrParamHandler(id self, SEL selector, id p1);
 }
 @end
 
+// Reproduces the production CoreData host-crash. NSManagedObjectContext is a direct
+// NSObject subclass; when NRMA__beginMethod misclassifies a call on such a class as a
+// [super _cmd] dispatch it walks ONE level up — to NSObject — which owns no
+// NRMAMethodOverride_ variant. The unfixed agent @threw an NSException there, and that
+// throw originates outside the @try in every *ParamHandler, so it unwinds uncaught into
+// the host app and terminates it (NRInvalidArgumentException, "unrecognized selector
+// 'executeFetchRequest:error:' sent to 'NSObject'"). This helper mirrors that shape:
+// a direct NSObject subclass whose renamed original lives only on itself.
+static BOOL __nrmaConflictOriginalRan;
+
+@interface NRMACoreDataConflictObject : NSObject
+- (id) nrmaFetch:(id)request error:(id)error;
+@end
+
+@implementation NRMACoreDataConflictObject
+// Occupies the slot that, in production, holds NR's trampoline (executeFetchRequest:error:).
+- (id) nrmaFetch:(id)request error:(id)error { return nil; }
+// The renamed original that NR's swizzle installs. The crash-recovery fallback must
+// resolve to THIS implementation so the app's real method still runs, untraced.
+- (id) NRMAMethodOverride_nrmaFetch:(id)request error:(id)error
+{
+    __nrmaConflictOriginalRan = YES;
+    return @"original-ran";
+}
+@end
+
 //NRMAMethodProfiler methods
 NSDictionary* ClassesGetSubclasses(NSSet* parents);
 NSMutableDictionary* NRMA__generateClassTrees(NSSet* parents);
@@ -662,6 +688,47 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
     XCTAssertEqual([[NRMAMethodProfiler actualTraceList] count], 0);
 
     [NewRelic enableFeatures:NRFeatureFlag_DefaultInteractions];
+}
+
+// Regression test for the McDonald's / CoreData host-crash:
+// NRInvalidArgumentException, "unrecognized selector 'executeFetchRequest:error:'
+// sent to 'NSObject'", thrown from NRMA__beginMethod and unwound uncaught into the host.
+//
+// NRMA__beginMethod misclassifies a call on a direct NSObject subclass as a [super _cmd]
+// dispatch (the receiver's effective class carries no method color — e.g. a KVO/dynamic
+// subclass or a 3rd-party CoreData swizzle), walks one level up to NSObject, finds no
+// NRMAMethodOverride_ variant there, and on the unfixed agent @throws. Because that throw
+// happens at the beginMethod call site — OUTSIDE the @try that each *ParamHandler wraps
+// around the actual invocation — it escapes into the host app and terminates the process.
+//
+// The agent must instead degrade gracefully: never throw into the host, and return the
+// receiver's real (renamed) implementation so the app's method still runs, just untraced.
+- (void) testBeginMethodRecoversWhenInstrumentedOriginalIsUnresolvable
+{
+    __nrmaConflictOriginalRan = NO;
+    NRMACoreDataConflictObject* obj = [[NRMACoreDataConflictObject alloc] init];
+
+    SEL selector = @selector(nrmaFetch:error:);
+    BOOL isTargetColor = NO;
+    NRMATrace* trace = nil;
+
+    // No color is registered for NRMACoreDataConflictObject.nrmaFetch:error:, so beginMethod
+    // treats the call as a super dispatch and walks up to NSObject (no override there) —
+    // the exact production failure path. This must NOT throw into the host.
+    __block IMP imp = NULL;
+    XCTAssertNoThrow(imp = NRMA__beginMethod(obj, selector, NRMAMethodColorBlack, &isTargetColor, &trace),
+                     @"beginMethod must never throw into the host when the instrumented original can't be resolved");
+    XCTAssertTrue(imp != NULL, @"beginMethod must return a usable IMP so the app's method still runs");
+
+    // Behavioral contract: the recovered IMP runs the receiver's real (renamed) original.
+    id result = ((id(*)(id,SEL,id,id))imp)(obj, selector, nil, nil);
+    XCTAssertTrue(__nrmaConflictOriginalRan, @"the app's original implementation must run via the fallback IMP");
+    XCTAssertEqualObjects(result, @"original-ran", @"the fallback must return the original method's real result");
+    XCTAssertNil(trace, @"no trace should be created for an unresolved/uninstrumented call");
+
+    // endMethod must balance the per-(self,selector) state without throwing.
+    XCTAssertNoThrow(NRMA__endMethod(obj, selector, isTargetColor, trace),
+                     @"endMethod must balance state without throwing");
 }
 
 @end

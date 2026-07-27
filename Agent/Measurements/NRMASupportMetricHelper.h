@@ -44,4 +44,9 @@ static NSMutableArray *deferredMetrics;
 
 + (void) enqueueKMMDetectionMetric;
 
+// Recorded when NRMA__beginMethod cannot resolve the instrumented original for a call
+// (a swizzle/instrumentation conflict) and safely runs the original untraced instead of
+// crashing the host. Surfaces how often this recovery fires in the field.
++ (void) enqueueInstrumentationConflictMetric;
+
 @end
