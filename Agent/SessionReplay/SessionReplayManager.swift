@@ -25,7 +25,7 @@ public class SessionReplayManager: NSObject {
     
     private let url: NSString
     
-    private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue", attributes: .concurrent)
+    private let sessionReplayQueue = DispatchQueue(label: "com.newrelic.sessionReplayQueue")
     private static let queueKey = DispatchSpecificKey<String>()
     
     private var isManuallyRecording: Bool = false
@@ -230,10 +230,13 @@ public class SessionReplayManager: NSObject {
     
     @objc public func harvest() {
         // sync is required here or session replay upload fails.
-        sessionReplayQueue.sync { [weak self] in
-            guard let self = self else { return }
-            
-            self.harvestSessionReplayFramesAndTouches()
+        // When called from sessionReplayTick (already on the queue), run inline to avoid deadlock.
+        if DispatchQueue.getSpecific(key: SessionReplayManager.queueKey) != nil {
+            harvestSessionReplayFramesAndTouches()
+        } else {
+            sessionReplayQueue.sync { [weak self] in
+                self?.harvestSessionReplayFramesAndTouches()
+            }
         }
     }
     
