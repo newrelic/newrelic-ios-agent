@@ -70,6 +70,7 @@
 		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
 		CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
+		CFC9E36B8EEDE1C37A6F26D2 /* CoreDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7FCD36108AFB638093E434 /* CoreDataView.swift */; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
@@ -398,6 +399,7 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
+		4A7FCD36108AFB638093E434 /* CoreDataView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataView.swift; sourceTree = "<group>"; };
 		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
 		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
 		D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTestViewController.swift; sourceTree = "<group>"; };
@@ -574,6 +576,7 @@
 				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
 				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
 				CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */,
+				4A7FCD36108AFB638093E434 /* CoreDataView.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -1392,6 +1395,7 @@
 				F8302B96297093FF003EC291 /* Variable.swift in Sources */,
 				CD0001011CD000000000CD00 /* MapViewController.swift in Sources */,
 				CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
+				CFC9E36B8EEDE1C37A6F26D2 /* CoreDataView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
