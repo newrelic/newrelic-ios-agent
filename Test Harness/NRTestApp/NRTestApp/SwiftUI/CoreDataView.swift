@@ -3,7 +3,7 @@
 //  NRTestApp
 //
 //  Reproduces the production Core Data crash path that New Relic instrumentation hit in
-//  the field (com.mcdonalds.gma.uk):
+//  the field.
 //
 //      NRInvalidArgumentException — "New Relic detected an unrecognized selector,
 //      'executeFetchRequest:error:', sent to 'NSObject'."

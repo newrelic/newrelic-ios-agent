@@ -690,7 +690,7 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
     [NewRelic enableFeatures:NRFeatureFlag_DefaultInteractions];
 }
 
-// Regression test for the McDonald's / CoreData host-crash:
+// Regression test for the CoreData host-crash:
 // NRInvalidArgumentException, "unrecognized selector 'executeFetchRequest:error:'
 // sent to 'NSObject'", thrown from NRMA__beginMethod and unwound uncaught into the host.
 //

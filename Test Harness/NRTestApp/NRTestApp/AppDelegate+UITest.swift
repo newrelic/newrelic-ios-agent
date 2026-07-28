@@ -21,7 +21,7 @@ extension AppDelegate {
     //
     //   xcrun simctl launch --console <sim> com.newrelic.NRApp.bitcode -RunCoreDataCrashRepro
     //
-    // Runs the same context.fetch(_:) chain the McDonald's crash hit
+    // Runs the same context.fetch(_:) chain crash hit
     // (fetch<A> -> executeRequest:error: -> instrumented executeFetchRequest:error:), including
     // the nested re-entrant fetch that drives NRMA__beginMethod into its former @throw branch.
     // With the hardened agent the process must survive and print "DONE".
