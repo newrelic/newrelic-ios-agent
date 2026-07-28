@@ -224,29 +224,32 @@
 
 // Includes Public and Private Attributes
 - (NSString*) sessionAttributeJSONString {
+    // Take a snapshot under the locks, then serialize outside them.
+    // NSJSONSerialization is instrumented by the method profiler, which tries to
+    // acquire kNRMAStartAndEndTracingLock. If the TraceController simultaneously
+    // holds that lock and calls setNRSessionAttribute (via the memory-vitals
+    // notification), the two threads deadlock. Narrowing the critical section to
+    // just the copy eliminates the lock-ordering inversion.
+    NSDictionary *snapshot;
     @synchronized (attributeDict) {
         @synchronized (privateAttributeDict) {
-            
-            NSMutableDictionary *output = [attributeDict mutableCopy];
-            [output addEntriesFromDictionary:privateAttributeDict];
-            
-            NSError *error;
-
-            if (![NSJSONSerialization isValidJSONObject:output]) {
-                return nil;
-            }
-
-            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:output options:0 error:&error];
-            if (!jsonData) {
-                NRLOG_AGENT_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
-            }
-            else {
-                NSString* jsonString =  [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-                return jsonString;
-            }
+            NSMutableDictionary *merged = [attributeDict mutableCopy];
+            [merged addEntriesFromDictionary:privateAttributeDict];
+            snapshot = [merged copy];
         }
     }
-    return nil;
+
+    if (![NSJSONSerialization isValidJSONObject:snapshot]) {
+        return nil;
+    }
+
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:snapshot options:0 error:&error];
+    if (!jsonData) {
+        NRLOG_AGENT_VERBOSE(@"Failed to create session attribute json w/ error = %@", error);
+        return nil;
+    }
+    return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
 
 + (NSString*) getLastSessionsAttributes {

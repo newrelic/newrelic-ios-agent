@@ -97,6 +97,8 @@
 		F824A54D29BBB23D000886A6 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */; };
 		F824A54E29BBB23D000886A6 /* NRAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */; };
 		F825FB0929CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */; };
+		F82697F83018F3A600D0BFB1 /* RandomWalkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82697F73018F3A600D0BFB1 /* RandomWalkController.swift */; };
+		F82697FD3018F3D800D0BFB1 /* RandomWalkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82697F73018F3A600D0BFB1 /* RandomWalkController.swift */; };
 		F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302AF8296F5EFA003EC291 /* AppDelegate.swift */; };
 		F8302AFB296F5EFA003EC291 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302AFA296F5EFA003EC291 /* SceneDelegate.swift */; };
 		F8302AFD296F5EFA003EC291 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8302AFC296F5EFA003EC291 /* ViewController.swift */; };
@@ -415,6 +417,7 @@
 		F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRAPI-Info.plist"; sourceTree = SOURCE_ROOT; };
 		F825C6632C790F4F006062A5 /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = readme.md; path = ../readme.md; sourceTree = "<group>"; };
 		F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRTestAppFakeNavigationAction.swift; sourceTree = "<group>"; };
+		F82697F73018F3A600D0BFB1 /* RandomWalkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomWalkController.swift; sourceTree = "<group>"; };
 		F8302AF5296F5EFA003EC291 /* NRTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NRTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8302AF8296F5EFA003EC291 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F8302AFA296F5EFA003EC291 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -806,6 +809,7 @@
 				F84EEFAD2E21B18B000E2A5A /* SecureLabel.swift */,
 				F8302B95297093FF003EC291 /* Variable.swift */,
 				F8302B9C2970B3E0003EC291 /* ApodURL.swift */,
+				F82697F73018F3A600D0BFB1 /* RandomWalkController.swift */,
 				F864286229775023002ABA01 /* plistHelper.swift */,
 				F864284B2971DFA5002ABA01 /* triggerException.m */,
 				2B708A982ADF3AD80063110E /* NewRelic+Replace.h */,
@@ -1349,6 +1353,7 @@
 				2BCDE5B52ECEA133008EE3B9 /* MinimalReproView.swift in Sources */,
 				F8302B8629707695003EC291 /* ViewControllerProvider.swift in Sources */,
 				F8302B9429708027003EC291 /* ApodResult.swift in Sources */,
+				F82697F83018F3A600D0BFB1 /* RandomWalkController.swift in Sources */,
 				F8302B89297076E9003EC291 /* Coordinator.swift in Sources */,
 				F864286329775023002ABA01 /* plistHelper.swift in Sources */,
 				2B8208C02E5D0F2A0063E9BD /* SwiftUIViewRepresentableTestView.swift in Sources */,
@@ -1445,6 +1450,7 @@
 				F86429432979CDFA002ABA01 /* ApodResult.swift in Sources */,
 				CD0001021CD000000000CD00 /* MapViewController.swift in Sources */,
 				CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
+				F82697FD3018F3D800D0BFB1 /* RandomWalkController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
