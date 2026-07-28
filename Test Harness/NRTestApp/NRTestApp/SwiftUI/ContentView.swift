@@ -97,6 +97,9 @@ struct SwiftUIContentView: View {
                             Text("Map View")
                         }
                     }
+                    NavigationLink(destination: NavigationLinkLabelLayoutTestCase()) {
+                        Text("NavigationLink Labels")
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
 
