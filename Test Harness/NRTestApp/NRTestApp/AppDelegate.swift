@@ -86,6 +86,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.setMaxEventBufferTime(60)
 
         NewRelic.logVerbose("NewRelic.start was called.")
+
+        runCoreDataCrashReproIfRequested()
+
         return true
     }
 
