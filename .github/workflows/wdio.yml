@@ -125,25 +125,25 @@ jobs:
         if: ${{ failure() || cancelled() }}
         run: echo "[ RUNNER ] - failed to execute iOS tests (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
 
-      - name: Notify success
-        if: ${{ success() }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
-        with:
-          webhook-type: incoming-webhook
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          payload: |
-            blocks:
-              - type: "header"
-                text:
-                  type: "plain_text"
-                  text: ":white_check_mark: iOS LambdaTest Run Complete"
-              - type: "divider"
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: "*Passed:* ${{ env.TESTS_PASSED }}\n*Failed:* ${{ env.TESTS_FAILED }}"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # - name: Notify success
+      #   if: ${{ success() }}
+      #   uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+      #   with:
+      #     webhook-type: incoming-webhook
+      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     payload: |
+      #       blocks:
+      #         - type: "header"
+      #           text:
+      #             type: "plain_text"
+      #             text: ":white_check_mark: iOS LambdaTest Run Complete"
+      #         - type: "divider"
+      #         - type: "section"
+      #           text:
+      #             type: "mrkdwn"
+      #             text: "*Passed:* ${{ env.TESTS_PASSED }}\n*Failed:* ${{ env.TESTS_FAILED }}"
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify failure
         if: ${{ failure() || cancelled() }}
