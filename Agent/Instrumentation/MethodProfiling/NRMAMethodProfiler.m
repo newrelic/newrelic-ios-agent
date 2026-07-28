@@ -24,7 +24,6 @@
 #import "NewRelicCustomInteractionInterface.h"
 #import "NRMAClassDataContainer.h"
 #import "NRMAFlags.h"
-#import "NRMASupportMetricHelper.h"
 
 #define NRMAMethodStoragePrefix @"NRMAMethodOverride_"
 #define CONFIGURATION_FILE_NAME @"newrelic_profiler"
