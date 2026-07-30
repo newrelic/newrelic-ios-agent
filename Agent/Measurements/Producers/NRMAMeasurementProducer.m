@@ -47,26 +47,43 @@
     }
 }
 
-// This method expects a dictionary of mutable sets.
+// This method expects a dictionary of sets.
 - (void) produceMeasurements:(NSDictionary*)measurements {
+    if (![measurements isKindOfClass:[NSDictionary class]]) {
+        return;
+    }
     @synchronized(self.producedMeasurements) {
         for (NSNumber* key in measurements.allKeys) {
             id value = [measurements objectForKey:key];
-            if (value) {
-                if ([self.producedMeasurements.allKeys containsObject:key]) {
-                    [[self.producedMeasurements objectForKey:key] unionSet:value];
-                } else {
-                    [self.producedMeasurements setObject:value forKey:key];
-                }
+            if (![value isKindOfClass:[NSSet class]]) {
+                continue;
+            }
+            NSMutableSet* existing = [self.producedMeasurements objectForKey:key];
+            if (existing) {
+                [existing unionSet:value];
+            } else {
+                // Store a private mutable copy so this producer exclusively owns the set.
+                // Never alias a set instance that another thread may still mutate — that
+                // shared-mutable-set race is what crashes consumers enumerating the set.
+                [self.producedMeasurements setObject:[value mutableCopy] forKey:key];
             }
         }
     }
 }
 - (NSDictionary*) drainMeasurements
 {
-    
+
     @synchronized(self.producedMeasurements) {
-        NSDictionary* measurements = [[NSDictionary alloc] initWithDictionary:self.producedMeasurements];
+        // Hand consumers a fully detached snapshot: copy each set so nothing a consumer
+        // iterates can be mutated by later production on another thread. A shallow
+        // initWithDictionary: would share the same NSMutableSet instances (use-after-free risk).
+        NSMutableDictionary* measurements = [[NSMutableDictionary alloc] initWithCapacity:self.producedMeasurements.count];
+        for (NSNumber* key in self.producedMeasurements.allKeys) {
+            id value = [self.producedMeasurements objectForKey:key];
+            if ([value isKindOfClass:[NSSet class]]) {
+                [measurements setObject:[value copy] forKey:key];
+            }
+        }
         [self.producedMeasurements removeAllObjects];
         return measurements;
     }

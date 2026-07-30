@@ -197,13 +197,23 @@ jobs:
           name: build-reports
           path: /Users/runner/Library/Logs/fastlane/xcbuild/
 
+  # Pre-release sanity check: can NRTestApp actually be archived and accepted by
+  # App Store Connect? Defined in archive-nrtestapp.yml so the same job is also
+  # runnable manually via workflow_dispatch from any branch.
+  archiveNRTestApp:
+    name: ArchiveNRTestApp
+    needs: [deployS3]
+    if: github.ref == 'refs/heads/staging'
+    uses: ./.github/workflows/archive-nrtestapp.yml
+    secrets: inherit
+
   # Create NewRelicAgent.podspec & Package.swift with new version number and checksum.
   deployStagingSpecs:
     name: DeployStagingSpecs
     runs-on: macos-15
     permissions:
       contents: write
-    needs: [deployS3]
+    needs: [deployS3, archiveNRTestApp]
     if: github.ref == 'refs/heads/staging'
     steps:
       - uses: actions/checkout@v3
