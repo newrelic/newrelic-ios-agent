@@ -313,7 +313,13 @@ public class NewRelic: NSObject {
         }
         if !NRMATraceController.isTracingActive() {
             NRLogger.log(NRLogLevelVerbose, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) attempted to end tracing method without active Interaction Trace", withAgentLogsOn: true)
-            objc_setAssociatedObject(timer, kNRTraceAssociatedKey, nil, .OBJC_ASSOCIATION_ASSIGN)
+            // kNRTraceAssociatedKey is a shared extern NSString* constant also used as the
+            // objc_setAssociatedObject/objc_getAssociatedObject key by NRMATraceController.m
+            // and NRMACustomTrace.m. Bridging it through NSString and taking its Unmanaged
+            // pointer reproduces the same object identity as their `(__bridge const void *)`
+            // casts, so this clears the same associated-object slot they read/write.
+            let traceAssociatedKey = Unmanaged.passUnretained(kNRTraceAssociatedKey as NSString).toOpaque()
+            objc_setAssociatedObject(timer, traceAssociatedKey, nil, .OBJC_ASSOCIATION_ASSIGN)
             return
         }
         NRMACustomTrace.endTracingMethod(withTimer: timer)
@@ -370,7 +376,13 @@ public class NewRelic: NSObject {
     ) {
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
-        let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])
+        // HTTPURLResponse's initializer is failable in Swift, but NRMANetworkFacade's
+        // `response:` parameter is non-optional (NRMANetworkFacade.h is inside
+        // NS_ASSUME_NONNULL_BEGIN and doesn't mark it nullable). The original ObjC code
+        // never checked this initializer's result for nil either, so force-unwrapping here
+        // preserves that same "assume it always succeeds" behavior; a fixed-format URL/HTTP
+        // version like this realistically never fails the initializer.
+        let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])!
         NRMANetworkFacade.noticeNetworkRequest(request as NSURLRequest, response: response, withTimer: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders, params: params)
     }
 
@@ -390,7 +402,10 @@ public class NewRelic: NSObject {
     ) {
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
-        let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])
+        // See the force-unwrap note in the sibling overload above: NRMANetworkFacade's
+        // `response:` parameter is non-optional, and the original ObjC never checked this
+        // failable initializer's result for nil either.
+        let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])!
         let timer = NRTimer(startTime: startTime, andEndTime: endTime)
         NRMANetworkFacade.noticeNetworkRequest(request as NSURLRequest, response: response, withTimer: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders as? [String: String], params: params)
     }
@@ -428,6 +443,10 @@ public class NewRelic: NSObject {
 
     @objc(httpHeadersAddedForTracking)
     public static func httpHeadersAddedForTracking() -> [String] {
-        return NRMAHTTPUtilities.trackedHeaderFields()
+        // NRMAHTTPUtilities.trackedHeaderFields is declared as bare `NSArray*` (no generic
+        // parameter), so it imports into Swift as [Any], not [String]. The underlying array
+        // is always header-name strings in practice, so compactMap is a safe, non-crashing
+        // narrowing to the public API's [String] return type.
+        return NRMAHTTPUtilities.trackedHeaderFields().compactMap { $0 as? String }
     }
 }
