@@ -99,6 +99,13 @@ public class JSErrorController: NSObject {
         loadPersistedErrorsOnStartup()
     }
 
+    deinit {
+        // URLSession retains its delegate strongly, so MobileErrorsUploader.deinit is
+        // never reached via ARC alone. Invalidating here breaks the retain cycle before
+        // JSErrorController releases the uploader property.
+        uploader?.invalidate()
+    }
+
     // MARK: - Public Methods
 
     @objc public func recordJSError(_ name: String,
