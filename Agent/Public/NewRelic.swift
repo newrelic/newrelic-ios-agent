@@ -230,4 +230,204 @@ public class NewRelic: NSObject {
     public static func start(withApplicationToken appToken: String, andCollectorAddress url: String, andCrashCollectorAddress crashCollectorUrl: String) {
         NewRelicAgentInternal.start(withApplicationToken: appToken, andCollectorAddress: url, andCrashCollectorAddress: crashCollectorUrl)
     }
+
+    // MARK: - Custom instrumentation
+
+    @objc(createAndStartTimer)
+    public static func createAndStartTimer() -> NRTimer {
+        return NRTimer()
+    }
+
+    // MARK: - Interaction Traces
+
+    @objc(startInteractionWithName:)
+    public static func startInteraction(withName interactionName: String) -> String? {
+        if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
+            return nil
+        }
+        if !NRMAFlags.shouldEnableInteractionTracing() {
+            NRLogger.log(NRLogLevelVerbose, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            return nil
+        }
+        var result: String?
+        let succeeded = NRExceptionCatcher.tryBlock({
+            result = NRMATraceMachineAgentUserInterface.startCustomActivity(interactionName)
+        }, catchBlock: { exception in
+            NRMAExceptionHandler.logException(exception, class: NSStringFromClass(NewRelic.self), selector: "startInteractionWithName:")
+            NRMATraceController.cleanup()
+        })
+        return succeeded ? result : nil
+    }
+
+    @objc(stopCurrentInteraction:)
+    public static func stopCurrentInteraction(_ activityIdentifier: String?) {
+        if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
+            return
+        }
+        if !NRMAFlags.shouldEnableInteractionTracing() {
+            NRLogger.log(NRLogLevelVerbose, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            return
+        }
+        _ = NRExceptionCatcher.tryBlock({
+            NRMATraceMachineAgentUserInterface.stopCustomActivity(activityIdentifier)
+        }, catchBlock: { exception in
+            NRMAExceptionHandler.logException(exception, class: NSStringFromClass(NewRelic.self), selector: "stopCurrentInteraction:")
+            NRMATraceController.cleanup()
+        })
+    }
+
+    // MARK: - Method Tracing
+
+    @objc(startTracingMethod:object:timer:category:)
+    public static func startTracingMethod(_ selector: Selector, object: Any, timer: NRTimer, category: NRTraceType) {
+        startTracingMethodNamed(NSStringFromSelector(selector), objectNamed: NSStringFromClass(type(of: object as AnyObject)), timer: timer, category: category)
+    }
+
+    // Hidden selector (manifest: startTracingMethodNamed:objectNamed:timer:category:) — consumed directly by Unity.
+    @objc(startTracingMethodNamed:objectNamed:timer:category:)
+    public static func startTracingMethodNamed(_ methodName: String, objectNamed objectName: String, timer: NRTimer, category: NRTraceType) {
+        if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
+            return
+        }
+        if !NRMAFlags.shouldEnableInteractionTracing() {
+            NRLogger.log(NRLogLevelVerbose, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            return
+        }
+        let cleanSelectorString = NewRelicInternalUtils.cleanseString(forCollector: methodName)
+        if !NRMATraceController.isTracingActive() {
+            NRLogger.log(NRLogLevelVerbose, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) attempted to start tracing method without active Interaction Trace", withAgentLogsOn: true)
+            return
+        }
+        NRMACustomTrace.startTracingMethod(NSSelectorFromString(cleanSelectorString), objectName: objectName, timer: timer, category: category)
+    }
+
+    @objc(endTracingMethodWithTimer:)
+    public static func endTracingMethod(withTimer timer: NRTimer) {
+        if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
+            return
+        }
+        timer.stopTimer()
+        if !NRMAFlags.shouldEnableInteractionTracing() {
+            NRLogger.log(NRLogLevelVerbose, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
+            return
+        }
+        if !NRMATraceController.isTracingActive() {
+            NRLogger.log(NRLogLevelVerbose, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) attempted to end tracing method without active Interaction Trace", withAgentLogsOn: true)
+            objc_setAssociatedObject(timer, kNRTraceAssociatedKey, nil, .OBJC_ASSOCIATION_ASSIGN)
+            return
+        }
+        NRMACustomTrace.endTracingMethod(withTimer: timer)
+    }
+
+    // MARK: - Recording custom metrics
+
+    @objc(recordMetricWithName:category:)
+    public static func recordMetric(withName name: String, category: String) {
+        NRCustomMetrics.recordMetric(withName: name, category: category)
+    }
+
+    @objc(recordMetricWithName:category:value:)
+    public static func recordMetric(withName name: String, category: String, value: NSNumber) {
+        NRCustomMetrics.recordMetric(withName: name, category: category, value: value)
+    }
+
+    @objc(recordMetricWithName:category:value:valueUnits:)
+    public static func recordMetric(withName name: String, category: String, value: NSNumber, valueUnits: String?) {
+        NRCustomMetrics.recordMetric(withName: name, category: category, value: value, valueUnits: valueUnits)
+    }
+
+    @objc(recordMetricWithName:category:value:valueUnits:countUnits:)
+    public static func recordMetric(withName name: String, category: String, value: NSNumber, valueUnits: String?, countUnits: String?) {
+        NRCustomMetrics.recordMetric(withName: name, category: category, value: value, valueUnits: valueUnits, countUnits: countUnits)
+    }
+
+    // Hidden selector (manifest: harvestNow).
+    @objc(harvestNow)
+    public static func harvestNow() -> Bool {
+        return NewRelicAgentInternal.harvestNow()
+    }
+
+    // MARK: - Recording custom network events
+
+    @objc(setURLRegexRules:)
+    public static func setURLRegexRules(_ regexRules: [String: String]) {
+        let transformer = NRMAURLTransformer(regexRules: regexRules)
+        NewRelicAgentInternal.setURLTransformer(transformer)
+    }
+
+    @objc(noticeNetworkRequestForURL:httpMethod:withTimer:responseHeaders:statusCode:bytesSent:bytesReceived:responseData:traceHeaders:andParams:)
+    public static func noticeNetworkRequest(
+        forURL url: URL,
+        httpMethod: String,
+        withTimer timer: NRTimer,
+        responseHeaders headers: [AnyHashable: Any]?,
+        statusCode httpStatusCode: Int,
+        bytesSent: UInt,
+        bytesReceived: UInt,
+        responseData: Data?,
+        traceHeaders: [String: String]?,
+        andParams params: [AnyHashable: Any]?
+    ) {
+        var request = URLRequest(url: url)
+        request.httpMethod = httpMethod
+        let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])
+        NRMANetworkFacade.noticeNetworkRequest(request as NSURLRequest, response: response, withTimer: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders, params: params)
+    }
+
+    @objc(noticeNetworkRequestForURL:httpMethod:startTime:endTime:responseHeaders:statusCode:bytesSent:bytesReceived:responseData:traceHeaders:andParams:)
+    public static func noticeNetworkRequest(
+        forURL url: URL,
+        httpMethod: String,
+        startTime: Double,
+        endTime: Double,
+        responseHeaders headers: [AnyHashable: Any]?,
+        statusCode httpStatusCode: Int,
+        bytesSent: UInt,
+        bytesReceived: UInt,
+        responseData: Data?,
+        traceHeaders: [AnyHashable: Any]?,
+        andParams params: [AnyHashable: Any]?
+    ) {
+        var request = URLRequest(url: url)
+        request.httpMethod = httpMethod
+        let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])
+        let timer = NRTimer(startTime: startTime, andEndTime: endTime)
+        NRMANetworkFacade.noticeNetworkRequest(request as NSURLRequest, response: response, withTimer: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders as? [String: String], params: params)
+    }
+
+    @objc(noticeNetworkFailureForURL:httpMethod:withTimer:andFailureCode:)
+    public static func noticeNetworkFailure(forURL url: URL, httpMethod: String, withTimer timer: NRTimer, andFailureCode iOSFailureCode: Int) {
+        let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
+        var request = URLRequest(url: url)
+        request.httpMethod = httpMethod
+        NRMANetworkFacade.noticeNetworkFailure(request as NSURLRequest, withTimer: timer, withError: error)
+    }
+
+    @objc(noticeNetworkFailureForURL:httpMethod:startTime:endTime:andFailureCode:)
+    public static func noticeNetworkFailure(forURL url: URL, httpMethod: String, startTime: Double, endTime: Double, andFailureCode iOSFailureCode: Int) {
+        let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
+        var request = URLRequest(url: url)
+        request.httpMethod = httpMethod
+        let timer = NRTimer(startTime: startTime, andEndTime: endTime)
+        NRMANetworkFacade.noticeNetworkFailure(request as NSURLRequest, withTimer: timer, withError: error)
+    }
+
+    @objc(generateDistributedTracingHeaders)
+    public static func generateDistributedTracingHeaders() -> [String: String] {
+        if NRMAFlags.shouldEnableNewEventSystem() {
+            return NRMAHTTPUtilities.generateConnectivityHeaders(withNRMAPayload: NRMAHTTPUtilities.generateNRMAPayload())
+        } else {
+            return NRMAHTTPUtilities.generateConnectivityHeaders(withPayload: NRMAHTTPUtilities.generatePayload())
+        }
+    }
+
+    @objc(addHTTPHeaderTrackingFor:)
+    public static func addHTTPHeaderTracking(for headers: [String]) {
+        NRMAHTTPUtilities.addHTTPHeaderTracking(for: headers)
+    }
+
+    @objc(httpHeadersAddedForTracking)
+    public static func httpHeadersAddedForTracking() -> [String] {
+        return NRMAHTTPUtilities.trackedHeaderFields()
+    }
 }
