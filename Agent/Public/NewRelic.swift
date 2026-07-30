@@ -9,7 +9,7 @@ public class NewRelic: NSObject {
     @objc(crashNow:)
     public static func crashNow(_ message: String?) {
         // If Agent is shutdown we shouldn't respond.
-        if NewRelicAgentInternal.sharedInstance().isShutdown {
+        if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
             return
         }
         NSException(
@@ -34,7 +34,7 @@ public class NewRelic: NSObject {
     @objc(logError:)
     public static func logError(_ message: String) {
         NRLogger.log(NRLogLevelError, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
-        NewRelicAgentInternal.sharedInstance().sessionReplayOnError(nil)
+        NewRelicAgentInternal.sharedInstance()?.sessionReplayOnError(nil)
     }
 
     @objc(logVerbose:)
@@ -121,7 +121,7 @@ public class NewRelic: NSObject {
     public static func logErrorObject(_ error: NSError) {
         let errorDesc = error.localizedDescription
         logError("Error encountered: \(errorDesc)")
-        NewRelicAgentInternal.sharedInstance().sessionReplayOnError(nil)
+        NewRelicAgentInternal.sharedInstance()?.sessionReplayOnError(nil)
     }
 
     // MARK: - Configuring the New Relic SDK
@@ -194,7 +194,7 @@ public class NewRelic: NSObject {
 
     @objc(currentSessionId)
     public static func currentSessionId() -> String {
-        return NewRelicAgentInternal.sharedInstance().currentSessionId()
+        return NewRelicAgentInternal.sharedInstance()?.currentSessionId() ?? ""
     }
 
     @objc(crossProcessId)
@@ -227,7 +227,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(startWithApplicationToken:andCollectorAddress:andCrashCollectorAddress:)
-    public static func start(withApplicationToken appToken: String, andCollectorAddress url: String?, andCrashCollectorAddress crashCollectorUrl: String?) {
+    public static func start(withApplicationToken appToken: String, andCollectorAddress url: String, andCrashCollectorAddress crashCollectorUrl: String) {
         NewRelicAgentInternal.start(withApplicationToken: appToken, andCollectorAddress: url, andCrashCollectorAddress: crashCollectorUrl)
     }
 }
