@@ -125,6 +125,21 @@ public class NewRelic: NSObject {
         NewRelicAgentInternal.sharedInstance()?.sessionReplay(onError: nil)
     }
 
+    // Swift-only convenience overload. Objective-C callers only ever have an
+    // NSError, but Swift callers commonly hold a `catch`-bound `any Error`
+    // (e.g. from a `do`/`catch` around a `throws` call). When this API was
+    // Objective-C, the compiler implicitly bridged `any Error` to `NSError`
+    // at Swift call sites; now that the declaration itself is native Swift,
+    // that implicit bridging no longer applies, so callers passing a
+    // non-NSError `Error` would otherwise fail to compile. `as NSError`
+    // performs the same bridging explicitly. Not exposed to Objective-C
+    // (the `Error` protocol has no ObjC representation), so it can't collide
+    // with the selector above.
+    @nonobjc
+    public static func logErrorObject(_ error: Error) {
+        logErrorObject(error as NSError)
+    }
+
     // MARK: - Configuring the New Relic SDK
 
     @objc(enableFeatures:)
@@ -408,11 +423,18 @@ public class NewRelic: NSObject {
         NewRelicAgentInternal.setURLTransformer(transformer)
     }
 
+    // External labels are `for:`/`with:`, not `forURL:`/`withTimer:` — matching what
+    // Swift's Objective-C importer generated for the original header (it drops the
+    // "URL"/"Timer" words from the label because they're redundant with the NSURL/
+    // NRTimer parameter types — "Omit Needless Words"). Existing Swift callers (e.g.
+    // the test harness) were written against that importer-generated interface, so
+    // matching it here keeps them source-compatible; the @objc selector below is
+    // unchanged, so Objective-C callers are unaffected either way.
     @objc(noticeNetworkRequestForURL:httpMethod:withTimer:responseHeaders:statusCode:bytesSent:bytesReceived:responseData:traceHeaders:andParams:)
     public static func noticeNetworkRequest(
-        forURL url: URL!,
+        for url: URL!,
         httpMethod: String!,
-        withTimer timer: NRTimer!,
+        with timer: NRTimer!,
         responseHeaders headers: [AnyHashable: Any]?,
         statusCode httpStatusCode: Int,
         bytesSent: UInt,
@@ -434,9 +456,11 @@ public class NewRelic: NSObject {
         NRMANetworkFacade.noticeNetworkRequest(request, response: response, with: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders, params: params)
     }
 
+    // See the labeling note on the sibling overload above — `for:` matches the
+    // importer-generated label for the original ObjC header's NSURL parameter.
     @objc(noticeNetworkRequestForURL:httpMethod:startTime:endTime:responseHeaders:statusCode:bytesSent:bytesReceived:responseData:traceHeaders:andParams:)
     public static func noticeNetworkRequest(
-        forURL url: URL!,
+        for url: URL!,
         httpMethod: String!,
         startTime: Double,
         endTime: Double,
@@ -462,16 +486,19 @@ public class NewRelic: NSObject {
         NRMANetworkFacade.noticeNetworkRequest(request, response: response, with: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders as? [String: String], params: params)
     }
 
+    // See the labeling note on noticeNetworkRequest(for:httpMethod:with:...) above —
+    // `for:`/`with:` match the importer-generated labels for the original header.
     @objc(noticeNetworkFailureForURL:httpMethod:withTimer:andFailureCode:)
-    public static func noticeNetworkFailure(forURL url: URL!, httpMethod: String!, withTimer timer: NRTimer!, andFailureCode iOSFailureCode: Int) {
+    public static func noticeNetworkFailure(for url: URL!, httpMethod: String!, with timer: NRTimer!, andFailureCode iOSFailureCode: Int) {
         let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
         NRMANetworkFacade.noticeNetworkFailure(request, with: timer, withError: error)
     }
 
+    // See the labeling note above — `for:` matches the importer-generated label.
     @objc(noticeNetworkFailureForURL:httpMethod:startTime:endTime:andFailureCode:)
-    public static func noticeNetworkFailure(forURL url: URL!, httpMethod: String!, startTime: Double, endTime: Double, andFailureCode iOSFailureCode: Int) {
+    public static func noticeNetworkFailure(for url: URL!, httpMethod: String!, startTime: Double, endTime: Double, andFailureCode iOSFailureCode: Int) {
         let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
@@ -604,8 +631,18 @@ public class NewRelic: NSObject {
 
     // MARK: - Custom events
 
+    // `attributes: ... = nil` below restores a Swift-caller convenience that came for
+    // free with the original Objective-C header: Swift's Clang importer infers a
+    // default value of `nil` for a trailing NSDictionary parameter named `attributes`
+    // (also `withAttributes`/`additionalAttributes`; this is a specific, allowlisted
+    // set of recognized dictionary-parameter names, not a general nullable-dictionary
+    // rule — confirmed empirically, e.g. a trailing `andParams:`/`traceHeaders:`
+    // parameter does NOT get this treatment). Now that these declarations are native
+    // Swift, that inference no longer happens automatically, so omitting the argument
+    // (as existing Swift callers like the test harness do) would fail to compile
+    // without an explicit default here.
     @objc(recordCustomEvent:name:attributes:)
-    public static func recordCustomEvent(_ eventType: String, name: String?, attributes: [AnyHashable: Any]?) -> Bool {
+    public static func recordCustomEvent(_ eventType: String, name: String?, attributes: [AnyHashable: Any]? = nil) -> Bool {
         var mutableAttributes = attributes ?? [:]
         if let name = name, !name.isEmpty {
             mutableAttributes["name"] = name
@@ -614,7 +651,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(recordCustomEvent:attributes:)
-    public static func recordCustomEvent(_ eventType: String, attributes: [AnyHashable: Any]?) -> Bool {
+    public static func recordCustomEvent(_ eventType: String, attributes: [AnyHashable: Any]? = nil) -> Bool {
         guard let agent = NewRelicAgentInternal.sharedInstance(), !agent.isShutdown else {
             return false
         }
@@ -622,7 +659,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(recordBreadcrumb:attributes:)
-    public static func recordBreadcrumb(_ name: String, attributes: [AnyHashable: Any]?) -> Bool {
+    public static func recordBreadcrumb(_ name: String, attributes: [AnyHashable: Any]? = nil) -> Bool {
         guard let agent = NewRelicAgentInternal.sharedInstance(), !agent.isShutdown else {
             return false
         }
@@ -630,7 +667,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(recordJavascriptError:message:stackTrace:isFatal:additionalAttributes:)
-    public static func recordJavascriptError(_ name: String, message: String, stackTrace: String, isFatal: Bool, additionalAttributes: [AnyHashable: Any]?) -> Bool {
+    public static func recordJavascriptError(_ name: String, message: String, stackTrace: String, isFatal: Bool, additionalAttributes: [AnyHashable: Any]? = nil) -> Bool {
         guard let agent = NewRelicAgentInternal.sharedInstance(), !agent.isShutdown else {
             return false
         }
@@ -674,7 +711,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(recordHandledException:withAttributes:)
-    public static func recordHandledException(_ exception: NSException, withAttributes attributes: [AnyHashable: Any]?) {
+    public static func recordHandledException(_ exception: NSException, withAttributes attributes: [AnyHashable: Any]? = nil) {
         guard let agent = NewRelicAgentInternal.sharedInstance(), !agent.isShutdown else {
             return
         }
@@ -703,12 +740,26 @@ public class NewRelic: NSObject {
     }
 
     @objc(recordError:attributes:)
-    public static func recordError(_ error: NSError, attributes: [AnyHashable: Any]?) {
+    public static func recordError(_ error: NSError, attributes: [AnyHashable: Any]? = nil) {
         guard let agent = NewRelicAgentInternal.sharedInstance(), !agent.isShutdown else {
             return
         }
         agent.sessionReplay(onError: nil)
         agent.handledExceptionsController?.recordError(error, attributes: attributes)
+    }
+
+    // Swift-only convenience overloads — see the comment on the
+    // logErrorObject(_: Error) overload above for why these are needed
+    // now that this API is implemented in native Swift rather than
+    // Objective-C. Not exposed to Objective-C.
+    @nonobjc
+    public static func recordError(_ error: Error) {
+        recordError(error as NSError)
+    }
+
+    @nonobjc
+    public static func recordError(_ error: Error, attributes: [AnyHashable: Any]? = nil) {
+        recordError(error as NSError, attributes: attributes)
     }
 
     // MARK: - Session Replay Masking
