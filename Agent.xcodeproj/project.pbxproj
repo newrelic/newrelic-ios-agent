@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00D3C8A763625C06E61485F0 /* NRMobileViewFeatureFlagGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */; };
 		0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
 		0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAC24E7042C00E45C90 /* NRAgentTestBase.m */; };
 		0209ABC424E7058500E45C90 /* NRMeasurementConsumerHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAD24E7042C00E45C90 /* NRMeasurementConsumerHelper.m */; };
@@ -1941,7 +1942,7 @@
 		};
 		34666B252924556A005A7010 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -1976,7 +1977,7 @@
 		};
 		34A9292D2912D72F001449B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 34BF4DDD29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2025,7 +2026,7 @@
 		};
 		34DD72F42912F04700481FA9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2053,7 +2054,7 @@
 		};
 		F89167402BC9D1CB0085BCFC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2649,6 +2650,7 @@
 		2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimer.m; sourceTree = "<group>"; };
 		2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelperTests.h; sourceTree = "<group>"; };
 		2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelperTests.m; sourceTree = "<group>"; };
+		3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NRMobileViewFeatureFlagGateTests.swift; sourceTree = "<group>"; };
 		340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGenerator.swift; sourceTree = "<group>"; };
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
@@ -3002,6 +3004,7 @@
 			children = (
 				0209AC4324E7078000E45C90 /* NRMAFeatureFlagsTests.m */,
 				0209AC4224E7078000E45C90 /* NRMAInteractionTraceFeatureFlag.m */,
+				3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */,
 			);
 			path = "Feature-Flags-Tests";
 			sourceTree = "<group>";
@@ -5801,6 +5804,7 @@
 				0209AC9424E7393300E45C90 /* NRMethodProfilerTests.m in Sources */,
 				0209AC2124E7071F00E45C90 /* MachineMeasurementsTest.m in Sources */,
 				0209ABF424E706FA00E45C90 /* NRThreadInfoTests.m in Sources */,
+				00D3C8A763625C06E61485F0 /* NRMobileViewFeatureFlagGateTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

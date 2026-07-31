@@ -45,6 +45,34 @@ public extension SwiftUI.View {
 
 // MARK: - MobileViews: SwiftUI support
 
+/// Feature-flag gate for the SwiftUI MobileView producers.
+///
+/// MobileView collection is opt-in via `NRFeatureFlag_AutomaticMobileViews`. The UIKit producer is
+/// gated at swizzle-install time (see `-[NewRelicAgentInternal initialize]`) and the manual
+/// `setCurrentView:` producer is gated at its API boundary (see `+[NewRelic setCurrentView:attributes:]`).
+/// The SwiftUI modifiers below are compiled into the host app's view tree, so they must consult the
+/// flag at emit time — otherwise merely attaching `.NRMobileView(...)` would send data even with the
+/// feature disabled, which is the bug this gate closes. Keeping the decision here means the flag is a
+/// true master switch for every SwiftUI entry point (`NRMobileView`, `NRMobileDestination`,
+/// `NRMobileSheet`, `NRMobileFullScreenCover`, `NRMobilePopover`, `NRMobileNavigationLink`,
+/// `NRMobileTabTracking`).
+internal enum NRMobileViewGate {
+
+    /// The master switch for SwiftUI MobileView collection.
+    static var isFeatureEnabled: Bool {
+        NRMAFlags.shouldEnableAutomaticMobileViews()
+    }
+
+    /// Whether a MobileView event should be recorded for this view: only when the feature flag is
+    /// enabled, the view is not explicitly ignored, and its name is not on the skip list.
+    static func shouldRecord(ignored: Bool, viewName: String) -> Bool {
+        guard isFeatureEnabled else { return false }
+        if ignored { return false }
+        if NRMA_ShouldSkipViewName(viewName) { return false }
+        return true
+    }
+}
+
 /// NRMobileViewModifier emits a MobileView custom event on appear and disappear.
 /// Tracks loadTime (onAppear - modifier init), timeVisible (disappear - appear), and
 /// viewInstanceId per appearance, matching the UIKit NRMAMobileViewTracker schema.
@@ -66,8 +94,9 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear {
-                if ignored { return }
-                if NRMA_ShouldSkipViewName(viewName) { return }
+                // Master switch: emit (and touch the shared view context) only when the
+                // AutomaticMobileViews feature flag is enabled and this view is trackable.
+                guard NRMobileViewGate.shouldRecord(ignored: ignored, viewName: viewName) else { return }
 
                 let now = Date()
                 let id = UUID().uuidString
@@ -99,8 +128,9 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 NewRelic.recordCustomEvent("MobileView", attributes: attrs)
             }
             .onDisappear {
-                if ignored { return }
-                if NRMA_ShouldSkipViewName(viewName) { return }
+                // Master switch: honor the AutomaticMobileViews feature flag here too, so a view
+                // never emits a disappear event while the feature is disabled.
+                guard NRMobileViewGate.shouldRecord(ignored: ignored, viewName: viewName) else { return }
 
                 let disappearTime = Date()
                 guard let appeared = appearTime, let id = instanceId else { return }
@@ -263,6 +293,8 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .task(id: selection) {
+                // Master switch: don't track tab switches while AutomaticMobileViews is disabled.
+                guard NRMobileViewGate.isFeatureEnabled else { return }
                 // cancelled if selection changes again within dwell window
                 do {
                     try await Task.sleep(nanoseconds: 500_000_000)
