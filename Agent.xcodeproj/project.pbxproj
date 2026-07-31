@@ -200,7 +200,6 @@
 		025658DE24ED97CE00FE3125 /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ABAA24E7042B00E45C90 /* libOCMock.a */; };
 		025658E224EDA93500FE3125 /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ABAA24E7042B00E45C90 /* libOCMock.a */; };
 		025658E324EDA93600FE3125 /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0209ABAA24E7042B00E45C90 /* libOCMock.a */; };
-		02FF47D924DB563600115469 /* NewRelic.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47D824DB563600115469 /* NewRelic.m */; };
 		02FF47E824DB567600115469 /* NRLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47DD24DB567600115469 /* NRLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		02FF47E924DB567600115469 /* NewRelicFeatureFlags.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47DE24DB567600115469 /* NewRelicFeatureFlags.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		02FF47EA24DB567600115469 /* NRTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47DF24DB567600115469 /* NRTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -757,7 +756,6 @@
 		02FF4C1D24E3201400115469 /* NRMAUserActionFacade.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF480424DB573E00115469 /* NRMAUserActionFacade.mm */; };
 		02FF4C1E24E3201400115469 /* NRMABool.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A8124DC652C00115469 /* NRMABool.m */; };
 		02FF4C1F24E3201400115469 /* NRMAThreadTransition.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF486A24DC618F00115469 /* NRMAThreadTransition.m */; };
-		02FF4C2024E3201400115469 /* NewRelic.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47D824DB563600115469 /* NewRelic.m */; };
 		02FF4C2124E3201400115469 /* NRMATaskQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47F724DB56B000115469 /* NRMATaskQueue.m */; };
 		02FF4C2224E3201400115469 /* NRMATraceController.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF483424DC614200115469 /* NRMATraceController.m */; };
 		02FF4C2324E3201400115469 /* NRMAFileCleanup.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4A8024DC652C00115469 /* NRMAFileCleanup.m */; };
@@ -869,6 +867,7 @@
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
 		0DF26FF5DA3C829A626DACD7 /* NRExceptionCatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 82F46B534F7135307E809651 /* NRExceptionCatcher.h */; };
+		1A759818076D1B61B56E2D26 /* NRExceptionCatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 82F46B534F7135307E809651 /* NRExceptionCatcher.h */; };
 		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B0340632E87366900182A70 /* GetViewRendererByKeyPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */; };
@@ -1045,6 +1044,7 @@
 		2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */; };
 		2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
 		2BFFB1EC28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
+		2E2322607F176202540F3F4B /* NewRelic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213B680EA4AB9740BFA7B775 /* NewRelic.swift */; };
 		340A8CE42DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */; };
 		340D64142AA92FCE00E63CC1 /* PersistentEventStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */; };
 		340D64152AA92FCE00E63CC1 /* PersistentEventStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */; };
@@ -1535,7 +1535,6 @@
 		348233AD2BC5F32B0070FAC3 /* NRGCDOverride.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47E724DB567600115469 /* NRGCDOverride.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		348233AE2BC5F32B0070FAC3 /* NRMAAgentVersion.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47F424DB56B000115469 /* NRMAAgentVersion.h */; };
 		348233AF2BC5F32B0070FAC3 /* NRTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47DF24DB567600115469 /* NRTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		348233B02BC5F32B0070FAC3 /* NewRelic.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF47D824DB563600115469 /* NewRelic.m */; };
 		348233B12BC5F32B0070FAC3 /* NRCustomMetrics.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47E524DB567600115469 /* NRCustomMetrics.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		348233B32BC5F32B0070FAC3 /* NewRelicFeatureFlags.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF47DE24DB567600115469 /* NewRelicFeatureFlags.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		348233B42BC5F39D0070FAC3 /* Analytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34A929222912D726001449B6 /* Analytics.framework */; };
@@ -1577,8 +1576,12 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
+		8A5282DC1D13693370234BB5 /* NRExceptionCatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 0490A77A4CEFC68A974B9DBB /* NRExceptionCatcher.m */; };
 		921FB9F42D4B0053D1DD0F9F /* NRExceptionCatcherTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C4A4169CE1D97D138F5E96D5 /* NRExceptionCatcherTests.m */; };
 		A549AD22EFA06F0E7B64A661 /* NRExceptionCatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 0490A77A4CEFC68A974B9DBB /* NRExceptionCatcher.m */; };
+		AD64FBA2D49A1BB4BDEF5C02 /* NRExceptionCatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 0490A77A4CEFC68A974B9DBB /* NRExceptionCatcher.m */; };
+		AE47CAD685DA634B694A7BEC /* NRExceptionCatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 82F46B534F7135307E809651 /* NRExceptionCatcher.h */; };
+		BE24B5276FF7204B8D705708 /* NewRelic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213B680EA4AB9740BFA7B775 /* NewRelic.swift */; };
 		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
 		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
@@ -1596,6 +1599,7 @@
 		D4C36C972FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4C36C982FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4DCC24030192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DCC23F30192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift */; };
+		E14A6C1F228EB46EAB94F6BA /* NewRelic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 213B680EA4AB9740BFA7B775 /* NewRelic.swift */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -2228,7 +2232,6 @@
 		025658D724EB322F00FE3125 /* NRMAStressTestHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAStressTestHelper.m; sourceTree = "<group>"; };
 		0264AB2325080523009E5514 /* agent.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = agent.modulemap; sourceTree = "<group>"; };
 		02AD76E124F06DB300D0671F /* tests-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "tests-Info.plist"; sourceTree = "<group>"; };
-		02FF47D824DB563600115469 /* NewRelic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NewRelic.m; sourceTree = "<group>"; };
 		02FF47DD24DB567600115469 /* NRLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRLogger.h; sourceTree = "<group>"; };
 		02FF47DE24DB567600115469 /* NewRelicFeatureFlags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NewRelicFeatureFlags.h; sourceTree = "<group>"; };
 		02FF47DF24DB567600115469 /* NRTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRTimer.h; sourceTree = "<group>"; };
@@ -2577,6 +2580,7 @@
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0490A77A4CEFC68A974B9DBB /* NRExceptionCatcher.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRExceptionCatcher.m; sourceTree = "<group>"; };
+		213B680EA4AB9740BFA7B775 /* NewRelic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NewRelic.swift; sourceTree = "<group>"; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetViewRendererByKeyPath.swift; sourceTree = "<group>"; };
 		2B0340672E874A9900182A70 /* ControllerTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTypeDetector.swift; sourceTree = "<group>"; };
@@ -3402,7 +3406,6 @@
 				02FF47F424DB56B000115469 /* NRMAAgentVersion.h */,
 				02FF47F624DB56B000115469 /* NRMATaskQueue.h */,
 				02FF47F724DB56B000115469 /* NRMATaskQueue.m */,
-				02FF47D824DB563600115469 /* NewRelic.m */,
 				02FF47E224DB567600115469 /* NewRelic.h */,
 				02FF47E424DB567600115469 /* NewRelicCustomInteractionInterface.h */,
 				02FF47DE24DB567600115469 /* NewRelicFeatureFlags.h */,
@@ -3415,6 +3418,7 @@
 				02FF47E024DB567600115469 /* NRWKNavigationDelegateBase.h */,
 				82F46B534F7135307E809651 /* NRExceptionCatcher.h */,
 				0490A77A4CEFC68A974B9DBB /* NRExceptionCatcher.m */,
+				213B680EA4AB9740BFA7B775 /* NewRelic.swift */,
 			);
 			path = Public;
 			sourceTree = "<group>";
@@ -4800,6 +4804,7 @@
 				02FF4BEB24E3201400115469 /* NRMAThreadLocalStore.h in Headers */,
 				02FF4BEC24E3201400115469 /* NRMAAgentVersion.h in Headers */,
 				02FF4BED24E3201400115469 /* NRMANetworkRequestData.h in Headers */,
+				AE47CAD685DA634B694A7BEC /* NRExceptionCatcher.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5011,6 +5016,7 @@
 				3482329F2BC5F1DD0070FAC3 /* NRMAMeasurementProducer.h in Headers */,
 				348232A92BC5F1E30070FAC3 /* NRCustomMetrics+private.h in Headers */,
 				348232EC2BC5F2050070FAC3 /* NRMAHarvestableMetric.h in Headers */,
+				1A759818076D1B61B56E2D26 /* NRExceptionCatcher.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5823,7 +5829,6 @@
 				2B3493602E8DD8CD006DE9D0 /* SwiftUIDisplayList+SwiftUIViewUpdater.swift in Sources */,
 				2B33E5D22AA9160E00AEB7B4 /* NRMASessionEvent.m in Sources */,
 				02FF486F24DC618F00115469 /* NRMAThreadTransition.m in Sources */,
-				02FF47D924DB563600115469 /* NewRelic.m in Sources */,
 				F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */,
 				02FF47FD24DB56B100115469 /* NRMATaskQueue.m in Sources */,
 				02FF484624DC614200115469 /* NRMATraceController.m in Sources */,
@@ -6014,6 +6019,7 @@
 				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
 				2BDCA8AA2A8C41160005740D /* NRMASAM.mm in Sources */,
 				A549AD22EFA06F0E7B64A661 /* NRExceptionCatcher.m in Sources */,
+				BE24B5276FF7204B8D705708 /* NewRelic.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6231,7 +6237,6 @@
 				02FF4C1E24E3201400115469 /* NRMABool.m in Sources */,
 				02FF4C1F24E3201400115469 /* NRMAThreadTransition.m in Sources */,
 				342C4B5B2A3BD15A00116992 /* BlockAttributeValidator.m in Sources */,
-				02FF4C2024E3201400115469 /* NewRelic.m in Sources */,
 				F824A43229AEAD63000886A6 /* NRViewModifier.swift in Sources */,
 				02FF4C2124E3201400115469 /* NRMATaskQueue.m in Sources */,
 				2B570A792EF0C473007D9E39 /* XRayDecoderError.swift in Sources */,
@@ -6395,6 +6400,8 @@
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */,
+				E14A6C1F228EB46EAB94F6BA /* NewRelic.swift in Sources */,
+				8A5282DC1D13693370234BB5 /* NRExceptionCatcher.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6653,7 +6660,6 @@
 				3482324B2BC5F1070070FAC3 /* W3CTraceParent.mm in Sources */,
 				348233482BC5F2710070FAC3 /* NRMAURLSessionTaskDelegate.m in Sources */,
 				348232832BC5F1AE0070FAC3 /* NRMAActivityTraceMeasurementCreator.m in Sources */,
-				348233B02BC5F32B0070FAC3 /* NewRelic.m in Sources */,
 				348233A12BC5F3250070FAC3 /* NRMAUserAction.m in Sources */,
 				348233812BC5F3120070FAC3 /* NRMATrace.m in Sources */,
 				348233822BC5F3120070FAC3 /* NRMATraceMachine.m in Sources */,
@@ -6671,6 +6677,8 @@
 				3482327D2BC5F1AE0070FAC3 /* NRMAMeasurementConsumer.m in Sources */,
 				348232C02BC5F1FE0070FAC3 /* NRMAHarvestableArray.m in Sources */,
 				348233382BC5F2490070FAC3 /* NRMAMethodProfiler.m in Sources */,
+				2E2322607F176202540F3F4B /* NewRelic.swift in Sources */,
+				AD64FBA2D49A1BB4BDEF5C02 /* NRExceptionCatcher.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
