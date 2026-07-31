@@ -88,5 +88,15 @@ enum ViewControllerProvider {
         let viewController = MapViewController()
         return viewController
     }
+
+    static var mobileViewAttributesViewController: MobileViewAttributesViewController {
+        let viewController = MobileViewAttributesViewController()
+        return viewController
+    }
+
+    static var mobileViewIgnoredViewController: MobileViewIgnoredViewController {
+        let viewController = MobileViewIgnoredViewController()
+        return viewController
+    }
 }
 

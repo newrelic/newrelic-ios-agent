@@ -52,6 +52,7 @@ struct ShapesView: View {
         }
         .navigationViewStyle(.stack)
         .NRTrackView(name: "ShapesView")
+        .NRMobileView(name: "ShapesView")
     }
 }
 

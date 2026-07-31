@@ -195,4 +195,14 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(mapViewController, animated: true)
     }
 
+    func showMobileViewAttributesViewController() {
+        let vc = ViewControllerProvider.mobileViewAttributesViewController
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    func showMobileViewIgnoredViewController() {
+        let vc = ViewControllerProvider.mobileViewIgnoredViewController
+        navigationController.pushViewController(vc, animated: true)
+    }
+
 }
