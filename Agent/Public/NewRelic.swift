@@ -194,7 +194,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(currentSessionId)
-    public static func currentSessionId() -> NSString? {
+    public static func currentSessionId() -> NSString! {
         // The original ObjC implementation returned `[[[NewRelicAgentInternal sharedInstance]
         // currentSessionId] copy]` and existing tests (NewRelicTests.m's testCurrentSessionId)
         // compare that exact expression against this method using pointer equality (XCTAssertEqual
@@ -276,14 +276,14 @@ public class NewRelic: NSObject {
     // MARK: - Custom instrumentation
 
     @objc(createAndStartTimer)
-    public static func createAndStartTimer() -> NRTimer {
+    public static func createAndStartTimer() -> NRTimer! {
         return NRTimer()
     }
 
     // MARK: - Interaction Traces
 
     @objc(startInteractionWithName:)
-    public static func startInteraction(withName interactionName: String) -> String? {
+    public static func startInteraction(withName interactionName: String!) -> String! {
         if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
             return nil
         }
@@ -321,7 +321,7 @@ public class NewRelic: NSObject {
     // MARK: - Method Tracing
 
     @objc(startTracingMethod:object:timer:category:)
-    public static func startTracingMethod(_ selector: Selector, object: Any, timer: NRTimer, category: NRTraceType) {
+    public static func startTracingMethod(_ selector: Selector, object: Any, timer: NRTimer!, category: NRTraceType) {
         startTracingMethodNamed(NSStringFromSelector(selector), objectNamed: NSStringFromClass(type(of: object as AnyObject)), timer: timer, category: category)
     }
 
@@ -349,7 +349,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(endTracingMethodWithTimer:)
-    public static func endTracingMethod(withTimer timer: NRTimer) {
+    public static func endTracingMethod(withTimer timer: NRTimer!) {
         if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
             return
         }
@@ -410,9 +410,9 @@ public class NewRelic: NSObject {
 
     @objc(noticeNetworkRequestForURL:httpMethod:withTimer:responseHeaders:statusCode:bytesSent:bytesReceived:responseData:traceHeaders:andParams:)
     public static func noticeNetworkRequest(
-        forURL url: URL,
-        httpMethod: String,
-        withTimer timer: NRTimer,
+        forURL url: URL!,
+        httpMethod: String!,
+        withTimer timer: NRTimer!,
         responseHeaders headers: [AnyHashable: Any]?,
         statusCode httpStatusCode: Int,
         bytesSent: UInt,
@@ -436,8 +436,8 @@ public class NewRelic: NSObject {
 
     @objc(noticeNetworkRequestForURL:httpMethod:startTime:endTime:responseHeaders:statusCode:bytesSent:bytesReceived:responseData:traceHeaders:andParams:)
     public static func noticeNetworkRequest(
-        forURL url: URL,
-        httpMethod: String,
+        forURL url: URL!,
+        httpMethod: String!,
         startTime: Double,
         endTime: Double,
         responseHeaders headers: [AnyHashable: Any]?,
@@ -463,7 +463,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(noticeNetworkFailureForURL:httpMethod:withTimer:andFailureCode:)
-    public static func noticeNetworkFailure(forURL url: URL, httpMethod: String, withTimer timer: NRTimer, andFailureCode iOSFailureCode: Int) {
+    public static func noticeNetworkFailure(forURL url: URL!, httpMethod: String!, withTimer timer: NRTimer!, andFailureCode iOSFailureCode: Int) {
         let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
@@ -471,7 +471,7 @@ public class NewRelic: NSObject {
     }
 
     @objc(noticeNetworkFailureForURL:httpMethod:startTime:endTime:andFailureCode:)
-    public static func noticeNetworkFailure(forURL url: URL, httpMethod: String, startTime: Double, endTime: Double, andFailureCode iOSFailureCode: Int) {
+    public static func noticeNetworkFailure(forURL url: URL!, httpMethod: String!, startTime: Double, endTime: Double, andFailureCode iOSFailureCode: Int) {
         let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
