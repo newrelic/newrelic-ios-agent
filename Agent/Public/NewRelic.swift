@@ -218,17 +218,28 @@ public class NewRelic: NSObject {
     @objc(crossProcessId)
     public static func crossProcessId() -> NSString? {
         // The original ObjC implementation was:
+        //   NRMAHarvestController* controller = [NRMAHarvestController harvestController];
+        //   NRMAHarvester* harvester = [controller harvester];
         //   NSString* crossProcessId = [harvester crossProcessID];
         //   return crossProcessId ? [crossProcessId copy] : nil;
         // and existing tests (NewRelicTests.m's testCrossProcessId) compare that exact
         // expression against this method using pointer equality (XCTAssertEqual on
-        // Objective-C object pointers does `==`, not `-isEqual:`). As with
-        // currentSessionId() above, staying in NSString end-to-end (via KVC, which
-        // dispatches dynamically rather than trusting any static nullability
-        // annotation) preserves that pointer identity and faithful nil-handling across
-        // the ObjC<->Swift bridge.
-        let controller = NRMAHarvestController()
-        guard let harvester = controller.harvester(),
+        // Objective-C object pointers does `==`, not `-isEqual:`).
+        //
+        // +harvestController is a singleton accessor (returns a `@synchronized`-guarded
+        // static variable, populated by +initialize:), NOT a plain alloc/init factory.
+        // Swift renames it to `init()` (the compiler insists: "'harvestController()' has
+        // been replaced by 'init()'"), but calling NRMAHarvestController() actually invokes
+        // a genuine fresh NSObject -init, allocating a brand-new, never-initialized
+        // instance completely unrelated to the shared singleton (confirmed empirically:
+        // its pointer differs from the real singleton's, and its .harvester() is nil).
+        // Reading the class method dynamically via KVC on the class object itself
+        // sidesteps Swift's static rename/unavailability and reaches the real singleton
+        // (confirmed empirically: identical pointer to the real +[NRMAHarvestController
+        // harvestController]/harvester() chain) — the same technique used for
+        // currentSessionId() above, applied one level up to the class accessor itself.
+        guard let controller = (NRMAHarvestController.self as AnyObject).value(forKey: "harvestController") as? NRMAHarvestController,
+              let harvester = controller.harvester(),
               let crossProcessId = harvester.value(forKey: "crossProcessID") as? NSString else {
             return nil
         }
