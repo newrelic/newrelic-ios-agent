@@ -363,8 +363,12 @@ public class NewRelic: NSObject {
         NRMACustomTrace.startTracingMethod(NSSelectorFromString(cleanSelectorString), objectName: objectName, timer: timer, category: category)
     }
 
+    // See the labeling note on noticeNetworkRequest(for:httpMethod:with:...) above —
+    // `with:` matches the importer-generated label for the original header's
+    // `endTracingMethodWithTimer:` selector ("Timer" is dropped because it's
+    // redundant with the NRTimer parameter type).
     @objc(endTracingMethodWithTimer:)
-    public static func endTracingMethod(withTimer timer: NRTimer!) {
+    public static func endTracingMethod(with timer: NRTimer!) {
         if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
             return
         }
