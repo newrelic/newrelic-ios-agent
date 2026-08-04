@@ -54,33 +54,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)
 
-//        if ProcessInfo.processInfo.environment["UITesting"] != nil {
-//            if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
-//                clearConnectUserDefaults()
-//            }
-//
-//            NewRelic.start(withApplicationToken: "APP-TOKEN-NRMA",
-//                           andCollectorAddress: "localhost:8080",
-//                           andCrashCollectorAddress: "localhost:8080")
-//        }
-//        else {
+        let uiTesting  = ProcessInfo.processInfo.environment["UITesting"] != nil
+        let captureMode = plistHelper.objectFor(key: "captureMode", plist: "NRAPI-Info") as? Bool ?? false
+
+        if uiTesting {
+            // UITests run their own Swifter stub server on port 8080 in the test process.
+            // Do NOT start NRCaptureServer here — it would conflict for that port.
+            if ProcessInfo.processInfo.environment["DeleteConnect"] != nil {
+                clearConnectUserDefaults()
+            }
+            NewRelic.start(withApplicationToken: "APP-TOKEN-UITEST",
+                           andCollectorAddress: "localhost:\(NRCaptureServer.port)",
+                           andCrashCollectorAddress: "localhost:\(NRCaptureServer.port)")
+        } else if captureMode {
+            // Always force a fresh connect so the mock response (including entity_guid,
+            // session_replay config, etc.) is processed on every launch.
+            clearConnectUserDefaults()
+            NRCaptureServer.shared.start()
+            let localhost = "localhost:\(NRCaptureServer.port)"
+            NewRelic.start(withApplicationToken: "APP-TOKEN-CAPTURE",
+                           andCollectorAddress: localhost,
+                           andCrashCollectorAddress: localhost)
+        } else {
             // Generate your own api key to see data get sent to your app's New Relic web services. Also be sure to put your key in the `Run New Relic dSYM Upload Tool` build phase.
-            guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else {return true}
+            guard let apiKey = plistHelper.objectFor(key: "NRAPIKey", plist: "NRAPI-Info") as? String else { return true }
 
             // Changing the collector and crash collector addresses is not necessary to use New Relic production servers.
-            guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPI-Info") as? String, let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPI-Info") as? String else { return true }
+            guard let collectorAddress = plistHelper.objectFor(key: "collectorAddress", plist: "NRAPI-Info") as? String,
+                  let crashCollectorAddress = plistHelper.objectFor(key: "crashCollectorAddress", plist: "NRAPI-Info") as? String else { return true }
 
-            // If the entries for collectorAddress or crashCollectorAddress are empty in NRAPI-Info.plist, start the New Relic agent with default production endpoints.
             if collectorAddress.isEmpty || crashCollectorAddress.isEmpty {
-                // Start the agent using default endpoints.
-                NewRelic.start(withApplicationToken:apiKey)
+                NewRelic.start(withApplicationToken: apiKey)
             } else {
-                // Start the agent with custom endpoints.
-                NewRelic.start(withApplicationToken:apiKey,
+                NewRelic.start(withApplicationToken: apiKey,
                                andCollectorAddress: collectorAddress,
                                andCrashCollectorAddress: crashCollectorAddress)
             }
-     //   }
+        }
         
         NewRelic.setMaxEventPoolSize(5000)
         NewRelic.setMaxEventBufferTime(60)

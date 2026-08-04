@@ -8,5 +8,7 @@
 	<string></string>
 	<key>NRAPIKey</key>
 	<string></string>
+	<key>captureMode</key>
+	<false/>
 </dict>
 </plist>
