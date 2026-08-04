@@ -13,6 +13,7 @@
 #import "NRMARequestEvent.h"
 #import "NRMANetworkErrorEvent.h"
 #import "NRMAAgentConfiguration.h"
+#import "NRMASupportMetricHelper.h"
 
 static const NSUInteger kDefaultBufferSize = 1000;
 static const NSUInteger kDefaultBufferTimeSeconds = 60; // 60 seconds
@@ -31,7 +32,10 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     
     NSUInteger totalAttemptedInserts;
     NSTimeInterval oldestEventTimestamp;
-    
+
+    NSUInteger eventsRecorded;
+    NSUInteger eventsEvicted;
+
     PersistentEventStore *_persistentStore;
 }
 
@@ -89,30 +93,53 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
 }
 
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event {
+    BOOL added = NO;
     @synchronized (events) {
         // The event fits within the buffer
         if (events.count < maxBufferSize) {
             [events addObject:event];
-            
+
             [_persistentStore setObject:event forKey:[self createKeyForEvent:event]];
-            
+
             if(events.count == 1) {
                 oldestEventTimestamp = event.timestamp;
             }
+            added = YES;
         } else {
+            [NRMASupportMetricHelper enqueueEventOverflowMetric];
+            [NRMASupportMetricHelper enqueueEventQueueSizeExceededMetric];
+
             // we need to throw away an event. We try to balance
             // between evicting newer events and older events.
             NSUInteger evictionIndex = [self getEvictionIndex];
             if (evictionIndex < events.count) {
                 [events removeObjectAtIndex:evictionIndex];
                 [events addObject:event];
-                
+
                 [_persistentStore removeObjectForKey:[self createKeyForEvent:event]];
+                added = YES;
             }
+            // else: the random eviction index landed outside the queue's current
+            // bounds -- drop the incoming event instead of silently losing it,
+            // matching the Android agent's handling of the same case.
+            [NRMASupportMetricHelper enqueueEventEvictedMetric];
+            eventsEvicted++;
         }
     }
     totalAttemptedInserts++;
-    return YES;
+    if (added) {
+        [NRMASupportMetricHelper enqueueEventAddedMetric];
+        eventsRecorded++;
+    }
+    return added;
+}
+
+- (NSUInteger)getEventsRecordedCount {
+    return eventsRecorded;
+}
+
+- (NSUInteger)getEventsEvictedCount {
+    return eventsEvicted;
 }
 
 - (NSString *)createKeyForEvent:(id<NRMAAnalyticEventProtocol>)event {
