@@ -89,4 +89,76 @@
     XCTAssertTrue(([measurement.value isEqual: @1]), @"Value is not generated properly.");
 }
 
+-(void)testEventAddedSupportMetric {
+    [NRMASupportMetricHelper enqueueEventAddedMetric];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([helper.result isKindOfClass:[NRMANamedValueMeasurement class]], @"The result is not a named value.");
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+    XCTAssertEqualObjects(measurement.name, kNRMAEventAddedMetric, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @1]), @"Value is not generated properly.");
+}
+
+-(void)testEventOverflowSupportMetric {
+    [NRMASupportMetricHelper enqueueEventOverflowMetric];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+    XCTAssertEqualObjects(measurement.name, kNRMAEventOverflowMetric, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @1]), @"Value is not generated properly.");
+}
+
+-(void)testEventEvictedSupportMetric {
+    [NRMASupportMetricHelper enqueueEventEvictedMetric];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+    XCTAssertEqualObjects(measurement.name, kNRMAEventEvictedMetric, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @1]), @"Value is not generated properly.");
+}
+
+-(void)testEventQueueSizeExceededSupportMetric {
+    [NRMASupportMetricHelper enqueueEventQueueSizeExceededMetric];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+    XCTAssertEqualObjects(measurement.name, kNRMAEventQueueSizeExceededMetric, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @1]), @"Value is not generated properly.");
+}
+
+-(void)testEventQueueTimeExceededSupportMetric {
+    [NRMASupportMetricHelper enqueueEventQueueTimeExceededMetric];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+    XCTAssertEqualObjects(measurement.name, kNRMAEventQueueTimeExceededMetric, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @1]), @"Value is not generated properly.");
+}
+
+-(void)testEventSizeUncompressedSupportMetric {
+    [NRMASupportMetricHelper enqueueEventSizeUncompressedMetric:512];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+    XCTAssertEqualObjects(measurement.name, kNRMAEventSizeUncompressedMetric, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @512]), @"Value is not generated properly.");
+}
+
+-(void)testEventRecordedSupportMetric {
+    [NRMASupportMetricHelper enqueueEventRecordedMetric:10 evicted:3];
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NRMANamedValueMeasurement* measurement = ((NRMANamedValueMeasurement*)helper.result);
+    XCTAssertEqualObjects(measurement.name, kNRMAEventRecordedMetric, @"Name is not generated properly.");
+    XCTAssertTrue(([measurement.value isEqual: @10]), @"Recorded value is not generated properly.");
+    XCTAssertTrue(([measurement.additionalValue isEqual: @3]), @"Evicted additionalValue is not generated properly.");
+}
+
 @end
