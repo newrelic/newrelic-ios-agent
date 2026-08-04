@@ -8,6 +8,17 @@
 
 import Foundation
 import UIKit
+import CoreGraphics
+
+/// Returns the same CGColor only if its CFTypeID is actually CGColor's. A bridge
+/// against dangling pointers we may receive from a layer that's mid-deallocation
+/// (e.g. Session Replay walking the view tree during a rootViewController swap
+/// on sign-out — NR-566282).
+internal extension CGColor {
+    var safeColor: CGColor? {
+        CFGetTypeID(self) == CGColor.typeID ? self : nil
+    }
+}
 
 internal extension UIColor {
     func toHexString(includingAlpha: Bool) -> String {

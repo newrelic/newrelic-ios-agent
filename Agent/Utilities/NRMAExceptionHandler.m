@@ -49,4 +49,24 @@
     }
 }
 
++ (BOOL) safelyRun:(NS_NOESCAPE void(^)(void))block
+             error:(NSError * _Nullable * _Nullable)error
+{
+    if (block == nil) { return YES; }
+    @try {
+        block();
+        return YES;
+    } @catch (NSException *ex) {
+        if (error != NULL) {
+            NSMutableDictionary *info = [NSMutableDictionary dictionary];
+            if (ex.name)   info[@"NSExceptionName"]   = ex.name;
+            if (ex.reason) info[NSLocalizedDescriptionKey] = ex.reason;
+            *error = [NSError errorWithDomain:@"com.newrelic.sessionreplay"
+                                         code:-1
+                                     userInfo:info];
+        }
+        return NO;
+    }
+}
+
 @end

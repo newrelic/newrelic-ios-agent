@@ -13,15 +13,23 @@ using namespace com::newrelic::mobile;
 using namespace flatbuffers;
 using namespace NewRelic::Hex::Report;
 
-// Build a container of Flatbuffer Libraries, given the global list of libraries found by LibraryController
+// Build a container of Flatbuffer Libraries, given the global list of libraries found by LibraryController.
+// Uses librariesSnapshot() so the lock is acquired internally and we copy
+// out before serializing — avoids holding the mutex across flatbuffer writes
+// and is safe even if the caller forgets to lock.
 std::vector<Offset<fbs::ios::Library>> buildLibraries(FlatBufferBuilder& builder) {
     std::vector<Offset<fbs::ios::Library>> libraries;
 
-    auto& libraryController = NewRelic::LibraryController::getInstance();
-    std::lock_guard<std::mutex> libraryLock(libraryController.getLibraryMutex());
-
-    for (auto& l : libraryController.libraries()) {
-        libraries.push_back(l.serialize(builder));
+    try {
+        auto& libraryController = NewRelic::LibraryController::getInstance();
+        auto snapshot = libraryController.librariesSnapshot();
+        libraries.reserve(snapshot.size());
+        for (auto& l : snapshot) {
+            libraries.push_back(l.serialize(builder));
+        }
+    } catch (...) {
+        // Never let library serialization failure escape — a partial
+        // libraries vector is preferable to crashing the host app.
     }
     return libraries;
 }
@@ -34,20 +42,38 @@ HandledException::serialize(flatbuffers::FlatBufferBuilder& builder) const {
 
     std::vector<Offset<fbs::hex::Thread>> threads;
     for (auto const& t : _threads) {
-        threads.push_back(t->serialize(builder));
+        if (!t) continue;
+        try {
+            threads.push_back(t->serialize(builder));
+        } catch (...) {
+            // Skip a thread that fails to serialize rather than aborting
+            // the whole exception report.
+        }
     }
 
     auto fbsThreads = builder.CreateVector(threads);
 
     auto libraries = buildLibraries(builder);
 
-    auto appImage = LibraryController::getInstance().getAppImage();
+    // getAppImage() is guaranteed to return a valid (possibly zero-UUID)
+    // Library even when no images have been registered — see
+    // LibraryController::getAppImage(). We still wrap in try/catch as
+    // belt-and-suspenders against any future change.
+    uint64_t appUuidLow = 0;
+    uint64_t appUuidHigh = 0;
+    try {
+        auto appImage = LibraryController::getInstance().getAppImage();
+        appUuidLow = appImage.uuidLow();
+        appUuidHigh = appImage.uuidHigh();
+    } catch (...) {
+        // Leave UUIDs at 0 on failure — backend treats this as "unknown".
+    }
 
     auto fbsLibraries = builder.CreateVector(libraries);
 
     auto fbsHandledException = fbs::hex::HandledExceptionBuilder(builder);
-    fbsHandledException.add_appUuidLow(appImage.uuidLow());
-    fbsHandledException.add_appUuidHigh(appImage.uuidHigh());
+    fbsHandledException.add_appUuidLow(appUuidLow);
+    fbsHandledException.add_appUuidHigh(appUuidHigh);
     fbsHandledException.add_sessionId(fbsSessionId);
     fbsHandledException.add_timestampMs(_epochMs);
     fbsHandledException.add_name(fbsName);

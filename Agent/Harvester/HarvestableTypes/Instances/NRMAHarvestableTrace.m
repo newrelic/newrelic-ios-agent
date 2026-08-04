@@ -21,13 +21,26 @@
         self.threadInfo = trace.threadInfo;
         
         self.subSegments = [[NSMutableArray alloc] init];
-        for (NRMATrace* subTrace in [trace.children allObjects]) {
+        // Snapshot children under the same lock NRMATrace.addChild: uses, so we
+        // don't fast-enumerate while another thread mutates the set
+        // (NSGenericException: "Collection ... was mutated while being enumerated").
+        NSArray* childrenSnapshot = nil;
+        @synchronized(trace.children) {
+            childrenSnapshot = [trace.children allObjects];
+        }
+        for (NRMATrace* subTrace in childrenSnapshot) {
             [self.subSegments addObject:[[NRMAHarvestableTrace alloc] initWithTrace:subTrace]];
         }
         self.events = [[NRMAScopedMeasurements alloc]initWithMeasurementType:NRMAMT_NamedEvent];
         self.network = [[NRMAScopedMeasurements alloc] initWithMeasurementType:NRMAMT_Network];
 
-        for ( NRMAMeasurement* measurement in trace.scopedMeasurements) {
+        // Same race exists for scopedMeasurements, mutated under @synchronized in
+        // NRMATrace.consumeMeasurement:. Snapshot under lock before iterating.
+        NSArray* measurementsSnapshot = nil;
+        @synchronized(trace.scopedMeasurements) {
+            measurementsSnapshot = [trace.scopedMeasurements copy];
+        }
+        for ( NRMAMeasurement* measurement in measurementsSnapshot) {
             if (measurement.type == NRMAMT_HTTPTransaction || measurement.type == NRMAMT_Network) {
                 NRMAScopedMeasurement* scopedMeasurement = [[NRMAScopedHTTPTransactionMeasurement alloc] initWithMeasurement:measurement];
                 scopedMeasurement.threadInfo = self.threadInfo;

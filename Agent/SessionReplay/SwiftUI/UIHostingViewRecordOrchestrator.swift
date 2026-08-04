@@ -128,7 +128,27 @@ final class UIHostingViewRecordOrchestrator {
         if #available(iOS 26, tvOS 26, *) { keys.insert("viewGraph", at: keys.count - 1) }
         return keys
     }()
-        
+
+    /// Caps a text-width compensation offset so it can never push a label's
+    /// captured wireframe past the ambient SwiftUI content bounds.
+    ///
+    /// `widthOffset` (see the `.text` case below) pads a `Text` view's measured
+    /// width to work around SwiftUI under-reporting space-heavy strings' true
+    /// rendered width (NR-522xxx/#646/#647). That padding scaled with the
+    /// string's space count and was never bounded, so long, multi-word
+    /// NavigationLink labels could grow past their row's real content width and
+    /// overlap the trailing disclosure chevron (NR-546764) — the chevron isn't
+    /// captured as a sibling with reserved space; it's just whatever the label
+    /// widens into. Clamping to `containerMaxX` (the enclosing SwiftUI content
+    /// frame, which already correctly excludes the chevron's reservation) keeps
+    /// the original truncation fix while guaranteeing it can't overshoot.
+    static func clampedWidthOffset(_ rawOffset: CGFloat, frameOriginX: CGFloat, frameWidth: CGFloat, containerMaxX: CGFloat) -> CGFloat {
+        guard rawOffset > 0 else { return rawOffset }
+        let availableWidth = containerMaxX - frameOriginX
+        guard availableWidth > frameWidth else { return 0 }
+        return min(rawOffset, availableWidth - frameWidth)
+    }
+
     // Entry point (renamed for clarity; keep old name if externally referenced)
     static func swiftUIViewThingys(_ view: UIView,
                                    context: SwiftUIContext,
@@ -243,21 +263,35 @@ final class UIHostingViewRecordOrchestrator {
         var viewName = "SwiftUIView"
 
         func makeDetails(widthOffset: CGFloat = 0) -> ViewDetails {
+                    let clampedWidthOffset = UIHostingViewRecordOrchestrator.clampedWidthOffset(
+                        widthOffset,
+                        frameOriginX: frame.origin.x,
+                        frameWidth: frame.size.width,
+                        containerMaxX: baseContext.frame.maxX)
                     let adjustedFrame = CGRect(x: frame.origin.x,
                                                y: frame.origin.y,
-                                               width: frame.size.width + widthOffset,
+                                               width: frame.size.width + clampedWidthOffset,
                                                height: frame.size.height)
-                    
+
+                    // safeColor-validated bridges from CGColor → UIColor. If validation
+                    // fails the underlying CGColor was a dangling pointer (e.g. a
+                    // hosting view being torn down on sign-out) — fall back to .clear /
+                    // nil instead of crashing in CGColorSpaceGetModel. NR-566282.
+                    let bgUIColor: UIColor = (viewAttributes.backgroundColor?.safeColor)
+                        .map(UIColor.init(cgColor:)) ?? .clear
+                    let borderUIColor: UIColor? = (viewAttributes.layerBorderColor?.safeColor)
+                        .map(UIColor.init(cgColor:))
+
                     return ViewDetails(frame: adjustedFrame,
                                 clip: viewAttributes.clip,
-                                backgroundColor: UIColor(cgColor: viewAttributes.backgroundColor ?? UIColor.clear.cgColor),
+                                backgroundColor: bgUIColor,
                                 alpha: viewAttributes.alpha,
                                 isHidden: viewAttributes.isHidden,
                                 viewName: viewName,
                                 parentId: parentId,
                                 cornerRadius: viewAttributes.layerCornerRadius,
                                 borderWidth: viewAttributes.layerBorderWidth,
-                                borderColor: UIColor(cgColor:viewAttributes.layerBorderColor ?? UIColor.clear.cgColor),
+                                borderColor: borderUIColor,
                                 viewId: contentId,
                                 view: originalView,
                                 maskApplicationText: viewAttributes.maskApplicationText,

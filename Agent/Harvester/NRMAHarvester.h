@@ -48,6 +48,12 @@ typedef enum {
 
 @property(readonly) NRMAHarvesterState currentState;
 @property(nonatomic,strong) NRMAHarvestData* harvestData;
+
+// Rate-limit (HTTP 429) backoff state. rateLimitBackoffUntil is an absolute
+// reference-date timestamp before which harvest uploads are paused;
+// rateLimitBackoffCount is the number of consecutive 429s driving exponential escalation.
+@property(atomic, assign) NSTimeInterval rateLimitBackoffUntil;
+@property(atomic, assign) NSInteger rateLimitBackoffCount;
 - (void) execute;
 - (void) setAgentConfiguration:(NRMAAgentConfiguration*)agentConfiguration;
 - (void) configureHarvester:(NRMAHarvesterConfiguration*)harvestConfiguration;

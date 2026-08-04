@@ -49,6 +49,7 @@
 - (void)tearDown {
     [NRMASupportMetricHelper processDeferredMetrics];
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
 
     [super tearDown];
 }
@@ -427,6 +428,26 @@
                                                       options:0
                                                         error:nil];
     XCTAssertTrue(decode[0][@"badAttribute"] == nil);
+
+    // Test that an invalid type (NSArray) is rejected and does not appear in the event.
+    NSArray* invalidValue = @[@"an", @"array"];
+    NSDictionary* badAttrs = @{@"invalidType": invalidValue};
+    XCTAssertTrue([analytics addCustomEvent:@"testEvent"
+                             withAttributes:badAttrs]);
+    NSString* json2 = [analytics analyticsJSONString];
+    NSArray* decode2 = [NSJSONSerialization JSONObjectWithData:[json2 dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:0
+                                                         error:nil];
+    // Find the event with eventType "testEvent"
+    NSDictionary* testEvent = nil;
+    for (NSDictionary* evt in decode2) {
+        if ([evt[@"eventType"] isEqualToString:@"testEvent"]) {
+            testEvent = evt;
+            break;
+        }
+    }
+    XCTAssertNotNil(testEvent);
+    XCTAssertNil(testEvent[@"invalidType"]);
 
 }
 
@@ -1112,6 +1133,26 @@
                                                       options:0
                                                         error:nil];
     XCTAssertTrue(decode[0][@"badAttribute"] == nil);
+
+    // Test that an invalid type (NSArray) is rejected and does not appear in the event.
+    NSArray* invalidValue = @[@"an", @"array"];
+    NSDictionary* badAttrs = @{@"invalidType": invalidValue};
+    XCTAssertTrue([analytics addCustomEvent:@"testEvent"
+                             withAttributes:badAttrs]);
+    NSString* json2 = [analytics analyticsJSONString];
+    NSArray* decode2 = [NSJSONSerialization JSONObjectWithData:[json2 dataUsingEncoding:NSUTF8StringEncoding]
+                                                       options:0
+                                                         error:nil];
+    // Find the event with eventType "testEvent"
+    NSDictionary* testEvent = nil;
+    for (NSDictionary* evt in decode2) {
+        if ([evt[@"eventType"] isEqualToString:@"testEvent"]) {
+            testEvent = evt;
+            break;
+        }
+    }
+    XCTAssertNotNil(testEvent);
+    XCTAssertNil(testEvent[@"invalidType"]);
 
 }
 

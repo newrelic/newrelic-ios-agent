@@ -26,6 +26,7 @@
 #import "NRMATaskQueue.h"
 #import "NRMAMetric.h"
 #import "NRMACrashReporterRecorder.h"
+#import "Constants.h"
 
 @interface NRMAExceptionHandlerManager  ()
 #if !TARGET_OS_WATCH
@@ -109,7 +110,16 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
         if ([_crashReporter hasPendingCrashReport]) {
             // Here we process pending crash reports.
             // This would possibly mean the last session ended in a crash.
-            [_reportManager processReportsWithSessionAttributes:attributes
+
+            // Check if there are session replay frames for this crashed session
+            // If so, retroactively add the hasReplay attribute
+            NSMutableDictionary *modifiedAttributes = attributes ? [attributes mutableCopy] : [NSMutableDictionary new];
+            if ([self hasSessionReplayFrames]) {
+                NRLOG_AGENT_DEBUG(@"Found session replay frames for crashed session - adding hasReplay attribute");
+                modifiedAttributes[kNRMA_RA_hasReplay] = @YES;
+            }
+
+            [_reportManager processReportsWithSessionAttributes:modifiedAttributes
                                                 analyticsEvents:events];
 
             NRMAReachability* r = [NewRelicInternalUtils reachability];
@@ -121,8 +131,13 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
             }
         }
         else {
-            // Clear saved crashed sessions from Mobile Session Replay
-            [self clearSessionReplayFrames];
+            if ([self previousSessionWasInSessionReplayErrorMode]) {
+                // No crash occurred and the previous session was recording session replay in
+                // error mode, where frames are only buffered to disk and uploaded when an
+                // error/crash happens. With no crash, those buffered frames are now stale and
+                // can be cleared.
+                [self clearSessionReplayFrames];
+            }
         }
         self.handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:_crashReporter];
 #endif
@@ -237,11 +252,71 @@ static const NSString* __memoryUsageLock = @"Lock";
     }
 }
 
+// Determines whether the previous session left a stale error-mode session replay buffer.
+// While recording in error mode, session replay drops a marker file into the frames folder
+// (see NRMASessionReplay.processFrameToFile) and removes it when it leaves error mode. So the
+// marker's presence here means the previous session ended while still in error mode.
+- (BOOL) previousSessionWasInSessionReplayErrorMode
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *markerPath = [[documentsDirectory stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder]
+                            stringByAppendingPathComponent:kNRMA_SessionReplayErrorMode_marker];
+
+    return [[NSFileManager defaultManager] fileExistsAtPath:markerPath];
+}
+
+- (BOOL) hasSessionReplayFrames
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *framesDirectory = [documentsDirectory stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder];
+
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    BOOL isDirectory = NO;
+
+    // Check if SessionReplayFrames directory exists
+    if (![fileManager fileExistsAtPath:framesDirectory isDirectory:&isDirectory] || !isDirectory) {
+        return NO;
+    }
+
+    // Check if there are any session directories with frames
+    NSError *error = nil;
+    NSArray *contents = [fileManager contentsOfDirectoryAtPath:framesDirectory error:&error];
+    if (error) {
+        NRLOG_AGENT_DEBUG(@"Error reading SessionReplayFrames directory: %@", error.localizedDescription);
+        return NO;
+    }
+
+    // Look for session directories (UUIDs) or upload URL files
+    for (NSString *item in contents) {
+        NSString *itemPath = [framesDirectory stringByAppendingPathComponent:item];
+        BOOL itemIsDirectory = NO;
+        [fileManager fileExistsAtPath:itemPath isDirectory:&itemIsDirectory];
+
+        // Check for session directories or upload URL files
+        if (itemIsDirectory) {
+            // Check if this session directory has any frame files
+            NSArray *sessionContents = [fileManager contentsOfDirectoryAtPath:itemPath error:nil];
+            for (NSString *file in sessionContents) {
+                if ([file hasPrefix:@"frame_"] && [file hasSuffix:@".json"]) {
+                    return YES;
+                }
+            }
+        } else if ([item hasSuffix:@"_upload_url.txt"]) {
+            // Found an upload URL file, indicating there was session replay data
+            return YES;
+        }
+    }
+
+    return NO;
+}
+
 - (void) clearSessionReplayFrames
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *framesDirectory = [documentsDirectory stringByAppendingPathComponent:@"SessionReplayFrames"];
+    NSString *framesDirectory = [documentsDirectory stringByAppendingPathComponent:kNRMA_SessionReplayFrames_folder];
 
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if ([fileManager fileExistsAtPath:framesDirectory]) {

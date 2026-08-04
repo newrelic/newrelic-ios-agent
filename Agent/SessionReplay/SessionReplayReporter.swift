@@ -21,10 +21,31 @@ public class SessionReplayReporter: NSObject {
     private let url: NSString
     private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
     private var pendingUploads = 0
+    private var pendingOfflineUploads = 0
+    private var offlineUploadMetricSize: Int = 0
+    private let offlineStorage: NRMAOfflineStorage
+
+    // HTTP Header Constants
+    private static let kContentTypeHeader = "Content-Type"
+    private static let kContentEncodingHeader = "Content-Encoding"
+    private static let kAcceptEncodingHeader = "Accept-Encoding"
+    private static let kContentLengthHeader = "Content-Length"
+    private static let kAppLicenseKeyHeader = "X-App-License-Key"
+    private static let kOctetStreamContentType = "application/octet-stream"
+    private static let kGzipEncoding = "gzip"
+    private static let kPostMethod = "POST"
 
     @objc public init(applicationToken: String, url: NSString) {
         self.applicationToken = applicationToken
         self.url = url
+        self.offlineStorage = NRMAOfflineStorage(endpoint: "sessionreplay")
+        super.init()
+
+        // Set max offline storage size if configured
+        if let _ = NRMAAgentConfiguration.connectionInformation() {
+            let maxSize = NRMAAgentConfiguration.getMaxOfflineStorageSize()
+            self.offlineStorage.setMaxOfflineStorageSize(maxSize)
+        }
     }
 
     func enqueueSessionReplayUpload(upload: SessionReplayData) {
@@ -148,8 +169,8 @@ public class SessionReplayReporter: NSObject {
             NRLOG_AGENT_DEBUG("Error accessing harvester configuration information")
             return nil
         }
-        guard let cStringAppVersion: UnsafePointer<CChar> = NRMA_getAppVersion(), let appVersion = String(validatingUTF8: cStringAppVersion) else {
-            NRLOG_AGENT_DEBUG("Error accessing app version information")
+        guard let connectionInfo = NRMAAgentConfiguration.connectionInformation() else {
+            NRLOG_AGENT_DEBUG("Error accessing connection information")
             return nil
         }
         var attributes: [String: String] = [
@@ -158,14 +179,20 @@ public class SessionReplayReporter: NSObject {
             "rrweb.version": "^2.0.0-alpha.17",
             "payload.type": "standard",
             "hasMeta": String(true),
+            "hasReplay": String(true),
             "decompressedBytes": String(uncompressedDataSize),
             "replay.firstTimestamp": String(Int(firstTimestamp)),
             "replay.lastTimestamp": String(Int(lastTimestamp)),
-            "appVersion": appVersion,
+            "appVersion": {
+                guard let applicationInformation = connectionInfo.applicationInformation,
+                      let appVersion = applicationInformation.appVersion as String? else {
+                    return "unknown"
+                }
+                return appVersion
+            }(),
             "instrumentation.provider": "mobile",
             "instrumentation.name": {
-                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
-                      let deviceInfo = connectionInfo.deviceInformation else {
+                guard let deviceInfo = connectionInfo.deviceInformation else {
                     return NewRelicInternalUtils.agentName()
                 }
                 let platform = deviceInfo.platform
@@ -174,8 +201,7 @@ public class SessionReplayReporter: NSObject {
                     : NewRelicInternalUtils.string(from: platform)
             }(),
             "instrumentation.version": {
-                guard let connectionInfo = NRMAAgentConfiguration.connectionInformation(),
-                      let deviceInfo = connectionInfo.deviceInformation,
+                guard let deviceInfo = connectionInfo.deviceInformation,
                       let platformVersion = deviceInfo.platformVersion as String? else {
                     return NewRelicInternalUtils.agentVersion()
                 }
@@ -184,7 +210,7 @@ public class SessionReplayReporter: NSObject {
             "collector.name": NewRelicInternalUtils.agentName()
         ]
         if isGZipped {
-            attributes["content_encoding"] = "gzip"
+            attributes["content_encoding"] = Self.kGzipEncoding
         }
         do {
             if let agent = NewRelicAgentInternal.sharedInstance(), let analyticsController = agent.analyticsController, let sessionAttributes = analyticsController.sessionAttributeJSONString(),

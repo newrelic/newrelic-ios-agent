@@ -9,6 +9,7 @@
 
 #import <OCMock/OCMock.h>
 #import <objc/runtime.h>
+#import <objc/message.h>
 #import <UIKit/UIKit.h>
 
 #import "NRMethodProfilerTests.h"
@@ -171,6 +172,65 @@ id NRMA__blk_ptrParamHandler(id self, SEL selector, id p1);
 
 @end
 
+// Mimics a .NET MAUI/Xamarin dynamic class hierarchy where the child's
+// [super _cmd] dispatch is broken: xamarin_dyn_objc_msgSendSuper re-dispatches
+// the super call back to the SAME class instead of the real superclass. We
+// reproduce that exactly with an objc_super struct whose super_class points at
+// the child class itself, so the (NR-swizzled) method re-enters on the same
+// class and the acting class never advances up the hierarchy.
+@interface NRMAXamarinSuper : NSObject
+@property (nonatomic) NSInteger parentCallCount;
+- (void) xamarinLayout;
+@end
+
+@implementation NRMAXamarinSuper
+- (void) xamarinLayout
+{
+    // Real parent implementation — terminates the chain. The fix must land here.
+    self.parentCallCount++;
+}
+@end
+
+@interface NRMAXamarinChild : NRMAXamarinSuper
+@end
+
+@implementation NRMAXamarinChild
+- (void) xamarinLayout
+{
+    // What this "should" be is [super xamarinLayout]. Xamarin's trampoline instead
+    // builds a super struct whose super_class is THIS class, so objc_msgSendSuper
+    // restarts lookup at NRMAXamarinChild and re-enters the swizzled method.
+    struct objc_super sup = { self, [NRMAXamarinChild class] };
+    ((void(*)(struct objc_super*, SEL))objc_msgSendSuper)(&sup, @selector(xamarinLayout));
+}
+@end
+
+// Reproduces the production CoreData host-crash. NSManagedObjectContext is a direct
+// NSObject subclass; when NRMA__beginMethod misclassifies a call on such a class as a
+// [super _cmd] dispatch it walks ONE level up — to NSObject — which owns no
+// NRMAMethodOverride_ variant. The unfixed agent @threw an NSException there, and that
+// throw originates outside the @try in every *ParamHandler, so it unwinds uncaught into
+// the host app and terminates it (NRInvalidArgumentException, "unrecognized selector
+// 'executeFetchRequest:error:' sent to 'NSObject'"). This helper mirrors that shape:
+// a direct NSObject subclass whose renamed original lives only on itself.
+static BOOL __nrmaConflictOriginalRan;
+
+@interface NRMACoreDataConflictObject : NSObject
+- (id) nrmaFetch:(id)request error:(id)error;
+@end
+
+@implementation NRMACoreDataConflictObject
+// Occupies the slot that, in production, holds NR's trampoline (executeFetchRequest:error:).
+- (id) nrmaFetch:(id)request error:(id)error { return nil; }
+// The renamed original that NR's swizzle installs. The crash-recovery fallback must
+// resolve to THIS implementation so the app's real method still runs, untraced.
+- (id) NRMAMethodOverride_nrmaFetch:(id)request error:(id)error
+{
+    __nrmaConflictOriginalRan = YES;
+    return @"original-ran";
+}
+@end
+
 //NRMAMethodProfiler methods
 NSDictionary* ClassesGetSubclasses(NSSet* parents);
 NSMutableDictionary* NRMA__generateClassTrees(NSSet* parents);
@@ -201,6 +261,8 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
                           @"DummyControllerChild",
                           @"DummyControllerSubChild",
                           @"NRMAImage",
+                          @"NRMAXamarinSuper",
+                          @"NRMAXamarinChild",
                           nil];
         
     });
@@ -215,7 +277,8 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
         __traceMethodList = @{
                               @"SwizzleParent":@[@"swizzleMe:", @"callMe:", @"callMe:withBlock:"],
                               @"UIViewController":@[@"viewWillAppear:"],
-                              @"UIImage":@[@"imageWithData:"]
+                              @"UIImage":@[@"imageWithData:"],
+                              @"NRMAXamarinSuper":@[@"xamarinLayout"]
                             };
     });
     
@@ -406,6 +469,29 @@ void NRMA__generateAndSwizzleMethod(NSString* className,NSString* methodName);
 {
     DummyControllerSubChild* c = [[DummyControllerSubChild alloc] initWithCollectionViewLayout:[[UICollectionViewLayout alloc] init]];
     [c viewWillAppear:NO];
+}
+
+- (void) testXamarinStyleNonAdvancingSuperDoesNotRecurseInfinitely
+{
+    // Regression test for the Xamarin/MAUI infinite-recursion crash.
+    //
+    // NRMAXamarinChild.xamarinLayout dispatches a [super xamarinLayout] whose
+    // objc_super.super_class points back at NRMAXamarinChild itself (exactly what
+    // xamarin_dyn_objc_msgSendSuper does). After NR swizzles xamarinLayout, that
+    // dispatch re-enters the swizzled handler on the same class with a matching
+    // method color, so the acting class never advances.
+    //
+    // On unfixed code this recurses until the stack overflows and the test process
+    // is killed. With the non-advancing-recursion guard in NRMA__beginMethod, the
+    // forced super-advance reaches NRMAXamarinSuper's real implementation once and
+    // the chain terminates.
+    NRMAMethodProfiler* methodProfiler = [[NRMAMethodProfiler alloc] init];
+    [methodProfiler startMethodReplacement];
+
+    NRMAXamarinChild* child = [[NRMAXamarinChild alloc] init];
+    [child xamarinLayout];
+
+    XCTAssertEqual(child.parentCallCount, 1, @"forced super-advance should reach the parent implementation exactly once");
 }
 
 - (void) testClassGetSubclasses
@@ -602,6 +688,47 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
     XCTAssertEqual([[NRMAMethodProfiler actualTraceList] count], 0);
 
     [NewRelic enableFeatures:NRFeatureFlag_DefaultInteractions];
+}
+
+// Regression test for the CoreData host-crash:
+// NRInvalidArgumentException, "unrecognized selector 'executeFetchRequest:error:'
+// sent to 'NSObject'", thrown from NRMA__beginMethod and unwound uncaught into the host.
+//
+// NRMA__beginMethod misclassifies a call on a direct NSObject subclass as a [super _cmd]
+// dispatch (the receiver's effective class carries no method color — e.g. a KVO/dynamic
+// subclass or a 3rd-party CoreData swizzle), walks one level up to NSObject, finds no
+// NRMAMethodOverride_ variant there, and on the unfixed agent @throws. Because that throw
+// happens at the beginMethod call site — OUTSIDE the @try that each *ParamHandler wraps
+// around the actual invocation — it escapes into the host app and terminates the process.
+//
+// The agent must instead degrade gracefully: never throw into the host, and return the
+// receiver's real (renamed) implementation so the app's method still runs, just untraced.
+- (void) testBeginMethodRecoversWhenInstrumentedOriginalIsUnresolvable
+{
+    __nrmaConflictOriginalRan = NO;
+    NRMACoreDataConflictObject* obj = [[NRMACoreDataConflictObject alloc] init];
+
+    SEL selector = @selector(nrmaFetch:error:);
+    BOOL isTargetColor = NO;
+    NRMATrace* trace = nil;
+
+    // No color is registered for NRMACoreDataConflictObject.nrmaFetch:error:, so beginMethod
+    // treats the call as a super dispatch and walks up to NSObject (no override there) —
+    // the exact production failure path. This must NOT throw into the host.
+    __block IMP imp = NULL;
+    XCTAssertNoThrow(imp = NRMA__beginMethod(obj, selector, NRMAMethodColorBlack, &isTargetColor, &trace),
+                     @"beginMethod must never throw into the host when the instrumented original can't be resolved");
+    XCTAssertTrue(imp != NULL, @"beginMethod must return a usable IMP so the app's method still runs");
+
+    // Behavioral contract: the recovered IMP runs the receiver's real (renamed) original.
+    id result = ((id(*)(id,SEL,id,id))imp)(obj, selector, nil, nil);
+    XCTAssertTrue(__nrmaConflictOriginalRan, @"the app's original implementation must run via the fallback IMP");
+    XCTAssertEqualObjects(result, @"original-ran", @"the fallback must return the original method's real result");
+    XCTAssertNil(trace, @"no trace should be created for an unresolved/uninstrumented call");
+
+    // endMethod must balance the per-(self,selector) state without throwing.
+    XCTAssertNoThrow(NRMA__endMethod(obj, selector, isTargetColor, trace),
+                     @"endMethod must balance state without throwing");
 }
 
 @end

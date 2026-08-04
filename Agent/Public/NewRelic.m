@@ -176,10 +176,10 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-
-    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception];
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
+
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception];
 }
 
 + (void) recordHandledException:(NSException*)exception
@@ -189,11 +189,11 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
-                                                                                    attributes:attributes];
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledException:exception
+                                                                                    attributes:attributes];
 }
 
 + (void)recordHandledExceptionWithStackTrace:(NSDictionary* _Nonnull)exceptionDictionary {
@@ -202,11 +202,11 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-
-    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
+    [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordHandledExceptionWithStackTrace:exceptionDictionary];
+    
 }
 
 + (void) recordError:(NSError* _Nonnull)error {
@@ -215,11 +215,11 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:nil];
-    
-    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) recordError:(NSError* _Nonnull)error
@@ -229,11 +229,11 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
                                                                          attributes:attributes];
-    
-    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 }
 
 + (void) setPlatform:(NRMAApplicationPlatform)platform {
@@ -649,43 +649,38 @@
 }
 
 + (BOOL) setUserId:(NSString* _Nullable)userId {
-    NSString *previousUserId = [[NewRelicAgentInternal sharedInstance] getUserId];
+    NewRelicAgentInternal *agent = [NewRelicAgentInternal sharedInstance];
+    if (!agent || agent.isShutdown) {
+        return NO;
+    }
 
-    BOOL newSession = false;
-    
-    // If userId has been set before and is different from the current userId, then we need to start a new session.
-    if ([previousUserId isEqualToString: userId] == NO) {
-        // end session and harvest.
-        newSession = true;
-    }
-        // Do nothing if passed userId is null and saved userId (for this app session (since app launch)) is null.
-    if (userId == nil) {
-        // end session and harvest.
-        newSession = true;
-    }
+    NSString *previousUserId = [agent getUserId];
+
+    // A new session is only started when a non-nil userId is being replaced with a different value
+    // (including nil). Setting a userId for the first time (previousUserId == nil) continues the
+    // current session so early-startup data is not lost.
+    BOOL newSession = (previousUserId != nil) && ([previousUserId isEqualToString:userId] == NO);
 
     NRLOG_AGENT_VERBOSE(@"setUserId: %@ and previousUserId: %@ and will start newSession=%d", userId, previousUserId, newSession);
 
     if (newSession) {
-        [[[NewRelicAgentInternal sharedInstance] analyticsController] newSession];
-        
-        [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
-
-        // Perform harvest
-        [self harvestNow];
-
-        [[NewRelicAgentInternal sharedInstance] sessionStartInitialization];
+        // userId changed — end the current session and harvest its data under the previous userId,
+        // then start a new session and apply the new userId to it. userId is set synchronously here so getUserId() is consistent.
+        agent.userId = userId;
+        [agent startNewSessionForUserId:userId];
+        return YES;
     }
-    
-    // Update in memory userId.
-    [NewRelicAgentInternal sharedInstance].userId = userId;
 
-    BOOL success = [[NewRelicAgentInternal sharedInstance].analyticsController setSessionAttribute:kNRMA_Attrib_userId
-                                                                                             value:userId
-                                                                                        persistent:YES];
-    // If passed userId == NULL , remove UserId attribute.
-    if (userId == NULL) {
-        success = [[NewRelicAgentInternal sharedInstance].analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
+    // No userId was previously set — continue the current session and apply the userId to it.
+    agent.userId = userId;
+
+    BOOL success;
+    if (userId) {
+        success = [agent.analyticsController setSessionAttribute:kNRMA_Attrib_userId
+                                                 value:userId
+                                            persistent:YES];
+    } else {
+        success = [agent.analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
     }
 
     return success;
@@ -761,6 +756,12 @@
         return false;
     }
 
+    // Check if JSError feature flag is enabled
+    if (![NRMAFlags shouldEnableJSErrorEvents]) {
+        NRLOG_AGENT_VERBOSE(@"JS Error reporting is disabled via feature flag. Cannot record JS error.");
+        return false;
+    }
+
 #if TARGET_OS_IOS
     // Get the JS Error Controller (iOS only - for React Native)
     JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
@@ -769,6 +770,8 @@
         NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
         return false;
     }
+    
+    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
     // Route to JS Error Controller for Mobile Errors Protocol
     [jsErrorController recordJSError:name

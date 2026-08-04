@@ -23,8 +23,13 @@ class UtilViewModel {
     var badAttribute = false
     var attributes = ""
     var events = 0 
+    var count: Int = 0
 
     var uniqueInteractionTraceIdentifier: String? =  nil
+
+    var isUserIdCyclingActive = false
+    private let cycleUserIds: [String?] = ["user_1", "user_2", "user_3", "testID", "Bob", nil]
+    private var cycleUserIdIndex = 0
 
     let taskProcessor = TaskProcessor()
     let taskProcessor2 = TaskProcessorNoDidRcvResp()
@@ -45,6 +50,9 @@ class UtilViewModel {
         options.append(UtilOption(title: "Set UserID to testID", handler: { [self] in changeUserID()}))
         options.append(UtilOption(title: "Set UserID to Bob", handler: { [self] in changeUserID2()}))
         options.append(UtilOption(title: "Set UserID to null", handler: { [self] in changeUserIDToNil()}))
+
+        options.append(UtilOption(title: "Start Random UserId Cycling", handler: { [self] in startUserIdCycling()}))
+        options.append(UtilOption(title: "Stop Random UserId Cycling", handler: { [self] in stopUserIdCycling()}))
 
         options.append(UtilOption(title: "Make 100 events", handler: { [self] in make100Events()}))
         options.append(UtilOption(title: "Start Interaction Trace", handler: { [self] in startInteractionTrace()}))
@@ -68,6 +76,7 @@ class UtilViewModel {
         options.append(UtilOption(title: "Make 100 Special Character Logs", handler: { [self] in make100SpecialCharacterLogs()}))
 
         options.append(UtilOption(title: "URLSession dataTask", handler: { [self] in doDataTask()}))
+        options.append(UtilOption(title: "Record JavaScript Error", handler: { [self] in recordJavascriptError()}))
         options.append(UtilOption(title: "Shut down New Relic Agent", handler: { [self] in shutDown()}))
     }
 
@@ -90,8 +99,8 @@ class UtilViewModel {
         do {
             try errorMethod()
         } catch {
-            NewRelic.recordError(error)
-            
+            NewRelic.recordError(error, attributes: ["id": count])
+            count += 1
         }
     }
     
@@ -108,6 +117,30 @@ class UtilViewModel {
 
     func changeUserIDToNil() {
         NewRelic.setUserId(nil)
+    }
+
+    func startUserIdCycling() {
+        guard !isUserIdCyclingActive else { return }
+        isUserIdCyclingActive = true
+        scheduleNextUserIdChange()
+    }
+
+    func stopUserIdCycling() {
+        isUserIdCyclingActive = false
+    }
+
+    private func scheduleNextUserIdChange() {
+        let delay = Double.random(in: 5...30)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self, self.isUserIdCyclingActive else { return }
+            let userId = self.cycleUserIds[self.cycleUserIdIndex % self.cycleUserIds.count]
+            NewRelic.setUserId(userId)
+            if let userId {
+                NewRelic.recordBreadcrumb(userId, attributes: ["cycleUserIdIndex": self.cycleUserIdIndex])
+            }
+            self.cycleUserIdIndex += 1
+            self.scheduleNextUserIdChange()
+        }
     }
 
     func makeValidBreadcrumb() {
@@ -259,6 +292,19 @@ class UtilViewModel {
         let dataTask = urlSession.dataTask(with: request)
 
         dataTask.resume()
+    }
+
+    func recordJavascriptError() {
+        NewRelic.recordJavascriptError(
+            "TypeError",
+            message: "Cannot read property 'foo' of undefined",
+            stackTrace: "at myFunction (app.js:42:15)\nat anotherFunction (app.js:30:5)\nat main (app.js:10:3)",
+            isFatal: false,
+            additionalAttributes: [
+                "component": "TestComponent",
+                "cause": "Felt like it."
+            ]
+        )
     }
 
     @objc func make100SpecialCharacterLogs() {

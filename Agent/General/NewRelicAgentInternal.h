@@ -82,6 +82,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) applicationWillEnterForeground;
 - (void) sessionStartInitialization;
+- (void) startNewSessionForUserId:(NSString* _Nullable)userId;
 + (NewRelicAgentInternal* _Nullable) sharedInstance;
 
 - (NSString*) currentSessionId;

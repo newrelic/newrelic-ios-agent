@@ -11,6 +11,7 @@
 
 #import "NRMAMetric.h"
 #import "NRMATaskQueue.h"
+#import "NRMAExceptionHandler.h"
 #import "NRMAAssociate.h"
 #import "NRMAMethodSwizzling.h"
 #import "NRMASupportMetricHelper.h"
@@ -29,5 +30,7 @@
 #import "NRMAAttributeValidator.h"
 #import "NRMAAppToken.h"
 #import "NRMAHarvesterConfiguration.h"
+#import "NRMAFlags.h"
+#import "NRMAOfflineStorage.h"
 
 #endif /* APrivateHeader_h */

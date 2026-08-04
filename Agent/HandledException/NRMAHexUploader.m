@@ -11,8 +11,13 @@
 #import "NRLogger.h"
 #import "NRMASupportMetricHelper.h"
 #import "NRConstants.h"
+#import "NewRelicInternalUtils.h"
+#import "NRMAReachability.h"
 
 #define kNRMAHexRetryLimit 5
+
+static const NSTimeInterval kNRMAHexRequestTimeout = 30.0;
+static const NSTimeInterval kNRMAHexResourceTimeout = 60.0;
 
 @interface NRMAHexUploader()
 @property(strong) NSString* host;
@@ -26,7 +31,11 @@
     self = [super init];
     if (self) {
         self.host = host;
+
         NSURLSessionConfiguration* sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
+        sessionConfiguration.timeoutIntervalForRequest = kNRMAHexRequestTimeout;
+        sessionConfiguration.timeoutIntervalForResource = kNRMAHexResourceTimeout;
+
         self.session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
         self.orchestrator = [[NRMARetryOrchestrator alloc] initWithInitialDelay:1.0 maxDelay:16.0];
     }
@@ -34,32 +43,39 @@
 }
 
 - (void) sendData:(NSData*)data {
-    if (data == nil) return;
+    [self sendData:data reportId:nil completion:nil];
+}
+
+- (void) sendData:(NSData*)data reportId:(NSString*)reportId completion:(void(^)(BOOL shouldRemove))completion {
+    if (data == nil) {
+        if (completion) completion(NO);
+        return;
+    }
+
+    if ([data length] > kNRMAMaxPayloadSizeLimit) {
+        NRLOG_AGENT_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
+        [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
+        if (completion) completion(YES);
+        return;
+    }
 
     NSMutableURLRequest* request = [self newPostWithURI:self.host];
-    if (request == nil) return;
+    if (request == nil) {
+        if (completion) completion(NO);
+        return;
+    }
 
     request.HTTPMethod = @"POST";
     [request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)data.length] forHTTPHeaderField:@"Content-Length"];
 
-    if ([data length] > kNRMAMaxPayloadSizeLimit) {
-        NRLOG_AGENT_ERROR(@"Hex uploader handled exceptions payload is greater than 1 MB, discarding payload");
-        [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"f"];
-        return;
-    }
-
     NRLOG_AGENT_VERBOSE(@"NEWRELIC HEX UPLOADER - Hex Upload started: %@", request);
 
-    NSMutableURLRequest *modifiedRequest = [request mutableCopy];
-    [modifiedRequest setHTTPBody:nil];
-
     NSURLSession *session = self.session;
+    unsigned long dataLength = (unsigned long)data.length;
 
-    // Async executeRequest: fires a completion-handler upload task and delivers
-    // the result via onResponse. Each retry creates a fresh task.
     NRMAExecuteRequestBlock executeRequest = ^(void (^onResponse)(NSHTTPURLResponse*, NSData*, NSError*)) {
-        [[session uploadTaskWithRequest:modifiedRequest
+        [[session uploadTaskWithRequest:request
                                fromData:data
                       completionHandler:^(NSData *responseBody, NSURLResponse *response, NSError *error) {
             NRLOG_AGENT_DEBUG(@"NEWRELIC HEX UPLOADER - Hex Upload response: %@", response);
@@ -71,7 +87,6 @@
         }] resume];
     };
 
-    // Retry on network errors or any HTTP 4xx/5xx.
     BOOL (^shouldRetry)(NSHTTPURLResponse *, NSError *) = ^BOOL(NSHTTPURLResponse *response, NSError *error) {
         if (error != nil) return YES;
         return response.statusCode >= 400;
@@ -82,19 +97,21 @@
                                  shouldRetry:shouldRetry
                                 waitForDelay:[NRMARetryOrchestrator asyncWaitForDelayOnQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)]
                                   completion:^(NSHTTPURLResponse *response, NSData *responseBody, NSError *error, NSInteger retryCount) {
-        if (error == nil && response.statusCode < 400) {
+        BOOL success = (error == nil && response.statusCode < 400);
+        if (success) {
             NRLOG_AGENT_DEBUG(@"NEWRELIC HEX UPLOADER - Handled exception upload completed successfully");
             [NRMASupportMetricHelper enqueueDataUseMetric:@"f"
-                                                     size:[modifiedRequest.HTTPBody length]
+                                                     size:dataLength
                                                  received:response.expectedContentLength];
         } else {
             NRLOG_AGENT_DEBUG(@"NEWRELIC HEX UPLOADER - Handled exception report max upload attempts reached. abandoning report.");
         }
+        if (completion) completion(success);
     }];
 }
 
 - (void) retryFailedTasks {
-    // Retries are now handled immediately by NRMARetryOrchestrator inside sendData:.
+    // Retries are handled immediately by NRMARetryOrchestrator inside sendData:.
 }
 
 - (void) invalidate {
@@ -102,6 +119,7 @@
 }
 
 - (void) dealloc {
+    [_session finishTasksAndInvalidate];
 }
 
 @end

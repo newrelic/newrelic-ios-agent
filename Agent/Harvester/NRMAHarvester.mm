@@ -7,6 +7,7 @@
 //
 
 #import "NRMAHarvester.h"
+#import <math.h>
 #import "NRLogger.h"
 #import "NRMAMeasurements.h"
 #import "NRTimer.h"
@@ -26,6 +27,11 @@
 #import "NRAutoLogCollector.h"
 
 #define kNRSupportabilityResponseCode kNRSupportabilityPrefix @"/Collector/ResponseStatusCodes"
+
+// Rate-limit (HTTP 429) backoff bounds. When the collector does not provide a
+// Retry-After header we escalate exponentially from the base, capped at the max.
+static const NSTimeInterval kNRMARateLimitBaseBackoffSeconds = 60.0;
+static const NSTimeInterval kNRMARateLimitMaxBackoffSeconds  = 600.0;
 
 @interface NRMAHarvester (privateMethods)
 
@@ -192,14 +198,78 @@
 
 - (void) configureHarvester:(NRMAHarvesterConfiguration*)harvestConfiguration
 {
-    NewRelic::Application::getInstance().setContext(NewRelic::ApplicationContext([[NSString stringWithFormat:@"%lld", harvestConfiguration.account_id] cStringUsingEncoding:NSUTF8StringEncoding],
-                                                                                 [[NSString stringWithFormat:@"%lld", harvestConfiguration.application_id] cStringUsingEncoding:NSUTF8StringEncoding],
-                                                                                 [[NSString stringWithFormat:@"%@", harvestConfiguration.trusted_account_key] cStringUsingEncoding:NSUTF8StringEncoding]));
+    if (![harvestConfiguration isKindOfClass:[NRMAHarvesterConfiguration class]]) {
+        NRLOG_AGENT_ERROR(@"configureHarvester: invalid configuration; skipping.");
+        return;
+    }
 
-    self.harvestData.dataToken = harvestConfiguration.data_token;
-    connection.serverTimestamp = harvestConfiguration.server_timestamp;
-    connection.crossProcessID  = harvestConfiguration.cross_process_id;
-    connection.requestHeadersMap = harvestConfiguration.request_header_map;
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        // Snapshot values into strong locals up front. Several object-typed properties on
+        // NRMAHarvesterConfiguration are declared 'assign' (e.g. request_header_map), so the
+        // backing object can be deallocated while the property still holds the pointer. Pulling
+        // values once and copying object types up front contains that risk to one wrapped block.
+        long long accountId = harvestConfiguration.account_id;
+        long long applicationId = harvestConfiguration.application_id;
+        NSString* trustedAccountKey = harvestConfiguration.trusted_account_key;
+        NRMADataToken* dataToken = harvestConfiguration.data_token;
+        long long serverTimestamp = harvestConfiguration.server_timestamp;
+        NSString* crossProcessID = harvestConfiguration.cross_process_id;
+
+        NSDictionary* requestHeaders = nil;
+        @try {
+            id rawHeaders = harvestConfiguration.request_header_map;
+            if ([rawHeaders isKindOfClass:[NSDictionary class]]) {
+                requestHeaders = [(NSDictionary*)rawHeaders copy];
+            }
+        } @catch (NSException* exception) {
+            NRLOG_AGENT_ERROR(@"configureHarvester: invalid request_header_map; ignoring.");
+            requestHeaders = nil;
+        }
+
+        // Keep the NSStrings alive for the lifetime of the setContext call so the C string
+        // pointers we hand to ApplicationContext remain valid.
+        NSString* accountIdString = [NSString stringWithFormat:@"%lld", accountId];
+        NSString* applicationIdString = [NSString stringWithFormat:@"%lld", applicationId];
+        NSString* trustedAccountKeyString = [NSString stringWithFormat:@"%@", trustedAccountKey ?: @""];
+
+        const char* accountIdCStr = [accountIdString cStringUsingEncoding:NSUTF8StringEncoding] ?: "";
+        const char* applicationIdCStr = [applicationIdString cStringUsingEncoding:NSUTF8StringEncoding] ?: "";
+        const char* trustedAccountKeyCStr = [trustedAccountKeyString cStringUsingEncoding:NSUTF8StringEncoding] ?: "";
+
+        NewRelic::Application::getInstance().setContext(NewRelic::ApplicationContext(accountIdCStr,
+                                                                                     applicationIdCStr,
+                                                                                     trustedAccountKeyCStr));
+
+        // Mutate the shared connection/harvestData state under the same lock that
+        // -execute holds, so a reconfigure can never interleave with an in-flight
+        // harvest cycle and leave the connection in a half-updated state.
+        @synchronized(self) {
+            NRMAHarvestData* localHarvestData = self.harvestData;
+            if (localHarvestData != nil) {
+                localHarvestData.dataToken = dataToken;
+            } else {
+                NRLOG_AGENT_ERROR(@"configureHarvester: harvestData is nil; skipping data_token assignment.");
+            }
+
+            NRMAHarvesterConnection* localConnection = connection;
+            if (localConnection != nil) {
+                localConnection.serverTimestamp = serverTimestamp;
+                localConnection.crossProcessID  = crossProcessID ?: @"";
+                localConnection.requestHeadersMap = requestHeaders;
+            } else {
+                NRLOG_AGENT_ERROR(@"configureHarvester: connection is nil; skipping connection updates.");
+            }
+        }
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        NRLOG_AGENT_ERROR(@"configureHarvester: caught exception %@: %@", exception.name, exception.reason);
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
+    }
+#endif
 }
 
 - (NSString *) applicationIdentifierAsString
@@ -307,6 +377,16 @@
     }
     
     NRLOG_AGENT_VERBOSE(@"Harvester: connected");
+
+    // If we are inside a rate-limit (429) backoff window, pause harvest uploads:
+    // skip the upload entirely and retain the buffered data for after the window,
+    // rather than blindly resending payloads the collector just rejected.
+    NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+    if (self.rateLimitBackoffUntil > now) {
+        NRLOG_AGENT_VERBOSE(@"Harvester: rate-limit backoff active, skipping upload for %.0f more seconds.", self.rateLimitBackoffUntil - now);
+        return;
+    }
+
     NRMAHarvestResponse* response = nil;
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
@@ -348,7 +428,12 @@
 
             // Send Supportability metric when received 409 to indicate that a config update should happen or send it when actual /connect call finishes which refreshes the data.
             [NRMASupportMetricHelper enqueueConfigurationUpdateMetric];
-            
+
+            break;
+        case TOO_MANY_REQUESTS:
+            // The collector is rate-limiting us. Arm a backoff window so the next
+            // harvest cycles pause instead of resending the just-rejected payload.
+            [self handleRateLimitResponse:response];
             break;
         default:
             break;
@@ -360,10 +445,14 @@
             // If the harvest was persisted for offline storage clear the harvest.
             [self.harvestData clear];
         } else {
+            // On a 429 we deliberately retain the buffer so it can be sent after
+            // the backoff window; the backoff guard above prevents an immediate resend.
             [self fireOnHarvestFailure];
         }
     } else {
         // success
+        // A successful (2xx) harvest clears any active rate-limit backoff.
+        [self resetRateLimitBackoff];
         [self.harvestData clear];
         // If there was a successful harvest upload send the persisted offline payloads.
         [connection sendOfflineStorage];
@@ -398,6 +487,33 @@
     }
 #endif
     [self fireOnHarvestComplete];
+}
+
+- (void) handleRateLimitResponse:(NRMAHarvestResponse*)response {
+    NSTimeInterval backoff;
+    if (response.retryAfterSeconds > 0) {
+        // Honor the server-provided Retry-After interval, bounded by our cap.
+        backoff = MIN(response.retryAfterSeconds, kNRMARateLimitMaxBackoffSeconds);
+    } else {
+        // No Retry-After: escalate exponentially from the base, capped at the max.
+        backoff = kNRMARateLimitBaseBackoffSeconds * pow(2.0, (double)self.rateLimitBackoffCount);
+        backoff = MIN(backoff, kNRMARateLimitMaxBackoffSeconds);
+    }
+
+    self.rateLimitBackoffUntil = [NSDate timeIntervalSinceReferenceDate] + backoff;
+    self.rateLimitBackoffCount += 1;
+
+    NRLOG_AGENT_WARNING(@"Harvester: received 429 rate-limit response; pausing harvest uploads for %.0f seconds (attempt %ld).", backoff, (long)self.rateLimitBackoffCount);
+
+    [NRMASupportMetricHelper enqueueRateLimitBackoffMetric:backoff];
+}
+
+- (void) resetRateLimitBackoff {
+    if (self.rateLimitBackoffUntil != 0 || self.rateLimitBackoffCount != 0) {
+        NRLOG_AGENT_VERBOSE(@"Harvester: successful harvest, clearing rate-limit backoff.");
+    }
+    self.rateLimitBackoffUntil = 0;
+    self.rateLimitBackoffCount = 0;
 }
 
 - (BOOL) checkOfflineAndPersist:(NRMAHarvestResponse*) response {
@@ -544,15 +660,32 @@
 
 - (void) transitionToConnected:(NRMAHarvesterConfiguration*)_configuration
 {
-     NRLOG_AGENT_VERBOSE(@"config: transitionToConnected");
+    NRLOG_AGENT_VERBOSE(@"config: transitionToConnected");
 
-    // Called from disconnected.
-    [self configureHarvester:_configuration];
-    
-    [self transition:NRMA_HARVEST_CONNECTED];
-    // Function will immediately send data.
-    [self execute];
-    return;
+    // Validate the inbound configuration before touching it. Sending messages to a
+    // freed/corrupt object here is the suspected root cause of crashes seen at this site.
+    if (![_configuration isKindOfClass:[NRMAHarvesterConfiguration class]]) {
+        NRLOG_AGENT_ERROR(@"transitionToConnected: invalid configuration; aborting transition.");
+        return;
+    }
+
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    @try {
+#endif
+        // Called from disconnected.
+        [self configureHarvester:_configuration];
+
+        [self transition:NRMA_HARVEST_CONNECTED];
+        // Function will immediately send data.
+        [self execute];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+    } @catch (NSException* exception) {
+        NRLOG_AGENT_ERROR(@"transitionToConnected: caught exception %@: %@", exception.name, exception.reason);
+        [NRMAExceptionHandler logException:exception
+                                     class:NSStringFromClass([self class])
+                                  selector:NSStringFromSelector(_cmd)];
+    }
+#endif
 }
 
 - (NRMAHarvesterConfiguration*) configureFromCollector:(NRMAHarvestResponse*)response
@@ -644,129 +777,154 @@
 
 - (void) fireOnHarvestBefore
 {
+    // Enumerate a snapshot of the listeners: a harvest-aware callback may reentrantly
+    // add or remove a listener, which would mutate the array mid-enumeration (a crash).
+    // Copying under the lock and iterating the copy also avoids holding the lock while
+    // calling out to listener code.
+    NSArray* harvestAwareObjectsSnapshot;
     @synchronized(self.harvestAwareObjects) {
-        for (id<NRMAHarvestAware> hao in self.harvestAwareObjects) {
-            if ([hao respondsToSelector:@selector(onHarvestBefore)]) {
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
+    }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvestBefore)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                @try {
+            @try {
 #endif
-                    [hao onHarvestBefore];
+                [hao onHarvestBefore];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                } @catch (NSException* exception) {
-                    [NRMAExceptionHandler logException:exception
-                                                 class:NSStringFromClass([hao class])
-                                              selector:@"onHarvestBefore"];
-                }
-#endif
+            } @catch (NSException* exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvestBefore"];
             }
+#endif
         }
     }
 }
 
 - (void) fireOnHarvest
 {
+    // See -fireOnHarvestBefore: iterate a snapshot to stay safe against reentrant
+    // listener mutation and to avoid calling out while holding the lock.
+    NSArray* harvestAwareObjectsSnapshot;
     @synchronized(self.harvestAwareObjects) {
-        for (id<NRMAHarvestAware> hao in self.harvestAwareObjects) {
-            if ([hao respondsToSelector:@selector(onHarvest)]) {
-#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                @try {
-#endif
-                    [hao onHarvest];
-#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                } @catch (NSException* exception) {
-                    [NRMAExceptionHandler logException:exception
-                                                 class:NSStringFromClass([hao class])
-                                              selector:@"onHarvest"];
-                }
-#endif
-            }
-        }
-        
-        [[NewRelicAgentInternal sharedInstance] uploadLogsIfSampled];
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
     }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvest)]) {
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            @try {
+#endif
+                [hao onHarvest];
+#ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
+            } @catch (NSException* exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvest"];
+            }
+#endif
+        }
+    }
+
+    [[NewRelicAgentInternal sharedInstance] uploadLogsIfSampled];
 }
 
 - (void) fireOnHarvestComplete
 {
-    
+    // See -fireOnHarvestBefore: iterate a snapshot to stay safe against reentrant
+    // listener mutation and to avoid calling out while holding the lock.
+    NSArray* harvestAwareObjectsSnapshot;
     @synchronized(self.harvestAwareObjects) {
-        for (id<NRMAHarvestAware> hao in self.harvestAwareObjects) {
-            if ([hao respondsToSelector:@selector(onHarvestComplete)]) {
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
+    }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvestComplete)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                @try {
+            @try {
 #endif
-                    [hao onHarvestComplete];
+                [hao onHarvestComplete];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                } @catch (NSException* excep) {
-                    [NRMAExceptionHandler logException:excep
-                                                 class:NSStringFromClass([hao class])
-                                              selector:@"onHarvestComplete"];
-                }
-#endif
+            } @catch (NSException* excep) {
+                [NRMAExceptionHandler logException:excep
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvestComplete"];
             }
+#endif
         }
     }
 }
 
 - (void) fireOnHarvestFailure
 {
+    // See -fireOnHarvestBefore: iterate a snapshot to stay safe against reentrant
+    // listener mutation and to avoid calling out while holding the lock.
+    NSArray* harvestAwareObjectsSnapshot;
     @synchronized(self.harvestAwareObjects) {
-        for (id<NRMAHarvestAware> hao in self.harvestAwareObjects) {
-            if ([hao respondsToSelector:@selector(onHarvestError)]) {
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
+    }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvestError)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                @try {
+            @try {
 #endif
-                    [hao onHarvestError];
+                [hao onHarvestError];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                } @catch (NSException* exception) {
-                    [NRMAExceptionHandler logException:exception
-                                                 class:NSStringFromClass([hao class])
-                                              selector:@"onHarvestError"];
-                }
-#endif
+            } @catch (NSException* exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvestError"];
             }
+#endif
         }
     }
 }
 
 - (void) fireOnHarvestStart
 {
+    // See -fireOnHarvestBefore: iterate a snapshot to stay safe against reentrant
+    // listener mutation and to avoid calling out while holding the lock.
+    NSArray* harvestAwareObjectsSnapshot;
     @synchronized(self.harvestAwareObjects) {
-        for (id<NRMAHarvestAware> hao in self.harvestAwareObjects) {
-            if ([hao respondsToSelector:@selector(onHarvestStart)]) {
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
+    }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvestStart)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                @try {
+            @try {
 #endif
-                    [hao onHarvestStart];
+                [hao onHarvestStart];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                } @catch (NSException* exception) {
-                    [NRMAExceptionHandler logException:exception
-                                                 class:NSStringFromClass([hao class])
-                                              selector:@"onHarvestStart"];
-                }
-#endif
+            } @catch (NSException* exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvestStart"];
             }
+#endif
         }
     }
 }
 
 - (void) stop
 {
+    // See -fireOnHarvestBefore: iterate a snapshot to stay safe against reentrant
+    // listener mutation and to avoid calling out while holding the lock.
+    NSArray* harvestAwareObjectsSnapshot;
     @synchronized(self.harvestAwareObjects) {
-        for (id<NRMAHarvestAware> hao in self.harvestAwareObjects) {
-            if ([hao respondsToSelector:@selector(onHarvestStop)]) {
+        harvestAwareObjectsSnapshot = [self.harvestAwareObjects copy];
+    }
+    for (id<NRMAHarvestAware> hao in harvestAwareObjectsSnapshot) {
+        if ([hao respondsToSelector:@selector(onHarvestStop)]) {
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                @try {
+            @try {
 #endif
-                    [hao onHarvestStop];
+                [hao onHarvestStop];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
-                } @catch (NSException* exception) {
-                    [NRMAExceptionHandler logException:exception
-                                                 class:NSStringFromClass([hao class])
-                                              selector:@"onHarvestStop"];
-                }
-#endif
+            } @catch (NSException* exception) {
+                [NRMAExceptionHandler logException:exception
+                                             class:NSStringFromClass([hao class])
+                                          selector:@"onHarvestStop"];
             }
+#endif
         }
     }
 }

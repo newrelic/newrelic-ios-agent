@@ -12,7 +12,9 @@ struct ApodURL {
     let url: String
     
     init(date:String) {
-        self.url = "https://api.nasa.gov/planetary/apod?api_key=L9fVBfet3ldADKiogWO5EZyOOOHczSE45du4FhXT&date=\(date)"
+        let fetchedKey = plistHelper.objectFor(key: "NASAAPIKey", plist: "NASAAPI-Info") as? String ?? ""
+        let apiKey = fetchedKey.isEmpty ? "DEMO_KEY" : fetchedKey
+        self.url = "https://api.nasa.gov/planetary/apod?api_key=\(apiKey)&date=\(date)"
     }
 }
 

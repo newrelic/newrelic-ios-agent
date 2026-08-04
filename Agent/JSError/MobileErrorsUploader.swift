@@ -21,6 +21,10 @@ class MobileErrorsUploader: NSObject {
     private var session: URLSession
     private let orchestrator = NRMARetryOrchestrator(initialDelay: 1.0, maxDelay: 16.0)
 
+    // Callbacks for upload completion
+    var onUploadSuccess: (() -> Void)?
+    var onUploadFailed: (() -> Void)?
+
     // MARK: - Initialization
 
     init?(host: String, applicationToken: String, appVersion: String, useSSL: Bool) {

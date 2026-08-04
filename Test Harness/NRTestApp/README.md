@@ -6,6 +6,7 @@ NRTestApp is an example app used to test the functionality of the New Relic iOS 
 
 ## Setup
 - Add your New Relic application token to `NRAPIInfo.plist` as a String under the key `NRAPIKey`.
+- Add your [NASA API](https://api.nasa.gov/) token to `NASAAPI-Info.plist` as a String under the key `NASAAPIKey`.
 - To test symbolication of crashes and handled exceptions add your New Relic application token to the `Run New Relic dSYM upload run-symbol-tool` build phase under the Target of the test app you want to run.
 - In AppDelegate.swift or WatchAppDelegate.swift adjust the [feature flags](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile/mobile-sdk/configure-settings/#ios) for the functionality you would like to test.
 - Check the [docs website](https://docs.newrelic.com/docs/mobile-monitoring/new-relic-mobile-ios/get-started/introduction-new-relic-mobile-ios/) for more information on how to configure the iOS agent.

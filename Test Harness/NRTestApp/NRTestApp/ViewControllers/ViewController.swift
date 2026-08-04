@@ -56,7 +56,12 @@ class ViewController: UIViewController {
             }
         }
         
-        viewModel.loadApodData()
+        // Delay the initial image load slightly so the view hierarchy and
+        // networking stack are fully set up first. This makes the initial
+        // space image load more reliably on every launch.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.viewModel.loadApodData()
+        }
         
         NotificationCenter.default.addObserver(self,
             selector: #selector(appDidBecomeActive),
@@ -85,6 +90,7 @@ class ViewController: UIViewController {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
         spaceImageView.isUserInteractionEnabled = true
         spaceImageView.addGestureRecognizer(tapGestureRecognizer)
+        spaceImageView.maskAllImages = false
         
         //Text Label
         spaceLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
@@ -92,6 +98,7 @@ class ViewController: UIViewController {
         spaceLabel.textAlignment = .center
         spaceLabel.numberOfLines = 0
         spaceLabel.accessibilityIdentifier = "public" // Because this is a SecureLabel this should stay masked.
+        spaceLabel.maskApplicationText = false
         
         //Text Label
         privateHelloLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 30).isActive = true
@@ -279,6 +286,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction()}))
 
+        options.append(UtilOption(title: "Map View (UIKit)", handler: { [self] in mapViewAction() }))
+
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
@@ -287,8 +296,25 @@ class ViewController: UIViewController {
         // In setupButtonsTable(), add these options:
         options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
         options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
+
+        // NR-566282 — exercises the Session Replay sign-out / rootViewController-swap crash repro.
+        options.append(UtilOption(title: "Sign-Out Crash Repro", handler: { [self] in signOutCrashReproAction() }))
+
+        // PR #691 – On the new event system, recording one event with invalid attributes drops all events at harvest time.
+        options.append(UtilOption(title: "Record an event with invalid attributes", handler: { [self] in recordEventBatchWithInvalidAttributes() }))
+
+        options.append(UtilOption(title: "Start Random Walk", handler: { [self] in startRandomWalk() }))
+        options.append(UtilOption(title: "Stop Random Walk", handler: { RandomWalkController.shared.stop() }))
     }
-    
+
+    func signOutCrashReproAction() {
+        coordinator?.showSignOutCrashReproViewController()
+    }
+
+    func recordEventBatchWithInvalidAttributes() {
+        coordinator?.recordEventBatchWithInvalidAttributes()
+    }
+
     func utilitiesAction() {
         coordinator?.showUtilitiesViewController()
     }
@@ -429,6 +455,15 @@ class ViewController: UIViewController {
 #if os(iOS)
         coordinator?.showTintedImagesViewController()
 #endif
+    }
+
+    func mapViewAction() {
+        coordinator?.showMapViewController()
+    }
+
+    func startRandomWalk() {
+        guard let coordinator else { return }
+        RandomWalkController.shared.start(with: coordinator)
     }
 }
 

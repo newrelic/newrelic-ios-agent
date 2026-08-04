@@ -18,26 +18,31 @@ class SessionReplayCapture {
     
     @MainActor
     public func recordFrom(rootView:UIView) -> SessionReplayFrame {
-        let effectiveViewController = findRootViewController(rootView: rootView)
-        var rootViewControllerID:String?
-        if let rootViewController = effectiveViewController {
-            rootViewControllerID = String(describing: type(of: rootViewController))
+        // Bound the lifetime of every autoreleased UIKit / CF object touched
+        // during the walk to a single frame so we don't drag stale references
+        // across view-controller tear-downs. NR-566282.
+        return autoreleasepool {
+            let effectiveViewController = findRootViewController(rootView: rootView)
+            var rootViewControllerID:String?
+            if let rootViewController = effectiveViewController {
+                rootViewControllerID = String(describing: type(of: rootViewController))
+            }
+
+            var rootSwiftUIViewID: Int? = nil
+            var rootThingy = findRecorderForView(view: rootView)
+
+            // Reset counters for this frame capture
+            layoutContainerViewCount = 0
+            navigationStackDepth = 0
+
+            // Build tree using recursive approach to properly handle value semantics
+            buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
+
+            // Set nextId for all views after tree is built
+            setNextIdRecursively(for: &rootThingy)
+
+            return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
         }
-        
-        var rootSwiftUIViewID: Int? = nil
-        var rootThingy = findRecorderForView(view: rootView)
-        
-        // Reset counters for this frame capture
-        layoutContainerViewCount = 0
-        navigationStackDepth = 0
-        
-        // Build tree using recursive approach to properly handle value semantics
-        buildViewTree(for: rootView, into: &rootThingy, rootSwiftUIViewID: &rootSwiftUIViewID)
-        
-        // Set nextId for all views after tree is built
-        setNextIdRecursively(for: &rootThingy)
-        
-        return SessionReplayFrame(date: Date(), views: rootThingy, rootViewControllerId: rootViewControllerID, rootSwiftUIViewId: rootSwiftUIViewID, size: rootView.frame.size, layoutContainerViewCount: layoutContainerViewCount, navigationStackDepth: navigationStackDepth)
     }
     
     private func buildViewTree(for currentView: UIView, into parentThingy: inout any SessionReplayViewThingy, rootSwiftUIViewID: inout Int?) {
@@ -60,7 +65,15 @@ class SessionReplayCapture {
         // Handle SwiftUI hosting views.
         if let viewController = extractVC(from: currentView) {
             let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
-            if vcType == .hostingController || vcType == .navigationStackHostingController {
+            // .modal is SwiftUI's PresentationHostingController, which hosts .sheet /
+            // .fullScreenCover / .popover content. Its hosting view exposes the same
+            // _base.viewGraph.renderer chain as a plain hosting controller, so it must run
+            // through the same SwiftUI extraction path. Without it the modal's container
+            // views are captured but the SwiftUI content inside (text, buttons, …) is never
+            // extracted, so the replay shows an empty modal. The `_UIHostingView` guard below
+            // intentionally does not match a modal's `HostingView`, leaving rootSwiftUIViewID
+            // and navigationStackDepth pinned to the app's root hosting view.
+            if vcType == .hostingController || vcType == .navigationStackHostingController || vcType == .modal {
             let className = NSStringFromClass(type(of: currentView))
             if className.contains("_UIHostingView") {
                 rootSwiftUIViewID = parentThingy.viewDetails.viewId
@@ -72,10 +85,12 @@ class SessionReplayCapture {
                 }
             }
             
+            // Validate CGColor pointers up front — they can dangle during view
+            // tear-down (e.g. rootViewController swap on sign-out). NR-566282.
             let viewAttributes = SwiftUIViewAttributes(frame: parentThingy.viewDetails.frame,
                                                        clip: parentThingy.viewDetails.clip,
-                                                       backgroundColor: currentView.backgroundColor?.cgColor,
-                                                       layerBorderColor: currentView.layer.borderColor,
+                                                       backgroundColor: currentView.backgroundColor?.cgColor.safeColor,
+                                                       layerBorderColor: currentView.layer.borderColor?.safeColor,
                                                        layerBorderWidth: currentView.layer.borderWidth,
                                                        layerCornerRadius: currentView.layer.cornerRadius,
                                                        alpha: currentView.alpha,
@@ -112,7 +127,7 @@ class SessionReplayCapture {
                     parentThingy.subviews.append(contentsOf: otherViews)
                 }
             }
-            } // if vcType == .hostingController || .navigationStackHostingController
+            } // if vcType == .hostingController || .navigationStackHostingController || .modal
         } // if let viewController
 
         // Handle UITextField custom text overlay
