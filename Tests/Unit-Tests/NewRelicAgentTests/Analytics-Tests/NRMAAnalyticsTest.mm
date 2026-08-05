@@ -857,6 +857,49 @@
 
 }
 
+- (void) testLegacyEventSystemOverflowFiresMetrics {
+    NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setMaxEventBufferSize:1];
+
+    XCTAssertTrue([analytics addEventNamed:@"first" withAttributes:@{}]);
+    // Second insert overflows the size-1 buffer; total_attempted_inserts == 1 at that point,
+    // so the C++ random eviction index is deterministically 0 -- the resident event is evicted.
+    XCTAssertTrue([analytics addEventNamed:@"second" withAttributes:@{}]);
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NSMutableSet<NSString*>* firedNames = [NSMutableSet set];
+    for (id measurement in helper.consumedMeasurements) {
+        if ([measurement isKindOfClass:[NRMANamedValueMeasurement class]]) {
+            [firedNames addObject:((NRMANamedValueMeasurement*)measurement).name];
+        }
+    }
+
+    XCTAssertTrue([firedNames containsObject:kNRMAEventAddedMetric]);
+    XCTAssertTrue([firedNames containsObject:kNRMAEventOverflowMetric]);
+    XCTAssertTrue([firedNames containsObject:kNRMAEventEvictedMetric]);
+    XCTAssertTrue([firedNames containsObject:kNRMAEventQueueSizeExceededMetric]);
+
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+    [NRMAMeasurements shutdown];
+}
+
+- (void) testLegacyEventSystemGetEventsRecordedAndEvictedCounts {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setMaxEventBufferSize:1];
+
+    [analytics addEventNamed:@"first" withAttributes:@{}];
+    [analytics addEventNamed:@"second" withAttributes:@{}]; // deterministic evict, see above
+
+    XCTAssertEqual([analytics getEventsRecordedCount], 2);
+    XCTAssertEqual([analytics getEventsEvictedCount], 1);
+}
+
 @end
 
 
@@ -1746,49 +1789,6 @@
 
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
-}
-
-- (void) testLegacyEventSystemOverflowFiresMetrics {
-    NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
-    [NRMAMeasurements initializeMeasurements];
-    [NRMAMeasurements addMeasurementConsumer:helper];
-
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    [analytics setMaxEventBufferSize:1];
-
-    XCTAssertTrue([analytics addEventNamed:@"first" withAttributes:@{}]);
-    // Second insert overflows the size-1 buffer; total_attempted_inserts == 1 at that point,
-    // so the C++ random eviction index is deterministically 0 -- the resident event is evicted.
-    XCTAssertTrue([analytics addEventNamed:@"second" withAttributes:@{}]);
-
-    [NRMASupportMetricHelper processDeferredMetrics];
-    [NRMATaskQueue synchronousDequeue];
-
-    NSMutableSet<NSString*>* firedNames = [NSMutableSet set];
-    for (id measurement in helper.consumedMeasurements) {
-        if ([measurement isKindOfClass:[NRMANamedValueMeasurement class]]) {
-            [firedNames addObject:((NRMANamedValueMeasurement*)measurement).name];
-        }
-    }
-
-    XCTAssertTrue([firedNames containsObject:kNRMAEventAddedMetric]);
-    XCTAssertTrue([firedNames containsObject:kNRMAEventOverflowMetric]);
-    XCTAssertTrue([firedNames containsObject:kNRMAEventEvictedMetric]);
-    XCTAssertTrue([firedNames containsObject:kNRMAEventQueueSizeExceededMetric]);
-
-    [NRMAMeasurements removeMeasurementConsumer:helper];
-    [NRMAMeasurements shutdown];
-}
-
-- (void) testLegacyEventSystemGetEventsRecordedAndEvictedCounts {
-    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
-    [analytics setMaxEventBufferSize:1];
-
-    [analytics addEventNamed:@"first" withAttributes:@{}];
-    [analytics addEventNamed:@"second" withAttributes:@{}]; // deterministic evict, see above
-
-    XCTAssertEqual([analytics getEventsRecordedCount], 2);
-    XCTAssertEqual([analytics getEventsEvictedCount], 1);
 }
 
 @end
