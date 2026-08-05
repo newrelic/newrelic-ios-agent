@@ -125,11 +125,12 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
             [NRMASupportMetricHelper enqueueEventEvictedMetric];
             eventsEvicted++;
         }
-    }
-    totalAttemptedInserts++;
-    if (added) {
-        [NRMASupportMetricHelper enqueueEventAddedMetric];
-        eventsRecorded++;
+
+        totalAttemptedInserts++;
+        if (added) {
+            [NRMASupportMetricHelper enqueueEventAddedMetric];
+            eventsRecorded++;
+        }
     }
     return added;
 }
