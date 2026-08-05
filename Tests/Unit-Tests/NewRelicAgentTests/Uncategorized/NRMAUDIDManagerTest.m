@@ -21,6 +21,7 @@
 + (NRMAUUIDStore*) secureUDIDStore;
 + (NRMAUUIDStore*) identifierForVendorStore;
 + (void) setUDID:(NSString*)udid;
++ (void) resetCachedDeviceIdentifier;
 
 + (NSString*) getSystemIdentifier;
 + (NSString*) saltValue;
@@ -43,6 +44,7 @@
 - (void)setUp {
     [super setUp];
     [NRMAUDIDManager setUDID:nil];
+    [NRMAUDIDManager resetCachedDeviceIdentifier];
 }
 
 - (void) testUUIDSalt {
@@ -105,6 +107,7 @@
 
 - (void)tearDown {
     [NRMAUDIDManager setUDID:nil];
+    [NRMAUDIDManager resetCachedDeviceIdentifier];
     [super tearDown];
 }
 
@@ -248,6 +251,7 @@
 
     //reset in memory udid
     [NRMAUDIDManager setUDID:nil];
+    [NRMAUDIDManager resetCachedDeviceIdentifier];
 
    self.vendorId = @"51";
 
@@ -272,6 +276,7 @@
 
     //reset in memory udid
     [NRMAUDIDManager setUDID:nil];
+    [NRMAUDIDManager resetCachedDeviceIdentifier];
 
     self.vendorId = @"51";
 

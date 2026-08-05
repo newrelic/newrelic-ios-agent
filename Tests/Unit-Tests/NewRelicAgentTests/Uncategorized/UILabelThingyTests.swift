@@ -398,10 +398,30 @@ struct UILabelThingyTests {
 
     // MARK: - Font Traits Tests
 
-    @Test func `Bold font`() {
+    @Test func `Bold system font actually renders as semibold`() {
+        // NR-546762: `UIFont.boldSystemFont` is backed by the same font
+        // resource as `.semibold`/SwiftUI's `.headline` on current OS
+        // versions (fontName ".SFUI-Semibold", weight trait 0.3) — despite
+        // its name and its `traitBold == true` flag, it does not visually
+        // render at true bold/700. Session replay should match what's
+        // actually on screen, not the API name.
         let label = UILabel()
         label.text = "Bold text"
         label.font = UIFont.boldSystemFont(ofSize: 17)
+        let details = makeViewDetails(isMasked: false)
+        let thingy = UILabelThingy(view: label, viewDetails: details)
+        #expect(thingy.fontWeight == .semibold)
+        let css = thingy.inlineCSSDescription()
+        #expect(css.contains("600"))
+    }
+
+    @Test func `True bold font`() {
+        // A font explicitly constructed at the .bold weight axis value
+        // (fontName ".SFUI-Bold", weight trait 0.4) — this is the case that
+        // should still resolve to CSS 700.
+        let label = UILabel()
+        label.text = "Bold text"
+        label.font = UIFont.systemFont(ofSize: 17, weight: .bold)
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
         #expect(thingy.fontWeight == .bold)
@@ -450,15 +470,48 @@ struct UILabelThingyTests {
         label.font = heavyFont
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(view: label, viewDetails: details)
-        #expect(thingy.fontWeight == .bold)
+        // NR-546762: `.heavy` reports `traitBold == true` just like `.bold` and
+        // `.semibold` do, so it used to get flattened to bold/700. It should
+        // resolve to its own, heavier weight instead.
+        #expect(thingy.fontWeight == .heavy)
         let css = thingy.inlineCSSDescription()
-        #expect(css.contains("700"))
+        #expect(css.contains("800"))
     }
 
-    @Test func `Extract font traits bold`() {
+    @Test func `Semibold font`() {
+        // NR-546762: SwiftUI's `.headline` text style renders as semibold/600,
+        // but its underlying font also reports `traitBold == true`, so it was
+        // being misclassified as bold/700.
+        let semiboldFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        let label = UILabel()
+        label.text = "Semibold text"
+        label.font = semiboldFont
+        let details = makeViewDetails(isMasked: false)
+        let thingy = UILabelThingy(view: label, viewDetails: details)
+        #expect(thingy.fontWeight == .semibold)
+        let css = thingy.inlineCSSDescription()
+        #expect(css.contains("600"))
+    }
+
+    @Test func `Extract font traits bold system font resolves to semibold`() {
+        // See `Bold system font actually renders as semibold` above.
         let boldFont = UIFont.boldSystemFont(ofSize: 17)
         let (weight, isItalic) = TextHelper.extractFontTraits(from: boldFont)
+        #expect(weight == .semibold)
+        #expect(!isItalic)
+    }
+
+    @Test func `Extract font traits true bold`() {
+        let boldFont = UIFont.systemFont(ofSize: 17, weight: .bold)
+        let (weight, isItalic) = TextHelper.extractFontTraits(from: boldFont)
         #expect(weight == .bold)
+        #expect(!isItalic)
+    }
+
+    @Test func `Extract font traits semibold`() {
+        let semiboldFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        let (weight, isItalic) = TextHelper.extractFontTraits(from: semiboldFont)
+        #expect(weight == .semibold)
         #expect(!isItalic)
     }
 
@@ -475,8 +528,18 @@ struct UILabelThingyTests {
         #expect(!isItalic)
     }
 
-    @Test func `Attributed text with bold font`() {
+    @Test func `Attributed text with bold system font resolves to semibold`() {
+        // See `Bold system font actually renders as semibold` above.
         let boldFont = UIFont.boldSystemFont(ofSize: 17)
+        let attrString = NSAttributedString(string: "Bold", attributes: [.font: boldFont])
+        let details = makeViewDetails(isMasked: false)
+        let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)
+        #expect(thingy.fontWeight == .semibold)
+        #expect(!thingy.isItalic)
+    }
+
+    @Test func `Attributed text with true bold font`() {
+        let boldFont = UIFont.systemFont(ofSize: 17, weight: .bold)
         let attrString = NSAttributedString(string: "Bold", attributes: [.font: boldFont])
         let details = makeViewDetails(isMasked: false)
         let thingy = UILabelThingy(viewDetails: details, attributedText: attrString)

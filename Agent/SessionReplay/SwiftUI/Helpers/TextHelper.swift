@@ -22,14 +22,18 @@ class TextHelper {
         // Extract font weight from font descriptor
         var fontWeight: UIFont.Weight = .regular
 
-        // Check symbolic traits first for bold (more reliable for boldSystemFont)
-        if traits.contains(.traitBold) {
-            fontWeight = .bold
-        }
-        // Try to get weight from font descriptor traits dictionary
-        else if let weightTrait = font.fontDescriptor.object(forKey: .traits) as? [UIFontDescriptor.TraitKey: Any],
+        // Prefer the precise numeric weight trait. The binary `.traitBold` flag
+        // is set for semibold and heavier (not just true bold/700) — e.g.
+        // SwiftUI's `.headline` (semibold/600) and `.heavy` fonts both report
+        // `traitBold == true` — so treating it as authoritative collapsed those
+        // weights down to a flat bold/700 (NR-546762). It's only consulted when
+        // no numeric weight is available (e.g. `boldSystemFont` on older OSes).
+        if let weightTrait = font.fontDescriptor.object(forKey: .traits) as? [UIFontDescriptor.TraitKey: Any],
                   let weight = weightTrait[.weight] as? CGFloat {
             fontWeight = UIFont.Weight(rawValue: weight)
+        }
+        else if traits.contains(.traitBold) {
+            fontWeight = .bold
         }
         // Fallback: Try to get weight from font descriptor face attribute
         else if let face = font.fontDescriptor.object(forKey: .face) as? String {
