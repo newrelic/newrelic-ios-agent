@@ -24,6 +24,13 @@ namespace NewRelic {
         Session
     };
 
+    struct EventAddResult {
+        bool added = false;
+        bool overflowed = false;
+        bool evicted = false;
+        operator bool() const { return added; }
+    };
+
     class EventManager {
     friend class AnalyticsController;
     private :
@@ -37,13 +44,17 @@ namespace NewRelic {
         // 0 is a special case that results in "false" for didReachMaxQueueTime();
         unsigned long long _oldest_event_timestamp_ms = 0; //special case!
         int _total_attempted_inserts = 0;
+        unsigned int _events_recorded = 0;
+        unsigned int _events_evicted = 0;
 
     public:
         EventManager(PersistentStore<std::string,AnalyticEvent>& store);
 
         virtual ~EventManager();
 
-        bool addEvent(std::shared_ptr<AnalyticEvent> event);
+        EventAddResult addEvent(std::shared_ptr<AnalyticEvent> event);
+        unsigned int getEventsRecordedCount() const { return _events_recorded; }
+        unsigned int getEventsEvictedCount() const { return _events_evicted; }
 
 
         //deprecated, replaced with newCustomEvent

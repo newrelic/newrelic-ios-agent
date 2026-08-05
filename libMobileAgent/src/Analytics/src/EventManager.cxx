@@ -58,13 +58,15 @@ void EventManager::resetTimestamp() {
         return s;
     }
 
-bool EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
+EventAddResult EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
     std::unique_lock<std::recursive_mutex> lock1(this->_eventsMutex, std::defer_lock);
     lock1.lock();
+    EventAddResult result;
     if (event == nullptr) {
-        return false;
+        return result;
     }
     if (_events.size() >= EventBufferConfig::getInstance().get_max_buffer_size()) {
+        result.overflowed = true;
         //throw away something...
         int index = getRemovalIndex();
         //concern if the total number of inserts exceeds RAND_MAX (guaranteed to be at least ~32,000, but could be 2,147,483,647) this will become crappy, index will always = 1;
@@ -80,25 +82,32 @@ bool EventManager::addEvent(std::shared_ptr<AnalyticEvent> event) {
             _events.erase(eventIterator);
             //add new event to the vector
             _events.push_back(event);
-            //insert ne event into the duplication store
-
-                _eventDuplicationStore.store(EventManager::createKey(event),event);
-        };
+            //insert new event into the duplication store
+            _eventDuplicationStore.store(EventManager::createKey(event), event);
+            result.added = true;
+            _events_recorded++;
+        }
+        // else: the random removal index landed outside the queue's current bounds --
+        // drop the incoming event instead of silently losing it (matches the Android
+        // agent's handling of the equivalent case).
+        result.evicted = true;
+        _events_evicted++;
     } else {
-        //buffer size limit not reach
+        //buffer size limit not reached
         //simply add new event to vector
         _events.push_back(event);
         //and to duplication store.
-
-            _eventDuplicationStore.store(EventManager::createKey(event),event);
+        _eventDuplicationStore.store(EventManager::createKey(event), event);
         if (_events.size() == 1) {
             //wait until the event is actually pushed before we assume it's the oldest event.
             _oldest_event_timestamp_ms = event->_timestamp_epoch_millis;
         }
+        result.added = true;
+        _events_recorded++;
     }
     //increment the total attempted inserts.
     _total_attempted_inserts++;
-    return true;
+    return result;
 }
 
 int EventManager::getRemovalIndex() {
