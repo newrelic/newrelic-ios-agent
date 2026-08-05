@@ -287,4 +287,31 @@
     [sessionManager updateSessionStartTime:[NSDate date]];
 }
 
+- (void) testAddHarvestableAnalyticsFiresSizeUncompressedMetric {
+    NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+
+    NSString* eventJSON = @"[{\"eventType\":\"Mobile\",\"name\":\"test\"}]";
+    NRMAHarvestableAnalytics* analytics = [[NRMAHarvestableAnalytics alloc] initWithAttributeJSON:@"{}"
+                                                                                          EventJSON:eventJSON];
+    [NRMAHarvestController addHarvestableAnalytics:analytics];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NRMANamedValueMeasurement* found = nil;
+    for (id measurement in helper.consumedMeasurements) {
+        if ([measurement isKindOfClass:[NRMANamedValueMeasurement class]] &&
+            [((NRMANamedValueMeasurement*)measurement).name isEqualToString:kNRMAEventSizeUncompressedMetric]) {
+            found = measurement;
+        }
+    }
+    XCTAssertNotNil(found, @"Size/Uncompressed metric was not recorded.");
+
+    NSData* expectedData = [NRMAJSON dataWithJSONObject:analytics.events options:0 error:nil];
+    XCTAssertEqualObjects(found.value, @(expectedData.length));
+
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+}
+
 @end
