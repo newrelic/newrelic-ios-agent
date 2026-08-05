@@ -126,6 +126,12 @@ namespace NewRelic {
 
         bool addEvent(std::shared_ptr <AnalyticEvent> event);
 
+        EventAddResult addEventWithMetrics(std::shared_ptr <AnalyticEvent> event);
+
+        unsigned int getEventsRecordedCount() const;
+
+        unsigned int getEventsEvictedCount() const;
+
         bool addRequestEvent(const NewRelic::NetworkRequestData& requestData,
                              const NewRelic::NetworkResponseData& responseData,
                              std::unique_ptr<const Connectivity::Payload> payload,
