@@ -900,6 +900,38 @@
     XCTAssertEqual([analytics getEventsEvictedCount], 1);
 }
 
+- (void) testMaxEventBufferTimeExceededFiresQueueTimeExceededMetric {
+    NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setMaxEventBufferTime:1];
+    [analytics addEventNamed:@"pewpew" withAttributes:@{}];
+
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                          crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfig];
+    sleep(2); // exceed the 1-second buffer time
+    [analytics onHarvestBefore];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    BOOL fired = NO;
+    for (id measurement in helper.consumedMeasurements) {
+        if ([measurement isKindOfClass:[NRMANamedValueMeasurement class]] &&
+            [((NRMANamedValueMeasurement*)measurement).name isEqualToString:kNRMAEventQueueTimeExceededMetric]) {
+            fired = YES;
+        }
+    }
+    XCTAssertTrue(fired, @"Queue/Time/Exceeded metric was not recorded.");
+
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+    [NRMAMeasurements shutdown];
+}
+
 @end
 
 

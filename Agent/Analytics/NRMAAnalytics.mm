@@ -1215,17 +1215,17 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) onHarvestBefore {
-    if([NRMAFlags shouldEnableNewEventSystem]){
-        if (_sessionWillEnd || _newSession || [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]) {
-            _newSession = NO;
-            [self handleHarvest];
-        }
+    BOOL queueTimeExceeded = [NRMAFlags shouldEnableNewEventSystem]
+        ? [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]
+        : _analyticsController->didReachMaxEventBufferTime();
+
+    if (queueTimeExceeded) {
+        [NRMASupportMetricHelper enqueueEventQueueTimeExceededMetric];
     }
-    else {
-        if (_sessionWillEnd || _newSession || _analyticsController->didReachMaxEventBufferTime()) {
-            _newSession = NO;
-            [self handleHarvest];
-        }
+
+    if (_sessionWillEnd || _newSession || queueTimeExceeded) {
+        _newSession = NO;
+        [self handleHarvest];
     }
 }
 
