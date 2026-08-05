@@ -30,6 +30,12 @@ bool EventManager::didReachMaxQueueTime(unsigned long long currentTimestamp_ms) 
     return (oldest_event_age_ms / 1000) + kBufferTimeSecondsLeeway >= EventBufferConfig::getInstance().get_max_buffer_time_sec();
 }
 
+bool EventManager::didExceedMaxQueueTime(unsigned long long currentTimestamp_ms) {
+    if (_oldest_event_timestamp_ms == 0) return false;
+    unsigned long long oldest_event_age_ms = currentTimestamp_ms - _oldest_event_timestamp_ms;
+    return (oldest_event_age_ms / 1000) >= EventBufferConfig::getInstance().get_max_buffer_time_sec();
+}
+
 void EventManager::setMaxBufferSize(unsigned int size) {
     EventBufferConfig::getInstance().setMaxEventBufferSize(size);
 

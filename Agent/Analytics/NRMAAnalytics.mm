@@ -1215,11 +1215,16 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) onHarvestBefore {
+    NSTimeInterval currentTimeMs = [NRMAAnalytics currentTimeMillis];
     BOOL queueTimeExceeded = [NRMAFlags shouldEnableNewEventSystem]
-        ? [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]
+        ? [_eventManager didReachMaxQueueTime:currentTimeMs]
         : _analyticsController->didReachMaxEventBufferTime();
 
-    if (queueTimeExceeded) {
+    BOOL queueTimeExceededForMetric = [NRMAFlags shouldEnableNewEventSystem]
+        ? [_eventManager didExceedMaxQueueTime:currentTimeMs]
+        : _analyticsController->didExceedMaxEventBufferTime();
+
+    if (queueTimeExceededForMetric) {
         [NRMASupportMetricHelper enqueueEventQueueTimeExceededMetric];
     }
 

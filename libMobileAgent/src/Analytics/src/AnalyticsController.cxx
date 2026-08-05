@@ -180,6 +180,10 @@ namespace NewRelic {
         return _eventManager.didReachMaxQueueTime(getCurrentTime_ms()); //throws std::logic_error
     }
 
+    bool AnalyticsController::didExceedMaxEventBufferTime() {
+        return _eventManager.didExceedMaxQueueTime(getCurrentTime_ms());
+    }
+
     bool AnalyticsController::addSessionEndAttribute() {
         try {
             unsigned long long current_time_ms = AnalyticsController::getCurrentTime_ms(); //throws std::logic_error

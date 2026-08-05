@@ -173,6 +173,8 @@ namespace NewRelic {
 
         bool didReachMaxEventBufferTime();
 
+        bool didExceedMaxEventBufferTime();
+
         void setMaxEventBufferSize(unsigned int size);
 
         /*

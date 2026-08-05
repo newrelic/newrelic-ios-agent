@@ -84,6 +84,14 @@ static NSString* const eventKeyFormat = @"%f|%f|%@";
     return (oldestEventAge / kMillisecondsPerSecond) + kBufferTimeSecondsLeeway >= maxBufferTimeSeconds;
 }
 
+- (BOOL)didExceedMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds {
+    if(oldestEventTimestamp == 0) {
+        return false;
+    }
+    NSTimeInterval oldestEventAge = currentTimeMilliseconds - oldestEventTimestamp;
+    return (oldestEventAge / kMillisecondsPerSecond) >= maxBufferTimeSeconds;
+}
+
 - (NSUInteger)getEvictionIndex {
     if(totalAttemptedInserts > 0) {
         return arc4random() % totalAttemptedInserts;

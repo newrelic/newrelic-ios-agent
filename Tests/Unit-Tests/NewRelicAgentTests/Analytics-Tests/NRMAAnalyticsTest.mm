@@ -52,6 +52,15 @@
 
 - (void)tearDown {
     [NRMASupportMetricHelper processDeferredMetrics];
+    // Reset the buffer size/time globals while NRFeatureFlag_NewEventSystem is still
+    // disabled (as set by -setUp above, and unchanged by any test in this class), so
+    // that NRMAAnalytics's legacy code path is exercised here and both the
+    // NRMAAgentConfiguration static defaults AND the C++ EventBufferConfig singleton
+    // (which is only reachable through that legacy path) get reset to the framework
+    // defaults (1000 events / 60 seconds). Doing this after re-enabling the feature
+    // flag below would only reset the former, leaving the latter leaked.
+    [[[NRMAAnalytics alloc] initWithSessionStartTimeMS:0] setMaxEventBufferSize:1000];
+    [[[NRMAAnalytics alloc] initWithSessionStartTimeMS:0] setMaxEventBufferTime:60];
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
 
