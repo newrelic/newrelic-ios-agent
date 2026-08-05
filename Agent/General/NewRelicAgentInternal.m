@@ -1263,6 +1263,12 @@ void applicationDidEnterBackgroundCF(void) {
 
         // * PERFORM FINAL SUPPORTABILITY METRIC SEND *//
 
+        // Emit a supportability metric recording events successfully queued vs. evicted
+        // for this agent run, matching the Android agent's session-end summary metric.
+        NSUInteger eventsRecorded = [[NewRelicAgentInternal sharedInstance].analyticsController getEventsRecordedCount];
+        NSUInteger eventsEvicted = [[NewRelicAgentInternal sharedInstance].analyticsController getEventsEvictedCount];
+        [NRMASupportMetricHelper enqueueEventRecordedMetric:eventsRecorded evicted:eventsEvicted];
+
         // If the agent is connected, it should have no problem performing an adhoc harvest right now containing Shutdown support metric.
         [NRMASupportMetricHelper enqueueStopAgentMetric];
 
