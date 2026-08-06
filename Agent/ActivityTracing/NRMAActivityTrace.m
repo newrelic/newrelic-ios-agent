@@ -21,6 +21,10 @@
     CPUTime _lastCPUTime;
     BOOL _lastCPUTimeValid;
     double _lastRecordVitalsTime;
+    // Guards the vitals bookkeeping ivars above. recordVitals(Throttled) can be called
+    // concurrently from method entry (addTrace:) and method exit (completeTrace:) on
+    // different threads; without this the CPUTime struct and throttle timestamp tear.
+    NSObject* _vitalsLock;
 }
 @end
 @implementation NRMAActivityTrace
@@ -41,6 +45,7 @@
         self.memoryVitals = [[NSMutableDictionary alloc] init];
         self.cpuVitals = [[NSMutableDictionary alloc] init];
         
+        _vitalsLock = [[NSObject alloc] init];
         _lastRecordVitalsTime = NRMAMillisecondTimestamp();
         int errorCode = [NRMACPUVitals cpuTime:&_lastCPUTime];
         _lastCPUTimeValid = (errorCode==0)?YES:NO;
@@ -60,13 +65,25 @@
 
 - (void)recordVitalsThrottled
 {
-    if (NRMAMillisecondTimestamp() - _lastRecordVitalsTime > RECORD_VITALS_THROTTLE_MS) {
-        [self recordVitals];
+    @synchronized(_vitalsLock) {
+        // Throttle check and record must be atomic together so two threads can't both
+        // pass the check and double-record.
+        if (NRMAMillisecondTimestamp() - _lastRecordVitalsTime > RECORD_VITALS_THROTTLE_MS) {
+            [self recordVitalsLocked];
+        }
     }
-
 }
 
 - (void)recordVitals
+{
+    @synchronized(_vitalsLock) {
+        [self recordVitalsLocked];
+    }
+}
+
+// Records CPU/memory vitals. Callers MUST hold _vitalsLock (protects the _lastCPUTime /
+// _lastRecordVitalsTime / _lastCPUTimeValid bookkeeping ivars mutated below).
+- (void)recordVitalsLocked
 {
     NSTimeInterval now = NRMAMillisecondTimestamp();
     CPUTime cpuTime;
@@ -74,7 +91,7 @@
 
     int errorCode = [NRMACPUVitals cpuTime:&cpuTime];
     memoryUseInMegabytes = [NRMAMemoryVitals memoryUseInMegabytes];
- 
+
     durationInSeconds = (now - _lastRecordVitalsTime) / 1000.0;
     if (durationInSeconds == 0) {
         return;

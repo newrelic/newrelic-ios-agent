@@ -14,13 +14,18 @@
 
 //used to identify the original object that initiated the activity trace
 //generally just the memory address of the object. 
-@property(nonatomic,strong) NSString          *initiatingObjectIdentifier;
-@property(nonatomic,strong) NRMATrace         *rootTrace;
+// atomic: read cross-thread (e.g. -isInteractionObject:) while mutated under kNRMAStartAndEndTracingLock.
+@property(atomic,strong) NSString          *initiatingObjectIdentifier;
+// atomic: read on background trace-completion threads (completeTrace:) while set during setup.
+@property(atomic,strong) NRMATrace         *rootTrace;
 @property(atomic,strong) NSMutableSet    *missingChildren;
 @property(nonatomic,assign) double      lastUpdated;
 @property(atomic,assign)    BOOL            isComplete;
-@property(nonatomic,strong) NSString        *type;
-@property(nonatomic,strong) NSString        *name;
+// atomic: name/type are read on background completion threads (getCurrentActivityName)
+// while being replaced on other threads; a nonatomic getter would return an
+// unretained pointer that a concurrent setter can free before ARC retains it.
+@property(atomic,strong) NSString        *type;
+@property(atomic,strong) NSString        *name;
 @property(nonatomic,strong) NSMutableDictionary *memoryVitals;
 @property(nonatomic,strong) NSMutableDictionary *cpuVitals;
 @property(nonatomic)        double          totalExclusiveTimeMillis;

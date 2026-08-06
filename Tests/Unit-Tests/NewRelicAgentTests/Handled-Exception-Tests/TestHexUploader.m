@@ -265,6 +265,42 @@
     [self.hexUploader invalidate];
 }
 
+// Regression: a create-after-invalidate race previously raised
+// NSGenericException "Task created in a session that has been invalidated".
+// NRMAHexUploader creates upload tasks on a background delegate queue
+// (delegateQueue:nil) while the C++ ~HexUploadPublisher() dtor calls -invalidate;
+// if invalidate won the race, the next -[NSURLSession uploadTaskWithRequest:fromData:]
+// threw and crashed the app. After invalidate, sendData: must not throw and must
+// preserve the report (shouldRemove=NO) for a later attempt.
+- (void) testSendAfterInvalidateDoesNotThrowAndPreservesReport {
+    NRMAHexUploader* uploader = [[NRMAHexUploader alloc] initWithHost:@"http://localhost/f"];
+    uploader.applicationToken = @"TOKEN";
+    uploader.applicationVersion = @"1.0";
+
+    // Invalidate first, then attempt an upload — the crash scenario.
+    [uploader invalidate];
+
+    const char* bytes = "handled-exception-bytes";
+    NSData* data = [NSData dataWithBytes:bytes length:strlen(bytes)];
+
+    __block BOOL completionCalled = NO;
+    __block BOOL shouldRemoveVal = YES;
+
+    XCTAssertNoThrow(([uploader sendData:data
+                                reportId:@"/tmp/nr-hex-report"
+                              completion:^(BOOL shouldRemove) {
+        completionCalled = YES;
+        shouldRemoveVal = shouldRemove;
+    }]),
+        @"creating an upload task after invalidate must not raise NSGenericException");
+
+    // Draining is synchronous, so the outcome is known by the time sendData: returns.
+    XCTAssertTrue(completionCalled,
+                  @"completion must fire so the store learns the upload outcome");
+    XCTAssertFalse(shouldRemoveVal,
+                   @"an upload skipped due to invalidation must keep the report for a later attempt");
+}
+
 //// Concurrency cap: more sendData: calls than kNRMAHexMaxInFlight (=4) must
 //// queue the overflow on pendingPayloads instead of submitting them all at
 //// once. Without this, a 200-deep backlog would spawn 200 sockets on cold

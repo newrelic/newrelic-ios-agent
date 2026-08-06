@@ -110,14 +110,19 @@ static NSTimeInterval __healthyTraceTimeout;
 #pragma mark - Static Functions
 + (NSString*) getCurrentActivityName
 {
-    NRMATraceMachine* localTraceMachine = [self traceMachine];
     NSString* scope = @"";
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
 #endif
-
-        if (localTraceMachine) {
-            scope = localTraceMachine.activityTrace.name;
+        // Snapshot each object into a local strong reference before dereferencing further.
+        // traceMachine and activityTrace are atomic; name is atomic (see NRMAActivityTrace.h),
+        // so each getter returns a retained+autoreleased value that a concurrent setter on
+        // another thread cannot free before we copy it. Defensively copy to fully detach.
+        NRMATraceMachine* localTraceMachine = [self traceMachine];
+        NRMAActivityTrace* activityTrace = localTraceMachine.activityTrace;
+        NSString* name = activityTrace.name;
+        if (name.length) {
+            scope = [name copy];
         }
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {
@@ -126,7 +131,7 @@ static NSTimeInterval __healthyTraceTimeout;
                                 selector:NSStringFromSelector(@selector(getCurrentActivityName))];
     }
 #endif
-    return scope;
+    return scope ?: @"";
 }
 
 
@@ -347,18 +352,23 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     if ([NewRelicAgentInternal sharedInstance].isShutdown) {
         return NO;
     }
-    if (![NRMATraceController isTracingActive]) {
-        return NO;
-    }
-    NRMATrace* childTrace = [NRMATraceController registerNewTrace:newTraceName withParent:parentTrace];
-    if (!childTrace) {
-        return NO;
-    }
-    childTrace.entryTimestamp = NRMAMillisecondTimestamp();
-    
-    return [NRMATraceController newTraceSetup:childTrace
-                             parentTrace:parentTrace];
+    // Serialize against the trace lifecycle (see completeTrace:). Without this lock a stale
+    // method-entry on one thread can keep mutating an activity trace that completeActivityTrace
+    // has already queued for harvest and torn down, corrupting the heap. isTracingActive is
+    // re-checked inside the lock to close the time-of-check/time-of-use window.
+    @synchronized(kNRMAStartAndEndTracingLock) {
+        if (![NRMATraceController isTracingActive]) {
+            return NO;
+        }
+        NRMATrace* childTrace = [NRMATraceController registerNewTrace:newTraceName withParent:parentTrace];
+        if (!childTrace) {
+            return NO;
+        }
+        childTrace.entryTimestamp = NRMAMillisecondTimestamp();
 
+        return [NRMATraceController newTraceSetup:childTrace
+                                 parentTrace:parentTrace];
+    }
 }
 
 + (NRMATrace*) enterMethod:(SEL)selector
@@ -383,6 +393,11 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     if ([NewRelicAgentInternal sharedInstance].isShutdown) {
         return nil;
     }
+
+    // Serialize against the trace lifecycle (see completeTrace:). Re-check isTracingActive
+    // inside the lock so a concurrent completeActivityTrace/cleanup can't leave us mutating
+    // a torn-down, already-harvested activity trace (heap corruption).
+    @synchronized(kNRMAStartAndEndTracingLock) {
 
     if (![NRMATraceController isTracingActive]) {
         return nil;
@@ -428,6 +443,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 #endif
 
     return childTrace;
+    } // @synchronized(kNRMAStartAndEndTracingLock)
 }
 
 + (NRMATrace*) registerNewTrace:(NSString *)name
@@ -488,6 +504,13 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     if (trace == nil) {
         return;
     }
+
+    // Serialize trace completion against the trace lifecycle (startTracing*/completeActivityTrace*/
+    // cleanup), which mutate and tear down the trace machine under this same lock. Without it,
+    // completion (invoked by the method profiler on an arbitrary thread) races a concurrent
+    // teardown, dereferencing freed trace state and corrupting the heap (SIGTRAP in libsystem_malloc).
+    // The validity check below MUST run inside the lock to close the time-of-check/time-of-use window.
+    @synchronized(kNRMAStartAndEndTracingLock) {
 
     NRMATraceMachine *localTraceMachine = [self traceMachine];
 
@@ -573,6 +596,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         [localTraceMachine.activityTrace.missingChildren removeObject:trace];
         localTraceMachine.activityTrace.lastUpdated = NRMAMillisecondTimestamp();
     }
+    } // @synchronized(kNRMAStartAndEndTracingLock)
 }
 
 
