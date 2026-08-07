@@ -19,6 +19,7 @@
 #include <sys/param.h>
 #include <sys/mount.h>
 #include <sys/utsname.h>
+#include <pthread.h>
 #import <time.h>
 
 
@@ -231,6 +232,13 @@ void NRMA_setBuild(const char* buildNumber)
     
     //
 
+    // Serializes the pointer swap below. __NRMA_assign_retain is called from
+    // many unrelated setters (session id, app version, orientation, memory
+    // usage, network connectivity, ...) each guarding its own static char*,
+    // so a single lock shared across all of them only ever contends with a
+    // second concurrent call targeting the *same* field.
+    static pthread_mutex_t __nrma_assign_retain_lock = PTHREAD_MUTEX_INITIALIZER;
+
     void __NRMA_assign_retain(char** dest, const char* src) {
         if (src == NULL) {
             return;
@@ -243,10 +251,19 @@ void NRMA_setBuild(const char* buildNumber)
         }
         strncpy(heapChar, src, len);
         heapChar[len] = '\0'; //added null-zero to str
-        if ((*dest) != NULL) {
-            free((void*)(*dest));
+
+        // Swap the pointer under the lock, then free the old value outside
+        // it. Without this, two threads racing the same setter can both
+        // read the same *dest and both free it -- a double free that shows
+        // up to libmalloc as "pointer being freed was not allocated".
+        pthread_mutex_lock(&__nrma_assign_retain_lock);
+        char* old = *dest;
+        *dest = heapChar;
+        pthread_mutex_unlock(&__nrma_assign_retain_lock);
+
+        if (old != NULL) {
+            free((void*)old);
         }
-        (*dest) = (char*)heapChar;
     }
 
     void NRMA__freeMetaData(void)

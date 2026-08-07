@@ -110,6 +110,39 @@
     free((void *)tempFile);
 }
 
+// Regression test for NR-603379: __NRMA_assign_retain read the old pointer,
+// freed it, and stored the new one with no synchronization. Two threads
+// racing the same setter could both read the same stale *dest and both
+// free it, which is exactly the libmalloc abort ("pointer being freed was
+// not allocated") seen in the field crash. Hammer the same setter from many
+// threads concurrently — this is expected to crash the test process on the
+// unfixed implementation.
+- (void)test_NRMA_assign_retain_concurrentWritesDoNotDoubleFree
+{
+    NSUInteger threadCount = 8;
+    NSUInteger iterationsPerThread = 2000;
+
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+    for (NSUInteger t = 0; t < threadCount; t++) {
+        dispatch_group_async(group, queue, ^{
+            for (NSUInteger i = 0; i < iterationsPerThread; i++) {
+                @autoreleasepool {
+                    NSString* value = [NSString stringWithFormat:@"session-%lu-%lu",
+                                        (unsigned long)t, (unsigned long)i];
+                    NRMA_setSessionId(value.UTF8String);
+                }
+            }
+        });
+    }
+
+    long result = dispatch_group_wait(group, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(30 * NSEC_PER_SEC)));
+    XCTAssertEqual(result, 0, @"Concurrent setter stress test timed out (possible deadlock)");
+
+    XCTAssertTrue(NRMA_getSessionId() != NULL, @"Session id should still be readable after concurrent writes");
+}
+
 // Repro for the __NRMA_assign_retain NULL-check-after-use bug: strlen(src) was called
 // before the NULL check, so any nil-derived input (e.g. a nil app token/version/name)
 // crashed with EXC_BAD_ACCESS in strlen instead of returning early.
