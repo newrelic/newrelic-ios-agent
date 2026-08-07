@@ -232,10 +232,10 @@ void NRMA_setBuild(const char* buildNumber)
     //
 
     void __NRMA_assign_retain(char** dest, const char* src) {
-        unsigned long len = strlen(src);
         if (src == NULL) {
             return;
         }
+        unsigned long len = strlen(src);
         char* heapChar = malloc(sizeof(char)*(len+1));
         if (heapChar == NULL) {
             //malloc error *shrug*

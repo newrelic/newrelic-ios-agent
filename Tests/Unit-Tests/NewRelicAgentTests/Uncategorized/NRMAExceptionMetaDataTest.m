@@ -110,4 +110,12 @@
     free((void *)tempFile);
 }
 
+// Repro for the __NRMA_assign_retain NULL-check-after-use bug: strlen(src) was called
+// before the NULL check, so any nil-derived input (e.g. a nil app token/version/name)
+// crashed with EXC_BAD_ACCESS in strlen instead of returning early.
+- (void)test_NRMA_assign_retain_crashesOnNullSrc
+{
+    NRMA_setAppToken(NULL);
+}
+
 @end
