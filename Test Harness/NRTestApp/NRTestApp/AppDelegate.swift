@@ -55,7 +55,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NewRelic.setMaxEventBufferTime(60)
 
         let uiTesting  = ProcessInfo.processInfo.environment["UITesting"] != nil
-        let captureMode = plistHelper.objectFor(key: "captureMode", plist: "NRAPI-Info") as? Bool ?? false
+        var captureMode = false
+        //captureMode = true
 
         if uiTesting {
             // UITests run their own Swifter stub server on port 8080 in the test process.

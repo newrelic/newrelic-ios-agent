@@ -33,7 +33,20 @@ final class NRCaptureServer: ObservableObject {
                 "session_replay": [
                     "enabled": true,
                     "sampling_rate": 100.0,
-                    "error_sampling_rate": 100.0
+                    "error_sampling_rate": 100.0,
+                    // "default" masks text and images; "custom" uses the explicit flags below.
+                    "mode": "custom",
+                    "mask_application_text": false,
+                    "mask_user_input_text": false,
+                    "mask_all_images": false,
+                    "mask_all_user_touches": false,
+                    // Each rule: identifier ("tag" | "class"), type ("mask" | "unmask"),
+                    // name is an NSArray — pass as a JSON array even for a single value.
+                    "custom_masking_rules": [
+                        ["identifier": "tag",   "type": "mask",   "name": ["sensitiveField"]],
+                        ["identifier": "class", "type": "mask",   "name": ["UITextField"]],
+                        ["identifier": "class", "type": "unmask", "name": ["NRUnmaskedLabel"]]
+                    ]
                 ],
                 // Enable log reporting so /mobile/logs uploads are captured.
                 "logs": [
