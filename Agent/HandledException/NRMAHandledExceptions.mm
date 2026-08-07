@@ -8,6 +8,7 @@
 
 #import "NRMAHandledExceptions.h"
 
+#include <exception>
 #include <Hex/HexController.hpp>
 #include <Hex/HexPersistenceManager.hpp>
 #import "NewRelicInternalUtils.h"
@@ -28,9 +29,39 @@
 // END
 
 @interface NRMAAnalytics(Protected)
-// Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference. 
+// Because the NRMAAnalytics class interfaces with non Objective-C++ files, we cannot expose the API on the header. Therefore, we must use this reference.
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController;
 @end
+
+// The public record* entry points are thin wrappers that validate their input
+// and then call these. The split exists so the C++ catch-all in the wrapper
+// covers the whole body without re-indenting it.
+@interface NRMAHandledExceptions (Guarded)
+- (void) recordErrorInternal:(NSError*)error attributes:(NSDictionary*)attributes;
+- (void) recordHandledExceptionInternal:(NSException*)exception attributes:(NSDictionary*)attributes;
+- (void) recordHandledExceptionWithStackTraceInternal:(NSDictionary*)exceptionDictionary;
+@end
+
+// Runs `body`, absorbing any C++ exception it throws.
+//
+// libMobileAgent is built with C++ exceptions enabled, and the report path can
+// throw: HexReport::finalize raises std::invalid_argument for a report missing
+// its exception or app info, and every vector/shared_ptr allocation along the
+// way can raise std::bad_alloc under memory pressure. Without this barrier such
+// an exception unwinds out of the ObjC frame into the caller — and callers are
+// usually Swift (NewRelicClient.recordException and friends). A C++ exception
+// crossing a Swift frame is an unconditional std::terminate, so one
+// unserializable report would abort the host app. Dropping the report is
+// always the better outcome.
+static void NRMAGuardCxx(NSString* context, void (^body)(void)) {
+    try {
+        body();
+    } catch (const std::exception& e) {
+        NRLOG_AGENT_ERROR(@"%@ failed: %s", context, e.what());
+    } catch (...) {
+        NRLOG_AGENT_ERROR(@"%@ failed: unknown C++ exception", context);
+    }
+}
 
 const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
@@ -204,15 +235,39 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 - (void) recordError:(NSError * _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes
 {
+    // _Nonnull is a compile-time hint, not a runtime contract, and it is not
+    // enforced at all across a Swift bridge or a dynamic-language bridge
+    // (React Native / Cordova / Unity). A nil error here used to reach
+    // HandledException's constructor as two null const char*s — a SIGSEGV in
+    // std::string, not a catchable exception.
+    if (error == nil) {
+        NRLOG_AGENT_ERROR(@"Ignoring nil error.");
+        return;
+    }
+
+    NRMAGuardCxx(@"recordError:attributes:", ^{
+        [self recordErrorInternal:error attributes:attributes];
+    });
+}
+
+- (void) recordErrorInternal:(NSError*)error
+                  attributes:(NSDictionary*)attributes
+{
     void* callstack[1024];
     int frames = backtrace(callstack,1024);
+
+    // An NSError can legitimately have a nil localizedDescription, and a
+    // subclass can return nil from -domain. Fall back to empty strings so
+    // -UTF8String can never hand a null pointer to the C++ layer.
+    NSString* eMessage = error.localizedDescription ?: @"";
+    NSString* eDomain = error.domain ?: @"";
 
     if([NRMAFlags shouldEnableNewEventSystem]){
         auto resultMap = [self getSessionAttributesResultMap];
 
         auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
-                                                error.localizedDescription.UTF8String,
-                                                error.domain.UTF8String,
+                                                eMessage.UTF8String,
+                                                eDomain.UTF8String,
                                                 resultMap,
                                                 [self createThreadVector:callstack length:frames]
                                                 );
@@ -232,8 +287,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
     else {
         auto report = _controller->createReport(uint64_t([[[NSDate new] autorelease] timeIntervalSince1970] * 1000),
-                                                error.localizedDescription.UTF8String,
-                                                error.domain.UTF8String,
+                                                eMessage.UTF8String,
+                                                eDomain.UTF8String,
                                                 [self createThreadVector:callstack length:frames]
                                                 );
         
@@ -260,15 +315,22 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
         return;
     }
 
+    if (!exception.callStackReturnAddresses.count) {
+        NSString* name = exception.name ?: NSStringFromClass([exception class]);
+        NRLOG_AGENT_ERROR(@"Invalid exception. \"%@\" was recorded without being thrown. +[NewRelic %@] is reserved for thrown exceptions only.", name, NSStringFromSelector(_cmd));
+        return;
+    }
 
+    NRMAGuardCxx(@"recordHandledException:attributes:", ^{
+        [self recordHandledExceptionInternal:exception attributes:attributes];
+    });
+}
+
+- (void) recordHandledExceptionInternal:(NSException*)exception
+                             attributes:(NSDictionary*)attributes {
     NSString* eName = exception.name;
     if(!eName) {
         eName = NSStringFromClass([exception class]);
-    }
-
-    if (!exception.callStackReturnAddresses.count) {
-        NRLOG_AGENT_ERROR(@"Invalid exception. \"%@\" was recorded without being thrown. +[NewRelic %@] is reserved for thrown exceptions only.", eName, NSStringFromSelector(_cmd));
-        return;
     }
 
     NSString* eReason = @"";
@@ -351,7 +413,13 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         @try {
-            _persistenceManager->retrieveAndPublishReports();
+            // @catch below only sees ObjC exceptions. retrieveAndPublishReports
+            // reads and deserializes flatbuffers off disk, so it can also raise a
+            // C++ exception — and a C++ exception escaping a dispatch block is an
+            // unconditional std::terminate, with no @catch anywhere above it.
+            NRMAGuardCxx(@"persisted-report flush", ^{
+                _persistenceManager->retrieveAndPublishReports();
+            });
         }
         @catch (NSException* ex) {
             NRLOG_AGENT_ERROR(@"persisted-report flush threw: %@", ex);
@@ -365,9 +433,26 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 }
 
 - (void) recordHandledExceptionWithStackTrace:(NSDictionary*)exceptionDictionary {
+    if (exceptionDictionary == nil) {
+        NRLOG_AGENT_ERROR(@"Ignoring nil exception dictionary.");
+        return;
+    }
 
-    NSString* eName = exceptionDictionary[@"name"];
-    NSString* eReason = exceptionDictionary[@"reason"];
+    NRMAGuardCxx(@"recordHandledExceptionWithStackTrace:", ^{
+        [self recordHandledExceptionWithStackTraceInternal:exceptionDictionary];
+    });
+}
+
+- (void) recordHandledExceptionWithStackTraceInternal:(NSDictionary*)exceptionDictionary {
+
+    // This is the entry point used by the cross-platform bridges (React
+    // Native, Cordova, Unity, Flutter), so the dictionary contents are wholly
+    // caller-controlled — a bridge that omits "name" or "reason" produced a
+    // nil NSString whose -UTF8String is null, and std::string(nullptr) is a
+    // SIGSEGV rather than a catchable exception. The frame sub-dictionaries
+    // below were already defended this way; the name and reason were not.
+    NSString* eName = exceptionDictionary[@"name"] ?: @"";
+    NSString* eReason = exceptionDictionary[@"reason"] ?: @"";
     NSMutableArray* stackTraceElements = exceptionDictionary[@"stackTraceElements"];
 
     // Begin: Assemble threadVector from the stackTraceElements dict.

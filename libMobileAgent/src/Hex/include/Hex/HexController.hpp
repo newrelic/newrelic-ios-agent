@@ -44,8 +44,6 @@ namespace NewRelic {
             
             void resetKeyContext();
 
-            void setSessionId(const char* sessionId);
-
             std::shared_ptr<Report::HexReport> createReport(uint64_t epochMs,
                                                             const char* message,
                                                             const char* name,

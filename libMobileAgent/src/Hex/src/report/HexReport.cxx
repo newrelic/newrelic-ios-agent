@@ -29,31 +29,62 @@ void HexReport::setAttributes(std::map<std::string, std::shared_ptr<AttributeBas
     for (auto it = attributes.begin(); it != attributes.end(); it++) {
         auto key = it->first;
         auto val = it->second;
-        auto value = val->getValue();
+        if (val == nullptr) {
+            continue;
+        }
 
-        if (value != nullptr) {
-            switch (value->getCategory()) {
-                case NewRelic::BaseValue::Category::STRING:
-                    _stringAttributes->add(key,
-                                           dynamic_cast<NewRelic::String*>(val->getValue().get())->getValue());
+        // Capture the value ONCE and work from that shared_ptr. The previous
+        // code null-checked `value` but then re-called val->getValue() inside
+        // every branch, so the pointer that was validated was not the pointer
+        // that got dereferenced.
+        auto value = val->getValue();
+        if (value == nullptr) {
+            continue;
+        }
+
+        // Each dynamic_cast below is checked before use. getCategory() is a
+        // self-reported tag, so a value whose runtime type disagrees with its
+        // category (or any future BaseValue subclass) previously produced a
+        // nullptr that was dereferenced immediately. Skipping the attribute
+        // loses one key/value pair; the alternative was a SIGSEGV.
+        switch (value->getCategory()) {
+            case NewRelic::BaseValue::Category::STRING: {
+                auto* stringValue = dynamic_cast<NewRelic::String*>(value.get());
+                if (stringValue == nullptr) {
+                    LLOG_ERROR("Handled Exception: attribute '%s' is tagged STRING but is not a String; skipping.",
+                               key.c_str());
                     break;
-                case NewRelic::BaseValue::Category::BOOLEAN:
-                    _booleanAttributes->add(key,
-                                            dynamic_cast<NewRelic::Boolean*>(val->getValue().get())->getValue());
+                }
+                _stringAttributes->add(key, stringValue->getValue());
+                break;
+            }
+            case NewRelic::BaseValue::Category::BOOLEAN: {
+                auto* boolValue = dynamic_cast<NewRelic::Boolean*>(value.get());
+                if (boolValue == nullptr) {
+                    LLOG_ERROR("Handled Exception: attribute '%s' is tagged BOOLEAN but is not a Boolean; skipping.",
+                               key.c_str());
                     break;
-                case NewRelic::BaseValue::Category::NUMBER:
-                    switch (dynamic_cast<NewRelic::Number*>(val->getValue().get())->getTag()) {
-                        case NewRelic::Number::Tag::DOUBLE:
-                            _doubleAttributes->add(key,
-                                                   dynamic_cast<NewRelic::Number*>(val->getValue().get())->doubleValue());
-                            break;
-                        case NewRelic::Number::Tag::LONG:
-                        case NewRelic::Number::Tag::U_LONG: //Flat buffer schema doesn't support un-signed longs
-                            _longAttributes->add(key,
-                                                 dynamic_cast<NewRelic::Number*>(val->getValue().get())->longLongValue());
-                            break;
-                    }
+                }
+                _booleanAttributes->add(key, boolValue->getValue());
+                break;
+            }
+            case NewRelic::BaseValue::Category::NUMBER: {
+                auto* numberValue = dynamic_cast<NewRelic::Number*>(value.get());
+                if (numberValue == nullptr) {
+                    LLOG_ERROR("Handled Exception: attribute '%s' is tagged NUMBER but is not a Number; skipping.",
+                               key.c_str());
                     break;
+                }
+                switch (numberValue->getTag()) {
+                    case NewRelic::Number::Tag::DOUBLE:
+                        _doubleAttributes->add(key, numberValue->doubleValue());
+                        break;
+                    case NewRelic::Number::Tag::LONG:
+                    case NewRelic::Number::Tag::U_LONG: //Flat buffer schema doesn't support un-signed longs
+                        _longAttributes->add(key, numberValue->longLongValue());
+                        break;
+                }
+                break;
             }
         }
     }

@@ -215,7 +215,19 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-    
+
+    // _Nonnull is a compile-time hint, not a runtime contract, and it is not
+    // enforced across a Swift bridge or a dynamic-language bridge (React
+    // Native / Cordova / Unity). A nil error used to reach the C++ layer as
+    // two null const char*s, which is a SIGSEGV inside std::string rather
+    // than a catchable exception. NRMAHandledExceptions rejects nil too;
+    // bailing here as well keeps us from firing a session replay error
+    // snapshot for a call that will be discarded anyway.
+    if (error == nil) {
+        NRLOG_AGENT_ERROR(@"%@ ignoring nil error.", NSStringFromSelector(_cmd));
+        return;
+    }
+
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error
@@ -229,7 +241,14 @@
     if([NewRelicAgentInternal sharedInstance].isShutdown) {
         return;
     }
-    
+
+    // See the note on +recordError: above — _Nonnull does not survive the
+    // bridges, and a nil error reaching the C++ layer is a hard crash.
+    if (error == nil) {
+        NRLOG_AGENT_ERROR(@"%@ ignoring nil error.", NSStringFromSelector(_cmd));
+        return;
+    }
+
     [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
 
     [[NewRelicAgentInternal sharedInstance].handledExceptionsController recordError:error

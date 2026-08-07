@@ -101,9 +101,11 @@ void HexController::submit(std::shared_ptr<Report::HexReport> report) {
     _keyContext->insert(std::move(report));
 }
 
-void HexController::setSessionId(const char* sessionId) {
-    _sessionId = std::string(sessionId);
-}
+// setSessionId was removed: it had zero callers, took no lock while mutating
+// _sessionId concurrently with readers of the key context, and did not guard
+// against a null sessionId (std::string(nullptr) is a SIGSEGV, not an
+// exception). The session id is set once at construction. If per-session
+// mutation is ever needed, do it under _keyContextMutex with a null guard.
 
 
 

@@ -31,13 +31,12 @@ namespace NewRelic {
                          uint64_t size
         );
 
-        std::vector<Hex::Report::Library> libraries() {
-            return library_images;
-        }
-
         // Returns a snapshot of the library list under the internal lock.
-        // Prefer this over libraries() when the caller cannot guarantee it
-        // is already holding getLibraryMutex().
+        // This is the only supported way to read the list. The former
+        // libraries() accessor copied library_images WITHOUT holding
+        // libraryContainerMutex, so it raced against add_library() — which
+        // dyld invokes on arbitrary threads whenever an image is loaded —
+        // making a torn read of the vector's internals possible.
         std::vector<Hex::Report::Library> librariesSnapshot() {
             std::lock_guard<std::mutex> libraryLock(libraryContainerMutex);
             return library_images;

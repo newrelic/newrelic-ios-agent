@@ -21,7 +21,7 @@ namespace NewRelic {
 
         ASSERT_NO_THROW(controller.getAppImage());
 
-        for (auto& library : controller.libraries()) {
+        for (auto& library : controller.librariesSnapshot()) {
             ASSERT_TRUE(library.getSize() > 0);
             ASSERT_TRUE(library.uuidLow() != 0);
             ASSERT_TRUE(library.uuidHigh() != 0);

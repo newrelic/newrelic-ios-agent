@@ -131,8 +131,33 @@ namespace NewRelic {
                 return;
             }
             flatbuffers::FlatBufferBuilder builder{};
-            auto agentData = report->finalize(builder);
-            builder.Finish(agentData);
+            // HexReport::finalize throws std::invalid_argument when the report
+            // is missing its exception or its app info, and flatbuffer
+            // construction can throw std::bad_alloc under memory pressure.
+            // store() is called synchronously from HexController::submit,
+            // which is called from -[NRMAHandledExceptions recordError:], whose
+            // callers are frequently Swift. A C++ exception unwinding through a
+            // Swift frame is std::terminate — so an unserializable report would
+            // kill the host app. Contain it here and drop the one report.
+            try {
+                auto agentData = report->finalize(builder);
+                builder.Finish(agentData);
+            } catch (const std::exception& e) {
+                LLOG_ERROR("failed to serialize handled exception report %s: %s",
+                           filename.c_str(), e.what());
+                // Close before unlinking, and remove the zero-byte file we just
+                // created — readAll() would otherwise find it, log it as
+                // corrupt, and delete it on a later pass.
+                file.reset();
+                std::remove(filename.c_str());
+                return;
+            } catch (...) {
+                LLOG_ERROR("failed to serialize handled exception report %s: unknown error",
+                           filename.c_str());
+                file.reset();
+                std::remove(filename.c_str());
+                return;
+            }
             auto size = std::fwrite(builder.GetBufferPointer(), sizeof(uint8_t),
                                     builder.GetSize(), file.get());
             if (size < builder.GetSize()) {

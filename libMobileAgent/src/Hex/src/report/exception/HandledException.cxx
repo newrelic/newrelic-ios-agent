@@ -97,8 +97,15 @@ HandledException::HandledException(const std::string& sessionId,
                                    std::vector<std::shared_ptr<Thread>> threads) :
         _sessionId(sessionId),
         _epochMs(epochMs),
-        _message(message),
-        _name(name),
+        // `message` and `name` come from -[NSError localizedDescription] /
+        // -[NSError domain] (and equivalents) via -UTF8String, which returns
+        // nullptr for a nil receiver. std::string(nullptr) is undefined
+        // behavior — strlen(nullptr) — and crashes with SIGSEGV rather than
+        // throwing, so no caller-side try/catch can contain it. Callers now
+        // reject nil errors up front, but keep the guard here so this
+        // constructor is safe for every caller, present and future.
+        _message(message ? message : ""),
+        _name(name ? name : ""),
         _threads(std::move(threads)) {}
 
 HandledException::~HandledException() {
