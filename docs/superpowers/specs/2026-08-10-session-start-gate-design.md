@@ -197,19 +197,38 @@ advances the clock via `performSessionStartInitialization`.
 
 ## Testing
 
-Added to `Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicAgentTests.m`, which
-already drives `[NewRelicAgentInternal sharedInstance]` with a `destroyAgent` teardown,
-so no `.pbxproj` edit is required. The test file declares the gate primitives via
-`@interface NewRelicAgentInternal (Testing)`.
+A new file, `Tests/Unit-Tests/NewRelicAgentTests/Harvester-Tests/NRMASessionStartGateTests.m`,
+added to the same three test targets as its sibling `NRHarvestControllerTest.m` using the
+`xcodeproj` Ruby gem (1.28.1 is installed).
+
+An earlier draft of this spec proposed
+`Tests/Unit-Tests/NewRelicAgentTests/Uncategorized/NewRelicAgentTests.m`. That was wrong:
+that file has a `PBXFileReference` but no `PBXBuildFile`, so it is in no target and does
+not compile — it still uses the SenTestingKit `STAssertTrue` macro, which is defined
+nowhere in the repo.
+
+**Test fixture.** Follow the idiom in `Analytics-Tests/PersistentStoreTests.m:86-89`:
+OCMock-stub `+sharedInstance` to return a bare `[[NewRelicAgentInternal alloc] init]`
+(there is no custom `-init`, so this is `NSObject`'s and runs none of the agent start
+path) and inject a real `NRMAAnalytics`.
+
+**Observable.** Use `appSessionStartDate`, not the session id. `agentConfiguration` is
+`readonly` (`NewRelicAgentInternal.h:60`) and cannot be injected, so on a bare instance
+`-onSessionStart` assigns `sessionIdentifier` through a nil configuration and
+`-currentSessionId` stays nil. `appSessionStartDate` is set unconditionally at the top of
+`-performSessionStartInitialization` and needs no configuration, so it is a reliable
+"did a session start actually run" signal. It is declared in the class extension
+(`NewRelicAgentInternal.m:97`), so the test file redeclares it in its category.
 
 | Test | Asserts |
 | --- | --- |
-| `test_gate_onlyOneClaimSucceeds` | N threads call `-tryBeginSessionStart`; exactly one gets `YES` |
-| `test_sessionStartInitialization_yieldsWhenGateHeld` | Claim, then `sessionStartInitialization`; session id unchanged |
-| `test_deferredSessionStart_runsOnRelease` | Claim, `sessionStartInitialization`, release; session id changes asynchronously |
-| `test_handle4HourSessionRestart_bailsWhenGateHeld` | Claim, then `handle4HourSessionRestart`; session id unchanged and no `Session/Duration` metric queued |
-| `test_skippedRestart_leavesClockUnadvanced` | Short `maxSessionDuration`; claim, `checkAndHandleSessionTimeout`, assert `hasSessionExceeded` still `YES`; release, call again, session id changes |
-| `test_startNewSessionForUserId_appliesUserIdWhenGateHeld` | Claim, then `startNewSessionForUserId:@"u1"`; userId attribute present, session id unchanged |
+| `test_gate_secondClaimFailsUntilReleased` | Claim succeeds, second claim fails, release, claim succeeds again |
+| `test_gate_onlyOneClaimSucceedsUnderContention` | N threads call `-tryBeginSessionStart`; exactly one gets `YES` |
+| `test_sessionStartInitialization_yieldsWhenGateHeld` | Claim, then `sessionStartInitialization`; `appSessionStartDate` unchanged |
+| `test_deferredSessionStart_runsOnRelease` | Claim, `sessionStartInitialization`, release; `appSessionStartDate` changes asynchronously |
+| `test_handle4HourSessionRestart_bailsWhenGateHeld` | Claim, then `handle4HourSessionRestart`; `appSessionStartDate` unchanged |
+| `test_skippedRestart_leavesClockUnadvanced` | Short `maxSessionDuration`; claim, `checkAndHandleSessionTimeout`, assert `hasSessionExceeded` still `YES`; release, call again, `appSessionStartDate` changes |
+| `test_startNewSessionForUserId_appliesUserIdWhenGateHeld` | Claim, then `startNewSessionForUserId:@"u1"`; `sessionAttributeJSONString` contains the user id and `appSessionStartDate` is unchanged |
 | `test_concurrentSessionStarts_doNotCrash` | N x M threads on `sessionStartInitialization`; smoke only, real coverage from one Thread Sanitizer run |
 
 Regression suites: `Tests/Unit-Tests/NewRelicAgentTests/Harvester-Tests/NRHarvestControllerTest.m`
@@ -218,10 +237,13 @@ them assert on the deleted `:691` behavior; they call `[timer tick]`, assert
 `XCTAssertNoThrow`, and restore the clock manually. The comment at
 `NRHarvestControllerTest.m:237` remains accurate.
 
-Two environment constraints carried over from earlier sessions:
+Environment constraints:
 
-- Build and run with **Xcode 26.3 (release)**. `Agent_Tests` hits an OCMock link failure
-  under the Xcode 27 beta.
+- Build and run with **Xcode 26.3 (release)**, which `xcode-select` already points at.
+  `Agent_Tests` hits an OCMock link failure under the Xcode 27 beta.
+- There is no `Agent_Tests` scheme. `Agent_Tests` is the testable of the **`Agent-iOS`**
+  scheme, whose `TestAction` also carries a `SkippedTests` entry — so run with
+  `-only-testing:` to select these tests explicitly.
 - Baseline before blaming the diff: 5 `NRMASessionExclusivityWithDelegateTests` upload
   tests fail on a clean tree because they depend on live `imgur.com`.
 
