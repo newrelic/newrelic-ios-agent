@@ -17,6 +17,13 @@
 #import "NRMAAppToken.h"
 #import "NewRelicAgentInternal.h"
 #import <NewRelic/NewRelic-Swift.h>
+#import "NRMeasurementConsumerHelper.h"
+#import "NRMAHarvestableAnalytics.h"
+#import "NRMASupportMetricHelper.h"
+#import "NRMATaskQueue.h"
+#import "NRMANamedValueMeasurement.h"
+#import "NRMAJSON.h"
+#import "NRConstants.h"
 
 @interface NewRelicAgentInternal(UnitTests)
 
