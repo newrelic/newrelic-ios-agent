@@ -96,4 +96,38 @@
     [self.agent endSessionStartDrainingDeferred];
 }
 
+#pragma mark - Funnel
+
+- (void) test_sessionStartInitialization_yieldsWhenGateHeld {
+    id agentMock = [OCMockObject partialMockForObject:self.agent];
+    // The real body tears down and rebuilds the whole harvest pipeline. We only care
+    // whether the gate let it run, so stub it out and assert on the call.
+    [[agentMock reject] performSessionStartInitialization];
+
+    XCTAssertTrue([self.agent tryBeginSessionStart]);
+    [self.agent sessionStartInitialization];
+
+    [agentMock verify];
+    [agentMock stopMocking];
+    [self.agent endSessionStartDrainingDeferred];
+}
+
+- (void) test_deferredSessionStart_runsOnRelease {
+    id agentMock = [OCMockObject partialMockForObject:self.agent];
+
+    XCTestExpectation* ranDeferred =
+        [self expectationWithDescription:@"deferred session start runs after release"];
+    [[[agentMock stub] andDo:^(NSInvocation* invocation) {
+        [ranDeferred fulfill];
+    }] performSessionStartInitialization];
+
+    XCTAssertTrue([self.agent tryBeginSessionStart]);
+    [self.agent sessionStartInitialization];         // loses, registers the deferral
+    [self.agent endSessionStartDrainingDeferred];    // releases, drains, re-dispatches
+
+    [self waitForExpectations:@[ranDeferred] timeout:5.0];
+
+    [agentMock stopMocking];
+}
+
 @end

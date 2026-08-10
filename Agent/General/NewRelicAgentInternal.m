@@ -911,6 +911,28 @@ static _Atomic bool __NRMASessionStartDeferred = false;
 #endif
 
 - (void) sessionStartInitialization {
+    if (![self tryBeginSessionStart]) {
+        NRLOG_AGENT_VERBOSE(@"Session start already in flight; deferring this one.");
+        atomic_store_explicit(&__NRMASessionStartDeferred, true, memory_order_release);
+
+        // Belt and braces for the case this gate exists to protect. On a background agent
+        // start -initialize skips +[NRMAHarvestController start], so this path is what
+        // starts the harvester; if the deferred re-run were ever lost, the session would
+        // report nothing at all. +start is safe to call again -- the timer no-ops when
+        // already running and the harvester only executes from UNINITIALIZED/DISCONNECTED.
+        [NRMAHarvestController start];
+        return;
+    }
+
+    @try {
+        [self performSessionStartInitialization];
+    } @finally {
+        [self endSessionStartDrainingDeferred];
+    }
+}
+
+// The session start itself. Callers must own the session-start gate.
+- (void) performSessionStartInitialization {
 
     [self makeSampleSeeds];
 
