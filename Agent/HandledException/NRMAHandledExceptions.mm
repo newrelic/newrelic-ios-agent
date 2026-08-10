@@ -42,7 +42,8 @@
 - (void) recordHandledExceptionWithStackTraceInternal:(NSDictionary*)exceptionDictionary;
 @end
 
-// Runs `body`, absorbing any C++ exception it throws.
+// Runs `body`, absorbing any C++ exception it throws. ObjC exceptions are
+// re-thrown unchanged — see the catch(id) handler for why.
 //
 // libMobileAgent is built with C++ exceptions enabled, and the report path can
 // throw: HexReport::finalize raises std::invalid_argument for a report missing
@@ -56,6 +57,15 @@
 static void NRMAGuardCxx(NSString* context, void (^body)(void)) {
     try {
         body();
+    } catch (id) {
+        // Deliberately NOT absorbed. Under the unified 64-bit exception model an
+        // @throw'n ObjC object is itself a C++ exception, so the bare catch(...)
+        // below would swallow NSExceptions too. Raising NSInvalidArgumentException
+        // for a malformed argument — e.g. an NSError whose localizedDescription is
+        // an NSNull, so -UTF8String is an unrecognized selector — is long-standing,
+        // tested behavior that surfaces a caller programming error. Hiding it would
+        // turn a loud bug into a silently dropped report.
+        throw;
     } catch (const std::exception& e) {
         NRLOG_AGENT_ERROR(@"%@ failed: %s", context, e.what());
     } catch (...) {
