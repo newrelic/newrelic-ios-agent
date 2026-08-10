@@ -231,6 +231,17 @@ static NewRelicAgentInternal* _sharedInstance;
         self->_isShutdown = false;
         self->_enabled = ![self isDisabled];
         if (self->_enabled) {
+            // Claim the session-start gate before the lifecycle observers below exist:
+            // -applicationWillEnterForeground can fire the moment they do, and its session
+            // start would tear down the harvest pipeline this initializer is still
+            // building. Holding the gate makes that handler defer instead.
+            //
+            // A failed claim is not a reason to skip agent start. Init is by construction
+            // the first session start, so a set flag here can only be stale state from a
+            // previous test-mode instance, and the release below clears it.
+            if (![self tryBeginSessionStart]) {
+                NRLOG_AGENT_ERROR(@"Agent start: a session start was already in flight; taking the session-start gate anyway.");
+            }
 #if TARGET_OS_WATCH
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(applicationDidEnterBackground)
@@ -282,8 +293,12 @@ static NewRelicAgentInternal* _sharedInstance;
                 NRMA_setAppName([NRMAAgentConfiguration connectionInformation].applicationInformation.appName.UTF8String);
                 NRMA_setTempDir(NSTemporaryDirectory().UTF8String);
             }
-            [self initialize];
-            [self onSessionStart];
+            @try {
+                [self initialize];
+                [self onSessionStart];
+            } @finally {
+                [self endSessionStartDrainingDeferred];
+            }
 
             if ([NRMAFlags shouldEnableCrashReporting]) {
                 NRMACrashReporterRecorder* crashReportRecorder = [[NRMACrashReporterRecorder alloc] init];

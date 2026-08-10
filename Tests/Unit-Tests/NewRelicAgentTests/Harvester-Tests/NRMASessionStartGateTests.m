@@ -121,6 +121,10 @@
     return atomic_load_explicit(&_sessionStartCount, memory_order_acquire);
 }
 
+- (int32_t) maxConcurrentSessionStarts {
+    return atomic_load_explicit(&_maxConcurrentSessionStarts, memory_order_acquire);
+}
+
 // Claims the gate, tolerating a brief window in which a previous test's deferred session
 // start is still finishing on a background queue. That transient hold is real gate
 // behaviour rather than a test artifact, so waiting for it is the honest thing to do.
@@ -263,6 +267,31 @@
     XCTAssertTrue([attributes containsString:@"gate-test-user"],
                   @"the user id must be applied even when the session restart yields, got: %@",
                   attributes);
+}
+
+#pragma mark - Concurrency
+
+- (void) test_concurrentSessionStarts_neverOverlap {
+    const NSUInteger threadCount = 16;
+    const NSUInteger iterations  = 50;
+
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+
+    for (NSUInteger t = 0; t < threadCount; t++) {
+        dispatch_group_async(group, queue, ^{
+            for (NSUInteger i = 0; i < iterations; i++) {
+                [self.agent sessionStartInitialization];
+            }
+        });
+    }
+    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+
+    XCTAssertLessThanOrEqual([self maxConcurrentSessionStarts], 1,
+                             @"the gate must never let two session starts overlap, saw %d",
+                             [self maxConcurrentSessionStarts]);
+    XCTAssertGreaterThan([self sessionStartCount], 0,
+                         @"sanity: at least one session start should have run");
 }
 
 @end
