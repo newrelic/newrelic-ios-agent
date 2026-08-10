@@ -689,7 +689,11 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         NSTimeInterval elapsed = [[NRMASessionDurationManager shared] currentSessionDuration];
         NSTimeInterval maxDuration = [[NRMASessionDurationManager shared] maxSessionDuration];
         NRLOG_AGENT_INFO(@"HarvestTimer: Session duration reached limit (%.0f seconds / %.0f max). Triggering session restart.", elapsed, maxDuration);
-        [[NRMASessionDurationManager shared] updateSessionStartTime:[NSDate date]];
+        // The session clock is deliberately not poked here.
+        // -performSessionStartInitialization updates it only when the restart actually
+        // runs, so a restart that loses the session-start gate is retried on the next
+        // harvest instead of silently buying another full session. The gate also prevents
+        // the recursion this poke used to guard against -- see -handle4HourSessionRestart.
         [self handle4HourSessionRestart];
     }
 }
@@ -969,6 +973,23 @@ static _Atomic bool __NRMASessionStartDeferred = false;
 }
 
 - (void) handle4HourSessionRestart {
+    // Claim the gate before any side effect. This runs on the harvest thread from inside
+    // -[NRMAHarvester execute], so it can collide with a foreground return, a setUserId, or
+    // agent start -- and it is the one caller that can simply give up, because
+    // -checkAndHandleSessionTimeout runs again on the next harvest tick. Bailing here
+    // rather than further down matters: everything below ends the current session, so
+    // yielding late would end a session and never start a replacement.
+    //
+    // This is also what stops the recursion that used to be broken by poking the session
+    // clock in -checkAndHandleSessionTimeout: the -execute below re-enters that method,
+    // whose -handle4HourSessionRestart then fails to claim the gate this thread is still
+    // holding, and returns.
+    if (![self tryBeginSessionStart]) {
+        NRLOG_AGENT_DEBUG(@"Skipping 4-hour session restart: a session start is already in flight. Retrying on the next harvest.");
+        return;
+    }
+
+    @try {
     NRLOG_AGENT_DEBUG(@"Executing 4-hour automatic session restart");
 
     // End current session (adds sessionDuration attribute and Session event)
@@ -988,8 +1009,9 @@ static _Atomic bool __NRMASessionStartDeferred = false;
     
     [[NewRelicAgentInternal sharedInstance] sessionReplayEndSession];
 
-    // Restart session: new session ID, new sample seeds, restart harvest
-    [self sessionStartInitialization];
+    // Restart session: new session ID, new sample seeds, restart harvest.
+    // Ungated: we already own the gate, so calling the wrapper would fail its own claim.
+    [self performSessionStartInitialization];
 
     // Restart session replay if enabled
     #if !TARGET_OS_TV && !TARGET_OS_WATCH
@@ -999,6 +1021,9 @@ static _Atomic bool __NRMASessionStartDeferred = false;
         }
     }
     #endif
+    } @finally {
+        [self endSessionStartDrainingDeferred];
+    }
 }
 
 #if !TARGET_OS_WATCH

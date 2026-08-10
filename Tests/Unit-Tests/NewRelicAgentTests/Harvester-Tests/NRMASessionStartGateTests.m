@@ -29,12 +29,24 @@
 @interface NRMASessionStartGateTests : NRMAAgentTestBase
 @property (nonatomic, strong) NewRelicAgentInternal* agent;
 @property (nonatomic, strong) id sharedInstanceMock;
+@property (nonatomic, strong) id agentMock;
+// Fulfilled by the shared -performSessionStartInitialization hook when set.
+@property (atomic, strong) XCTestExpectation* sessionStartExpectation;
 @end
 
-@implementation NRMASessionStartGateTests
+@implementation NRMASessionStartGateTests {
+    _Atomic int32_t _sessionStartCount;
+    _Atomic int32_t _concurrentSessionStarts;
+    _Atomic int32_t _maxConcurrentSessionStarts;
+}
 
 - (void) setUp {
     [super setUp];
+
+    atomic_store(&_sessionStartCount, 0);
+    atomic_store(&_concurrentSessionStarts, 0);
+    atomic_store(&_maxConcurrentSessionStarts, 0);
+    self.sessionStartExpectation = nil;
 
     // There is no custom -init on NewRelicAgentInternal, so this is NSObject's and runs
     // none of the agent start path -- exactly what we want. Stubbing +sharedInstance
@@ -43,24 +55,90 @@
     self.agent = [[NewRelicAgentInternal alloc] init];
     self.agent.analyticsController = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0.0];
     [[[[self.sharedInstanceMock stub] classMethod] andReturn:self.agent] sharedInstance];
+
+    // Stub the real session start for every test in this class, and count the calls.
+    //
+    // Two reasons this is a shared stub rather than a per-test one. First, the real body
+    // stops and rebuilds the whole harvest pipeline, which is not what any of these tests
+    // are about. Second, releasing the gate re-dispatches deferred session starts
+    // *asynchronously*: a test that deliberately causes a deferral hands off work that
+    // lands after it has finished, and with no stub in place that work would run the real
+    // body and hold the gate while the next test tried to claim it.
+    self.agentMock = [OCMockObject partialMockForObject:self.agent];
+    __weak __typeof__(self) weakSelf = self;
+    [[[self.agentMock stub] andDo:^(NSInvocation* invocation) {
+        [weakSelf noteSessionStartRan];
+    }] performSessionStartInitialization];
 }
 
 - (void) tearDown {
-    // The gate is a file static and survives between tests. Release it unconditionally so
-    // one failing test cannot strand it and cascade into every later test.
+    // The gate is a file static and outlives each test, so release it unconditionally.
+    // This can re-dispatch a deferred session start onto a background queue, which lands
+    // after this method returns.
     [self.agent endSessionStartDrainingDeferred];
 
+    // Deliberately do NOT stop the agent partial mock, and do NOT release it or the agent.
+    // The deferred session start above holds a strong reference to the agent and runs
+    // later; if the stub were gone by then it would execute the real funnel body, which
+    // rebuilds the harvest pipeline and pokes the session clock, corrupting whichever test
+    // runs next. That is exactly the failure this suite hit. Leaving the stub installed
+    // makes the late work a no-op. Each test builds its own agent and mock, so nothing is
+    // shared between them, and XCTest keeps test instances alive for the whole run, so the
+    // mock cannot be collected out from under a pending block. The only residue is a
+    // transient gate hold, which -claimGate waits out.
+    //
+    // The +sharedInstance class mock is a different matter: it patches the class itself, so
+    // it has to come off before the next test installs its own.
     [self.sharedInstanceMock stopMocking];
     self.sharedInstanceMock = nil;
-    self.agent = nil;
+    self.sessionStartExpectation = nil;
 
     [super tearDown];
+}
+
+#pragma mark - Helpers
+
+// Called in place of the real -performSessionStartInitialization. Records that a session
+// start ran, and tracks how many ran at once so the contention test can assert the gate
+// never let two overlap.
+- (void) noteSessionStartRan {
+    int32_t now = atomic_fetch_add_explicit(&_concurrentSessionStarts, 1, memory_order_acq_rel) + 1;
+
+    int32_t seen = atomic_load_explicit(&_maxConcurrentSessionStarts, memory_order_acquire);
+    while (now > seen &&
+           !atomic_compare_exchange_weak_explicit(&_maxConcurrentSessionStarts, &seen, now,
+                                                  memory_order_acq_rel, memory_order_acquire)) {
+        // A failed exchange reloads `seen`, so the loop re-tests against the new value.
+    }
+
+    atomic_fetch_add_explicit(&_sessionStartCount, 1, memory_order_acq_rel);
+    atomic_fetch_sub_explicit(&_concurrentSessionStarts, 1, memory_order_acq_rel);
+
+    [self.sessionStartExpectation fulfill];
+}
+
+- (int32_t) sessionStartCount {
+    return atomic_load_explicit(&_sessionStartCount, memory_order_acquire);
+}
+
+// Claims the gate, tolerating a brief window in which a previous test's deferred session
+// start is still finishing on a background queue. That transient hold is real gate
+// behaviour rather than a test artifact, so waiting for it is the honest thing to do.
+- (BOOL) claimGate {
+    NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    do {
+        if ([self.agent tryBeginSessionStart]) {
+            return YES;
+        }
+        [NSThread sleepForTimeInterval:0.005];
+    } while ([deadline timeIntervalSinceNow] > 0);
+    return NO;
 }
 
 #pragma mark - Gate primitive
 
 - (void) test_gate_secondClaimFailsUntilReleased {
-    XCTAssertTrue([self.agent tryBeginSessionStart], @"first claim should win the gate");
+    XCTAssertTrue([self claimGate], @"first claim should win the gate");
     XCTAssertFalse([self.agent tryBeginSessionStart], @"second claim should lose while held");
 
     [self.agent endSessionStartDrainingDeferred];
@@ -99,35 +177,68 @@
 #pragma mark - Funnel
 
 - (void) test_sessionStartInitialization_yieldsWhenGateHeld {
-    id agentMock = [OCMockObject partialMockForObject:self.agent];
-    // The real body tears down and rebuilds the whole harvest pipeline. We only care
-    // whether the gate let it run, so stub it out and assert on the call.
-    [[agentMock reject] performSessionStartInitialization];
+    XCTAssertTrue([self claimGate]);
 
-    XCTAssertTrue([self.agent tryBeginSessionStart]);
     [self.agent sessionStartInitialization];
 
-    [agentMock verify];
-    [agentMock stopMocking];
-    [self.agent endSessionStartDrainingDeferred];
+    XCTAssertEqual([self sessionStartCount], 0,
+                   @"session start must not run while another one holds the gate");
 }
 
 - (void) test_deferredSessionStart_runsOnRelease {
-    id agentMock = [OCMockObject partialMockForObject:self.agent];
-
-    XCTestExpectation* ranDeferred =
+    self.sessionStartExpectation =
         [self expectationWithDescription:@"deferred session start runs after release"];
-    [[[agentMock stub] andDo:^(NSInvocation* invocation) {
-        [ranDeferred fulfill];
-    }] performSessionStartInitialization];
 
-    XCTAssertTrue([self.agent tryBeginSessionStart]);
+    XCTAssertTrue([self claimGate]);
     [self.agent sessionStartInitialization];         // loses, registers the deferral
+    XCTAssertEqual([self sessionStartCount], 0, @"nothing should have run yet");
+
     [self.agent endSessionStartDrainingDeferred];    // releases, drains, re-dispatches
 
-    [self waitForExpectations:@[ranDeferred] timeout:5.0];
+    [self waitForExpectations:@[self.sessionStartExpectation] timeout:5.0];
+    XCTAssertEqual([self sessionStartCount], 1, @"the deferred session start should have run once");
+}
 
-    [agentMock stopMocking];
+#pragma mark - 4-hour restart
+
+- (void) test_handle4HourSessionRestart_bailsBeforeAnySideEffectWhenGateHeld {
+    // Asserting only that -performSessionStartInitialization did not run would prove
+    // nothing: gating the funnel already makes the restart's session start yield, because
+    // the restart calls that funnel. The stronger claim, and the one this task is for, is
+    // that the restart gives up *before* ending the analytics session -- otherwise a
+    // restart that loses the gate ends a session and never starts a replacement.
+    // -newSession is the method's first side effect, so rejecting it pins the bail to the
+    // top of the method.
+    id analyticsMock = [OCMockObject partialMockForObject:self.agent.analyticsController];
+    [[analyticsMock reject] newSession];
+
+    XCTAssertTrue([self claimGate]);
+    XCTAssertNoThrow([self.agent handle4HourSessionRestart]);
+
+    [analyticsMock verify];
+    XCTAssertEqual([self sessionStartCount], 0, @"the restart must not have restarted the session");
+
+    [analyticsMock stopMocking];
+}
+
+- (void) test_skippedRestart_leavesClockUnadvanced {
+    NRMASessionDurationManager* manager = [NRMASessionDurationManager shared];
+    NSTimeInterval originalMax = manager.maxSessionDuration;
+
+    [manager setMaxSessionDuration:2.0];
+    [manager updateSessionStartTime:[NSDate dateWithTimeIntervalSinceNow:-5.0]];
+    XCTAssertTrue([manager hasSessionExceeded], @"precondition: session must be over the limit");
+
+    // Hold the gate so the restart has to yield.
+    XCTAssertTrue([self claimGate]);
+    XCTAssertNoThrow([self.agent checkAndHandleSessionTimeout]);
+
+    XCTAssertTrue([manager hasSessionExceeded],
+                  @"a restart that yielded must leave the clock alone so the next harvest retries");
+    XCTAssertEqual([self sessionStartCount], 0, @"the restart must not have restarted the session");
+
+    [manager setMaxSessionDuration:originalMax];
+    [manager updateSessionStartTime:[NSDate date]];
 }
 
 @end
