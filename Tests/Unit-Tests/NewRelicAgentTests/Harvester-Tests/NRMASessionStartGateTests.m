@@ -241,4 +241,28 @@
     [manager updateSessionStartTime:[NSDate date]];
 }
 
+#pragma mark - setUserId
+
+- (void) test_startNewSessionForUserId_appliesUserIdWhenGateHeld {
+    // Same reasoning as the 4-hour restart: the claim has to land before -newSession, or a
+    // loser ends the current session and leaves it with no replacement. The user id must
+    // still be applied, because the gate owner is itself starting a new session.
+    id analyticsMock = [OCMockObject partialMockForObject:self.agent.analyticsController];
+    [[analyticsMock reject] newSession];
+
+    XCTAssertTrue([self claimGate]);
+    XCTAssertNoThrow([self.agent startNewSessionForUserId:@"gate-test-user"]);
+
+    [analyticsMock verify];
+    XCTAssertEqual([self sessionStartCount], 0, @"setUserId must not have restarted the session");
+
+    [analyticsMock stopMocking];
+
+    NSString* attributes = [self.agent.analyticsController sessionAttributeJSONString];
+    XCTAssertNotNil(attributes, @"session attributes should be readable");
+    XCTAssertTrue([attributes containsString:@"gate-test-user"],
+                  @"the user id must be applied even when the session restart yields, got: %@",
+                  attributes);
+}
+
 @end

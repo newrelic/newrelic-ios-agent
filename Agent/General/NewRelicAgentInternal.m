@@ -958,17 +958,37 @@ static _Atomic bool __NRMASessionStartDeferred = false;
 
 - (void) startNewSessionForUserId:(NSString* _Nullable)userId {
     @synchronized(kNRMA_BGFG_MUTEX) {
-        [self.analyticsController newSession];
-        [self sessionReplayEndSession];
-        [NewRelicAgentInternal harvestNow];
-        [self sessionStartInitialization];
-        if (userId) {
-            [self.analyticsController setSessionAttribute:kNRMA_Attrib_userId
-                                                    value:userId
-                                               persistent:YES];
-        } else {
-            [self.analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
+        // Claim the gate before ending the current session. If another thread is already
+        // restarting the session we must not end this one and leave it without a
+        // replacement -- but the user id is applied either way, because the thread that
+        // owns the gate is itself starting a new session, so the id lands on a fresh one
+        // regardless of who created it.
+        if (![self tryBeginSessionStart]) {
+            NRLOG_AGENT_VERBOSE(@"setUserId: session start already in flight; applying the user id to it.");
+            [self applyUserId:userId];
+            return;
         }
+
+        @try {
+            [self.analyticsController newSession];
+            [self sessionReplayEndSession];
+            [NewRelicAgentInternal harvestNow];
+            // Ungated: we already own the gate.
+            [self performSessionStartInitialization];
+            [self applyUserId:userId];
+        } @finally {
+            [self endSessionStartDrainingDeferred];
+        }
+    }
+}
+
+- (void) applyUserId:(NSString* _Nullable)userId {
+    if (userId) {
+        [self.analyticsController setSessionAttribute:kNRMA_Attrib_userId
+                                                value:userId
+                                           persistent:YES];
+    } else {
+        [self.analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
     }
 }
 
