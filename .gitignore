@@ -93,4 +93,5 @@ Test Harness/NRTestApp/upload_dsym_results.log
 node_modules
 derived_path
 builds/nrtestapp-ios.zip
+.worktrees
 examples/RNSampleApp/ios/Pods
