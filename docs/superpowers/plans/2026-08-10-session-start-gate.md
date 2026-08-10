@@ -15,6 +15,7 @@
 - **Xcode 26.3 (release)**, which `xcode-select` already points at. `Agent_Tests` hits an OCMock link failure under the Xcode 27 beta — do not switch to `Xcode-beta.app`.
 - There is **no `Agent_Tests` scheme**. `Agent_Tests` is the testable of the **`Agent-iOS`** scheme, whose `TestAction` also carries a `SkippedTests` entry, so always select tests with `-only-testing:`.
 - Simulator for every test run: **iOS 26.3, iPhone 17 Pro, id `15135556-1BB1-445F-8AB2-E080E1F8B4BE`**.
+- **`-only-testing:` takes class names, not filenames**, and a mismatch is silent: `xcodebuild` reports `Executed 0 tests` and `** TEST SUCCEEDED **`. Always confirm the executed-test count is what you expect before believing a pass. The 4-hour regression class is `NRMAHarvestControllerTest`, in a file named `NRHarvestControllerTest.m`.
 - The canonical test command, used verbatim in every task:
 
 ```bash
@@ -661,7 +662,7 @@ xcodebuild test \
   -project Agent.xcodeproj \
   -scheme Agent-iOS \
   -destination 'platform=iOS Simulator,id=15135556-1BB1-445F-8AB2-E080E1F8B4BE' \
-  -only-testing:Agent_Tests/NRHarvestControllerTest \
+  -only-testing:Agent_Tests/NRMAHarvestControllerTest \
   2>&1 | tail -40
 ```
 
