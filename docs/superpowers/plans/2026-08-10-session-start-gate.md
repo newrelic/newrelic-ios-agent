@@ -80,6 +80,9 @@ Create `Tests/Unit-Tests/NewRelicAgentTests/Harvester-Tests/NRMASessionStartGate
 - (BOOL) tryBeginSessionStart;
 - (void) endSessionStartDrainingDeferred;
 - (void) performSessionStartInitialization;
+// Defined at NewRelicAgentInternal.m:893 but declared in neither the header nor the class
+// extension, so Task 3's tests cannot see it without this.
+- (void) handle4HourSessionRestart;
 @end
 
 @interface NRMASessionStartGateTests : NRMAAgentTestBase
