@@ -21,6 +21,7 @@
 #import "NRMATraceController.h"
 #import "NRMAUserActionBuilder.h"
 #import <mach/mach_time.h>
+#include <stdatomic.h>
 #import "NRMALastActivityTraceController.h"
 #import "NRMACrashReporterRecorder.h"
 #import "NRMAMetric.h"
@@ -780,6 +781,61 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
 @"com.newrelic.appWillTerm";
+
+#pragma mark - Session start gate
+
+// Starting a session tears down and rebuilds the harvest pipeline
+// (-performSessionStartInitialization) and reassigns the session id (-onSessionStart).
+// Two threads doing that at once corrupt each other, and four call sites reach it from
+// three different lock contexts:
+//
+//   -init                            no locks held
+//   -applicationWillEnterForeground  kNRMA_BGFG_MUTEX
+//   -startNewSessionForUserId        kNRMA_BGFG_MUTEX
+//   -handle4HourSessionRestart       @synchronized(harvester), from -[NRMAHarvester execute]
+//
+// A mutex cannot serialize those. The foreground and background harvests take
+// kNRMA_BGFG_MUTEX and then call -[NRMAHarvester execute], which takes
+// @synchronized(self) -- ordering BGFG before the harvester lock. The 4-hour restart
+// arrives already holding the harvester lock, because NRMAHarvester.mm calls
+// -checkAndHandleSessionTimeout from inside -execute, so any mutex it takes here is
+// ordered after it. One mutex shared by both orderings is a lock-order inversion: it
+// would trade a fixed crash for a hang.
+//
+// So this gate never waits. It is a test-and-set: a thread either claims it and runs, or
+// loses and returns immediately. Nothing blocks on anything, so no edge is added to the
+// lock graph and the inversion cannot arise.
+static _Atomic bool __NRMASessionStartInFlight = false;
+
+// Set by a caller that lost the gate but whose session start still needs to happen.
+// Whoever releases the gate re-dispatches it.
+static _Atomic bool __NRMASessionStartDeferred = false;
+
+// YES means the caller now owns the gate and must release it with
+// -endSessionStartDrainingDeferred.
+- (BOOL) tryBeginSessionStart {
+    return !atomic_exchange_explicit(&__NRMASessionStartInFlight, true, memory_order_acq_rel);
+}
+
+// Releases the gate, then re-runs any session start that was deferred while we held it.
+// The re-run is dispatched asynchronously on purpose: this can be called from the harvest
+// thread while it still holds @synchronized(harvester), and running session start there
+// would nest a second harvest inside the first.
+- (void) endSessionStartDrainingDeferred {
+    atomic_store_explicit(&__NRMASessionStartInFlight, false, memory_order_release);
+
+    if (!atomic_exchange_explicit(&__NRMASessionStartDeferred, false, memory_order_acq_rel)) {
+        return;
+    }
+
+    NRLOG_AGENT_VERBOSE(@"Session start: running deferred session start");
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        if (self->_isShutdown) {
+            return;
+        }
+        [self sessionStartInitialization];
+    });
+}
 
 - (void)applicationWillEnterForeground {
     
