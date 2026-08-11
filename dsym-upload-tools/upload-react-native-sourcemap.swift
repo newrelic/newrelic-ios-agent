@@ -31,7 +31,7 @@
 //
 // Region:
 // The upload host is derived from the app token's region prefix:
-//   US (no prefix)  -> https://symbol-ingest-api.newrelic.com
+//   US (no prefix)  -> https://symbol-ingest-api.service.newrelic.com
 //   EU (eu01x...)   -> https://symbol-ingest-api.service.eu.newrelic.com
 //   JP (jp01x...)   -> https://symbol-ingest-api.service.jp.newrelic.com
 // Setting SOURCEMAP_UPLOAD_URL overrides the auto-detected host.
@@ -44,7 +44,7 @@
 // START of Script upload-react-native-sourcemap.swift
 import Foundation
 
-let defaultURL = "https://symbol-ingest-api.newrelic.com"
+let defaultURL = "https://symbol-ingest-api.service.newrelic.com"
 let fileManager = FileManager.default
 let environment = ProcessInfo.processInfo.environment
 // Set to true for additional debug info in the upload_sourcemap_results.log file.
