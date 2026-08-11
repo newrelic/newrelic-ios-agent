@@ -313,6 +313,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "Start Random Walk", handler: { [self] in startRandomWalk() }))
         options.append(UtilOption(title: "Stop Random Walk", handler: { RandomWalkController.shared.stop() }))
+
+        options.append(UtilOption(title: "Capture Viewer", handler: { [self] in showCaptureViewer() }))
     }
 
     func signOutCrashReproAction() {
@@ -480,6 +482,10 @@ class ViewController: UIViewController {
     func startRandomWalk() {
         guard let coordinator else { return }
         RandomWalkController.shared.start(with: coordinator)
+    }
+
+    func showCaptureViewer() {
+        coordinator?.showCaptureViewer()
     }
 }
 

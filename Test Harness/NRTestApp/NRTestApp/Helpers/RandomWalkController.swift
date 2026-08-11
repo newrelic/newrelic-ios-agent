@@ -102,6 +102,7 @@ final class RandomWalkController {
             { coordinator.showSwiftUITestView() },
             { coordinator.showSwiftUIViewRepresentableTestView() },
             { coordinator.showMapViewController() },
+            { coordinator.showCaptureViewer() },
         ]
 
 #if os(iOS)
@@ -141,6 +142,7 @@ final class RandomWalkController {
             recordRandomEvent,
             recordRandomBreadcrumb,
             recordRandomError,
+            recordRandomJSError,
             recordRandomLog,
             setRandomAttribute,
             simulateRandomNetworkRequest,
@@ -214,6 +216,44 @@ final class RandomWalkController {
         NewRelic.recordError(
             errors.randomElement()!,
             attributes: ["step": stepCount, "source": "RandomWalk"]
+        )
+    }
+
+    // MARK: - JS Errors
+
+    private let jsErrorTypes = [
+        "TypeError", "ReferenceError", "SyntaxError",
+        "RangeError", "URIError", "EvalError", "Error",
+    ]
+
+    private let jsErrorMessages = [
+        "Cannot read properties of undefined (reading 'map')",
+        "undefined is not a function",
+        "Cannot set property 'state' of null",
+        "Maximum call stack size exceeded",
+        "fetch is not defined",
+        "Invalid or unexpected token",
+        "Network request failed",
+        "Expected expression, got end of script",
+        "Cannot destructure property 'id' of undefined",
+        "Unhandled promise rejection: timeout",
+    ]
+
+    private let jsStackFrames = [
+        "    at Object.render (App.js:42:17)\n    at processTicksAndRejections (internal/process/task_queues.js:93:5)",
+        "    at fetchUserData (api.js:118:9)\n    at async UserScreen.componentDidMount (UserScreen.js:34:5)",
+        "    at reducer (store.js:77:24)\n    at dispatch (redux.js:201:12)\n    at App.handleAction (App.js:88:5)",
+        "    at parseResponse (utils.js:55:13)\n    at async loadContent (ContentLoader.js:29:18)",
+        "    at Router.navigate (Router.js:210:8)\n    at NavButton.onPress (NavButton.js:15:5)\n    at RCTEventEmitter.receiveEvent (EventEmitter.js:71:10)",
+    ]
+
+    private func recordRandomJSError() {
+        NewRelic.recordJavascriptError(
+            jsErrorTypes.randomElement()!,
+            message: jsErrorMessages.randomElement()!,
+            stackTrace: jsStackFrames.randomElement()!,
+            isFatal: Bool.random() && Bool.random(), // ~25% fatal
+            additionalAttributes: ["step": stepCount, "source": "RandomWalk"]
         )
     }
 

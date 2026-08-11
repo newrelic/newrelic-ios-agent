@@ -222,6 +222,30 @@
 		F8F5D8462BEBB86000CDC139 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
 		F8F5D8472BEBB86000CDC139 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
 		F8F5D8482BEBB86000CDC139 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
+		AA0001012F9000000000AA01 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */; };
+		AA0001022F9000000000AA01 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
+		AA0001032F9000000000AA01 /* HttpServerIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */; };
+		AA0001042F9000000000AA01 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
+		AA0001052F9000000000AA01 /* Socket+Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA32ADF2DF600C0C972 /* Socket+Server.swift */; };
+		AA0001062F9000000000AA01 /* String+SHA1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA42ADF2DF600C0C972 /* String+SHA1.swift */; };
+		AA0001072F9000000000AA01 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
+		AA0001082F9000000000AA01 /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA62ADF2DF600C0C972 /* Files.swift */; };
+		AA0001092F9000000000AA01 /* HttpRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA72ADF2DF600C0C972 /* HttpRequest.swift */; };
+		AA00010A2F9000000000AA01 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
+		AA00010B2F9000000000AA01 /* HttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA92ADF2DF600C0C972 /* HttpServer.swift */; };
+		AA00010C2F9000000000AA01 /* Errno.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAA2ADF2DF600C0C972 /* Errno.swift */; };
+		AA00010D2F9000000000AA01 /* Socket+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAB2ADF2DF600C0C972 /* Socket+File.swift */; };
+		AA00010E2F9000000000AA01 /* String+BASE64.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAC2ADF2DF600C0C972 /* String+BASE64.swift */; };
+		AA00010F2F9000000000AA01 /* String+Misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAD2ADF2DF600C0C972 /* String+Misc.swift */; };
+		AA0001102F9000000000AA01 /* HttpRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAE2ADF2DF600C0C972 /* HttpRouter.swift */; };
+		AA0001112F9000000000AA01 /* HTTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAF2ADF2DF600C0C972 /* HTTPParser.swift */; };
+		AA0001122F9000000000AA01 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
+		AA0001132F9000000000AA01 /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB12ADF2DF600C0C972 /* Socket.swift */; };
+		AA0001302F9000000000AA01 /* CapturedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001202F9000000000AA01 /* CapturedRequest.swift */; };
+		AA0001312F9000000000AA01 /* NRCaptureServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001212F9000000000AA01 /* NRCaptureServer.swift */; };
+		AA0001322F9000000000AA01 /* CaptureViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001222F9000000000AA01 /* CaptureViewerView.swift */; };
+		AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001502F9000000000AA01 /* VerificationResult.swift */; };
+		AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001512F9000000000AA01 /* PayloadVerifiers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -508,6 +532,11 @@
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
+		AA0001202F9000000000AA01 /* CapturedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedRequest.swift; sourceTree = "<group>"; };
+		AA0001212F9000000000AA01 /* NRCaptureServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRCaptureServer.swift; sourceTree = "<group>"; };
+		AA0001222F9000000000AA01 /* CaptureViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewerView.swift; sourceTree = "<group>"; };
+		AA0001502F9000000000AA01 /* VerificationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationResult.swift; sourceTree = "<group>"; };
+		AA0001512F9000000000AA01 /* PayloadVerifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadVerifiers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -707,12 +736,25 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		AA0001402F9000000000AA01 /* CaptureServer */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001202F9000000000AA01 /* CapturedRequest.swift */,
+				AA0001212F9000000000AA01 /* NRCaptureServer.swift */,
+				AA0001222F9000000000AA01 /* CaptureViewerView.swift */,
+				AA0001502F9000000000AA01 /* VerificationResult.swift */,
+				AA0001512F9000000000AA01 /* PayloadVerifiers.swift */,
+			);
+			path = CaptureServer;
+			sourceTree = "<group>";
+		};
 		F8302AF7296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXGroup;
 			children = (
 				2BAE5C8D2E860C7D001D2B88 /* SwiftUI */,
 				2B808EBE29FC4EA500E04658 /* NRTestApp.entitlements */,
 				F86428492971DF80002ABA01 /* Helpers */,
+				AA0001402F9000000000AA01 /* CaptureServer */,
 				F8302AF8296F5EFA003EC291 /* AppDelegate.swift */,
 				2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */,
 				F8302B872970769E003EC291 /* Navigation */,
@@ -1438,6 +1480,30 @@
 				CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
 				F0D3ACC5C5777D6181629701 /* (null) in Sources */,
 				CFC9E36B8EEDE1C37A6F26D2 /* CoreDataView.swift in Sources */,
+				AA0001012F9000000000AA01 /* Scopes.swift in Sources */,
+				AA0001022F9000000000AA01 /* WebSockets.swift in Sources */,
+				AA0001032F9000000000AA01 /* HttpServerIO.swift in Sources */,
+				AA0001042F9000000000AA01 /* Process.swift in Sources */,
+				AA0001052F9000000000AA01 /* Socket+Server.swift in Sources */,
+				AA0001062F9000000000AA01 /* String+SHA1.swift in Sources */,
+				AA0001072F9000000000AA01 /* String+File.swift in Sources */,
+				AA0001082F9000000000AA01 /* Files.swift in Sources */,
+				AA0001092F9000000000AA01 /* HttpRequest.swift in Sources */,
+				AA00010A2F9000000000AA01 /* HttpResponse.swift in Sources */,
+				AA00010B2F9000000000AA01 /* HttpServer.swift in Sources */,
+				AA00010C2F9000000000AA01 /* Errno.swift in Sources */,
+				AA00010D2F9000000000AA01 /* Socket+File.swift in Sources */,
+				AA00010E2F9000000000AA01 /* String+BASE64.swift in Sources */,
+				AA00010F2F9000000000AA01 /* String+Misc.swift in Sources */,
+				AA0001102F9000000000AA01 /* HttpRouter.swift in Sources */,
+				AA0001112F9000000000AA01 /* HTTPParser.swift in Sources */,
+				AA0001122F9000000000AA01 /* MimeTypes.swift in Sources */,
+				AA0001132F9000000000AA01 /* Socket.swift in Sources */,
+				AA0001302F9000000000AA01 /* CapturedRequest.swift in Sources */,
+				AA0001312F9000000000AA01 /* NRCaptureServer.swift in Sources */,
+				AA0001322F9000000000AA01 /* CaptureViewerView.swift in Sources */,
+				AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */,
+				AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
