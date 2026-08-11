@@ -44,4 +44,13 @@ static NSMutableArray *deferredMetrics;
 
 + (void) enqueueKMMDetectionMetric;
 
+// Events (queue lifecycle) supportability metrics -- Android parity (NR-478730)
++ (void) enqueueEventAddedMetric;
++ (void) enqueueEventOverflowMetric;
++ (void) enqueueEventEvictedMetric;
++ (void) enqueueEventQueueSizeExceededMetric;
++ (void) enqueueEventQueueTimeExceededMetric;
++ (void) enqueueEventRecordedMetric:(NSUInteger)recorded evicted:(NSUInteger)evicted;
++ (void) enqueueEventSizeUncompressedMetric:(long)size;
+
 @end
