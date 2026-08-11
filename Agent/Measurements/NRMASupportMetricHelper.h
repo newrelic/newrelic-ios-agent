@@ -42,6 +42,10 @@ static NSMutableArray *deferredMetrics;
 + (void) enqueueJSErrorUploadThrottledMetric;
 + (void) enqueueJSErrorFailedUploadMetric;
 
+// Permanent-rejection metrics (HTTP 400 / 403).
++ (void) enqueueCrashRejectedMetric;
++ (void) enqueueHandledExceptionRejectedMetric;
+
 + (void) enqueueKMMDetectionMetric;
 
 @end
