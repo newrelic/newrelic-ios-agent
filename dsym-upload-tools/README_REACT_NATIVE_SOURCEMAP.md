@@ -102,10 +102,14 @@ export SOURCEMAP_PATH="${DERIVED_FILE_DIR}/custom-bundle.map"
 ```
 
 #### SOURCEMAP_UPLOAD_URL
-Override the New Relic Symbol Ingest API endpoint (for EU regions or testing).
+Override the New Relic Symbol Ingest API endpoint (for testing or overriding auto-detection). Region is normally auto-detected from the app token's prefix (`eu01x...` -> EU, `jp01x...` -> JP, no prefix -> US).
 
 ```bash
-export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.eu01.nr-data.net"
+export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.service.eu.newrelic.com"
+```
+
+```bash
+export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.service.jp.newrelic.com"
 ```
 
 ## How It Works

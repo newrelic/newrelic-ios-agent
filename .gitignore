@@ -94,4 +94,5 @@ node_modules
 derived_path
 builds/nrtestapp-ios.zip
 .worktrees
+.superpowers
 examples/RNSampleApp/ios/Pods
