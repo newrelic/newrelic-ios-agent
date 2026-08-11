@@ -44,7 +44,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		34A928EF2912D4B8001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = ../../../ext/JSON/JSON.xcodeproj; sourceTree = "<group>"; };
+		34A928EF2912D4B8001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = ../../../ext/JSON/json.xcodeproj; sourceTree = "<group>"; };
 		34BF4DFC2910904C00E4D170 /* Utilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Utilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34BF4E062910907B00E4D170 /* libLogger.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = libLogger.cxx; path = ../src/libLogger.cxx; sourceTree = "<group>"; };
 		34BF4E072910907B00E4D170 /* String.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = String.cxx; path = ../src/String.cxx; sourceTree = "<group>"; };

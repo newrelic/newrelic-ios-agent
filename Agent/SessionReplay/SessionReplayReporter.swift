@@ -245,7 +245,8 @@ public class SessionReplayReporter: NSObject {
             return "\(key)=\(value)"
         }.joined(separator: "&")
 
-        var urlComponents = URLComponents(string:"https://\(self.url as String)")
+        let urlBase = (self.url as String).hasPrefix("http") ? (self.url as String) : "https://\(self.url as String)"
+        var urlComponents = URLComponents(string: urlBase)
 
         urlComponents?.queryItems = [
             URLQueryItem(name: "type", value: "SessionReplay"),
