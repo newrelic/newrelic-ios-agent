@@ -126,7 +126,8 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
         // Default mode
         _sessionReplayMode = @"OFF";
         
-        if ([[NSProcessInfo processInfo] environment][@"UITesting"]) {
+        if ([[NSProcessInfo processInfo] environment][@"UITesting"] ||
+            [collectorHost isEqualToString:@"localhost:8080"]) {
             _useSSL = NO;
         } else {
             _useSSL = YES;
@@ -196,11 +197,17 @@ static NSMutableArray * __NRMA__session_replay_unmaskedAccessibilityIdentifiers;
     else {
         _loggingURL = kNRMA_DEFAULT_LOGGING_HOST;
     }
-    _sessionReplayURL = [_loggingURL stringByAppendingFormat:@"/mobile/blobs"];
+    // For localhost capture mode, embed the http:// scheme so SessionReplayReporter
+    // doesn't double-prepend https:// on top of a plain-HTTP host.
+    BOOL isLocalhost = [_loggingURL isEqualToString:@"localhost:8080"];
+    NSString* replayScheme = isLocalhost ? @"http://" : @"";
+    _sessionReplayURL = [NSString stringWithFormat:@"%@%@/mobile/blobs", replayScheme, _loggingURL];
+
     _loggingURL = [_loggingURL stringByAppendingFormat:@"/mobile/logs"];
     // since setLoggingURL is always called we can make the session replay url here.
 
-    NSString* logURL = [NSString stringWithFormat:@"%@%@", @"https://", _loggingURL];
+    NSString* logScheme = isLocalhost ? @"http://" : @"https://";
+    NSString* logURL = [NSString stringWithFormat:@"%@%@", logScheme, _loggingURL];
     
     [NRLogger setLogURL:logURL];
     [NRLogger setLogIngestKey:self.applicationToken.value];
