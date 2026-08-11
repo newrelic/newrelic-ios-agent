@@ -1015,10 +1015,6 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     [mockConnection stopMocking];
 }
 
-
-
-// TODO: LogReporting Add test for entity_guid: and log_reporting: { enabled: , level: }
-
 - (void) testConnectedv5Apps{
     id mockHarvester = [OCMockObject partialMockForObject:harvester];
     id mockConnection = [OCMockObject partialMockForObject:[mockHarvester connection]];
