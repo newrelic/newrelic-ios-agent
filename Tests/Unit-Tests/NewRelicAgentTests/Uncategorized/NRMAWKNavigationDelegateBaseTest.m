@@ -17,6 +17,14 @@
 #import "NRMAMeasurements.h"
 #import "NRMAHTTPTransactionMeasurement.h"
 
+// Upper bound on how long a WebKit-derived measurement may take to reach a consumer. The
+// navigation delegate hands the request to NRMANetworkFacade, which hops onto a global queue
+// before the transaction is enqueued on NRMATaskQueue and broadcast to the consumers. That
+// normally takes milliseconds, but the first such measurement in the process also pays for
+// WebKit and carrier-lookup warmup, so the bound is generous: a passing test returns as soon
+// as the measurement lands and only a broken one waits this long.
+static const NSTimeInterval kMeasurementConsumptionTimeout = 10.0;
+
 @interface NRMATaskQueue (tests)
 + (void) clear;
 @end
@@ -33,6 +41,13 @@
 // and WebKit later fires the cached callback against the orphaned proxy.
 @interface NRMAWKNavigationDelegateWithTerminateFunction : NSObject <WKNavigationDelegate>
 @property(nonatomic) BOOL didTerminateCalled;
+@end
+
+// Hands each measurement to the test as it is consumed, so a test can wait for the specific
+// measurement it cares about instead of sleeping. consumeMeasurement: is called on
+// NRMATaskQueue's dispatch queue, so onConsumeMeasurement runs off the main thread.
+@interface NRMANotifyingMeasurementConsumerHelper : NRMAMeasurementConsumerHelper
+@property(atomic, copy) void (^onConsumeMeasurement)(NRMAMeasurement* measurement);
 @end
 
 @interface NRWKNavigationDelegateBase ()
@@ -58,7 +73,7 @@
 @property(strong) WKWebView* webViewWithDelegateFunction;
 @property(strong) WKNavigation* navigationItem;
 
-@property(strong) NRMAMeasurementConsumerHelper* helper;
+@property(strong) NRMANotifyingMeasurementConsumerHelper* helper;
 
 
 @end
@@ -87,7 +102,7 @@
     
     [NRMATaskQueue clear];
 
-    self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_HTTPTransaction];
+    self.helper = [[NRMANotifyingMeasurementConsumerHelper alloc] initWithType:NRMAMT_HTTPTransaction];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:self.helper];
 
@@ -257,64 +272,69 @@
 
 - (void)testWebViewLoadTimeMetric {
     [self startWebKitLoad];
-    
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didFinishNavigation:self.navigationItem];
-    sleep(1);
-    
+
     NSString* fullMetricName = self.url.absoluteString;
-    
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
-    
+
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForHTTPTransactionMeasurementWithURL:fullMetricName
+                                                                                      afterTriggering:^{
+        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webViewWithDelegateFunction didFinishNavigation:self.navigationItem];
+    }];
+
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
 }
 
 - (void)testWebViewLoadFailedProvisionalNavigationMetric {
     [self startWebKitLoad];
-    
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailProvisionalNavigation:self.navigationItem withError:[self createNSError]];
-    sleep(1);
-    
+
     NSString* fullMetricName = self.url.absoluteString;
-    
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
-    
+
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForHTTPTransactionMeasurementWithURL:fullMetricName
+                                                                                      afterTriggering:^{
+        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailProvisionalNavigation:self.navigationItem withError:[self createNSError]];
+    }];
+
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
-    
 }
 
 - (void)testWebViewLoadDidFailNavigationMetric {
     [self startWebKitLoad];
-    
-    [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailNavigation:self.navigationItem withError:[self createNSError]];
-    sleep(1);
-    
+
     NSString* fullMetricName = self.url.absoluteString;
-    
-    NRMAHTTPTransactionMeasurement* foundMeasurement;
-    
-    for (id measurement in self.helper.consumedMeasurements) {
-        if([((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:fullMetricName]) {
-            foundMeasurement = measurement;
-            break;
-        }
-    }
-    
+
+    NRMAHTTPTransactionMeasurement* foundMeasurement = [self waitForHTTPTransactionMeasurementWithURL:fullMetricName
+                                                                                      afterTriggering:^{
+        [self.webViewWithDelegateFunction.navigationDelegate webView:self.webView didFailNavigation:self.navigationItem withError:[self createNSError]];
+    }];
+
     XCTAssertEqualObjects(foundMeasurement.url, fullMetricName, @"Metric is not generated properly.");
-    
+}
+
+// Waits for the measurement consumer to see an HTTP transaction measurement for url. The wait
+// is installed before trigger runs so that a fast delivery cannot be missed, and only the
+// first match is captured so nothing writes foundMeasurement after the wait has returned.
+- (NRMAHTTPTransactionMeasurement*) waitForHTTPTransactionMeasurementWithURL:(NSString*)url
+                                                             afterTriggering:(void (^)(void))trigger {
+    XCTestExpectation* consumed = [self expectationWithDescription:
+                                   [NSString stringWithFormat:@"consumed an HTTP transaction measurement for %@", url]];
+
+    __block NRMAHTTPTransactionMeasurement* foundMeasurement = nil;
+    self.helper.onConsumeMeasurement = ^(NRMAMeasurement* measurement) {
+        if (foundMeasurement != nil) {
+            return;
+        }
+        if ([measurement isKindOfClass:[NRMAHTTPTransactionMeasurement class]]
+            && [((NRMAHTTPTransactionMeasurement*)measurement).url isEqualToString:url]) {
+            foundMeasurement = (NRMAHTTPTransactionMeasurement*)measurement;
+            [consumed fulfill];
+        }
+    };
+
+    trigger();
+
+    [self waitForExpectations:@[consumed] timeout:kMeasurementConsumptionTimeout];
+    self.helper.onConsumeMeasurement = nil;
+
+    return foundMeasurement;
 }
 
 - (void) startWebKitLoad {
@@ -375,6 +395,21 @@
 
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
     self.didTerminateCalled = YES;
+}
+
+@end
+
+@implementation NRMANotifyingMeasurementConsumerHelper
+
+- (void) consumeMeasurement:(NRMAMeasurement*)measurement {
+    [super consumeMeasurement:measurement];
+
+    // Copied out of the atomic property so the block stays alive for the call even if the
+    // test clears it from another thread.
+    void (^onConsumeMeasurement)(NRMAMeasurement*) = self.onConsumeMeasurement;
+    if (onConsumeMeasurement) {
+        onConsumeMeasurement(measurement);
+    }
 }
 
 @end
