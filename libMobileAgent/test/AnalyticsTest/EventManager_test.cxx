@@ -368,5 +368,65 @@ TEST_F(EventManagerTest, testResetTimestampResetsTimestamp) {
     // Timestamp should be reset
     ASSERT_FALSE(manager.didReachMaxQueueTime(2000));
 }
+
+TEST_F(EventManagerTest, testAddEventIncrementsRecordedCount) {
+    EventManager manager{store};
+    auto event = manager.newCustomMobileEvent("custom", epoch_time_ms, 1, validator);
+
+    auto result = manager.addEvent(event);
+
+    ASSERT_TRUE(result.added);
+    ASSERT_FALSE(result.overflowed);
+    ASSERT_FALSE(result.evicted);
+    ASSERT_TRUE(result);  // operator bool()
+    ASSERT_EQ(1, manager.getEventsRecordedCount());
+    ASSERT_EQ(0, manager.getEventsEvictedCount());
+}
+
+TEST_F(EventManagerTest, testOverflowEvictsAndIncrementsEvictedCount) {
+    EventManager manager{store};
+    manager.setMaxBufferSize(1);
+
+    auto first = manager.newCustomMobileEvent("custom", epoch_time_ms - 1000, 1, validator);
+    auto firstResult = manager.addEvent(first);
+    ASSERT_TRUE(firstResult.added);
+    ASSERT_FALSE(firstResult.overflowed);
+
+    auto second = manager.newCustomMobileEvent("custom 2", epoch_time_ms, 1, validator);
+    auto secondResult = manager.addEvent(second);
+
+    // total_attempted_inserts == 1 at this point, so getRemovalIndex() == rand() % 1 == 0,
+    // deterministically evicting the only resident event.
+    ASSERT_TRUE(secondResult.added);
+    ASSERT_TRUE(secondResult.overflowed);
+    ASSERT_TRUE(secondResult.evicted);
+    ASSERT_EQ(2, manager.getEventsRecordedCount());
+    ASSERT_EQ(1, manager.getEventsEvictedCount());
+}
+
+TEST_F(EventManagerTest, testOutOfBoundsRemovalIndexDropsIncomingEvent) {
+    MockEventManager manager{store};
+    manager.setMaxBufferSize(1);
+
+    auto first = manager.newCustomMobileEvent("custom", epoch_time_ms - 1000, 1, validator);
+    manager.addEvent(first);
+
+    EXPECT_CALL(manager, getRemovalIndex())
+            .WillOnce(Return(100)); // out of bounds -> incoming event should be dropped
+
+    auto second = manager.newCustomMobileEvent("custom 2", epoch_time_ms, 1, validator);
+    auto result = manager.addEvent(second);
+
+    ASSERT_FALSE(result.added);
+    ASSERT_TRUE(result.overflowed);
+    ASSERT_TRUE(result.evicted);
+    ASSERT_FALSE(result); // operator bool() reflects "added", not "evicted"
+    ASSERT_EQ(1, manager.getEventsRecordedCount());
+    ASSERT_EQ(1, manager.getEventsEvictedCount());
+
+    auto json = manager.toJSON();
+    ASSERT_EQ(1, json->size());
+    ASSERT_EQ(((*json)[0]["name"]).as_string(), "custom"); // original event survives
+}
 } // namespace NewRelic
 

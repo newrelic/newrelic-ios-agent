@@ -5,12 +5,12 @@
     "@wdio/cli": "^9.24.0",
     "@wdio/local-runner": "^9.24.0",
     "@wdio/mocha-framework": "^9.24.0",
-    "appium": "^3.5.2",
+    "appium": "^3.6.0",
     "basic-ftp": "^5.3.1",
     "body-parser": "^2.2.2",
     "dayjs": "^1.11.19",
     "diff": "^5.2.2",
-    "undici": "^7.24.2",
+    "undici": "^7.28.0",
     "wdio-lambdatest-service": "^4.0.1"
   },
   "scripts": {
