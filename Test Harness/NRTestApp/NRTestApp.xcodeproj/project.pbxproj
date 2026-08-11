@@ -14,6 +14,7 @@
 		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
 		2B2B3FB92AEB166E00C24897 /* harvestCollector.json in Resources */ = {isa = PBXBuildFile; fileRef = 2B2B3FB32AEB166E00C24897 /* harvestCollector.json */; };
 		2B3493712E8EF15C006DE9D0 /* MaskingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493692E8EF15A006DE9D0 /* MaskingView.swift */; };
+		2B3CF321302B7BC600670459 /* CoreDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3CF320302B7BC600670459 /* CoreDataView.swift */; };
 		2B6649012DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649022DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
 		2B6649032DEA283000923E4D /* TextMaskingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */; };
@@ -72,19 +73,35 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
-		2BFEE269301BE61F00FD7A49 /* ManualViewsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFEE268301BE61F00FD7A49 /* ManualViewsDemoView.swift */; };
-		2BFEE26A301BE61F00FD7A49 /* ManualViewsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFEE268301BE61F00FD7A49 /* ManualViewsDemoView.swift */; };
-		2BFEE26B301BE61F00FD7A49 /* ManualViewsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFEE268301BE61F00FD7A49 /* ManualViewsDemoView.swift */; };
-		ABCDE0001000000000000001 /* ModalsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE0001000000000000002 /* ModalsDemoView.swift */; };
-		ABCDE10010000000000001A1 /* MobileViewAttributesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */; };
-		ABCDE10010000000000001B1 /* MobileViewIgnoredDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */; };
-		ABCDE10010000000000001C1 /* MobileViewAttributesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */; };
-		ABCDE10010000000000001D1 /* MobileViewIgnoredViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */; };
+		AA0001012F9000000000AA01 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */; };
+		AA0001022F9000000000AA01 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
+		AA0001032F9000000000AA01 /* HttpServerIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */; };
+		AA0001042F9000000000AA01 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
+		AA0001052F9000000000AA01 /* Socket+Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA32ADF2DF600C0C972 /* Socket+Server.swift */; };
+		AA0001062F9000000000AA01 /* String+SHA1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA42ADF2DF600C0C972 /* String+SHA1.swift */; };
+		AA0001072F9000000000AA01 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
+		AA0001082F9000000000AA01 /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA62ADF2DF600C0C972 /* Files.swift */; };
+		AA0001092F9000000000AA01 /* HttpRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA72ADF2DF600C0C972 /* HttpRequest.swift */; };
+		AA00010A2F9000000000AA01 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
+		AA00010B2F9000000000AA01 /* HttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA92ADF2DF600C0C972 /* HttpServer.swift */; };
+		AA00010C2F9000000000AA01 /* Errno.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAA2ADF2DF600C0C972 /* Errno.swift */; };
+		AA00010D2F9000000000AA01 /* Socket+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAB2ADF2DF600C0C972 /* Socket+File.swift */; };
+		AA00010E2F9000000000AA01 /* String+BASE64.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAC2ADF2DF600C0C972 /* String+BASE64.swift */; };
+		AA00010F2F9000000000AA01 /* String+Misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAD2ADF2DF600C0C972 /* String+Misc.swift */; };
+		AA0001102F9000000000AA01 /* HttpRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAE2ADF2DF600C0C972 /* HttpRouter.swift */; };
+		AA0001112F9000000000AA01 /* HTTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAF2ADF2DF600C0C972 /* HTTPParser.swift */; };
+		AA0001122F9000000000AA01 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
+		AA0001132F9000000000AA01 /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB12ADF2DF600C0C972 /* Socket.swift */; };
+		AA0001302F9000000000AA01 /* CapturedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001202F9000000000AA01 /* CapturedRequest.swift */; };
+		AA0001312F9000000000AA01 /* NRCaptureServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001212F9000000000AA01 /* NRCaptureServer.swift */; };
+		AA0001322F9000000000AA01 /* CaptureViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001222F9000000000AA01 /* CaptureViewerView.swift */; };
+		AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001502F9000000000AA01 /* VerificationResult.swift */; };
+		AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001512F9000000000AA01 /* PayloadVerifiers.swift */; };
 		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001041CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
 		CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */; };
-		CFC9E36B8EEDE1C37A6F26D2 /* CoreDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A7FCD36108AFB638093E434 /* CoreDataView.swift */; };
+		CFC9E36B8EEDE1C37A6F26D2 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		D46F91D72F69D1DD00FD2EBE /* SwitchTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91D62F69D1DD00FD2EBE /* SwitchTestViewController.swift */; };
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
@@ -222,30 +239,6 @@
 		F8F5D8462BEBB86000CDC139 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
 		F8F5D8472BEBB86000CDC139 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
 		F8F5D8482BEBB86000CDC139 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
-		AA0001012F9000000000AA01 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */; };
-		AA0001022F9000000000AA01 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
-		AA0001032F9000000000AA01 /* HttpServerIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */; };
-		AA0001042F9000000000AA01 /* Process.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA22ADF2DF600C0C972 /* Process.swift */; };
-		AA0001052F9000000000AA01 /* Socket+Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA32ADF2DF600C0C972 /* Socket+Server.swift */; };
-		AA0001062F9000000000AA01 /* String+SHA1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA42ADF2DF600C0C972 /* String+SHA1.swift */; };
-		AA0001072F9000000000AA01 /* String+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA52ADF2DF600C0C972 /* String+File.swift */; };
-		AA0001082F9000000000AA01 /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA62ADF2DF600C0C972 /* Files.swift */; };
-		AA0001092F9000000000AA01 /* HttpRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA72ADF2DF600C0C972 /* HttpRequest.swift */; };
-		AA00010A2F9000000000AA01 /* HttpResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA82ADF2DF600C0C972 /* HttpResponse.swift */; };
-		AA00010B2F9000000000AA01 /* HttpServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA92ADF2DF600C0C972 /* HttpServer.swift */; };
-		AA00010C2F9000000000AA01 /* Errno.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAA2ADF2DF600C0C972 /* Errno.swift */; };
-		AA00010D2F9000000000AA01 /* Socket+File.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAB2ADF2DF600C0C972 /* Socket+File.swift */; };
-		AA00010E2F9000000000AA01 /* String+BASE64.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAC2ADF2DF600C0C972 /* String+BASE64.swift */; };
-		AA00010F2F9000000000AA01 /* String+Misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAD2ADF2DF600C0C972 /* String+Misc.swift */; };
-		AA0001102F9000000000AA01 /* HttpRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAE2ADF2DF600C0C972 /* HttpRouter.swift */; };
-		AA0001112F9000000000AA01 /* HTTPParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DAF2ADF2DF600C0C972 /* HTTPParser.swift */; };
-		AA0001122F9000000000AA01 /* MimeTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB02ADF2DF600C0C972 /* MimeTypes.swift */; };
-		AA0001132F9000000000AA01 /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DB12ADF2DF600C0C972 /* Socket.swift */; };
-		AA0001302F9000000000AA01 /* CapturedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001202F9000000000AA01 /* CapturedRequest.swift */; };
-		AA0001312F9000000000AA01 /* NRCaptureServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001212F9000000000AA01 /* NRCaptureServer.swift */; };
-		AA0001322F9000000000AA01 /* CaptureViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001222F9000000000AA01 /* CaptureViewerView.swift */; };
-		AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001502F9000000000AA01 /* VerificationResult.swift */; };
-		AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001512F9000000000AA01 /* PayloadVerifiers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -392,6 +385,7 @@
 		2B2317DE2ADF442100D521E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2B2B3FB32AEB166E00C24897 /* harvestCollector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestCollector.json; sourceTree = "<group>"; };
 		2B3493692E8EF15A006DE9D0 /* MaskingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskingView.swift; sourceTree = "<group>"; };
+		2B3CF320302B7BC600670459 /* CoreDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataView.swift; sourceTree = "<group>"; };
 		2B6649002DEA283000923E4D /* TextMaskingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewModel.swift; sourceTree = "<group>"; };
 		2B69E45D2DE8F9EB00543A2E /* TextMaskingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextMaskingViewController.swift; sourceTree = "<group>"; };
 		2B708A982ADF3AD80063110E /* NewRelic+Replace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NewRelic+Replace.h"; sourceTree = "<group>"; };
@@ -439,6 +433,11 @@
 		2BD05DF12ADF32D300C0C972 /* harvestConnector.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnector.json; sourceTree = "<group>"; };
 		2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = harvestConnectorWithLogReporting.json; sourceTree = "<group>"; };
 		2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+UITest.swift"; sourceTree = "<group>"; };
+		AA0001202F9000000000AA01 /* CapturedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedRequest.swift; sourceTree = "<group>"; };
+		AA0001212F9000000000AA01 /* NRCaptureServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRCaptureServer.swift; sourceTree = "<group>"; };
+		AA0001222F9000000000AA01 /* CaptureViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewerView.swift; sourceTree = "<group>"; };
+		AA0001502F9000000000AA01 /* VerificationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationResult.swift; sourceTree = "<group>"; };
+		AA0001512F9000000000AA01 /* PayloadVerifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadVerifiers.swift; sourceTree = "<group>"; };
 		2BFEE268301BE61F00FD7A49 /* ManualViewsDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualViewsDemoView.swift; sourceTree = "<group>"; };
 		4A7FCD36108AFB638093E434 /* CoreDataView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataView.swift; sourceTree = "<group>"; };
 		ABCDE0001000000000000002 /* ModalsDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalsDemoView.swift; sourceTree = "<group>"; };
@@ -464,7 +463,7 @@
 		F824A43329AEADC2000886A6 /* ImageDetailPDFView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageDetailPDFView.swift; sourceTree = "<group>"; };
 		F824A43B29AEAE2D000886A6 /* ImageFullScreen.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageFullScreen.swift; sourceTree = "<group>"; };
 		F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "NRAPI-Info.plist"; sourceTree = SOURCE_ROOT; };
-		F825C6632C790F4F006062A5 /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = readme.md; path = ../readme.md; sourceTree = "<group>"; };
+		F825C6632C790F4F006062A5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		F825FB0329CA509100E1C1DC /* NRTestAppFakeNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRTestAppFakeNavigationAction.swift; sourceTree = "<group>"; };
 		F82697F73018F3A600D0BFB1 /* RandomWalkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomWalkController.swift; sourceTree = "<group>"; };
 		F8302AF5296F5EFA003EC291 /* NRTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NRTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -532,11 +531,6 @@
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
-		AA0001202F9000000000AA01 /* CapturedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedRequest.swift; sourceTree = "<group>"; };
-		AA0001212F9000000000AA01 /* NRCaptureServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRCaptureServer.swift; sourceTree = "<group>"; };
-		AA0001222F9000000000AA01 /* CaptureViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewerView.swift; sourceTree = "<group>"; };
-		AA0001502F9000000000AA01 /* VerificationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationResult.swift; sourceTree = "<group>"; };
-		AA0001512F9000000000AA01 /* PayloadVerifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadVerifiers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -599,6 +593,7 @@
 		2BAE5C8D2E860C7D001D2B88 /* SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				2B3CF320302B7BC600670459 /* CoreDataView.swift */,
 				D4DCC2393017DF26008B5C59 /* NavigationLinkLabelLayoutTestCase.swift */,
 				2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */,
 				D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */,
@@ -686,6 +681,18 @@
 			path = Stubs;
 			sourceTree = "<group>";
 		};
+		AA0001402F9000000000AA01 /* CaptureServer */ = {
+			isa = PBXGroup;
+			children = (
+				AA0001202F9000000000AA01 /* CapturedRequest.swift */,
+				AA0001212F9000000000AA01 /* NRCaptureServer.swift */,
+				AA0001222F9000000000AA01 /* CaptureViewerView.swift */,
+				AA0001502F9000000000AA01 /* VerificationResult.swift */,
+				AA0001512F9000000000AA01 /* PayloadVerifiers.swift */,
+			);
+			path = CaptureServer;
+			sourceTree = "<group>";
+		};
 		F802EE942BE0218600AB956F /* NRTestApp (watchOS) Watch App */ = {
 			isa = PBXGroup;
 			children = (
@@ -736,18 +743,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AA0001402F9000000000AA01 /* CaptureServer */ = {
-			isa = PBXGroup;
-			children = (
-				AA0001202F9000000000AA01 /* CapturedRequest.swift */,
-				AA0001212F9000000000AA01 /* NRCaptureServer.swift */,
-				AA0001222F9000000000AA01 /* CaptureViewerView.swift */,
-				AA0001502F9000000000AA01 /* VerificationResult.swift */,
-				AA0001512F9000000000AA01 /* PayloadVerifiers.swift */,
-			);
-			path = CaptureServer;
-			sourceTree = "<group>";
-		};
 		F8302AF7296F5EFA003EC291 /* NRTestApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -765,7 +760,7 @@
 				F8302B06296F5EFB003EC291 /* Info.plist */,
 				F824A54C29BBB23D000886A6 /* NRAPI-Info.plist */,
 				2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */,
-				F825C6632C790F4F006062A5 /* readme.md */,
+				F825C6632C790F4F006062A5 /* README.md */,
 			);
 			path = NRTestApp;
 			sourceTree = "<group>";
@@ -1457,6 +1452,7 @@
 				F8D23CB62F7727D7000FFD31 /* SettingsView.swift in Sources */,
 				F8D23CB72F7727D7000FFD31 /* DataModels.swift in Sources */,
 				D4DCC23A3017DF26008B5C59 /* NavigationLinkLabelLayoutTestCase.swift in Sources */,
+				2B3CF321302B7BC600670459 /* CoreDataView.swift in Sources */,
 				F8D23CB82F7727D7000FFD31 /* ChartsView.swift in Sources */,
 				F8D23CB92F7727D7000FFD31 /* DashboardView.swift in Sources */,
 				F8302AF9296F5EFA003EC291 /* AppDelegate.swift in Sources */,
@@ -1915,11 +1911,11 @@
 				CODE_SIGN_ENTITLEMENTS = NRTestApp/NRTestApp.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"ENABLE_APP_SANDBOX[sdk=*]" = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NRTestApp/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.business";
@@ -1932,7 +1928,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.7;
+				MARKETING_VERSION = 5.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRApp.bitcode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1959,7 +1955,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
@@ -1980,12 +1976,12 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.7;
+				MARKETING_VERSION = 5.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.NRApp.bitcode;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = iOSAgentiOSDist;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "NRTestApp-AppStore";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = iOSAgentDist;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
