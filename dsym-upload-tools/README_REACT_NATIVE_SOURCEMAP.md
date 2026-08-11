@@ -108,6 +108,10 @@ Override the New Relic Symbol Ingest API endpoint (for testing or overriding aut
 export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.service.eu.newrelic.com"
 ```
 
+```bash
+export SOURCEMAP_UPLOAD_URL="https://symbol-ingest-api.service.jp.newrelic.com"
+```
+
 ## How It Works
 
 1. The script runs only during **Release** configuration builds
