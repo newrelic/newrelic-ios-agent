@@ -875,21 +875,19 @@ static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =
 }
 
 - (void) startNewSessionForUserId:(NSString* _Nullable)userId {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        @synchronized(kNRMA_BGFG_MUTEX) {
-            [self.analyticsController newSession];
-            [self sessionReplayEndSession];
-            [NewRelicAgentInternal harvestNow];
-            [self sessionStartInitialization];
-            if (userId) {
-                [self.analyticsController setSessionAttribute:kNRMA_Attrib_userId
-                                                        value:userId
-                                                   persistent:YES];
-            } else {
-                [self.analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
-            }
+    @synchronized(kNRMA_BGFG_MUTEX) {
+        [self.analyticsController newSession];
+        [self sessionReplayEndSession];
+        [NewRelicAgentInternal harvestNow];
+        [self sessionStartInitialization];
+        if (userId) {
+            [self.analyticsController setSessionAttribute:kNRMA_Attrib_userId
+                                                    value:userId
+                                               persistent:YES];
+        } else {
+            [self.analyticsController removeSessionAttributeNamed:kNRMA_Attrib_userId];
         }
-    });
+    }
 }
 
 - (void) handle4HourSessionRestart {
