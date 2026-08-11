@@ -231,17 +231,15 @@ static NewRelicAgentInternal* _sharedInstance;
         self->_isShutdown = false;
         self->_enabled = ![self isDisabled];
         if (self->_enabled) {
-            // Claim the session-start gate before the lifecycle observers below exist:
-            // -applicationWillEnterForeground can fire the moment they do, and its session
-            // start would tear down the harvest pipeline this initializer is still
-            // building. Holding the gate makes that handler defer instead.
+            // Claim the session-start gate before the lifecycle observers below exist. On a
+            // background launch didFireEnterForeground is still NO, so a foreground return
+            // can reach -sessionStartInitialization the moment those observers register and
+            // tear down the harvest pipeline this initializer is still building. Holding the
+            // gate makes that handler defer instead.
             //
-            // A failed claim is not a reason to skip agent start. Init is by construction
-            // the first session start, so a set flag here can only be stale state from a
-            // previous test-mode instance, and the release below clears it.
-            if (![self tryBeginSessionStart]) {
-                NRLOG_AGENT_ERROR(@"Agent start: a session start was already in flight; taking the session-start gate anyway.");
-            }
+            // A failed claim never blocks agent start; it only decides whether we are
+            // allowed to release the gate afterwards. See -claimSessionStartGateForAgentStart.
+            BOOL ownsSessionStartGate = [self claimSessionStartGateForAgentStart];
 #if TARGET_OS_WATCH
             [[NSNotificationCenter defaultCenter] addObserver:self
                                                      selector:@selector(applicationDidEnterBackground)
@@ -297,7 +295,11 @@ static NewRelicAgentInternal* _sharedInstance;
                 [self initialize];
                 [self onSessionStart];
             } @finally {
-                [self endSessionStartDrainingDeferred];
+                // Only release what we actually claimed. Releasing another thread's gate
+                // would let its session start overlap with a third one.
+                if (ownsSessionStartGate) {
+                    [self endSessionStartDrainingDeferred];
+                }
             }
 
             if ([NRMAFlags shouldEnableCrashReporting]) {
@@ -836,6 +838,33 @@ static _Atomic bool __NRMASessionStartDeferred = false;
     return !atomic_exchange_explicit(&__NRMASessionStartInFlight, true, memory_order_acq_rel);
 }
 
+// Claims the gate on behalf of agent start. YES means the caller owns it and must release
+// it with -endSessionStartDrainingDeferred.
+//
+// +startWithApplicationToken: is dispatch_once-guarded, so in production the gate is free
+// here and this always succeeds. It can fail in test mode, which resets that token and
+// re-instantiates the agent: there a set flag is stale state left behind by the previous
+// instance rather than a live owner, so clearing it is the correct recovery.
+//
+// Outside test mode a set flag means another thread really is starting a session. Agent
+// start still proceeds -- it must never be skipped -- but this reports NO so the caller
+// leaves that thread's flag alone. Releasing a gate we do not hold would let two session
+// starts overlap, which is the one thing the gate exists to prevent.
+- (BOOL) claimSessionStartGateForAgentStart {
+    if ([self tryBeginSessionStart]) {
+        return YES;
+    }
+
+    if (_NRMAAgentTestModeEnabled) {
+        NRLOG_AGENT_VERBOSE(@"Agent start: clearing a stale session-start gate left by a previous test-mode instance.");
+        atomic_store_explicit(&__NRMASessionStartInFlight, false, memory_order_release);
+        return [self tryBeginSessionStart];
+    }
+
+    NRLOG_AGENT_ERROR(@"Agent start: a session start is already in flight; starting without the session-start gate.");
+    return NO;
+}
+
 // Releases the gate, then re-runs any session start that was deferred while we held it.
 // The re-run is dispatched asynchronously on purpose: this can be called from the harvest
 // thread while it still holds @synchronized(harvester), and running session start there
@@ -852,7 +881,20 @@ static _Atomic bool __NRMASessionStartDeferred = false;
         if (self->_isShutdown) {
             return;
         }
-        [self sessionStartInitialization];
+        // Take kNRMA_BGFG_MUTEX, which every other steady-state session start already
+        // holds (-applicationWillEnterForeground, -startNewSessionForUserId:). The gate
+        // only serializes session starts against each other; BGFG is what serializes a
+        // session start against the background harvests, which call
+        // -[NRMAHarvester execute] while holding it. Without this, a deferred re-run could
+        // shut down NRMAMeasurements and tear down the harvest controller underneath a
+        // harvest that is already running.
+        //
+        // Blocking here is safe. We are on a fresh queue holding no other lock, so this
+        // acquires BGFG *before* the harvester lock -- the same direction as every
+        // existing site, not the reverse ordering the gate exists to avoid.
+        @synchronized(kNRMA_BGFG_MUTEX) {
+            [self sessionStartInitialization];
+        }
     });
 }
 
@@ -934,13 +976,30 @@ static _Atomic bool __NRMASessionStartDeferred = false;
         NRLOG_AGENT_VERBOSE(@"Session start already in flight; deferring this one.");
         atomic_store_explicit(&__NRMASessionStartDeferred, true, memory_order_release);
 
-        // Belt and braces for the case this gate exists to protect. On a background agent
-        // start -initialize skips +[NRMAHarvestController start], so this path is what
-        // starts the harvester; if the deferred re-run were ever lost, the session would
-        // report nothing at all. +start is safe to call again -- the timer no-ops when
-        // already running and the harvester only executes from UNINITIALIZED/DISCONNECTED.
-        [NRMAHarvestController start];
-        return;
+        // Publishing the deferral is not enough on its own. The owner can release and
+        // drain -- finding nothing -- in the window between the failed claim above and
+        // that store, which leaves the flag set with nobody responsible for it. It would
+        // then fire on some later, unrelated release as a session start nothing asked for.
+        // So re-check the gate now that the deferral is visible to whoever holds it.
+        if (![self tryBeginSessionStart]) {
+            // Still held, so the owner is guaranteed to see our deferral when it releases
+            // and re-run it. That re-run calls +[NRMAHarvestController start] via
+            // -performSessionStartInitialization, so there is nothing to start here. An
+            // earlier revision called +start directly as a safety net; it raced the owner's
+            // +initialize: (+start takes @synchronized(controller) without
+            // NRMAHarvestControllerInitializationLock) and widened the existing
+            // controller/harvester lock inversion at exactly the worst moment.
+            return;
+        }
+
+        // The gate freed up after we published, so we own it now and have to honour the
+        // deferral ourselves -- unless the outgoing owner drained it on its way out, in
+        // which case it is already running the session start we asked for and a second one
+        // here would be spurious.
+        if (!atomic_exchange_explicit(&__NRMASessionStartDeferred, false, memory_order_acq_rel)) {
+            [self endSessionStartDrainingDeferred];
+            return;
+        }
     }
 
     @try {
