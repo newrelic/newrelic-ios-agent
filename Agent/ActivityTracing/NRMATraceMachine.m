@@ -115,7 +115,9 @@ static NSString *healthyTimerLock = @"healthy timer lock";
     }
 
     if(![self.activityTrace hasMissingChildren]) {
-        [NRMATraceController completeActivityTrace];
+        // Quiescence: end the interaction at its last instrumented boundary, not at "now", so the
+        // healthy timeout is not added to the reported duration.
+        [NRMATraceController completeActivityTraceOnTimeout];
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         @try {
 #endif
@@ -153,7 +155,9 @@ static NSString *healthyTimerLock = @"healthy timer lock";
                                   selector:NSStringFromSelector(_cmd)];
     }
 #endif
-    [NRMATraceController completeActivityTrace];
+    // Hit the hard ceiling. Same reasoning as the healthy path: the interaction's useful span ended
+    // at its last instrumented boundary, so don't charge it the full unhealthy timeout.
+    [NRMATraceController completeActivityTraceOnTimeout];
 }
 - (void) dealloc
 {

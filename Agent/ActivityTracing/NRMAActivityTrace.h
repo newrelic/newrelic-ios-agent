@@ -41,7 +41,18 @@
 - (id) initWithRootTrace:(NRMATrace*)rootTrace;
 - (void) addTrace:(NRMATrace*)trace;
 - (BOOL) hasMissingChildren;
+/// Completes the trace, ending it at `lastUpdated` — the last instrumented method boundary.
+/// This is quiescence semantics: the interaction ended when work stopped, not when the trace
+/// machine's timer noticed, so the timeout never inflates the reported duration.
 - (void) complete;
+/// Completes the trace, ending it at an explicit wall-clock timestamp. Used when something other
+/// than the quiescence timer ends the interaction (an explicit `stopCurrentInteraction:`, or
+/// supersession by the next screen's interaction), where the real end time is known and is what
+/// the caller means by the interaction's duration.
+///
+/// `endTimestampMillis` is floored at `lastUpdated`, so the reported duration can never be shorter
+/// than the instrumented work it contains.
+- (void) completeWithEndTimestampMillis:(double)endTimestampMillis;
 - (void) recordVitalsThrottled;
 - (NSTimeInterval) durationInSeconds;
 - (BOOL) shouldRecord;

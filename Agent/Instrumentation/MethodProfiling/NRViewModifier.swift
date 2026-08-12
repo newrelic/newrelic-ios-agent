@@ -106,23 +106,27 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 appearTime = now
                 instanceId = id
 
-                // Make this view current in the shared context so it becomes the referrer for the
-                // next view and for breadcrumbs recorded while it is visible.
-                NRMAViewContext.sharedInstance().transition(
-                    toView: viewName, instanceId: id, appearTime: now.timeIntervalSinceReferenceDate)
-
-                // Order matters: the view has to be current *before* the interaction opens, so that
-                // late binding at completion attributes the interaction to this screen. Starting it
-                // before the event is emitted also lets the event carry the interactionId.
+                // Order matters, and it is the opposite of what completion-time binding wanted: the
+                // interaction has to open *before* this view becomes current, so that the transition
+                // below is the one that latches the interaction to this screen. (NRMAViewContext
+                // binds an interaction to the first view that becomes current after it starts, which
+                // is also how the UIKit path works — viewDidLoad opens the interaction, viewDidAppear
+                // makes the screen current.) Opening it here also lets the MobileView event below
+                // carry the interactionId.
                 //
-                // Deliberately not stopped in onDisappear. The interaction is the screen *load*,
-                // matching the UIKit auto-interaction: it completes on the trace machine's healthy
-                // quiescence timeout while this view is still current, which is what late binding
-                // needs. Stopping it on disappear would complete it after the *next* screen had
-                // already become current, and blame that screen instead.
+                // Deliberately not stopped in onDisappear: in SwiftUI the incoming screen's onAppear
+                // fires before the outgoing screen's onDisappear, so stopping there would end the
+                // interaction after the next screen had already become current. The interaction
+                // represents this screen and is ended by the trace machine or by supersession.
                 if startsInteraction {
                     NewRelic.startInteraction(withName: viewName)
                 }
+
+                // Make this view current in the shared context so it becomes the referrer for the
+                // next view and for breadcrumbs recorded while it is visible — and so it is latched
+                // as the view the interaction opened above describes.
+                NRMAViewContext.sharedInstance().transition(
+                    toView: viewName, instanceId: id, appearTime: now.timeIntervalSinceReferenceDate)
 
                 // loadTime (ms): modifier creation (≈ view body evaluation) → onAppear
                 let loadTimeMs = NRMAViewContext.millisecondsBetween(
@@ -144,7 +148,8 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 attrs["appeared"]       = NSNumber(value: true)
                 attrs["uiPlatform"]     = "SwiftUI"
                 attrs["agentName"]      = "iOS"
-                NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+                // ONLY RECORD ON DISSAPEAR 
+                //NewRelic.recordCustomEvent("MobileView", attributes: attrs)
             }
             .onDisappear {
                 // Master switch: honor the AutomaticMobileViews feature flag here too, so a view
@@ -193,9 +198,12 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 ///     to via `interactionId`. Default false.
 ///
 ///     A pure SwiftUI screen has no UIViewController, so the method profiler never starts an
-///     interaction for it and there is otherwise nothing to correlate. The interaction represents
-///     the screen *load*: it completes on the trace machine's quiescence timeout, the same as a
-///     UIKit auto-interaction, not when the view disappears.
+///     interaction for it and there is otherwise nothing to correlate. The interaction is not
+///     stopped when the view disappears; it ends on the trace machine's quiescence timeout, on
+///     supersession by the next interaction, or at the hard ceiling — the same as a UIKit
+///     auto-interaction. With the default 30s quiescence timeout that means its duration
+///     approximates how long the screen was in use, not only how long it took to load. Tune via
+///     `+[NRMATraceController setHealthyTraceTimeout:]`.
 ///
 ///     Two caveats. Only one interaction trace can be active at a time, so enabling this on many
 ///     rapidly-appearing views will cancel and re-open traces. And because it routes through

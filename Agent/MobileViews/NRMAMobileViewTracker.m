@@ -263,8 +263,9 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
         @"uiPlatform":          @"UIKit",
         @"agentName":           @"iOS",
     }];
-
-    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+    // ONLY CALL ON DISAPPEAR
+    
+    // [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 }
 
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {

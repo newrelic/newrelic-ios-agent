@@ -25,8 +25,25 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAFlags.h"
 #import "NRMAViewContext.h"
-const NSTimeInterval NRMA_UNHEALTHY_TRACE_TIMEOUT = 60;
-const NSTimeInterval NRMA_HEALTHY_TRACE_TIMEOUT = 0.5;
+// Quiescence timeout: how long an interaction may go with no instrumented method entry/exit before
+// the trace machine decides it is finished. This is the setting that used to cap an interaction at
+// roughly a second: at 0.5s an interaction could not outlive its screen-load burst, so a screen the
+// user sat on for 30s still reported a sub-second interaction.
+//
+// At 30s the quiescence timer stops being the thing that ends a typical interaction. A UIKit
+// auto-interaction now ends when the next screen supersedes it (NRMA__shouldCancelCurrentTrace), so
+// its duration becomes screen dwell time; a custom interaction ends when the host calls
+// stopCurrentInteraction:. The timer remains the backstop for an interaction that is simply
+// abandoned. Hosts wanting the old load-only semantics can call +setHealthyTraceTimeout:.
+//
+// #define rather than a const: these initialize file-static storage below, and in C a const
+// variable is not a constant expression.
+#define NRMA_HEALTHY_TRACE_TIMEOUT 30.0
+// Hard ceiling. The real backstop for an interaction that is never explicitly stopped — note that a
+// custom activity is immune to supersession (-isInteractionObject: always returns YES for it), so
+// without this a single missed stopCurrentInteraction: would block every later interaction for the
+// rest of the foreground session. Settable via +setUnhealthyTraceTimeout:.
+#define NRMA_UNHEALTHY_TRACE_TIMEOUT 300.0
 
 NSString* const kNRMACustomInteractionIdentifier = @"CUSTOM";
 const int NRMA_MAX_NODE_LIMIT = 2000;
@@ -43,6 +60,8 @@ NSString * const kNRMAStartAndEndTracingLock = @"startTracingLock";
 + (void) exitMethodWithTimestampMillis:(double)exitTimestampMilliseconds;
 + (void) completeTrace:(NRMATrace*)trace withExitTimestampMillis:(NSNumber*)exitTimestampMilliseconds;
 + (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds;
++ (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds
+                                         endedByTimer:(BOOL)endedByTimer;
 
 @end
 
@@ -76,35 +95,41 @@ static const NSString* __newRelicTraceMachAsyncLock = @"lock";
 
 
 
-static NSTimeInterval __unhealthyTraceTimeout;
+// Statically initialized rather than lazily via dispatch_once. These are settable from the host app,
+// and a default applied on first *read* would clobber a value set before that first read — which is
+// the normal ordering, since a host configures the agent at startup and nothing reads the timeout
+// until the first interaction begins.
+//
+// Both are plain doubles read on the main run loop (timer scheduling) and written from whichever
+// thread calls the setter. A torn read is not possible for an aligned double on any platform the
+// agent supports, and a stale read only affects the interval of the next timer, so no lock.
+static NSTimeInterval __unhealthyTraceTimeout = NRMA_UNHEALTHY_TRACE_TIMEOUT;
 + (NSTimeInterval) unhealthyTraceTimeout
 {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        __unhealthyTraceTimeout = NRMA_UNHEALTHY_TRACE_TIMEOUT;
-    });
-
     return __unhealthyTraceTimeout;
 }
 
-+ (void) setUnhealthyTraceTimeout:(NSUInteger)unhealthyTraceTimeout
++ (void) setUnhealthyTraceTimeout:(NSTimeInterval)unhealthyTraceTimeout
 {
+    if (unhealthyTraceTimeout <= 0) {
+        NRLOG_AGENT_ERROR(@"Ignoring non-positive unhealthy trace timeout %f; interactions would complete immediately.", unhealthyTraceTimeout);
+        return;
+    }
     __unhealthyTraceTimeout = unhealthyTraceTimeout;
 }
 
-static NSTimeInterval __healthyTraceTimeout;
+static NSTimeInterval __healthyTraceTimeout = NRMA_HEALTHY_TRACE_TIMEOUT;
 + (NSTimeInterval) healthyTraceTimeout
 {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        __healthyTraceTimeout = NRMA_HEALTHY_TRACE_TIMEOUT;
-    });
-
     return __healthyTraceTimeout;
 }
 
-+ (void) setHealthyTraceTimeout:(NSUInteger) healthyTraceTimeout
++ (void) setHealthyTraceTimeout:(NSTimeInterval) healthyTraceTimeout
 {
+    if (healthyTraceTimeout <= 0) {
+        NRLOG_AGENT_ERROR(@"Ignoring non-positive healthy trace timeout %f; interactions would complete immediately.", healthyTraceTimeout);
+        return;
+    }
     __healthyTraceTimeout = healthyTraceTimeout;
 }
 
@@ -294,8 +319,24 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     return [self completeActivityTraceWithExitTimestampMillis:timer.endTimeMillis];
 }
 
+// Called only by the trace machine's healthy/unhealthy timers. Separated from the ordinary
+// completion path because the two mean different things about *when* the interaction ended: a timer
+// firing says "nothing has happened for a while", so the interaction ended back at its last
+// instrumented boundary, not now. Ending it at "now" would add the whole timeout to every duration.
++ (BOOL) completeActivityTraceOnTimeout
+{
+    return [self completeActivityTraceWithExitTimestampMillis:NRMAMillisecondTimestamp()
+                                                endedByTimer:YES];
+}
 
 + (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds
+{
+    return [self completeActivityTraceWithExitTimestampMillis:exitTimestampMilliseconds
+                                                endedByTimer:NO];
+}
+
++ (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds
+                                         endedByTimer:(BOOL)endedByTimer
 {
     @synchronized(kNRMAStartAndEndTracingLock) {
 
@@ -321,10 +362,23 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 
             [traceMach.tracePool removeMeasurementConsumer:activityTrace.rootTrace];
 
-            [activityTrace complete];
+            // The root trace always ends at the real wall-clock exit: it describes the UI_Thread
+            // span, and its exclusive-time arithmetic needs the true boundary. Set before completing
+            // so the trace is fully formed by the time it is queued for harvest below.
+            activityTrace.rootTrace.exitTimestamp = exitTimestampMilliseconds;
+
+            // The interaction's own end time is what becomes interactionDuration. On a timer-driven
+            // completion that is the last instrumented boundary (quiescence); on an explicit stop or
+            // supersession by the next screen it is the real timestamp. Previously this was always
+            // lastUpdated, which is why calling stopCurrentInteraction: after 30 seconds still
+            // reported a sub-second interaction.
+            if (endedByTimer) {
+                [activityTrace complete];
+            } else {
+                [activityTrace completeWithEndTimestampMillis:exitTimestampMilliseconds];
+            }
 
             activityTrace.totalNetworkTimeMillis += activityTrace.rootTrace.networkTimeMillis;
-            activityTrace.rootTrace.exitTimestamp = exitTimestampMilliseconds;
 
             NSNumber* totalTimeSeconds = [NSNumber numberWithDouble:[activityTrace durationInSeconds]];
 

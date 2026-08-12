@@ -49,6 +49,13 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     // interaction's id.
     NSString *_currentInteractionId;
     NSString *_currentInteractionName;
+
+    // The view an interaction is bound to, latched at the moment that view became current rather
+    // than read back at interaction completion. See -latchInteractionViewBindingLocked.
+    NSString *_boundForInteractionId;
+    NSString *_boundViewName;
+    NSString *_boundViewInstanceId;
+    NSString *_boundPreviousViewName;
 }
 
 + (instancetype)sharedInstance {
@@ -81,6 +88,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewInstanceId  = [instanceId copy];
     _currentViewAppearTime  = appearTime;
     _currentViewSource      = NRMAViewSourceAutomatic;
+    [self latchInteractionViewBindingLocked];
     os_unfair_lock_unlock(&_lock);
 }
 
@@ -106,6 +114,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewInstanceId  = newInstanceId;
     _currentViewAppearTime  = now;
     _currentViewSource      = NRMAViewSourceManual;
+    [self latchInteractionViewBindingLocked];
     os_unfair_lock_unlock(&_lock);
 
     // Close the outgoing view only if the manual API opened it; auto views close via viewDidDisappear.
@@ -205,9 +214,43 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 // the dependency has to stay one-way or the two locks can deadlock.
 - (void)setCurrentInteractionId:(NSString *)interactionId name:(NSString *)name {
     os_unfair_lock_lock(&_lock);
+    // A different interaction (or none) invalidates the latch. Note that -startTracingWithName:
+    // re-publishes the *same* id once the real name is known, so compare ids rather than clearing
+    // unconditionally — otherwise that second publish would drop a binding already latched.
+    if (![_currentInteractionId isEqualToString:interactionId]) {
+        _boundForInteractionId = nil;
+        _boundViewName         = nil;
+        _boundViewInstanceId   = nil;
+        _boundPreviousViewName = nil;
+    }
     _currentInteractionId   = [interactionId copy];
     _currentInteractionName = [name copy];
     os_unfair_lock_unlock(&_lock);
+}
+
+// Binds the running interaction to whichever view is current at this instant. Callers MUST hold
+// _lock (os_unfair_lock is not recursive, so this must never be called from an unlocked path).
+//
+// Why latch rather than read the current view at interaction completion, which is what §3.2 of the
+// correlation design doc describes: reading at completion was only correct because the quiescence
+// timeout was 0.5s — long enough for viewDidAppear: to have landed, short enough that the user could
+// not have navigated away yet. Once an interaction can span a screen's dwell time (and a custom
+// interaction is immune to supersession entirely, -isInteractionObject: always returns YES for it),
+// a completion-time read would attribute a screen load to whatever screen was current when the timer
+// finally fired. §9 of that doc already listed this as a best-effort risk on the unhealthy path; the
+// latch removes it for every path.
+//
+// Only the first transition after an interaction starts is latched. An auto-interaction begins in
+// viewDidLoad/viewWillAppear: while the *outgoing* screen is still current, so the first view to
+// become current after that is the screen the interaction actually describes.
+- (void)latchInteractionViewBindingLocked {
+    if (_currentInteractionId.length == 0) { return; }
+    if ([_boundForInteractionId isEqualToString:_currentInteractionId]) { return; }
+
+    _boundForInteractionId = [_currentInteractionId copy];
+    _boundViewName         = _currentViewName;
+    _boundViewInstanceId   = _currentViewInstanceId;
+    _boundPreviousViewName = _previousViewName;
 }
 
 - (NSDictionary<NSString *, id> *)interactionAttributes {
@@ -226,14 +269,26 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 - (NSDictionary<NSString *, id> *)viewCorrelationAttributes {
     NSMutableDictionary<NSString *, id> *attrs = [NSMutableDictionary dictionary];
     os_unfair_lock_lock(&_lock);
-    if (_currentViewName.length > 0) {
-        attrs[kNRAttr_viewName] = _currentViewName;
+
+    // Prefer the view latched when this interaction's screen became current. Falls back to the
+    // current view when nothing was ever latched — an interaction that started and finished without
+    // any view transition (a custom interaction around a background task, say), where the current
+    // view is still the best available answer and matches the pre-latch behaviour.
+    BOOL haveLatch = (_boundViewName.length > 0
+                      && [_boundForInteractionId isEqualToString:_currentInteractionId]);
+
+    NSString *viewName       = haveLatch ? _boundViewName         : _currentViewName;
+    NSString *viewInstanceId = haveLatch ? _boundViewInstanceId   : _currentViewInstanceId;
+    NSString *previousView   = haveLatch ? _boundPreviousViewName : _previousViewName;
+
+    if (viewName.length > 0) {
+        attrs[kNRAttr_viewName] = viewName;
     }
-    if (_currentViewInstanceId.length > 0) {
-        attrs[kNRAttr_viewInstanceId] = _currentViewInstanceId;
+    if (viewInstanceId.length > 0) {
+        attrs[kNRAttr_viewInstanceId] = viewInstanceId;
     }
-    if (_previousViewName.length > 0) {
-        attrs[kNRAttr_previousView] = _previousViewName;
+    if (previousView.length > 0) {
+        attrs[kNRAttr_previousView] = previousView;
     }
     os_unfair_lock_unlock(&_lock);
     return attrs;

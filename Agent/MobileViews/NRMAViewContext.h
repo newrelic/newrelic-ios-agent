@@ -55,6 +55,10 @@ FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionName;
 /// Publishes the currently-running interaction (activity trace) so MobileView events emitted while
 /// it runs can carry its identity. Pass nil/nil to clear when the interaction completes, so a view
 /// event can never carry the id of a finished interaction.
+///
+/// Publishing a *different* id also discards any latched interaction→view binding (see
+/// -viewCorrelationAttributes). Re-publishing the same id does not, so the second publish that
+/// -startTracingWithName: makes once the real interaction name is known preserves an existing latch.
 - (void)setCurrentInteractionId:(nullable NSString *)interactionId
                            name:(nullable NSString *)name;
 
@@ -66,6 +70,12 @@ FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionName;
 /// values). Deliberately uses the MobileView event's key names so the two event types join on
 /// identically-named attributes — unlike -referrerAttributes, which emits the current view under
 /// the breadcrumb key `currentView`.
+///
+/// Reports the view *latched* when the running interaction's screen became current — the first view
+/// to become current after the interaction started — rather than whichever view happens to be
+/// current at completion. An interaction can outlive the screen it describes (quiescence defaults to
+/// 30s, and a custom interaction is never superseded), so a completion-time read would misattribute
+/// it. Falls back to the current view when no transition occurred while the interaction was open.
 - (NSDictionary<NSString *, id> *)viewCorrelationAttributes;
 
 #pragma mark - Referrer accessors
