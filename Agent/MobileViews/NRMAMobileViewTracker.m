@@ -251,6 +251,9 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
         [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
     // Referrer for this appearance (previousView / previousViewInstanceId).
     [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] previousViewAttributes]];
+    // Identity of the interaction (activity trace) covering this appearance, so the screen can be
+    // joined to its code-level trace. Absent when no interaction is running.
+    [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] interactionAttributes]];
     // Reserved keys win over caller-supplied ones to keep the event schema stable.
     [attrs addEntriesFromDictionary:@{
         kNRAttr_viewClass:      viewClass,
@@ -299,6 +302,9 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     NSDictionary<NSString *, id> *custom = NRMA_AttributesForController(self);
     NSMutableDictionary<NSString *, id> *attrs =
         [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
+    // Usually absent here: the load interaction has normally completed by the time the view goes
+    // away. Present when an interaction is still running (or a new one has started).
+    [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] interactionAttributes]];
     [attrs addEntriesFromDictionary:@{
         kNRAttr_viewClass:      viewClass,
         kNRAttr_viewName:       viewName,

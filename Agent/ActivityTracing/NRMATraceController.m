@@ -23,6 +23,8 @@
 #import <objc/runtime.h>
 #import "NRMATraceMachine.h"
 #import "NewRelicAgentInternal.h"
+#import "NRMAFlags.h"
+#import "NRMAViewContext.h"
 const NSTimeInterval NRMA_UNHEALTHY_TRACE_TIMEOUT = 60;
 const NSTimeInterval NRMA_HEALTHY_TRACE_TIMEOUT = 0.5;
 
@@ -107,6 +109,43 @@ static NSTimeInterval __healthyTraceTimeout;
 }
 
 
+#pragma mark - MobileViews correlation
+
+// Correlation is active whenever either MobileViews producer is enabled, matching the referrer
+// stamping rule in +[NewRelic recordBreadcrumb:attributes:]. With both flags off (the default) a
+// default-configured agent behaves exactly as before: nothing is published to NRMAViewContext and
+// no attributes are added to the interaction event.
++ (BOOL) shouldCorrelateMobileViews
+{
+    return [NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews];
+}
+
+// Publishes the running interaction so MobileView events emitted while it runs carry its identity.
+//
+// LOCK ORDER: callers hold kNRMAStartAndEndTracingLock, and NRMAViewContext takes its own
+// os_unfair_lock and never calls back into this class. That edge must stay one-way
+// (trace lock -> view lock) or the two locks can deadlock.
++ (void) publishRunningInteractionId:(NSString*)interactionId name:(NSString*)name
+{
+    if (![self shouldCorrelateMobileViews]) { return; }
+    [[NRMAViewContext sharedInstance] setCurrentInteractionId:interactionId name:name];
+}
+
+// Read at *completion*, not at start. An auto-interaction starts in viewDidLoad/viewWillAppear:,
+// when the outgoing screen is still current; the loading screen only becomes current in
+// viewDidAppear:. Binding at start would blame the previous screen for every screen load.
++ (NSDictionary*) correlationAttributesForActivityTrace:(NRMAActivityTrace*)activityTrace
+{
+    if (![self shouldCorrelateMobileViews]) { return nil; }
+
+    NSMutableDictionary* attrs =
+        [NSMutableDictionary dictionaryWithDictionary:[[NRMAViewContext sharedInstance] viewCorrelationAttributes]];
+    if (activityTrace.interactionId.length > 0) {
+        attrs[kNRMAAttributeInteractionId] = activityTrace.interactionId;
+    }
+    return attrs.count > 0 ? attrs : nil;
+}
+
 #pragma mark - Static Functions
 + (NSString*) getCurrentActivityName
 {
@@ -163,6 +202,9 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         NRMATraceMachine* traceMach = [self traceMachine];
         traceMach.activityTrace.name = name;
         traceMach.activityTrace.initiatingObjectIdentifier = [NSString stringWithFormat:@"%p",obj];
+        // Re-publish now that the real name is known; startTracingWithRootTrace: only had the
+        // placeholder root-trace name to work with.
+        [self publishRunningInteractionId:traceMach.activityTrace.interactionId name:name];
         [NRMAInteractionHistoryObjCInterface insertInteraction:name startTime:(long long)(traceMach.activityTrace.startTime)];
     }
 }
@@ -229,6 +271,10 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         NRMATraceMachine* traceMach = [[NRMATraceMachine alloc] initWithRootTrace:rootTrace];
 
         traceMach.activityTrace.name = activityName;
+        // Single choke point for activity-trace creation, so every interaction gets an id here.
+        // The name is still the placeholder at this point; startTracingWithName: re-publishes it.
+        traceMach.activityTrace.interactionId = [[NSUUID UUID] UUIDString];
+        [self publishRunningInteractionId:traceMach.activityTrace.interactionId name:nil];
 
         rootTrace.traceMachine = traceMach;
         [NRMAThreadLocalStore setThreadRootTrace:rootTrace];
@@ -293,13 +339,17 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
             [NRMATaskQueue queue:activityTrace];
 
             [[NewRelicAgentInternal sharedInstance].analyticsController  addInteractionEvent:activityTrace.name
-                                      interactionDuration:activityTrace.endTime - activityTrace.startTime];
+                                      interactionDuration:activityTrace.endTime - activityTrace.startTime
+                                               attributes:[self correlationAttributesForActivityTrace:activityTrace]];
 
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         } @catch (NSException* exception) {
             [NRMAExceptionHandler logException:exception class:NSStringFromClass([self class]) selector:NSStringFromSelector(_cmd)];
         }
 #endif
+        // Outside the @try so it runs even if emitting the event threw: this interaction is over and
+        // no later MobileView event may carry its id.
+        [self publishRunningInteractionId:nil name:nil];
         [[self class] cleanup];
     }
 

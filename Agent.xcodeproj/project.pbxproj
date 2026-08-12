@@ -1584,6 +1584,7 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
+		476F718437EE85233BEC229D /* NRMAViewInteractionCorrelationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2820F50EDAF271091D7C47EC /* NRMAViewInteractionCorrelationTests.m */; };
 		507B2C259DD5885F94F7B3B7 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
 		A05B32D10732915D2D8DCA3B /* NRMAMobileViewTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */; };
 		AD5B1B2261682AEEAA17D236 /* NRMAViewContext.m in Sources */ = {isa = PBXBuildFile; fileRef = C9AF87A7CB68173909761538 /* NRMAViewContext.m */; };
@@ -2587,6 +2588,7 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2820F50EDAF271091D7C47EC /* NRMAViewInteractionCorrelationTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewInteractionCorrelationTests.m; sourceTree = "<group>"; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetViewRendererByKeyPath.swift; sourceTree = "<group>"; };
 		2B0340672E874A9900182A70 /* ControllerTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTypeDetector.swift; sourceTree = "<group>"; };
@@ -2715,6 +2717,7 @@
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewContext.h; sourceTree = "<group>"; };
 		9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAMobileViewTracker.m; sourceTree = "<group>"; };
+		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
 		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
 		C9AF87A7CB68173909761538 /* NRMAViewContext.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewContext.m; sourceTree = "<group>"; };
@@ -2759,7 +2762,6 @@
 		F879257B2D441ACC00576F5D /* NRMAAttributeValidator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAAttributeValidator.h; sourceTree = "<group>"; };
 		F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporterOfflineStorageTests.swift; sourceTree = "<group>"; };
 		F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporterNetworkTests.swift; sourceTree = "<group>"; };
-		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F89167382BC9D1540085BCFC /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/WatchOS.platform/Developer/SDKs/WatchOS10.2.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRAutoLogCollector.m; sourceTree = "<group>"; };
@@ -2956,6 +2958,7 @@
 				0209ABC824E705B500E45C90 /* Analytics-Tests */,
 				0209ABC724E705AB00E45C90 /* Agent-Health-Tests */,
 				0209ABC624E7059900E45C90 /* User-Action-Tests */,
+				0BEB5EA0C2408151F241489D /* MobileViews-Tests */,
 			);
 			path = NewRelicAgentTests;
 			sourceTree = "<group>";
@@ -4082,6 +4085,15 @@
 				02FF4AFB24DC8CB200115469 /* base.h */,
 			);
 			path = flatbuffers;
+			sourceTree = "<group>";
+		};
+		0BEB5EA0C2408151F241489D /* MobileViews-Tests */ = {
+			isa = PBXGroup;
+			children = (
+				2820F50EDAF271091D7C47EC /* NRMAViewInteractionCorrelationTests.m */,
+			);
+			name = "MobileViews-Tests";
+			path = "MobileViews-Tests";
 			sourceTree = "<group>";
 		};
 		10BA5FBBE9EB9701CF3DF426 /* MobileViews */ = {
@@ -5809,6 +5821,7 @@
 				0209AC2124E7071F00E45C90 /* MachineMeasurementsTest.m in Sources */,
 				0209ABF424E706FA00E45C90 /* NRThreadInfoTests.m in Sources */,
 				00D3C8A763625C06E61485F0 /* NRMobileViewFeatureFlagGateTests.swift in Sources */,
+				476F718437EE85233BEC229D /* NRMAViewInteractionCorrelationTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

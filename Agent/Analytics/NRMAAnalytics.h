@@ -53,6 +53,18 @@
         withAttributes:(NSDictionary*)attributes;
 
 - (BOOL) addInteractionEvent:(NSString*)name interactionDuration:(double)duration_secs;
+
+/*
+ * Adds an interaction event carrying extra agent-owned attributes — used to stamp the MobileViews
+ * correlation (viewName / viewInstanceId / previousView / interactionId) onto the interaction.
+ *
+ * NOTE: attributes are only applied on the new event system. The legacy C++ entry point
+ * (AnalyticsController::addInteractionEvent) has no attribute parameter, so with
+ * NRFeatureFlag_NewEventSystem disabled they are dropped and a verbose log explains why.
+ */
+- (BOOL) addInteractionEvent:(NSString*)name
+         interactionDuration:(double)duration_secs
+                  attributes:(NSDictionary*)attributes;
 - (BOOL) recordUserAction:(NRMAUserAction *)userAction;
 
 

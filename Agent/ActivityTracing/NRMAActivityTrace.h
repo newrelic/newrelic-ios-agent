@@ -26,6 +26,9 @@
 // unretained pointer that a concurrent setter can free before ARC retains it.
 @property(atomic,strong) NSString        *type;
 @property(atomic,strong) NSString        *name;
+// Identity of this interaction, used to join the interaction event against the MobileView events
+// emitted while it runs. Assigned once at trace creation; atomic for the same reason as name/type.
+@property(atomic,strong) NSString        *interactionId;
 @property(nonatomic,strong) NSMutableDictionary *memoryVitals;
 @property(nonatomic,strong) NSMutableDictionary *cpuVitals;
 @property(nonatomic)        double          totalExclusiveTimeMillis;

@@ -296,6 +296,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "MobileView · Ignored (UIKit)", handler: { [self] in mobileViewIgnoredAction()}))
 
+        options.append(UtilOption(title: "MobileView · Views × Interactions (UIKit)", handler: { [self] in viewsAndInteractionsAction()}))
+
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
@@ -398,6 +400,10 @@ class ViewController: UIViewController {
 
     func mobileViewIgnoredAction() {
         coordinator?.showMobileViewIgnoredViewController()
+    }
+
+    func viewsAndInteractionsAction() {
+        coordinator?.showViewsAndInteractionsViewController()
     }
 
     func makeButton(title: String) -> UIButton {

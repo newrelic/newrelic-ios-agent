@@ -21,6 +21,8 @@ static NSString * const kNRAttr_timeVisible    = @"timeVisible";
 static NSString * const kNRAttr_appeared       = @"appeared";
 static NSString * const kNRAttr_uiPlatform     = @"uiPlatform";
 static NSString * const kNRAttr_agentName      = @"agentName";
+NSString * const kNRMAAttributeInteractionId   = @"interactionId";
+NSString * const kNRMAAttributeInteractionName = @"interactionName";
 
 static NSString * const kNRUIPlatformManual    = @"Manual";
 static NSString * const kNRAgentName           = @"iOS";
@@ -41,6 +43,12 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     NSString *_previousViewName;
     NSString *_previousViewInstanceId;
+
+    // Identity of the interaction (activity trace) currently running, published by
+    // NRMATraceController. Cleared on completion so view events can never carry a finished
+    // interaction's id.
+    NSString *_currentInteractionId;
+    NSString *_currentInteractionName;
 }
 
 + (instancetype)sharedInstance {
@@ -166,6 +174,11 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     NSMutableDictionary<NSString *, id> *attrs =
         [NSMutableDictionary dictionaryWithDictionary:customAttrs ?: @{}];
 
+    // Identity of the interaction running right now, so this view event can be joined to it.
+    // Merged with the agent-owned keys below so caller attributes can never overwrite it.
+    // Safe to call here: every caller has already released _lock (os_unfair_lock is not recursive).
+    [attrs addEntriesFromDictionary:[self interactionAttributes]];
+
     attrs[kNRAttr_viewClass]      = name;   // manual views have no class; name is the identity
     attrs[kNRAttr_viewName]       = name;
     attrs[kNRAttr_viewInstanceId] = instanceId ?: @"";
@@ -183,6 +196,47 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     }
 
     [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+}
+
+#pragma mark - Interaction correlation
+
+// LOCK ORDER: NRMATraceController holds kNRMAStartAndEndTracingLock while calling in here, so the
+// edge is trace lock -> view lock. Nothing in this class may call back into NRMATraceController;
+// the dependency has to stay one-way or the two locks can deadlock.
+- (void)setCurrentInteractionId:(NSString *)interactionId name:(NSString *)name {
+    os_unfair_lock_lock(&_lock);
+    _currentInteractionId   = [interactionId copy];
+    _currentInteractionName = [name copy];
+    os_unfair_lock_unlock(&_lock);
+}
+
+- (NSDictionary<NSString *, id> *)interactionAttributes {
+    NSMutableDictionary<NSString *, id> *attrs = [NSMutableDictionary dictionary];
+    os_unfair_lock_lock(&_lock);
+    if (_currentInteractionId.length > 0) {
+        attrs[kNRMAAttributeInteractionId] = _currentInteractionId;
+    }
+    if (_currentInteractionName.length > 0) {
+        attrs[kNRMAAttributeInteractionName] = _currentInteractionName;
+    }
+    os_unfair_lock_unlock(&_lock);
+    return attrs;
+}
+
+- (NSDictionary<NSString *, id> *)viewCorrelationAttributes {
+    NSMutableDictionary<NSString *, id> *attrs = [NSMutableDictionary dictionary];
+    os_unfair_lock_lock(&_lock);
+    if (_currentViewName.length > 0) {
+        attrs[kNRAttr_viewName] = _currentViewName;
+    }
+    if (_currentViewInstanceId.length > 0) {
+        attrs[kNRAttr_viewInstanceId] = _currentViewInstanceId;
+    }
+    if (_previousViewName.length > 0) {
+        attrs[kNRAttr_previousView] = _previousViewName;
+    }
+    os_unfair_lock_unlock(&_lock);
+    return attrs;
 }
 
 #pragma mark - Referrer accessors

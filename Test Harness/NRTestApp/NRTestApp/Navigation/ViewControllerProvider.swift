@@ -98,5 +98,10 @@ enum ViewControllerProvider {
         let viewController = MobileViewIgnoredViewController()
         return viewController
     }
+
+    static var viewsAndInteractionsViewController: ViewsAndInteractionsViewController {
+        let viewController = ViewsAndInteractionsViewController()
+        return viewController
+    }
 }
 

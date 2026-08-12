@@ -210,4 +210,9 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
 
+    func showViewsAndInteractionsViewController() {
+        let vc = ViewControllerProvider.viewsAndInteractionsViewController
+        navigationController.pushViewController(vc, animated: true)
+    }
+
 }

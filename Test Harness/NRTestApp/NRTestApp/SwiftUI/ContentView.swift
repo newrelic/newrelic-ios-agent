@@ -131,6 +131,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: ManualViewsDemoView()) {
                         Text("MobileView · Manual (setCurrentView + referrer)")
                     }
+                    NavigationLink(destination: ViewsAndInteractionsDemoView()) {
+                        Text("MobileView · Views × Interactions (startsInteraction)")
+                    }
                     if #available(iOS 16.0, *) {
                         NRMobileNavigationLink(name: "NavigationStackView") {
                             NavigationStackView()

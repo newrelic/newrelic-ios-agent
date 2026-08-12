@@ -19,6 +19,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// The join key between a MobileView event and the interaction (activity trace) event that covers
+/// it. Exported so both producers use one definition and the two sides cannot drift apart.
+FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionId;
+/// Display name of that interaction, carried on MobileView events.
+FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionName;
+
 @interface NRMAViewContext : NSObject
 
 + (instancetype)sharedInstance;
@@ -43,6 +49,24 @@ NS_ASSUME_NONNULL_BEGIN
 /// If the current view was set manually, emits its `appeared:NO` MobileView event (with timeVisible)
 /// and clears it. Called on app background so the last manual view's duration is not lost.
 - (void)flushCurrentManualViewOnBackground;
+
+#pragma mark - Interaction correlation
+
+/// Publishes the currently-running interaction (activity trace) so MobileView events emitted while
+/// it runs can carry its identity. Pass nil/nil to clear when the interaction completes, so a view
+/// event can never carry the id of a finished interaction.
+- (void)setCurrentInteractionId:(nullable NSString *)interactionId
+                           name:(nullable NSString *)name;
+
+/// Attributes for MobileView events: interactionId, interactionName (only keys with values).
+/// Empty when no interaction is running.
+- (NSDictionary<NSString *, id> *)interactionAttributes;
+
+/// Attributes for the interaction event: viewName, viewInstanceId, previousView (only keys with
+/// values). Deliberately uses the MobileView event's key names so the two event types join on
+/// identically-named attributes — unlike -referrerAttributes, which emits the current view under
+/// the breadcrumb key `currentView`.
+- (NSDictionary<NSString *, id> *)viewCorrelationAttributes;
 
 #pragma mark - Referrer accessors
 
