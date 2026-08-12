@@ -395,6 +395,14 @@ func uploadSourceMap(
             errorMessage = json["message"] as? String ?? json["errorMessage"] as? String
         }
 
+        // 409 means a source map for this jsBundleId has already been stored -- this is
+        // expected/harmless (e.g. a rebuild without a version bump), not a failure.
+        // Matches the Android agent's HTTP_CONFLICT handling.
+        if httpStatusCode == 409 {
+            print("New Relic: A source map for this build (jsBundleId: \(jsBundleId)) has already been stored.")
+            return
+        }
+
         guard (200...299).contains(httpStatusCode) else {
             print("Error: Source map upload failed (HTTP \(httpStatusCode))")
 
