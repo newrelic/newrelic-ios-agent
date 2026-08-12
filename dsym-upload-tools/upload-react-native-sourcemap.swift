@@ -52,6 +52,7 @@ var debug = false
 
 var sourcemapEndpointPath = "v1/react-native/sourcemaps"
 var sourcemapUploadDataPostKey = "sourcemap"
+let telemetryDataHeader = "x-telemetry-data"
 
 // Maximum file size: 200MB
 let maxFileSizeBytes: UInt64 = 209715200
@@ -143,17 +144,13 @@ func start() {
     print("New Relic: Found source map at: \(sourcemapPath)")
 
     // Check file size
+    var sourcemapFileSize: UInt64 = 0
     do {
         let attributes = try fileManager.attributesOfItem(atPath: sourcemapPath)
         if let fileSize = attributes[.size] as? UInt64 {
+            sourcemapFileSize = fileSize
             let fileSizeMB = Double(fileSize) / 1024.0 / 1024.0
             print("New Relic: Source map size: \(String(format: "%.2f", fileSizeMB))MB")
-
-            if fileSize > maxFileSizeBytes {
-                print("Error: Source map exceeds 200MB limit")
-                print("Consider enabling minification or using code splitting")
-                exit(1)
-            }
         }
     } catch {
         print("Warning: Could not determine file size: \(error)")
@@ -198,6 +195,23 @@ func start() {
 
     // Upload source map
     let uploadURL = "\(url)/\(sourcemapEndpointPath)"
+
+    // If the source map exceeds the 200MB limit, skip the upload entirely and send
+    // telemetry metadata instead, rather than failing the build. Mirrors the Android
+    // agent's oversized-source-map handling (ReactNativeSourceMap.sendTelemetryOnly).
+    if sourcemapFileSize > maxFileSizeBytes {
+        sendTelemetryOnly(
+            apiKey: apiKey,
+            appToken: appToken,
+            url: uploadURL,
+            jsBundleId: jsBundleId,
+            appVersion: appVersion,
+            sourcemapName: sourcemapName,
+            sourcemapSize: sourcemapFileSize
+        )
+        exit(0)
+    }
+
     print("New Relic: Uploading to: \(uploadURL)")
 
     do {
@@ -489,6 +503,89 @@ func uploadSourceMap(
     if let error = uploadError {
         throw error
     }
+}
+
+// Sends telemetry metadata instead of the actual source map when the map exceeds the
+// 200MB limit. No file body is included -- the x-telemetry-data header (Base64-encoded
+// JSON) is the payload. A non-2xx response is expected (there's no file for the server
+// to validate) and is logged, not treated as a failure -- this function never throws,
+// mirroring the Android agent's non-fatal telemetry send (ReactNativeSourceMap.sendTelemetryOnly).
+func sendTelemetryOnly(
+    apiKey: String,
+    appToken: String,
+    url: String,
+    jsBundleId: String,
+    appVersion: String,
+    sourcemapName: String,
+    sourcemapSize: UInt64
+) {
+    print("New Relic: Source map exceeds 200MB limit. Sending telemetry data instead of the file.")
+
+    let bundlePath = "\(environment["BUILT_PRODUCTS_DIR"] ?? "")/main.jsbundle"
+    var bundleSize: UInt64 = 0
+    if let attributes = try? fileManager.attributesOfItem(atPath: bundlePath),
+       let size = attributes[.size] as? UInt64 {
+        bundleSize = size
+    }
+    let bundleName = sourcemapName.replacingOccurrences(of: ".map", with: "")
+
+    let telemetryJSON = "{\"bundler\":\"metro\",\"bundles\":[{\"name\":\"\(bundleName)\",\"size\":\(bundleSize)}],"
+        + "\"sourcemaps\":[{\"name\":\"\(sourcemapName)\",\"size\":\(sourcemapSize)}]}"
+    let encodedTelemetry = Data(telemetryJSON.utf8).base64EncodedString()
+
+    if debug {
+        print("========== Telemetry JSON = \(telemetryJSON)")
+    }
+
+    guard let telemetryURL = URL(string: url) else {
+        print("Warning: Could not build telemetry request URL (non-critical).")
+        print("New Relic: JavaScript errors for this build will not be symbolicated.")
+        return
+    }
+
+    let boundary = "Boundary-\(UUID().uuidString)"
+    var request = URLRequest(url: telemetryURL)
+    request.httpMethod = "POST"
+    request.setValue(apiKey, forHTTPHeaderField: "Api-Key")
+    request.setValue(appToken, forHTTPHeaderField: "X-APP-LICENSE-KEY")
+    request.setValue(encodedTelemetry, forHTTPHeaderField: telemetryDataHeader)
+    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+    var body = Data()
+    let textFields = [
+        "jsBundleId": jsBundleId,
+        "appVersion": appVersion,
+        "sourcemapName": sourcemapName
+    ]
+    for (key, value) in textFields {
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
+        body.append("\(value)\r\n")
+    }
+    body.append("--\(boundary)--\r\n")
+    request.httpBody = body
+
+    let semaphore = DispatchSemaphore(value: 0)
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        defer { semaphore.signal() }
+
+        if let error = error {
+            print("Note: Telemetry send encountered an error (non-critical): \(error.localizedDescription)")
+            return
+        }
+        guard let httpResponse = response as? HTTPURLResponse else { return }
+        // A non-2xx response is expected here since no source map file is attached --
+        // the telemetry header is the payload, not the response status.
+        print("New Relic: Telemetry data sent (server returned \(httpResponse.statusCode)).")
+        if debug, let data = data, let responseString = String(data: data, encoding: .utf8) {
+            print("Response body: \(responseString)")
+        }
+    }
+    task.resume()
+    semaphore.wait()
+
+    print("New Relic: New Relic currently supports source map files up to 200MB. The source map for this build exceeds that limit.")
+    print("New Relic: JavaScript errors for this build will not be symbolicated.")
 }
 
 // MARK: - Region Parsing
