@@ -143,6 +143,24 @@ Compressed size: 12.67MB (85.2% reduction)
 ✅ Source map uploaded successfully!
 ```
 
+### Oversized Source Maps (Telemetry Fallback)
+
+If the source map is still over the 200MB limit, the file is **not** uploaded at all —
+uploading would fail regardless of compression. Instead, the script sends a lightweight
+`x-telemetry-data` header (Base64-encoded JSON with the sourcemap and JS bundle sizes)
+with no file body, so New Relic can track the attempt. This does not fail the build:
+
+```
+New Relic: Source map exceeds 200MB limit. Sending telemetry data instead of the file.
+New Relic: Telemetry data sent (server returned 400).
+New Relic: New Relic currently supports source map files up to 200MB. The source map for this build exceeds that limit.
+New Relic: JavaScript errors for this build will not be symbolicated.
+```
+
+A non-2xx response to the telemetry request (e.g. 400) is expected, since no source map
+file is attached — the header is the payload, not the file. This mirrors the New Relic
+Android agent's handling of oversized React Native source maps.
+
 ## Uploaded Metadata
 
 The following data is sent with each source map upload:
@@ -216,6 +234,12 @@ The upload script provides detailed error messages for all API responses:
 **Meaning:** Source map file exceeds 200MB limit (even after compression)
 
 **Error message:** `"Sourcemap file is too large"`
+
+**Note:** If the *raw, uncompressed* source map already exceeds 200MB, the script now
+skips the upload entirely and sends telemetry metadata instead — see
+[Oversized Source Maps](#oversized-source-maps-telemetry-fallback) above. A 413 from the
+server itself would only occur if a compressed file just under the raw limit is still
+rejected server-side.
 
 **The script automatically:**
 - Compresses files over 50MB to `.zip` format
