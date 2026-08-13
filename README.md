@@ -136,4 +136,3 @@ To all contributors, we thank you!  Without your contribution, this project woul
 ## License
 New Relic iOS Agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
 The New Relic iOS agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found  in the [third-party notices](./THIRD_PARTY_NOTICES.md).
-
