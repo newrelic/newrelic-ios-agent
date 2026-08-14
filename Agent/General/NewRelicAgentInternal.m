@@ -691,13 +691,13 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
 }
 
 - (void) checkAndHandleSessionTimeout {
-    // Check for session timeout using SessionDurationManager
     if ([[NRMASessionDurationManager shared] hasSessionExceeded]) {
-        NSTimeInterval elapsed = [[NRMASessionDurationManager shared] currentSessionDuration];
-        NSTimeInterval maxDuration = [[NRMASessionDurationManager shared] maxSessionDuration];
-        NRLOG_AGENT_INFO(@"HarvestTimer: Session duration reached limit (%.0f seconds / %.0f max). Triggering session restart.", elapsed, maxDuration);
+        // Poke the clock so the next few harvests don't re-enqueue while this is pending.
         [[NRMASessionDurationManager shared] updateSessionStartTime:[NSDate date]];
-        [self handle4HourSessionRestart];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            if (self->_isShutdown) { return; }
+            @synchronized(kNRMA_BGFG_MUTEX) { [self handle4HourSessionRestart]; }
+        });
     }
 }
 
