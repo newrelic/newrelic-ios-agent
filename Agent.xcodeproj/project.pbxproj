@@ -868,7 +868,6 @@
 		02FF4C9724E3201400115469 /* NRMAHTTPUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4ACC24DC657B00115469 /* NRMAHTTPUtilities.mm */; };
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
-		0EA0DA15A28C7FE0E98CD11E /* SessionReplayHarvestEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */; };
 		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B0340632E87366900182A70 /* GetViewRendererByKeyPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */; };
