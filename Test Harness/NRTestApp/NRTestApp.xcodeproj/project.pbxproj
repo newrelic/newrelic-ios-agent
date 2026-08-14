@@ -89,6 +89,7 @@
 		AA0001302F9000000000AA01 /* CapturedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001202F9000000000AA01 /* CapturedRequest.swift */; };
 		AA0001312F9000000000AA01 /* NRCaptureServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001212F9000000000AA01 /* NRCaptureServer.swift */; };
 		AA0001322F9000000000AA01 /* CaptureViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001222F9000000000AA01 /* CaptureViewerView.swift */; };
+		AA0001332F9000000000AA01 /* ConnectConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001232F9000000000AA01 /* ConnectConfig.swift */; };
 		AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001502F9000000000AA01 /* VerificationResult.swift */; };
 		AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001512F9000000000AA01 /* PayloadVerifiers.swift */; };
 		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
@@ -429,6 +430,7 @@
 		AA0001202F9000000000AA01 /* CapturedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedRequest.swift; sourceTree = "<group>"; };
 		AA0001212F9000000000AA01 /* NRCaptureServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRCaptureServer.swift; sourceTree = "<group>"; };
 		AA0001222F9000000000AA01 /* CaptureViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewerView.swift; sourceTree = "<group>"; };
+		AA0001232F9000000000AA01 /* ConnectConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectConfig.swift; sourceTree = "<group>"; };
 		AA0001502F9000000000AA01 /* VerificationResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerificationResult.swift; sourceTree = "<group>"; };
 		AA0001512F9000000000AA01 /* PayloadVerifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayloadVerifiers.swift; sourceTree = "<group>"; };
 		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
@@ -668,6 +670,7 @@
 				AA0001202F9000000000AA01 /* CapturedRequest.swift */,
 				AA0001212F9000000000AA01 /* NRCaptureServer.swift */,
 				AA0001222F9000000000AA01 /* CaptureViewerView.swift */,
+				AA0001232F9000000000AA01 /* ConnectConfig.swift */,
 				AA0001502F9000000000AA01 /* VerificationResult.swift */,
 				AA0001512F9000000000AA01 /* PayloadVerifiers.swift */,
 			);
@@ -1466,6 +1469,7 @@
 				AA0001302F9000000000AA01 /* CapturedRequest.swift in Sources */,
 				AA0001312F9000000000AA01 /* NRCaptureServer.swift in Sources */,
 				AA0001322F9000000000AA01 /* CaptureViewerView.swift in Sources */,
+				AA0001332F9000000000AA01 /* ConnectConfig.swift in Sources */,
 				AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */,
 				AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */,
 			);
