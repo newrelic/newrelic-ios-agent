@@ -612,6 +612,7 @@
 				2BAE5C8A2E860C7D001D2B88 /* TextFieldsView.swift */,
 				2BAE5C8B2E860C7D001D2B88 /* TogglesView.swift */,
 				CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */,
+				4A7FCD36108AFB638093E434 /* CoreDataView.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
