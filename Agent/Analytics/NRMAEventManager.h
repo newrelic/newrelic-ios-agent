@@ -24,6 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setMaxEventBufferTimeInSeconds:(NSUInteger)seconds;
 - (NSUInteger)getMaxEventBufferTimeInSeconds;
 - (BOOL)didReachMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
+- (BOOL)didExceedMaxQueueTime:(NSTimeInterval)currentTimeMilliseconds;
+- (NSUInteger)getEventsRecordedCount;
+- (NSUInteger)getEventsEvictedCount;
 - (BOOL)addEvent:(id<NRMAAnalyticEventProtocol>)event;
 - (void)empty;
 - (void)resetTimestamp;

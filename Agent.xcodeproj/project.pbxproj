@@ -868,6 +868,7 @@
 		02FF4C9724E3201400115469 /* NRMAHTTPUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4ACC24DC657B00115469 /* NRMAHTTPUtilities.mm */; };
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
+		0EA0DA15A28C7FE0E98CD11E /* SessionReplayHarvestEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */; };
 		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B0340632E87366900182A70 /* GetViewRendererByKeyPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */; };
@@ -2688,7 +2689,7 @@
 		34A929172912D721001449B6 /* Hex.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Hex.xcodeproj; path = libMobileAgent/src/Hex/Hex.xcodeproj; sourceTree = "<group>"; };
 		34A9291D2912D726001449B6 /* Analytics.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Analytics.xcodeproj; path = libMobileAgent/src/Analytics/Analytics.xcodeproj; sourceTree = "<group>"; };
 		34A929232912D72A001449B6 /* Connectivity.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Connectivity.xcodeproj; path = libMobileAgent/src/Connectivity/Connectivity.xcodeproj; sourceTree = "<group>"; };
-		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/JSON.xcodeproj; sourceTree = "<group>"; };
+		34A929292912D72F001449B6 /* JSON.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = JSON.xcodeproj; path = libMobileAgent/ext/JSON/json.xcodeproj; sourceTree = "<group>"; };
 		34A9292F2912D736001449B6 /* Utilities.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Utilities.xcodeproj; path = libMobileAgent/src/Utilities/Utilities/Utilities.xcodeproj; sourceTree = "<group>"; };
 		34D0401D2D86036D007BE92D /* UIColor+HexString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+HexString.swift"; sourceTree = "<group>"; };
 		34DB25352824791B00A5BC45 /* NRMAURLTransformer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAURLTransformer.h; sourceTree = "<group>"; };
@@ -2740,6 +2741,7 @@
 		F879257B2D441ACC00576F5D /* NRMAAttributeValidator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAAttributeValidator.h; sourceTree = "<group>"; };
 		F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporterOfflineStorageTests.swift; sourceTree = "<group>"; };
 		F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayReporterNetworkTests.swift; sourceTree = "<group>"; };
+		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
 		F88C2CE32A2FA7AC00373EFE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F89167382BC9D1540085BCFC /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/WatchOS.platform/Developer/SDKs/WatchOS10.2.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		F891A6BD2CB6F5C1007675F4 /* NRAutoLogCollector.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRAutoLogCollector.m; sourceTree = "<group>"; };
@@ -3149,6 +3151,7 @@
 				F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */,
 				F88801D12FC5FB780051DC67 /* SessionReplayReporterOfflineStorageTests.swift */,
 				F88801E62FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift */,
+				C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */,
 				0209ACB424E747FA00E45C90 /* NewRelicAgentTests.m */,
 				F8BF154C2F3A37FB00EF5628 /* SwiftUIShapeThingyTests.swift */,
 				0209ACB224E7394B00E45C90 /* NRMAInternalTests.m */,
@@ -5658,6 +5661,7 @@
 				2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */,
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
 				F88801E72FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift in Sources */,
+				0EA0DA15A28C7FE0E98CD11E /* SessionReplayHarvestEndToEndTests.swift in Sources */,
 				F8BF15382F3A37C200EF5628 /* SwiftUIShapeThingy.swift in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
 				C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */,
@@ -6782,12 +6786,13 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -6837,12 +6842,13 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}",
@@ -6914,16 +6920,16 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -6993,15 +6999,15 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -7041,12 +7047,12 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7054,7 +7060,8 @@
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = NO;
@@ -7070,7 +7077,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.5;
+				MARKETING_VERSION = 7.7.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -7103,19 +7110,21 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = NO;
@@ -7131,7 +7140,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.5;
+				MARKETING_VERSION = 7.7.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -7157,9 +7166,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -7216,9 +7225,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -7268,9 +7277,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
@@ -7310,9 +7319,9 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
@@ -7352,12 +7361,12 @@
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=appletvos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7365,7 +7374,8 @@
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/**",
@@ -7379,7 +7389,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.5;
+				MARKETING_VERSION = 7.7.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -7405,11 +7415,11 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7417,6 +7427,8 @@
 					"$(PROJECT_DIR)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = (
 					.,
@@ -7430,7 +7442,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.5;
+				MARKETING_VERSION = 7.7.6;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -7457,9 +7469,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7521,9 +7533,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7580,12 +7592,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7594,7 +7606,8 @@
 					"$(inherited)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -7608,7 +7621,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.7.5;
+				MARKETING_VERSION = 7.7.6;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";
@@ -7638,12 +7651,12 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.5;
+				CURRENT_PROJECT_VERSION = 7.7.6;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.5;
+				DYLIB_CURRENT_VERSION = 7.7.6;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7652,6 +7665,8 @@
 					"$(inherited)",
 				);
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = NO;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -7665,7 +7680,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.7.5;
+				MARKETING_VERSION = 7.7.6;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";

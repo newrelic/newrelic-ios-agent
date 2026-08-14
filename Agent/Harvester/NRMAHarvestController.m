@@ -9,6 +9,8 @@
 #import "NRMAHarvestController.h"
 #import "NRMAExceptionHandler.h"
 #import "NewRelicInternalUtils.h"
+#import "NRMASupportMetricHelper.h"
+#import "NRMAJSON.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -413,6 +415,13 @@ static NSObject* NRMAHarvestControllerAccessorLock;
     NRMAHarvestData* harvestData = [[self class] harvestData];
     if (harvestData == nil) return;
     @synchronized(harvestData) {
+        if (analytics.events.count > 0) {
+            NSError *error = nil;
+            NSData *eventsData = [NRMAJSON dataWithJSONObject:analytics.events options:0 error:&error];
+            if (eventsData != nil) {
+                [NRMASupportMetricHelper enqueueEventSizeUncompressedMetric:eventsData.length];
+            }
+        }
         [harvestData.analyticsEvents addEvents:analytics.events];
         harvestData.analyticsAttributes = analytics.sessionAttributes;
     }
