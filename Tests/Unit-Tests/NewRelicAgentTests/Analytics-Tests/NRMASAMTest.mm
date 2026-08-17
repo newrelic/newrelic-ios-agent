@@ -13,6 +13,7 @@
 #import "NRMAAnalytics.h"
 #import "Constants.h"
 #import "NRMABool.h"
+#import "NRMAAttributeValidator.h"
 
 @interface NRMASAMTest : XCTestCase
 {
@@ -413,6 +414,22 @@
     // valid attrib was added
     XCTAssertEqual(decode.count, 1);
 
+}
+
+- (NRMASAM *)samWithProductionValidator {
+    return [[NRMASAM alloc] initWithAttributeValidator:[[NRMAAttributeValidator alloc] init]];
+}
+
+- (void)testSetSessionAttributeWithArrayFails {
+    NRMASAM *sam = [self samWithProductionValidator];
+    XCTAssertFalse([sam setSessionAttribute:@"arrayAttr" value:@[@"one", @"two"]],
+                   @"Should reject NSArray as a session attribute value");
+}
+
+- (void)testSetSessionAttributeWithDictionaryFails {
+    NRMASAM *sam = [self samWithProductionValidator];
+    XCTAssertFalse([sam setSessionAttribute:@"dictAttr" value:@{@"key": @"value"}],
+                   @"Should reject NSDictionary as a session attribute value");
 }
 
 - (void)testIncrementIntegerValueWithDouble {
