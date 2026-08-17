@@ -422,13 +422,15 @@
 
 - (void)testSetSessionAttributeWithArrayFails {
     NRMASAM *sam = [self samWithProductionValidator];
-    XCTAssertFalse([sam setSessionAttribute:@"arrayAttr" value:@[@"one", @"two"]],
+    NSArray *arrayValue = @[@"one", @"two"];
+    XCTAssertFalse([sam setSessionAttribute:@"arrayAttr" value:arrayValue],
                    @"Should reject NSArray as a session attribute value");
 }
 
 - (void)testSetSessionAttributeWithDictionaryFails {
     NRMASAM *sam = [self samWithProductionValidator];
-    XCTAssertFalse([sam setSessionAttribute:@"dictAttr" value:@{@"key": @"value"}],
+    NSDictionary *dictValue = @{@"key": @"value"};
+    XCTAssertFalse([sam setSessionAttribute:@"dictAttr" value:dictValue],
                    @"Should reject NSDictionary as a session attribute value");
 }
 
