@@ -4,9 +4,6 @@ import Foundation
 
 /// Typed model of the /connect response body. All fields map 1-to-1 to the JSON the server
 /// sends to the agent. Codable lets the UI edit the config as pretty-printed JSON and re-parse it.
-///
-/// `at_capture` ([Int, [Any]]) is a heterogeneous array that can't be expressed cleanly in
-/// Swift's type system — it is injected separately by `toServerDict()`.
 struct ConnectConfig: Codable {
     var serverTimestamp: Int = 1656525980
     var dataReportPeriod: Int = 60
@@ -103,14 +100,12 @@ extension ConnectConfig {
     static let `default` = ConnectConfig()
 
     /// Returns a [String: Any] dict ready to hand to HttpServer as the connect response body.
-    /// Injects `at_capture` ([1, []]) which can't be round-tripped through Codable cleanly.
     func toServerDict() -> [String: Any] {
         let enc = JSONEncoder()
         guard let data = try? enc.encode(self),
               var dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
             return [:]
         }
-        dict["at_capture"] = [1, []] as [Any]
         return dict
     }
 }
