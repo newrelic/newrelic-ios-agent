@@ -276,9 +276,23 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
         @"uiPlatform":          @"UIKit",
         @"agentName":           @"iOS",
     }];
-    // ONLY CALL ON DISAPPEAR
-    
-    // [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+    // loadTime belongs here and not only on the disappear event, which is where this producer used
+    // to report it alone. The appear event is the one that also carries interactionId — by
+    // viewDidDisappear: the covering interaction has normally completed and NRMAViewContext has
+    // cleared it — so this is the only event from which a load cost can be joined to the trace that
+    // measured it. It also brings the UIKit schema in line with the SwiftUI producer, which has
+    // always put loadTime on appear.
+    //
+    // Omitted rather than zeroed when viewDidLoad was never observed for this appearance (agent
+    // started mid-session), so aggregates are not dragged toward 0 by a placeholder.
+    if (loadTimestamp) {
+        attrs[kNRAttr_loadTime] = @([NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue
+                                                                    and:appearTime]);
+    }
+
+    // Both halves of a view's lifetime are recorded, and they carry different things: this one
+    // loadTime and interactionId, the disappear event timeVisible.
+    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 }
 
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {

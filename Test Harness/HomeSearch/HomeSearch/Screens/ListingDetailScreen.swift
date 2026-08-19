@@ -52,14 +52,19 @@ struct ListingDetailScreen: View {
     private func content(for listing: Listing) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                heroPhoto(for: listing)
-                header(for: listing)
+                heroPhoto(for: listing).NRMobileView(name: Component.heroPhoto.rawValue,
+                                                     attributes: Component.attributes)
+                header(for: listing).NRMobileView(name: Component.header.rawValue,
+                                                  attributes: Component.attributes)
                 Divider()
-                facts(for: listing)
+                facts(for: listing).NRMobileView(name: Component.facts.rawValue,
+                                                 attributes: Component.attributes)
                 Divider()
-                summary(for: listing)
+                summary(for: listing).NRMobileView(name: Component.summary.rawValue,
+                                                   attributes: Component.attributes)
                 Divider()
-                agentCard(for: listing)
+                agentCard(for: listing).NRMobileView(name: Component.agentCard.rawValue,
+                                                     attributes: Component.attributes)
             }
             .padding(.bottom, 32)
         }
@@ -99,6 +104,37 @@ struct ListingDetailScreen: View {
                          name: ViewName.mortgageCalculator.rawValue) {
             MortgageCalculatorScreen(listing: listing)
         }
+    }
+
+    // MARK: - Component-level views
+
+    /// The sections of this screen, each tracked as a view in its own right.
+    ///
+    /// These take the default `startsInteraction: false`, so they open no trace of their own — each
+    /// records a load segment against whatever interaction is already open, which on this screen is
+    /// the one the screen itself opens with `startsInteraction: true`. That is what puts several
+    /// `Method/MobileView/<component>` rows into a *single* interaction's breakdown table, instead
+    /// of the one row naming the screen.
+    ///
+    /// Names are dot-separated rather than slash-separated on purpose: `/` is one of the characters
+    /// `+[NewRelicInternalUtils cleanseStringForCollector:]` rewrites to `_`, and it is also the
+    /// separator in the `Method/<class>/<method>` metric grammar these names land in.
+    ///
+    /// The names are fixed strings, never per-listing — see the cardinality note in ViewName.
+    private enum Component: String {
+        case heroPhoto = "ListingDetail.HeroPhoto"
+        case header    = "ListingDetail.Header"
+        case facts     = "ListingDetail.Facts"
+        case summary   = "ListingDetail.Summary"
+        case agentCard = "ListingDetail.AgentCard"
+
+        /// Marks the emitted MobileView events as components rather than screens. `viewName` alone
+        /// cannot tell them apart — to the agent a component is just another view — so dashboards
+        /// need an attribute to facet on.
+        static let attributes: [String: Any] = [
+            "component": true,
+            "componentOf": ViewName.listingDetail.rawValue
+        ]
     }
 
     // MARK: - Sections

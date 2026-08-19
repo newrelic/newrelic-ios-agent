@@ -156,8 +156,11 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 attrs["appeared"]       = NSNumber(value: true)
                 attrs["uiPlatform"]     = "SwiftUI"
                 attrs["agentName"]      = "iOS"
-                // ONLY RECORD ON DISSAPEAR 
-                //NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+                // Recorded on both appear and disappear, carrying different things. This one is
+                // the only event that can hold loadTime (measured above) and interactionId: the
+                // interaction opened on appear has normally completed by onDisappear, so the
+                // disappear event carries timeVisible instead.
+                NewRelic.recordCustomEvent("MobileView", attributes: attrs)
             }
             .onDisappear {
                 // Master switch: honor the AutomaticMobileViews feature flag here too, so a view
