@@ -133,6 +133,14 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                     modifierCreatedAt.timeIntervalSinceReferenceDate,
                     and: now.timeIntervalSinceReferenceDate)
 
+                // The same span as a segment on the interaction opened above, which puts this
+                // screen in that interaction's breakdown as MobileView/<viewName>. A SwiftUI view
+                // has no UIViewController for the method profiler to hook, so without this the
+                // interaction has no row naming the screen it belongs to.
+                NRMAMobileViewTracker.recordLoadSegment(forViewNamed: viewName,
+                                                       loadTime: modifierCreatedAt.timeIntervalSinceReferenceDate,
+                                                       appearTime: now.timeIntervalSinceReferenceDate)
+
                 var attrs: [String: Any] = customAttributes ?? [:]
                 // Referrer for this appearance (previousView / previousViewInstanceId).
                 attrs.merge(NRMAViewContext.sharedInstance().previousViewAttributes()) { _, new in new }

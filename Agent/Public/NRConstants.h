@@ -61,7 +61,10 @@ enum NRTraceType {
     NRTraceTypeDatabase,
     NRTraceTypeImages,
     NRTraceTypeJson,
-    NRTraceTypeNetwork
+    NRTraceTypeNetwork,
+    // Append new categories here, never insert: host apps compile NR_TRACE_METHOD_START(<category>)
+    // against these raw values.
+    NRTraceTypeMobileView
 };
 
 typedef NSString * SessionReplayMaskingMode NS_STRING_ENUM;

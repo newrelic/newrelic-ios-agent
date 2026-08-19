@@ -550,6 +550,66 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     } // @synchronized(kNRMAStartAndEndTracingLock)
 }
 
++ (void) recordCompletedSegmentWithObjectNamed:(NSString*)objectName
+                                   methodNamed:(NSString*)methodName
+                          entryTimestampMillis:(double)entryTimestampMillis
+                           exitTimestampMillis:(double)exitTimestampMillis
+                                 traceCategory:(enum NRTraceType)category
+{
+    if ([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+    if (![NRMAFlags shouldEnableInteractionTracing]) {
+        return;
+    }
+    if (!objectName.length || !methodName.length) {
+        return;
+    }
+
+    NSString* classLabel  = [NewRelicInternalUtils cleanseStringForCollector:objectName];
+    NSString* methodLabel = [NewRelicInternalUtils cleanseStringForCollector:methodName];
+
+    // The same lock the rest of the trace lifecycle takes (see completeTrace:), held across
+    // register/push/complete so a concurrent teardown can't free the activity trace underneath
+    // a half-recorded segment. @synchronized is recursive, so completeTrace: retaking it is fine.
+    @synchronized(kNRMAStartAndEndTracingLock) {
+        if (![NRMATraceController isTracingActive]) {
+            return;
+        }
+        NRMATrace* parentTrace = [NRMATraceController currentTrace];
+        if (parentTrace == nil) {
+            return;
+        }
+
+        // Registered with no parent, and marked ignoreNode, so the segment never joins the trace
+        // tree: its span was measured after the fact and overlaps the instrumented methods it
+        // covers, so as a child of the frame it is recorded from it would subtract its whole
+        // duration from that frame's exclusive time and start before its parent began. The row the
+        // caller wants comes from the metric completeTrace: emits, not from a place in the tree.
+        //
+        // registerNewTrace: still adds the node to the activity trace's missing-children set, so
+        // from here on every path has to reach completeTrace: — otherwise the interaction is left
+        // waiting on a child that never finishes.
+        NRMATrace* segment = [NRMATraceController registerNewTrace:[NSString stringWithFormat:@"%@#%@", classLabel, methodLabel]
+                                                       withParent:nil];
+        if (segment == nil) {
+            return;
+        }
+        segment.ignoreNode  = YES;
+        segment.category    = category;
+        segment.classLabel  = classLabel;
+        segment.methodLabel = methodLabel;
+
+        // Pushing stamps entry with *now*, which the caller's timestamp then replaces — the same
+        // order enterMethod:...withTimer: uses, because the push validates a set entryTimestamp.
+        [NRMATraceController newTraceSetup:segment parentTrace:parentTrace];
+        segment.entryTimestamp = entryTimestampMillis;
+
+        // Pops the segment straight back off, restoring parentTrace as the thread's current trace.
+        [NRMATraceController completeTrace:segment withExitTimestampMillis:@(exitTimestampMillis)];
+    }
+}
+
 + (NRMATrace*) registerNewTrace:(NSString *)name
                    withParent:(NRMATrace*) parentTrace
 {

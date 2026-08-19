@@ -75,6 +75,28 @@ extern NSString* const kNRMACustomInteractionIdentifier;
 + (BOOL) enterMethod:(NRMATrace*)parentTrace
                 name:(NSString*)newTraceName;
 
+/// Records an already-finished segment on the interaction covering this thread, using timestamps
+/// the caller captured earlier. For work whose boundaries are only known after the fact — a view's
+/// load span, which straddles two runloop turns and so cannot hold the thread's trace stack open
+/// between them the way an instrumented method does.
+///
+/// A no-op when no interaction is running: a segment describes work *inside* an interaction and
+/// must never start one of its own.
+///
+/// The segment emits its metrics but is deliberately kept out of the harvested trace tree: its span
+/// overlaps the instrumented methods it covers, so a node would subtract its whole duration from
+/// the exclusive time of the frame it was recorded from.
+///
+/// `objectName` and `methodName` become the segment's `Method/<objectName>/<methodName>` metric,
+/// which is the row the interaction's breakdown shows. Both are cleansed for the collector, so
+/// host-app text is safe to pass. Strings rather than a SEL deliberately: a selector built from a
+/// dynamic view name would be interned in the runtime's selector table for the life of the process.
++ (void) recordCompletedSegmentWithObjectNamed:(NSString*)objectName
+                                   methodNamed:(NSString*)methodName
+                          entryTimestampMillis:(double)entryTimestampMillis
+                           exitTimestampMillis:(double)exitTimestampMillis
+                                 traceCategory:(enum NRTraceType)category;
+
 + (void) exitMethod;
 
 + (NRMATrace*) currentTrace;

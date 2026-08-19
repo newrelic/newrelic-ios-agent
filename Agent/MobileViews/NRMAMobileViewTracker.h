@@ -71,6 +71,23 @@ FOUNDATION_EXPORT BOOL NRMA_ShouldSkipViewName(NSString *viewName);
  */
 - (void)start;
 
+/**
+ * Records a view's load span as a segment on the interaction (activity trace) currently covering
+ * it, so the screen shows up as a `MobileView/<viewName>` row in that interaction's breakdown.
+ * The swizzled lifecycle rows can't say which screen they belong to — the method profiler traces
+ * the class it swizzles, so every one of them reads `UIViewController/viewDidLoad`.
+ *
+ * `loadTime` and `appearTime` are CFAbsoluteTime, the domain both producers already capture in:
+ * viewDidLoad → viewDidAppear for UIKit, modifier creation → onAppear for SwiftUI.
+ *
+ * A no-op unless MobileViews collection is enabled, an interaction is running, and the span is
+ * positive. A `loadTime` of 0 means the load was never observed — a view reappearing without
+ * reloading — rather than a load that took no time.
+ */
++ (void)recordLoadSegmentForViewNamed:(NSString *)viewName
+                             loadTime:(CFAbsoluteTime)loadTime
+                           appearTime:(CFAbsoluteTime)appearTime;
+
 @end
 
 NS_ASSUME_NONNULL_END
