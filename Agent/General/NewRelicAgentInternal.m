@@ -979,7 +979,9 @@ static UIBackgroundTaskIdentifier background_task;
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
     @try {
 #endif
-        [NRMATraceController completeActivityTrace];
+        // Every live interaction, not just the one this thread resolves to: the app is going away,
+        // so anything still open has to be flushed or it is lost.
+        [NRMATraceController completeAllActivityTraces];
 
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -1297,7 +1299,9 @@ void applicationDidEnterBackgroundCF(void) {
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
     @try {
 #endif
-        [NRMATraceController completeActivityTrace];
+        // Every live interaction, not just the one this thread resolves to: the app is going away,
+        // so anything still open has to be flushed or it is lost.
+        [NRMATraceController completeAllActivityTraces];
 
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER

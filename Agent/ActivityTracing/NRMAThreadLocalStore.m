@@ -19,6 +19,30 @@
 
 const NSString* NRMA_TRACE_FIELD_KEY = @"_nr_threadTrace";
 const NSString* NRMA_TRACE_STACK_KEY = @"_nr_threadStackTrace";
+// Per-thread: interactionId -> {NRMA_TRACE_FIELD_KEY: frame, NRMA_TRACE_STACK_KEY: stack}
+static NSString* const NRMA_INTERACTIONS_KEY = @"_nr_threadInteractions";
+// Per-thread: the interaction instrumented code on this thread is currently inside.
+static NSString* const NRMA_CURRENT_INTERACTION_KEY = @"_nr_threadCurrentInteraction";
+// Stands in for an interaction id when a trace has none. A root trace is built before its machine
+// exists, and a caller can still push segments before any id is assigned; bucketing those under one
+// stable key keeps the legacy single-interaction behaviour intact rather than dropping the segment.
+static NSString* const NRMA_UNSCOPED_INTERACTION_KEY = @"_nr_unscopedInteraction";
+
+// Internals. Declared up front so definition order below does not matter. Every one of these assumes
+// the caller already holds __threadDictionaryLock.
+@interface NRMAThreadLocalStore()
++ (NSMutableDictionary*) currentThreadDictionary;
++ (NSString*) scopeKeyForTrace:(NRMATrace*)trace;
++ (NSMutableDictionary*) scopeDictionaryForInteractionId:(NSString*)interactionId;
++ (NRMATrace*) frameForInteractionId:(NSString*)interactionId;
++ (NSMutableArray*) threadLocalStackForInteractionId:(NSString*)interactionId;
++ (void) setThreadLocalTrace:(NRMATrace*)trace;
++ (void) cleanupCurrentThreadLocalForInteractionId:(NSString*)interactionId;
++ (int) prepareNewThread:(NSMutableArray*)stack child:(NRMATrace*)child withParent:(NRMATrace*)parent;
++ (int) prepareSameThread:(NSMutableArray*)stack child:(NRMATrace*)child withParent:(NRMATrace*)parent;
++ (BOOL) isThreadMatchForChild:(NRMATrace*)child parent:(NRMATrace*)parent;
++ (BOOL) validateIsSerialParent:(NRMATrace*)parent child:(NRMATrace*)child;
+@end
 
 @implementation NRMAThreadLocalStore
 
@@ -28,13 +52,48 @@ static NSMutableDictionary* __threadDictionaries;
 
 // Public methods - must acquire a lock and prevent reentrancy
 
+#pragma mark - Ambient interaction for this thread
+
++ (NSString *)currentInteractionId
+{
+    @synchronized(__threadDictionaryLock)
+    {
+        return [[self class] currentThreadDictionary][NRMA_CURRENT_INTERACTION_KEY];
+    }
+}
+
++ (NSString *)setCurrentInteractionId:(NSString *)interactionId
+{
+    @synchronized(__threadDictionaryLock)
+    {
+        NSMutableDictionary* threadDict = [[self class] currentThreadDictionary];
+        NSString* previous = threadDict[NRMA_CURRENT_INTERACTION_KEY];
+        if (interactionId.length) {
+            threadDict[NRMA_CURRENT_INTERACTION_KEY] = [interactionId copy];
+        } else {
+            [threadDict removeObjectForKey:NRMA_CURRENT_INTERACTION_KEY];
+        }
+        return previous;
+    }
+}
+
+#pragma mark - Segment stack
+
 /** return the currently active trace segment (i.e. frame ptr) for this thread */
 + (NRMATrace*)threadLocalTrace
 {
     @synchronized(__threadDictionaryLock)
     {
-        NSMutableDictionary *currentDict = [[self class] currentThreadDictionary];
-        return  [currentDict objectForKey:NRMA_TRACE_FIELD_KEY];
+        NSMutableDictionary* threadDict = [[self class] currentThreadDictionary];
+        return [[self class] frameForInteractionId:threadDict[NRMA_CURRENT_INTERACTION_KEY]];
+    }
+}
+
++ (NRMATrace*)threadLocalTraceForInteractionId:(NSString *)interactionId
+{
+    @synchronized(__threadDictionaryLock)
+    {
+        return [[self class] frameForInteractionId:interactionId];
     }
 }
 
@@ -48,9 +107,14 @@ static NSMutableDictionary* __threadDictionaries;
 
     @synchronized(__threadDictionaryLock)
     {
+        // A root trace defines its interaction's stack, so entering it also makes that interaction
+        // ambient on this thread — instrumented code that follows lands in the right bucket.
+        NSString* interactionId = [[self class] scopeKeyForTrace:root];
+        [[self class] currentThreadDictionary][NRMA_CURRENT_INTERACTION_KEY] = interactionId;
+
         [NRMAThreadLocalStore setThreadLocalTrace:root];
 
-        NSMutableArray *stack = [NRMAThreadLocalStore threadLocalStack];
+        NSMutableArray *stack = [NRMAThreadLocalStore threadLocalStackForInteractionId:interactionId];
         [stack removeAllObjects];
         [stack addObject:root];
     }
@@ -71,6 +135,24 @@ static NSMutableDictionary* __threadDictionaries;
     [oldDict removeAllObjects];
 }
 
++ (void)destroyStateForInteractionId:(NSString *)interactionId
+{
+    NSString* scopeKey = interactionId.length ? interactionId : NRMA_UNSCOPED_INTERACTION_KEY;
+
+    @synchronized(__threadDictionaryLock)
+    {
+        // Every thread may hold a stack for this interaction — a single interaction's segments can be
+        // spread across any number of threads — so all of them are visited, not just the caller's.
+        for (NSMutableDictionary* threadDict in [__threadDictionaries allValues]) {
+            NSMutableDictionary* interactions = threadDict[NRMA_INTERACTIONS_KEY];
+            [interactions removeObjectForKey:scopeKey];
+            if ([threadDict[NRMA_CURRENT_INTERACTION_KEY] isEqualToString:scopeKey]) {
+                [threadDict removeObjectForKey:NRMA_CURRENT_INTERACTION_KEY];
+            }
+        }
+    }
+}
+
 /** push childTrace onto the thread's stack and set it as the frame ptr.
  if parentTrace is not on the same thread this will clear the stack and set parentTrace as the 0th item before pushing childTrace. */
 
@@ -83,7 +165,10 @@ static NSMutableDictionary* __threadDictionaries;
     BOOL parentIsOnSameThread = [self isThreadMatchForChild:childTrace parent:parentTrace];
     @synchronized(__threadDictionaryLock)
     {
-        NSMutableArray *stack = [NRMAThreadLocalStore threadLocalStack];
+        // The child's interaction owns the stack. A cross-interaction parent would otherwise splice
+        // this segment onto the wrong interaction's stack and corrupt both unwinds.
+        NSString* scopeKey = [[self class] scopeKeyForTrace:childTrace];
+        NSMutableArray *stack = [NRMAThreadLocalStore threadLocalStackForInteractionId:scopeKey];
         if (!parentIsOnSameThread) {
             //case for new thread
             [self prepareNewThread:stack child:childTrace withParent:parentTrace];
@@ -113,7 +198,7 @@ static NSMutableDictionary* __threadDictionaries;
         error = 1;
         [stack removeAllObjects];
     }
-    
+
     [stack addObject:parent];
 
     return error;
@@ -123,12 +208,12 @@ static NSMutableDictionary* __threadDictionaries;
 {
     int error = 0;
 
-            if ([NRMAThreadLocalStore threadLocalTrace] != parent) {
+            if ([NRMAThreadLocalStore frameForInteractionId:[[self class] scopeKeyForTrace:child]] != parent) {
                 if (![self validateIsSerialParent:parent child:child]) {
                     NRLOG_AGENT_ERROR(@"<Activity: \"%@\"> threadLocalTrace is not parentTrace! On thread %ud, p=%@, c=%@, f=%@, stack=%@",
                                 [NRMATraceController getCurrentActivityName],
                                 child.threadInfo.identity,
-                                parent, child, [NRMAThreadLocalStore threadLocalTrace], stack);
+                                parent, child, [NRMAThreadLocalStore frameForInteractionId:[[self class] scopeKeyForTrace:child]], stack);
                     [NRMATaskQueue queue:[[NRMAMetric alloc]
                                         initWithName:kNRSupportabilityPrefix@"/ThreadLocalParentNotField"
                                         value:@1
@@ -137,11 +222,11 @@ static NSMutableDictionary* __threadDictionaries;
                 }
             } else if ([stack lastObject] != parent) {
                 if (![self validateIsSerialParent:parent child:child]) {
-                    
+
                     NRLOG_AGENT_ERROR(@"<Activity: \"%@\"> parentTrace is not at bottom of threadLocalStack! On thread %ud, p=%@, c=%@, f=%@, stack=%@",
                                 [NRMATraceController getCurrentActivityName],
                                 child.threadInfo.identity,
-                                parent, child, [NRMAThreadLocalStore threadLocalTrace], stack);
+                                parent, child, [NRMAThreadLocalStore frameForInteractionId:[[self class] scopeKeyForTrace:child]], stack);
                     [NRMATaskQueue queue:[[NRMAMetric alloc]
                                         initWithName:kNRSupportabilityPrefix@"/ThreadLocalParentNotOnStack"
                                         value:@1
@@ -176,10 +261,14 @@ static NSMutableDictionary* __threadDictionaries;
     *parent = nil;
     @synchronized(__threadDictionaryLock)
     {
-        NSMutableDictionary *currentDict = [[self class] currentThreadDictionary];
+        // Unwind the stack belonging to this trace's own interaction, not whichever interaction
+        // happens to be ambient on the thread right now: an interleaved interaction must not be able
+        // to pop another's frames.
+        NSString* scopeKey = [[self class] scopeKeyForTrace:trace];
+        NSMutableDictionary *scopeDict = [[self class] scopeDictionaryForInteractionId:scopeKey];
 
-        NRMATrace *currentTrace = [currentDict objectForKey:NRMA_TRACE_FIELD_KEY];
-        NSMutableArray *stack = [currentDict objectForKey:NRMA_TRACE_STACK_KEY];
+        NRMATrace *currentTrace = scopeDict[NRMA_TRACE_FIELD_KEY];
+        NSMutableArray *stack = scopeDict[NRMA_TRACE_STACK_KEY];
 
         if (trace.threadInfo.identity != pthread_mach_thread_np(pthread_self()))
         {
@@ -212,11 +301,12 @@ static NSMutableDictionary* __threadDictionaries;
 
         // update the frame ptr to the parent (if on the same thread)
         if ((*parent).threadInfo.identity == trace.threadInfo.identity) {
-            [currentDict setObject:(*parent) forKey:NRMA_TRACE_FIELD_KEY];
+            scopeDict[NRMA_TRACE_FIELD_KEY] = *parent;
         }
         else {
-            // or clean out the thread
-            [[self class] cleanupCurrentThreadLocal];
+            // or clean out this interaction's state on this thread. Scoped rather than wholesale:
+            // other interactions may still hold live stacks on this same thread.
+            [[self class] cleanupCurrentThreadLocalForInteractionId:scopeKey];
         }
 
         return YES;
@@ -247,13 +337,47 @@ static NSMutableDictionary* __threadDictionaries;
     return threadDictionary;
 }
 
-+ (NSMutableArray*)threadLocalStack {
-    NSMutableDictionary *currentDict = [NRMAThreadLocalStore currentThreadDictionary];
+/// The key a trace's segment stack lives under. Traces created before their interaction had an id
+/// fall back to a single shared bucket rather than being dropped.
++ (NSString*)scopeKeyForTrace:(NRMATrace*)trace
+{
+    NSString* interactionId = trace.interactionId;
+    return interactionId.length ? interactionId : NRMA_UNSCOPED_INTERACTION_KEY;
+}
 
-    NSMutableArray* array = [currentDict objectForKey:NRMA_TRACE_STACK_KEY];
-    if ( array == nil) {
+/// The {frame, stack} pair for one interaction on the current thread, created on demand.
++ (NSMutableDictionary*)scopeDictionaryForInteractionId:(NSString*)interactionId
+{
+    NSString* scopeKey = interactionId.length ? interactionId : NRMA_UNSCOPED_INTERACTION_KEY;
+    NSMutableDictionary* threadDict = [NRMAThreadLocalStore currentThreadDictionary];
+
+    NSMutableDictionary* interactions = threadDict[NRMA_INTERACTIONS_KEY];
+    if (interactions == nil) {
+        interactions = [[NSMutableDictionary alloc] init];
+        threadDict[NRMA_INTERACTIONS_KEY] = interactions;
+    }
+
+    NSMutableDictionary* scopeDict = interactions[scopeKey];
+    if (scopeDict == nil) {
+        scopeDict = [[NSMutableDictionary alloc] init];
+        interactions[scopeKey] = scopeDict;
+    }
+
+    return scopeDict;
+}
+
++ (NRMATrace*)frameForInteractionId:(NSString*)interactionId
+{
+    return [[self class] scopeDictionaryForInteractionId:interactionId][NRMA_TRACE_FIELD_KEY];
+}
+
++ (NSMutableArray*)threadLocalStackForInteractionId:(NSString*)interactionId {
+    NSMutableDictionary* scopeDict = [[self class] scopeDictionaryForInteractionId:interactionId];
+
+    NSMutableArray* array = scopeDict[NRMA_TRACE_STACK_KEY];
+    if (array == nil) {
         array = [[NSMutableArray alloc] init];
-        [currentDict setObject:array forKey:NRMA_TRACE_STACK_KEY];
+        scopeDict[NRMA_TRACE_STACK_KEY] = array;
     }
 
     return array;
@@ -266,16 +390,28 @@ static NSMutableDictionary* __threadDictionaries;
         return;
     }
 
-    NSMutableDictionary *currentDict = [NRMAThreadLocalStore currentThreadDictionary];
-    [currentDict setObject:trace forKey:NRMA_TRACE_FIELD_KEY];
+    [[self class] scopeDictionaryForInteractionId:[[self class] scopeKeyForTrace:trace]][NRMA_TRACE_FIELD_KEY] = trace;
 }
 
 
-
-+ (void)cleanupCurrentThreadLocal
++ (void)cleanupCurrentThreadLocalForInteractionId:(NSString*)interactionId
 {
-    if (__threadDictionaries) {
-        NSString* threadID = [NSString stringWithFormat:@"%d",pthread_mach_thread_np(pthread_self())];
+    if (!__threadDictionaries) {
+        return;
+    }
+    NSString* scopeKey = interactionId.length ? interactionId : NRMA_UNSCOPED_INTERACTION_KEY;
+    NSString* threadID = [NSString stringWithFormat:@"%d",pthread_mach_thread_np(pthread_self())];
+    NSMutableDictionary* threadDict = __threadDictionaries[threadID];
+
+    NSMutableDictionary* interactions = threadDict[NRMA_INTERACTIONS_KEY];
+    [interactions removeObjectForKey:scopeKey];
+    if ([threadDict[NRMA_CURRENT_INTERACTION_KEY] isEqualToString:scopeKey]) {
+        [threadDict removeObjectForKey:NRMA_CURRENT_INTERACTION_KEY];
+    }
+
+    // Drop the whole thread entry once nothing is left, which is what keeps the store from growing
+    // an entry per thread that ever ran an interaction.
+    if (interactions.count == 0) {
         [__threadDictionaries removeObjectForKey:threadID];
     }
 }

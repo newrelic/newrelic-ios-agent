@@ -228,6 +228,21 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     os_unfair_lock_unlock(&_lock);
 }
 
+- (void)clearCurrentInteractionIdIfEqualTo:(NSString *)interactionId {
+    os_unfair_lock_lock(&_lock);
+    // Compare-and-clear under the lock. Reading the id out, comparing, then clearing would let a
+    // sibling interaction publish in between and have its identity wiped by this call.
+    if (interactionId.length == 0 || [_currentInteractionId isEqualToString:interactionId]) {
+        _currentInteractionId   = nil;
+        _currentInteractionName = nil;
+        _boundForInteractionId  = nil;
+        _boundViewName          = nil;
+        _boundViewInstanceId    = nil;
+        _boundPreviousViewName  = nil;
+    }
+    os_unfair_lock_unlock(&_lock);
+}
+
 // Binds the running interaction to whichever view is current at this instant. Callers MUST hold
 // _lock (os_unfair_lock is not recursive, so this must never be called from an unlocked path).
 //
