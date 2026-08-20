@@ -44,16 +44,42 @@ extern NSString* const kNRMACustomInteractionIdentifier;
 
 + (void) startTracingWithRootTrace:(NRMATrace*)rootTrace;
 
+/// `superseding` YES completes any running interaction first, which is the historical behaviour and
+/// what the plain form above does. NO leaves running interactions alone and adds this one alongside
+/// them in the registry.
++ (void) startTracingWithRootTrace:(NRMATrace*)rootTrace superseding:(BOOL)superseding;
+
 + (NRMATrace*) startTracing:(BOOL)persistentTrace;
+
++ (NRMATrace*) startTracing:(BOOL)persistentTrace superseding:(BOOL)superseding;
 
 + (NRMATrace*) registerNewTrace:(NSString *)name
                    withParent:(NRMATrace*) parentTrace;
 
 + (BOOL) isInteractionObject:(id __unsafe_unretained)obj;
 
++ (BOOL) isInteractionObject:(id __unsafe_unretained)obj forInteractionId:(NSString*)interactionId;
+
 + (void) startTracingWithName:(NSString *)name interactionObject:(id __unsafe_unretained)obj;
 
+/// Starts an interaction and returns its interactionId, or nil if it could not start.
+///
+/// `concurrent` NO is identical to +startTracingWithName:interactionObject: — the running interaction
+/// is completed first, so exactly one is ever live. YES leaves the others running, adds this one to
+/// the registry, and binds the calling thread to it so subsequent instrumented code on this thread is
+/// attributed here. Refused (nil) once +maxConcurrentInteractions are already live.
++ (NSString*) startTracingWithName:(NSString *)name
+                 interactionObject:(id __unsafe_unretained)obj
+                        concurrent:(BOOL)concurrent;
+
 + (BOOL) completeActivityTrace;
+
+/// Completes one specific interaction, leaving any others running.
++ (BOOL) completeActivityTraceForInteractionId:(NSString*)interactionId;
+
+/// Quiescence completion for one specific interaction. For a trace machine's own timers — see
+/// +completeActivityTraceOnTimeout.
++ (BOOL) completeActivityTraceOnTimeoutForInteractionId:(NSString*)interactionId;
 
 /// Completes the running interaction as a *quiescence* event: its end time is its last instrumented
 /// method boundary rather than now, so the timeout that triggered completion is not counted in the
@@ -99,14 +125,65 @@ extern NSString* const kNRMACustomInteractionIdentifier;
 
 + (void) exitMethod;
 
+/// Pops a specific segment instead of the top of this thread's ambient stack. Callers that kept the
+/// trace they entered should prefer this: with concurrent interactions the ambient stack may belong
+/// to a different interaction than the segment being exited.
++ (void) exitMethodForTrace:(NRMATrace*)trace;
+
+/// Completes every live interaction. For app background and shutdown, which want everything flushed
+/// rather than only the interaction the calling thread resolves to.
++ (BOOL) completeAllActivityTraces;
+
 + (NRMATrace*) currentTrace;
+
+/// The open frame on this thread for `interactionId`, or that interaction's root trace when this
+/// thread has not entered any of its segments. nil if the interaction is not running.
++ (NRMATrace*) currentTraceForInteractionId:(NSString*)interactionId;
 
 + (NSString*) currentScope;
 
+/// YES when *any* interaction is running, which is what every pre-registry caller means by it.
 + (BOOL) isTracingActive;
+
++ (BOOL) isTracingActiveForInteractionId:(NSString*)interactionId;
+
+#pragma mark - Concurrent interactions
+
+/// The interaction instrumented code on this thread is inside: the thread's explicit binding if it
+/// has one and that interaction is still live, otherwise the most recently started interaction.
++ (NSString*) currentInteractionId;
+
+/// ids of every interaction currently in the registry, in no particular order.
++ (NSArray<NSString*>*) activeInteractionIds;
+
++ (NSUInteger) activeInteractionCount;
+
+/// Ceiling on simultaneously live interactions; defaults to 16. Each one holds an activity trace, a
+/// measurement pool and three measurement transmitters, and each is harvested separately, so this
+/// bounds what a host that never stops its interactions can consume. A concurrent start past the
+/// ceiling is refused rather than superseding something. Zero is ignored.
++ (NSUInteger) maxConcurrentInteractions;
++ (void) setMaxConcurrentInteractions:(NSUInteger)maxConcurrentInteractions;
+
+/// Binds this thread to `interactionId` so instrumented code here is attributed to it rather than to
+/// the most recently started interaction. Pass nil to unbind. Threads are not bound automatically
+/// across dispatch boundaries — a block that runs on another queue resolves to the most recent
+/// interaction unless it binds itself.
++ (void) bindCurrentThreadToInteractionId:(NSString*)interactionId;
+
+/// This thread's explicit binding, or nil. Unlike +currentInteractionId this does not fall back.
++ (NSString*) currentThreadInteractionId;
 
 + (BOOL) shouldCollectTraces;
 
-+ (void) cleanup; 
+/// Tears down the interaction this thread resolves to.
++ (void) cleanup;
+
+/// Tears down one specific interaction, leaving others running.
++ (void) cleanupInteractionId:(NSString*)interactionId;
+
+/// Tears down every live interaction and the whole thread-local store. For agent shutdown and test
+/// teardown; ordinary completion uses +cleanupInteractionId:.
++ (void) cleanupAll;
 
 @end

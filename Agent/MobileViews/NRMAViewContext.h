@@ -62,6 +62,14 @@ FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionName;
 - (void)setCurrentInteractionId:(nullable NSString *)interactionId
                            name:(nullable NSString *)name;
 
+/// Clears the published interaction only if `interactionId` is the one currently published.
+///
+/// This slot holds a single interaction, but NRMATraceController can now have several running at
+/// once. When one completes it must not clear a sibling's identity: an unconditional clear would
+/// strip interactionId from every MobileView event emitted after whichever interaction happened to
+/// finish first, even though another is still open. A no-op when the ids do not match.
+- (void)clearCurrentInteractionIdIfEqualTo:(nullable NSString *)interactionId;
+
 /// Attributes for MobileView events: interactionId, interactionName (only keys with values).
 /// Empty when no interaction is running.
 - (NSDictionary<NSString *, id> *)interactionAttributes;

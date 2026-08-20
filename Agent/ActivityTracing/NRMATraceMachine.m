@@ -117,7 +117,10 @@ static NSString *healthyTimerLock = @"healthy timer lock";
     if(![self.activityTrace hasMissingChildren]) {
         // Quiescence: end the interaction at its last instrumented boundary, not at "now", so the
         // healthy timeout is not added to the reported duration.
-        [NRMATraceController completeActivityTraceOnTimeout];
+        //
+        // Targeted at this machine's own interaction: timers belong to a machine, so resolving
+        // "the current interaction" here would let one interaction's timer complete a sibling.
+        [NRMATraceController completeActivityTraceOnTimeoutForInteractionId:self.activityTrace.interactionId];
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         @try {
 #endif
@@ -156,8 +159,9 @@ static NSString *healthyTimerLock = @"healthy timer lock";
     }
 #endif
     // Hit the hard ceiling. Same reasoning as the healthy path: the interaction's useful span ended
-    // at its last instrumented boundary, so don't charge it the full unhealthy timeout.
-    [NRMATraceController completeActivityTraceOnTimeout];
+    // at its last instrumented boundary, so don't charge it the full unhealthy timeout. Targeted at
+    // this machine's own interaction for the same reason as -healthyTimeout.
+    [NRMATraceController completeActivityTraceOnTimeoutForInteractionId:self.activityTrace.interactionId];
 }
 - (void) dealloc
 {

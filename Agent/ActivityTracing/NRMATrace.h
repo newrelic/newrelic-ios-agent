@@ -22,6 +22,13 @@
 @property(atomic,strong) NSString* methodLabel;
 // atomic: threadInfo.identity is read on background trace-completion threads (completeTrace:).
 @property(atomic,strong) NRMAThreadInfo* threadInfo;
+/// Identity of the interaction (activity trace) this segment belongs to.
+///
+/// Duplicated here rather than read through `traceMachine.activityTrace.interactionId` because
+/// `traceMachine` is a weak reference: once an interaction completes and its machine is released,
+/// that chain reads nil, and the thread-local store still needs the id to find and unwind the
+/// segment stack this trace was pushed onto. Assigned once at creation and never mutated.
+@property(atomic,strong) NSString* interactionId;
 @property(nonatomic,strong) NSMutableDictionary* parameters;
 @property(nonatomic,assign) BOOL      persistent;
 @property(nonatomic,strong) NSMutableSet* children; 

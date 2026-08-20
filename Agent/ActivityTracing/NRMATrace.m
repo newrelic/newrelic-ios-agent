@@ -32,6 +32,10 @@
     if (self) {
         self.traceMachine = traceMachine;
         self.name = name;
+        // Latch the owning interaction's id now, while the machine is still alive. See the property
+        // comment: traceMachine is weak, so this is the only durable record of which interaction's
+        // segment stack this trace was pushed onto.
+        self.interactionId = traceMachine.activityTrace.interactionId;
     }
     return self;
 }
