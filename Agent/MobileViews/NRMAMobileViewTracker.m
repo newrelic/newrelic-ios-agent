@@ -58,6 +58,8 @@ NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         prefixes = @[
+            @"UIKitTabBarController",
+            @"TabHostingController",
             @"UIHostingController",
             @"UINavigationController",
             @"NavigationStackHostingController",

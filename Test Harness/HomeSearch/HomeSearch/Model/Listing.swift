@@ -104,3 +104,15 @@ struct ListingsResponse: Codable {
     let listings: [Listing]
     let threads: [MessageThread]
 }
+
+/// The payload the stub server returns from `/api/listings/page` — one page of the browse feed.
+///
+/// `hasMore` is what the infinite list keys off: it stops asking for pages when the server says
+/// there are none left, so the "scrolled to the true end" case is reachable rather than endless.
+struct BrowsePage: Codable {
+    let listings: [Listing]
+    let page: Int
+    let pageSize: Int
+    let hasMore: Bool
+    let totalPages: Int
+}
