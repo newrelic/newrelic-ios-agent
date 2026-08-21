@@ -298,6 +298,12 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "MobileView · Views × Interactions (UIKit)", handler: { [self] in viewsAndInteractionsAction()}))
 
+#if os(iOS)
+        options.append(UtilOption(title: "MobileView · Modals (UIKit)", handler: { [self] in mobileViewModalsAction()}))
+
+        options.append(UtilOption(title: "MobileView · Restarted / Legacy Name (UIKit)", handler: { [self] in mobileViewRestartedAction()}))
+#endif
+
         // BlockView examples
         options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
         options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
@@ -405,6 +411,16 @@ class ViewController: UIViewController {
     func viewsAndInteractionsAction() {
         coordinator?.showViewsAndInteractionsViewController()
     }
+
+#if os(iOS)
+    func mobileViewModalsAction() {
+        coordinator?.showMobileViewModalsViewController()
+    }
+
+    func mobileViewRestartedAction() {
+        coordinator?.showMobileViewRestartedViewController()
+    }
+#endif
 
     func makeButton(title: String) -> UIButton {
         let button = UIButton(type: .system)

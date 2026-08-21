@@ -215,4 +215,16 @@ class MainCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
 
+#if os(iOS)
+    func showMobileViewModalsViewController() {
+        let vc = ViewControllerProvider.mobileViewModalsViewController
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    func showMobileViewRestartedViewController() {
+        let vc = ViewControllerProvider.mobileViewRestartedViewController
+        navigationController.pushViewController(vc, animated: true)
+    }
+#endif
+
 }

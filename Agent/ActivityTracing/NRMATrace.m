@@ -8,6 +8,9 @@
 
 #import "NRMATrace.h"
 #import "NRMAMeasurementEngine.h"
+// NRMATrace.h only forward-declares NRMATraceMachine; the initializer below reads through
+// traceMachine.activityTrace, which needs the full declaration.
+#import "NRMATraceMachine.h"
 #import "NRMATraceController.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAHTTPTransactionMeasurement.h"

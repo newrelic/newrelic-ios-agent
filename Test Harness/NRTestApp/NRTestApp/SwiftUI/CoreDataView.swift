@@ -152,6 +152,7 @@ struct CoreDataView: View {
         .padding()
         .onAppear { NRCoreDataStack.seedIfNeeded() }
         .NRTrackView(name: "CoreDataView")
+        .NRMobileView(name: "CoreDataView")
     }
 
     private func runFetch(nested: Bool) {

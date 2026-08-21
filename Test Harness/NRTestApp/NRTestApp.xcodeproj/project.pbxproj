@@ -77,10 +77,14 @@
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		2E4EAED06484653D26AC8460 /* MobileViewAttributesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */; };
+		33330D334DAF56DA1EF5FBAD /* MobileViewRestartedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */; };
 		404AE441D22AABA37E095251 /* MobileViewIgnoredDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */; };
 		5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
 		6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
 		7B9CB1B9B842FE8EE0EB4A0E /* MobileViewIgnoredViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */; };
+		87CE2A26AA768742E53EB23B /* MobileViewRestartedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */; };
+		964FC24FBB221FAF8BD9CD60 /* MobileViewRestartedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */; };
+		A37F42BB1965A0E52E624F1E /* MobileViewModalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */; };
 		A67A9C1CC416BDBEB4A12401 /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
 		AA0001012F9000000000AA01 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */; };
 		AA0001022F9000000000AA01 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
@@ -107,6 +111,8 @@
 		AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001502F9000000000AA01 /* VerificationResult.swift */; };
 		AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001512F9000000000AA01 /* PayloadVerifiers.swift */; };
 		AD7807FD8A2F077901675368 /* ViewsAndInteractionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */; };
+		BB4CD17744738F61C09F10D3 /* MobileViewModalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */; };
+		C1A950386607A36BDB695E63 /* MobileViewModalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */; };
 		C9C82CAFAD5787BE3D7DF493 /* ViewsAndInteractionsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52FE8658C674963EDE1CC225 /* ViewsAndInteractionsDemoView.swift */; };
 		CD0001011CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
 		CD0001021CD000000000CD00 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD0001001CD000000000CD00 /* MapViewController.swift */; };
@@ -449,6 +455,7 @@
 		4A7FCD36108AFB638093E434 /* CoreDataView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CoreDataView.swift; sourceTree = "<group>"; };
 		52FE8658C674963EDE1CC225 /* ViewsAndInteractionsDemoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewsAndInteractionsDemoView.swift; sourceTree = "<group>"; };
 		5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewsAndInteractionsViewController.swift; sourceTree = "<group>"; };
+		60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewRestartedViewController.swift; sourceTree = "<group>"; };
 		AA0001202F9000000000AA01 /* CapturedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedRequest.swift; sourceTree = "<group>"; };
 		AA0001212F9000000000AA01 /* NRCaptureServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRCaptureServer.swift; sourceTree = "<group>"; };
 		AA0001222F9000000000AA01 /* CaptureViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewerView.swift; sourceTree = "<group>"; };
@@ -459,6 +466,7 @@
 		ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredDemoView.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesViewController.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredViewController.swift; sourceTree = "<group>"; };
+		BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewModalsViewController.swift; sourceTree = "<group>"; };
 		B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewComponent.swift; sourceTree = "<group>"; };
 		C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewCorrelationProbe.swift; sourceTree = "<group>"; };
 		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
@@ -848,6 +856,8 @@
 				ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */,
 				ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */,
 				5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */,
+				BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */,
+				60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1398,6 +1408,8 @@
 				F802EECE2BE023CE00AB956F /* ApodURL.swift in Sources */,
 				F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */,
 				2B80C9A4301BD92700302EA4 /* CoreDataView.swift in Sources */,
+				C1A950386607A36BDB695E63 /* MobileViewModalsViewController.swift in Sources */,
+				87CE2A26AA768742E53EB23B /* MobileViewRestartedViewController.swift in Sources */,
 				A67A9C1CC416BDBEB4A12401 /* MobileViewComponent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1523,6 +1535,8 @@
 				195E31092A8CF3C89186D453 /* ManualViewsDemoView.swift in Sources */,
 				1178E34212C8CB653D0A1898 /* MobileViewAttributesViewController.swift in Sources */,
 				7B9CB1B9B842FE8EE0EB4A0E /* MobileViewIgnoredViewController.swift in Sources */,
+				BB4CD17744738F61C09F10D3 /* MobileViewModalsViewController.swift in Sources */,
+				964FC24FBB221FAF8BD9CD60 /* MobileViewRestartedViewController.swift in Sources */,
 				5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1586,6 +1600,8 @@
 				CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
 				2B80C99B301BD8DF00302EA4 /* MobileViewAttributesViewController.swift in Sources */,
 				F82697FD3018F3D800D0BFB1 /* RandomWalkController.swift in Sources */,
+				A37F42BB1965A0E52E624F1E /* MobileViewModalsViewController.swift in Sources */,
+				33330D334DAF56DA1EF5FBAD /* MobileViewRestartedViewController.swift in Sources */,
 				6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
