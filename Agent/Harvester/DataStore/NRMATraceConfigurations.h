@@ -8,11 +8,28 @@
 
 #import <Foundation/Foundation.h>
 
+/// Activity traces retained per in-flight harvest when the collector does not say otherwise.
+///
+/// Must never be 0: the collection gate is `count < maxTotalTraceCount`
+/// (`+[NRMAHarvestController shouldCollectTraces]`), so a cap of 0 is false for every trace and
+/// silently drops all activity traces for the whole session.
+#define NRMA_DEFAULT_MAX_TOTAL_TRACE_COUNT 1000
+
 @interface NRMATraceConfigurations : NSObject
 @property(nonatomic,assign) int maxTotalTraceCount;
 @property (atomic, strong) NSMutableArray *activityTraceConfigurations;
 
+/// Parses the collector's `at_capture` value: a 2-element array of
+/// `[maxTotalTraceCount, [[namePattern, totalTraceCount], ...]]`.
+///
+/// `maxTotalTraceCount` defaults to NRMA_DEFAULT_MAX_TOTAL_TRACE_COUNT when `array` is nil or is not
+/// in that shape, so a missing or reshaped `at_capture` degrades to the default cap rather than to 0.
 - (id) initWithArray:(NSArray*)array;
 + (id) defaultTraceConfigurations;
+
+/// Inverse of -initWithArray:, for persisting to NSUserDefaults. Emits plain arrays (not
+/// NRMATraceConfiguration objects) so the value is plist-serializable and round-trips back through
+/// -initWithArray:.
+- (NSArray*) asArray;
 
 @end
