@@ -252,6 +252,82 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     XCTAssertEqualObjects(@"/*", configuration.activityTraceNamePattern, @"Trace name pattern is not correct");
 }
 
+// The expected default is spelled out as a literal rather than as
+// NRMA_DEFAULT_MAX_TOTAL_TRACE_COUNT so that these assertions describe a behavior instead of
+// restating the constant: a cap of 0 drops every activity trace for the whole session, and a test
+// that mirrors the constant would keep passing if the constant were changed back to 0.
+
+- (void) testActivityTraceConfigurationMissingAtCaptureUsesDefaultCap
+{
+    // A /connect response that omits at_capture entirely.
+    NRMATraceConfigurations *traceConfigurations = [[NRMATraceConfigurations alloc] initWithArray:nil];
+
+    XCTAssertNotEqual(0, traceConfigurations.maxTotalTraceCount, @"A missing at_capture must not produce a cap of 0, which drops every activity trace.");
+    XCTAssertEqual(1000, traceConfigurations.maxTotalTraceCount, @"A missing at_capture should fall back to the default max trace count");
+}
+
+- (void) testActivityTraceConfigurationUnexpectedShapeUsesDefaultCap
+{
+    // at_capture present but not the documented 2-element [max, [configs]] shape.
+    NRMATraceConfigurations *traceConfigurations = [[NRMATraceConfigurations alloc] initWithArray:@[@5]];
+
+    XCTAssertEqual(1000, traceConfigurations.maxTotalTraceCount, @"A reshaped at_capture should fall back to the default max trace count");
+}
+
+- (void) testActivityTraceConfigurationNonPositiveCapUsesDefaultCap
+{
+    // at_capture in the right shape, but with a cap that would drop every trace.
+    NRMATraceConfigurations *traceConfigurations = [[NRMATraceConfigurations alloc] initWithArray:@[@0, @[]]];
+
+    XCTAssertEqual(1000, traceConfigurations.maxTotalTraceCount, @"A cap of 0 should be replaced with the default max trace count");
+}
+
+- (void) testActivityTraceConfigurationSkipsMalformedTraceConfigurations
+{
+    // Each inner entry must be a [namePattern, totalTraceCount] pair. A non-array entry used to be
+    // sent -objectAtIndex:, which raises.
+    NSArray *at_capture = @[@7, @[@"not-an-array", @[@"/valid", @3]]];
+
+    NRMATraceConfigurations *traceConfigurations = [[NRMATraceConfigurations alloc] initWithArray:at_capture];
+
+    XCTAssertEqual(7, traceConfigurations.maxTotalTraceCount, @"An explicit positive cap should be honored");
+    XCTAssertEqual(1, (int)traceConfigurations.activityTraceConfigurations.count, @"The malformed entry should be skipped and the valid one kept");
+
+    NRMATraceConfiguration *configuration = [traceConfigurations.activityTraceConfigurations objectAtIndex:0];
+    XCTAssertEqualObjects(@"/valid", configuration.activityTraceNamePattern, @"The surviving configuration should be the well-formed one");
+    XCTAssertEqual(3, configuration.totalTraceCount, @"The surviving configuration should keep its trace count");
+}
+
+- (void) testHarvestConfigurationMissingAtCaptureUsesDefaults
+{
+    NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[NSDictionary dictionary]];
+
+    // if kNRMA_AT_CAPTURE is missing
+    XCTAssertEqual(1000, config.at_capture.maxTotalTraceCount, @"A bad dictionary should parse the max activity trace count to its default.");
+    // if KNRMA_AT_MIN_UTILIZATION is missing
+    XCTAssertEqual(NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION, config.activity_trace_min_utilization, @"A bad dictionary should parse activity trace min utilization to its default.");
+}
+
+- (void) testActivityTraceConfigurationRoundTripsThroughDictionary
+{
+    // -asDictionary is what gets persisted to NSUserDefaults, so its at_capture value has to be
+    // plist-serializable and has to be readable back by -initWithDictionary:.
+    NRMAHarvesterConfiguration* config = [self makeHarvestConfig];
+    config.at_capture = [[NRMATraceConfigurations alloc] initWithArray:@[@9, @[@[@"/pattern", @4]]]];
+
+    NSDictionary* dictionary = [config asDictionary];
+    XCTAssertTrue([NSPropertyListSerialization propertyList:dictionary isValidForFormat:NSPropertyListBinaryFormat_v1_0],
+                  @"at_capture must serialize to plist types so the configuration can be persisted");
+
+    NRMAHarvesterConfiguration* restored = [[NRMAHarvesterConfiguration alloc] initWithDictionary:dictionary];
+    XCTAssertEqual(9, restored.at_capture.maxTotalTraceCount, @"The max trace count should survive a round trip");
+    XCTAssertEqual(1, (int)restored.at_capture.activityTraceConfigurations.count, @"The trace configurations should survive a round trip");
+
+    NRMATraceConfiguration *configuration = [restored.at_capture.activityTraceConfigurations objectAtIndex:0];
+    XCTAssertEqualObjects(@"/pattern", configuration.activityTraceNamePattern, @"The name pattern should survive a round trip");
+    XCTAssertEqual(4, configuration.totalTraceCount, @"The trace count should survive a round trip");
+}
+
 - (void) testBadStoredDataRecover
 {
     NRMAHarvester* newHarvester = [[NRMAHarvester alloc] init];
