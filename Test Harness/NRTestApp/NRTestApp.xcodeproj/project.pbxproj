@@ -78,7 +78,10 @@
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
 		2E4EAED06484653D26AC8460 /* MobileViewAttributesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */; };
 		404AE441D22AABA37E095251 /* MobileViewIgnoredDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */; };
+		5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
+		6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
 		7B9CB1B9B842FE8EE0EB4A0E /* MobileViewIgnoredViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */; };
+		A67A9C1CC416BDBEB4A12401 /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
 		AA0001012F9000000000AA01 /* Scopes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05D9F2ADF2DF600C0C972 /* Scopes.swift */; };
 		AA0001022F9000000000AA01 /* WebSockets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA02ADF2DF600C0C972 /* WebSockets.swift */; };
 		AA0001032F9000000000AA01 /* HttpServerIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BD05DA12ADF2DF600C0C972 /* HttpServerIO.swift */; };
@@ -456,6 +459,7 @@
 		ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredDemoView.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesViewController.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredViewController.swift; sourceTree = "<group>"; };
+		B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewComponent.swift; sourceTree = "<group>"; };
 		C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewCorrelationProbe.swift; sourceTree = "<group>"; };
 		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
 		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
@@ -901,6 +905,7 @@
 				F864284D2971DFC9002ABA01 /* triggerException.h */,
 				F864284A2971DFA4002ABA01 /* NRTestApp-Bridging-Header.h */,
 				D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */,
+				B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -1393,6 +1398,7 @@
 				F802EECE2BE023CE00AB956F /* ApodURL.swift in Sources */,
 				F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */,
 				2B80C9A4301BD92700302EA4 /* CoreDataView.swift in Sources */,
+				A67A9C1CC416BDBEB4A12401 /* MobileViewComponent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1517,6 +1523,7 @@
 				195E31092A8CF3C89186D453 /* ManualViewsDemoView.swift in Sources */,
 				1178E34212C8CB653D0A1898 /* MobileViewAttributesViewController.swift in Sources */,
 				7B9CB1B9B842FE8EE0EB4A0E /* MobileViewIgnoredViewController.swift in Sources */,
+				5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1579,6 +1586,7 @@
 				CD0001051CD000000000CD00 /* MapViewSwiftUI.swift in Sources */,
 				2B80C99B301BD8DF00302EA4 /* MobileViewAttributesViewController.swift in Sources */,
 				F82697FD3018F3D800D0BFB1 /* RandomWalkController.swift in Sources */,
+				6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -7,6 +7,15 @@
 //  that presenting modal content emits MobileView events tagged with the
 //  view name we pass in.
 //
+//  Two levels of nesting to keep straight. Each *modal* reports as a view in its own right with
+//  "ModalsDemoView" as its referrer, and dismissing it should make ModalsDemoView current again.
+//  Each *section* of this screen also reports as a view, but tagged component: true /
+//  componentOf: "ModalsDemoView" — a modal is a destination, a component is a part of a screen, and
+//  viewName alone cannot tell them apart.
+//
+//  The screen opts into `startsInteraction: true` so there is one interaction for the section load
+//  segments to land in; without it the components would have no breakdown table to populate.
+//
 
 import SwiftUI
 
@@ -23,23 +32,17 @@ struct ModalsDemoView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Modal Presentations")
-                .font(.largeTitle)
+            header.NRMobileView(name: Component.header.rawValue,
+                                attributes: Component.attributes)
 
-            Button("Present Sheet (isPresented)") { showSheet = true }
-                .buttonStyle(.borderedProminent)
+            sheetTriggers.NRMobileView(name: Component.sheetTriggers.rawValue,
+                                       attributes: Component.attributes)
 
-            Button("Present Sheet (item)") {
-                selectedDetail = DetailItem(title: "Detail A")
-            }
-            .buttonStyle(.bordered)
+            coverTrigger.NRMobileView(name: Component.coverTrigger.rawValue,
+                                      attributes: Component.attributes)
 
-            Button("Present Full-Screen Cover") { showFullScreenCover = true }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
-
-            Button("Present Popover") { showPopover = true }
-                .buttonStyle(.bordered)
+            popoverTrigger.NRMobileView(name: Component.popoverTrigger.rawValue,
+                                        attributes: Component.attributes)
 
             Spacer()
         }
@@ -60,8 +63,68 @@ struct ModalsDemoView: View {
                          name: "ModalsDemo.Popover") {
             PopoverDetailView { showPopover = false }
         }
-        .NRTrackView(name: "ModalsDemoView")
-        .NRMobileView(name: "ModalsDemoView")
+        .NRTrackView(name: Self.screenName)
+        .NRMobileView(name: Self.screenName, startsInteraction: true)
+    }
+
+    // MARK: - Component-level views
+
+    private static let screenName = "ModalsDemoView"
+
+    /// The sections of this screen, each tracked as a view in its own right.
+    ///
+    /// These take the default `startsInteraction: false`, so they open no trace of their own — each
+    /// records a load segment against the interaction the screen opens above, which is what puts
+    /// several `Method/MobileView/<component>` rows into a *single* interaction's breakdown table
+    /// instead of the one row naming the screen.
+    ///
+    /// Names are dot-separated rather than slash-separated on purpose: `/` is one of the characters
+    /// `+[NewRelicInternalUtils cleanseStringForCollector:]` rewrites to `_`, and it is also the
+    /// separator in the `Method/<class>/<method>` metric grammar these names land in.
+    ///
+    /// They share the `ModalsDemo.` prefix with the modal view names above, and are told apart from
+    /// them by the `component` attribute rather than by the name.
+    private enum Component: String {
+        case header         = "ModalsDemo.Header"
+        case sheetTriggers  = "ModalsDemo.SheetTriggers"
+        case coverTrigger   = "ModalsDemo.CoverTrigger"
+        case popoverTrigger = "ModalsDemo.PopoverTrigger"
+
+        /// Marks the emitted MobileView events as components rather than screens or modals.
+        static let attributes: [String: Any] = [
+            "component": true,
+            "componentOf": ModalsDemoView.screenName,
+        ]
+    }
+
+    // MARK: - Sections
+
+    private var header: some View {
+        Text("Modal Presentations")
+            .font(.largeTitle)
+    }
+
+    private var sheetTriggers: some View {
+        VStack(spacing: 16) {
+            Button("Present Sheet (isPresented)") { showSheet = true }
+                .buttonStyle(.borderedProminent)
+
+            Button("Present Sheet (item)") {
+                selectedDetail = DetailItem(title: "Detail A")
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+
+    private var coverTrigger: some View {
+        Button("Present Full-Screen Cover") { showFullScreenCover = true }
+            .buttonStyle(.borderedProminent)
+            .tint(.orange)
+    }
+
+    private var popoverTrigger: some View {
+        Button("Present Popover") { showPopover = true }
+            .buttonStyle(.bordered)
     }
 }
 

@@ -11,6 +11,10 @@
 //  the interaction and the id clears: the interaction event has been emitted, carrying this screen's
 //  viewName / viewInstanceId (late binding).
 //
+//  Each section of the screen also reports as its own MobileView (component: true,
+//  componentOf: "Views & Interactions (UIKit)"), so this screen's interaction breakdown holds a
+//  MobileView row per section rather than one row for the whole screen.
+//
 //  Requires NRFeatureFlag_AutomaticMobileViews (and NRFeatureFlag_NewEventSystem for the view
 //  attributes to reach the interaction event) — both enabled in AppDelegate.
 //
@@ -25,7 +29,26 @@ class ViewsAndInteractionsViewController: UIViewController {
     // MARK: - MobileViews hooks
 
     @objc func nrMobileViewName() -> String? {
-        "Views & Interactions (UIKit)"
+        Self.screenName
+    }
+
+    private static let screenName = "Views & Interactions (UIKit)"
+
+    // MARK: - Component-level views
+
+    /// The sections of this screen, each tracked as a view in its own right via a child view
+    /// controller (see MobileViewComponentController).
+    ///
+    /// None of them opens an interaction — each records a load segment against the interaction
+    /// already covering this screen, which is the automatic one the method profiler starts for the
+    /// push. That is what puts several `Method/MobileView/<component>` rows into a *single*
+    /// interaction's breakdown table, instead of the one row naming the screen.
+    private enum Component: String {
+        case intro          = "ViewsAndInteractions.Intro"
+        case forwardReadout = "ViewsAndInteractions.ForwardReadout"
+        case reverseReadout = "ViewsAndInteractions.ReverseReadout"
+        case actions        = "ViewsAndInteractions.Actions"
+        case callLog        = "ViewsAndInteractions.CallLog"
     }
 
     // MARK: - Lifecycle
@@ -142,20 +165,30 @@ class ViewsAndInteractionsViewController: UIViewController {
             viewInstanceId — read at completion, so a screen load is attributed to the screen that \
             loaded rather than the one being left.
             """
-        stack.addArrangedSubview(intro)
+        addComponent(.intro, views: [intro], to: stack)
 
-        stack.addArrangedSubview(sectionHeader("On MobileView events (forward)"))
-        stack.addArrangedSubview(interactionLabel)
-        stack.addArrangedSubview(sectionHeader("On the interaction event at completion (reverse)"))
-        stack.addArrangedSubview(viewLabel)
+        addComponent(.forwardReadout,
+                     views: [sectionHeader("On MobileView events (forward)"), interactionLabel],
+                     to: stack)
 
-        stack.addArrangedSubview(button("Do traced work", #selector(tracedWorkTapped)))
-        stack.addArrangedSubview(button("Start custom interaction", #selector(startCustomInteractionTapped)))
-        stack.addArrangedSubview(button("Record breadcrumb", #selector(breadcrumbTapped)))
-        stack.addArrangedSubview(button("setCurrentView(\"Checkout\")", #selector(setCurrentViewTapped)))
+        addComponent(.reverseReadout,
+                     views: [sectionHeader("On the interaction event at completion (reverse)"), viewLabel],
+                     to: stack)
 
-        stack.addArrangedSubview(sectionHeader("Call log (most recent first)"))
-        stack.addArrangedSubview(logLabel)
+        addComponent(.actions, views: [
+            button("Do traced work", #selector(tracedWorkTapped)),
+            button("Start custom interaction", #selector(startCustomInteractionTapped)),
+            button("Record breadcrumb", #selector(breadcrumbTapped)),
+            button("setCurrentView(\"Checkout\")", #selector(setCurrentViewTapped)),
+        ], to: stack)
+
+        addComponent(.callLog,
+                     views: [sectionHeader("Call log (most recent first)"), logLabel],
+                     to: stack)
+    }
+
+    private func addComponent(_ component: Component, views: [UIView], to stack: UIStackView) {
+        addMobileViewComponent(component.rawValue, of: Self.screenName, views: views, to: stack)
     }
 
     private func sectionHeader(_ text: String) -> UILabel {
