@@ -51,8 +51,18 @@ struct PerformanceContentView: View {
                     HeavyUIKitTab(tabIndex: 3).tag(3)
                     HeavyUIKitTab(tabIndex: 4).tag(4)
                 }
+                // MobileViews: tab switches are not view lifecycle events, so a tab change emits
+                // nothing on its own — NRMobileTabTracking is what turns a selection change into a
+                // MobileView event. This screen is the one worth attaching it to: "Run Rapid Tab
+                // Switch Test" drives selectedTab in a tight loop, which is exactly what the
+                // modifier's 500ms dwell window exists to absorb. Only the tab the user settles on
+                // should produce an event; the ones flicked past should be cancelled.
+                .NRMobileTabTracking(selection: $tabViewModel.selectedTab) { tag in
+                    "PerformanceTab \(tag)"
+                }
             }
         }
+        .NRMobileView(name: "PerformanceContentView")
     }
 
     private func runPerformanceTest() {
