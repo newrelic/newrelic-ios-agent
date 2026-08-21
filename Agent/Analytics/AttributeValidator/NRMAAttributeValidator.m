@@ -55,6 +55,11 @@
         return false;
     }
 
+    if ([value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSDictionary class]]) {
+        NRLOG_AGENT_ERROR(@"invalid attribute: value cannot be an NSArray or NSDictionary");
+        return false;
+    }
+
     if ([value isKindOfClass:[NSString class]]) {
         if ([(NSString*)value length] == 0) {
             NRLOG_AGENT_ERROR(@"invalid attribute: value length = 0");
