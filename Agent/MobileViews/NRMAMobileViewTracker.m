@@ -250,7 +250,10 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
 
     // Make this view current in the shared context so it becomes the referrer for the next view
     // and for breadcrumbs recorded while it is visible.
-    [[NRMAViewContext sharedInstance] transitionToView:viewName instanceId:uuid appearTime:appearTime];
+    [[NRMAViewContext sharedInstance] transitionToView:viewName
+                                            instanceId:uuid
+                                            appearTime:appearTime
+                                              platform:@"UIKit"];
 
     // Put the screen's load span in the covering interaction's breakdown. Read back rather than
     // passed down because viewDidLoad may never have run for this appearance.
@@ -348,6 +351,12 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     }];
 
     [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+
+    // Drop this instance from the visible-view stack. For UIKit this is bookkeeping rather than a
+    // fix: viewDidAppear: fires on pop, so the uncovered screen reports a real appearance moments
+    // from now, which supersedes anything synthesized here. Keeping the stack accurate matters
+    // because a UIKit controller can be what a *SwiftUI* view was covering.
+    [[NRMAViewContext sharedInstance] viewDidDisappearNamed:viewName instanceId:instanceId];
 
     //NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
     //                    viewName, loadTimeSec, timeVisibleSec, isRestarted ? @"YES" : @"NO");

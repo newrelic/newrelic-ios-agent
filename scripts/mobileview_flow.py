@@ -127,13 +127,16 @@ def appear_events(rows, session=None, include_components=False):
 class Graph:
     def __init__(self):
         self.edges = Counter()          # (from, to) -> traversals
+        self.back = Counter()           # (from, to) -> traversals that were back-navigations
         self.load_totals = defaultdict(float)
         self.load_counts = Counter()
         self.component_of = {}          # component view -> owning screen
         self.nodes = set()
 
-    def add_edge(self, src, dst, count=1):
+    def add_edge(self, src, dst, count=1, back=False):
         self.edges[(src, dst)] += count
+        if back:
+            self.back[(src, dst)] += count
         if src != START:
             self.nodes.add(src)
         self.nodes.add(dst)
@@ -150,6 +153,7 @@ class Graph:
         if min_count <= 1:
             return
         self.edges = Counter({e: c for e, c in self.edges.items() if c >= min_count})
+        self.back = Counter({e: c for e, c in self.back.items() if e in self.edges})
         kept = {n for edge in self.edges for n in edge if n != START}
         self.nodes &= kept
 
@@ -180,7 +184,17 @@ def build_graph(rows, aggregated, ordered_walk=False, collapse=None):
             src, dst = fold(src or START), fold(dst)
             if src == dst:
                 continue
+            back_count = 0
+            for key in ("back", "of which back", "reappeared"):
+                if isinstance(row.get(key), (int, float)):
+                    back_count = int(row[key])
+                    break
+                if row.get(key) is True:
+                    back_count = count
+                    break
             g.add_edge(src, dst, count)
+            if back_count:
+                g.back[(src, dst)] += back_count
             for key in ("average.loadTime", "Avg load (ms)", "loadTime"):
                 if isinstance(row.get(key), (int, float)):
                     g.load_totals[dst] += row[key] * max(count, 1)
@@ -195,8 +209,9 @@ def build_graph(rows, aggregated, ordered_walk=False, collapse=None):
         dst = fold(row["viewName"])
         src = fold(row.get("previousView") or START)
         # A self-loop here means the transition was between two segments of one screen.
+        back = bool(row.get("reappeared"))
         if src != dst:
-            g.add_edge(src, dst)
+            g.add_edge(src, dst, back=back)
         else:
             g.nodes.add(dst)
         folded = bool(collapse) and bool(row.get("component"))
@@ -212,8 +227,21 @@ def build_graph(rows, aggregated, ordered_walk=False, collapse=None):
 # --------------------------------------------------------------------------- rendering
 
 def sanitize(label):
-    """Mermaid chokes on quotes and pipes inside labels."""
+    """Node labels are emitted inside double quotes, so only quotes and pipes need handling."""
     return str(label).replace('"', "'").replace("|", "/").replace("\n", " ")
+
+
+def sanitize_edge_label(label):
+    """Edge labels sit bare between pipes, so Mermaid lexes their punctuation as shape tokens.
+
+    A literal "(" becomes PS and aborts the parse ("3 (2 back)" is a parse error, not a label).
+    Keep these to letters, digits and spaces -- there is no quoting form that is safe across
+    Mermaid versions.
+    """
+    text = str(label)
+    for ch in '()[]{}<>|"\'`-':
+        text = text.replace(ch, " ")
+    return " ".join(text.split())
 
 
 def render(g, slow_ms, title=None):
@@ -265,7 +293,20 @@ def render(g, slow_ms, title=None):
         dst_id = ids.get(dst)
         if not src_id or not dst_id:
             continue
-        arrow = f"-->|{count}|" if count > 1 else "-->"
+        back = g.back.get((src, dst), 0)
+        if back and back >= count:
+            # Purely a back-navigation: dashed, so a returning route never reads as a new one.
+            label = f"{count} back" if count > 1 else "back"
+            arrow = f"-.->|{sanitize_edge_label(label)}|"
+        elif back:
+            # Mixed pair -- traversed forward and returned along the same edge. Report the two
+            # counts separately rather than a total plus a parenthetical.
+            label = f"{count - back} fwd {back} back"
+            arrow = f"-->|{sanitize_edge_label(label)}|"
+        elif count > 1:
+            arrow = f"-->|{sanitize_edge_label(count)}|"
+        else:
+            arrow = "-->"
         lines.append(f"    {src_id} {arrow} {dst_id}")
 
     for node_id in slow_nodes:

@@ -23,9 +23,27 @@ static NSString * const kNRAttr_uiPlatform     = @"uiPlatform";
 static NSString * const kNRAttr_agentName      = @"agentName";
 NSString * const kNRMAAttributeInteractionId   = @"interactionId";
 NSString * const kNRMAAttributeInteractionName = @"interactionName";
+NSString * const kNRMAAttributeReappeared      = @"reappeared";
+
+// Upper bound on the visible-view stack. A producer can miss a disappearance (a view deallocated
+// without SwiftUI calling onDisappear, or the agent starting mid-session), and an unbounded stack
+// would then grow for the life of the session and resurface long-dead screens. Oldest entries are
+// discarded first; they are the least likely to be what the user is looking at.
+static const NSUInteger kNRMAMaxVisibleViews = 32;
 
 static NSString * const kNRUIPlatformManual    = @"Manual";
 static NSString * const kNRAgentName           = @"iOS";
+
+/// One view believed to be on screen. Held oldest-first, so the last element is the topmost.
+@interface NRMAVisibleView : NSObject
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *instanceId;
+@property (nonatomic, copy, nullable) NSString *platform;
+@property (nonatomic) CFAbsoluteTime appearTime;
+@end
+
+@implementation NRMAVisibleView
+@end
 
 typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     NRMAViewSourceNone = 0,
@@ -43,6 +61,11 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     NSString *_previousViewName;
     NSString *_previousViewInstanceId;
+
+    // Views the automatic producers have reported as appeared and not yet as disappeared, oldest
+    // first. Only used to decide whether a disappearance uncovered something; _currentViewName
+    // above remains the source of truth for referrer stamping.
+    NSMutableArray<NRMAVisibleView *> *_visibleViews;
 
     // Identity of the interaction (activity trace) currently running, published by
     // NRMATraceController. Cleared on completion so view events can never carry a finished
@@ -71,6 +94,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     if ((self = [super init])) {
         _lock = OS_UNFAIR_LOCK_INIT;
         _currentViewSource = NRMAViewSourceNone;
+        _visibleViews = [NSMutableArray array];
     }
     return self;
 }
@@ -80,6 +104,13 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 - (void)transitionToView:(NSString *)name
               instanceId:(NSString *)instanceId
               appearTime:(CFAbsoluteTime)appearTime {
+    [self transitionToView:name instanceId:instanceId appearTime:appearTime platform:nil];
+}
+
+- (void)transitionToView:(NSString *)name
+              instanceId:(NSString *)instanceId
+              appearTime:(CFAbsoluteTime)appearTime
+                platform:(nullable NSString *)platform {
     if (name.length == 0) { return; }
     os_unfair_lock_lock(&_lock);
     _previousViewName       = _currentViewName;
@@ -89,7 +120,128 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewAppearTime  = appearTime;
     _currentViewSource      = NRMAViewSourceAutomatic;
     [self latchInteractionViewBindingLocked];
+    [self pushVisibleViewLocked:name instanceId:instanceId appearTime:appearTime platform:platform];
     os_unfair_lock_unlock(&_lock);
+}
+
+#pragma mark - Visible-view stack (lock held)
+
+- (void)pushVisibleViewLocked:(NSString *)name
+                   instanceId:(NSString *)instanceId
+                   appearTime:(CFAbsoluteTime)appearTime
+                     platform:(nullable NSString *)platform {
+    if (instanceId.length == 0) { return; }
+
+    // A repeated appearance of the same instance replaces the existing entry instead of stacking a
+    // duplicate that could later resurface itself.
+    [self removeVisibleViewLocked:instanceId];
+
+    NRMAVisibleView *entry = [[NRMAVisibleView alloc] init];
+    entry.name       = name;
+    entry.instanceId = instanceId;
+    entry.platform   = platform;
+    entry.appearTime = appearTime;
+    [_visibleViews addObject:entry];
+
+    while (_visibleViews.count > kNRMAMaxVisibleViews) {
+        [_visibleViews removeObjectAtIndex:0];
+    }
+}
+
+/// Removes the entry for `instanceId` wherever it sits. Returns NSNotFound if it was not tracked,
+/// otherwise the index it occupied, so the caller can tell whether the top changed.
+- (NSUInteger)removeVisibleViewLocked:(NSString *)instanceId {
+    if (instanceId.length == 0) { return NSNotFound; }
+    for (NSUInteger i = 0; i < _visibleViews.count; i++) {
+        if ([_visibleViews[i].instanceId isEqualToString:instanceId]) {
+            [_visibleViews removeObjectAtIndex:i];
+            return i;
+        }
+    }
+    return NSNotFound;
+}
+
+#pragma mark - Re-appearance synthesis
+
+- (void)viewDidDisappearNamed:(NSString *)name instanceId:(NSString *)instanceId {
+    if (instanceId.length == 0) { return; }
+
+    // Everything the synthesized event needs is captured under the lock and the event is recorded
+    // after releasing it: -recordCustomEvent: runs the analytics stack, which must never be entered
+    // while holding this non-recursive lock.
+    NSString *resurfacedName       = nil;
+    NSString *resurfacedInstanceId = nil;
+    NSString *resurfacedPlatform   = nil;
+    NSString *departedName         = nil;
+    NSString *departedInstanceId   = nil;
+    NSString *interactionId        = nil;
+    NSString *interactionName      = nil;
+
+    os_unfair_lock_lock(&_lock);
+
+    NSUInteger removedIndex = [self removeVisibleViewLocked:instanceId];
+    // After the removal, the departing view was on top precisely when it sat at what is now the end
+    // of the array. Anything else means it was buried and nothing was uncovered.
+    BOOL wasTop = (removedIndex != NSNotFound && removedIndex == _visibleViews.count);
+
+    if (wasTop && _visibleViews.count > 0 && _currentViewSource == NRMAViewSourceAutomatic) {
+        NRMAVisibleView *uncovered = _visibleViews.lastObject;
+
+        // Guard against a same-name resurrection (a view replaced by another instance of itself),
+        // which would emit an edge from a screen to itself.
+        if (uncovered.name.length > 0 && ![uncovered.name isEqualToString:name]) {
+            resurfacedName       = uncovered.name;
+            resurfacedInstanceId = [[NSUUID UUID] UUIDString];
+            resurfacedPlatform   = uncovered.platform;
+            departedName         = [name copy];
+            departedInstanceId   = [instanceId copy];
+
+            // This is a new visible lifetime for the uncovered view: fresh instance id so its next
+            // timeVisible is measured from now rather than from when it was first pushed.
+            uncovered.instanceId = resurfacedInstanceId;
+            uncovered.appearTime = CFAbsoluteTimeGetCurrent();
+
+            _previousViewName       = departedName;
+            _previousViewInstanceId = departedInstanceId;
+            _currentViewName        = uncovered.name;
+            _currentViewInstanceId  = resurfacedInstanceId;
+            _currentViewAppearTime  = uncovered.appearTime;
+            _currentViewSource      = NRMAViewSourceAutomatic;
+            [self latchInteractionViewBindingLocked];
+
+            // Read directly rather than via -interactionAttributes, which takes the same lock.
+            interactionId   = _currentInteractionId;
+            interactionName = _currentInteractionName;
+        }
+    }
+
+    os_unfair_lock_unlock(&_lock);
+
+    if (resurfacedName == nil) { return; }
+
+    NSMutableDictionary<NSString *, id> *attrs = [NSMutableDictionary dictionary];
+    attrs[kNRAttr_viewName]       = resurfacedName;
+    attrs[kNRAttr_viewInstanceId] = resurfacedInstanceId;
+    attrs[kNRAttr_previousView]   = departedName;
+    attrs[kNRAttr_previousViewId] = departedInstanceId;
+    attrs[kNRAttr_appeared]       = @YES;
+    // Distinguishes this from an observed appearance so consumers can treat back-navigation
+    // separately -- and so it is obvious why there is no loadTime.
+    attrs[kNRMAAttributeReappeared] = @YES;
+    attrs[kNRAttr_agentName]      = kNRAgentName;
+    if (resurfacedPlatform.length > 0) {
+        attrs[kNRAttr_uiPlatform] = resurfacedPlatform;
+    }
+    if (interactionId.length > 0) {
+        attrs[kNRMAAttributeInteractionId] = interactionId;
+    }
+    if (interactionName.length > 0) {
+        attrs[kNRMAAttributeInteractionName] = interactionName;
+    }
+    // Deliberately no loadTime: nothing was constructed or laid out, the screen was merely
+    // uncovered. Zeroing it would drag load-time aggregates toward zero.
+
+    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 }
 
 #pragma mark - Manual producer

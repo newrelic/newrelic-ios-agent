@@ -24,6 +24,9 @@ NS_ASSUME_NONNULL_BEGIN
 FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionId;
 /// Display name of that interaction, carried on MobileView events.
 FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionName;
+/// Marks a MobileView appear event the agent synthesized because a screen became visible again
+/// when the view covering it went away, rather than because a producer observed an appearance.
+FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
 
 @interface NRMAViewContext : NSObject
 
@@ -37,6 +40,30 @@ FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionName;
 - (void)transitionToView:(NSString *)name
               instanceId:(NSString *)instanceId
               appearTime:(CFAbsoluteTime)appearTime;
+
+/// As above, recording which producer saw the appearance so a synthesized re-appearance can report
+/// the same `uiPlatform` the original event did. Prefer this over the three-argument form.
+- (void)transitionToView:(NSString *)name
+              instanceId:(NSString *)instanceId
+              appearTime:(CFAbsoluteTime)appearTime
+                platform:(nullable NSString *)platform;
+
+/// Records that an automatically-tracked view instance is no longer visible, and synthesizes a
+/// MobileView appear event for whatever it was covering.
+///
+/// SwiftUI is the reason this exists. `onDisappear` fires when a NavigationStack pushes past a
+/// view, but popping back to that view does *not* fire its `onAppear` again -- the root was never
+/// torn down -- so nothing tells the agent the screen is visible again. Without this, the next
+/// screen to appear reports a dismissed sheet as its `previousView`. UIKit does not have the
+/// problem (`viewDidAppear:` fires on pop) and is unaffected: a real appearance always supersedes
+/// a synthesized one.
+///
+/// `instanceId` identifies which visible lifetime ended, and it is removed from wherever it sits in
+/// the stack rather than only from the top. That matters because SwiftUI fires the *incoming*
+/// view's `onAppear` before the *outgoing* view's `onDisappear`, so by the time a push is reported
+/// the departing view is already buried; and because a pop delivers its disappearances batched and
+/// out of order. Only a removal that actually changes the top of the stack synthesizes an event.
+- (void)viewDidDisappearNamed:(NSString *)name instanceId:(NSString *)instanceId;
 
 #pragma mark - Manual producer (+[NewRelic setCurrentView:attributes:])
 

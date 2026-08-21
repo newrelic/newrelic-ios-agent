@@ -126,7 +126,10 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 // next view and for breadcrumbs recorded while it is visible — and so it is latched
                 // as the view the interaction opened above describes.
                 NRMAViewContext.sharedInstance().transition(
-                    toView: viewName, instanceId: id, appearTime: now.timeIntervalSinceReferenceDate)
+                    toView: viewName,
+                    instanceId: id,
+                    appearTime: now.timeIntervalSinceReferenceDate,
+                    platform: "SwiftUI")
 
                 // loadTime (ms): modifier creation (≈ view body evaluation) → onAppear
                 let loadTimeMs = NRMAViewContext.millisecondsBetween(
@@ -187,6 +190,13 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 attrs["appeared"]       = NSNumber(value: false)
                 attrs["agentName"]      = "iOS"
                 NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+
+                // Tell the shared context this instance is gone. This is the SwiftUI-specific half
+                // of the fix: popping a NavigationStack back to a view does not re-fire its
+                // onAppear, so if this disappearance uncovered something, the context synthesizes
+                // the appear event SwiftUI never delivers. Called before `instanceId` is cleared,
+                // since that is the key the stack is keyed by.
+                NRMAViewContext.sharedInstance().viewDidDisappearNamed(viewName, instanceId: id)
 
                 hasAppearedBefore = true
                 appearTime = nil

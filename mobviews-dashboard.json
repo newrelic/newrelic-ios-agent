@@ -306,7 +306,7 @@
             "id": "viz.markdown"
           },
           "rawConfiguration": {
-            "text": "## How to read this page\n\nEvery `MobileView` **appear** event carries both ends of a transition: `viewName` (where the user\nlanded) and `previousView` (where they came from). That pair *is* a directed edge, so the screen-flow\ngraph needs no derivation — only aggregation.\n\n**Every query here is guarded with `component IS NULL`.** Component rows (`component = true`,\n`componentOf = 'Listing Detail'`) are segments *inside* one screen load, not steps in the user's\njourney. Leave them in and the five Listing Detail sections become five phantom screens branching\noff `ListingDetailScreen`.\n\n**Reading the matrix.** Rows are the *from* screen, columns the *to* screen. Bright cells are the\nwell-trodden paths; a row that is empty across every column is a screen users only ever leave by\nbackgrounding the app.\n\n**Walking one session.** Pick a `sessionId` from *Busiest sessions*, then paste it into the\n*Session walk* query as `AND sessionId = '<id>'`. The table is already ordered by time, so it reads\ntop-to-bottom as the actual route taken.\n\n**Want an actual node-and-arrow picture?** NRQL has no Sankey. Run `scripts/mobileview_flow.py`\nagainst an event dump (or the results of the *Top transitions* query) to get a Mermaid `flowchart`\nyou can paste into GitHub, Confluence, or a PR description."
+            "text": "## How to read this page\n\nEvery `MobileView` **appear** event carries both ends of a transition: `viewName` (where the user\nlanded) and `previousView` (where they came from). That pair *is* a directed edge, so the screen-flow\ngraph needs no derivation — only aggregation.\n\n**Every query here is guarded with `component IS NULL`.** Component rows (`component = true`,\n`componentOf = 'Listing Detail'`) are segments *inside* one screen load, not steps in the user's\njourney. Leave them in and the five Listing Detail sections become five phantom screens branching\noff `ListingDetailScreen`.\n\n**Reading the matrix.** Rows are the *from* screen, columns the *to* screen. Bright cells are the\nwell-trodden paths; a row that is empty across every column is a screen users only ever leave by\nbackgrounding the app.\n\n**Walking one session.** Pick a `sessionId` from *Busiest sessions*, then paste it into the\n*Session walk* query as `AND sessionId = '<id>'`. The table is already ordered by time, so it reads\ntop-to-bottom as the actual route taken.\n\n**Want an actual node-and-arrow picture?** NRQL has no Sankey. Run `scripts/mobileview_flow.py`\nagainst an event dump (or the results of the *Top transitions* query) to get a Mermaid `flowchart`\nyou can paste into GitHub, Confluence, or a PR description.\n\n## Back-navigation (`reappeared IS TRUE`)\n\nSwiftUI never re-fires `onAppear` when a NavigationStack pops back to a view, so the agent\n**synthesizes** the missing appear event and marks it `reappeared = true`. Without it, the next\nscreen to appear reported a dismissed sheet as its `previousView`.\n\nThree consequences for these queries:\n\n* Synthesized events are `appeared IS TRUE`, so they **are** counted in the matrix and in\n  *Top transitions* -- which is the point: returning to a screen is real navigation. The\n  *of which back* column separates them from forward moves.\n* They carry **no `loadTime`** -- nothing was constructed, the screen was merely uncovered. NRQL's\n  `average()` skips nulls, so load-time aggregates stay honest without extra filtering.\n* UIKit never needed this (`viewDidAppear:` already fires on pop), so `reappeared` is\n  effectively a SwiftUI-only marker. Filter `uiPlatform` if that distinction matters to you."
           }
         },
         {
@@ -350,7 +350,7 @@
           }
         },
         {
-          "title": "Top transitions — traversals and how slow the landing was",
+          "title": "Top transitions — forward vs back, and how slow the landing was",
           "layout": {
             "column": 1,
             "row": 8,
@@ -364,7 +364,7 @@
             "nrqlQueries": [
               {
                 "accountId": 10816994,
-                "query": "SELECT count(*) AS 'Traversals', average(loadTime) AS 'Avg load (ms)', max(loadTime) AS 'Worst load (ms)' FROM MobileView WHERE appeared IS TRUE AND component IS NULL AND previousView IS NOT NULL FACET previousView, viewName SINCE 1 day ago LIMIT 100"
+                "query": "SELECT count(*) AS 'Traversals', filter(count(*), WHERE reappeared IS TRUE) AS 'of which back', average(loadTime) AS 'Avg load (ms)', max(loadTime) AS 'Worst load (ms)' FROM MobileView WHERE appeared IS TRUE AND component IS NULL AND previousView IS NOT NULL FACET previousView, viewName SINCE 1 day ago LIMIT 100"
               }
             ]
           }
@@ -404,7 +404,27 @@
             "nrqlQueries": [
               {
                 "accountId": 10816994,
-                "query": "SELECT timestamp, previousView, viewName, loadTime, interactionName, uiPlatform FROM MobileView WHERE appeared IS TRUE AND component IS NULL SINCE 1 day ago ORDER BY timestamp LIMIT 100"
+                "query": "SELECT timestamp, previousView, viewName, reappeared, loadTime, interactionName, uiPlatform FROM MobileView WHERE appeared IS TRUE AND component IS NULL SINCE 1 day ago ORDER BY timestamp LIMIT 100"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Back-navigation — screens users returned to",
+          "layout": {
+            "column": 1,
+            "row": 16,
+            "width": 12,
+            "height": 3
+          },
+          "visualization": {
+            "id": "viz.bar"
+          },
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountId": 10816994,
+                "query": "SELECT count(*) FROM MobileView WHERE appeared IS TRUE AND component IS NULL AND reappeared IS TRUE FACET previousView, viewName SINCE 1 day ago LIMIT 20"
               }
             ]
           }
