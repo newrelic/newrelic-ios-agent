@@ -21,7 +21,7 @@
 #import "NRMATaskQueue.h"
 
 @interface NRMATraceController ()
-+ (void) setHealthyTraceTimeout:(NSUInteger) healthyTraceTimeout;
++ (void) setHealthyTraceTimeout:(NSTimeInterval) healthyTraceTimeout;
 @end
 
 @interface NRMATaskQueue ()

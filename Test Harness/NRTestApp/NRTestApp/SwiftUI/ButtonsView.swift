@@ -71,6 +71,7 @@ struct ButtonsView: View {
         }
         .padding()
         .NRTrackView(name: "ButtonsView")
+        .NRMobileView(name: "ButtonsView")
     }
 }
 

@@ -26,6 +26,9 @@
 // unretained pointer that a concurrent setter can free before ARC retains it.
 @property(atomic,strong) NSString        *type;
 @property(atomic,strong) NSString        *name;
+// Identity of this interaction, used to join the interaction event against the MobileView events
+// emitted while it runs. Assigned once at trace creation; atomic for the same reason as name/type.
+@property(atomic,strong) NSString        *interactionId;
 @property(nonatomic,strong) NSMutableDictionary *memoryVitals;
 @property(nonatomic,strong) NSMutableDictionary *cpuVitals;
 @property(nonatomic)        double          totalExclusiveTimeMillis;
@@ -38,7 +41,18 @@
 - (id) initWithRootTrace:(NRMATrace*)rootTrace;
 - (void) addTrace:(NRMATrace*)trace;
 - (BOOL) hasMissingChildren;
+/// Completes the trace, ending it at `lastUpdated` — the last instrumented method boundary.
+/// This is quiescence semantics: the interaction ended when work stopped, not when the trace
+/// machine's timer noticed, so the timeout never inflates the reported duration.
 - (void) complete;
+/// Completes the trace, ending it at an explicit wall-clock timestamp. Used when something other
+/// than the quiescence timer ends the interaction (an explicit `stopCurrentInteraction:`, or
+/// supersession by the next screen's interaction), where the real end time is known and is what
+/// the caller means by the interaction's duration.
+///
+/// `endTimestampMillis` is floored at `lastUpdated`, so the reported duration can never be shorter
+/// than the instrumented work it contains.
+- (void) completeWithEndTimestampMillis:(double)endTimestampMillis;
 - (void) recordVitalsThrottled;
 - (NSTimeInterval) durationInSeconds;
 - (BOOL) shouldRecord;

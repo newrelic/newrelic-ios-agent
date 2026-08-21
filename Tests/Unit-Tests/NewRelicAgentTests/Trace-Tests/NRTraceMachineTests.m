@@ -29,8 +29,8 @@
 @end
 
 @interface NRMATraceController (asdf)
-+ (void) setUnhealthyTraceTimeout:(NSUInteger)millseconds;
-+ (void) setHealthyTraceTimeout:(NSUInteger) healthyTraceTimeout;
++ (void) setUnhealthyTraceTimeout:(NSTimeInterval)seconds;
++ (void) setHealthyTraceTimeout:(NSTimeInterval) healthyTraceTimeout;
 + (void) completeTrace:(NRMATrace*)trace withExitTimestampMillis:(NSNumber*)exitTimestampMilliseconds;
 @end
 

@@ -88,5 +88,34 @@ enum ViewControllerProvider {
         let viewController = MapViewController()
         return viewController
     }
+
+    static var mobileViewAttributesViewController: MobileViewAttributesViewController {
+        let viewController = MobileViewAttributesViewController()
+        return viewController
+    }
+
+    static var mobileViewIgnoredViewController: MobileViewIgnoredViewController {
+        let viewController = MobileViewIgnoredViewController()
+        return viewController
+    }
+
+    static var viewsAndInteractionsViewController: ViewsAndInteractionsViewController {
+        let viewController = ViewsAndInteractionsViewController()
+        return viewController
+    }
+
+#if os(iOS)
+    // Modal presentation styles (.formSheet / .popover) are iOS-only, so both of these MobileViews
+    // demos are guarded to match the screens themselves.
+    static var mobileViewModalsViewController: MobileViewModalsViewController {
+        let viewController = MobileViewModalsViewController()
+        return viewController
+    }
+
+    static var mobileViewRestartedViewController: MobileViewRestartedViewController {
+        let viewController = MobileViewRestartedViewController()
+        return viewController
+    }
+#endif
 }
 

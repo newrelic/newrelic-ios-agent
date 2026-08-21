@@ -16,6 +16,9 @@
 
 @interface NRMATraceController ()
 + (NRMATraceMachine*) traceMachine;
++ (NRMATraceMachine*) traceMachineForInteractionId:(NSString*)interactionId;
++ (NSArray<NSString*>*) activeInteractionIds;
++ (BOOL) completeActivityTraceForInteractionId:(NSString*)interactionId;
 @end
 
 static NSString * const kNRMAActivityIdentifierKey = @"com.newrelic.customapi.tracemachine.customActivityIdentifier";
@@ -60,11 +63,23 @@ static NSString * const kNRMAActivityIdentifierKey = @"com.newrelic.customapi.tr
 + (void) stopCustomActivity:(NSString*)activityIdentifier
 {
     @synchronized(kNRMAStartAndEndTracingLock) {
-        NRMATraceMachine* localActivityTrace = [self traceMachine];
-        @synchronized(localActivityTrace) {
-            NSString* currentActivityIdentifier = objc_getAssociatedObject(localActivityTrace, (__bridge const void *)(kNRMAActivityIdentifierKey));
-            if ([currentActivityIdentifier isEqualToString:activityIdentifier]) {
-                [NRMATraceController completeActivityTrace];
+        // Searched across every live interaction rather than only the current one. The activity being
+        // stopped need not be the one that started most recently — that was guaranteed while only one
+        // interaction could exist, and is exactly the assumption the registry removes. Looking only at
+        // the current machine would silently ignore stopCustomActivity: for any activity that had been
+        // joined by a later one.
+        for (NSString* interactionId in [NRMATraceController activeInteractionIds]) {
+            NRMATraceMachine* candidate = [NRMATraceController traceMachineForInteractionId:interactionId];
+            if (candidate == nil) {
+                continue;
+            }
+            NSString* candidateIdentifier;
+            @synchronized(candidate) {
+                candidateIdentifier = objc_getAssociatedObject(candidate, (__bridge const void *)(kNRMAActivityIdentifierKey));
+            }
+            if ([candidateIdentifier isEqualToString:activityIdentifier]) {
+                [NRMATraceController completeActivityTraceForInteractionId:interactionId];
+                return;
             }
         }
     }

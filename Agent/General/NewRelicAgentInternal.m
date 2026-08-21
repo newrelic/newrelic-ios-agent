@@ -27,6 +27,8 @@
 #import "NRMATaskQueue.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMAMethodProfiler.h"
+#import "NRMAMobileViewTracker.h"
+#import "NRMAViewContext.h"
 #import "NRMACPUVitals.h"
 #import "NRMAExceptionHandlerManager.h"
 #import "NRMAExceptionMetaDataStore.h"
@@ -330,6 +332,12 @@ static NewRelicAgentInternal* _sharedInstance;
 
     if ([NRMAFlags shouldEnableInteractionTracing]) {
         [[NRMAMethodProfiler sharedInstance] startMethodReplacement];
+    }
+
+    if ([NRMAFlags shouldEnableAutomaticMobileViews]) {
+#if !TARGET_OS_WATCH
+        [[NRMAMobileViewTracker sharedInstance] start];
+#endif
     }
 
     if ([NRMAFlags shouldEnableCrashReporting]) {
@@ -942,6 +950,11 @@ static UIBackgroundTaskIdentifier background_task;
     didFireEnterForeground = NO;
     didFireEnterBackground = YES;
 
+    // Flush the current manual view (if any) so its timeVisible is recorded before backgrounding.
+    if ([NRMAFlags shouldEnableManualMobileViews]) {
+        [[NRMAViewContext sharedInstance] flushCurrentManualViewOnBackground];
+    }
+
 #if TARGET_OS_WATCH
     _currentApplicationState = WKApplicationStateBackground;
 #else
@@ -966,7 +979,9 @@ static UIBackgroundTaskIdentifier background_task;
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
     @try {
 #endif
-        [NRMATraceController completeActivityTrace];
+        // Every live interaction, not just the one this thread resolves to: the app is going away,
+        // so anything still open has to be flushed or it is lost.
+        [NRMATraceController completeAllActivityTraces];
 
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
@@ -1284,7 +1299,9 @@ void applicationDidEnterBackgroundCF(void) {
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
     @try {
 #endif
-        [NRMATraceController completeActivityTrace];
+        // Every live interaction, not just the one this thread resolves to: the app is going away,
+        // so anything still open has to be flushed or it is lost.
+        [NRMATraceController completeAllActivityTraces];
 
         [NRMAInteractionHistoryObjCInterface deallocInteractionHistory];
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER

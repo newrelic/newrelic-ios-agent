@@ -73,6 +73,10 @@ struct SwiftUITabBar: View {
                 .tag(6)
         }
         .tint(Color(red: 1.0, green: 0.27, blue: 0.23)) // Custom red/coral tint
+        .NRMobileTabTracking(selection: $selectedTab) { tag in
+            let tabNames = ["Dashboard", "Form", "Charts", "Alerts", "Profile", "Media", "Settings"]
+            return tag < tabNames.count ? tabNames[tag] : "Tab(\(tag))"
+        }
         .onAppear {
             configureCustomTabBarAppearance()
         }

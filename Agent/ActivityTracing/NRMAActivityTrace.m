@@ -130,11 +130,20 @@
 
 - (void) complete
 {
+    // Quiescence path: end at the last instrumented method boundary. Ending at "now" here would
+    // add the whole healthy-timeout window to every interaction's duration.
+    [self completeWithEndTimestampMillis:self.lastUpdated];
+}
+
+- (void) completeWithEndTimestampMillis:(double)endTimestampMillis
+{
 //        //we want to do one final recordVitals, not throttled
 //        //so it must be wrapped in thread safety block.
     [self recordVitals];
 
-    self.endTime = self.lastUpdated;
+    // Floor at lastUpdated so an end timestamp captured before a late-completing trace on another
+    // thread cannot produce a duration shorter than the work it contains (or a negative one).
+    self.endTime = MAX(endTimestampMillis, self.lastUpdated);
     [NRMAMeasurements processCurrentSummaryMetricsWithTotalTime:self.endTime - self.startTime
                                                  activityName:self.name];
  //   [self.rootTrace calculateExclusiveTime];
@@ -148,7 +157,25 @@
 
 - (BOOL) shouldRecord
 {
-    double exclusivePercentage = (self.totalExclusiveTimeMillis + self.totalNetworkTimeMillis) / (self.endTime - self.startTime);
+    // Utilization answers "is there a useful waterfall in here?", so it is measured over the span in
+    // which instrumented work actually happened (startTime -> lastUpdated) rather than the full
+    // wall-clock span (startTime -> endTime).
+    //
+    // The two spans used to be nearly identical, because an interaction was truncated shortly after
+    // its last traced method. Now that an interaction can carry an arbitrarily long idle tail (it
+    // ends on explicit stop or supersession by the next screen, not on the load burst), dividing by
+    // the wall-clock span would push essentially every trace under activity_trace_min_utilization
+    // and silently drop its node payload — a screen that loads in 300ms but is viewed for 30s would
+    // score 0.01 against a 0.3 floor.
+    double activeSpanMillis = self.lastUpdated - self.startTime;
+
+    // No instrumented work at all: nothing worth sending. Also guards the divide, which previously
+    // produced nan (0/0) or inf for a zero-length span.
+    if (activeSpanMillis <= 0) {
+        return NO;
+    }
+
+    double exclusivePercentage = (self.totalExclusiveTimeMillis + self.totalNetworkTimeMillis) / activeSpanMillis;
 
     return exclusivePercentage > [NRMAHarvestController configuration].activity_trace_min_utilization;
 }

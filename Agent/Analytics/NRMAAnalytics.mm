@@ -258,15 +258,29 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
 - (BOOL) addInteractionEvent:(NSString*)name
          interactionDuration:(double)duration_secs {
+    return [self addInteractionEvent:name interactionDuration:duration_secs attributes:nil];
+}
+
+- (BOOL) addInteractionEvent:(NSString*)name
+         interactionDuration:(double)duration_secs
+                  attributes:(NSDictionary*)attributes {
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(name == nil || name.length == 0){return NO;}
         NRMAInteractionEvent *event = [[NRMAInteractionEvent alloc] initWithTimestamp:[NRMAAnalytics currentTimeMillis]
                                                 sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime] name:name category:@"Interaction"
                                                      withAttributeValidator:_attributeValidator];
         [event addAttribute:kNRMA_RA_InteractionDuration value:@(duration_secs)];
-        
+        // Agent-owned correlation attributes are added last so they win over anything already set.
+        for (NSString* key in attributes) {
+            [event addAttribute:key value:attributes[key]];
+        }
+
         return [_eventManager addEvent:[event autorelease]];
     } else {
+        if (attributes.count > 0) {
+            NRLOG_AGENT_VERBOSE(@"Dropping %lu interaction event attribute(s): the legacy event system cannot carry them. Enable NRFeatureFlag_NewEventSystem to correlate interactions with MobileView events.",
+                                (unsigned long)attributes.count);
+        }
         return _analyticsController->addInteractionEvent([name UTF8String], duration_secs, [self checkOfflineStatus], [self checkBackgroundStatus]);
     }
 }

@@ -32,5 +32,6 @@
 #import "NRMAHarvesterConfiguration.h"
 #import "NRMAFlags.h"
 #import "NRMAOfflineStorage.h"
-
+#import "NRMAMobileViewTracker.h"
+#import "NRMAViewContext.h"
 #endif /* APrivateHeader_h */

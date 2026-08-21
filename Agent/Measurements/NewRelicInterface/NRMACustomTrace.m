@@ -107,6 +107,9 @@ NSString* NSStringFromNRMATraceType (enum NRTraceType category) {
         case NRTraceTypeNetwork:
             return @"Network";
             break;
+        case NRTraceTypeMobileView:
+            return @"Views";
+            break;
         default:
             return @"None";
             break;
