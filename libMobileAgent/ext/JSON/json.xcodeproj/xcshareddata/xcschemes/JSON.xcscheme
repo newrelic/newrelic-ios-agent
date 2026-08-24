@@ -17,7 +17,7 @@
                BlueprintIdentifier = "34BF4DDC29108DE200E4D170"
                BuildableName = "JSON.framework"
                BlueprintName = "JSON"
-               ReferencedContainer = "container:JSON.xcodeproj">
+               ReferencedContainer = "container:json.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -53,7 +53,7 @@
             BlueprintIdentifier = "34BF4DDC29108DE200E4D170"
             BuildableName = "JSON.framework"
             BlueprintName = "JSON"
-            ReferencedContainer = "container:JSON.xcodeproj">
+            ReferencedContainer = "container:json.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
