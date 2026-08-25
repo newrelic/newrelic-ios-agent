@@ -19,11 +19,6 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// The join key between a MobileView event and the interaction (activity trace) event that covers
-/// it. Exported so both producers use one definition and the two sides cannot drift apart.
-FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionId;
-/// Display name of that interaction, carried on MobileView events.
-FOUNDATION_EXPORT NSString * const kNRMAAttributeInteractionName;
 /// Marks a MobileView appear event the agent synthesized because a screen became visible again
 /// when the view covering it went away, rather than because a producer observed an appearance.
 FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
@@ -76,42 +71,6 @@ FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
 /// If the current view was set manually, emits its `appeared:NO` MobileView event (with timeVisible)
 /// and clears it. Called on app background so the last manual view's duration is not lost.
 - (void)flushCurrentManualViewOnBackground;
-
-#pragma mark - Interaction correlation
-
-/// Publishes the currently-running interaction (activity trace) so MobileView events emitted while
-/// it runs can carry its identity. Pass nil/nil to clear when the interaction completes, so a view
-/// event can never carry the id of a finished interaction.
-///
-/// Publishing a *different* id also discards any latched interaction→view binding (see
-/// -viewCorrelationAttributes). Re-publishing the same id does not, so the second publish that
-/// -startTracingWithName: makes once the real interaction name is known preserves an existing latch.
-- (void)setCurrentInteractionId:(nullable NSString *)interactionId
-                           name:(nullable NSString *)name;
-
-/// Clears the published interaction only if `interactionId` is the one currently published.
-///
-/// This slot holds a single interaction, but NRMATraceController can now have several running at
-/// once. When one completes it must not clear a sibling's identity: an unconditional clear would
-/// strip interactionId from every MobileView event emitted after whichever interaction happened to
-/// finish first, even though another is still open. A no-op when the ids do not match.
-- (void)clearCurrentInteractionIdIfEqualTo:(nullable NSString *)interactionId;
-
-/// Attributes for MobileView events: interactionId, interactionName (only keys with values).
-/// Empty when no interaction is running.
-- (NSDictionary<NSString *, id> *)interactionAttributes;
-
-/// Attributes for the interaction event: viewName, viewInstanceId, previousView (only keys with
-/// values). Deliberately uses the MobileView event's key names so the two event types join on
-/// identically-named attributes — unlike -referrerAttributes, which emits the current view under
-/// the breadcrumb key `currentView`.
-///
-/// Reports the view *latched* when the running interaction's screen became current — the first view
-/// to become current after the interaction started — rather than whichever view happens to be
-/// current at completion. An interaction can outlive the screen it describes (quiescence defaults to
-/// 30s, and a custom interaction is never superseded), so a completion-time read would misattribute
-/// it. Falls back to the current view when no transition occurred while the interaction was open.
-- (NSDictionary<NSString *, id> *)viewCorrelationAttributes;
 
 #pragma mark - Referrer accessors
 

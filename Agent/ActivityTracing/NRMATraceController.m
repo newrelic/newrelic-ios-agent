@@ -23,50 +23,14 @@
 #import <objc/runtime.h>
 #import "NRMATraceMachine.h"
 #import "NewRelicAgentInternal.h"
-#import "NRMAFlags.h"
-#import "NRMAViewContext.h"
-// Quiescence timeout: how long an interaction may go with no instrumented method entry/exit before
-// the trace machine decides it is finished. This is the setting that used to cap an interaction at
-// roughly a second: at 0.5s an interaction could not outlive its screen-load burst, so a screen the
-// user sat on for 30s still reported a sub-second interaction.
-//
-// At 30s the quiescence timer stops being the thing that ends a typical interaction. A UIKit
-// auto-interaction now ends when the next screen supersedes it (NRMA__shouldCancelCurrentTrace), so
-// its duration becomes screen dwell time; a custom interaction ends when the host calls
-// stopCurrentInteraction:. The timer remains the backstop for an interaction that is simply
-// abandoned. Hosts wanting the old load-only semantics can call +setHealthyTraceTimeout:.
-//
-// #define rather than a const: these initialize file-static storage below, and in C a const
-// variable is not a constant expression.
-#define NRMA_HEALTHY_TRACE_TIMEOUT 30.0
-// Hard ceiling. The real backstop for an interaction that is never explicitly stopped — note that a
-// custom activity is immune to supersession (-isInteractionObject: always returns YES for it), so
-// without this a single missed stopCurrentInteraction: would block every later interaction for the
-// rest of the foreground session. Settable via +setUnhealthyTraceTimeout:.
-#define NRMA_UNHEALTHY_TRACE_TIMEOUT 300.0
+const NSTimeInterval NRMA_UNHEALTHY_TRACE_TIMEOUT = 60;
+const NSTimeInterval NRMA_HEALTHY_TRACE_TIMEOUT = 0.5;
 
 NSString* const kNRMACustomInteractionIdentifier = @"CUSTOM";
 const int NRMA_MAX_NODE_LIMIT = 2000;
 
-// The registry of live interactions, keyed by NRMAActivityTrace.interactionId. Replaces the single
-// __traceMachine slot this class used to hold.
-//
-// Concurrency is opt-in: +startTracingWithRootTrace: still supersedes whatever is running, so the
-// UIKit auto-interaction path and every existing caller see exactly one live interaction and behave
-// as before. Only +startConcurrentTracingWithName:interactionObject: adds a machine alongside the
-// others.
-static NSMutableDictionary<NSString*, NRMATraceMachine*>* __traceMachines;
-// The interaction a thread with no explicit binding resolves to — the most recently started one.
-// This is what preserves the old "there is a current interaction" behaviour for instrumented code
-// that never opts into concurrency.
-static NSString* __mostRecentInteractionId;
+static NRMATraceMachine* __traceMachine;
 
-// Ceiling on live interactions. Each one holds an activity trace, a measurement pool and three
-// measurement transmitters, and every one of them is harvested; an unbounded registry would let a
-// host that never stops its interactions grow memory without limit. Beyond the cap, a concurrent
-// start is refused rather than silently superseding something.
-#define NRMA_MAX_CONCURRENT_INTERACTIONS 16
-static NSUInteger __maxConcurrentInteractions = NRMA_MAX_CONCURRENT_INTERACTIONS;
 
 NSString * const kNRMAStartAndEndTracingLock = @"startTracingLock";
 
@@ -77,29 +41,6 @@ NSString * const kNRMAStartAndEndTracingLock = @"startTracingLock";
 + (void) exitMethodWithTimestampMillis:(double)exitTimestampMilliseconds;
 + (void) completeTrace:(NRMATrace*)trace withExitTimestampMillis:(NSNumber*)exitTimestampMilliseconds;
 + (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds;
-+ (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds
-                                         endedByTimer:(BOOL)endedByTimer;
-
-// Registry internals. Declared up front so the definition order below does not matter.
-+ (NRMATraceMachine*) traceMachine;
-+ (NRMATraceMachine*) traceMachineForInteractionId:(NSString*)interactionId;
-+ (NSMutableDictionary*) traceMachinesLocked;
-+ (void) registerTraceMachine:(NRMATraceMachine*)traceMachine forInteractionId:(NSString*)interactionId;
-+ (void) unregisterTraceMachineForInteractionId:(NSString*)interactionId;
-+ (void) clearMeasurementTransmitters;
-+ (void) clearMeasurementTransmittersForTraceMachine:(NRMATraceMachine*)traceMachine;
-+ (void) publishRunningInteractionId:(NSString*)interactionId name:(NSString*)name;
-+ (void) clearPublishedInteractionIdIfCurrent:(NSString*)interactionId;
-+ (BOOL) shouldCorrelateMobileViews;
-+ (NSDictionary*) correlationAttributesForActivityTrace:(NRMAActivityTrace*)activityTrace;
-+ (NRMATrace*) getCurrentTrace;
-+ (NRMATrace*) getCurrentTraceForInteractionId:(NSString*)interactionId;
-+ (BOOL) isTracingActiveForSegmentParent:(NRMATrace*)parentTrace;
-+ (NRMATrace*) threadLocalTrace;
-+ (BOOL) newTraceSetup:(NRMATrace*)newTrace parentTrace:(NRMATrace*)parentTrace;
-+ (BOOL) completeActivityTraceForInteractionId:(NSString*)interactionId
-                           exitTimestampMillis:(double)exitTimestampMilliseconds
-                                  endedByTimer:(BOOL)endedByTimer;
 
 @end
 
@@ -107,244 +48,64 @@ NSString * const kNRMAStartAndEndTracingLock = @"startTracingLock";
 
 
 static const NSString* __newRelicTraceMachAsyncLock = @"lock";
-
-+ (NSMutableDictionary*) traceMachinesLocked
-{
-    if (__traceMachines == nil) {
-        __traceMachines = [[NSMutableDictionary alloc] init];
-    }
-    return __traceMachines;
-}
-
-/// The interaction this thread is operating inside: an explicit per-thread binding if one exists,
-/// otherwise the most recently started interaction.
-+ (NSString*) currentInteractionId
-{
-    NSString* bound = [NRMAThreadLocalStore currentInteractionId];
-    if (bound.length) {
-        @synchronized(__newRelicTraceMachAsyncLock) {
-            // A stale binding — the interaction it names has already completed — must not shadow the
-            // live one, or instrumented code on this thread would silently stop being recorded.
-            if ([self traceMachinesLocked][bound] != nil) {
-                return bound;
-            }
-        }
-    }
-    @synchronized(__newRelicTraceMachAsyncLock) {
-        return __mostRecentInteractionId;
-    }
-}
-
 + (NRMATraceMachine*)traceMachine
 {
-    return [self traceMachineForInteractionId:[self currentInteractionId]];
-}
-
-+ (NRMATraceMachine*)traceMachineForInteractionId:(NSString*)interactionId
-{
-    if (interactionId.length == 0) {
-        return nil;
-    }
     @synchronized(__newRelicTraceMachAsyncLock) {
-        return [self traceMachinesLocked][interactionId];
+        return __traceMachine;
     }
 }
 
-+ (NSArray<NSString*>*)activeInteractionIds
++ (void) setTraceMachine:(NRMATraceMachine*)traceMachine
 {
     @synchronized(__newRelicTraceMachAsyncLock) {
-        return [[self traceMachinesLocked] allKeys];
+        __traceMachine = traceMachine;
     }
-}
-
-+ (NSUInteger)activeInteractionCount
-{
-    @synchronized(__newRelicTraceMachAsyncLock) {
-        return [self traceMachinesLocked].count;
-    }
-}
-
-+ (NSUInteger)maxConcurrentInteractions
-{
-    return __maxConcurrentInteractions;
-}
-
-+ (void)setMaxConcurrentInteractions:(NSUInteger)maxConcurrentInteractions
-{
-    if (maxConcurrentInteractions == 0) {
-        NRLOG_AGENT_ERROR(@"Ignoring a max concurrent interaction count of 0; no interaction could ever start.");
-        return;
-    }
-    __maxConcurrentInteractions = maxConcurrentInteractions;
-}
-
-/// Adds `traceMachine` to the registry under `interactionId` and makes it the fallback for threads
-/// with no explicit binding.
-+ (void) registerTraceMachine:(NRMATraceMachine*)traceMachine forInteractionId:(NSString*)interactionId
-{
-    if (traceMachine == nil || interactionId.length == 0) {
-        return;
-    }
-    @synchronized(__newRelicTraceMachAsyncLock) {
-        [self traceMachinesLocked][interactionId] = traceMachine;
-        __mostRecentInteractionId = [interactionId copy];
-    }
-}
-
-/// Removes one interaction from the registry. When it was the most-recent fallback, another live
-/// interaction takes over that role so unbound threads keep resolving to something real.
-+ (void) unregisterTraceMachineForInteractionId:(NSString*)interactionId
-{
-    if (interactionId.length == 0) {
-        return;
-    }
-    @synchronized(__newRelicTraceMachAsyncLock) {
-        NSMutableDictionary* machines = [self traceMachinesLocked];
-        [machines removeObjectForKey:interactionId];
-        if ([__mostRecentInteractionId isEqualToString:interactionId]) {
-            // anyObject rather than a real recency order: the registry is unordered, and the only
-            // requirement is that an unbound thread resolves to *a* live interaction. Callers that
-            // care which one bind their thread explicitly.
-            __mostRecentInteractionId = [[machines allKeys] firstObject];
-        }
-    }
-}
-
-+ (void) bindCurrentThreadToInteractionId:(NSString*)interactionId
-{
-    [NRMAThreadLocalStore setCurrentInteractionId:interactionId];
-}
-
-+ (NSString*) currentThreadInteractionId
-{
-    return [NRMAThreadLocalStore currentInteractionId];
 }
 
 
 + (void) cleanup
 {
-    [self cleanupInteractionId:[self currentInteractionId]];
-}
-
-/// Tears down a single interaction: its measurement pool, its transmitters, its registry entry, and
-/// its per-thread segment stacks. Scoped rather than wholesale — the thread-local store and the
-/// measurement transmitters both used to be destroyed globally here, which with a registry would
-/// take out interactions that are still running.
-+ (void) cleanupInteractionId:(NSString*)interactionId
-{
-    NRMATraceMachine* localTraceMachine = [self traceMachineForInteractionId:interactionId];
+    NRMATraceMachine* localTraceMachine = [self traceMachine];
     [localTraceMachine.tracePool shutdown];
-    [NRMATraceController clearMeasurementTransmittersForTraceMachine:localTraceMachine];
-    [self unregisterTraceMachineForInteractionId:interactionId];
-    [NRMAThreadLocalStore destroyStateForInteractionId:interactionId];
-}
-
-/// Tears down every live interaction. For agent shutdown and test teardown, where the whole
-/// thread-local store should go with it.
-+ (void) cleanupAll
-{
-    for (NSString* interactionId in [self activeInteractionIds]) {
-        NRMATraceMachine* machine = [self traceMachineForInteractionId:interactionId];
-        [machine.tracePool shutdown];
-        [NRMATraceController clearMeasurementTransmittersForTraceMachine:machine];
-        [self unregisterTraceMachineForInteractionId:interactionId];
-    }
-    @synchronized(__newRelicTraceMachAsyncLock) {
-        [[self traceMachinesLocked] removeAllObjects];
-        __mostRecentInteractionId = nil;
-    }
+    [NRMATraceController clearMeasurementTransmitters];
+    [self setTraceMachine:nil];
     [NRMAThreadLocalStore destroyStore];
 }
 
 
 
-// Statically initialized rather than lazily via dispatch_once. These are settable from the host app,
-// and a default applied on first *read* would clobber a value set before that first read — which is
-// the normal ordering, since a host configures the agent at startup and nothing reads the timeout
-// until the first interaction begins.
-//
-// Both are plain doubles read on the main run loop (timer scheduling) and written from whichever
-// thread calls the setter. A torn read is not possible for an aligned double on any platform the
-// agent supports, and a stale read only affects the interval of the next timer, so no lock.
-static NSTimeInterval __unhealthyTraceTimeout = NRMA_UNHEALTHY_TRACE_TIMEOUT;
+static NSTimeInterval __unhealthyTraceTimeout;
 + (NSTimeInterval) unhealthyTraceTimeout
 {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __unhealthyTraceTimeout = NRMA_UNHEALTHY_TRACE_TIMEOUT;
+    });
+
     return __unhealthyTraceTimeout;
 }
 
-+ (void) setUnhealthyTraceTimeout:(NSTimeInterval)unhealthyTraceTimeout
++ (void) setUnhealthyTraceTimeout:(NSUInteger)unhealthyTraceTimeout
 {
-    if (unhealthyTraceTimeout <= 0) {
-        NRLOG_AGENT_ERROR(@"Ignoring non-positive unhealthy trace timeout %f; interactions would complete immediately.", unhealthyTraceTimeout);
-        return;
-    }
     __unhealthyTraceTimeout = unhealthyTraceTimeout;
 }
 
-static NSTimeInterval __healthyTraceTimeout = NRMA_HEALTHY_TRACE_TIMEOUT;
+static NSTimeInterval __healthyTraceTimeout;
 + (NSTimeInterval) healthyTraceTimeout
 {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __healthyTraceTimeout = NRMA_HEALTHY_TRACE_TIMEOUT;
+    });
+
     return __healthyTraceTimeout;
 }
 
-+ (void) setHealthyTraceTimeout:(NSTimeInterval) healthyTraceTimeout
++ (void) setHealthyTraceTimeout:(NSUInteger) healthyTraceTimeout
 {
-    if (healthyTraceTimeout <= 0) {
-        NRLOG_AGENT_ERROR(@"Ignoring non-positive healthy trace timeout %f; interactions would complete immediately.", healthyTraceTimeout);
-        return;
-    }
     __healthyTraceTimeout = healthyTraceTimeout;
 }
 
-
-#pragma mark - MobileViews correlation
-
-// Correlation is active whenever either MobileViews producer is enabled, matching the referrer
-// stamping rule in +[NewRelic recordBreadcrumb:attributes:]. With both flags off (the default) a
-// default-configured agent behaves exactly as before: nothing is published to NRMAViewContext and
-// no attributes are added to the interaction event.
-+ (BOOL) shouldCorrelateMobileViews
-{
-    return [NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews];
-}
-
-// Publishes the running interaction so MobileView events emitted while it runs carry its identity.
-//
-// LOCK ORDER: callers hold kNRMAStartAndEndTracingLock, and NRMAViewContext takes its own
-// os_unfair_lock and never calls back into this class. That edge must stay one-way
-// (trace lock -> view lock) or the two locks can deadlock.
-+ (void) publishRunningInteractionId:(NSString*)interactionId name:(NSString*)name
-{
-    if (![self shouldCorrelateMobileViews]) { return; }
-    [[NRMAViewContext sharedInstance] setCurrentInteractionId:interactionId name:name];
-}
-
-// Clears the published identity only when `interactionId` is the one currently published.
-//
-// NRMAViewContext holds a single interaction slot, so with several interactions live it names
-// whichever published most recently. Completing any other one must leave that slot alone; otherwise
-// the first sibling to finish would strip interactionId from every subsequent MobileView event even
-// though an interaction is still running.
-+ (void) clearPublishedInteractionIdIfCurrent:(NSString*)interactionId
-{
-    if (![self shouldCorrelateMobileViews]) { return; }
-    [[NRMAViewContext sharedInstance] clearCurrentInteractionIdIfEqualTo:interactionId];
-}
-
-// Read at *completion*, not at start. An auto-interaction starts in viewDidLoad/viewWillAppear:,
-// when the outgoing screen is still current; the loading screen only becomes current in
-// viewDidAppear:. Binding at start would blame the previous screen for every screen load.
-+ (NSDictionary*) correlationAttributesForActivityTrace:(NRMAActivityTrace*)activityTrace
-{
-    if (![self shouldCorrelateMobileViews]) { return nil; }
-
-    NSMutableDictionary* attrs =
-        [NSMutableDictionary dictionaryWithDictionary:[[NRMAViewContext sharedInstance] viewCorrelationAttributes]];
-    if (activityTrace.interactionId.length > 0) {
-        attrs[kNRMAAttributeInteractionId] = activityTrace.interactionId;
-    }
-    return attrs.count > 0 ? attrs : nil;
-}
 
 #pragma mark - Static Functions
 + (NSString*) getCurrentActivityName
@@ -378,15 +139,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 
 + (void) clearMeasurementTransmitters
 {
-    [self clearMeasurementTransmittersForTraceMachine:[self traceMachine]];
-}
-
-/// Removes only `traceMachine`'s transmitters from the measurement engine. Each machine installs its
-/// own three consumers in -setupTracePool, so tearing down one interaction must not unhook the
-/// consumers belonging to interactions that are still running.
-+ (void) clearMeasurementTransmittersForTraceMachine:(NRMATraceMachine*)traceMachine
-{
-    NSMutableArray* measurementTransmitters = traceMachine.measurementTransmitters;
+    NSMutableArray* measurementTransmitters = [self traceMachine].measurementTransmitters;
     @synchronized(measurementTransmitters) {
         for (NRMAMeasurementTransmitter* transmitter in measurementTransmitters) {
             [NRMAMeasurements removeMeasurementConsumer:transmitter];
@@ -398,60 +151,25 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 
 + (void) startTracingWithName:(NSString *)name interactionObject:(id __unsafe_unretained)obj
 {
-    (void)[self startTracingWithName:name interactionObject:obj concurrent:NO];
-}
-
-/// Starts an interaction named `name`, returning its interactionId.
-///
-/// `concurrent` NO reproduces the historical behaviour: any running interaction is completed first,
-/// so exactly one is ever live. YES leaves the others running and adds this one to the registry
-/// alongside them, and binds the calling thread to it so instrumented code that follows on this
-/// thread is attributed here rather than to whichever interaction started most recently.
-///
-/// Returns nil when the agent is shut down or the concurrency ceiling is already reached.
-+ (NSString*) startTracingWithName:(NSString *)name
-                 interactionObject:(id __unsafe_unretained)obj
-                        concurrent:(BOOL)concurrent
-{
     @synchronized(kNRMAStartAndEndTracingLock) {
         // If Agent is shutdown we shouldn't record traces.
         if([NewRelicAgentInternal sharedInstance].isShutdown) {
-            return nil;
-        }
-
-        if (concurrent && [self activeInteractionCount] >= [self maxConcurrentInteractions]) {
-            NRLOG_AGENT_ERROR(@"Refusing to start concurrent interaction \"%@\": %lu are already running (ceiling is %lu). Stop one, or raise +setMaxConcurrentInteractions:.",
-                              name,
-                              (unsigned long)[self activeInteractionCount],
-                              (unsigned long)[self maxConcurrentInteractions]);
-            return nil;
+            return;
         }
 
         NRLOG_AGENT_VERBOSE(@"\"%@\" Activity started", name);
-        NRMATrace* rootTrace = [NRMATraceController startTracing:NO superseding:!concurrent];
-        if (rootTrace == nil) {
-            return nil;
-        }
+        [NRMATraceController startTracing:NO];
         [[[NewRelicAgentInternal sharedInstance] analyticsController] setLastInteraction:name];
-        NRMATraceMachine* traceMach = [self traceMachineForInteractionId:rootTrace.interactionId];
+        NRMATraceMachine* traceMach = [self traceMachine];
         traceMach.activityTrace.name = name;
         traceMach.activityTrace.initiatingObjectIdentifier = [NSString stringWithFormat:@"%p",obj];
-        // Re-publish now that the real name is known; startTracingWithRootTrace: only had the
-        // placeholder root-trace name to work with.
-        [self publishRunningInteractionId:traceMach.activityTrace.interactionId name:name];
         [NRMAInteractionHistoryObjCInterface insertInteraction:name startTime:(long long)(traceMach.activityTrace.startTime)];
-        return traceMach.activityTrace.interactionId;
     }
 }
 
 + (BOOL) isInteractionObject:(id __unsafe_unretained)obj
 {
-    return [self isInteractionObject:obj forInteractionId:[self currentInteractionId]];
-}
-
-+ (BOOL) isInteractionObject:(id __unsafe_unretained)obj forInteractionId:(NSString*)interactionId
-{
-    NRMATraceMachine* traceMach = [self traceMachineForInteractionId:interactionId];
+    NRMATraceMachine* traceMach = [self traceMachine];
     if ([traceMach.activityTrace.initiatingObjectIdentifier isEqualToString:kNRMACustomInteractionIdentifier]) {
         //a special case, only custom activites are set to kNRMACustomInteractionIdentifier
         //and we want to prevent system activities from terminating a custom activity.
@@ -465,11 +183,6 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 // MARK: Bryce says persistentTrace is not used and a relic from the Android agent, no idea what it means.
 + (NRMATrace*) startTracing:(BOOL)persistentTrace
 {
-    return [self startTracing:persistentTrace superseding:YES];
-}
-
-+ (NRMATrace*) startTracing:(BOOL)persistentTrace superseding:(BOOL)superseding
-{
     @synchronized(kNRMAStartAndEndTracingLock) {
 
         // If Agent is shutdown we shouldn't record traces.
@@ -481,11 +194,11 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
         rootTrace.persistent = persistentTrace;
         rootTrace.name = @"UI_Thread";
         rootTrace.entryTimestamp = NRMAMillisecondTimestamp();
-
+        
         NRLOG_AGENT_VERBOSE(@"Started activity with root trace : %@", rootTrace);
-
-        [NRMATraceController startTracingWithRootTrace:rootTrace superseding:superseding];
-
+        
+        [NRMATraceController startTracingWithRootTrace:rootTrace];
+        
         return rootTrace;
     }
 }
@@ -497,11 +210,6 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 //                     cancelRunningTrace:(BOOL)cancel
 + (void) startTracingWithRootTrace:(NRMATrace*)rootTrace
 {
-    [self startTracingWithRootTrace:rootTrace superseding:YES];
-}
-
-+ (void) startTracingWithRootTrace:(NRMATrace*)rootTrace superseding:(BOOL)superseding
-{
     @synchronized(kNRMAStartAndEndTracingLock) {
 
         // If Agent is shutdown we shouldn't record traces.
@@ -509,43 +217,24 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
             return;
         }
 
-        // Superseding is the historical behaviour and stays the default: the new interaction replaces
-        // whatever was running. When it is off the running interactions are left alone and this one
-        // joins them in the registry.
-        if (superseding) {
-            if ([NRMATraceController isTracingActive]) {
-                [NRMATraceController completeActivityTrace];
-            }
-
-            [NRMATraceController cleanup];
+        if ([NRMATraceController isTracingActive]) {
+            [NRMATraceController completeActivityTrace];
         }
 
+        [NRMATraceController cleanup];
+        
         NSString* activityName = rootTrace.name;
         rootTrace.name = @"UI_Thread";
-
-        // Assigned before the machine is built so the id is available to stamp onto rootTrace, which
-        // the thread-local store needs in order to file the root on the right interaction's stack.
-        NSString* interactionId = [[NSUUID UUID] UUIDString];
-        rootTrace.interactionId = interactionId;
 
         NRMATraceMachine* traceMach = [[NRMATraceMachine alloc] initWithRootTrace:rootTrace];
 
         traceMach.activityTrace.name = activityName;
-        // Single choke point for activity-trace creation, so every interaction gets an id here.
-        // The name is still the placeholder at this point; startTracingWithName: re-publishes it.
-        traceMach.activityTrace.interactionId = interactionId;
-        [self publishRunningInteractionId:interactionId name:nil];
 
         rootTrace.traceMachine = traceMach;
-
-        // Registered before the root is filed so that anything the store logs about this interaction
-        // can already resolve its machine.
-        [self registerTraceMachine:traceMach forInteractionId:interactionId];
-
-        // Also binds this interaction as ambient on the calling thread, so instrumented code that
-        // follows here is attributed to it rather than to whichever interaction started last.
         [NRMAThreadLocalStore setThreadRootTrace:rootTrace];
         [traceMach.tracePool addMeasurementConsumer:rootTrace];
+
+        [self setTraceMachine:traceMach];
     }
 }
 
@@ -559,65 +248,8 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     return [self completeActivityTraceWithExitTimestampMillis:timer.endTimeMillis];
 }
 
-// Called only by the trace machine's healthy/unhealthy timers. Separated from the ordinary
-// completion path because the two mean different things about *when* the interaction ended: a timer
-// firing says "nothing has happened for a while", so the interaction ended back at its last
-// instrumented boundary, not now. Ending it at "now" would add the whole timeout to every duration.
-+ (BOOL) completeActivityTraceOnTimeout
-{
-    return [self completeActivityTraceWithExitTimestampMillis:NRMAMillisecondTimestamp()
-                                                endedByTimer:YES];
-}
-
-/// Timeout completion for one specific interaction. The trace machine's timers must use this rather
-/// than +completeActivityTraceOnTimeout: each machine owns its own healthy/unhealthy timers, so with
-/// several interactions live, a timer resolving "the current interaction" would complete a sibling
-/// instead of the machine whose timer actually fired.
-+ (BOOL) completeActivityTraceOnTimeoutForInteractionId:(NSString*)interactionId
-{
-    return [self completeActivityTraceForInteractionId:interactionId
-                              exitTimestampMillis:NRMAMillisecondTimestamp()
-                                     endedByTimer:YES];
-}
 
 + (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds
-{
-    return [self completeActivityTraceWithExitTimestampMillis:exitTimestampMilliseconds
-                                                endedByTimer:NO];
-}
-
-+ (BOOL) completeActivityTraceWithExitTimestampMillis:(double)exitTimestampMilliseconds
-                                         endedByTimer:(BOOL)endedByTimer
-{
-    return [self completeActivityTraceForInteractionId:[self currentInteractionId]
-                              exitTimestampMillis:exitTimestampMilliseconds
-                                     endedByTimer:endedByTimer];
-}
-
-+ (BOOL) completeActivityTraceForInteractionId:(NSString*)interactionId
-{
-    return [self completeActivityTraceForInteractionId:interactionId
-                              exitTimestampMillis:NRMAMillisecondTimestamp()
-                                     endedByTimer:NO];
-}
-
-/// Completes every live interaction. For the points where the app is going away — background and
-/// shutdown — which want everything flushed rather than only whichever interaction the calling thread
-/// happens to resolve to.
-+ (BOOL) completeAllActivityTraces
-{
-    BOOL completedAny = NO;
-    // Snapshot the ids first: completing one mutates the registry, so iterating it live would
-    // enumerate a collection being modified.
-    for (NSString* interactionId in [self activeInteractionIds]) {
-        completedAny |= [self completeActivityTraceForInteractionId:interactionId];
-    }
-    return completedAny;
-}
-
-+ (BOOL) completeActivityTraceForInteractionId:(NSString*)interactionId
-                           exitTimestampMillis:(double)exitTimestampMilliseconds
-                                  endedByTimer:(BOOL)endedByTimer
 {
     @synchronized(kNRMAStartAndEndTracingLock) {
 
@@ -626,14 +258,14 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
             return NO;
         }
 
-        if(![NRMATraceController isTracingActiveForInteractionId:interactionId]) {
+        if(![NRMATraceController isTracingActive]) {
             NRLOG_AGENT_VERBOSE(@"completeTrace called while no trace was running.");
             return NO;
         }
 #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
         @try {
-#endif
-            NRMATraceMachine* traceMach = [self traceMachineForInteractionId:interactionId];
+#endif  
+            NRMATraceMachine* traceMach = [self traceMachine];
 
             [traceMach invalidateTimers]; //invalidate any timers that might be running.
 
@@ -643,23 +275,10 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 
             [traceMach.tracePool removeMeasurementConsumer:activityTrace.rootTrace];
 
-            // The root trace always ends at the real wall-clock exit: it describes the UI_Thread
-            // span, and its exclusive-time arithmetic needs the true boundary. Set before completing
-            // so the trace is fully formed by the time it is queued for harvest below.
-            activityTrace.rootTrace.exitTimestamp = exitTimestampMilliseconds;
-
-            // The interaction's own end time is what becomes interactionDuration. On a timer-driven
-            // completion that is the last instrumented boundary (quiescence); on an explicit stop or
-            // supersession by the next screen it is the real timestamp. Previously this was always
-            // lastUpdated, which is why calling stopCurrentInteraction: after 30 seconds still
-            // reported a sub-second interaction.
-            if (endedByTimer) {
-                [activityTrace complete];
-            } else {
-                [activityTrace completeWithEndTimestampMillis:exitTimestampMilliseconds];
-            }
+            [activityTrace complete];
 
             activityTrace.totalNetworkTimeMillis += activityTrace.rootTrace.networkTimeMillis;
+            activityTrace.rootTrace.exitTimestamp = exitTimestampMilliseconds;
 
             NSNumber* totalTimeSeconds = [NSNumber numberWithDouble:[activityTrace durationInSeconds]];
 
@@ -674,22 +293,14 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
             [NRMATaskQueue queue:activityTrace];
 
             [[NewRelicAgentInternal sharedInstance].analyticsController  addInteractionEvent:activityTrace.name
-                                      interactionDuration:activityTrace.endTime - activityTrace.startTime
-                                               attributes:[self correlationAttributesForActivityTrace:activityTrace]];
+                                      interactionDuration:activityTrace.endTime - activityTrace.startTime];
 
 #ifndef  DISABLE_NR_EXCEPTION_WRAPPER
         } @catch (NSException* exception) {
             [NRMAExceptionHandler logException:exception class:NSStringFromClass([self class]) selector:NSStringFromSelector(_cmd)];
         }
 #endif
-        // Outside the @try so it runs even if emitting the event threw: this interaction is over and
-        // no later MobileView event may carry its id.
-        //
-        // Cleared only if this interaction is the one currently published. With concurrent
-        // interactions an unconditional clear would wipe a sibling's identity off every MobileView
-        // event emitted after this one happened to finish first.
-        [self clearPublishedInteractionIdIfCurrent:interactionId];
-        [[self class] cleanupInteractionId:interactionId];
+        [[self class] cleanup];
     }
 
     return YES;
@@ -746,9 +357,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     // has already queued for harvest and torn down, corrupting the heap. isTracingActive is
     // re-checked inside the lock to close the time-of-check/time-of-use window.
     @synchronized(kNRMAStartAndEndTracingLock) {
-        // Scoped to the parent's interaction, not "is anything running": a segment whose own
-        // interaction has completed must be refused even while a sibling interaction is still live.
-        if (![NRMATraceController isTracingActiveForSegmentParent:parentTrace]) {
+        if (![NRMATraceController isTracingActive]) {
             return NO;
         }
         NRMATrace* childTrace = [NRMATraceController registerNewTrace:newTraceName withParent:parentTrace];
@@ -790,8 +399,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     // a torn-down, already-harvested activity trace (heap corruption).
     @synchronized(kNRMAStartAndEndTracingLock) {
 
-    // Scoped to the parent's interaction — see +enterMethod:name:.
-    if (![NRMATraceController isTracingActiveForSegmentParent:parentTrace]) {
+    if (![NRMATraceController isTracingActive]) {
         return nil;
     }
 
@@ -838,74 +446,10 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     } // @synchronized(kNRMAStartAndEndTracingLock)
 }
 
-+ (void) recordCompletedSegmentWithObjectNamed:(NSString*)objectName
-                                   methodNamed:(NSString*)methodName
-                          entryTimestampMillis:(double)entryTimestampMillis
-                           exitTimestampMillis:(double)exitTimestampMillis
-                                 traceCategory:(enum NRTraceType)category
-{
-    if ([NewRelicAgentInternal sharedInstance].isShutdown) {
-        return;
-    }
-    if (![NRMAFlags shouldEnableInteractionTracing]) {
-        return;
-    }
-    if (!objectName.length || !methodName.length) {
-        return;
-    }
-
-    NSString* classLabel  = [NewRelicInternalUtils cleanseStringForCollector:objectName];
-    NSString* methodLabel = [NewRelicInternalUtils cleanseStringForCollector:methodName];
-
-    // The same lock the rest of the trace lifecycle takes (see completeTrace:), held across
-    // register/push/complete so a concurrent teardown can't free the activity trace underneath
-    // a half-recorded segment. @synchronized is recursive, so completeTrace: retaking it is fine.
-    @synchronized(kNRMAStartAndEndTracingLock) {
-        if (![NRMATraceController isTracingActive]) {
-            return;
-        }
-        NRMATrace* parentTrace = [NRMATraceController currentTrace];
-        if (parentTrace == nil) {
-            return;
-        }
-
-        // Registered with no parent, and marked ignoreNode, so the segment never joins the trace
-        // tree: its span was measured after the fact and overlaps the instrumented methods it
-        // covers, so as a child of the frame it is recorded from it would subtract its whole
-        // duration from that frame's exclusive time and start before its parent began. The row the
-        // caller wants comes from the metric completeTrace: emits, not from a place in the tree.
-        //
-        // registerNewTrace: still adds the node to the activity trace's missing-children set, so
-        // from here on every path has to reach completeTrace: — otherwise the interaction is left
-        // waiting on a child that never finishes.
-        NRMATrace* segment = [NRMATraceController registerNewTrace:[NSString stringWithFormat:@"%@#%@", classLabel, methodLabel]
-                                                       withParent:nil];
-        if (segment == nil) {
-            return;
-        }
-        segment.ignoreNode  = YES;
-        segment.category    = category;
-        segment.classLabel  = classLabel;
-        segment.methodLabel = methodLabel;
-
-        // Pushing stamps entry with *now*, which the caller's timestamp then replaces — the same
-        // order enterMethod:...withTimer: uses, because the push validates a set entryTimestamp.
-        [NRMATraceController newTraceSetup:segment parentTrace:parentTrace];
-        segment.entryTimestamp = entryTimestampMillis;
-
-        // Pops the segment straight back off, restoring parentTrace as the thread's current trace.
-        [NRMATraceController completeTrace:segment withExitTimestampMillis:@(exitTimestampMillis)];
-    }
-}
-
 + (NRMATrace*) registerNewTrace:(NSString *)name
                    withParent:(NRMATrace*) parentTrace
 {
-    // Follow the parent's machine when there is one. Resolving through the thread's ambient
-    // interaction instead would register the child on a different interaction than its parent whenever
-    // a segment is entered under a parent belonging to another interaction, which splits one logical
-    // tree across two activity traces.
-    NRMATraceMachine* localTraceMachine = parentTrace.traceMachine ?: [self traceMachine];
+    NRMATraceMachine* localTraceMachine = [self traceMachine];
     @synchronized(localTraceMachine) {
         if (localTraceMachine == nil) {
 
@@ -955,17 +499,6 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
           withExitTimestampMillis:[NSNumber numberWithDouble:exitTimestampMilliseconds]];
 }
 
-/// Pops a known segment rather than "whatever is on top of this thread's ambient stack".
-///
-/// +exitMethod has to guess, and with concurrent interactions the ambient stack may belong to a
-/// sibling — so a caller holding the trace it entered (the method profiler does) must say which one
-/// it means, or the wrong segment gets popped and the right one is left as a permanent missing child.
-+ (void) exitMethodForTrace:(NRMATrace*)trace
-{
-    [NRMATraceController completeTrace:trace
-              withExitTimestampMillis:[NSNumber numberWithDouble:NRMAMillisecondTimestamp()]];
-}
-
 + (void) completeTrace:(NRMATrace*)trace withExitTimestampMillis:(NSNumber*)exitTimestampMilliseconds
 {
     if (trace == nil) {
@@ -979,13 +512,9 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     // The validity check below MUST run inside the lock to close the time-of-check/time-of-use window.
     @synchronized(kNRMAStartAndEndTracingLock) {
 
-    // Derived from the trace itself rather than from the thread's ambient interaction. A segment
-    // always completes against the machine that created it — with concurrent interactions the ambient
-    // one may well be a sibling, and the old identity check (localTraceMachine != trace.traceMachine)
-    // would then reject a perfectly valid completion and leave the segment on the stack forever.
-    NRMATraceMachine *localTraceMachine = trace.traceMachine;
+    NRMATraceMachine *localTraceMachine = [self traceMachine];
 
-    if (localTraceMachine == nil || ![NRMATraceController isTracingActiveForInteractionId:trace.interactionId]) {
+    if (localTraceMachine == nil || ![NRMATraceController isTracingActive] || localTraceMachine != trace.traceMachine) {
         return;
     }
 
@@ -1074,34 +603,21 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 
 + (NRMATrace*) getCurrentTrace
 {
-    return [self getCurrentTraceForInteractionId:[self currentInteractionId]];
-}
-
-+ (NRMATrace*) getCurrentTraceForInteractionId:(NSString*)interactionId
-{
-    // The open frame on this thread for that interaction, or — when this thread has never entered a
-    // segment of it — the interaction's root. This fallback is what lets work on a thread the
-    // interaction has not touched still attach to it.
-    NRMATrace *theTrace = [NRMAThreadLocalStore threadLocalTraceForInteractionId:interactionId];
+    NRMATrace *theTrace = [NRMAThreadLocalStore threadLocalTrace];
 
     if (theTrace) {
         return theTrace;
     } else {
-        return [self traceMachineForInteractionId:interactionId].activityTrace.rootTrace;
+        return [self traceMachine].activityTrace.rootTrace;
     }
 }
 
 + (NRMATrace*) currentTrace
 {
-    return [self currentTraceForInteractionId:[self currentInteractionId]];
-}
-
-+ (NRMATrace*) currentTraceForInteractionId:(NSString*)interactionId
-{
-    if (![NRMATraceController isTracingActiveForInteractionId:interactionId]) {
+    if (![NRMATraceController isTracingActive]) {
         return nil;
     }
-    return [NRMATraceController getCurrentTraceForInteractionId:interactionId];
+    return [NRMATraceController getCurrentTrace];
 }
 
 + (NRMATrace*) threadLocalTrace
@@ -1115,28 +631,7 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
 }
 + (BOOL) isTracingActive
 {
-    // "Is any interaction running", which is what every existing caller means by it. Callers that
-    // need to know about one specific interaction use +isTracingActiveForInteractionId:.
-    return [self activeInteractionCount] > 0;
-}
-
-+ (BOOL) isTracingActiveForInteractionId:(NSString*)interactionId
-{
-    return [self traceMachineForInteractionId:interactionId] != nil;
-}
-
-/// Whether the interaction a prospective segment would belong to is still running.
-///
-/// A parent carries its interaction id, so it answers the question exactly. Only when the parent has
-/// no id — a trace built before its interaction existed — does this fall back to "is anything
-/// running", which is the pre-registry behaviour.
-+ (BOOL) isTracingActiveForSegmentParent:(NRMATrace*)parentTrace
-{
-    NSString* interactionId = parentTrace.interactionId;
-    if (interactionId.length == 0) {
-        return [self isTracingActive];
-    }
-    return [self isTracingActiveForInteractionId:interactionId];
+    return [self traceMachine] != nil;
 }
 
 // Forwarders. The trace-collection gate lives in NRMAHarvestController, which owns the harvest

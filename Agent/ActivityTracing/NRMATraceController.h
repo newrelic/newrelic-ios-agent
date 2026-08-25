@@ -25,18 +25,6 @@ extern NSString* const kNRMACustomInteractionIdentifier;
 + (NSTimeInterval) healthyTraceTimeout;
 + (NSTimeInterval) unhealthyTraceTimeout;
 
-/// Seconds an interaction may go with no instrumented method entry/exit before the trace machine
-/// completes it. Raise it to let interactions span a screen's dwell time; lower it (0.5 restores the
-/// historical value) to make an interaction describe only the screen-load burst.
-///
-/// Applies to the next interaction to start — an in-flight interaction keeps the timeout it captured
-/// at creation (see -[NRMATraceMachine initWithRootTrace:]). Non-positive values are ignored.
-+ (void) setHealthyTraceTimeout:(NSTimeInterval)healthyTraceTimeout;
-
-/// Hard ceiling, in seconds, on an interaction's lifetime. Backstop for an interaction that is never
-/// explicitly stopped. Same next-interaction-only semantics as +setHealthyTraceTimeout:.
-+ (void) setUnhealthyTraceTimeout:(NSTimeInterval)unhealthyTraceTimeout;
-
 
 + (void) exitCustomMethodWithTimer:(NRTimer*)timer;
 
@@ -44,48 +32,16 @@ extern NSString* const kNRMACustomInteractionIdentifier;
 
 + (void) startTracingWithRootTrace:(NRMATrace*)rootTrace;
 
-/// `superseding` YES completes any running interaction first, which is the historical behaviour and
-/// what the plain form above does. NO leaves running interactions alone and adds this one alongside
-/// them in the registry.
-+ (void) startTracingWithRootTrace:(NRMATrace*)rootTrace superseding:(BOOL)superseding;
-
 + (NRMATrace*) startTracing:(BOOL)persistentTrace;
-
-+ (NRMATrace*) startTracing:(BOOL)persistentTrace superseding:(BOOL)superseding;
 
 + (NRMATrace*) registerNewTrace:(NSString *)name
                    withParent:(NRMATrace*) parentTrace;
 
 + (BOOL) isInteractionObject:(id __unsafe_unretained)obj;
 
-+ (BOOL) isInteractionObject:(id __unsafe_unretained)obj forInteractionId:(NSString*)interactionId;
-
 + (void) startTracingWithName:(NSString *)name interactionObject:(id __unsafe_unretained)obj;
 
-/// Starts an interaction and returns its interactionId, or nil if it could not start.
-///
-/// `concurrent` NO is identical to +startTracingWithName:interactionObject: — the running interaction
-/// is completed first, so exactly one is ever live. YES leaves the others running, adds this one to
-/// the registry, and binds the calling thread to it so subsequent instrumented code on this thread is
-/// attributed here. Refused (nil) once +maxConcurrentInteractions are already live.
-+ (NSString*) startTracingWithName:(NSString *)name
-                 interactionObject:(id __unsafe_unretained)obj
-                        concurrent:(BOOL)concurrent;
-
 + (BOOL) completeActivityTrace;
-
-/// Completes one specific interaction, leaving any others running.
-+ (BOOL) completeActivityTraceForInteractionId:(NSString*)interactionId;
-
-/// Quiescence completion for one specific interaction. For a trace machine's own timers — see
-/// +completeActivityTraceOnTimeout.
-+ (BOOL) completeActivityTraceOnTimeoutForInteractionId:(NSString*)interactionId;
-
-/// Completes the running interaction as a *quiescence* event: its end time is its last instrumented
-/// method boundary rather than now, so the timeout that triggered completion is not counted in the
-/// reported duration. For the trace machine's healthy/unhealthy timers only — every other caller
-/// wants +completeActivityTrace.
-+ (BOOL) completeActivityTraceOnTimeout;
 
 + (NRMATrace*) enterMethod:(SEL)selector
            fromObjectNamed:(NSString*)objName
@@ -101,89 +57,16 @@ extern NSString* const kNRMACustomInteractionIdentifier;
 + (BOOL) enterMethod:(NRMATrace*)parentTrace
                 name:(NSString*)newTraceName;
 
-/// Records an already-finished segment on the interaction covering this thread, using timestamps
-/// the caller captured earlier. For work whose boundaries are only known after the fact — a view's
-/// load span, which straddles two runloop turns and so cannot hold the thread's trace stack open
-/// between them the way an instrumented method does.
-///
-/// A no-op when no interaction is running: a segment describes work *inside* an interaction and
-/// must never start one of its own.
-///
-/// The segment emits its metrics but is deliberately kept out of the harvested trace tree: its span
-/// overlaps the instrumented methods it covers, so a node would subtract its whole duration from
-/// the exclusive time of the frame it was recorded from.
-///
-/// `objectName` and `methodName` become the segment's `Method/<objectName>/<methodName>` metric,
-/// which is the row the interaction's breakdown shows. Both are cleansed for the collector, so
-/// host-app text is safe to pass. Strings rather than a SEL deliberately: a selector built from a
-/// dynamic view name would be interned in the runtime's selector table for the life of the process.
-+ (void) recordCompletedSegmentWithObjectNamed:(NSString*)objectName
-                                   methodNamed:(NSString*)methodName
-                          entryTimestampMillis:(double)entryTimestampMillis
-                           exitTimestampMillis:(double)exitTimestampMillis
-                                 traceCategory:(enum NRTraceType)category;
-
 + (void) exitMethod;
-
-/// Pops a specific segment instead of the top of this thread's ambient stack. Callers that kept the
-/// trace they entered should prefer this: with concurrent interactions the ambient stack may belong
-/// to a different interaction than the segment being exited.
-+ (void) exitMethodForTrace:(NRMATrace*)trace;
-
-/// Completes every live interaction. For app background and shutdown, which want everything flushed
-/// rather than only the interaction the calling thread resolves to.
-+ (BOOL) completeAllActivityTraces;
 
 + (NRMATrace*) currentTrace;
 
-/// The open frame on this thread for `interactionId`, or that interaction's root trace when this
-/// thread has not entered any of its segments. nil if the interaction is not running.
-+ (NRMATrace*) currentTraceForInteractionId:(NSString*)interactionId;
-
 + (NSString*) currentScope;
 
-/// YES when *any* interaction is running, which is what every pre-registry caller means by it.
 + (BOOL) isTracingActive;
-
-+ (BOOL) isTracingActiveForInteractionId:(NSString*)interactionId;
-
-#pragma mark - Concurrent interactions
-
-/// The interaction instrumented code on this thread is inside: the thread's explicit binding if it
-/// has one and that interaction is still live, otherwise the most recently started interaction.
-+ (NSString*) currentInteractionId;
-
-/// ids of every interaction currently in the registry, in no particular order.
-+ (NSArray<NSString*>*) activeInteractionIds;
-
-+ (NSUInteger) activeInteractionCount;
-
-/// Ceiling on simultaneously live interactions; defaults to 16. Each one holds an activity trace, a
-/// measurement pool and three measurement transmitters, and each is harvested separately, so this
-/// bounds what a host that never stops its interactions can consume. A concurrent start past the
-/// ceiling is refused rather than superseding something. Zero is ignored.
-+ (NSUInteger) maxConcurrentInteractions;
-+ (void) setMaxConcurrentInteractions:(NSUInteger)maxConcurrentInteractions;
-
-/// Binds this thread to `interactionId` so instrumented code here is attributed to it rather than to
-/// the most recently started interaction. Pass nil to unbind. Threads are not bound automatically
-/// across dispatch boundaries — a block that runs on another queue resolves to the most recent
-/// interaction unless it binds itself.
-+ (void) bindCurrentThreadToInteractionId:(NSString*)interactionId;
-
-/// This thread's explicit binding, or nil. Unlike +currentInteractionId this does not fall back.
-+ (NSString*) currentThreadInteractionId;
 
 + (BOOL) shouldCollectTraces;
 
-/// Tears down the interaction this thread resolves to.
-+ (void) cleanup;
-
-/// Tears down one specific interaction, leaving others running.
-+ (void) cleanupInteractionId:(NSString*)interactionId;
-
-/// Tears down every live interaction and the whole thread-local store. For agent shutdown and test
-/// teardown; ordinary completion uses +cleanupInteractionId:.
-+ (void) cleanupAll;
++ (void) cleanup; 
 
 @end

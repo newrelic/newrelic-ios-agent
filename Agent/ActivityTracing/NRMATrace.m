@@ -8,9 +8,6 @@
 
 #import "NRMATrace.h"
 #import "NRMAMeasurementEngine.h"
-// NRMATrace.h only forward-declares NRMATraceMachine; the initializer below reads through
-// traceMachine.activityTrace, which needs the full declaration.
-#import "NRMATraceMachine.h"
 #import "NRMATraceController.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAHTTPTransactionMeasurement.h"
@@ -35,10 +32,6 @@
     if (self) {
         self.traceMachine = traceMachine;
         self.name = name;
-        // Latch the owning interaction's id now, while the machine is still alive. See the property
-        // comment: traceMachine is weak, so this is the only durable record of which interaction's
-        // segment stack this trace was pushed onto.
-        self.interactionId = traceMachine.activityTrace.interactionId;
     }
     return self;
 }

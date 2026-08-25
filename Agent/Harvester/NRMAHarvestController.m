@@ -323,20 +323,7 @@ static NSObject* NRMAHarvestControllerAccessorLock;
         return YES;
 
     // todo: use fine grained AT capture rules later.
-    int currentCount = harvestData.activityTraces.count;
-    int maxCount = configuration.at_capture.maxTotalTraceCount;
-    BOOL shouldCollect = currentCount < maxCount;
-
-    if (!shouldCollect) {
-        // Log the counts: without them "max traces collected" is indistinguishable between a normal
-        // full buffer (1/1, cleared by the next successful harvest) and a misconfigured cap of 0/0,
-        // which drops every activity trace for the whole session. Note the buffer is only cleared on
-        // a successful harvest, so a failing or rate-limited harvest keeps it full indefinitely.
-        NRLOG_AGENT_VERBOSE(@"Activity trace buffer full: %d/%d retained. Cleared on the next successful harvest.",
-                            currentCount, maxCount);
-    }
-
-    return shouldCollect;
+    return harvestData.activityTraces.count < configuration.at_capture.maxTotalTraceCount;
 }
 
 + (BOOL) shouldNotCollectTraces

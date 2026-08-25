@@ -17,7 +17,6 @@
 #import "NRLogger.h"
 #import "NRMAMethodSwizzling.h"
 #import "NRMAViewContext.h"
-#import "NRMATraceController.h"
 #import "NRMAFlags.h"
 
 // Associated-object keys (pointer address acts as unique key)
@@ -27,10 +26,6 @@ static const char kNRViewInstanceIdKey;
 static const char kNRHasAppearedBeforeKey;
 
 static NSString * const kNRMobileViewEventType = @"MobileView";
-
-// The class half of a load segment's `Method/MobileView/<viewName>` metric name: one stable prefix
-// for every tracked screen, so the rows group together wherever metric names are matched.
-static NSString * const kNRMobileViewSegmentClassLabel = @"MobileView";
 
 // Attribute keys matching the PM spec
 static NSString * const kNRAttr_viewClass      = @"viewClass";
@@ -255,12 +250,8 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
                                             appearTime:appearTime
                                               platform:@"UIKit"];
 
-    // Put the screen's load span in the covering interaction's breakdown. Read back rather than
-    // passed down because viewDidLoad may never have run for this appearance.
+    // Read back rather than passed down because viewDidLoad may never have run for this appearance.
     NSNumber *loadTimestamp = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
-    [NRMAMobileViewTracker recordLoadSegmentForViewNamed:viewName
-                                               loadTime:loadTimestamp ? loadTimestamp.doubleValue : 0
-                                             appearTime:appearTime];
 
     NSString *viewClass = NRMA_DemangledName([self class], YES);
 
@@ -269,9 +260,6 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
         [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
     // Referrer for this appearance (previousView / previousViewInstanceId).
     [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] previousViewAttributes]];
-    // Identity of the interaction (activity trace) covering this appearance, so the screen can be
-    // joined to its code-level trace. Absent when no interaction is running.
-    [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] interactionAttributes]];
     // Reserved keys win over caller-supplied ones to keep the event schema stable.
     [attrs addEntriesFromDictionary:@{
         kNRAttr_viewClass:      viewClass,
@@ -282,11 +270,8 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
         @"agentName":           @"iOS",
     }];
     // loadTime belongs here and not only on the disappear event, which is where this producer used
-    // to report it alone. The appear event is the one that also carries interactionId — by
-    // viewDidDisappear: the covering interaction has normally completed and NRMAViewContext has
-    // cleared it — so this is the only event from which a load cost can be joined to the trace that
-    // measured it. It also brings the UIKit schema in line with the SwiftUI producer, which has
-    // always put loadTime on appear.
+    // to report it alone. It also brings the UIKit schema in line with the SwiftUI producer, which
+    // has always put loadTime on appear.
     //
     // Omitted rather than zeroed when viewDidLoad was never observed for this appearance (agent
     // started mid-session), so aggregates are not dragged toward 0 by a placeholder.
@@ -296,7 +281,7 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     }
 
     // Both halves of a view's lifetime are recorded, and they carry different things: this one
-    // loadTime and interactionId, the disappear event timeVisible.
+    // loadTime, the disappear event timeVisible.
     [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 }
 
@@ -335,9 +320,6 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     NSDictionary<NSString *, id> *custom = NRMA_AttributesForController(self);
     NSMutableDictionary<NSString *, id> *attrs =
         [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
-    // Usually absent here: the load interaction has normally completed by the time the view goes
-    // away. Present when an interaction is still running (or a new one has started).
-    [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] interactionAttributes]];
     [attrs addEntriesFromDictionary:@{
         kNRAttr_viewClass:      viewClass,
         kNRAttr_viewName:       viewName,
@@ -373,11 +355,6 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
 
 #pragma mark - NRMAMobileViewTracker
 
-// CFAbsoluteTime (seconds since 2001) → the milliseconds-since-epoch domain trace timestamps use.
-NS_INLINE double NRMA_EpochMillisFromAbsoluteTime(CFAbsoluteTime absoluteTime) {
-    return (absoluteTime + kCFAbsoluteTimeIntervalSince1970) * 1000;
-}
-
 @implementation NRMAMobileViewTracker
 
 + (instancetype)sharedInstance {
@@ -387,30 +364,6 @@ NS_INLINE double NRMA_EpochMillisFromAbsoluteTime(CFAbsoluteTime absoluteTime) {
         instance = [[NRMAMobileViewTracker alloc] init];
     });
     return instance;
-}
-
-+ (void)recordLoadSegmentForViewNamed:(NSString *)viewName
-                             loadTime:(CFAbsoluteTime)loadTime
-                           appearTime:(CFAbsoluteTime)appearTime {
-    // The feature flag has to hold here too, not just at swizzle-install time: the SwiftUI
-    // producer is compiled into the host app's view tree and reaches this method directly.
-    if (![NRMAFlags shouldEnableAutomaticMobileViews]) {
-        return;
-    }
-    if (viewName.length == 0) {
-        return;
-    }
-    // loadTime of 0 is "never observed", so the span is unknown rather than instantaneous —
-    // recording it would date the segment's start to 2001. A backwards span is equally unusable.
-    if (loadTime <= 0 || appearTime <= loadTime) {
-        return;
-    }
-
-    [NRMATraceController recordCompletedSegmentWithObjectNamed:kNRMobileViewSegmentClassLabel
-                                                  methodNamed:viewName
-                                         entryTimestampMillis:NRMA_EpochMillisFromAbsoluteTime(loadTime)
-                                          exitTimestampMillis:NRMA_EpochMillisFromAbsoluteTime(appearTime)
-                                                traceCategory:NRTraceTypeMobileView];
 }
 
 - (void)start {

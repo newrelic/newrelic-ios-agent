@@ -225,11 +225,7 @@ static NSString* __NRMAInitializationMutex = @"initializationMutex";
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/ActivityTracesDropped"
                                                         value:@1
                                                         scope:@""]];
-        // Counts are logged by +[NRMAHarvestController shouldCollectTraces]. Naming the trace here
-        // identifies which interaction lost its code-level payload; the interaction *event* itself is
-        // unaffected, it is emitted independently of this gate in -completeActivityTrace.
-        NRLOG_AGENT_VERBOSE(@"Maximum number of Activity Traces collected. Skipping code-level payload for \"%@\".",
-                            activityTrace.name);
+        NRLOG_AGENT_VERBOSE(@"Maximum number of Activity Traces collected. Skipping");
         return;
     }
 

@@ -1313,13 +1313,8 @@ void NRMA__endMethod(id self, SEL selector, BOOL isTargetColor, NRMATrace* trace
     #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     @try {
     #endif
-        // Guarded on this trace's *own* interaction still being live, and popping this trace by name.
-        // The previous form compared against the thread's current trace machine, which with concurrent
-        // interactions can legitimately be a sibling — the comparison would fail, exitMethod would be
-        // skipped, and this segment would stay a missing child that blocks its interaction from ever
-        // completing. Popping by trace also avoids exiting a sibling's frame off the ambient stack.
-        if (trace != nil && [NRMATraceController isTracingActiveForInteractionId:trace.interactionId]) {
-            [NRMATraceController exitMethodForTrace:trace];
+        if (trace != nil && [NRMATraceController isTracingActive] && trace.traceMachine == [NRMATraceController currentTrace].traceMachine) {
+            [NRMATraceController exitMethod];
         }
     #ifndef  DISABLE_NRMA_EXCEPTION_WRAPPER
     } @catch (NSException* exception) {

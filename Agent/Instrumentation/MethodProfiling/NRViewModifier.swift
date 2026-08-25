@@ -83,9 +83,6 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
     let viewClass: String
     let customAttributes: [String: Any]?
     let ignored: Bool
-    /// Opt-in: also open an interaction trace named after this view, so a SwiftUI screen (which has
-    /// no UIViewController for the method profiler to hook) gets code-level tracing to correlate to.
-    let startsInteraction: Bool
 
     @State private var appearTime: Date?
     @State private var instanceId: String?
@@ -106,25 +103,8 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 appearTime = now
                 instanceId = id
 
-                // Order matters, and it is the opposite of what completion-time binding wanted: the
-                // interaction has to open *before* this view becomes current, so that the transition
-                // below is the one that latches the interaction to this screen. (NRMAViewContext
-                // binds an interaction to the first view that becomes current after it starts, which
-                // is also how the UIKit path works — viewDidLoad opens the interaction, viewDidAppear
-                // makes the screen current.) Opening it here also lets the MobileView event below
-                // carry the interactionId.
-                //
-                // Deliberately not stopped in onDisappear: in SwiftUI the incoming screen's onAppear
-                // fires before the outgoing screen's onDisappear, so stopping there would end the
-                // interaction after the next screen had already become current. The interaction
-                // represents this screen and is ended by the trace machine or by supersession.
-                if startsInteraction {
-                    NewRelic.startInteraction(withName: viewName)
-                }
-
                 // Make this view current in the shared context so it becomes the referrer for the
-                // next view and for breadcrumbs recorded while it is visible — and so it is latched
-                // as the view the interaction opened above describes.
+                // next view and for breadcrumbs recorded while it is visible.
                 NRMAViewContext.sharedInstance().transition(
                     toView: viewName,
                     instanceId: id,
@@ -136,20 +116,9 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                     modifierCreatedAt.timeIntervalSinceReferenceDate,
                     and: now.timeIntervalSinceReferenceDate)
 
-                // The same span as a segment on the interaction opened above, which puts this
-                // screen in that interaction's breakdown as MobileView/<viewName>. A SwiftUI view
-                // has no UIViewController for the method profiler to hook, so without this the
-                // interaction has no row naming the screen it belongs to.
-                NRMAMobileViewTracker.recordLoadSegment(forViewNamed: viewName,
-                                                       loadTime: modifierCreatedAt.timeIntervalSinceReferenceDate,
-                                                       appearTime: now.timeIntervalSinceReferenceDate)
-
                 var attrs: [String: Any] = customAttributes ?? [:]
                 // Referrer for this appearance (previousView / previousViewInstanceId).
                 attrs.merge(NRMAViewContext.sharedInstance().previousViewAttributes()) { _, new in new }
-                // Identity of the interaction covering this appearance, for the join to its
-                // code-level trace. Absent when no interaction is running.
-                attrs.merge(NRMAViewContext.sharedInstance().interactionAttributes()) { _, new in new }
                 // Reserved keys overwrite any caller-supplied values to keep the event schema stable.
                 attrs["viewClass"]      = viewClass
                 attrs["viewName"]       = viewName
@@ -160,9 +129,8 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 attrs["uiPlatform"]     = "SwiftUI"
                 attrs["agentName"]      = "iOS"
                 // Recorded on both appear and disappear, carrying different things. This one is
-                // the only event that can hold loadTime (measured above) and interactionId: the
-                // interaction opened on appear has normally completed by onDisappear, so the
-                // disappear event carries timeVisible instead.
+                // the only event that can hold loadTime (measured above); the disappear event
+                // carries timeVisible instead.
                 NewRelic.recordCustomEvent("MobileView", attributes: attrs)
             }
             .onDisappear {
@@ -179,8 +147,6 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                     and: disappearTime.timeIntervalSinceReferenceDate)
 
                 var attrs: [String: Any] = customAttributes ?? [:]
-                // Usually absent: the interaction opened on appear has normally completed by now.
-                attrs.merge(NRMAViewContext.sharedInstance().interactionAttributes()) { _, new in new }
                 attrs["viewClass"]      = viewClass
                 attrs["viewName"]       = viewName
                 attrs["viewInstanceId"] = id
@@ -214,28 +180,11 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
 ///     for this view. Reserved keys (viewClass, viewName, viewInstanceId, restarted,
 ///     loadTime, timeVisible, appeared, uiPlatform, agentName) are not overridden.
 ///   - ignored: When true, no MobileView events are emitted for this view. Default false.
-///   - startsInteraction: When true, also opens an interaction trace named after this view so the
-///     screen gets code-level (method / network) tracing that its MobileView events can be joined
-///     to via `interactionId`. Default false.
-///
-///     A pure SwiftUI screen has no UIViewController, so the method profiler never starts an
-///     interaction for it and there is otherwise nothing to correlate. The interaction is not
-///     stopped when the view disappears; it ends on the trace machine's quiescence timeout, on
-///     supersession by the next interaction, or at the hard ceiling — the same as a UIKit
-///     auto-interaction. With the default 30s quiescence timeout that means its duration
-///     approximates how long the screen was in use, not only how long it took to load. Tune via
-///     `+[NRMATraceController setHealthyTraceTimeout:]`.
-///
-///     Two caveats. Only one interaction trace can be active at a time, so enabling this on many
-///     rapidly-appearing views will cancel and re-open traces. And because it routes through
-///     `startInteractionWithName:`, the trace is marked as a custom activity, which stops UIKit
-///     auto-interactions from cancelling it while it is open.
 @available(iOS 13, tvOS 13, *)
 public extension SwiftUI.View {
     func NRMobileView(name: String? = nil,
                       attributes: [String: Any]? = nil,
-                      ignored: Bool = false,
-                      startsInteraction: Bool = false) -> some View {
+                      ignored: Bool = false) -> some View {
         // String(reflecting:) produces a noisy generic modifier stack when views are chained
         // (e.g. "SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<...>>"), so we use
         // String(describing:) for a clean simple name, or the caller-supplied name if given.
@@ -245,8 +194,7 @@ public extension SwiftUI.View {
             viewName:          resolved,
             viewClass:         resolved,
             customAttributes:  attributes,
-            ignored:           ignored,
-            startsInteraction: startsInteraction
+            ignored:           ignored
         ))
     }
     
