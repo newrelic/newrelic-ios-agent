@@ -10,6 +10,7 @@
 
 #import "NRMACustomEvent.h"
 #import "BlockAttributeValidator.h"
+#import "NRMAAttributeValidator.h"
 
 @interface TestCustomEvents : XCTestCase
 
@@ -203,10 +204,10 @@
     NSTimeInterval timestamp = 10;
     unsigned long long elapsedTime = 50;
     NSString *eventType = @"New Event";
-    
+
     NSString *attributeName = @"String Attribute";
     NSString *stringAttributeValue = @"Go Pack Go";
-    
+
     BlockAttributeValidator *badNameValidator = [[BlockAttributeValidator alloc] initWithNameValidator:^BOOL(NSString *) {
         return YES;
     } valueValidator:^BOOL(id) {
@@ -214,15 +215,15 @@
     } andEventTypeValidator:^BOOL(NSString *) {
         return YES;
     }];
-    
-    
+
+
     // When
     NRMACustomEvent *sut = [[NRMACustomEvent alloc] initWithEventType:eventType
                                                             timestamp:timestamp
                                           sessionElapsedTimeInSeconds:elapsedTime
                                                withAttributeValidator:badNameValidator];
     [sut addAttribute:attributeName value:stringAttributeValue];
-    
+
     // Then
     NSDictionary *event = [sut JSONObject];
     XCTAssertEqual([event[@"timestamp"] doubleValue], timestamp);
@@ -230,6 +231,36 @@
     XCTAssertEqual(event[@"eventType"], @"New Event");
 //    XCTAssertTrue([event[attributeName] isEqualToString:stringAttributeValue]);
     XCTAssertNil(event[attributeName]);
+}
+
+- (void)testAddArrayAttributePreventsAdding {
+    // Given
+    NRMAAttributeValidator *realValidator = [[NRMAAttributeValidator alloc] init];
+    NRMACustomEvent *sut = [[NRMACustomEvent alloc] initWithEventType:@"TestEvent"
+                                                           timestamp:10
+                                         sessionElapsedTimeInSeconds:50
+                                              withAttributeValidator:realValidator];
+    // When
+    BOOL result = [sut addAttribute:@"arrayAttr" value:@[@"one", @"two"]];
+
+    // Then
+    XCTAssertFalse(result, @"Should reject NSArray as an event attribute value");
+    XCTAssertNil([sut JSONObject][@"arrayAttr"]);
+}
+
+- (void)testAddDictionaryAttributePreventsAdding {
+    // Given
+    NRMAAttributeValidator *realValidator = [[NRMAAttributeValidator alloc] init];
+    NRMACustomEvent *sut = [[NRMACustomEvent alloc] initWithEventType:@"TestEvent"
+                                                           timestamp:10
+                                         sessionElapsedTimeInSeconds:50
+                                              withAttributeValidator:realValidator];
+    // When
+    BOOL result = [sut addAttribute:@"dictAttr" value:@{@"key": @"value"}];
+
+    // Then
+    XCTAssertFalse(result, @"Should reject NSDictionary as an event attribute value");
+    XCTAssertNil([sut JSONObject][@"dictAttr"]);
 }
 
 @end

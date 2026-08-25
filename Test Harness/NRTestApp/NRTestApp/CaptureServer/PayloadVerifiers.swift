@@ -24,25 +24,37 @@ private func h(_ headers: [String: String], _ name: String) -> String? {
     headers[name.lowercased()]
 }
 
+/// Returns a detail string for the first event in `items` that fails `test`, or nil when all pass.
+/// Reports the event's `eventType` and the raw value of `key` so a failing check points at
+/// the specific item rather than just collapsing to false.
+private func firstFailing(_ items: [[String: Any]], key: String, test: (Any?) -> Bool) -> String? {
+    guard let bad = items.first(where: { !test($0[key]) }) else { return nil }
+    let evt = (bad["eventType"] as? String) ?? "unknown"
+    if let val = bad[key] { return "\(key)=\(val) in \(evt)" }
+    return "\(key) missing in \(evt)"
+}
+
 // Session attributes required by both data.md and jserror_data.md.
 // Returns checks against a flat [String: Any] dict (data harvest) or
 // [String: String] dict (session replay URL attributes, JS error events).
 private func sessionAttributeChecks(from attrs: [String: Any]) -> [VerificationCheck] {
     func str(_ key: String) -> String? { attrs[key] as? String }
     // memUsageMb arrives as NSNumber in JSON dicts and as a numeric string in URL attribute dicts.
-    func numericPresent(_ key: String) -> Bool {
-        if attrs[key] is NSNumber { return true }
-        return (attrs[key] as? String).flatMap(Double.init) != nil
+    // The field may be absent (e.g. memory info unavailable) — only fail if present but non-numeric.
+    func numericIfPresent(_ key: String) -> Bool {
+        guard let val = attrs[key] else { return true }
+        if val is NSNumber { return true }
+        return (val as? String).flatMap(Double.init) != nil
     }
     return [
         check("sessionAttrs: sessionId non-empty",          str("sessionId")?.isEmpty         == false, detail: str("sessionId")),
         check("sessionAttrs: osName non-empty",             str("osName")?.isEmpty             == false, detail: str("osName")),
         check("sessionAttrs: osVersion non-empty",          str("osVersion")?.isEmpty          == false, detail: str("osVersion")),
-        check("sessionAttrs: osMajorVersion non-empty",     str("osMajorVersion")?.isEmpty     == false),
-        check("sessionAttrs: deviceManufacturer non-empty", str("deviceManufacturer")?.isEmpty == false),
-        check("sessionAttrs: deviceModel non-empty",        str("deviceModel")?.isEmpty        == false),
+        check("sessionAttrs: osMajorVersion non-empty",     str("osMajorVersion")?.isEmpty     == false, detail: str("osMajorVersion")),
+        check("sessionAttrs: deviceManufacturer non-empty", str("deviceManufacturer")?.isEmpty == false, detail: str("deviceManufacturer")),
+        check("sessionAttrs: deviceModel non-empty",        str("deviceModel")?.isEmpty        == false, detail: str("deviceModel")),
         check("sessionAttrs: newRelicVersion non-empty",    str("newRelicVersion")?.isEmpty    == false, detail: str("newRelicVersion")),
-        check("sessionAttrs: memUsageMb is numeric",        numericPresent("memUsageMb"),       detail: str("memUsageMb")),
+        check("sessionAttrs: memUsageMb is numeric",        numericIfPresent("memUsageMb"),     detail: str("memUsageMb")),
         check("sessionAttrs: carrier non-empty",            str("carrier")?.isEmpty            == false, detail: str("carrier")),
     ]
 }
@@ -53,14 +65,15 @@ private func sessionAttributeChecks(from attrs: [String: Any]) -> [VerificationC
 private func analyticsEventChecks(events: [[String: Any]], httpCount: Int) -> [VerificationCheck] {
     let timestampsValid = events.allSatisfy { $0["timestamp"] is NSNumber }
 
-    let mobileRequestEvts = events.filter { $0["eventType"] as? String == "MobileRequest" }
+    let mobileRequestEvts  = events.filter { $0["eventType"] as? String == "MobileRequest" }
     let mobileErrEvts     = events.filter { $0["eventType"] as? String == "MobileRequestError" }
     let mobileActionEvts  = events.filter { $0["eventType"] as? String == "MobileAction" }
     let mobileSessionEvts = events.filter { ["Mobile", "MobileSession"].contains($0["eventType"] as? String) }
     let mobileViewEvts    = events.filter { $0["eventType"] as? String == "MobileView" }
 
     var result: [VerificationCheck] = [
-        check("analyticsEvents: all have timestamp (NSNumber)", timestampsValid),
+        check("analyticsEvents: all have timestamp (NSNumber)", timestampsValid,
+              detail: firstFailing(events, key: "timestamp") { $0 is NSNumber }),
     ]
 
     // If the agent recorded HTTP transactions, there must be corresponding MobileRequest events.
@@ -74,32 +87,51 @@ private func analyticsEventChecks(events: [[String: Any]], httpCount: Int) -> [V
 
     if !mobileRequestEvts.isEmpty {
         result += [
-            check("MobileRequest: requestUrl is String",      mobileRequestEvts.allSatisfy { $0["requestUrl"]    is String }),
-            check("MobileRequest: statusCode is NSNumber",    mobileRequestEvts.allSatisfy { $0["statusCode"]    is NSNumber }),
-            check("MobileRequest: responseTime is NSNumber",  mobileRequestEvts.allSatisfy { $0["responseTime"]  is NSNumber }),
-            check("MobileRequest: bytesReceived is NSNumber", mobileRequestEvts.allSatisfy { $0["bytesReceived"] is NSNumber }),
+            check("MobileRequest: requestUrl is String",
+                  mobileRequestEvts.allSatisfy { $0["requestUrl"] is String },
+                  detail: firstFailing(mobileRequestEvts, key: "requestUrl") { $0 is String }),
+            check("MobileRequest: statusCode is NSNumber",
+                  mobileRequestEvts.allSatisfy { $0["statusCode"] is NSNumber },
+                  detail: firstFailing(mobileRequestEvts, key: "statusCode") { $0 is NSNumber }),
+            check("MobileRequest: responseTime is NSNumber",
+                  mobileRequestEvts.allSatisfy { $0["responseTime"] is NSNumber },
+                  detail: firstFailing(mobileRequestEvts, key: "responseTime") { $0 is NSNumber }),
+            check("MobileRequest: bytesReceived is NSNumber when present",
+                  mobileRequestEvts.allSatisfy { $0["bytesReceived"] == nil || $0["bytesReceived"] is NSNumber },
+                  detail: firstFailing(mobileRequestEvts, key: "bytesReceived") { $0 == nil || $0 is NSNumber }),
             check("MobileRequest: bytesSent is NSNumber when present",
-                  mobileRequestEvts.allSatisfy { $0["bytesSent"] == nil || $0["bytesSent"] is NSNumber }),
+                  mobileRequestEvts.allSatisfy { $0["bytesSent"] == nil || $0["bytesSent"] is NSNumber },
+                  detail: firstFailing(mobileRequestEvts, key: "bytesSent") { $0 == nil || $0 is NSNumber }),
         ]
     }
 
     if !mobileErrEvts.isEmpty {
         result += [
-            check("MobileRequestError: requestUrl is String",        mobileErrEvts.allSatisfy { $0["requestUrl"] is String }),
-            check("MobileRequestError: statusCode or networkError",  mobileErrEvts.allSatisfy { $0["statusCode"] is NSNumber || $0["networkError"] is String }),
+            check("MobileRequestError: requestUrl is String",
+                  mobileErrEvts.allSatisfy { $0["requestUrl"] is String },
+                  detail: firstFailing(mobileErrEvts, key: "requestUrl") { $0 is String }),
+            check("MobileRequestError: statusCode or networkError",
+                  mobileErrEvts.allSatisfy { $0["statusCode"] is NSNumber || $0["networkError"] is String },
+                  detail: firstFailing(mobileErrEvts, key: "statusCode") { $0 is NSNumber || ($0 as? String) != nil }),
         ]
     }
 
     if !mobileActionEvts.isEmpty {
         result += [
-            check("MobileAction: actionType is String", mobileActionEvts.allSatisfy { $0["actionType"] is String }),
-            check("MobileAction: name is String",       mobileActionEvts.allSatisfy { $0["name"] is String }),
+            check("MobileAction: actionType is String",
+                  mobileActionEvts.allSatisfy { $0["actionType"] is String },
+                  detail: firstFailing(mobileActionEvts, key: "actionType") { $0 is String }),
+            check("MobileAction: name is String",
+                  mobileActionEvts.allSatisfy { $0["name"] is String },
+                  detail: firstFailing(mobileActionEvts, key: "name") { $0 is String }),
         ]
     }
 
     if !mobileSessionEvts.isEmpty {
         result += [
-            check("Mobile/MobileSession: timeSinceLoad is NSNumber",   mobileSessionEvts.allSatisfy { $0["timeSinceLoad"]   is NSNumber }),
+            check("Mobile/MobileSession: timeSinceLoad is NSNumber",
+                  mobileSessionEvts.allSatisfy { $0["timeSinceLoad"] is NSNumber },
+                  detail: firstFailing(mobileSessionEvts, key: "timeSinceLoad") { $0 is NSNumber }),
         ]
     }
 
@@ -375,28 +407,38 @@ private enum JSErrorsVerifier {
 
             // Per-event required fields (jserror_data.md §MobileJSError)
             check("all events: eventType == MobileJSError",
-                  events?.allSatisfy { $0["eventType"] as? String == "MobileJSError" } == true)
+                  events?.allSatisfy { $0["eventType"] as? String == "MobileJSError" } == true,
+                  detail: events.flatMap { firstFailing($0, key: "eventType") { $0 as? String == "MobileJSError" } })
             check("all events: errorId present",
-                  events?.allSatisfy { $0["errorId"] is String } == true)
+                  events?.allSatisfy { $0["errorId"] is String } == true,
+                  detail: events.flatMap { firstFailing($0, key: "errorId") { $0 is String } })
             check("all events: errorName present",
-                  events?.allSatisfy { $0["errorName"] is String } == true)
+                  events?.allSatisfy { $0["errorName"] is String } == true,
+                  detail: events.flatMap { firstFailing($0, key: "errorName") { $0 is String } })
             check("all events: errorMessage present",
-                  events?.allSatisfy { $0["errorMessage"] is String } == true)
+                  events?.allSatisfy { $0["errorMessage"] is String } == true,
+                  detail: events.flatMap { firstFailing($0, key: "errorMessage") { $0 is String } })
 
             // Per jserror_data.md, session attributes are flattened into every event.
             // Verify each event carries the required system attributes.
             check("all events: sessionId non-empty",
-                  events?.allSatisfy { ($0["sessionId"] as? String)?.isEmpty == false } == true)
+                  events?.allSatisfy { ($0["sessionId"] as? String)?.isEmpty == false } == true,
+                  detail: events.flatMap { firstFailing($0, key: "sessionId") { ($0 as? String)?.isEmpty == false } })
             check("all events: osName non-empty",
-                  events?.allSatisfy { ($0["osName"] as? String)?.isEmpty == false } == true)
+                  events?.allSatisfy { ($0["osName"] as? String)?.isEmpty == false } == true,
+                  detail: events.flatMap { firstFailing($0, key: "osName") { ($0 as? String)?.isEmpty == false } })
             check("all events: osVersion non-empty",
-                  events?.allSatisfy { ($0["osVersion"] as? String)?.isEmpty == false } == true)
+                  events?.allSatisfy { ($0["osVersion"] as? String)?.isEmpty == false } == true,
+                  detail: events.flatMap { firstFailing($0, key: "osVersion") { ($0 as? String)?.isEmpty == false } })
             check("all events: newRelicVersion non-empty",
-                  events?.allSatisfy { ($0["newRelicVersion"] as? String)?.isEmpty == false } == true)
+                  events?.allSatisfy { ($0["newRelicVersion"] as? String)?.isEmpty == false } == true,
+                  detail: events.flatMap { firstFailing($0, key: "newRelicVersion") { ($0 as? String)?.isEmpty == false } })
             check("all events: deviceModel non-empty",
-                  events?.allSatisfy { ($0["deviceModel"] as? String)?.isEmpty == false } == true)
+                  events?.allSatisfy { ($0["deviceModel"] as? String)?.isEmpty == false } == true,
+                  detail: events.flatMap { firstFailing($0, key: "deviceModel") { ($0 as? String)?.isEmpty == false } })
             check("all events: memUsageMb is number",
-                  events?.allSatisfy { $0["memUsageMb"] is NSNumber } == true)
+                  events?.allSatisfy { $0["memUsageMb"] is NSNumber } == true,
+                  detail: events.flatMap { firstFailing($0, key: "memUsageMb") { $0 is NSNumber } })
         }
     }
 }
@@ -414,10 +456,10 @@ private enum JSErrorsVerifier {
 //   [{ "common": { "attributes": { entity.guid, sessionId, instrumentation.*, appId, … } },
 //      "logs":   [ { "level", "message", "timestamp", "file", "lineNumber", "method" }, … ] }]
 //
-// Valid levels: ERROR, WARNING, INFO, VERBOSE, AUDIT, DEBUG (NRLogger.levelToString)
+// Valid levels: ERROR, WARN, INFO, VERBOSE, AUDIT, DEBUG (NRLogger.levelToString)
 
 private enum LogsVerifier {
-    private static let validLevels: Set<String> = ["ERROR", "WARNING", "INFO", "VERBOSE", "AUDIT", "DEBUG"]
+    private static let validLevels: Set<String> = ["ERROR", "WARN", "INFO", "VERBOSE", "AUDIT", "DEBUG"]
 
     static func verify(_ data: Data, headers: [String: String]) -> VerificationResult {
         // kNRMAGZipHeader = @"deflate" — the agent uses zlib/deflate format, not gzip.
@@ -439,9 +481,10 @@ private enum LogsVerifier {
         let commonAttrs = common?["attributes"] as? [String: Any]
         let logs        = batch?["logs"] as? [[String: Any]]
 
-        let levelsValid = logs?.allSatisfy {
-            ($0["level"] as? String).map { validLevels.contains($0) } ?? false
-        } ?? true
+        let badLevelEntry = logs?.first {
+            ($0["level"] as? String).map { !validLevels.contains($0) } ?? true
+        }
+        let levelsValid = badLevelEntry == nil
         let timestampsValid = logs?.allSatisfy { $0["timestamp"] is NSNumber } ?? true
 
         return .make {
@@ -479,7 +522,11 @@ private enum LogsVerifier {
             // Per-entry checks
             check("all entries have level",             logs?.allSatisfy { $0["level"] is String } == true)
             check("all entries have valid level",       levelsValid,
-                  detail: levelsValid ? nil : "expected one of: \(validLevels.sorted().joined(separator: ", "))")
+                  detail: badLevelEntry.map { entry in
+                      let level = entry["level"] as? String ?? "(missing)"
+                      let msg   = (entry["message"] as? String ?? "").prefix(80)
+                      return "level=\"\(level)\" message=\"\(msg)\" — valid: \(validLevels.sorted().joined(separator: ", "))"
+                  })
             check("all entries have message",           logs?.allSatisfy { $0["message"] is String } == true)
             check("all entries have timestamp",         timestampsValid)
         }
@@ -613,11 +660,21 @@ private enum SessionReplayVerifier {
 //
 // The agent encodes [AnyRRWebEvent] as a JSON array: [{type, timestamp, data}, ...].
 // RRWebEventType raw values: 2=fullSnapshot, 3=incrementalSnapshot, 4=meta.
+// Incremental source values: 0=mutation, 2=mouseInteraction (touchStart/End), 6=touchMove.
 //
 // SessionReplayManager sets:
 //   firstTimestamp = container.first.timestamp
 //   lastTimestamp  = container.last.timestamp
 // so the URL attribute timestamps must exactly match the body event range.
+// Touch events (source 2 or 6) are excluded from the firstTimestamp comparison
+// because they can appear before the first frame event.
+
+private func isTouchEvent(_ event: [String: Any]) -> Bool {
+    guard event["type"] as? Int == 3,
+          let source = (event["data"] as? [String: Any])?["source"] as? Int
+    else { return false }
+    return source == 2 || source == 6
+}
 
 private func rrwebConsistencyChecks(data: Data,
                                     attrs: [String: String],
@@ -630,9 +687,11 @@ private func rrwebConsistencyChecks(data: Data,
                       detail: "body is not a JSON array — decompression may have failed")]
     }
 
-    let timestamps = events.compactMap { ($0["timestamp"] as? NSNumber)?.doubleValue }
+    let timestamps        = events.compactMap { ($0["timestamp"] as? NSNumber)?.doubleValue }
+    let nonTouchTimestamps = events.filter { !isTouchEvent($0) }
+                                   .compactMap { ($0["timestamp"] as? NSNumber)?.doubleValue }
     let types      = events.compactMap { $0["type"] as? Int }
-    let bodyFirst  = timestamps.min()
+    let bodyFirst  = nonTouchTimestamps.min()
     let bodyLast   = timestamps.max()
     let typeSet    = Array(Set(types)).sorted().map(String.init).joined(separator: ",")
 
