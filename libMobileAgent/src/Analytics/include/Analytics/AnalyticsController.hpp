@@ -40,6 +40,7 @@ namespace NewRelic {
                 __kNRMA_RET_mobileRequestError,
                 __kNRMA_RET_mobileSession,
                 __kNRMA_RET_mobileBreadcrumb,
+                __kNRMA_RET_mobileView
         };
 
         const std::vector <std::string> _reserved_keys{

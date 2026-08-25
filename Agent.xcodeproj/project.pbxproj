@@ -1584,9 +1584,7 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
-		476F718437EE85233BEC229D /* NRMAViewInteractionCorrelationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2820F50EDAF271091D7C47EC /* NRMAViewInteractionCorrelationTests.m */; };
 		507B2C259DD5885F94F7B3B7 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
-		6FC003D070ACA7680FAAC979 /* NRMAMobileViewTraceSegmentTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A179C9B593CF166D5A76B068 /* NRMAMobileViewTraceSegmentTests.m */; };
 		A05B32D10732915D2D8DCA3B /* NRMAMobileViewTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */; };
 		AD5B1B2261682AEEAA17D236 /* NRMAViewContext.m in Sources */ = {isa = PBXBuildFile; fileRef = C9AF87A7CB68173909761538 /* NRMAViewContext.m */; };
 		C6EBCA8F96D37B1FE792B222 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
@@ -1945,7 +1943,7 @@
 		};
 		34666B252924556A005A7010 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -1980,7 +1978,7 @@
 		};
 		34A9292D2912D72F001449B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 34BF4DDD29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2029,7 +2027,7 @@
 		};
 		34DD72F42912F04700481FA9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2057,7 +2055,7 @@
 		};
 		F89167402BC9D1CB0085BCFC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2589,7 +2587,6 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		2820F50EDAF271091D7C47EC /* NRMAViewInteractionCorrelationTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewInteractionCorrelationTests.m; sourceTree = "<group>"; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetViewRendererByKeyPath.swift; sourceTree = "<group>"; };
 		2B0340672E874A9900182A70 /* ControllerTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTypeDetector.swift; sourceTree = "<group>"; };
@@ -2718,7 +2715,6 @@
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewContext.h; sourceTree = "<group>"; };
 		9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAMobileViewTracker.m; sourceTree = "<group>"; };
-		A179C9B593CF166D5A76B068 /* NRMAMobileViewTraceSegmentTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAMobileViewTraceSegmentTests.m; sourceTree = "<group>"; };
 		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
 		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
@@ -2960,7 +2956,6 @@
 				0209ABC824E705B500E45C90 /* Analytics-Tests */,
 				0209ABC724E705AB00E45C90 /* Agent-Health-Tests */,
 				0209ABC624E7059900E45C90 /* User-Action-Tests */,
-				0BEB5EA0C2408151F241489D /* MobileViews-Tests */,
 			);
 			path = NewRelicAgentTests;
 			sourceTree = "<group>";
@@ -4087,16 +4082,6 @@
 				02FF4AFB24DC8CB200115469 /* base.h */,
 			);
 			path = flatbuffers;
-			sourceTree = "<group>";
-		};
-		0BEB5EA0C2408151F241489D /* MobileViews-Tests */ = {
-			isa = PBXGroup;
-			children = (
-				2820F50EDAF271091D7C47EC /* NRMAViewInteractionCorrelationTests.m */,
-				A179C9B593CF166D5A76B068 /* NRMAMobileViewTraceSegmentTests.m */,
-			);
-			name = "MobileViews-Tests";
-			path = "MobileViews-Tests";
 			sourceTree = "<group>";
 		};
 		10BA5FBBE9EB9701CF3DF426 /* MobileViews */ = {
@@ -5824,8 +5809,6 @@
 				0209AC2124E7071F00E45C90 /* MachineMeasurementsTest.m in Sources */,
 				0209ABF424E706FA00E45C90 /* NRThreadInfoTests.m in Sources */,
 				00D3C8A763625C06E61485F0 /* NRMobileViewFeatureFlagGateTests.swift in Sources */,
-				476F718437EE85233BEC229D /* NRMAViewInteractionCorrelationTests.m in Sources */,
-				6FC003D070ACA7680FAAC979 /* NRMAMobileViewTraceSegmentTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -58,7 +58,7 @@ struct ViewsAndInteractionsDemoView: View {
             .padding()
         }
         .navigationTitle("Views × Interactions")
-        .NRMobileView(name: Self.screenName, startsInteraction: true)
+        .NRMobileView(name: Self.screenName)
         .onAppear(perform: refresh)
         .task {
             // Poll while the screen is up so the id can be seen appearing and then clearing when the

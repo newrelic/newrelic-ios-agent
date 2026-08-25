@@ -37,6 +37,7 @@ extern const char* __kNRMA_RET_mobileRequestError;
 extern const char* __kNRMA_RET_mobileCrash;
 extern const char* __kNRMA_RET_mobileBreadcrumb;
 extern const char* __kNRMA_RET_mobileUserAction;
+extern const char* __kNRMA_RET_mobileView;
 extern const char* __kNRMA_RET_userAction;
 
 // Gesture attributes (not reserved)

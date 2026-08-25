@@ -64,7 +64,7 @@ struct ModalsDemoView: View {
             PopoverDetailView { showPopover = false }
         }
         .NRTrackView(name: Self.screenName)
-        .NRMobileView(name: Self.screenName, startsInteraction: true)
+        .NRMobileView(name: Self.screenName)
     }
 
     // MARK: - Component-level views
