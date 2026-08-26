@@ -225,6 +225,11 @@ class MainCoordinator: Coordinator {
         let vc = ViewControllerProvider.mobileViewRestartedViewController
         navigationController.pushViewController(vc, animated: true)
     }
+
+    func showSessionFlowDiagramViewController() {
+        let vc = ViewControllerProvider.sessionFlowDiagramViewController
+        navigationController.pushViewController(vc, animated: true)
+    }
 #endif
 
 }

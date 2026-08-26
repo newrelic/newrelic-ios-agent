@@ -15,6 +15,7 @@
 #import "NRConstants.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAFlags.h"
+#import "NRMASessionFlowMonitor.h"
 #import "NRMANetworkRequestData+CppInterface.h"
 #import "NRMANetworkResponseData+CppInterface.h"
 #import <Connectivity/Payload.hpp>
@@ -1194,6 +1195,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) endSessionReusable {
+    // The session's screen-flow diagram ends where the MobileSession event begins. Archived here
+    // rather than on backgrounding because this is the single point both paths that end a session --
+    // going to background and the 4-hour restart -- funnel through.
+    //
+    // Archive only, no event: this runs inside the agent's background/foreground mutex, and
+    // recording an event would re-enter the analytics stack mid-teardown.
+    [[NRMASessionFlowMonitor sharedInstance] finalizeCurrentSessionDiagram];
+
     if([NRMAFlags shouldEnableNewEventSystem]){
         if(![self addSessionEndAttribute]) { //has exception handling within
             NRLOG_AGENT_ERROR(@"failed to add session end attribute.");

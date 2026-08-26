@@ -17,6 +17,11 @@ Examples:
     ./scripts/mobileview_flow.py events.json
     ./scripts/mobileview_flow.py events.json --session 1A2B-3C4D --min-count 2
     pbpaste | ./scripts/mobileview_flow.py - --include-components
+    ./scripts/mobileview_flow.py events.json --include-breadcrumbs
+
+    ./scripts/mobileview_flow.py events.json \
+    --title "HomeSearch screen flow" \
+    --svg /tmp/mv_flow.svg --include-components --include-breadcrumbs
 """
 
 from __future__ import annotations
@@ -29,6 +34,7 @@ import sys
 from collections import Counter, defaultdict
 
 MOBILE_VIEW = "MobileView"
+MOBILE_BREADCRUMB = "MobileBreadcrumb"
 START = "__start__"
 
 
@@ -122,6 +128,26 @@ def appear_events(rows, session=None, include_components=False):
     return out
 
 
+def breadcrumb_events(rows, session=None):
+    """Keep only MobileBreadcrumb events with a name.
+
+    Only meaningful for raw event-list input -- aggregated NerdGraph-facet or pre-aggregated
+    rows are edge counts between MobileView transitions and have no room for a third event type.
+    """
+    out = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if row.get("eventType") != MOBILE_BREADCRUMB:
+            continue
+        if not row.get("name"):
+            continue
+        if session and str(row.get("sessionId", "")) != session:
+            continue
+        out.append(row)
+    return out
+
+
 # --------------------------------------------------------------------------- aggregation
 
 class Graph:
@@ -132,6 +158,7 @@ class Graph:
         self.load_counts = Counter()
         self.component_of = {}          # component view -> owning screen
         self.nodes = set()
+        self.breadcrumbs = Counter()    # (view, name) -> occurrences
 
     def add_edge(self, src, dst, count=1, back=False):
         self.edges[(src, dst)] += count
@@ -148,6 +175,9 @@ class Graph:
     def avg_load(self, view):
         n = self.load_counts[view]
         return self.load_totals[view] / n if n else None
+
+    def add_breadcrumb(self, view, name):
+        self.breadcrumbs[(view, name)] += 1
 
     def prune(self, min_count):
         if min_count <= 1:
@@ -224,6 +254,23 @@ def build_graph(rows, aggregated, ordered_walk=False, collapse=None):
     return g
 
 
+def add_breadcrumbs(g, rows, collapse=None):
+    """Attach each breadcrumb to the screen that was current when it was recorded.
+
+    Returns the number of breadcrumbs skipped for having no currentView (recorded before any
+    view appeared, or with view tracking disabled).
+    """
+    collapse = collapse or {}
+    skipped = 0
+    for row in rows:
+        view = row.get("currentView")
+        if not view:
+            skipped += 1
+            continue
+        g.add_breadcrumb(collapse.get(view, view), row["name"])
+    return skipped
+
+
 # --------------------------------------------------------------------------- rendering
 
 def sanitize(label):
@@ -244,7 +291,7 @@ def sanitize_edge_label(label):
     return " ".join(text.split())
 
 
-def render(g, slow_ms, title=None):
+def render(g, slow_ms, title=None, breadcrumbs=False):
     ids = {}
     for i, node in enumerate(sorted(g.nodes)):
         ids[node] = f"v{i}"
@@ -257,6 +304,8 @@ def render(g, slow_ms, title=None):
 
     lines.append("    classDef slow fill:#fde2e2,stroke:#c0392b,stroke-width:2px;")
     lines.append("    classDef entry fill:#eef6ff,stroke:#2c6fbb,stroke-width:1px;")
+    if breadcrumbs and g.breadcrumbs:
+        lines.append("    classDef breadcrumb fill:#fff8e1,stroke:#c9a227,stroke-dasharray: 3 3;")
 
     has_start = any(src == START for src, _ in g.edges)
     if has_start:
@@ -311,6 +360,20 @@ def render(g, slow_ms, title=None):
 
     for node_id in slow_nodes:
         lines.append(f"    class {node_id} slow;")
+
+    if breadcrumbs:
+        crumb_ids = []
+        for i, ((view, name), count) in enumerate(sorted(g.breadcrumbs.items())):
+            view_id = ids.get(view)
+            if not view_id:
+                continue  # view was pruned away or never became a node
+            label = sanitize(name) + (f" ×{count}" if count > 1 else "")
+            crumb_id = f"b{i}"
+            lines.append(f'    {crumb_id}(["{label}"])')
+            lines.append(f"    {view_id} -.-> {crumb_id}")
+            crumb_ids.append(crumb_id)
+        for crumb_id in crumb_ids:
+            lines.append(f"    class {crumb_id} breadcrumb;")
 
     return "\n".join(lines)
 
@@ -367,6 +430,10 @@ def main():
     ap.add_argument("--include-components", action="store_true",
                     help="show component segments nested under their screen "
                          "(default: dropped, since they are not navigation steps)")
+    ap.add_argument("--include-breadcrumbs", action="store_true",
+                    help="annotate each screen with the breadcrumbs recorded while it was "
+                         "current (default: dropped, to keep the flow uncluttered); "
+                         "raw event-list input only, ignored for aggregated input")
     ap.add_argument("--slow-ms", type=float, default=500.0, metavar="MS",
                     help="highlight screens whose average loadTime is at least MS (default: 500)")
     ap.add_argument("--title", help="title line for the diagram")
@@ -377,10 +444,13 @@ def main():
     rows, aggregated = rows_from_payload(payload)
 
     collapse = {}
+    breadcrumb_rows = []
     if not aggregated:
         total = len(rows)
         if not args.include_components:
             collapse = component_owners(rows)
+        if args.include_breadcrumbs:
+            breadcrumb_rows = breadcrumb_events(rows, session=args.session)
         rows = appear_events(rows, session=args.session,
                              include_components=args.include_components)
         note = f" ({len(collapse)} component segments folded into their screen)" if collapse else ""
@@ -389,18 +459,28 @@ def main():
         if not rows:
             sys.exit("error: no MobileView appear events matched "
                      "(wrong dump, or --session filtered everything out)")
-    elif args.session:
-        print("note: --session ignored; input is already aggregated", file=sys.stderr)
+    else:
+        if args.session:
+            print("note: --session ignored; input is already aggregated", file=sys.stderr)
+        if args.include_breadcrumbs:
+            print("note: --include-breadcrumbs ignored; input is already aggregated",
+                  file=sys.stderr)
 
     g = build_graph(rows, aggregated, ordered_walk=bool(args.session),
                     collapse=collapse)
+    if breadcrumb_rows:
+        skipped = add_breadcrumbs(g, breadcrumb_rows, collapse=collapse)
+        if skipped:
+            print(f"note: {skipped} breadcrumbs skipped (no currentView)", file=sys.stderr)
     g.prune(args.min_count)
     if not g.edges:
         sys.exit(f"error: no edges left (try lowering --min-count, currently {args.min_count})")
 
-    mermaid = render(g, slow_ms=args.slow_ms, title=args.title)
+    mermaid = render(g, slow_ms=args.slow_ms, title=args.title,
+                     breadcrumbs=args.include_breadcrumbs)
     print(mermaid)
-    print(f"{len(g.nodes)} screens, {len(g.edges)} transitions", file=sys.stderr)
+    crumb_note = f", {sum(g.breadcrumbs.values())} breadcrumbs" if args.include_breadcrumbs else ""
+    print(f"{len(g.nodes)} screens, {len(g.edges)} transitions{crumb_note}", file=sys.stderr)
 
     if args.svg:
         write_svg(mermaid, args.svg)

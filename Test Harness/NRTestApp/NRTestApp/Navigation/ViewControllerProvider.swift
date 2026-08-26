@@ -112,6 +112,11 @@ enum ViewControllerProvider {
         return viewController
     }
 
+    static var sessionFlowDiagramViewController: SessionFlowDiagramViewController {
+        let viewController = SessionFlowDiagramViewController()
+        return viewController
+    }
+
     static var mobileViewRestartedViewController: MobileViewRestartedViewController {
         let viewController = MobileViewRestartedViewController()
         return viewController

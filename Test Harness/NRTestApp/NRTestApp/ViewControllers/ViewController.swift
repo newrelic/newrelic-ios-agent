@@ -302,6 +302,10 @@ class ViewController: UIViewController {
         options.append(UtilOption(title: "MobileView · Modals (UIKit)", handler: { [self] in mobileViewModalsAction()}))
 
         options.append(UtilOption(title: "MobileView · Restarted / Legacy Name (UIKit)", handler: { [self] in mobileViewRestartedAction()}))
+
+        // Renders the agent's own session flow diagram (+[NewRelic currentSessionFlowDiagram]) as an
+        // SVG. Most useful *after* wandering through the screens above.
+        options.append(UtilOption(title: "MobileView · Session Diagram (SVG)", handler: { [self] in sessionFlowDiagramAction()}))
 #endif
 
         // BlockView examples
@@ -419,6 +423,10 @@ class ViewController: UIViewController {
 
     func mobileViewRestartedAction() {
         coordinator?.showMobileViewRestartedViewController()
+    }
+
+    func sessionFlowDiagramAction() {
+        coordinator?.showSessionFlowDiagramViewController()
     }
 #endif
 

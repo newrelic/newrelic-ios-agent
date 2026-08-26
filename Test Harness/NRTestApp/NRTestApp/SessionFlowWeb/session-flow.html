@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--
+  session-flow.html — host page for the Session Diagram screen.
+
+  The agent hands us Mermaid source (+[NewRelic currentSessionFlowDiagram]); mermaid.js turns it into
+  an SVG. Loaded once with loadFileURL so the 3.5 MB bundle is parsed a single time; each refresh only
+  calls renderDiagram() again over the bridge.
+
+  mermaid.min.js is vendored (v11.17.2) rather than pulled from a CDN so the screen works with no
+  network — the harness also runs on LambdaTest devices.
+
+  Zooming: the SVG is laid out at its natural size and the *page* is what pans and zooms, driven by
+  WKWebView's own pinch gesture. fitViewport() rewrites the viewport meta after each render so the
+  diagram opens shrunk to fit; see the comment on that function for why the scales are chosen the way
+  they are.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Rewritten by fitViewport()/resetViewport() after every render. The initial value only covers the
+     moment before the first diagram arrives. -->
+<meta id="viewport" name="viewport" content="width=device-width, initial-scale=1">
+<script src="mermaid.min.js"></script>
+<style>
+  :root { color-scheme: light dark; }
+  html, body { margin: 0; padding: 0; background: Canvas; color: CanvasText; }
+  body {
+    font: 15px/1.45 -apple-system, system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  /* No overflow container around the diagram: the page scrolls and zooms as a whole, which is what
+     lets the native pinch gesture re-render the SVG crisply at any scale instead of scaling a
+     bitmap. margin auto centres the diagram when the fit is height-constrained and leaves
+     horizontal slack; it collapses to 0 when the diagram is wider than the viewport, so the left
+     edge stays reachable. */
+  #diagram svg { display: block; margin: 0 auto; max-width: none; }
+  .placeholder { padding: 24px 20px; color: GrayText; }
+  .placeholder h2 { font-size: 17px; margin: 0 0 8px; color: CanvasText; }
+  .placeholder code { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .error { color: #c0392b; }
+  pre.source {
+    white-space: pre-wrap; word-break: break-word;
+    font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+    background: color-mix(in srgb, CanvasText 8%, Canvas); padding: 10px; border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<div id="diagram"></div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "strict",
+    // useMaxWidth false so the SVG keeps its natural size instead of being squeezed into the phone's
+    // width. Fitting it on screen is the page scale's job, not CSS's — a squeezed SVG cannot be
+    // zoomed back out to full detail, a scaled-down page can.
+    flowchart: { htmlLabels: true, useMaxWidth: false },
+  });
+
+  const viewportTag = document.getElementById("viewport");
+  const target = document.getElementById("diagram");
+  let renderCount = 0;
+  /** Size of the host's web view in CSS px. Kept so a re-fit does not need it passed again. */
+  let available = { width: 0, height: 0 };
+
+  // WebKit clamps viewport scales into this range, so a diagram wide enough to want a smaller
+  // initial-scale than MIN_SCALE opens with a little horizontal scroll left in it.
+  const MIN_SCALE = 0.1;
+  // Absolute — 1 is the diagram's natural size — so this is a zoom-in ceiling of 10x natural
+  // regardless of how far out the fit scale ends up. That is what keeps full detail reachable.
+  const MAX_SCALE = 10;
+
+  function setViewport(content) {
+    // WebKit re-evaluates the viewport when this attribute changes; that is what applies the new
+    // initial-scale/minimum-scale pair to the live page.
+    viewportTag.setAttribute("content", content);
+  }
+
+  /** Ordinary text-sized page, for the placeholder and error states. */
+  function resetViewport() {
+    setViewport("width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=6");
+  }
+
+  function showPlaceholder(html) {
+    target.innerHTML = '<div class="placeholder">' + html + '</div>';
+    resetViewport();
+  }
+
+  function escapeHtml(text) {
+    return String(text).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  }
+
+  /**
+   * The diagram's size in CSS px. The viewBox is the authority — mermaid always emits one, and its
+   * units are the px the layout was computed in, so treating them as CSS px is an exact 1:1.
+   */
+  function naturalSize(svg) {
+    const box = svg.viewBox && svg.viewBox.baseVal;
+    if (box && box.width > 0 && box.height > 0) {
+      return { width: box.width, height: box.height };
+    }
+    const rect = svg.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+  }
+
+  /**
+   * Pins the SVG to its natural size and points the viewport at it:
+   *
+   *   width          the diagram's own width, so one CSS px is one diagram px
+   *   initial-scale  shrink-to-fit, so the whole diagram is on screen when the page opens
+   *   minimum-scale  the same, so fit is as far out as you can pinch
+   *   maximum-scale  MAX_SCALE, an absolute multiple of natural size — this is the part that keeps
+   *                  zooming all the way in available no matter how small the fit scale is
+   *
+   * Capped at 1: a diagram smaller than the view is left at natural size rather than blown up.
+   * Returns { fit, max } so the host can pin the page's scale to them — WebKit applies initial-scale
+   * on a fresh load but not when only the limits change, so the host has the last word.
+   */
+  function fitViewport() {
+    const svg = target.querySelector("svg");
+    if (!svg) { resetViewport(); return { fit: 1, max: 6 }; }
+
+    const size = naturalSize(svg);
+    svg.style.width = size.width + "px";
+    svg.style.height = size.height + "px";
+
+    if (!(available.width > 0 && available.height > 0)) {
+      // Only reachable before the host has told us its size; the viewport is still device-width
+      // here, so innerWidth/innerHeight are the CSS px we want.
+      available = { width: window.innerWidth, height: window.innerHeight };
+    }
+
+    const fit = Math.max(MIN_SCALE, Math.min(1,
+                                             available.width / size.width,
+                                             available.height / size.height));
+    setViewport("width=" + Math.ceil(size.width) +
+                ", initial-scale=" + fit.toFixed(3) +
+                ", minimum-scale=" + fit.toFixed(3) +
+                ", maximum-scale=" + MAX_SCALE +
+                ", user-scalable=yes");
+    return { fit: fit, max: MAX_SCALE };
+  }
+
+  /**
+   * Renders Mermaid source as an SVG, then fits it to the view. Called from Swift via
+   * callAsyncJavaScript with a JSON-encoded string, so no escaping happens on this side.
+   * viewWidth/viewHeight are the host web view's size in CSS px.
+   *
+   * Returns { status, fit, max }: the status string is what Swift surfaces in the footer label,
+   * which is how a render failure becomes visible instead of just leaving the last diagram on
+   * screen, and the scales are what Swift pins the page to.
+   */
+  async function renderDiagram(source, viewWidth, viewHeight) {
+    if (viewWidth > 0 && viewHeight > 0) {
+      available = { width: viewWidth, height: viewHeight };
+    }
+    if (!source || !source.trim()) {
+      showPlaceholder(
+        "<h2>No diagram yet</h2>" +
+        "<p>The agent has not recorded a screen transition for this session.</p>" +
+        "<p>Visit a couple of screens in the app and come back, or check that " +
+        "<code>NRFeatureFlag_AutomaticMobileViews</code> is enabled.</p>");
+      return { status: "empty", fit: 1, max: 6 };
+    }
+    // Fresh id per render: mermaid caches by id and will not re-render into a reused one.
+    const id = "mvflow" + (++renderCount);
+    try {
+      const { svg } = await mermaid.render(id, source);
+      target.innerHTML = svg;
+      const scales = fitViewport();
+      return { status: "ok · fit " + Math.round(scales.fit * 100) + "%",
+               fit: scales.fit, max: scales.max };
+    } catch (err) {
+      // Show the source that failed — a Mermaid syntax error is a bug in the agent's renderer, and
+      // the offending text is the only useful thing to report.
+      showPlaceholder(
+        '<h2 class="error">Mermaid could not parse this diagram</h2>' +
+        "<p>" + escapeHtml(err && err.message ? err.message : err) + "</p>" +
+        '<pre class="source">' + escapeHtml(source) + "</pre>");
+      return { status: "error: " + (err && err.message ? err.message : err), fit: 1, max: 6 };
+    }
+  }
+
+  /**
+   * Re-fits the diagram already on screen after the host's view changed size — rotation, or an iPad
+   * split view. Without this the fit scale would keep describing the old view.
+   */
+  function refitDiagram(viewWidth, viewHeight) {
+    if (viewWidth > 0 && viewHeight > 0) {
+      available = { width: viewWidth, height: viewHeight };
+    }
+    const scales = fitViewport();
+    return { status: "fit " + Math.round(scales.fit * 100) + "%",
+             fit: scales.fit, max: scales.max };
+  }
+</script>
+</body>
+</html>

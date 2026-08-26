@@ -21,6 +21,7 @@
 #import <NewRelic/NRLogger.h>
 #import <NewRelic/NewRelicCustomInteractionInterface.h>
 #import <NewRelic/NRGCDOverride.h>
+#import <NewRelic/NRSessionFlowDiagramOptions.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -699,6 +700,57 @@ extern "C" {
  */
 + (void) setCurrentView:(NSString* _Nonnull)name
              attributes:(NSDictionary* _Nullable)attributes;
+
+/*******************************/
+/** Session flow diagrams     **/
+/*******************************/
+
+#pragma mark - Session flow diagrams
+
+/*!
+ * Mermaid flowchart of the screens visited this session and the transitions between them.
+ *
+ * Every MobileView appear event carries both ends of a transition -- `viewName` (where the user
+ * landed) and `previousView` (where they came from) -- so the diagram is an aggregation over those
+ * pairs, with no ordering heuristics. Screens are annotated with their average loadTime, and slow
+ * ones highlighted; a route the user backed out along is drawn dashed rather than as a new one.
+ *
+ * The output is Mermaid source, not an image: paste it into GitHub, Confluence, or a PR description,
+ * or render it in a WKWebView with mermaid.js (see the Session Diagram screen in NRTestApp).
+ *
+ * Accumulation is active whenever NRFeatureFlag_AutomaticViews or NRFeatureFlag_ManualViews is
+ * enabled -- the same flags that produce the events -- and costs nothing when both are off.
+ *
+ * @return Mermaid source, or nil when no transition has been recorded yet (view tracking is
+ *         disabled, or only one screen has appeared so far).
+ */
++ (NSString* _Nullable) currentSessionFlowDiagram;
+
+/*!
+ * As +currentSessionFlowDiagram, with control over what is drawn.
+ *
+ * @param options Rendering options; pass nil for the defaults. See NRSessionFlowDiagramOptions.
+ */
++ (NSString* _Nullable) currentSessionFlowDiagramWithOptions:(NRSessionFlowDiagramOptions* _Nullable)options;
+
+/*!
+ * Session ids that have a finished diagram, oldest first.
+ *
+ * A session's diagram is archived when the session ends -- the same moment the MobileSession event is
+ * created -- so a diagram remains readable after the session it describes has rolled. The most
+ * recent few are kept; older ones are discarded.
+ */
++ (NSArray<NSString*>* _Nonnull) archivedFlowDiagramSessionIds;
+
+/*!
+ * Mermaid flowchart for a session that has already ended.
+ *
+ * @param sessionId A session id from +archivedFlowDiagramSessionIds.
+ * @param options Rendering options; pass nil for the defaults.
+ * @return Mermaid source, or nil when that session has no archived diagram.
+ */
++ (NSString* _Nullable) flowDiagramForSessionId:(NSString* _Nonnull)sessionId
+                                        options:(NRSessionFlowDiagramOptions* _Nullable)options;
 
 /*!
  * Records a JavaScript error as a MobileJSError custom event.

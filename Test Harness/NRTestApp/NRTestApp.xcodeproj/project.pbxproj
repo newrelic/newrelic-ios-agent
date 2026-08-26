@@ -10,8 +10,10 @@
 		02B45E18AC97EDC067CFD63F /* ModalsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE0001000000000000002 /* ModalsDemoView.swift */; };
 		1178E34212C8CB653D0A1898 /* MobileViewAttributesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */; };
 		195E31092A8CF3C89186D453 /* ManualViewsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFEE268301BE61F00FD7A49 /* ManualViewsDemoView.swift */; };
+		19BBD522DA2ED77DBFA2E8F8 /* SessionFlowDiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B648D4E70E026CAE45D4CECB /* SessionFlowDiagramViewController.swift */; };
 		2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
 		2552B1472FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */; };
+		26A661E9DE4D16D9BAB3BAC5 /* mermaid.min.js in Resources */ = {isa = PBXBuildFile; fileRef = B705024714762305520D5460 /* mermaid.min.js */; };
 		2B131C742F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B131C752F7C5BAF00748ACB /* NavigationStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */; };
 		2B16DF932F5A0FAB00BAE24D /* BlockViewExamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */; };
@@ -76,9 +78,11 @@
 		2BE9D6C42A1E913700A09A98 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F8302B6229705766003EC291 /* NewRelic.framework */; };
 		2BEDE1702B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BEDE16A2B180A0700BEF5B6 /* harvestConnectorWithLogReporting.json */; };
 		2BF1FA3C2AE32C9500E9019C /* AppDelegate+UITest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF1FA3B2AE32C9500E9019C /* AppDelegate+UITest.swift */; };
+		2C7283654D4C025EF707C3FB /* SessionFlowDiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B648D4E70E026CAE45D4CECB /* SessionFlowDiagramViewController.swift */; };
 		2E4EAED06484653D26AC8460 /* MobileViewAttributesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */; };
 		33330D334DAF56DA1EF5FBAD /* MobileViewRestartedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */; };
 		404AE441D22AABA37E095251 /* MobileViewIgnoredDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */; };
+		569D49EE3625BA278FDA263C /* SessionFlowDiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B648D4E70E026CAE45D4CECB /* SessionFlowDiagramViewController.swift */; };
 		5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
 		6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
 		7B9CB1B9B842FE8EE0EB4A0E /* MobileViewIgnoredViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */; };
@@ -124,6 +128,7 @@
 		D46F91DD2F6C6BAB00FD2EBE /* CustomSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DC2F6C6BAB00FD2EBE /* CustomSwitch.swift */; };
 		D46F91DF2F6C6C7200FD2EBE /* CustomToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91DE2F6C6C7200FD2EBE /* CustomToggleStyle.swift */; };
 		D4DCC23A3017DF26008B5C59 /* NavigationLinkLabelLayoutTestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DCC2393017DF26008B5C59 /* NavigationLinkLabelLayoutTestCase.swift */; };
+		D5A27C66F7096FD0FA15BE19 /* session-flow.html in Resources */ = {isa = PBXBuildFile; fileRef = 19844BBBE6A375431CA3F9BD /* session-flow.html */; };
 		F0D3ACC5C5777D6181629701 /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		F4EFAE7D3870F3228FDEBF89 /* MobileViewCorrelationProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */; };
 		F802EE962BE0218600AB956F /* NRTestApp__watchOS_App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F802EE952BE0218600AB956F /* NRTestApp__watchOS_App.swift */; };
@@ -398,6 +403,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		19844BBBE6A375431CA3F9BD /* session-flow.html */ = {isa = PBXFileReference; includeInIndex = 1; name = "session-flow.html"; path = "SessionFlowWeb/session-flow.html"; sourceTree = "<group>"; };
 		2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "NASAAPI-Info.plist"; sourceTree = "<group>"; };
 		2B131C722F7C5BAF00748ACB /* NavigationStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationStackView.swift; sourceTree = "<group>"; };
 		2B16DF912F5A0FAB00BAE24D /* BlockViewExamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockViewExamples.swift; sourceTree = "<group>"; };
@@ -468,8 +474,10 @@
 		ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredDemoView.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesViewController.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredViewController.swift; sourceTree = "<group>"; };
-		BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewModalsViewController.swift; sourceTree = "<group>"; };
 		B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewComponent.swift; sourceTree = "<group>"; };
+		B648D4E70E026CAE45D4CECB /* SessionFlowDiagramViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SessionFlowDiagramViewController.swift; sourceTree = "<group>"; };
+		B705024714762305520D5460 /* mermaid.min.js */ = {isa = PBXFileReference; includeInIndex = 1; name = mermaid.min.js; path = SessionFlowWeb/mermaid.min.js; sourceTree = "<group>"; };
+		BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewModalsViewController.swift; sourceTree = "<group>"; };
 		C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewCorrelationProbe.swift; sourceTree = "<group>"; };
 		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
 		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
@@ -708,6 +716,15 @@
 			path = Stubs;
 			sourceTree = "<group>";
 		};
+		3B3BEBF4F432560083EABF53 /* SessionFlowWeb */ = {
+			isa = PBXGroup;
+			children = (
+				19844BBBE6A375431CA3F9BD /* session-flow.html */,
+				B705024714762305520D5460 /* mermaid.min.js */,
+			);
+			name = SessionFlowWeb;
+			sourceTree = "<group>";
+		};
 		AA0001402F9000000000AA01 /* CaptureServer */ = {
 			isa = PBXGroup;
 			children = (
@@ -790,6 +807,7 @@
 				2552B1412FAC432B00B0AF8C /* NASAAPI-Info.plist */,
 				F825C6632C790F4F006062A5 /* README.md */,
 				C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */,
+				3B3BEBF4F432560083EABF53 /* SessionFlowWeb */,
 			);
 			path = NRTestApp;
 			sourceTree = "<group>";
@@ -861,6 +879,7 @@
 				5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */,
 				BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */,
 				60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */,
+				B648D4E70E026CAE45D4CECB /* SessionFlowDiagramViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1263,6 +1282,8 @@
 				F8302B05296F5EFB003EC291 /* LaunchScreen.storyboard in Resources */,
 				2552B1462FAC432D00B0AF8C /* NASAAPI-Info.plist in Resources */,
 				F8302B02296F5EFB003EC291 /* Assets.xcassets in Resources */,
+				D5A27C66F7096FD0FA15BE19 /* session-flow.html in Resources */,
+				26A661E9DE4D16D9BAB3BAC5 /* mermaid.min.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1414,6 +1435,7 @@
 				C1A950386607A36BDB695E63 /* MobileViewModalsViewController.swift in Sources */,
 				87CE2A26AA768742E53EB23B /* MobileViewRestartedViewController.swift in Sources */,
 				A67A9C1CC416BDBEB4A12401 /* MobileViewComponent.swift in Sources */,
+				19BBD522DA2ED77DBFA2E8F8 /* SessionFlowDiagramViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1542,6 +1564,7 @@
 				BB4CD17744738F61C09F10D3 /* MobileViewModalsViewController.swift in Sources */,
 				964FC24FBB221FAF8BD9CD60 /* MobileViewRestartedViewController.swift in Sources */,
 				5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */,
+				569D49EE3625BA278FDA263C /* SessionFlowDiagramViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1607,6 +1630,7 @@
 				A37F42BB1965A0E52E624F1E /* MobileViewModalsViewController.swift in Sources */,
 				33330D334DAF56DA1EF5FBAD /* MobileViewRestartedViewController.swift in Sources */,
 				6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */,
+				2C7283654D4C025EF707C3FB /* SessionFlowDiagramViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

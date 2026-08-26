@@ -15,6 +15,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAFlags.h"
 #import "NRMAViewContext.h"
+#import "NRMASessionFlowMonitor.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMATaskQueue.h"
@@ -728,6 +729,15 @@
         return false;
     }
 
+    // Fold MobileView events into the session's flow diagram. Tapped here rather than in each
+    // producer because all of them -- the UIKit swizzle, the SwiftUI modifier, manual setCurrentView,
+    // and a host app recording its own -- arrive through this one call, which is also exactly what
+    // scripts/mobileview_flow.py sees when it reads an event dump.
+    if (([NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews])
+        && [eventType isEqualToString:kNRMA_RET_mobileView]) {
+        [[NRMASessionFlowMonitor sharedInstance] recordMobileViewEventWithAttributes:attributes];
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController addCustomEvent:eventType
                                                                        withAttributes:attributes];
 }
@@ -755,6 +765,13 @@
         }
     }
 
+    // Attach the breadcrumb to whichever screen was current when it was recorded. Reads
+    // breadcrumbAttributes, not attributes, because currentView is added by the merge above.
+    if ([NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews]) {
+        [[NRMASessionFlowMonitor sharedInstance] recordBreadcrumbNamed:name
+                                                           attributes:breadcrumbAttributes];
+    }
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
                                                                       withAttributes:breadcrumbAttributes];
 }
@@ -780,6 +797,27 @@
     // SPA / route-change model: close out the previous manual view (emitting its timeVisible),
     // make `name` current, and emit its appearance stamped with the prior view as referrer.
     [[NRMAViewContext sharedInstance] setCurrentManualView:name attributes:attributes];
+}
+
+#pragma mark - Session flow diagrams
+
++ (NSString*) currentSessionFlowDiagram {
+    return [NewRelic currentSessionFlowDiagramWithOptions:nil];
+}
+
++ (NSString*) currentSessionFlowDiagramWithOptions:(NRSessionFlowDiagramOptions*)options {
+    // Reading a diagram after shutdown is allowed on purpose: what was collected before the agent
+    // stopped is still the truth about that session, and this is a debugging aid.
+    return [[NRMASessionFlowMonitor sharedInstance] mermaidForCurrentSessionWithOptions:options];
+}
+
++ (NSArray<NSString*>*) archivedFlowDiagramSessionIds {
+    return [[NRMASessionFlowMonitor sharedInstance] archivedSessionIds];
+}
+
++ (NSString*) flowDiagramForSessionId:(NSString*)sessionId
+                              options:(NRSessionFlowDiagramOptions*)options {
+    return [[NRMASessionFlowMonitor sharedInstance] mermaidForSessionId:sessionId options:options];
 }
 
 + (BOOL) recordJavascriptError:(NSString* __nonnull)name
