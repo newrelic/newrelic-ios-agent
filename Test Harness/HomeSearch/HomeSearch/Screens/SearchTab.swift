@@ -46,7 +46,7 @@ struct SearchTab: View {
                     }
                 }
                 // Search is one of the two screens that opens an interaction trace.
-                .NRMobileView(name: ViewName.search.rawValue, startsInteraction: true)
+                .NRMobileView(name: ViewName.search.rawValue)
                 // Filters is a sheet, so it reports as its own view with Search as its referrer.
                 .NRMobileSheet(isPresented: $showingFilters, name: ViewName.filters.rawValue) {
                     FilterSheetScreen()

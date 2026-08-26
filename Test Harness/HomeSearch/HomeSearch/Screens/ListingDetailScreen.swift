@@ -85,8 +85,7 @@ struct ListingDetailScreen: View {
         // attributes are attached to the MobileView event.
         .NRMobileView(
             name: ViewName.listingDetail.rawValue,
-            attributes: listing.mobileViewAttributes,
-            startsInteraction: true
+            attributes: listing.mobileViewAttributes
         )
         // Item-driven sheet: the name closure receives the item, so it could vary per agent. It
         // deliberately does not — see the cardinality note in ViewName.

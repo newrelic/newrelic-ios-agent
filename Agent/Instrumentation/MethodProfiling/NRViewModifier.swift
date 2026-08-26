@@ -312,18 +312,18 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
                 do {
                     try await Task.sleep(nanoseconds: 500_000_000)
                 } catch { return }
-                //emitDisappearIfNeeded()
                 let id = UUID().uuidString
                 lastFiredAt = Date()
                 lastInstance = id
+                let viewName = name(selection)
                 NewRelic.recordCustomEvent("MobileView", attributes: [
-                    "viewName": name(selection),
+                    "viewName": viewName,
                     "viewClass": String(describing: Tag.self),
                     "viewInstanceId": id,
                     "uiPlatform": "SwiftUI",
                     "navigationKind": "tab",
                     // loadTime ≈ 0 for tab switches; semantics caveat in docs
-                    "appeared":       NSNumber(value: false),
+                    "appeared":       NSNumber(value: true),
                     "agentName": "iOS",
                 ])
             }

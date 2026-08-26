@@ -30,7 +30,10 @@ struct PhotoGalleryScreen: View {
                 }
             }
             .tabViewStyle(.page)
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .indexViewStyle(.page(backgroundDisplayMode: .always))       .NRMobileTabTracking(selection: $selection) { tag in
+               
+                return "Photo \(tag)"
+            }
 
             VStack {
                 HStack {
