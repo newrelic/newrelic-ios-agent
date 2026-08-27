@@ -1,0 +1,158 @@
+# Copy of wdio.yml that runs the LambdaTest iOS suite against the `mobile-views-2`
+# build instead of `develop`.
+#
+# Chained to the mobile-views-2 upload workflow, so it consumes the app that
+# workflow just pushed (via the `lambdatest-app-id` artifact) rather than the
+# develop app.
+#
+# Runs are identified in the LambdaTest automation dashboard by LT_RUN_LABEL,
+# which wdio-config-ios.js turns into:
+#   - build name: "[mobile-views-2] Build_NRTestApp - iOS:<timestamp>"
+#   - a "mobile-views-2" tag chip on every automation row (filterable)
+
+name: "WDIO: automate iOS tests (mobile-views-2)"
+
+permissions:
+  contents: read
+
+on:
+  # enables option for workflow to be manually executed in Github UI
+  workflow_dispatch:
+
+  # Automatically trigger after the mobile-views-2 uploadApp workflow completes successfully
+  workflow_run:
+    workflows: ["Upload iOS NRTestApp (mobile-views-2) to LambdaTest"]
+    types:
+      - completed
+
+jobs:
+  ios-data:
+    name: Generate iOS data (mobile-views-2)
+    runs-on: ubuntu-latest
+    # Only run if manually triggered, or if the trusted upstream upload workflow_run succeeded
+    if: ${{ (github.event_name == 'workflow_dispatch') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      # Surfaces this run as "[mobile-views-2] ..." + a tag chip in the LambdaTest dashboard
+      LT_RUN_LABEL: mobile-views-2
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Download LambdaTest app ID artifact (from workflow_run)
+        if: github.event_name == 'workflow_run'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            const matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "lambdatest-app-id"
+            })[0];
+            if (matchArtifact) {
+              const download = await github.rest.actions.downloadArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: matchArtifact.id,
+                archive_format: 'zip',
+              });
+              const fs = require('fs');
+              const path = require('path');
+              const artifactDir = path.join(process.env.RUNNER_TEMP, 'artifacts');
+              fs.mkdirSync(artifactDir, { recursive: true });
+              fs.writeFileSync(path.join(artifactDir, 'app-id.zip'), Buffer.from(download.data));
+            }
+
+      - name: Extract app ID (from workflow_run)
+        if: github.event_name == 'workflow_run'
+        run: |
+          if [ -f "${{ runner.temp }}/artifacts/app-id.zip" ]; then
+            mkdir -p "${{ runner.temp }}/artifacts/LambdaTest"
+            unzip -q "${{ runner.temp }}/artifacts/app-id.zip" -d "${{ runner.temp }}/artifacts/LambdaTest"
+            echo "Extracted app ID from workflow_run artifact"
+          fi
+        continue-on-error: true
+
+      - name: Download LambdaTest app ID artifact (from manual run)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/download-artifact@v6
+        with:
+          name: lambdatest-app-id
+          path: ${{ runner.temp }}/artifacts/LambdaTest
+        continue-on-error: true
+
+      - name: Set LT_APP_ID environment variable
+        run: |
+          APP_ID_FILE="${{ runner.temp }}/artifacts/LambdaTest/last-app-id"
+          if [ -f "$APP_ID_FILE" ]; then
+            APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
+            if echo "$APP_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+              echo "LT_APP_ID=$APP_ID" >> $GITHUB_ENV
+              echo "Using app ID: $APP_ID"
+            else
+              echo "Artifact app ID is invalid; tests will use default app ID from config"
+            fi
+          else
+            echo "No app ID artifact found, tests will use default app ID from config"
+          fi
+
+      - name: Execute iOS tests
+        run: for i in {1..1}; do echo "test run $i"; npm run test:wdio-ios; done
+
+      - name: Read test results
+        if: ${{ always() }}
+        run: |
+          RESULTS_FILE="LambdaTest/test-results.json"
+          if [ -f "$RESULTS_FILE" ]; then
+            PASSED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).passed")"
+            FAILED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).failed")"
+          else
+            PASSED="unknown"
+            FAILED="unknown"
+          fi
+          echo "TESTS_PASSED=$PASSED" >> $GITHUB_ENV
+          echo "TESTS_FAILED=$FAILED" >> $GITHUB_ENV
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully executed mobile-views-2 iOS tests (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to execute mobile-views-2 iOS tests (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":rotating_light: iOS LambdaTest Run Failed (mobile-views-2)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Branch:* mobile-views-2\n*Passed:* ${{ env.TESTS_PASSED }}\n*Failed:* ${{ env.TESTS_FAILED }}"
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

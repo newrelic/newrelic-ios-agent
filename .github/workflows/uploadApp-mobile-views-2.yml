@@ -1,0 +1,158 @@
+# Copy of uploadApp.yml that builds and uploads NRTestApp from the `mobile-views-2`
+# branch instead of `develop`, so the mobile-views work has its own always-fresh
+# app on LambdaTest (LambdaTest expires uploads after 60 days).
+#
+# The upload script (LambdaTest/uploadAppToLambdaTest.mjs) stamps each custom_id
+# with a timestamp, so this run never clobbers the develop upload.
+#
+# Note: this workflow deliberately keeps a different `name:` from uploadApp.yml so
+# it does NOT trigger wdio.yml, which listens for workflow_run on
+# "Upload iOS NRTestApp to LambdaTest" and checks out develop.
+
+name: Upload iOS NRTestApp (mobile-views-2) to LambdaTest
+
+permissions:
+  contents: read
+  actions: read
+
+on:
+ # enables option for workflow to be manually executed in Github UI
+ workflow_dispatch:
+
+ # Runs daily to build, upload, and refresh the LambdaTest app (which otherwise expires after 60 days)
+ schedule:
+   - cron: "41 7 * * *"
+
+jobs:
+
+  build-ios:
+    name: Build iOS app
+    runs-on: macos-15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
+        with:
+          ref: mobile-views-2
+          submodules: true
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Select Xcode 16.4
+        run: |
+          sudo xcode-select -switch /Applications/Xcode_16.4.app
+
+      - name: Install dependencies
+        run: |
+          npm install
+      # before building iOS app, please set the main server, the crash server, and the app token secret
+      # the plist to be modified is located at ./Test Harness/NRTestApp/NRAPI-Info.plist
+      # the secret mapping is as follows secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS , secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS, secrets.NRTESTAPP_APP_TOKEN
+      - name: Set plist secrets
+        env:
+          NRTESTAPP_CRASH_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_CRASH_COLLECTOR_ADDRESS }}
+          NRTESTAPP_MAIN_COLLECTOR_ADDRESS: ${{ secrets.NRTESTAPP_MAIN_COLLECTOR_ADDRESS }}
+          NRTESTAPP_APP_TOKEN: ${{ secrets.NRTESTAPP_APP_TOKEN }}
+        run: |
+          PLIST_PATH="./Test Harness/NRTestApp/NRAPI-Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :crashCollectorAddress ${NRTESTAPP_CRASH_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :collectorAddress ${NRTESTAPP_MAIN_COLLECTOR_ADDRESS}" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :NRAPIKey ${NRTESTAPP_APP_TOKEN}" "$PLIST_PATH"
+
+      - name: Clean iOS app
+        run: |
+          xcodebuild clean -workspace Agent.xcworkspace -scheme NRTestApp -derivedDataPath "derived_build"
+
+      - name: Build iOS app
+        run: |
+          xcodebuild build \
+            -workspace Agent.xcworkspace -scheme NRTestApp \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath "derived_build" \
+            build
+
+      - name: Compress iOS app
+        run: |
+          ls -al
+          cd ./derived_build/Build/Products/Release-iphonesimulator/
+          ls
+          zip -r nrtestapp-ios.zip NRTestApp.app
+
+      - name: Upload iOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: nrtestapp-ios
+          path: ./derived_build//Build/Products/Release-iphonesimulator/nrtestapp-ios.zip
+          compression-level: 0
+          retention-days: 1
+
+  upload-apps:
+    name: Upload NRTestApp app to LT
+    needs: [build-ios]
+    runs-on: ubuntu-latest
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      - name: Download iOS artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: nrtestapp-ios
+          path: ${{ github.workspace }}/builds
+
+      - name: Run upload script
+        run: node LambdaTest/uploadAppToLambdaTest.mjs
+
+      - name: Upload custom_id artifact
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambdatest-app-id
+          path: LambdaTest/last-app-id
+          retention-days: 1
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully uploaded mobile-views-2 apps to LambdaTest"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to upload mobile-views-2 apps to LambdaTest"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":crying-sunglasses-cowboy: LambdaTest Upload Failed (mobile-views-2)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "Something went wrong while uploading the mobile-views-2 NRTestApp to LambdaTest. Please check the logs for more details."
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
