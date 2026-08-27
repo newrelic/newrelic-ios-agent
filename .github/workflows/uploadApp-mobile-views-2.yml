@@ -92,6 +92,11 @@ jobs:
     name: Upload NRTestApp app to LT
     needs: [build-ios]
     runs-on: ubuntu-latest
+    outputs:
+      # Handed to the test workflow as a workflow_call input. Passing it in-run
+      # like this avoids having the downstream workflow download an artifact from
+      # this run, which is the "artifact poisoning" pattern security scanners flag.
+      app_id: ${{ steps.app-id.outputs.app_id }}
     env:
       LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
@@ -112,6 +117,27 @@ jobs:
       - name: Run upload script
         run: node LambdaTest/uploadAppToLambdaTest.mjs
 
+      # Read back the custom_id this run just wrote. Validated before it leaves
+      # the job so a malformed value can't reach the downstream workflow.
+      - name: Capture uploaded app ID
+        id: app-id
+        run: |
+          APP_ID_FILE="LambdaTest/last-app-id"
+          if [ ! -f "$APP_ID_FILE" ]; then
+            echo "::error::upload script did not write $APP_ID_FILE"
+            exit 1
+          fi
+          APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
+          if ! printf '%s' "$APP_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+            echo "::error::uploaded app ID is not in the expected format"
+            exit 1
+          fi
+          echo "app_id=$APP_ID" >> "$GITHUB_OUTPUT"
+          echo "Captured app ID: $APP_ID"
+
+      # Informational only - for humans debugging a run. Nothing consumes this;
+      # the test workflow gets the ID via the job output above. Do not wire a
+      # downstream workflow to download it (artifact poisoning).
       - name: Upload custom_id artifact
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
@@ -156,3 +182,11 @@ jobs:
                   action_id: "button-action"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  run-tests:
+    name: Run LambdaTest iOS suite
+    needs: [upload-apps]
+    uses: ./.github/workflows/wdio-mobile-views-2.yml
+    secrets: inherit
+    with:
+      app_id: ${{ needs.upload-apps.outputs.app_id }}
