@@ -1,9 +1,12 @@
 # Copy of wdio.yml that runs the LambdaTest iOS suite against the `mobile-views-2`
 # build instead of `develop`.
 #
-# Chained to the mobile-views-2 upload workflow, so it consumes the app that
-# workflow just pushed (via the `lambdatest-app-id` artifact) rather than the
-# develop app.
+# The LambdaTest app ID arrives as a workflow_call INPUT from
+# uploadApp-mobile-views-2.yml, not as a downloaded artifact. That is deliberate:
+# consuming an artifact produced by another workflow run is the "artifact
+# poisoning" pattern (the artifact's bytes are attacker-controllable when the
+# upstream run can be influenced by an outside contributor), whereas a
+# workflow_call input is passed in-run from a job output in this repo.
 #
 # Runs are identified in the LambdaTest automation dashboard by LT_RUN_LABEL,
 # which wdio-config-ios.js turns into:
@@ -16,21 +19,28 @@ permissions:
   contents: read
 
 on:
+  # Chained from uploadApp-mobile-views-2.yml once the app is uploaded.
+  workflow_call:
+    inputs:
+      app_id:
+        description: "LambdaTest custom_id of the app to test."
+        required: false
+        type: string
+        default: ""
+
   # enables option for workflow to be manually executed in Github UI
   workflow_dispatch:
-
-  # Automatically trigger after the mobile-views-2 uploadApp workflow completes successfully
-  workflow_run:
-    workflows: ["Upload iOS NRTestApp (mobile-views-2) to LambdaTest"]
-    types:
-      - completed
+    inputs:
+      app_id:
+        description: "LambdaTest custom_id to test. Leave blank to use LambdaTest/last-app-id from the branch."
+        required: false
+        type: string
+        default: ""
 
 jobs:
   ios-data:
     name: Generate iOS data (mobile-views-2)
     runs-on: ubuntu-latest
-    # Only run if manually triggered, or if the trusted upstream upload workflow_run succeeded
-    if: ${{ (github.event_name == 'workflow_dispatch') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     env:
       LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
       LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
@@ -43,64 +53,20 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/env-setup
 
-      - name: Download LambdaTest app ID artifact (from workflow_run)
-        if: github.event_name == 'workflow_run'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.payload.workflow_run.id,
-            });
-            const matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "lambdatest-app-id"
-            })[0];
-            if (matchArtifact) {
-              const download = await github.rest.actions.downloadArtifact({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                artifact_id: matchArtifact.id,
-                archive_format: 'zip',
-              });
-              const fs = require('fs');
-              const path = require('path');
-              const artifactDir = path.join(process.env.RUNNER_TEMP, 'artifacts');
-              fs.mkdirSync(artifactDir, { recursive: true });
-              fs.writeFileSync(path.join(artifactDir, 'app-id.zip'), Buffer.from(download.data));
-            }
-
-      - name: Extract app ID (from workflow_run)
-        if: github.event_name == 'workflow_run'
-        run: |
-          if [ -f "${{ runner.temp }}/artifacts/app-id.zip" ]; then
-            mkdir -p "${{ runner.temp }}/artifacts/LambdaTest"
-            unzip -q "${{ runner.temp }}/artifacts/app-id.zip" -d "${{ runner.temp }}/artifacts/LambdaTest"
-            echo "Extracted app ID from workflow_run artifact"
-          fi
-        continue-on-error: true
-
-      - name: Download LambdaTest app ID artifact (from manual run)
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/download-artifact@v6
-        with:
-          name: lambdatest-app-id
-          path: ${{ runner.temp }}/artifacts/LambdaTest
-        continue-on-error: true
-
+      # Validate before use. The value is repo-controlled (job output or a
+      # dispatch by someone with write access), but a bad value would otherwise
+      # flow into $GITHUB_ENV, so keep the allowlist tight.
       - name: Set LT_APP_ID environment variable
+        env:
+          APP_ID_INPUT: ${{ inputs.app_id }}
         run: |
-          APP_ID_FILE="${{ runner.temp }}/artifacts/LambdaTest/last-app-id"
-          if [ -f "$APP_ID_FILE" ]; then
-            APP_ID="$(tr -d '\n' < "$APP_ID_FILE")"
-            if echo "$APP_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
-              echo "LT_APP_ID=$APP_ID" >> $GITHUB_ENV
-              echo "Using app ID: $APP_ID"
-            else
-              echo "Artifact app ID is invalid; tests will use default app ID from config"
-            fi
+          if [ -z "$APP_ID_INPUT" ]; then
+            echo "No app ID supplied; tests will use LambdaTest/last-app-id from the branch"
+          elif printf '%s' "$APP_ID_INPUT" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+            echo "LT_APP_ID=$APP_ID_INPUT" >> "$GITHUB_ENV"
+            echo "Using app ID: $APP_ID_INPUT"
           else
-            echo "No app ID artifact found, tests will use default app ID from config"
+            echo "Supplied app ID is invalid; tests will use LambdaTest/last-app-id from the branch"
           fi
 
       - name: Execute iOS tests
