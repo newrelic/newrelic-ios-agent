@@ -16,7 +16,7 @@ public class JSErrorController: NSObject {
 
     // MARK: - Properties
 
-    var sessionId: String?
+    private var sessionId: String?
     var sessionStartDate: Date?
 
     private let platform: String
@@ -150,16 +150,18 @@ public class JSErrorController: NSObject {
             allAttributes["appVersion"] = appVersion
             // Keep appVersion at top level for grouping in onHarvest
             errorData["appVersion"] = appVersion
+        } else {
+            NRLOG_AGENT_DEBUG("JS error recorded without agent configuration: appVersion returned nil")
         }
 
         // Add all session attributes from analytics controller
-        if let sessionAttributesJSON = analyticsController.sessionAttributeJSONString(),
-           !sessionAttributesJSON.isEmpty,
-           let sessionData = sessionAttributesJSON.data(using: .utf8),
-           let sessionAttributes = try? JSONSerialization.jsonObject(with: sessionData) as? [String: Any] {
+        if let sessionAttributes = analyticsController.sessionAttributeDictionary() as? [String: Any],
+           !sessionAttributes.isEmpty {
             for (key, value) in sessionAttributes {
                 allAttributes[key] = value
             }
+        } else {
+            NRLOG_AGENT_DEBUG("JS error recorded without session attributes: sessionAttributeDictionary() returned nil or empty")
         }
 
         // Add additional attributes if provided (may override session attributes)
@@ -306,9 +308,6 @@ public class JSErrorController: NSObject {
 
         // Format payload (session attributes are now per-error, not at payload level)
         let payload = formatPayload(errors, appVersion: appVersion)
-
-        // Get connection info
-        let connectInfo = NRMAAgentConfiguration.connectionInformation()
 
         // Track this upload
         pendingUploadsLock.lock()

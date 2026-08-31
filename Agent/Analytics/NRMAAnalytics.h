@@ -33,6 +33,7 @@
 - (BOOL) addNetworkErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload*)payload;
 
 - (NSString*) analyticsJSONString;
+- (NSDictionary*) sessionAttributeDictionary;
 - (NSString*) sessionAttributeJSONString;
 
 - (void) sessionWillEnd;

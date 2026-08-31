@@ -12,6 +12,10 @@
 #import "NRMAHarvestController.h"
 #import "NRMABool.h"
 #import <Utilities/LibLogger.hpp>
+#import <Utilities/String.hpp>
+#import <Utilities/Number.hpp>
+#import <Utilities/Boolean.hpp>
+#import <Analytics/AttributeBase.hpp>
 #import "NRConstants.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAFlags.h"
@@ -1069,6 +1073,74 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
             NRLOG_AGENT_VERBOSE(@"Failed to generate event json");
         }
         return nil;
+    }
+}
+
+- (NSDictionary*) sessionAttributeDictionaryFromCpp {
+    NSMutableDictionary *result = [NSMutableDictionary dictionary];
+    try {
+        auto attributes = _analyticsController->getSessionAttributes();
+        for (const auto& pair : attributes) {
+            NSString *key = [NSString stringWithUTF8String:pair.first.c_str()];
+            auto value = pair.second->getValue();
+            if (!value) {
+                NRLOG_AGENT_VERBOSE(@"Skipping attribute \"%s\": null value", pair.first.c_str());
+                continue;
+            }
+            id objcValue = nil;
+            switch (value->getCategory()) {
+                case BaseValue::Category::STRING: {
+                    auto str = dynamic_cast<String*>(value.get());
+                    if (str) {
+                        objcValue = [NSString stringWithUTF8String:str->getValue().c_str()];
+                    }
+                    break;
+                }
+                case BaseValue::Category::NUMBER: {
+                    auto num = dynamic_cast<Number*>(value.get());
+                    if (num) {
+                        switch (num->getTag()) {
+                            case Number::Tag::DOUBLE:
+                                objcValue = [NSNumber numberWithDouble:num->doubleValue()];
+                                break;
+                            case Number::Tag::LONG:
+                                objcValue = [NSNumber numberWithLongLong:num->longLongValue()];
+                                break;
+                            case Number::Tag::U_LONG:
+                                objcValue = [NSNumber numberWithUnsignedLongLong:num->unsignedLongLongValue()];
+                                break;
+                            default:
+                                NRLOG_AGENT_VERBOSE(@"Skipping attribute \"%s\": unrecognised Number::Tag %d", pair.first.c_str(), (int)num->getTag());
+                                break;
+                        }
+                    }
+                    break;
+                }
+                case BaseValue::Category::BOOLEAN: {
+                    auto b = dynamic_cast<NewRelic::Boolean*>(value.get());
+                    if (b) {
+                        objcValue = [NSNumber numberWithBool:b->getValue()];
+                    }
+                    break;
+                }
+            }
+            if (key && objcValue) {
+                result[key] = objcValue;
+            }
+        }
+    } catch (std::exception& e) {
+        NRLOG_AGENT_VERBOSE(@"Failed to get session attributes from C++ layer: %s", e.what());
+    } catch (...) {
+        NRLOG_AGENT_VERBOSE(@"Failed to get session attributes from C++ layer.");
+    }
+    return [result copy];
+}
+
+- (NSDictionary*) sessionAttributeDictionary {
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        return [_sessionAttributeManager sessionAttributeDictionary];
+    } else {
+        return [self sessionAttributeDictionaryFromCpp];
     }
 }
 
