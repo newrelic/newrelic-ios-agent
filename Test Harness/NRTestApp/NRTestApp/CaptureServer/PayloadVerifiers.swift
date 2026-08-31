@@ -296,7 +296,7 @@ private enum DataVerifier {
 // Spec: endpoints/jserror_data.md
 //
 // Required body fields: dataToken (array), analyticsEvents (array)
-// Required query params: protocol_version=1, platform=reactnative
+// Required query params: protocol_version=1, platform=ReactNative
 // Required event fields: eventType="MobileJSError", errorId, errorName, errorMessage
 
 private enum JSErrorsVerifier {
@@ -316,7 +316,7 @@ private enum JSErrorsVerifier {
 
             // Query params (jserror_data.md §Request)
             check("protocol_version == 1",              q("protocol_version") == "1",  detail: q("protocol_version").map { "was \"\($0)\"" })
-            check("platform == reactnative",            q("platform") == "reactnative", detail: q("platform").map { "was \"\($0)\"" })
+            check("platform == ReactNative",            q("platform") == "ReactNative", detail: q("platform").map { "was \"\($0)\"" })
 
             // Required body fields
             check("Valid JSON object",                  true)
