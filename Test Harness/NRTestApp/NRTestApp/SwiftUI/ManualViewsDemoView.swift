@@ -11,6 +11,11 @@
 //  tracking. Each call closes the previous manual view (emitting its timeVisible) and opens a new
 //  one, with the prior screen recorded as the `previousView` referrer.
 //
+//  It also exercises MobileViewTiming against a manual view: markViewTiming measures from the
+//  setCurrentView call that declared the view, so timings work identically whether the current view
+//  came from UIKit swizzling, a SwiftUI modifier, or this API. Tapping a timing button before any
+//  screen is selected returns false — no current view means no zero point.
+//
 //  Requires NRFeatureFlag_ManualViews (enabled in AppDelegate).
 //
 
@@ -60,6 +65,39 @@ struct ManualViewsDemoView: View {
                     append("recordBreadcrumb(\"cta_tapped\") — carries currentView/previousView")
                 } label: {
                     Text("Record breadcrumb here").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                // Timings attach to whichever view is current — including a manually declared one.
+                // A manual view's appear time is set by setCurrentView, so markViewTiming measures
+                // from the tap that declared it. Tapping this *before* choosing a screen above
+                // returns false: there is no current view, so there is no zero point to measure from.
+                Text("Time this manual view").font(.headline)
+
+                Button {
+                    let took = NewRelic.markViewTiming("timeToFullDisplay")
+                    append("markViewTiming(\"timeToFullDisplay\") -> \(took)"
+                           + (took ? " — measured from setCurrentView" : " — no current view"))
+                } label: {
+                    Text("markViewTiming(\"timeToFullDisplay\")").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    // Zero point is the request, not the view, so the duration is supplied.
+                    let took = NewRelic.recordViewTiming("timeToFirstByte", milliseconds: 214)
+                    append("recordViewTiming(\"timeToFirstByte\", 214ms) -> \(took)")
+                } label: {
+                    Text("recordViewTiming(\"timeToFirstByte\", 214ms)").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    // Reserved: the agent owns this series.
+                    let took = NewRelic.markViewTiming("timeToInitialDisplay")
+                    append("markViewTiming(\"timeToInitialDisplay\") -> \(took) — reserved name")
+                } label: {
+                    Text("markViewTiming(\"timeToInitialDisplay\") — reserved").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
 

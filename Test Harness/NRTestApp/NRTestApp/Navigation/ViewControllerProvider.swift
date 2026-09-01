@@ -94,6 +94,11 @@ enum ViewControllerProvider {
         return viewController
     }
 
+    static var mobileViewTimingViewController: MobileViewTimingViewController {
+        let viewController = MobileViewTimingViewController()
+        return viewController
+    }
+
     static var mobileViewIgnoredViewController: MobileViewIgnoredViewController {
         let viewController = MobileViewIgnoredViewController()
         return viewController

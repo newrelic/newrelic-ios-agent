@@ -17,6 +17,7 @@
 #import "NRLogger.h"
 #import "NRMAMethodSwizzling.h"
 #import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
 #import "NRMAFlags.h"
 
 // Associated-object keys (pointer address acts as unique key)
@@ -287,6 +288,18 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     // Both halves of a view's lifetime are recorded, and they carry different things: this one
     // loadTime, the disappear event timeVisible.
     [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+
+    // Project the same number as the out-of-the-box timeToInitialDisplay timing, so MobileViewTiming
+    // dashboards populate with no customer instrumentation and customer marks such as
+    // timeToFullDisplay land on the same axis. Skipped when loadTime was omitted above: there is
+    // nothing to project, and a placeholder would drag the aggregate toward zero.
+    if (loadTimestamp) {
+        [[NRMAViewTiming sharedInstance] recordInitialDisplayForViewNamed:viewName
+                                                              instanceId:uuid
+                                                            previousView:attrs[@"previousView"]
+                                                                platform:@"UIKit"
+                                                            milliseconds:[attrs[kNRAttr_loadTime] doubleValue]];
+    }
 }
 
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {

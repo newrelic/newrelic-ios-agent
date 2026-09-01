@@ -294,6 +294,8 @@ class ViewController: UIViewController {
 
         options.append(UtilOption(title: "MobileView · Custom Attrs (UIKit)", handler: { [self] in mobileViewAttributesAction()}))
 
+        options.append(UtilOption(title: "MobileView · View Timing / TTFD (UIKit)", handler: { [self] in mobileViewTimingAction()}))
+
         options.append(UtilOption(title: "MobileView · Ignored (UIKit)", handler: { [self] in mobileViewIgnoredAction()}))
 
         options.append(UtilOption(title: "MobileView · Views × Interactions (UIKit)", handler: { [self] in viewsAndInteractionsAction()}))
@@ -402,6 +404,10 @@ class ViewController: UIViewController {
 
     func mobileViewAttributesAction() {
         coordinator?.showMobileViewAttributesViewController()
+    }
+
+    func mobileViewTimingAction() {
+        coordinator?.showMobileViewTimingViewController()
     }
 
     func mobileViewIgnoredAction() {

@@ -15,6 +15,7 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAFlags.h"
 #import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMATaskQueue.h"
@@ -780,6 +781,28 @@
     // SPA / route-change model: close out the previous manual view (emitting its timeVisible),
     // make `name` current, and emit its appearance stamped with the prior view as referrer.
     [[NRMAViewContext sharedInstance] setCurrentManualView:name attributes:attributes];
+}
+
++ (BOOL) markViewTiming:(NSString* __nonnull)name
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
+
+    // Validation, capping, and the flag gate all live in NRMAViewTiming so they are testable
+    // without a running agent.
+    return [[NRMAViewTiming sharedInstance] markTimingNamed:name];
+}
+
++ (BOOL) recordViewTiming:(NSString* __nonnull)name milliseconds:(double)milliseconds
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
+
+    return [[NRMAViewTiming sharedInstance] recordTimingNamed:name milliseconds:milliseconds];
 }
 
 + (BOOL) recordJavascriptError:(NSString* __nonnull)name

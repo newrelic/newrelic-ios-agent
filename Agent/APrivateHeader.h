@@ -34,4 +34,5 @@
 #import "NRMAOfflineStorage.h"
 #import "NRMAMobileViewTracker.h"
 #import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
 #endif /* APrivateHeader_h */

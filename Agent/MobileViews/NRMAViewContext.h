@@ -23,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// when the view covering it went away, rather than because a producer observed an appearance.
 FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
 
+@class NRMAViewTimingSnapshot;
+
 @interface NRMAViewContext : NSObject
 
 + (instancetype)sharedInstance;
@@ -83,6 +85,12 @@ FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
 - (NSDictionary<NSString *, id> *)previousViewAttributes;
 
 #pragma mark - Timing
+
+/// Immutable copy of the current view, its appear time, and its referrer, for MobileViewTiming.
+///
+/// Exists so timing never emits while holding this class's non-recursive os_unfair_lock: callers
+/// take a snapshot, the lock is released here, and only then is an event recorded.
+- (NRMAViewTimingSnapshot *)snapshotForTiming;
 
 /// Single seconds → milliseconds conversion, floored at 0. All view timing (loadTime, timeVisible)
 /// runs through here so the unit cannot drift between producers.

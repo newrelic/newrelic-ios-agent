@@ -79,8 +79,11 @@
 		2E4EAED06484653D26AC8460 /* MobileViewAttributesDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */; };
 		33330D334DAF56DA1EF5FBAD /* MobileViewRestartedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */; };
 		404AE441D22AABA37E095251 /* MobileViewIgnoredDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */; };
+		4B3F377D5E70F791A3FA92D2 /* MobileViewTimingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9186DCC3D3FBBF7DA189D72 /* MobileViewTimingViewController.swift */; };
 		5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
+		5E0667158763F1148D5D3C91 /* MobileViewTimingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9186DCC3D3FBBF7DA189D72 /* MobileViewTimingViewController.swift */; };
 		6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */; };
+		6B7A632DDA9119E541B8BB48 /* MobileViewTimingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9186DCC3D3FBBF7DA189D72 /* MobileViewTimingViewController.swift */; };
 		7B9CB1B9B842FE8EE0EB4A0E /* MobileViewIgnoredViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */; };
 		87CE2A26AA768742E53EB23B /* MobileViewRestartedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */; };
 		964FC24FBB221FAF8BD9CD60 /* MobileViewRestartedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */; };
@@ -468,8 +471,8 @@
 		ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredDemoView.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001C2 /* MobileViewAttributesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewAttributesViewController.swift; sourceTree = "<group>"; };
 		ABCDE10010000000000001D2 /* MobileViewIgnoredViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewIgnoredViewController.swift; sourceTree = "<group>"; };
-		BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewModalsViewController.swift; sourceTree = "<group>"; };
 		B4E8F8DCA37F7A30864E36C9 /* MobileViewComponent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewComponent.swift; sourceTree = "<group>"; };
+		BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewModalsViewController.swift; sourceTree = "<group>"; };
 		C0ED90FB8B82A0549540934E /* MobileViewCorrelationProbe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewCorrelationProbe.swift; sourceTree = "<group>"; };
 		CD0001001CD000000000CD00 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewController.swift; sourceTree = "<group>"; };
 		CD0001031CD000000000CD00 /* MapViewSwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewSwiftUI.swift; sourceTree = "<group>"; };
@@ -557,6 +560,7 @@
 		F8F5D8202BEBB7C800CDC139 /* NRTestApp (watchOS) AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "NRTestApp (watchOS) AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8F5D8222BEBB7C800CDC139 /* NRTestApp__watchOS__AppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTests.swift; sourceTree = "<group>"; };
 		F8F5D8242BEBB7C800CDC139 /* NRTestApp__watchOS__AppTestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRTestApp__watchOS__AppTestsLaunchTests.swift; sourceTree = "<group>"; };
+		F9186DCC3D3FBBF7DA189D72 /* MobileViewTimingViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewTimingViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -861,6 +865,7 @@
 				5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */,
 				BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */,
 				60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */,
+				F9186DCC3D3FBBF7DA189D72 /* MobileViewTimingViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -1414,6 +1419,7 @@
 				C1A950386607A36BDB695E63 /* MobileViewModalsViewController.swift in Sources */,
 				87CE2A26AA768742E53EB23B /* MobileViewRestartedViewController.swift in Sources */,
 				A67A9C1CC416BDBEB4A12401 /* MobileViewComponent.swift in Sources */,
+				5E0667158763F1148D5D3C91 /* MobileViewTimingViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1542,6 +1548,7 @@
 				BB4CD17744738F61C09F10D3 /* MobileViewModalsViewController.swift in Sources */,
 				964FC24FBB221FAF8BD9CD60 /* MobileViewRestartedViewController.swift in Sources */,
 				5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */,
+				6B7A632DDA9119E541B8BB48 /* MobileViewTimingViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1607,6 +1614,7 @@
 				A37F42BB1965A0E52E624F1E /* MobileViewModalsViewController.swift in Sources */,
 				33330D334DAF56DA1EF5FBAD /* MobileViewRestartedViewController.swift in Sources */,
 				6901E635D6B2B37C9B292B9F /* MobileViewComponent.swift in Sources */,
+				4B3F377D5E70F791A3FA92D2 /* MobileViewTimingViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

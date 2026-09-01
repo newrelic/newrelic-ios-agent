@@ -132,6 +132,16 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 // the only event that can hold loadTime (measured above); the disappear event
                 // carries timeVisible instead.
                 NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+
+                // Project the same number as the out-of-the-box timeToInitialDisplay timing, so
+                // MobileViewTiming dashboards populate with no customer instrumentation and customer
+                // marks such as timeToFullDisplay land on the same axis as the agent's baseline.
+                NRMAViewTiming.sharedInstance().recordInitialDisplay(
+                    forViewNamed: viewName,
+                    instanceId: id,
+                    previousView: attrs["previousView"] as? String,
+                    platform: "SwiftUI",
+                    milliseconds: loadTimeMs)
             }
             .onDisappear {
                 // Master switch: honor the AutomaticMobileViews feature flag here too, so a view

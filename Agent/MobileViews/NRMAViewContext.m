@@ -8,6 +8,7 @@
 #import "NRMAViewContext.h"
 #import <os/lock.h>
 #import "NewRelic.h"
+#import "NRMAViewTiming.h"
 
 // MobileView event type + attribute keys (shared schema with NRMAMobileViewTracker).
 static NSString * const kNRMobileViewEventType = @"MobileView";
@@ -356,6 +357,38 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 }
 
 #pragma mark - Timing
+
+- (NRMAViewTimingSnapshot *)snapshotForTiming {
+    os_unfair_lock_lock(&_lock);
+    NSString *name       = _currentViewName;
+    NSString *instanceId = _currentViewInstanceId;
+    CFAbsoluteTime appear = _currentViewAppearTime;
+    NSString *previous   = _previousViewName;
+    BOOL hasCurrent      = (_currentViewName.length > 0);
+
+    // Platform is not held alongside _currentView*: automatic producers keep it on their visible-view
+    // stack entry, and the manual producer has no entry at all. Resolve it here so the timing event
+    // reports the same uiPlatform the MobileView event did.
+    NSString *platform = nil;
+    if (_currentViewSource == NRMAViewSourceManual) {
+        platform = kNRUIPlatformManual;
+    } else if (instanceId.length > 0) {
+        for (NRMAVisibleView *entry in _visibleViews.reverseObjectEnumerator) {
+            if ([entry.instanceId isEqualToString:instanceId]) {
+                platform = entry.platform;
+                break;
+            }
+        }
+    }
+    os_unfair_lock_unlock(&_lock);
+
+    return [[NRMAViewTimingSnapshot alloc] initWithViewName:name
+                                            viewInstanceId:instanceId
+                                              previousView:previous
+                                                uiPlatform:platform
+                                                appearTime:appear
+                                            hasCurrentView:hasCurrent];
+}
 
 + (double)millisecondsBetween:(CFAbsoluteTime)start and:(CFAbsoluteTime)end {
     double ms = (end - start) * 1000.0;
