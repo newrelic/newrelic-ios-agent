@@ -17,6 +17,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMAAppToken.h"
 #include <execinfo.h>
+#include <exception>
 #import "NRMAFlags.h"
 #include <Analytics/AnalyticsController.hpp>
 #import "NRMABool.h"
@@ -33,6 +34,17 @@
 @end
 
 const NSString* kHexBackupStoreFolder = @"hexbkup/";
+
+// The unguarded bodies of the three public record* entry points. Every public
+// entry point wraps its counterpart here in the crash boundary below; nothing
+// else should call these directly.
+@interface NRMAHandledExceptions (CrashBoundary)
+- (void) nrma_recordErrorUnguarded:(NSError* _Nonnull)error
+                        attributes:(NSDictionary* _Nullable)attributes;
+- (void) nrma_recordHandledExceptionUnguarded:(NSException*)exception
+                                   attributes:(NSDictionary*)attributes;
+- (void) nrma_recordHandledExceptionWithStackTraceUnguarded:(NSDictionary*)exceptionDictionary;
+@end
 
 @implementation NRMAHandledExceptions {
     NewRelic::Hex::HexController* _controller;
@@ -201,8 +213,60 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
 }
 
+// MARK: - Crash boundary
+//
+// Everything under the record* entry points is C++ that allocates: createReport(),
+// the attribute maps, and the flatbuffer serialization inside HexStore::store().
+// When the device is low on memory any of those allocations can throw
+// std::bad_alloc, and a malformed report makes HexReport::finalize() throw
+// std::invalid_argument. None of it used to be caught, so the throw unwound
+// straight out through this Objective-C frame with no handler above it —
+// std::terminate -> __cxa_call_terminate -> the host app is killed.
+//
+// Instrumentation must never be able to kill the app it is watching. Guarding
+// here rather than inside HexController::submit() is deliberate: the throw can
+// originate in createReport() and in the attribute plumbing, both of which run
+// before submit() is reached. On failure the report is dropped and we return.
+//
+// See GitHub issue #884 / NR-614312.
+
 - (void) recordError:(NSError * _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes
+{
+    try {
+        [self nrma_recordErrorUnguarded:error attributes:attributes];
+    } catch (const std::exception& e) {
+        NRLOG_AGENT_ERROR(@"Dropped handled error report for domain \"%@\": %s", error.domain, e.what());
+    } catch (...) {
+        NRLOG_AGENT_ERROR(@"Dropped handled error report for domain \"%@\": unknown C++ exception", error.domain);
+    }
+}
+
+- (void) recordHandledException:(NSException*)exception
+                     attributes:(NSDictionary*)attributes
+{
+    try {
+        [self nrma_recordHandledExceptionUnguarded:exception attributes:attributes];
+    } catch (const std::exception& e) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report \"%@\": %s", exception.name, e.what());
+    } catch (...) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report \"%@\": unknown C++ exception", exception.name);
+    }
+}
+
+- (void) recordHandledExceptionWithStackTrace:(NSDictionary*)exceptionDictionary
+{
+    try {
+        [self nrma_recordHandledExceptionWithStackTraceUnguarded:exceptionDictionary];
+    } catch (const std::exception& e) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report with stack trace: %s", e.what());
+    } catch (...) {
+        NRLOG_AGENT_ERROR(@"Dropped handled exception report with stack trace: unknown C++ exception");
+    }
+}
+
+- (void) nrma_recordErrorUnguarded:(NSError * _Nonnull)error
+                        attributes:(NSDictionary* _Nullable)attributes
 {
     void* callstack[1024];
     int frames = backtrace(callstack,1024);
@@ -253,8 +317,8 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     }
 }
 
-- (void) recordHandledException:(NSException*)exception
-                     attributes:(NSDictionary*)attributes {
+- (void) nrma_recordHandledExceptionUnguarded:(NSException*)exception
+                                   attributes:(NSDictionary*)attributes {
     if (exception == nil) {
         NRLOG_AGENT_ERROR(@"Ignoring nil exception.");
         return;
@@ -364,7 +428,7 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
     });
 }
 
-- (void) recordHandledExceptionWithStackTrace:(NSDictionary*)exceptionDictionary {
+- (void) nrma_recordHandledExceptionWithStackTraceUnguarded:(NSDictionary*)exceptionDictionary {
 
     NSString* eName = exceptionDictionary[@"name"];
     NSString* eReason = exceptionDictionary[@"reason"];
