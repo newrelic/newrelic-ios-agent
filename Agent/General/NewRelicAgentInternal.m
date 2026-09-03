@@ -624,7 +624,7 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
         self.jsErrorController = [[JSErrorController alloc] initWithAnalyticsController:self.analyticsController
                                                                         sessionStartTime:self.appSessionStartDate
                                                                       agentConfiguration:self.agentConfiguration
-                                                                                platform:@"reactnative"
+                                                                                platform:kNRMAPlatformString_ReactNative
                                                                                sessionId:[self currentSessionId]
                                                                       attributeValidator:[[NRMAAttributeValidator alloc] init]];
 
