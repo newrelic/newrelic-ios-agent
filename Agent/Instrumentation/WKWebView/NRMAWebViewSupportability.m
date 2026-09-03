@@ -53,9 +53,14 @@ static BOOL sNRMABrowserAgentDetected = NO;
 
 + (void)recordBrowserAgentDetected {
     sNRMABrowserAgentDetected = YES;
-    static dispatch_once_t token;
-    [self recordWebViewSupportMetric:kNRMAWebViewBrowserAgentDetectedMetric withToken:&token];
+    [NRMAMeasurements recordAndScopeMetricNamed:kNRMAWebViewBrowserAgentDetectedMetric value:@1];
 }
+
+#ifdef DEBUG
++ (void)resetBrowserAgentDetectionForTesting {
+    sNRMABrowserAgentDetected = NO;
+}
+#endif
 
 + (void)recordWebViewSupportMetric:(NSString *)name withToken:(dispatch_once_t *)token {
     dispatch_once(token, ^{
