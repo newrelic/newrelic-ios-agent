@@ -581,7 +581,8 @@ static long long _accountId;
     if (self == object) return YES;
     if (object == nil || ![object isKindOfClass:self.class]) return NO;
     NRMAHarvesterConfiguration* that = (NRMAHarvesterConfiguration*)object;
-    if (self.application_token != that.application_token) return NO;
+    if (self.application_token != that.application_token &&
+        ![self.application_token isEqualToString:that.application_token]) return NO;
     if (self.collect_network_errors != that.collect_network_errors) return NO;
     if (self.data_report_period != that.data_report_period) return NO;
     if (self.error_limit != that.error_limit) return NO;
@@ -604,7 +605,8 @@ static long long _accountId;
     if (![self.log_reporting_level isEqualToString:that.log_reporting_level]) return NO;
     if (self.log_reporting_enabled != that.log_reporting_enabled) return NO;
     if (self.has_log_reporting_config != that.has_log_reporting_config) return NO;
-    if (self.request_header_map != that.request_header_map) return NO;
+    if (self.request_header_map != that.request_header_map &&
+        ![self.request_header_map isEqualToDictionary:that.request_header_map]) return NO;
 
 
     // session replay equality
