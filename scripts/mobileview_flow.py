@@ -691,7 +691,10 @@ def render_timeline(visits, origin, exact_origin, title=None, axis_format="%M:%S
         if end <= appear:
             # Still on screen when recording stopped; give it a sliver so the bar is visible.
             end = appear + 1
-        state = "crit" if visit["reappeared"] else "active"
+        # "crit, done": red outline over a grey fill. A re-appearance genuinely differs from a normal
+        # visible span -- nothing was constructed -- so it should stand out, but `crit` alone paints it
+        # solid red, which reads as a problem. Back-navigation is not a problem.
+        state = "crit, done" if visit["reappeared"] else "active"
         lines.append(f"    visible :{state}, {appear}, {end}")
 
         for ts, name, value in sorted(visit["marks"]):

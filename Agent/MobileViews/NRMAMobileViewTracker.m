@@ -36,10 +36,6 @@ static NSString * const kNRAttr_restarted      = @"restarted";
 static NSString * const kNRAttr_loadTime       = @"loadTime";
 static NSString * const kNRAttr_timeVisible    = @"timeVisible";
 
-// Swift class prefix to skip (NRViewModifier handles SwiftUI views)
-static NSString * const kSwiftMangledPrefix = @"_TtC";
-static NSString * const kSwiftUIPrefix      = @"SwiftUI.";
-
 // Swift mangling marker — any class name starting with _Tt is mangled
 static NSString * const kSwiftManglingMarker = @"_Tt";
 
@@ -59,6 +55,17 @@ NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
             @"UIInputWindowController",
             @"UITrackingElementWindowController",
             @"UIKitTabBarController",
+            // Plain UITabBarController was missing while UIKitTabBarController (the SwiftUI-backed
+            // container on newer OSes) and UINavigationController were both here -- an omission, not a
+            // decision. It is a container, not a screen: a tab switch is reported by the child view
+            // controllers' own viewDidAppear:/viewDidDisappear:, so tracking the container adds no
+            // signal. It did add harm. Because UIKit fires the outgoing tab's viewDidDisappear:
+            // *before* the incoming tab's viewDidAppear:, the container sat underneath on the visible
+            // stack and was "uncovered" on every switch -- synthesizing a re-appearance of the tab bar
+            // itself, and making it the previousView of the incoming tab instead of the tab left
+            // behind. A user's own UITabBarController subclass has its own class name and is
+            // unaffected.
+            @"UITabBarController",
             @"TabHostingController",
             @"UIHostingController",
             @"UINavigationController",

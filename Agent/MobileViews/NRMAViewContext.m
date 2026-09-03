@@ -30,6 +30,16 @@ NSString * const kNRMAAttributeReappeared      = @"reappeared";
 // discarded first; they are the least likely to be what the user is looking at.
 static const NSUInteger kNRMAMaxVisibleViews = 32;
 
+// Shortest visible lifetime treated as a real appearance. Below it, the appear/disappear pair is
+// construction churn rather than something the user saw.
+//
+// SwiftUI's TabView is the observed case: switching tabs delivers onAppear for the incoming content,
+// then onDisappear for that same content 8-16ms later, then onAppear again with a new identity. The
+// middle disappearance is not a navigation, but it *is* the top of the stack going away, so without
+// this guard it synthesizes a re-appearance of the previous tab -- a back-navigation the user never
+// performed, recorded every single time they switch tabs.
+const double kNRMAMinDwellMs = 100.0;
+
 static NSString * const kNRUIPlatformManual    = @"Manual";
 static NSString * const kNRAgentName           = @"iOS";
 
@@ -99,8 +109,13 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                 platform:(nullable NSString *)platform {
     if (name.length == 0) { return; }
     os_unfair_lock_lock(&_lock);
-    _previousViewName       = _currentViewName;
-    _previousViewInstanceId = _currentViewInstanceId;
+    // A view replacing itself (a new instance of the same screen, as SwiftUI produces during tab
+    // churn) keeps the referrer it already had. Shifting it here would make the screen its own
+    // previousView, which reads as a navigation from a screen to itself.
+    if (![_currentViewName isEqualToString:name]) {
+        _previousViewName       = _currentViewName;
+        _previousViewInstanceId = _currentViewInstanceId;
+    }
     _currentViewName        = [name copy];
     _currentViewInstanceId  = [instanceId copy];
     _currentViewAppearTime  = appearTime;
@@ -162,12 +177,22 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     os_unfair_lock_lock(&_lock);
 
+    // How long the departing instance was actually on screen, captured before it is removed.
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    BOOL wasChurn = NO;
+    for (NRMAVisibleView *entry in _visibleViews) {
+        if ([entry.instanceId isEqualToString:instanceId]) {
+            wasChurn = ([NRMAViewContext millisecondsBetween:entry.appearTime and:now] < kNRMAMinDwellMs);
+            break;
+        }
+    }
+
     NSUInteger removedIndex = [self removeVisibleViewLocked:instanceId];
     // After the removal, the departing view was on top precisely when it sat at what is now the end
     // of the array. Anything else means it was buried and nothing was uncovered.
     BOOL wasTop = (removedIndex != NSNotFound && removedIndex == _visibleViews.count);
 
-    if (wasTop && _visibleViews.count > 0 && _currentViewSource == NRMAViewSourceAutomatic) {
+    if (wasTop && !wasChurn && _visibleViews.count > 0 && _currentViewSource == NRMAViewSourceAutomatic) {
         NRMAVisibleView *uncovered = _visibleViews.lastObject;
 
         // Guard against a same-name resurrection (a view replaced by another instance of itself),
@@ -179,10 +204,15 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
             departedName         = [name copy];
             departedInstanceId   = [instanceId copy];
 
-            // This is a new visible lifetime for the uncovered view: fresh instance id so its next
-            // timeVisible is measured from now rather than from when it was first pushed.
-            uncovered.instanceId = resurfacedInstanceId;
-            uncovered.appearTime = CFAbsoluteTimeGetCurrent();
+            // A new visible lifetime, so timeVisible restarts from now.
+            //
+            // The entry's instanceId is deliberately NOT overwritten with resurfacedInstanceId. It is
+            // the key -removeVisibleViewLocked: matches on, and only the producer knows it: when this
+            // view really does disappear it reports the id it was pushed with. Replacing the key with
+            // a UUID no producer holds made the entry unremovable, so it stayed on the stack until the
+            // 32-entry cap evicted it -- and any later disappearance could "uncover" it and resurrect
+            // a screen the user left minutes ago, stealing the referrer of whatever appeared next.
+            uncovered.appearTime = now;
 
             _previousViewName       = departedName;
             _previousViewInstanceId = departedInstanceId;

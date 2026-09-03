@@ -23,6 +23,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// when the view covering it went away, rather than because a producer observed an appearance.
 FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
 
+/// Shortest visible lifetime treated as a real appearance; below it, an appear/disappear pair is
+/// construction churn. Exported so the SwiftUI producer flags the same threshold the context uses to
+/// suppress synthesis -- two copies of this number would drift.
+FOUNDATION_EXPORT const double kNRMAMinDwellMs;
+
 @class NRMAViewTimingSnapshot;
 
 @interface NRMAViewContext : NSObject
