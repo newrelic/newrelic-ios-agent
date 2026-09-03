@@ -136,6 +136,8 @@ typedef NSString NRMetricUnit;
 // KMP Detection (Kotlin Multiplatform)
 #define kNRMAKMMDetectionMetric @"Supportability/Mobile/iOS/HybridPlatform/KMP"
 
+#define kNRMAWebViewBrowserAgentDetectedMetric @"Supportability/Mobile/iOS/WebView/BrowserAgentDetected"
+
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"
 #define kNRMABytesOutFAPIString           @"/f/Output/Bytes"
