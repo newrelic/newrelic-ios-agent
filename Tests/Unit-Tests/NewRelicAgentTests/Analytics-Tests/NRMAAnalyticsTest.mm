@@ -24,6 +24,7 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
+#import "NRMAViewContext.h"
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -1106,6 +1107,77 @@
     XCTAssertNil(decode[0][@"networkErrorCode"]);
 
 
+}
+
+- (void) testRequestEventIncludesReferrerAttributesWhenMobileViewsEnabled {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    [NRMAFlags enableFeatures:NRFeatureFlag_AutomaticMobileViews];
+    [[NRMAViewContext sharedInstance] transitionToView:@"CheckoutScreen"
+                                             instanceId:@"REQ-TEST-VIEW"
+                                             appearTime:CFAbsoluteTimeGetCurrent()];
+
+    NRTimer* timer = [NRTimer new];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSURL* url = [NSURL URLWithString:@"https://api.newrelic.com/api/v1/mobile"];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:100];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
+                                                                                          bytesReceived:200
+                                                                                           responseTime:[timer timeElapsedInSeconds]];
+
+    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertEqualObjects(decode[0][@"currentView"], @"CheckoutScreen");
+    XCTAssertEqualObjects(decode[0][@"currentViewInstanceId"], @"REQ-TEST-VIEW");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    [NRMAFlags disableFeatures:NRFeatureFlag_AutomaticMobileViews];
+}
+
+- (void) testRequestErrorEventIncludesReferrerAttributesWhenMobileViewsEnabled {
+    [NRMAFlags enableFeatures:NRFeatureFlag_AutomaticMobileViews];
+    [[NRMAViewContext sharedInstance] transitionToView:@"CartScreen"
+                                             instanceId:@"ERR-TEST-VIEW"
+                                             appearTime:CFAbsoluteTimeGetCurrent()];
+
+    NRTimer* timer = [NRTimer new];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSURL* url = [NSURL URLWithString:@"https://api.newrelic.com/api/v1/mobile"];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:200];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithNetworkError:-1001
+                                                                                    bytesReceived:100
+                                                                                     responseTime:[timer timeElapsedInSeconds]
+                                                                              networkErrorMessage:@"network failure"];
+
+    XCTAssertTrue([analytics addNetworkErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertEqualObjects(decode[0][@"currentView"], @"CartScreen");
+    XCTAssertEqualObjects(decode[0][@"currentViewInstanceId"], @"ERR-TEST-VIEW");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_AutomaticMobileViews];
 }
 
 - (void) testSetLastInteraction {

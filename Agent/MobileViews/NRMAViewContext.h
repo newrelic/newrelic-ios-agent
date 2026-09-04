@@ -90,6 +90,13 @@ FOUNDATION_EXPORT const double kNRMAMinDwellMs;
 /// previousView, previousViewInstanceId (only keys with values are included).
 - (NSDictionary<NSString *, id> *)previousViewAttributes;
 
+/// Merges `referrerAttributes` into `attributes`, agent-owned referrer keys winning over any
+/// caller-supplied attribute of the same name. Returns `attributes` unchanged (nil stays nil, never
+/// promoted to an empty dictionary) unless at least one Mobile Views flag is enabled and a view is
+/// currently set. Shared by every non-view producer §5.5 requires the referrer plumbing for:
+/// breadcrumbs, MobileRequest, MobileRequestError, and Handled Exceptions.
++ (nullable NSDictionary<NSString *, id> *)mergeReferrerAttributesInto:(nullable NSDictionary<NSString *, id> *)attributes;
+
 #pragma mark - Crash-time referrer recovery
 
 /// `referrerAttributes` as of the most recent view transition, read back from disk. Meant for a

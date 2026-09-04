@@ -745,16 +745,7 @@
 
     // Stamp the referrer (currentView / previousView) so navigation paths can be reconstructed
     // from breadcrumbs. Active whenever automatic or manual view tracking is enabled.
-    NSDictionary *breadcrumbAttributes = attributes;
-    if ([NRMAFlags shouldEnableAutomaticMobileViews] || [NRMAFlags shouldEnableManualMobileViews]) {
-        NSDictionary *referrer = [[NRMAViewContext sharedInstance] referrerAttributes];
-        if (referrer.count > 0) {
-            NSMutableDictionary *merged = [NSMutableDictionary dictionaryWithDictionary:attributes ?: @{}];
-            // Agent-owned referrer keys win over caller-supplied attributes.
-            [merged addEntriesFromDictionary:referrer];
-            breadcrumbAttributes = merged;
-        }
-    }
+    NSDictionary *breadcrumbAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
 
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
                                                                       withAttributes:breadcrumbAttributes];

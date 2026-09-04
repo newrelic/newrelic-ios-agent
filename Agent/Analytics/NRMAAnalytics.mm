@@ -30,6 +30,7 @@
 #import "NRMAUserActionEvent.h"
 #import "NRMAPayload.h"
 #import "NRMANetworkErrorEvent.h"
+#import "NRMAViewContext.h"
 #import "NRMASAM.h"
 #import "NRMAAttributeValidator.h"
 #import "NRMASessionEvent.h"
@@ -369,7 +370,14 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 [event addAttribute:key value:requestData.trackedHeaders[key]];
             }
         }
-        
+
+        // §5.5's referrer plumbing (currentView/currentViewInstanceId/previousView/
+        // previousViewInstanceId), so a request can be joined back to the screen it happened on.
+        NSDictionary<NSString *, id> *referrerAttrs = [NRMAViewContext mergeReferrerAttributesInto:nil];
+        for (NSString *key in referrerAttrs) {
+            [event addAttribute:key value:referrerAttrs[key]];
+        }
+
         return [_eventManager addEvent:[event autorelease]];
     } @catch (NSException *exception) {
         NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);
@@ -505,7 +513,15 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 [event addAttribute:key value:requestData.trackedHeaders[key]];
             }
         }
-        
+
+        // §5.5's referrer plumbing, so a request error can be joined back to the screen it
+        // happened on. Shared by addNetworkErrorEvent and addHTTPErrorEvent (both call through
+        // here), so this covers MobileRequestError regardless of which error type it was.
+        NSDictionary<NSString *, id> *referrerAttrs = [NRMAViewContext mergeReferrerAttributesInto:nil];
+        for (NSString *key in referrerAttrs) {
+            [event addAttribute:key value:referrerAttrs[key]];
+        }
+
         return event;
     } @catch (NSException *exception) {
         NRLOG_AGENT_ERROR(@"Failed to add Network Event.: %@", exception.reason);

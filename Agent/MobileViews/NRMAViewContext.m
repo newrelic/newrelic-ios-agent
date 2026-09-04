@@ -10,6 +10,7 @@
 #import "NewRelic.h"
 #import "NRMAViewTiming.h"
 #import "Constants.h"
+#import "NRMAFlags.h"
 
 // MobileView event type + attribute keys (shared schema with NRMAMobileViewTracker).
 static NSString * const kNRMobileViewEventType = @"MobileView";
@@ -394,6 +395,19 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     }
     os_unfair_lock_unlock(&_lock);
     return attrs;
+}
+
++ (nullable NSDictionary<NSString *, id> *)mergeReferrerAttributesInto:(nullable NSDictionary<NSString *, id> *)attributes {
+    if (![NRMAFlags shouldEnableAutomaticMobileViews] && ![NRMAFlags shouldEnableManualMobileViews]) {
+        return attributes;
+    }
+    NSDictionary<NSString *, id> *referrer = [[NRMAViewContext sharedInstance] referrerAttributes];
+    if (referrer.count == 0) {
+        return attributes;
+    }
+    NSMutableDictionary<NSString *, id> *merged = [NSMutableDictionary dictionaryWithDictionary:attributes ?: @{}];
+    [merged addEntriesFromDictionary:referrer];
+    return merged;
 }
 
 #pragma mark - Crash-time referrer recovery

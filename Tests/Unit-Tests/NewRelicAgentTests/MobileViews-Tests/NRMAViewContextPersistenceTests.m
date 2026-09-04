@@ -87,4 +87,44 @@
     XCTAssertEqualObjects(persisted[@"currentView"], @"Cart");
 }
 
+#pragma mark - mergeReferrerAttributesInto: (shared by breadcrumbs, MobileRequest,
+#pragma mark   MobileRequestError, and Handled Exceptions per IDD §5.5/§11 Q7)
+
+- (void)testMergeReferrerAttributesReturnsAttributesUnchangedWhenNoMobileViewsFlagEnabled {
+    [NewRelic disableFeatures:NRFeatureFlag_AutomaticMobileViews];
+    NSDictionary *attributes = @{@"custom": @"value"};
+
+    NSDictionary *merged = [NRMAViewContext mergeReferrerAttributesInto:attributes];
+
+    XCTAssertEqualObjects(merged, attributes);
+}
+
+- (void)testMergeReferrerAttributesReturnsNilUnchangedWhenNoMobileViewsFlagEnabled {
+    [NewRelic disableFeatures:NRFeatureFlag_AutomaticMobileViews];
+
+    XCTAssertNil([NRMAViewContext mergeReferrerAttributesInto:nil]);
+}
+
+- (void)testMergeReferrerAttributesAddsCurrentViewWhenEnabledAndViewIsSet {
+    [[NRMAViewContext sharedInstance] transitionToView:@"MergeTestView"
+                                             instanceId:@"MERGE-1"
+                                             appearTime:CFAbsoluteTimeGetCurrent()];
+
+    NSDictionary *merged = [NRMAViewContext mergeReferrerAttributesInto:@{@"custom": @"value"}];
+
+    XCTAssertEqualObjects(merged[@"custom"], @"value");
+    XCTAssertEqualObjects(merged[@"currentView"], @"MergeTestView");
+    XCTAssertEqualObjects(merged[@"currentViewInstanceId"], @"MERGE-1");
+}
+
+- (void)testMergeReferrerAttributesAgentOwnedKeyWinsOverCallerSuppliedValue {
+    [[NRMAViewContext sharedInstance] transitionToView:@"OverrideTestView"
+                                             instanceId:@"MERGE-2"
+                                             appearTime:CFAbsoluteTimeGetCurrent()];
+
+    NSDictionary *merged = [NRMAViewContext mergeReferrerAttributesInto:@{@"currentView": @"CallerSuppliedNonsense"}];
+
+    XCTAssertEqualObjects(merged[@"currentView"], @"OverrideTestView");
+}
+
 @end
