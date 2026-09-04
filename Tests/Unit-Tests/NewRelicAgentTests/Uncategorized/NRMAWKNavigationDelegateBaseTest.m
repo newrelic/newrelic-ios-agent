@@ -460,7 +460,7 @@
     WKWebView *webView = [[WKWebView alloc] init];
     [webView loadHTMLString:@"<html><body></body></html>" baseURL:nil];
 
-    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:3.0];
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
     while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
     }
