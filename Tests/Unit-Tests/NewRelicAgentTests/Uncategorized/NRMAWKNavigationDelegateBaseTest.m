@@ -396,6 +396,20 @@
 
 @implementation NRMAWebViewBrowserAgentDetectionTests
 
++ (void)setUp {
+    [super setUp];
+    // The first WKWebView created in a process must launch a separate WebContent
+    // process, which can take longer than an individual test's load timeout on a
+    // busy CI runner. Warm that process up once for the whole test class so the
+    // per-test timeouts below only need to cover normal (already-warm) load time.
+    WKWebView *warmupWebView = [[WKWebView alloc] init];
+    [warmupWebView loadHTMLString:@"<html><body></body></html>" baseURL:nil];
+    NSDate *warmupDeadline = [NSDate dateWithTimeIntervalSinceNow:30.0];
+    while (warmupWebView.isLoading && [NSDate.date compare:warmupDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+}
+
 - (void)setUp {
     [super setUp];
     [NRMAWebViewSupportability resetBrowserAgentDetectionForTesting];
