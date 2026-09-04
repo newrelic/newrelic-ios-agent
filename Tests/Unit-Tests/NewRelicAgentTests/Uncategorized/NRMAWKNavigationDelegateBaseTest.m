@@ -399,6 +399,7 @@
 - (void)setUp {
     [super setUp];
     [NRMAWebViewSupportability resetBrowserAgentDetectionForTesting];
+    [NRMATaskQueue clear];
     self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
     [NRMAMeasurements addMeasurementConsumer:self.helper];
