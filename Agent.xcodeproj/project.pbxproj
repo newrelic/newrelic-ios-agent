@@ -52,6 +52,7 @@
 		0209AC3124E7073800E45C90 /* NRMADeviceInformationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC2D24E7073800E45C90 /* NRMADeviceInformationTests.m */; };
 		0209AC3224E7073800E45C90 /* NRMAHarvestableAnalyticsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC2E24E7073800E45C90 /* NRMAHarvestableAnalyticsTest.m */; };
 		0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */; };
+		CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3624E7075100E45C90 /* NRHarvestableVitalsTest.m */; };
 		0209AC3E24E7075200E45C90 /* NRHarvesterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3724E7075100E45C90 /* NRHarvesterTest.m */; };
 		0209AC3F24E7075200E45C90 /* NRHarvesterStateTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3824E7075200E45C90 /* NRHarvesterStateTest.m */; };
@@ -121,6 +122,7 @@
 		0256580E24EB19BF00FE3125 /* NRMAAppTokenTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC0824E7071400E45C90 /* NRMAAppTokenTest.m */; };
 		0256580F24EB19BF00FE3125 /* TestContextAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABD624E706AE00E45C90 /* TestContextAdapter.mm */; };
 		0256581024EB19BF00FE3125 /* NRMAConnectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */; };
+		CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		0256581124EB19BF00FE3125 /* NRMALastActivityTraceControllerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABE724E706F900E45C90 /* NRMALastActivityTraceControllerTest.m */; };
 		0256581224EB19BF00FE3125 /* APINetworkNoticeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC0624E7071400E45C90 /* APINetworkNoticeTest.m */; };
 		0256581324EB19BF00FE3125 /* NRMADeviceInformationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC2D24E7073800E45C90 /* NRMADeviceInformationTests.m */; };
@@ -1127,6 +1129,7 @@
 		3431DD7E2BED4A5200FF145F /* NRHarvesterConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3924E7075200E45C90 /* NRHarvesterConnectionTests.m */; };
 		3431DD7F2BED4A5200FF145F /* NRHarvesterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3724E7075100E45C90 /* NRHarvesterTest.m */; };
 		3431DD802BED4A5200FF145F /* NRMAConnectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */; };
+		CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		3431DD812BED4A5200FF145F /* NRHarvestableVitalsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3624E7075100E45C90 /* NRHarvestableVitalsTest.m */; };
 		3431DD822BED4A5200FF145F /* NRHarvesterStateTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3824E7075200E45C90 /* NRHarvesterStateTest.m */; };
 		3431DD842BED4A9900FF145F /* NRMAFeatureFlagsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC4324E7078000E45C90 /* NRMAFeatureFlagsTests.m */; };
@@ -2132,6 +2135,7 @@
 		0209AC2D24E7073800E45C90 /* NRMADeviceInformationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMADeviceInformationTests.m; sourceTree = "<group>"; };
 		0209AC2E24E7073800E45C90 /* NRMAHarvestableAnalyticsTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvestableAnalyticsTest.m; sourceTree = "<group>"; };
 		0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAConnectionTest.m; sourceTree = "<group>"; };
+		CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvesterConfigurationLifetimeTests.m; sourceTree = "<group>"; };
 		0209AC3524E7075100E45C90 /* NRHarvesterStateTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRHarvesterStateTest.h; sourceTree = "<group>"; };
 		0209AC3624E7075100E45C90 /* NRHarvestableVitalsTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRHarvestableVitalsTest.m; sourceTree = "<group>"; };
 		0209AC3724E7075100E45C90 /* NRHarvesterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRHarvesterTest.m; sourceTree = "<group>"; };
@@ -3005,6 +3009,7 @@
 				0209AC3A24E7075200E45C90 /* NRHarvesterTest.h */,
 				0209AC3724E7075100E45C90 /* NRHarvesterTest.m */,
 				0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */,
+				CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */,
 				0209AC2A24E7072700E45C90 /* Harvestable-Data-Tests */,
 				F8D23CF92F840F92000FFD31 /* Agent-watchos-Tests-Bridging-Header.h */,
 			);
@@ -5634,6 +5639,7 @@
 				F85ABB602F1557EA0098A2CF /* SerializedNode.swift in Sources */,
 				0209ABDC24E706AE00E45C90 /* TestContextAdapter.mm in Sources */,
 				0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */,
+				CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
 				F85ABB632F155B4B0098A2CF /* RRWebEvent.swift in Sources */,
 				0209ABF124E706FA00E45C90 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0209AC0E24E7071500E45C90 /* APINetworkNoticeTest.m in Sources */,
@@ -6048,6 +6054,7 @@
 				0256580F24EB19BF00FE3125 /* TestContextAdapter.mm in Sources */,
 				F8FBFA5A2A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				0256581024EB19BF00FE3125 /* NRMAConnectionTest.m in Sources */,
+				CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
 				0256581124EB19BF00FE3125 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0256581224EB19BF00FE3125 /* APINetworkNoticeTest.m in Sources */,
 				0256581324EB19BF00FE3125 /* NRMADeviceInformationTests.m in Sources */,
@@ -6463,6 +6470,7 @@
 				3431DD7E2BED4A5200FF145F /* NRHarvesterConnectionTests.m in Sources */,
 				3431DD7F2BED4A5200FF145F /* NRHarvesterTest.m in Sources */,
 				3431DD802BED4A5200FF145F /* NRMAConnectionTest.m in Sources */,
+				CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
 				3431DD812BED4A5200FF145F /* NRHarvestableVitalsTest.m in Sources */,
 				3431DD822BED4A5200FF145F /* NRHarvesterStateTest.m in Sources */,
 				3431DD562BED38F400FF145F /* NRMAHTTPUtilitiesTests.m in Sources */,
