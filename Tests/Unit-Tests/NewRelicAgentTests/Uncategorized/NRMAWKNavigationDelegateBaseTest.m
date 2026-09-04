@@ -16,6 +16,9 @@
 #import "NRMeasurementConsumerHelper.h"
 #import "NRMAMeasurements.h"
 #import "NRMAHTTPTransactionMeasurement.h"
+#import "NRMAWebViewSupportability.h"
+#import "NRMANamedValueMeasurement.h"
+#import "NRConstants.h"
 
 @interface NRMATaskQueue (tests)
 + (void) clear;
@@ -375,6 +378,106 @@
 
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
     self.didTerminateCalled = YES;
+}
+
+@end
+
+// ---------------------------------------------------------------------------
+#pragma mark - NRMAWebViewBrowserAgentDetectionTests
+
+@interface NRMAWebViewSupportability (Testing)
++ (void)resetBrowserAgentDetectionForTesting;
++ (void)recordBrowserAgentDetected;
+@end
+
+@interface NRMAWebViewBrowserAgentDetectionTests : XCTestCase
+@property (strong) NRMAMeasurementConsumerHelper *helper;
+@end
+
+@implementation NRMAWebViewBrowserAgentDetectionTests
+
+- (void)setUp {
+    [super setUp];
+    [NRMAWebViewSupportability resetBrowserAgentDetectionForTesting];
+    [NRMATaskQueue clear];
+    self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:self.helper];
+}
+
+- (void)tearDown {
+    [NRMAMeasurements removeMeasurementConsumer:self.helper];
+    self.helper = nil;
+    [NRMAMeasurements shutdown];
+    [NRMAWebViewSupportability resetBrowserAgentDetectionForTesting];
+    [super tearDown];
+}
+
+- (void)testBrowserAgentDetectedRecordsCorrectMetricName {
+    [NRMAWebViewSupportability recordBrowserAgentDetected];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertTrue([self.helper.result isKindOfClass:[NRMANamedValueMeasurement class]]);
+    NRMANamedValueMeasurement *m = (NRMANamedValueMeasurement *)self.helper.result;
+    XCTAssertEqualObjects(m.name, kNRMAWebViewBrowserAgentDetectedMetric);
+}
+
+- (void)testStartBrowserAgentDetectionShortCircuitsWhenAlreadyDetected {
+    [NRMAWebViewSupportability recordBrowserAgentDetected];
+    [NRMATaskQueue synchronousDequeue];
+    NSUInteger countAfterFirstDetection = self.helper.consumedMeasurements.count;
+
+    WKWebView *webView = [[WKWebView alloc] init];
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+    [NRMATaskQueue synchronousDequeue];
+
+    XCTAssertEqual(self.helper.consumedMeasurements.count, countAfterFirstDetection);
+}
+
+- (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
+    WKWebView *webView = [[WKWebView alloc] init];
+    [webView loadHTMLString:@"<script>window.newrelic = {}</script>" baseURL:nil];
+
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    XCTAssertFalse(webView.isLoading, @"WebView timed out while loading");
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    NSDate *detectDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while (!self.helper.result && [NSDate.date compare:detectDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+    }
+
+    XCTAssertTrue([self.helper.result isKindOfClass:[NRMANamedValueMeasurement class]]);
+    NRMANamedValueMeasurement *m = (NRMANamedValueMeasurement *)self.helper.result;
+    XCTAssertEqualObjects(m.name, kNRMAWebViewBrowserAgentDetectedMetric);
+}
+
+- (void)testDetectionDoesNotRecordMetricWhenBrowserAgentAbsent {
+    WKWebView *webView = [[WKWebView alloc] init];
+    [webView loadHTMLString:@"<html><body></body></html>" baseURL:nil];
+
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    XCTAssertFalse(webView.isLoading, @"WebView timed out while loading");
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    // Spin the run loop for longer than the full polling window (8 attempts × 250ms = 2s).
+    // We must wait the full duration — there is no early-exit signal for "not detected".
+    NSDate *pollDeadline = [NSDate dateWithTimeIntervalSinceNow:2.5];
+    while ([NSDate.date compare:pollDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+    }
+
+    XCTAssertNil(self.helper.result, @"No metric should be recorded when browser agent is absent");
 }
 
 @end
