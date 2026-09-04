@@ -678,6 +678,75 @@ extern "C" {
                attributes:(NSDictionary* _Nullable)attributes;
 
 /*!
+ * Manually set the currently-displayed view (screen).
+ *
+ * Records a "MobileView" event for `name` and marks it as the current view using a browser
+ * route-change model: the previously set current view is closed out first (emitting its
+ * timeVisible), then `name` becomes current with the prior view recorded as its referrer
+ * (previousView). Breadcrumbs and MobileView events recorded while `name` is current carry it as
+ * currentView.
+ *
+ * Use this when automatic instrumentation does not capture a view correctly, to rename views for
+ * business reasons, or to name cross-platform (e.g. React Native) screens that would otherwise
+ * collapse to a single generic host view controller.
+ *
+ * Requires NRFeatureFlag_ManualViews to be enabled. Independent of NRFeatureFlag_AutomaticViews.
+ *
+ * @param name The display name of the view (screen). Must be a non-empty string.
+ * @param attributes Optional custom attributes merged into the MobileView event. Reserved keys
+ *        (viewClass, viewName, viewInstanceId, previousView, appeared, timeVisible, uiPlatform,
+ *        agentName) are not overridden.
+ */
++ (void) setCurrentView:(NSString* _Nonnull)name
+             attributes:(NSDictionary* _Nullable)attributes;
+
+/*!
+ * Records how long something took on the current view, as a "MobileViewTiming" event.
+ *
+ * The duration is measured from the moment the current view appeared until now, which is what
+ * screen-timing metrics such as Time to Full Display and Time to Interactive actually are. Call it
+ * at the point the screen genuinely reached that state:
+ *
+ *     // after the real content, not the placeholder, is on screen
+ *     [NewRelic markViewTiming:@"timeToFullDisplay"];
+ *
+ * The event carries the current view's viewName and viewInstanceId, so it joins back to that
+ * specific visit, and previousView, so timings can be compared by the route taken into the screen.
+ *
+ * The agent already records "timeToInitialDisplay" itself, from the view's own load time; that name
+ * is reserved and cannot be used here.
+ *
+ * Requires NRFeatureFlag_AutomaticMobileViews or NRFeatureFlag_ManualMobileViews.
+ *
+ * @param name What was timed, e.g. @"timeToFullDisplay". Non-empty, at most 128 characters.
+ * @return YES if the timing was recorded. NO if view tracking is disabled, no view is currently
+ *         being tracked (there is no start point to measure from — use
+ *         recordViewTiming:milliseconds: instead), the name is invalid or reserved, or too many
+ *         timings have already been recorded for this view.
+ */
++ (BOOL) markViewTiming:(NSString* _Nonnull)name;
+
+/*!
+ * Records a "MobileViewTiming" event with a duration you have already measured.
+ *
+ * Use this when the current view's appear time is not the right starting point — a prefetch that
+ * began before navigation, or a duration measured by your own code or another SDK:
+ *
+ *     [NewRelic recordViewTiming:@"timeToFirstByte" milliseconds:214];
+ *
+ * Unlike markViewTiming:, this succeeds even when no view is being tracked; the event is simply
+ * recorded without view identity.
+ *
+ * Requires NRFeatureFlag_AutomaticMobileViews or NRFeatureFlag_ManualMobileViews.
+ *
+ * @param name What was timed. Non-empty, at most 128 characters. "timeToInitialDisplay" is reserved.
+ * @param milliseconds The duration in milliseconds. Must be finite, not negative, and at most
+ *        600000 (10 minutes) — a larger value usually means seconds were passed by mistake.
+ * @return YES if the timing was recorded, NO if it was rejected.
+ */
++ (BOOL) recordViewTiming:(NSString* _Nonnull)name milliseconds:(double)milliseconds;
+
+/*!
  * Records a JavaScript error as a MobileJSError custom event.
  *
  * This method is intended for use by hybrid frameworks (like React Native) to report JavaScript errors.

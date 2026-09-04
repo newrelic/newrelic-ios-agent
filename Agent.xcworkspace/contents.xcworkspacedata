@@ -2,9 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:examples/spm/SPMExample/SPMExample.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:Test Harness/SessionReplayTest/SessionReplayTest.xcodeproj">
    </FileRef>
    <FileRef
@@ -12,5 +9,8 @@
    </FileRef>
    <FileRef
       location = "container:Test Harness/NRTestApp/NRTestApp.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "container:Test Harness/HomeSearch/HomeSearch.xcodeproj">
    </FileRef>
 </Workspace>

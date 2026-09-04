@@ -14,6 +14,8 @@
 #import "NRMAMeasurements.h"
 #import "NewRelicAgentInternal.h"
 #import "NRMAFlags.h"
+#import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
 #import "NewRelicInternalUtils.h"
 #import "NRMAExceptionHandler.h"
 #import "NRMATaskQueue.h"
@@ -741,8 +743,57 @@
         return false;
     }
 
+    // Stamp the referrer (currentView / previousView) so navigation paths can be reconstructed
+    // from breadcrumbs. Active whenever automatic or manual view tracking is enabled.
+    NSDictionary *breadcrumbAttributes = [NRMAViewContext mergeReferrerAttributesInto:attributes];
+
     return [[NewRelicAgentInternal sharedInstance].analyticsController addBreadcrumb:name
-                                                                      withAttributes:attributes];
+                                                                      withAttributes:breadcrumbAttributes];
+}
+
++ (void) setCurrentView:(NSString* __nonnull)name
+             attributes:(NSDictionary* __nullable)attributes
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
+    if (![NRMAFlags shouldEnableManualMobileViews]) {
+        NRLOG_AGENT_VERBOSE(@"setCurrentView: ignored because NRFeatureFlag_ManualViews is disabled.");
+        return;
+    }
+
+    if (name.length == 0) {
+        NRLOG_AGENT_VERBOSE(@"setCurrentView: ignored because name must be a non-empty string.");
+        return;
+    }
+
+    // SPA / route-change model: close out the previous manual view (emitting its timeVisible),
+    // make `name` current, and emit its appearance stamped with the prior view as referrer.
+    [[NRMAViewContext sharedInstance] setCurrentManualView:name attributes:attributes];
+}
+
++ (BOOL) markViewTiming:(NSString* __nonnull)name
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
+
+    // Validation, capping, and the flag gate all live in NRMAViewTiming so they are testable
+    // without a running agent.
+    return [[NRMAViewTiming sharedInstance] markTimingNamed:name];
+}
+
++ (BOOL) recordViewTiming:(NSString* __nonnull)name milliseconds:(double)milliseconds
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return NO;
+    }
+
+    return [[NRMAViewTiming sharedInstance] recordTimingNamed:name milliseconds:milliseconds];
 }
 
 + (BOOL) recordJavascriptError:(NSString* __nonnull)name

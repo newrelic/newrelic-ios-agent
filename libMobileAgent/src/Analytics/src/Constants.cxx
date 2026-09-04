@@ -36,6 +36,7 @@ const char* __kNRMA_RET_mobileRequestError   = "MobileRequestError";
 const char* __kNRMA_RET_mobileCrash          = "MobileCrash";
 const char* __kNRMA_RET_mobileBreadcrumb     = "MobileBreadcrumb";
 const char* __kNRMA_RET_mobileUserAction     = "MobileUserAction";
+const char* __kNRMA_RET_mobileView           = "MobileView";
 const char* __kNRMA_RET_userAction           = "UserAction";
 
 //gesture attributes (not reserved)
