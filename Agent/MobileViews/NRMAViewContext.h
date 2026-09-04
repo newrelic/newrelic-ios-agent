@@ -81,13 +81,28 @@ FOUNDATION_EXPORT const double kNRMAMinDwellMs;
 
 #pragma mark - Referrer accessors
 
-/// Attributes for breadcrumbs and other non-view events: currentView, previousView,
-/// previousViewInstanceId (only keys with values are included). Empty if no view is set.
+/// Attributes for breadcrumbs and other non-view events: currentView, currentViewInstanceId,
+/// previousView, previousViewInstanceId (only keys with values are included). Empty if no view is
+/// set.
 - (NSDictionary<NSString *, id> *)referrerAttributes;
 
 /// Attributes for MobileView events, which already carry the current view as viewName:
 /// previousView, previousViewInstanceId (only keys with values are included).
 - (NSDictionary<NSString *, id> *)previousViewAttributes;
+
+#pragma mark - Crash-time referrer recovery
+
+/// `referrerAttributes` as of the most recent view transition, read back from disk. Meant for a
+/// crash report processed on next launch: the crashed session's in-memory NRMAViewContext state is
+/// gone, but this file survives because every transition writes through to it. Nil if nothing was
+/// ever persisted (e.g. the app crashed before any view appeared, or the file was already
+/// consumed). Read this before calling +clearPersistedReferrerAttributes.
++ (nullable NSDictionary<NSString *, NSString *> *)persistedReferrerAttributes;
+
+/// Deletes whatever +persistedReferrerAttributes would return. Call once at startup -- after a
+/// pending crash has had a chance to read it, if there was one -- so a session that exits cleanly
+/// never leaves behind a view that a crash several sessions later would be wrongly attributed to.
++ (void)clearPersistedReferrerAttributes;
 
 #pragma mark - Timing
 

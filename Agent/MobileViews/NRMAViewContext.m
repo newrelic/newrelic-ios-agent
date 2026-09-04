@@ -9,6 +9,7 @@
 #import <os/lock.h>
 #import "NewRelic.h"
 #import "NRMAViewTiming.h"
+#import "Constants.h"
 
 // MobileView event type + attribute keys (shared schema with NRMAMobileViewTracker).
 static NSString * const kNRMobileViewEventType = @"MobileView";
@@ -18,6 +19,7 @@ static NSString * const kNRAttr_viewInstanceId = @"viewInstanceId";
 static NSString * const kNRAttr_previousView   = @"previousView";
 static NSString * const kNRAttr_previousViewId = @"previousViewInstanceId";
 static NSString * const kNRAttr_currentView    = @"currentView";
+static NSString * const kNRAttr_currentViewId  = @"currentViewInstanceId";
 static NSString * const kNRAttr_timeVisible    = @"timeVisible";
 static NSString * const kNRAttr_appeared       = @"appeared";
 static NSString * const kNRAttr_uiPlatform     = @"uiPlatform";
@@ -122,6 +124,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewSource      = NRMAViewSourceAutomatic;
     [self pushVisibleViewLocked:name instanceId:instanceId appearTime:appearTime platform:platform];
     os_unfair_lock_unlock(&_lock);
+    [self persistCurrentReferrerState];
 }
 
 #pragma mark - Visible-view stack (lock held)
@@ -227,6 +230,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     if (resurfacedName == nil) { return; }
 
+    [self persistCurrentReferrerState];
+
     NSMutableDictionary<NSString *, id> *attrs = [NSMutableDictionary dictionary];
     attrs[kNRAttr_viewName]       = resurfacedName;
     attrs[kNRAttr_viewInstanceId] = resurfacedInstanceId;
@@ -269,6 +274,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewAppearTime  = now;
     _currentViewSource      = NRMAViewSourceManual;
     os_unfair_lock_unlock(&_lock);
+    [self persistCurrentReferrerState];
 
     // Close the outgoing view only if the manual API opened it; auto views close via viewDidDisappear.
     if (outgoingName.length > 0 && outgoingWasManual) {
@@ -313,6 +319,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewInstanceId  = nil;
     _currentViewSource      = NRMAViewSourceNone;
     os_unfair_lock_unlock(&_lock);
+    [self persistCurrentReferrerState];
 
     double timeVisibleMs = [NRMAViewContext millisecondsBetween:appear and:now];
     [self recordMobileView:name
@@ -363,6 +370,9 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     if (_currentViewName.length > 0) {
         attrs[kNRAttr_currentView] = _currentViewName;
     }
+    if (_currentViewInstanceId.length > 0) {
+        attrs[kNRAttr_currentViewId] = _currentViewInstanceId;
+    }
     if (_previousViewName.length > 0) {
         attrs[kNRAttr_previousView] = _previousViewName;
     }
@@ -384,6 +394,40 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     }
     os_unfair_lock_unlock(&_lock);
     return attrs;
+}
+
+#pragma mark - Crash-time referrer recovery
+
+// Documents, not Caches: the crash report itself lives in Caches, but Caches can be purged before
+// the report is ever processed. SessionReplayFrames uses Documents for the same reason -- this file
+// has the same survival requirement.
++ (NSString *)persistedReferrerStateFilePath {
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = paths.firstObject;
+    return [documentsDirectory stringByAppendingPathComponent:kNRMA_LastKnownView_fileName];
+}
+
+// Called after every transition, outside the lock: -referrerAttributes takes it again briefly, and
+// disk I/O must never happen while it's held. "Last known", written synchronously on the happy
+// path, is the whole point -- there is no crash-time hook that could capture this more precisely
+// without reintroducing the signal-handler reentrancy hazard this design exists to avoid.
+- (void)persistCurrentReferrerState {
+    NSDictionary<NSString *, id> *attrs = [self referrerAttributes];
+    NSString *path = [NRMAViewContext persistedReferrerStateFilePath];
+    if (attrs.count == 0) {
+        [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
+        return;
+    }
+    [attrs writeToFile:path atomically:YES];
+}
+
++ (nullable NSDictionary<NSString *, NSString *> *)persistedReferrerAttributes {
+    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:[self persistedReferrerStateFilePath]];
+    return dict.count > 0 ? dict : nil;
+}
+
++ (void)clearPersistedReferrerAttributes {
+    [[NSFileManager defaultManager] removeItemAtPath:[self persistedReferrerStateFilePath] error:nil];
 }
 
 #pragma mark - Timing

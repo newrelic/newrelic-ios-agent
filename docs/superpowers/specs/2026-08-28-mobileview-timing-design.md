@@ -38,8 +38,6 @@ Discovery confirmed several pieces of the browser mapping already exist and must
   `reappeared`, `loadTime`, `timeVisible`, `previousView`, `previousViewInstanceId`, `uiPlatform`, and
   `component` / `componentOf` / `interactionId`.
 - `scripts/mobileview_flow.py` renders the session DAG from `previousView` → `viewName` edges.
-- `mobviews-dashboard.json` already covers interaction breakdown, transition matrix, entry screens,
-  session walk, and back-navigation.
 
 The gap is timing depth, not naming and not navigation.
 

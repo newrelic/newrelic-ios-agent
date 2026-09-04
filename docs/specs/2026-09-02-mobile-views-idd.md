@@ -280,12 +280,52 @@ Initiative-level requirements:
 | Validation, caps, and reserved names per §6.4 | Every rejection rule is invisible in the data, so all agents must apply the same ones |
 | `loadTime` remains on `MobileView` | Additive by design; removing it breaks already-shipped panels |
 
-The public API for customer-supplied timings, the agent-owned baseline, and the normative shared constants
-are specified in §6.2–§6.4.
+The event schema is §5.8. The public API for customer-supplied timings, the agent-owned baseline, and the
+normative shared constants are specified in §6.2–§6.4.
 
 iOS has this implemented; see `docs/superpowers/specs/2026-08-28-mobileview-timing-design.md` for the iOS
 realisation and its threading invariant. That document is a CDD-level companion — where it and §6 differ on a
 shared value, §6 governs.
+
+### 5.8 Canonical `MobileViewTiming` schema
+
+Event namespace `Custom`; event name `MobileViewTiming`. **This table is the contract**, on the same terms as
+§5.3: an agent that renames `timingName`, or ships `timingValue` in seconds, produces rows that look valid and
+aggregate wrongly against every other agent's.
+
+| Attribute | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `timingName` | string | ✅ | The timing's identity: `timeToInitialDisplay` (§6.3) or a customer-supplied name (§6.2). Validated per §6.4 |
+| `timingValue` | double | ✅ | Duration in **milliseconds**. Finite, ≥ 0, ≤ 600000 (§6.4) |
+| `agentName` | string | ✅ | The SDK — same enum and meaning as §5.3 |
+| `viewName` | string | when a view is current | The screen the timing is about |
+| `viewInstanceId` | string (UUID) | when a view is current | Join key back to the exact `MobileView` **visit** that produced it |
+| `previousView` | string | when known | Referrer, so timings are queryable by route rather than only by destination |
+| `uiPlatform` | string | when a view is current | UI runtime — same enum as §5.3 |
+
+Four properties of this schema are load-bearing and are the ones an agent is most likely to get wrong:
+
+**Name–value, not one attribute per timing.** A timing is `timingName` + `timingValue`, and each event carries
+exactly one. The alternative — widening the event with a column per timing — cannot express a set the customer
+defines at runtime, and forces every timing to wait for the slowest one before any of them can be sent. This
+is why `MobileViewTiming` is a separate streamed event rather than more attributes on `MobileView`; see the
+`FACET timingName` queries in §8, which are only possible in this shape.
+
+**View identity is conditional, not required.** Capability 8 succeeds with no view being tracked (§6.2), so
+`timingName` + `timingValue` + `agentName` alone is a **valid row**. Agents must not manufacture a placeholder
+view name to fill the gap: an unattributed timing that claims a screen is worse than one that admits it has
+none, because it is indistinguishable from a real measurement in an aggregate. Consumers filter on
+`viewInstanceId IS NOT NULL` when they need attributed rows only.
+
+**Absent means absent.** When a value is unknown the key is **omitted**, never emitted as an empty string,
+`"unknown"`, or `null`. Empty strings become a legitimate-looking facet value that silently splits every
+group-by, and they defeat `IS NULL` filtering — so this is a query-correctness rule, not formatting.
+
+**Deliberately narrower than `MobileView`.** `viewClass`, `restarted`, `appeared`, `timeVisible`, and
+`previousViewInstanceId` are **not** on this event. Everything but the last is already reachable by joining on
+`viewInstanceId`, and duplicating it costs event volume for no additional information. `previousViewInstanceId`
+is the real omission: timings can be faceted by referrer **name**, but cannot be joined to the exact referrer
+*visit* the way `MobileView` rows can. That is a live limitation, not a settled decision — see §11.
 
 ## 6. Public API contract
 
@@ -386,6 +426,8 @@ that look valid and aggregate wrongly against every other agent's.
 | Max accepted duration | **600000** ms (10 minutes) | Capability 8 | Catches the seconds-passed-where-milliseconds-expected mistake instead of recording it as a ten-hour screen load |
 | Minimum dwell for a real appearance | **100** ms | §5.2 | Below it, an appear/disappear pair is construction churn, not a visit |
 | Timing unit | milliseconds | Capabilities 7, 8; §5.7 | Unit drift between agents corrupts cross-platform percentiles invisibly |
+| Unattributed-bucket window | **60** seconds | Capability 8 | See below — a rolling window, not a lifetime cap |
+| Max tracked cap buckets | **64** | Capabilities 7, 8 | Bounds cap bookkeeping; without it a long session retains one bucket per view instance ever visited |
 
 **Rejection rules, applied by every agent in this order.** A timing is rejected — and the failure reported
 per §6.2 — when:
@@ -399,8 +441,13 @@ per §6.2 — when:
 6. the per-view-instance cap of 16 is already reached.
 
 Rows with no `viewInstanceId` — capability 8 called with no current view — share a single unattributed cap
-bucket, reset on session start. Otherwise an uncapped path exists in precisely the case where no view
-identity is available to key a cap on.
+bucket, because otherwise an uncapped path exists in precisely the case where no view identity is available to
+key a cap on. That bucket is a **rolling 60-second rate limit, not a lifetime cap**: a per-view-instance bucket
+is self-limiting because the view goes away, but this one never does, so a lifetime cap of 16 would let sixteen
+unattributed timings early in a launch silence the path for the whole session.
+
+Cap bookkeeping is itself bounded to 64 buckets, oldest-inserted evicted first. Eviction re-admits a view to
+its cap, which is acceptable: an evicted bucket belongs to a screen the user left long ago.
 
 ## 7. Delegated to the CDDs
 
@@ -520,3 +567,26 @@ indistinguishable from a screen with no traffic.
    stated normatively here rather than in an iOS-only document. Each is a value an agent could plausibly
    have chosen differently, and every one of them is invisible in the resulting data, so they need explicit
    cross-platform sign-off rather than inheritance.
+6. **Should `MobileViewTiming` carry `previousViewInstanceId`?** (§5.8). It carries `previousView`, so timings
+   can be faceted by referrer name but not joined to the exact referrer *visit*. Adding it makes the timing
+   event a first-class node in the same navigation graph as `MobileView`, at the cost of one attribute on every
+   timing row. iOS has shipped without it, so this is cheapest to settle before other agents implement.
+7. **Decorate `MobileRequest`, `MobileRequestError`, and Handled Exceptions with the current/previous view**
+   (`currentView`, `currentViewInstanceId`, `previousView`, `previousViewInstanceId`), so a request, a
+   request error, or a handled exception can be joined back to the screen it happened on without a
+   `sessionId` + timestamp correlation at query time. This is the same referrer plumbing §5.5 already
+   requires for breadcrumbs, applied to three more producers — iOS has the mechanism (`NRMAViewContext`)
+   but today only `recordBreadcrumb:` calls into it, and it does not yet expose `currentViewInstanceId` at
+   all (`referrerAttributes` returns `currentView` by name only), so this is a schema addition, not just a
+   new consumer of an existing one. It also supersedes the §4 non-goal that named this "the recommended
+   next increment... not in scope here" for network events specifically — that line should be reconciled or
+   dropped if this question is adopted.
+
+   **Crashes are deliberately excluded from this list** and should be tracked separately rather than folded
+   in here. The other three are emitted in-process while the view subsystem's state is still live; a crash
+   report is captured by a signal/exception handler and is typically packaged into an event on the *next*
+   launch, by which point `NRMAViewContext`'s in-memory state is gone. Decorating crashes needs either (a)
+   the current/previous view persisted to disk on every transition so it survives the crash, or (b) a
+   snapshot captured from inside the crash handler itself — the latter reintroduces the reentrancy and
+   lock-ordering hazard already known from session-start (§6, threading model). That is a materially
+   different design problem and should not block sign-off on the other three.
