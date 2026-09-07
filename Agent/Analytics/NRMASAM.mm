@@ -223,6 +223,16 @@
 }
 
 // Includes Public and Private Attributes
+- (NSDictionary*) sessionAttributeDictionary {
+    @synchronized (attributeDict) {
+        @synchronized (privateAttributeDict) {
+            NSMutableDictionary *merged = [attributeDict mutableCopy];
+            [merged addEntriesFromDictionary:privateAttributeDict];
+            return [merged copy];
+        }
+    }
+}
+
 - (NSString*) sessionAttributeJSONString {
     // Take a snapshot under the locks, then serialize outside them.
     // NSJSONSerialization is instrumented by the method profiler, which tries to

@@ -11,6 +11,7 @@
 
 @interface NRMAAnalytics (cppInterface)
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController;
+- (NSDictionary*) sessionAttributeDictionaryFromCpp;
 
 - (BOOL) recordLegacyEventResult:(NewRelic::EventAddResult)result;
 

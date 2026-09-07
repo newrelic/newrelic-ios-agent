@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString*) getLastSessionsAttributes;
 
+- (NSDictionary*) sessionAttributeDictionary;
 - (NSString*) sessionAttributeJSONString;
 - (BOOL) setLastInteraction:(NSString*)name;
 @end
