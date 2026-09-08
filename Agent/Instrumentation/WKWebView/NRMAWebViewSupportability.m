@@ -13,6 +13,8 @@
 
 static const NSInteger kNRMABrowserAgentMaxAttempts = 8;
 static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
+// Incremented by resetPollCycleForTesting to invalidate in-flight retries from previous cycles.
+static NSUInteger sNRMABrowserAgentPollCycle = 0;
 
 @implementation NRMAWebViewSupportability
 
@@ -22,10 +24,10 @@ static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
 }
 
 + (void)startBrowserAgentDetection:(WKWebView *)webView {
-    [self pollForBrowserAgent:webView attempts:0];
+    [self pollForBrowserAgent:webView attempts:0 cycle:sNRMABrowserAgentPollCycle];
 }
 
-+ (void)pollForBrowserAgent:(WKWebView *)webView attempts:(NSInteger)attempts {
++ (void)pollForBrowserAgent:(WKWebView *)webView attempts:(NSInteger)attempts cycle:(NSUInteger)cycle {
     if (webView == nil || attempts >= kNRMABrowserAgentMaxAttempts) {
         return;
     }
@@ -33,7 +35,7 @@ static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
     __weak WKWebView *weakWebView = webView;
     [webView evaluateJavaScript:@"typeof window.newrelic !== 'undefined'"
               completionHandler:^(id result, NSError *error) {
-        if (error != nil || weakWebView == nil) {
+        if (error != nil || weakWebView == nil || cycle != sNRMABrowserAgentPollCycle) {
             return;
         }
         if ([result boolValue]) {
@@ -41,11 +43,17 @@ static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
         } else {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kNRMABrowserAgentPollInterval * NSEC_PER_SEC)),
                            dispatch_get_main_queue(), ^{
-                [self pollForBrowserAgent:weakWebView attempts:attempts + 1];
+                [self pollForBrowserAgent:weakWebView attempts:attempts + 1 cycle:cycle];
             });
         }
     }];
 }
+
+#ifdef DEBUG
++ (void)resetPollCycleForTesting {
+    sNRMABrowserAgentPollCycle++;
+}
+#endif
 
 + (void)recordWebViewSupportMetric:(NSString *)name withToken:(dispatch_once_t *)token {
     dispatch_once(token, ^{

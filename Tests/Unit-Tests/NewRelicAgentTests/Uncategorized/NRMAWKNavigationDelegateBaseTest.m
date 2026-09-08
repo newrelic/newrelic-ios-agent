@@ -385,6 +385,10 @@
 // ---------------------------------------------------------------------------
 #pragma mark - NRMAWebViewBrowserAgentDetectionTests
 
+@interface NRMAWebViewSupportability (Testing)
++ (void)resetPollCycleForTesting;
+@end
+
 @interface NRMAWebViewBrowserAgentDetectionTests : XCTestCase
 @property (strong) NRMAMeasurementConsumerHelper *helper;
 @end
@@ -393,6 +397,11 @@
 
 - (void)setUp {
     [super setUp];
+    // Invalidate any in-flight dispatch_after retries from previous test classes
+    // (e.g. NRMAWKNavigationDelegateBaseTest fires didFinishNavigation: which starts
+    // detection polling; those zombie retries would otherwise fire during our run-loop
+    // spins and record a metric into this test's consumer).
+    [NRMAWebViewSupportability resetPollCycleForTesting];
     [NRMATaskQueue clear];
     self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
