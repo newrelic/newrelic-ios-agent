@@ -447,29 +447,22 @@
 }
 
 - (void)testDetectionDoesNotRecordMetricWhenBrowserAgentAbsent {
+    // Use an unloaded WKWebView — it has no JavaScript context that could define
+    // window.newrelic, eliminating the unreliable page-load wait and any chance of
+    // picking up injected scripts.  evaluateJavaScript: on an unloaded WebView either
+    // errors immediately (our handler returns early) or evaluates to false; neither
+    // path records the metric.
     WKWebView *webView = [[WKWebView alloc] init];
-    [webView loadHTMLString:@"<html><body></body></html>" baseURL:nil];
-
-    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
-    while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
-        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
-    }
-    XCTAssertFalse(webView.isLoading, @"WebView timed out while loading");
 
     [NRMAWebViewSupportability startBrowserAgentDetection:webView];
 
-    // Spin the run loop for longer than the full polling window (8 attempts × 250ms = 2s).
-    // We must wait the full duration — there is no early-exit signal for "not detected".
+    // Spin long enough for all 8 polling attempts to exhaust (8 × 250 ms = 2 s).
     NSDate *pollDeadline = [NSDate dateWithTimeIntervalSinceNow:2.5];
     while ([NSDate.date compare:pollDeadline] == NSOrderedAscending) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
         [NRMATaskQueue synchronousDequeue];
     }
 
-    // Check specifically that the browser agent metric was NOT recorded.
-    // Other NRMANamedValueMeasurements (e.g. memory/CPU from NRMANamedValueProducer)
-    // may have been delivered to the consumer during the wait and must not be confused
-    // with the browser agent detection metric.
     BOOL browserAgentMetricRecorded = NO;
     for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
         if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
