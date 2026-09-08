@@ -13,8 +13,6 @@
 
 static const NSInteger kNRMABrowserAgentMaxAttempts = 8;
 static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
-// Incremented by resetPollCycleForTesting to invalidate in-flight retries from previous cycles.
-static NSUInteger sNRMABrowserAgentPollCycle = 0;
 
 @implementation NRMAWebViewSupportability
 
@@ -24,10 +22,10 @@ static NSUInteger sNRMABrowserAgentPollCycle = 0;
 }
 
 + (void)startBrowserAgentDetection:(WKWebView *)webView {
-    [self pollForBrowserAgent:webView attempts:0 cycle:sNRMABrowserAgentPollCycle];
+    [self pollForBrowserAgent:webView attempts:0];
 }
 
-+ (void)pollForBrowserAgent:(WKWebView *)webView attempts:(NSInteger)attempts cycle:(NSUInteger)cycle {
++ (void)pollForBrowserAgent:(WKWebView *)webView attempts:(NSInteger)attempts {
     if (webView == nil || attempts >= kNRMABrowserAgentMaxAttempts) {
         return;
     }
@@ -35,7 +33,7 @@ static NSUInteger sNRMABrowserAgentPollCycle = 0;
     __weak WKWebView *weakWebView = webView;
     [webView evaluateJavaScript:@"typeof window.newrelic !== 'undefined'"
               completionHandler:^(id result, NSError *error) {
-        if (error != nil || weakWebView == nil || cycle != sNRMABrowserAgentPollCycle) {
+        if (error != nil || weakWebView == nil) {
             return;
         }
         if ([result boolValue]) {
@@ -43,17 +41,11 @@ static NSUInteger sNRMABrowserAgentPollCycle = 0;
         } else {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kNRMABrowserAgentPollInterval * NSEC_PER_SEC)),
                            dispatch_get_main_queue(), ^{
-                [self pollForBrowserAgent:weakWebView attempts:attempts + 1 cycle:cycle];
+                [self pollForBrowserAgent:weakWebView attempts:attempts + 1];
             });
         }
     }];
 }
-
-#ifdef DEBUG
-+ (void)resetPollCycleForTesting {
-    sNRMABrowserAgentPollCycle++;
-}
-#endif
 
 + (void)recordWebViewSupportMetric:(NSString *)name withToken:(dispatch_once_t *)token {
     dispatch_once(token, ^{
