@@ -427,15 +427,23 @@
 
     [NRMAWebViewSupportability startBrowserAgentDetection:webView];
 
+    // Poll until the specific browser agent metric arrives (ignore other NRMANamedValueMeasurements
+    // such as memory/CPU produced by NRMANamedValueProducer while the run loop spins).
     NSDate *detectDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
-    while (!self.helper.result && [NSDate.date compare:detectDeadline] == NSOrderedAscending) {
+    NRMANamedValueMeasurement *found = nil;
+    while (!found && [NSDate.date compare:detectDeadline] == NSOrderedAscending) {
         [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
         [NRMATaskQueue synchronousDequeue];
+        for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+            if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+                found = m;
+                break;
+            }
+        }
     }
 
-    XCTAssertTrue([self.helper.result isKindOfClass:[NRMANamedValueMeasurement class]]);
-    NRMANamedValueMeasurement *m = (NRMANamedValueMeasurement *)self.helper.result;
-    XCTAssertEqualObjects(m.name, kNRMAWebViewBrowserAgentDetectedMetric);
+    XCTAssertNotNil(found, @"Browser agent detection metric should be recorded");
+    XCTAssertEqualObjects(found.name, kNRMAWebViewBrowserAgentDetectedMetric);
 }
 
 - (void)testDetectionDoesNotRecordMetricWhenBrowserAgentAbsent {
@@ -458,7 +466,18 @@
         [NRMATaskQueue synchronousDequeue];
     }
 
-    XCTAssertNil(self.helper.result, @"No metric should be recorded when browser agent is absent");
+    // Check specifically that the browser agent metric was NOT recorded.
+    // Other NRMANamedValueMeasurements (e.g. memory/CPU from NRMANamedValueProducer)
+    // may have been delivered to the consumer during the wait and must not be confused
+    // with the browser agent detection metric.
+    BOOL browserAgentMetricRecorded = NO;
+    for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+        if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+            browserAgentMetricRecorded = YES;
+            break;
+        }
+    }
+    XCTAssertFalse(browserAgentMetricRecorded, @"Browser agent detection metric should not be recorded when browser agent is absent");
 }
 
 - (void)testDetectionDoesNotRetainWebView {
