@@ -13,7 +13,6 @@
 
 static const NSInteger kNRMABrowserAgentMaxAttempts = 8;
 static const NSTimeInterval kNRMABrowserAgentPollInterval = 0.250;
-static BOOL sNRMABrowserAgentDetected = NO;
 
 @implementation NRMAWebViewSupportability
 
@@ -23,9 +22,6 @@ static BOOL sNRMABrowserAgentDetected = NO;
 }
 
 + (void)startBrowserAgentDetection:(WKWebView *)webView {
-    if (sNRMABrowserAgentDetected) {
-        return;
-    }
     [self pollForBrowserAgent:webView attempts:0];
 }
 
@@ -41,7 +37,7 @@ static BOOL sNRMABrowserAgentDetected = NO;
             return;
         }
         if ([result boolValue]) {
-            [self recordBrowserAgentDetected];
+            [NRMAMeasurements recordAndScopeMetricNamed:kNRMAWebViewBrowserAgentDetectedMetric value:@1];
         } else {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kNRMABrowserAgentPollInterval * NSEC_PER_SEC)),
                            dispatch_get_main_queue(), ^{
@@ -50,17 +46,6 @@ static BOOL sNRMABrowserAgentDetected = NO;
         }
     }];
 }
-
-+ (void)recordBrowserAgentDetected {
-    sNRMABrowserAgentDetected = YES;
-    [NRMAMeasurements recordAndScopeMetricNamed:kNRMAWebViewBrowserAgentDetectedMetric value:@1];
-}
-
-#ifdef DEBUG
-+ (void)resetBrowserAgentDetectionForTesting {
-    sNRMABrowserAgentDetected = NO;
-}
-#endif
 
 + (void)recordWebViewSupportMetric:(NSString *)name withToken:(dispatch_once_t *)token {
     dispatch_once(token, ^{

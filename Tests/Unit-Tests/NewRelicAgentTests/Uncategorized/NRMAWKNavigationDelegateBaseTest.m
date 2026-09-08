@@ -385,11 +385,6 @@
 // ---------------------------------------------------------------------------
 #pragma mark - NRMAWebViewBrowserAgentDetectionTests
 
-@interface NRMAWebViewSupportability (Testing)
-+ (void)resetBrowserAgentDetectionForTesting;
-+ (void)recordBrowserAgentDetected;
-@end
-
 @interface NRMAWebViewBrowserAgentDetectionTests : XCTestCase
 @property (strong) NRMAMeasurementConsumerHelper *helper;
 @end
@@ -398,7 +393,6 @@
 
 - (void)setUp {
     [super setUp];
-    [NRMAWebViewSupportability resetBrowserAgentDetectionForTesting];
     [NRMATaskQueue clear];
     self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
     [NRMAMeasurements initializeMeasurements];
@@ -409,29 +403,7 @@
     [NRMAMeasurements removeMeasurementConsumer:self.helper];
     self.helper = nil;
     [NRMAMeasurements shutdown];
-    [NRMAWebViewSupportability resetBrowserAgentDetectionForTesting];
     [super tearDown];
-}
-
-- (void)testBrowserAgentDetectedRecordsCorrectMetricName {
-    [NRMAWebViewSupportability recordBrowserAgentDetected];
-    [NRMATaskQueue synchronousDequeue];
-
-    XCTAssertTrue([self.helper.result isKindOfClass:[NRMANamedValueMeasurement class]]);
-    NRMANamedValueMeasurement *m = (NRMANamedValueMeasurement *)self.helper.result;
-    XCTAssertEqualObjects(m.name, kNRMAWebViewBrowserAgentDetectedMetric);
-}
-
-- (void)testStartBrowserAgentDetectionShortCircuitsWhenAlreadyDetected {
-    [NRMAWebViewSupportability recordBrowserAgentDetected];
-    [NRMATaskQueue synchronousDequeue];
-    NSUInteger countAfterFirstDetection = self.helper.consumedMeasurements.count;
-
-    WKWebView *webView = [[WKWebView alloc] init];
-    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
-    [NRMATaskQueue synchronousDequeue];
-
-    XCTAssertEqual(self.helper.consumedMeasurements.count, countAfterFirstDetection);
 }
 
 - (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
@@ -478,6 +450,23 @@
     }
 
     XCTAssertNil(self.helper.result, @"No metric should be recorded when browser agent is absent");
+}
+
+- (void)testDetectionDoesNotRetainWebView {
+    __weak WKWebView *weakRef = nil;
+
+    @autoreleasepool {
+        WKWebView *webView = [[WKWebView alloc] init];
+        weakRef = webView;
+        [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+        // webView's only strong owner goes out of scope here
+    }
+
+    // Spin the run loop to let any in-flight dispatch_after blocks fire and release.
+    // The blocks capture weakWebView weakly, so they cannot keep the WKWebView alive.
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+
+    XCTAssertNil(weakRef, @"Detection polling must not hold a strong reference to WKWebView");
 }
 
 @end
