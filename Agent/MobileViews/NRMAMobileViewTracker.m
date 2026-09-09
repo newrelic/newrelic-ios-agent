@@ -2,9 +2,9 @@
 //  NRMAMobileViewTracker.m
 //  NewRelicAgent
 //
-//  MobileViews: automatic UIViewController lifecycle tracking. Emits "MobileView" custom events
-//  with timing and identity attributes, and updates NRMAViewContext so breadcrumbs and MobileView
-//  events carry a consistent currentView / previousView referrer.
+//  MobileViews: automatic UIViewController lifecycle tracking. Reports view lifecycle facts to
+//  NRMAMobileViewRecorder, which owns the MobileView schema, and updates NRMAViewContext so
+//  breadcrumbs and MobileView events carry a consistent currentView / previousView referrer.
 //
 //  Copyright © 2024 New Relic. All rights reserved.
 //
@@ -13,12 +13,12 @@
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 #import <dlfcn.h>
-#import "NewRelic.h"
 #import "NRLogger.h"
 #import "NRMAMethodSwizzling.h"
 #import "NRMAViewContext.h"
 #import "NRMAViewTiming.h"
 #import "NRMAFlags.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 // Associated-object keys (pointer address acts as unique key)
 static const char kNRLoadTimestampKey;
@@ -26,18 +26,12 @@ static const char kNRAppearTimestampKey;
 static const char kNRViewInstanceIdKey;
 static const char kNRHasAppearedBeforeKey;
 
-static NSString * const kNRMobileViewEventType = @"MobileView";
+// Attribute names, the event type, and the loadTime-vs-loadTimeUnavailable rule all live in
+// MobileViewEmitter.swift now. This file reports facts; it does not build events.
 
-// Attribute keys matching the PM spec
-static NSString * const kNRAttr_viewClass      = @"viewClass";
-static NSString * const kNRAttr_viewName       = @"viewName";
-static NSString * const kNRAttr_viewInstanceId = @"viewInstanceId";
-static NSString * const kNRAttr_restarted      = @"restarted";
-static NSString * const kNRAttr_loadTime       = @"loadTime";
-// Why loadTime is absent, when it is. Recorded explicitly so the omission is diagnosable in NRDB
-// rather than looking like the attribute was never implemented.
-static NSString * const kNRAttr_loadTimeUnavailable = @"loadTimeUnavailable";
-static NSString * const kNRAttr_timeVisible    = @"timeVisible";
+// The reason string handed to the recorder when a construction interval cannot be trusted.
+static NSString * const kNRLoadUnavailableConstructedBeforeAppear = @"constructedBeforeAppear";
+static NSString * const kNRLoadUnavailableNoConstructionObserved  = @"noConstructionObserved";
 
 // Swift mangling marker — any class name starting with _Tt is mangled
 static NSString * const kSwiftManglingMarker = @"_Tt";
@@ -291,36 +285,32 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
 
     NSString *viewClass = NRMA_DemangledName([self class], YES);
 
-    NSDictionary<NSString *, id> *custom = NRMA_AttributesForController(self);
-    NSMutableDictionary<NSString *, id> *attrs =
-        [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
+    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
+    fields.viewName   = viewName;
+    fields.viewClass  = viewClass;
+    fields.instanceId = uuid;
+    fields.platform   = @"UIKit";
     // Referrer for this appearance (previousView / previousViewInstanceId).
-    [attrs addEntriesFromDictionary:[[NRMAViewContext sharedInstance] previousViewAttributes]];
-    // Reserved keys win over caller-supplied ones to keep the event schema stable.
-    [attrs addEntriesFromDictionary:@{
-        kNRAttr_viewClass:      viewClass,
-        kNRAttr_viewName:       viewName,
-        kNRAttr_viewInstanceId: uuid,
-        @"appeared":            @YES,
-        @"uiPlatform":          @"UIKit",
-    }];
+    fields.useContextReferrer = YES;
+    fields.custom     = NRMA_AttributesForController(self);
     // loadTime belongs here and not only on the disappear event, which is where this producer used
     // to report it alone. It also brings the UIKit schema in line with the SwiftUI producer, which
     // has always put loadTime on appear.
     //
-    // Omitted rather than zeroed when there is no trustworthy construction start, so aggregates are
-    // not dragged toward 0 by a placeholder. The reason is recorded either way.
+    // The recorder omits loadTime rather than zeroing it when there is no trustworthy construction
+    // start, so aggregates are not dragged toward 0 by a placeholder, and records the reason either
+    // way. Setting exactly one of these is what picks that branch.
     if (loadIsMeasurable) {
-        attrs[kNRAttr_loadTime] = @(loadTimeMs);
+        fields.loadTimeMs = @(loadTimeMs);
     } else if (loadTimestamp) {
-        attrs[kNRAttr_loadTimeUnavailable] = @"constructedBeforeAppear";
+        fields.loadTimeUnavailable = kNRLoadUnavailableConstructedBeforeAppear;
     } else {
-        attrs[kNRAttr_loadTimeUnavailable] = @"noConstructionObserved";
+        fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
     }
 
     // Both halves of a view's lifetime are recorded, and they carry different things: this one
     // loadTime, the disappear event timeVisible.
-    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+    [NRMAMobileViewRecorder recordAppeared:fields];
 
     // The out-of-the-box baseline, so MobileViewTiming dashboards populate with no customer
     // instrumentation and customer marks such as timeToFullDisplay share its origin. Derived from
@@ -369,28 +359,24 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     // viewClass: fully-qualified demangled name, e.g. "MyApp.ProductDetailViewController"
     NSString *viewClass = NRMA_DemangledName([self class], YES);
 
-    NSDictionary<NSString *, id> *custom = NRMA_AttributesForController(self);
-    NSMutableDictionary<NSString *, id> *attrs =
-        [NSMutableDictionary dictionaryWithDictionary:custom ?: @{}];
-    [attrs addEntriesFromDictionary:@{
-        kNRAttr_viewClass:      viewClass,
-        kNRAttr_viewName:       viewName,
-        kNRAttr_viewInstanceId: instanceId,
-        kNRAttr_restarted:      @(isRestarted),
-        kNRAttr_timeVisible:    @(timeVisibleMs),
-        @"appeared":            @NO,
-        @"uiPlatform":          @"UIKit",
-    }];
+    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
+    fields.viewName      = viewName;
+    fields.viewClass     = viewClass;
+    fields.instanceId    = instanceId;
+    fields.platform      = @"UIKit";
+    fields.restarted     = @(isRestarted);
+    fields.timeVisibleMs = @(timeVisibleMs);
+    fields.custom        = NRMA_AttributesForController(self);
 
     if (loadIsMeasurable) {
-        attrs[kNRAttr_loadTime] = @(loadTimeMs);
+        fields.loadTimeMs = @(loadTimeMs);
     } else if (loadTimestamp) {
-        attrs[kNRAttr_loadTimeUnavailable] = @"constructedBeforeAppear";
+        fields.loadTimeUnavailable = kNRLoadUnavailableConstructedBeforeAppear;
     } else {
-        attrs[kNRAttr_loadTimeUnavailable] = @"noConstructionObserved";
+        fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
     }
 
-    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+    [NRMAMobileViewRecorder recordDisappeared:fields];
 
     // Drop this instance from the visible-view stack. For UIKit this is bookkeeping rather than a
     // fix: viewDidAppear: fires on pop, so the uncovered screen reports a real appearance moments

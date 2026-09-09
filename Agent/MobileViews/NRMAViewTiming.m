@@ -8,8 +8,8 @@
 #import "NRMAViewTiming.h"
 #import "NRMAViewContext.h"
 #import "NRMAFlags.h"
-#import "NewRelic.h"
 #import "NRLogger.h"
+#import <NewRelic/NewRelic-Swift.h>
 #import <os/lock.h>
 
 NSString * const kNRMAViewTimingEventType     = @"MobileViewTiming";
@@ -19,17 +19,8 @@ const NSUInteger kNRMAViewTimingMaxPerViewInstance = 16;
 const NSUInteger kNRMAViewTimingMaxNameLength      = 128;
 const double     kNRMAViewTimingMaxMilliseconds    = 10 * 60 * 1000;   // 10 minutes
 
-// Attribute keys. Kept as literals here rather than shared with NRMAViewContext because this is a
-// different event type: viewName/viewInstanceId mean the same thing, but timingName/timingValue are
-// this schema's own and the two schemas are free to diverge.
-static NSString * const kNRAttr_timingName     = @"timingName";
-static NSString * const kNRAttr_timingValue    = @"timingValue";
-static NSString * const kNRAttr_viewName       = @"viewName";
-static NSString * const kNRAttr_viewInstanceId = @"viewInstanceId";
-static NSString * const kNRAttr_previousView   = @"previousView";
-static NSString * const kNRAttr_uiPlatform     = @"uiPlatform";
-static NSString * const kNRAttr_agentName      = @"agentName";
-static NSString * const kNRAgentName           = @"iOS";
+// This event's attribute names live in MobileViewEmitter.swift, which owns the MobileViewTiming
+// schema. This file owns admission policy: what is allowed to be recorded, and how often.
 
 // Cap bucket for timings recorded with no view current. A view instance's bucket is naturally
 // bounded — the view goes away — but this one is not, so it is rate limited by window instead of
@@ -186,13 +177,16 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
            milliseconds:(double)milliseconds
                snapshot:(NRMAViewTimingSnapshot *)snapshot
              agentOwned:(BOOL)agentOwned {
+    // attributesForTimingNamed: is the admission gate: it validates the name and duration, applies
+    // the per-view-instance cap, and returns nil to mean "do not record". The attributes it hands
+    // back are the recorder's own, so there is exactly one definition of this event's shape.
     NSDictionary<NSString *, id> *attrs = [self attributesForTimingNamed:name
                                                            milliseconds:milliseconds
                                                                snapshot:snapshot
                                                              agentOwned:agentOwned];
     if (attrs == nil) { return NO; }
 
-    return [NewRelic recordCustomEvent:kNRMAViewTimingEventType attributes:attrs];
+    return [NRMAMobileViewRecorder emitTimingWithAttributes:attrs];
 }
 
 #pragma mark - Decision layer
@@ -208,18 +202,14 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
     // the out-of-the-box baseline.
     if (!agentOwned && ![self admitTimingForSnapshot:snapshot]) { return nil; }
 
-    NSMutableDictionary<NSString *, id> *attrs = [NSMutableDictionary dictionary];
-    attrs[kNRAttr_timingName]  = name;
-    attrs[kNRAttr_timingValue] = @(milliseconds);
-    attrs[kNRAttr_agentName]   = kNRAgentName;
-
-    // Only keys with values are set; an absent view must read as absent, not as an empty string.
-    if (snapshot.viewName.length > 0)       { attrs[kNRAttr_viewName]       = snapshot.viewName; }
-    if (snapshot.viewInstanceId.length > 0) { attrs[kNRAttr_viewInstanceId] = snapshot.viewInstanceId; }
-    if (snapshot.previousView.length > 0)   { attrs[kNRAttr_previousView]   = snapshot.previousView; }
-    if (snapshot.uiPlatform.length > 0)     { attrs[kNRAttr_uiPlatform]     = snapshot.uiPlatform; }
-
-    return attrs;
+    // The shape is the recorder's: it owns this event's schema, including which keys are omitted
+    // when absent. Building a second copy here is what let agentName diverge between the two.
+    return [NRMAMobileViewRecorder timingAttributes:name
+                                      milliseconds:milliseconds
+                                          viewName:snapshot.viewName
+                                    viewInstanceId:snapshot.viewInstanceId
+                                      previousView:snapshot.previousView
+                                          platform:snapshot.uiPlatform];
 }
 
 #pragma mark - Validation

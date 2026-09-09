@@ -6,6 +6,7 @@
 #include "Analytics/EventDeserializer.hpp"
 #include "Analytics/EventManager.hpp"
 #include "Analytics/AttributeDeserializer.hpp"
+#include "Analytics/Constants.hpp"
 
 namespace NewRelic {
     std::shared_ptr<AnalyticEvent> EventDeserializer::deserialize(std::istream& is) {
@@ -17,6 +18,10 @@ namespace NewRelic {
             return deserializeMobileEvent(is);
         } else if (eventType == UserActionEvent::__eventType) {
             return deserializeUserActionEvent(is);
+        } else if (eventType == std::string(__kNRMA_RET_mobileView)) {
+            return deserializeViewEvent(__kNRMA_RET_mobileView, is);
+        } else if (eventType == std::string(__kNRMA_RET_mobileViewTiming)) {
+            return deserializeViewEvent(__kNRMA_RET_mobileViewTiming, is);
         } else if (eventType.length()) {
             return deserializeCustomEvent(eventType, is);
         } else {
@@ -67,6 +72,45 @@ namespace NewRelic {
         // Also check fail() — istream::get(streambuf&, delim) sets failbit
         // (not eofbit) when the next char already is the delimiter and zero
         // chars are extracted. Without this guard the loop spins forever.
+        while (!is.eof() && !is.fail()) {
+            auto attribute = AttributeDeserializer::deserializeAttributes(is);
+            if(attribute == nullptr) continue;
+            event->insertAttribute(attribute);
+        }
+        return event;
+    }
+
+    /*
+     * Reconstitutes a ViewEvent rather than letting MobileView / MobileViewTiming fall
+     * through to deserializeCustomEvent. That fallthrough would return a plain CustomEvent,
+     * whose generateJSONObject() adds no category -- so an offline-stored view event would
+     * ship without `category` while a live one shipped with it: same event type, two shapes,
+     * split on whether the device had connectivity.
+     *
+     * The category is not on the wire (ViewEvent::put writes only the event type), because
+     * it is a constant for every view event type.
+     */
+    std::shared_ptr<AnalyticEvent> EventDeserializer::deserializeViewEvent(const char* eventType, std::istream &is) {
+        AttributeValidator validator{[](const char*){return true;},[](const char*){return true;},[](const char*){return true;}};
+
+        unsigned long long timestamp_millis;
+        double session_elapsed_time_sec;
+
+        readStreamToDelimiter(is,AnalyticEvent::_delimiter) >> timestamp_millis;
+        is.ignore(std::numeric_limits<std::streamsize>::max(), AnalyticEvent::_delimiter);
+
+        readStreamToDelimiter(is, AnalyticEvent::_delimiter) >> session_elapsed_time_sec;
+        is.ignore(std::numeric_limits<std::streamsize>::max(), AnalyticEvent::_delimiter);
+
+        auto event = EventManager::newViewEvent(eventType,
+                                                __kNRMA_RET_mobile,
+                                                timestamp_millis,
+                                                session_elapsed_time_sec,
+                                                validator);
+
+        // See deserializeUserActionEvent for the failbit-vs-eofbit explanation. The
+        // unguarded `while (auto attribute = ...)` form used by deserializeCustomEvent
+        // spins forever here.
         while (!is.eof() && !is.fail()) {
             auto attribute = AttributeDeserializer::deserializeAttributes(is);
             if(attribute == nullptr) continue;

@@ -192,6 +192,20 @@ std::shared_ptr<UserActionEvent> EventManager::newUserActionEvent(unsigned long 
     return event;
 }
 
+std::shared_ptr<ViewEvent> EventManager::newViewEvent(const char* eventType,
+                                                     const char* category,
+                                                     unsigned long long timestamp_epoch_millis,
+                                                     double session_elapsed_time_sec,
+                                                     AttributeValidator &attributeValidator) {
+    auto event = std::make_shared<ViewEvent>(
+            ViewEvent(eventType,
+                      category,
+                      timestamp_epoch_millis,
+                      session_elapsed_time_sec,
+                      attributeValidator));
+    return event;
+}
+
 std::shared_ptr<CustomMobileEvent> EventManager::newCustomMobileEvent(const char* name,
                                                                       unsigned long long timestamp_epoch_millis,
                                                                       double session_elapsed_time_sec,

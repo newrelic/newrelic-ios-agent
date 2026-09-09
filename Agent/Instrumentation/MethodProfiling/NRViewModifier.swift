@@ -148,27 +148,30 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                     loadStartTime: loadStart,
                     platform: "SwiftUI")
 
-                var attrs: [String: Any] = customAttributes ?? [:]
-                // Referrer for this appearance (previousView / previousViewInstanceId).
-                attrs.merge(NRMAViewContext.sharedInstance().previousViewAttributes()) { _, new in new }
-                // Reserved keys overwrite any caller-supplied values to keep the event schema stable.
-                attrs["viewClass"]      = viewClass
-                attrs["viewName"]       = viewName
-                attrs["viewInstanceId"] = id
-                attrs["restarted"]      = NSNumber(value: hasAppearedBefore)
-                if loadIsMeasurable {
-                    attrs["loadTime"]   = NSNumber(value: loadTimeMs)
-                } else {
-                    // Recorded explicitly so an absent loadTime is diagnosable in NRDB rather than
-                    // looking like the attribute was never implemented.
-                    attrs["loadTimeUnavailable"] = unavailableReason ?? "noConstructionObserved"
-                }
-                attrs["appeared"]       = NSNumber(value: true)
-                attrs["uiPlatform"]     = "SwiftUI"
+                // Reserved keys overwrite any caller-supplied values, and the referrer for this
+                // appearance is merged in, by the shared recorder -- which owns the schema.
+                //
+                // The load outcome is a single value rather than two independent attributes, so
+                // loadTime and loadTimeUnavailable cannot both be written or both be missed. An
+                // absent loadTime is recorded with its reason, so it is diagnosable in NRDB rather
+                // than looking like the attribute was never implemented.
+                let load: NRViewLoadOutcome = loadIsMeasurable
+                    ? .measured(loadTimeMs)
+                    : .unavailable(unavailableReason.flatMap { NRViewLoadOutcome.Reason(rawValue: $0) }
+                                   ?? .noConstructionObserved)
+
                 // Recorded on both appear and disappear, carrying different things. This one is
                 // the only event that can hold loadTime (measured above); the disappear event
                 // carries timeVisible instead.
-                NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+                MobileViewRecord(viewName: viewName,
+                                 viewClass: viewClass,
+                                 instanceId: id,
+                                 platform: .swiftUI,
+                                 phase: .appeared,
+                                 referrer: .fromContext,
+                                 load: load,
+                                 restarted: hasAppearedBefore,
+                                 custom: customAttributes).emit()
 
                 // The out-of-the-box baseline, so MobileViewTiming dashboards populate with no
                 // customer instrumentation and customer marks such as timeToFullDisplay share its
@@ -189,22 +192,17 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 // timeVisible (ms): onAppear → onDisappear. loadTime is only included on appear.
                 let timeVisibleMs = NRMAViewContext.millisecondsBetween(appeared, and: disappearTime)
 
-                var attrs: [String: Any] = customAttributes ?? [:]
-                attrs["viewClass"]      = viewClass
-                attrs["viewName"]       = viewName
-                attrs["viewInstanceId"] = id
-                attrs["restarted"]      = NSNumber(value: hasAppearedBefore)
-                attrs["timeVisible"]    = NSNumber(value: timeVisibleMs)
-                // A visible lifetime this short is construction churn, not something the user saw --
-                // SwiftUI produces it on every TabView switch. The events are still recorded (hiding
-                // data is worse than labelling it), but this marks them so screen-view counts can
-                // exclude the duplicate visit: `WHERE churn IS NULL`.
-                if timeVisibleMs < kNRMAMinDwellMs {
-                    attrs["churn"]      = NSNumber(value: true)
-                }
-                attrs["uiPlatform"]     = "SwiftUI"
-                attrs["appeared"]       = NSNumber(value: false)
-                NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+                // `churn` is applied by the recorder from timeVisible, so every producer marks a
+                // construction-churn appearance the same way -- this used to be the only site that
+                // did. SwiftUI produces churn on every TabView switch.
+                MobileViewRecord(viewName: viewName,
+                                 viewClass: viewClass,
+                                 instanceId: id,
+                                 platform: .swiftUI,
+                                 phase: .disappeared,
+                                 timeVisibleMs: timeVisibleMs,
+                                 restarted: hasAppearedBefore,
+                                 custom: customAttributes).emit()
 
                 // Tell the shared context this instance is gone. This is the SwiftUI-specific half
                 // of the fix: popping a NavigationStack back to a view does not re-fire its
@@ -394,20 +392,18 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
                     loadStartTime: nil,
                     platform: "SwiftUI")
 
-                var attrs: [String: Any] = [:]
-                attrs.merge(NRMAViewContext.sharedInstance().previousViewAttributes()) { _, new in new }
-                attrs["viewName"]       = viewName
-                attrs["viewClass"]      = String(describing: Tag.self)
-                attrs["viewInstanceId"] = id
-                attrs["uiPlatform"]     = "SwiftUI"
-                attrs["navigationKind"] = "tab"
-                attrs["restarted"]      = NSNumber(value: restarted)
                 // No loadTime: selecting a tab constructs nothing measurable here. Omitted rather
                 // than zeroed so it does not drag load-time aggregates toward 0; the reason is
                 // recorded so the omission is diagnosable.
-                attrs["loadTimeUnavailable"] = "noConstructionObserved"
-                attrs["appeared"]       = NSNumber(value: true)
-                NewRelic.recordCustomEvent("MobileView", attributes: attrs)
+                MobileViewRecord(viewName: viewName,
+                                 viewClass: String(describing: Tag.self),
+                                 instanceId: id,
+                                 platform: .swiftUI,
+                                 phase: .appeared,
+                                 referrer: .fromContext,
+                                 load: .unavailable(.noConstructionObserved),
+                                 restarted: restarted,
+                                 navigationKind: "tab").emit()
 
                 closeOpenTab(at: now)
 
@@ -435,15 +431,13 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
 
         let timeVisibleMs = NRMAViewContext.millisecondsBetween(priorSince, and: when)
 
-        NewRelic.recordCustomEvent("MobileView", attributes: [
-            "viewName":       priorName,
-            "viewClass":      String(describing: Tag.self),
-            "viewInstanceId": priorId,
-            "uiPlatform":     "SwiftUI",
-            "navigationKind": "tab",
-            "timeVisible":    NSNumber(value: timeVisibleMs),
-            "appeared":       NSNumber(value: false),
-        ])
+        MobileViewRecord(viewName: priorName,
+                         viewClass: String(describing: Tag.self),
+                         instanceId: priorId,
+                         platform: .swiftUI,
+                         phase: .disappeared,
+                         timeVisibleMs: timeVisibleMs,
+                         navigationKind: "tab").emit()
 
         NRMAViewContext.sharedInstance().viewDidDisappearNamed(priorName, instanceId: priorId)
     }

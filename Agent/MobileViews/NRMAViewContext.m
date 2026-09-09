@@ -8,24 +8,18 @@
 #import "NRMAViewContext.h"
 #import <os/lock.h>
 #import <time.h>
-#import "NewRelic.h"
 #import "NRMAViewTiming.h"
 #import "Constants.h"
 #import "NRMAFlags.h"
+#import <NewRelic/NewRelic-Swift.h>
 
-// MobileView event type + attribute keys (shared schema with NRMAMobileViewTracker).
-static NSString * const kNRMobileViewEventType = @"MobileView";
-static NSString * const kNRAttr_viewClass      = @"viewClass";
-static NSString * const kNRAttr_viewName       = @"viewName";
-static NSString * const kNRAttr_viewInstanceId = @"viewInstanceId";
+// Referrer attribute keys. These are this file's own: they are what -referrerAttributes and
+// -previousViewAttributes hand to breadcrumbs, requests and the MobileView producers. The
+// MobileView event's own attribute names live in MobileViewEmitter.swift, which owns that schema.
 static NSString * const kNRAttr_previousView   = @"previousView";
 static NSString * const kNRAttr_previousViewId = @"previousViewInstanceId";
 static NSString * const kNRAttr_currentView    = @"currentView";
 static NSString * const kNRAttr_currentViewId  = @"currentViewInstanceId";
-static NSString * const kNRAttr_timeVisible    = @"timeVisible";
-static NSString * const kNRAttr_appeared       = @"appeared";
-static NSString * const kNRAttr_uiPlatform     = @"uiPlatform";
-static NSString * const kNRAttr_agentName      = @"agentName";
 NSString * const kNRMAAttributeReappeared      = @"reappeared";
 
 // Upper bound on the visible-view stack. A producer can miss a disappearance (a view deallocated
@@ -50,7 +44,6 @@ const double kNRMAMinDwellMs = 100.0;
 const double kNRMAMaxPlausibleLoadMs = 5000.0;
 
 static NSString * const kNRUIPlatformManual    = @"Manual";
-static NSString * const kNRAgentName           = @"iOS";
 
 /// One view believed to be on screen. Held oldest-first, so the last element is the topmost.
 @interface NRMAVisibleView : NSObject
@@ -282,23 +275,24 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     [self persistCurrentReferrerState];
 
-    NSMutableDictionary<NSString *, id> *attrs = [NSMutableDictionary dictionary];
-    attrs[kNRAttr_viewName]       = resurfacedName;
-    attrs[kNRAttr_viewInstanceId] = resurfacedInstanceId;
-    attrs[kNRAttr_previousView]   = departedName;
-    attrs[kNRAttr_previousViewId] = departedInstanceId;
-    attrs[kNRAttr_appeared]       = @YES;
+    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
+    fields.viewName   = resurfacedName;
+    fields.instanceId = resurfacedInstanceId;
+    // The referrer is the view whose departure uncovered this one, which only this method
+    // knows -- so it is passed explicitly rather than read back out of the context.
+    fields.previousView           = departedName;
+    fields.previousViewInstanceId = departedInstanceId;
     // Distinguishes this from an observed appearance so consumers can treat back-navigation
     // separately -- and so it is obvious why there is no loadTime.
-    attrs[kNRMAAttributeReappeared] = @YES;
-    attrs[kNRAttr_agentName]      = kNRAgentName;
-    if (resurfacedPlatform.length > 0) {
-        attrs[kNRAttr_uiPlatform] = resurfacedPlatform;
-    }
+    fields.reappeared = YES;
+    // An empty platform string omits uiPlatform, which is what an uncovered entry recorded
+    // without one needs.
+    fields.platform   = resurfacedPlatform;
     // Deliberately no loadTime: nothing was constructed or laid out, the screen was merely
-    // uncovered. Zeroing it would drag load-time aggregates toward zero.
+    // uncovered. Zeroing it would drag load-time aggregates toward zero. Leaving both
+    // loadTimeMs and loadTimeUnavailable unset omits the pair entirely.
 
-    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
+    [NRMAMobileViewRecorder recordAppeared:fields];
 }
 
 #pragma mark - Manual producer
@@ -403,8 +397,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                customAttrs:nil];
 }
 
-// Assembles and records a MobileView event for the manual producer. Reserved keys always win over
-// caller-supplied custom attributes to keep the event schema stable.
+// Reports a MobileView for the manual producer. The recorder keeps reserved keys winning over
+// caller-supplied custom attributes, so the event schema stays stable.
 - (void)recordMobileView:(NSString *)name
               instanceId:(NSString *)instanceId
             previousView:(nullable NSString *)previousView
@@ -412,26 +406,22 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                 appeared:(BOOL)appeared
              timeVisible:(nullable NSNumber *)timeVisibleMs
              customAttrs:(nullable NSDictionary<NSString *, id> *)customAttrs {
-    NSMutableDictionary<NSString *, id> *attrs =
-        [NSMutableDictionary dictionaryWithDictionary:customAttrs ?: @{}];
+    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
+    fields.viewName      = name;
+    fields.viewClass     = name;   // manual views have no class; name is the identity
+    fields.instanceId    = instanceId ?: @"";
+    fields.platform      = kNRUIPlatformManual;
+    fields.timeVisibleMs = timeVisibleMs;
+    fields.custom        = customAttrs;
+    // The manual producer tracks its own navigation, so it names the referrer directly.
+    fields.previousView           = previousView;
+    fields.previousViewInstanceId = previousViewInstanceId;
 
-    attrs[kNRAttr_viewClass]      = name;   // manual views have no class; name is the identity
-    attrs[kNRAttr_viewName]       = name;
-    attrs[kNRAttr_viewInstanceId] = instanceId ?: @"";
-    attrs[kNRAttr_appeared]       = @(appeared);
-    attrs[kNRAttr_uiPlatform]     = kNRUIPlatformManual;
-    attrs[kNRAttr_agentName]      = kNRAgentName;
-    if (previousView.length > 0) {
-        attrs[kNRAttr_previousView] = previousView;
+    if (appeared) {
+        [NRMAMobileViewRecorder recordAppeared:fields];
+    } else {
+        [NRMAMobileViewRecorder recordDisappeared:fields];
     }
-    if (previousViewInstanceId.length > 0) {
-        attrs[kNRAttr_previousViewId] = previousViewInstanceId;
-    }
-    if (timeVisibleMs != nil) {
-        attrs[kNRAttr_timeVisible] = timeVisibleMs;
-    }
-
-    [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 }
 
 #pragma mark - Referrer accessors

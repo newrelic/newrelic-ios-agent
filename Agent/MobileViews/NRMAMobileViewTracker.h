@@ -22,8 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
  *   viewName        (NSString) — Simple display name, e.g. "ProductViewController"; customisable (see below)
  *   viewInstanceId  (NSString) — UUID unique to this single visible lifetime of the view
  *   restarted       (NSNumber/BOOL) — NO on first appearance, YES on subsequent appearances
- *   loadTime        (NSNumber/double, seconds) — viewDidLoad → viewDidAppear
- *   timeVisible     (NSNumber/double, seconds) — viewDidAppear → viewDidDisappear
+ *   loadTime        (NSNumber/double, milliseconds) — viewDidLoad → viewDidAppear
+ *   timeVisible     (NSNumber/double, milliseconds) — viewDidAppear → viewDidDisappear
  *
  * ─── Customising viewName ────────────────────────────────────────────────────
  *

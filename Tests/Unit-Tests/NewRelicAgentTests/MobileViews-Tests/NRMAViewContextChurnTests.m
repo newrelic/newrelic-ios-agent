@@ -52,10 +52,21 @@ static const NSTimeInterval kDwellPastThreshold = 0.15;
 
 #pragma mark - Helpers
 
+// appearTime MUST come from +monotonicNow, not CFAbsoluteTimeGetCurrent.
+//
+// -viewDidDisappearNamed: computes the dwell as millisecondsBetween(entry.appearTime, monotonicNow).
+// The two clocks have unrelated epochs -- wall clock counts from 2001, CLOCK_UPTIME_RAW from boot,
+// ~810,681,827s vs ~1,224,701s when this was written -- so a wall-clock appearTime makes that
+// subtraction hugely negative, and millisecondsBetween floors it at 0 via MAX(ms, 0.0). Every
+// disappearance then reads as 0ms, i.e. sub-dwell construction churn, and synthesis never fires.
+//
+// That is not hypothetical: seeding this helper with CFAbsoluteTimeGetCurrent() silently broke the
+// two synthesis tests below, and made testSubDwellDisappearanceDoesNotSynthesizeBackNavigation pass
+// vacuously -- it would have passed even with the churn guard removed entirely.
 - (void)appear:(NSString *)name instance:(NSString *)instanceId {
     [_context transitionToView:name
                     instanceId:instanceId
-                    appearTime:CFAbsoluteTimeGetCurrent()
+                    appearTime:[NRMAViewContext monotonicNow]
                       platform:@"SwiftUI"];
 }
 

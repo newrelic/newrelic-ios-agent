@@ -48,6 +48,7 @@ NSString * const kNRMA_RET_mobileCrash          = @"MobileCrash";
 NSString * const kNRMA_RET_mobileBreadcrumb     = @"MobileBreadcrumb";
 NSString * const kNRMA_RET_mobileUserAction     = @"MobileUserAction";
 NSString * const kNRMA_RET_mobileView           = @"MobileView";
+NSString * const kNRMA_RET_mobileViewTiming     = @"MobileViewTiming";
 NSString * const kNRMA_RET_userAction           = @"UserAction";
 
 //gesture attributes (not reserved)

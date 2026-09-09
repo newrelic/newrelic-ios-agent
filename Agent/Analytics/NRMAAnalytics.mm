@@ -28,6 +28,7 @@
 #import "NRMARequestEvent.h"
 #import "NRMAInteractionEvent.h"
 #import "NRMAUserActionEvent.h"
+#import "NRMAViewEvent.h"
 #import "NRMAPayload.h"
 #import "NRMANetworkErrorEvent.h"
 #import "NRMAViewContext.h"
@@ -869,6 +870,77 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 
+- (BOOL) addMobileViewEventWithAttributes:(NSDictionary*)attributes {
+    return [self addViewEventOfType:kNRMA_RET_mobileView withAttributes:attributes];
+}
+
+- (BOOL) addViewTimingEventWithAttributes:(NSDictionary*)attributes {
+    return [self addViewEventOfType:kNRMA_RET_mobileViewTiming withAttributes:attributes];
+}
+
+/*
+ * Shared body for both built-in view event types. Structured like
+ * -addBreadcrumb:withAttributes:, and deliberately symmetric across the two event systems:
+ * the whole reason this method exists is that MobileView used to reach -addCustomEvent:,
+ * where the old system's reserved-eventType validator threw and dropped every event while
+ * the new system accepted them.
+ */
+- (BOOL) addViewEventOfType:(NSString*)eventType withAttributes:(NSDictionary*)attributes {
+    if (eventType.length == 0) {
+        NRLOG_AGENT_ERROR(@"View event must have an event type.");
+        return NO;
+    }
+
+    if([NRMAFlags shouldEnableNewEventSystem]){
+        NRMAViewEvent* event = [[NRMAViewEvent alloc] initWithEventType:eventType
+                                                               category:kNRMA_RET_mobile
+                                                              timestamp:[NRMAAnalytics currentTimeMillis]
+                                            sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
+                                                 withAttributeValidator:_attributeValidator];
+        if (event == nil) {
+            NRLOG_AGENT_ERROR(@"Unable to create %@ event", eventType);
+            return NO;
+        }
+
+        // Offline and background stamps are applied by NRMAMobileEvent's initializer on this
+        // path; the legacy path below has to do it by hand.
+        [attributes enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            [event addAttribute:key value:obj];
+        }];
+
+        return [_eventManager addEvent:[event autorelease]];
+    } else {
+        try {
+            auto event = [eventType isEqualToString:kNRMA_RET_mobileViewTiming]
+                       ? _analyticsController->newViewTimingEvent()
+                       : _analyticsController->newMobileViewEvent();
+
+            if (event == nullptr) {
+                NRLOG_AGENT_ERROR(@"Unable to create %@ event", eventType);
+                return NO;
+            }
+
+            if ([self event:event withAttributes:attributes]) {
+                if([self checkOfflineStatus]){
+                    event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
+                }
+                if([self checkBackgroundStatus]){
+                    event->addAttribute(kNRMA_Attrib_background.UTF8String, @YES.boolValue);
+                }
+                return [self recordLegacyEventResult:_analyticsController->addEventWithMetrics(event)];
+            }
+        } catch (std::exception& e){
+            NRLOG_AGENT_ERROR(@"Failed to add %@ event: %s", eventType, e.what());
+            return NO;
+        } catch (...) {
+            NRLOG_AGENT_ERROR(@"Failed to add %@ event.", eventType);
+            return NO;
+        }
+        return NO;
+    }
+}
+
+
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes {
     try {
@@ -890,6 +962,18 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
         if (!(textCheckingResults.count > 0 && ((NSTextCheckingResult*)textCheckingResults[0]).range.length == eventType.length)) {
             NRLOG_AGENT_ERROR(@"Failed to add event type: %@. EventType is may only contain word characters, numbers, spaces, colons, underscores, and periods.",eventType);
             return NO;
+        }
+
+        // Reserved event types belong to the agent and have dedicated built-in paths
+        // (-addMobileViewEventWithAttributes: and friends). The old event system has always
+        // rejected them in AnalyticsController's eventType validator; the new one did not,
+        // so the same call was dropped or accepted depending on a feature flag. Reject here
+        // so both systems behave identically.
+        for (NSString* reserved in [NRMAAnalytics reservedEventTypes]) {
+            if ([reserved isEqualToString:eventType]) {
+                NRLOG_AGENT_ERROR(@"Failed to add event type: %@. \"%@\" is reserved for use by the agent.", eventType, reserved);
+                return NO;
+            }
         }
 
         if([NRMAFlags shouldEnableNewEventSystem]){
@@ -1288,6 +1372,23 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     double timestamp = [[NSDate date] timeIntervalSince1970];
     int64_t timeInMilisInt64 = (int64_t)(timestamp * 1000);
     return timeInMilisInt64;
+}
+
+/*
+ * Mirrors the old event system's AnalyticsController::_reserved_eventTypes exactly, so a
+ * customer's -recordCustomEvent: with one of these names is rejected identically whichever
+ * event system is live. Note MobileUserAction is absent from both lists; adding it is a
+ * separate change, and the two lists are kept identical on purpose.
+ */
++ (NSArray<NSString*>*) reservedEventTypes {
+    return @[kNRMA_RET_mobile,
+             kNRMA_RET_mobileCrash,
+             kNRMA_RET_mobileRequest,
+             kNRMA_RET_mobileRequestError,
+             kNRMA_RET_mobileSession,
+             kNRMA_RET_mobileBreadcrumb,
+             kNRMA_RET_mobileView,
+             kNRMA_RET_mobileViewTiming];
 }
 
 + (NSArray<NSString*>*) reservedKeywords {

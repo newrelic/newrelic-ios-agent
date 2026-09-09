@@ -34,6 +34,7 @@
 
 @interface NRMAAnalytics ()
 - (NSString*) sessionAttributeJSONString;
+- (BOOL) addViewEventOfType:(NSString*)eventType withAttributes:(NSDictionary*)attributes;
 @end
 @implementation NRMAAnalyticsTest
 
@@ -1902,6 +1903,120 @@
 
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
+}
+
+#pragma mark - Built-in view events
+
+/*
+ * The regression these guard.
+ *
+ * MobileView is in AnalyticsController's _reserved_eventTypes, and newCustomEvent throws on a
+ * reserved type. NRFeatureFlag_NewEventSystem is not enabled by default, so while view data was
+ * emitted through -recordCustomEvent: EVERY MobileView event was dropped on the default
+ * configuration -- and accepted under the new event system, so the same call behaved differently
+ * depending on a flag.
+ *
+ * Each of these therefore runs under BOTH event systems. -setUp leaves NewEventSystem disabled,
+ * which is the case that used to fail.
+ */
+
+- (void) assertViewEventLandsUnderBothEventSystems:(NSString*)description
+                                             block:(BOOL(^)(NRMAAnalytics*))record
+                                     expectedSubstrings:(NSArray<NSString*>*)expected {
+    for (NSNumber* useNewSystem in @[@NO, @YES]) {
+        if (useNewSystem.boolValue) {
+            [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+        } else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+        }
+
+        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+        XCTAssertTrue(record(analytics),
+                      @"%@ must be recorded with NewEventSystem %@",
+                      description, useNewSystem.boolValue ? @"enabled" : @"disabled");
+
+        NSString* json = [analytics analyticsJSONString];
+        for (NSString* substring in expected) {
+            XCTAssertTrue([json containsString:substring],
+                          @"%@ payload missing \"%@\" with NewEventSystem %@ -- got: %@",
+                          description, substring,
+                          useNewSystem.boolValue ? @"enabled" : @"disabled", json);
+        }
+    }
+    // Leave the flag as -setUp had it; -tearDown re-enables it for the rest of the suite.
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+}
+
+- (void) testMobileViewEventIsRecordedUnderBothEventSystems {
+    [self assertViewEventLandsUnderBothEventSystems:@"MobileView"
+                                              block:^BOOL(NRMAAnalytics* analytics) {
+        return [analytics addMobileViewEventWithAttributes:@{@"viewName": @"CheckoutView",
+                                                             @"viewInstanceId": @"instance-1",
+                                                             @"appeared": @YES,
+                                                             @"uiPlatform": @"UIKit"}];
+    }
+                                 expectedSubstrings:@[@"MobileView", @"CheckoutView", @"instance-1"]];
+}
+
+- (void) testViewTimingEventIsRecordedUnderBothEventSystems {
+    [self assertViewEventLandsUnderBothEventSystems:@"MobileViewTiming"
+                                              block:^BOOL(NRMAAnalytics* analytics) {
+        return [analytics addViewTimingEventWithAttributes:@{@"timingName": @"timeToInitialDisplay",
+                                                             @"timingValue": @(250.5),
+                                                             @"viewName": @"CheckoutView"}];
+    }
+                                 expectedSubstrings:@[@"MobileViewTiming", @"timeToInitialDisplay"]];
+}
+
+// Both systems attach category at serialization time, past the attribute validator.
+- (void) testViewEventsCarryTheirCategoryUnderBothEventSystems {
+    [self assertViewEventLandsUnderBothEventSystems:@"MobileView category"
+                                              block:^BOOL(NRMAAnalytics* analytics) {
+        return [analytics addMobileViewEventWithAttributes:@{@"viewName": @"CheckoutView"}];
+    }
+                                 expectedSubstrings:@[@"category", @"Mobile"]];
+}
+
+- (void) testViewEventWithNoEventTypeIsRejected {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertFalse([analytics addViewEventOfType:@"" withAttributes:@{@"viewName": @"X"}]);
+}
+
+#pragma mark - Reserved event types
+
+/*
+ * The old event system has always rejected reserved event types; the new one did not, so the
+ * same -recordCustomEvent: call was dropped or accepted depending on a feature flag. Both now
+ * reject.
+ */
+- (void) testReservedEventTypesAreRejectedUnderBothEventSystems {
+    for (NSNumber* useNewSystem in @[@NO, @YES]) {
+        if (useNewSystem.boolValue) {
+            [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+        } else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+        }
+
+        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+        for (NSString* reserved in [NRMAAnalytics reservedEventTypes]) {
+            XCTAssertFalse([analytics addCustomEvent:reserved withAttributes:@{@"a": @"b"}],
+                           @"reserved event type \"%@\" must be rejected with NewEventSystem %@",
+                           reserved, useNewSystem.boolValue ? @"enabled" : @"disabled");
+        }
+
+        XCTAssertTrue([analytics addCustomEvent:@"MyCustomEvent" withAttributes:@{@"a": @"b"}],
+                      @"a non-reserved event type must still be accepted");
+    }
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+}
+
+- (void) testReservedEventTypesMatchTheLegacyControllerList {
+    // Kept identical on purpose: if the two lists diverge, a customer's call succeeds under one
+    // event system and fails under the other -- the bug this change removed.
+    XCTAssertEqualObjects([NRMAAnalytics reservedEventTypes],
+                          (@[@"Mobile", @"MobileCrash", @"MobileRequest", @"MobileRequestError",
+                             @"MobileSession", @"MobileBreadcrumb", @"MobileView",
+                             @"MobileViewTiming"]));
 }
 
 @end

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		285C2F1445DC00F0005B7159 /* ViewEvent.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 646D42CD85761876440C6BE3 /* ViewEvent.cxx */; };
 		34BF4EC5291095E500E4D170 /* SessionAttributeManager.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E8C291095E400E4D170 /* SessionAttributeManager.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		34BF4EC6291095E500E4D170 /* EventBufferConfig.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E8D291095E400E4D170 /* EventBufferConfig.hpp */; };
 		34BF4EC7291095E500E4D170 /* CacheBackedStore.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 34BF4E8F291095E400E4D170 /* CacheBackedStore.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -63,6 +64,7 @@
 		34BF4EFC2910977100E4D170 /* JSON.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4EFB2910977100E4D170 /* JSON.framework */; };
 		34BF4F002910984C00E4D170 /* Connectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4EFF2910984C00E4D170 /* Connectivity.framework */; };
 		34BF4F032910985F00E4D170 /* Utilities.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34BF4F022910985F00E4D170 /* Utilities.framework */; };
+		7C5001F51A52362EA00569FB /* ViewEvent.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 76CB911EE1A16B2961D42AF3 /* ViewEvent.hpp */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -123,6 +125,8 @@
 		34BF4EFB2910977100E4D170 /* JSON.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = JSON.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34BF4EFF2910984C00E4D170 /* Connectivity.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Connectivity.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		34BF4F022910985F00E4D170 /* Utilities.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Utilities.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		646D42CD85761876440C6BE3 /* ViewEvent.cxx */ = {isa = PBXFileReference; includeInIndex = 1; path = ViewEvent.cxx; sourceTree = "<group>"; };
+		76CB911EE1A16B2961D42AF3 /* ViewEvent.hpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.h; path = ViewEvent.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -212,6 +216,7 @@
 				34BF4EA6291095E400E4D170 /* NamedAnalyticEvent.hpp */,
 				34BF4EA7291095E400E4D170 /* IntrinsicEvent.hpp */,
 				34BF4EA8291095E400E4D170 /* SessionAnalyticEvent.hpp */,
+				76CB911EE1A16B2961D42AF3 /* ViewEvent.hpp */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -252,6 +257,7 @@
 				34BF4EC1291095E500E4D170 /* IntrinsicEvent.cxx */,
 				34BF4EC2291095E500E4D170 /* NamedAnalyticEvent.cxx */,
 				34BF4EC3291095E500E4D170 /* RequestEvent.cxx */,
+				646D42CD85761876440C6BE3 /* ViewEvent.cxx */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -301,6 +307,7 @@
 				34BF4ED5291095E500E4D170 /* UserActionEvent.hpp in Headers */,
 				34BF4EE0291095E500E4D170 /* AttributeDeserializer.hpp in Headers */,
 				34BF4EC6291095E500E4D170 /* EventBufferConfig.hpp in Headers */,
+				7C5001F51A52362EA00569FB /* ViewEvent.hpp in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,6 +404,7 @@
 				34BF4EED291095E500E4D170 /* NetworkErrorEvent.cxx in Sources */,
 				34BF4EE3291095E500E4D170 /* Deserializer.cxx in Sources */,
 				34BF4EEA291095E500E4D170 /* Constants.cxx in Sources */,
+				285C2F1445DC00F0005B7159 /* ViewEvent.cxx in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

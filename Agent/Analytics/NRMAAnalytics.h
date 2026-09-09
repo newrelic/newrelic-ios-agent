@@ -28,6 +28,17 @@
 
 - (BOOL) addCustomEvent:(NSString*)eventType
          withAttributes:(NSDictionary*)attributes;
+
+/*
+ * The built-in view events. These exist because MobileView and MobileViewTiming are
+ * reserved event types: the old event system's newCustomEvent refuses them outright, so
+ * -addCustomEvent: cannot be used to emit them. Both routes attach `category` at
+ * serialization time, past the attribute validator.
+ *
+ * Call these through NRMAMobileViewRecorder rather than directly -- it owns the schema.
+ */
+- (BOOL) addMobileViewEventWithAttributes:(NSDictionary*)attributes;
+- (BOOL) addViewTimingEventWithAttributes:(NSDictionary*)attributes;
 - (BOOL) addNetworkRequestEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload *)payload;
 - (BOOL) addHTTPErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload *)payload;
 - (BOOL) addNetworkErrorEvent:(NRMANetworkRequestData *)requestData withResponse:(NRMANetworkResponseData *)responseData withNRMAPayload:(NRMAPayload*)payload;
@@ -78,6 +89,7 @@
 
 + (int64_t) currentTimeMillis;
 + (NSArray<NSString*>*) reservedKeywords;
++ (NSArray<NSString*>*) reservedEventTypes;
 + (NSArray<NSString*>*) reservedPrefixes;
 
 @end
