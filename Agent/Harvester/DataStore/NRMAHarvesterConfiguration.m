@@ -100,17 +100,32 @@ static long long _accountId;
         //                         whole session.
         //   min_utilization absent -> [nil doubleValue] == 0.0, a floor nothing can fall below, so
         //                         the utilization filter was effectively disabled.
-        if ([dict objectForKey:kNRMA_AT_CAPTURE]) {
-            self.at_capture = [[NRMATraceConfigurations alloc] initWithArray:[dict valueForKey:kNRMA_AT_CAPTURE]];
+        //
+        // Presence alone is not enough for either: the value is whatever the collector sent, so a
+        // JSON null (NSNull) or a reshaped value would be parsed as if it had the expected type.
+        // -initWithArray: re-checks its own argument, but the check here keeps a wrong-typed
+        // at_capture on the same "fall back to the documented default" path as an absent one.
+        id atCapture = [dict objectForKey:kNRMA_AT_CAPTURE];
+        if ([atCapture isKindOfClass:[NSArray class]]) {
+            self.at_capture = [[NRMATraceConfigurations alloc] initWithArray:atCapture];
         }
         else {
+            if (atCapture != nil) {
+                NRLOG_AGENT_WARNING(@"Ignoring at_capture of unexpected type %@; using the default activity trace configuration.",
+                                    NSStringFromClass([atCapture class]));
+            }
             self.at_capture = [NRMATraceConfigurations defaultTraceConfigurations];
         }
 
-        if ([dict objectForKey:KNRMA_AT_MIN_UTILIZATION]) {
-            self.activity_trace_min_utilization = [[dict valueForKey:KNRMA_AT_MIN_UTILIZATION] doubleValue];
+        id minUtilization = [dict objectForKey:KNRMA_AT_MIN_UTILIZATION];
+        if (NRMAIsNumberLikeConfigurationValue(minUtilization)) {
+            self.activity_trace_min_utilization = [minUtilization doubleValue];
         }
         else {
+            if (minUtilization != nil) {
+                NRLOG_AGENT_WARNING(@"Ignoring at_min_utilization of unexpected type %@; using the default of %f.",
+                                    NSStringFromClass([minUtilization class]), NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION);
+            }
             self.activity_trace_min_utilization = NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION;
         }
         if ([dict objectForKey:kNRMA_ENCODING_KEY]) {
@@ -581,7 +596,8 @@ static long long _accountId;
     if (self == object) return YES;
     if (object == nil || ![object isKindOfClass:self.class]) return NO;
     NRMAHarvesterConfiguration* that = (NRMAHarvesterConfiguration*)object;
-    if (self.application_token != that.application_token) return NO;
+    if (self.application_token != that.application_token &&
+        ![self.application_token isEqualToString:that.application_token]) return NO;
     if (self.collect_network_errors != that.collect_network_errors) return NO;
     if (self.data_report_period != that.data_report_period) return NO;
     if (self.error_limit != that.error_limit) return NO;
@@ -604,7 +620,8 @@ static long long _accountId;
     if (![self.log_reporting_level isEqualToString:that.log_reporting_level]) return NO;
     if (self.log_reporting_enabled != that.log_reporting_enabled) return NO;
     if (self.has_log_reporting_config != that.has_log_reporting_config) return NO;
-    if (self.request_header_map != that.request_header_map) return NO;
+    if (self.request_header_map != that.request_header_map &&
+        ![self.request_header_map isEqualToDictionary:that.request_header_map]) return NO;
 
 
     // session replay equality

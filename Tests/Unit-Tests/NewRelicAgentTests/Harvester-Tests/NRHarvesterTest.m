@@ -298,6 +298,104 @@ static void NRMAWaitForHarvesterToLeaveState(NRMAHarvester *harvester, NSInteger
     XCTAssertEqual(3, configuration.totalTraceCount, @"The surviving configuration should keep its trace count");
 }
 
+- (void) testActivityTraceConfigurationNullAtCaptureUsesDefaultCap
+{
+    // A /connect response that sends "at_capture": null. NSJSONSerialization decodes that to NSNull,
+    // which is not nil and does not respond to -count/-objectAtIndex:.
+    NSString *configWithNullAtCapture = @"{\"at_capture\":null}";
+    NSDictionary *decoded = [NRMAJSON JSONObjectWithData:[configWithNullAtCapture dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+    XCTAssertEqualObjects([NSNull null], decoded[@"at_capture"], @"JSON null should decode to NSNull, which is what this test is about");
+
+    NRMATraceConfigurations *traceConfigurations = [[NRMATraceConfigurations alloc] initWithArray:decoded[@"at_capture"]];
+
+    XCTAssertEqual(1000, traceConfigurations.maxTotalTraceCount, @"A null at_capture should fall back to the default max trace count instead of raising");
+}
+
+- (void) testActivityTraceConfigurationNonArrayAtCaptureUsesDefaultCap
+{
+    // at_capture is typed NSArray* but the collector can send any JSON value.
+    XCTAssertEqual(1000, [[NRMATraceConfigurations alloc] initWithArray:(NSArray *)@"nope"].maxTotalTraceCount,
+                   @"A string at_capture should fall back to the default max trace count");
+    XCTAssertEqual(1000, [[NRMATraceConfigurations alloc] initWithArray:(NSArray *)@{@"max": @5}].maxTotalTraceCount,
+                   @"A dictionary at_capture should fall back to the default max trace count");
+    XCTAssertEqual(1000, [[NRMATraceConfigurations alloc] initWithArray:(NSArray *)@5].maxTotalTraceCount,
+                   @"A bare number at_capture should fall back to the default max trace count");
+}
+
+- (void) testActivityTraceConfigurationNonNumericCapUsesDefaultCap
+{
+    // Right shape, but the cap itself is not a number, so -intValue would raise on it.
+    NRMATraceConfigurations *traceConfigurations = [[NRMATraceConfigurations alloc] initWithArray:@[[NSNull null], @[]]];
+
+    XCTAssertEqual(1000, traceConfigurations.maxTotalTraceCount, @"A non-numeric cap should fall back to the default max trace count");
+}
+
+- (void) testActivityTraceConfigurationSkipsTraceConfigurationsWithWrongElementTypes
+{
+    // The pattern has to be a string (-activityTraceNamePattern is one, and it is matched against
+    // trace names) and the count has to be numeric. Neither was checked before.
+    NSArray *at_capture = @[@7, @[@[[NSNull null], @3],
+                                  @[@"/null-count", [NSNull null]],
+                                  @[@42, @1],
+                                  @[@"/valid", @3]]];
+
+    NRMATraceConfigurations *traceConfigurations = [[NRMATraceConfigurations alloc] initWithArray:at_capture];
+
+    XCTAssertEqual(7, traceConfigurations.maxTotalTraceCount, @"An explicit positive cap should be honored");
+    XCTAssertEqual(1, (int)traceConfigurations.activityTraceConfigurations.count, @"Only the well-formed pair should be kept");
+
+    NRMATraceConfiguration *configuration = [traceConfigurations.activityTraceConfigurations objectAtIndex:0];
+    XCTAssertEqualObjects(@"/valid", configuration.activityTraceNamePattern, @"The surviving configuration should be the well-formed one");
+    XCTAssertEqual(3, configuration.totalTraceCount, @"The surviving configuration should keep its trace count");
+}
+
+- (void) testHarvestConfigurationNullAtCaptureAndMinUtilizationUseDefaults
+{
+    // The whole /connect body, decoded the way the agent decodes it, with both fields sent as null.
+    NSString *connectResponse = @"{\"at_capture\":null,\"activity_trace_min_utilization\":null}";
+    NSDictionary *decoded = [NRMAJSON JSONObjectWithData:[connectResponse dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+
+    NRMAHarvesterConfiguration *config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:decoded];
+
+    XCTAssertEqual(1000, config.at_capture.maxTotalTraceCount, @"A null at_capture should parse to the default max activity trace count");
+    XCTAssertEqual(NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION, config.activity_trace_min_utilization, @"A null min utilization should parse to its default");
+}
+
+- (void) testHarvestConfigurationNonNumericMinUtilizationUsesDefault
+{
+    // Present-but-wrong-typed values used to reach -doubleValue directly.
+    for (id minUtilization in @[[NSNull null], @[@0.5], @{@"value": @0.5}]) {
+        NRMAHarvesterConfiguration *config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:@{KNRMA_AT_MIN_UTILIZATION: minUtilization}];
+
+        XCTAssertEqual(NRMA_DEFAULT_ACTIVITY_TRACE_MIN_UTILIZATION, config.activity_trace_min_utilization,
+                       @"A min utilization of type %@ should fall back to its default", NSStringFromClass([minUtilization class]));
+    }
+}
+
+- (void) testHarvestConfigurationNumericStringValuesAreStillParsed
+{
+    // The guards reject non-numeric types, they do not tighten the parsing that already worked: the
+    // collector's numeric fields have always been read with -intValue/-doubleValue, which strings
+    // answer too.
+    NRMAHarvesterConfiguration *config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:@{
+        kNRMA_AT_CAPTURE: @[@"12", @[@[@"/pattern", @"4"]]],
+        KNRMA_AT_MIN_UTILIZATION: @"0.75"
+    }];
+
+    XCTAssertEqual(12, config.at_capture.maxTotalTraceCount, @"A numeric string cap should still be parsed");
+    XCTAssertEqual(0.75, config.activity_trace_min_utilization, @"A numeric string min utilization should still be parsed");
+    XCTAssertEqual(1, (int)config.at_capture.activityTraceConfigurations.count, @"The well-formed pair should be kept");
+    XCTAssertEqual(4, [[config.at_capture.activityTraceConfigurations objectAtIndex:0] totalTraceCount], @"A numeric string trace count should still be parsed");
+}
+
+- (void) testHarvestConfigurationNonArrayAtCaptureUsesDefaultConfiguration
+{
+    NRMAHarvesterConfiguration *config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:@{kNRMA_AT_CAPTURE: @"not-an-array"}];
+
+    XCTAssertEqual(1000, config.at_capture.maxTotalTraceCount, @"A wrong-typed at_capture should parse to the default max activity trace count");
+    XCTAssertEqual(0, (int)config.at_capture.activityTraceConfigurations.count, @"A wrong-typed at_capture should not produce any trace configurations");
+}
+
 - (void) testHarvestConfigurationMissingAtCaptureUsesDefaults
 {
     NRMAHarvesterConfiguration* config = [[NRMAHarvesterConfiguration alloc] initWithDictionary:[NSDictionary dictionary]];

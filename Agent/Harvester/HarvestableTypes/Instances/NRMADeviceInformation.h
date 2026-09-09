@@ -31,7 +31,7 @@
 @property(strong) NSString* regionCode;
 @property(strong) NSString* manufacturer;
 @property(assign) NRMAApplicationPlatform platform;
-@property(assign) NSString* platformVersion;
+@property(copy) NSString* platformVersion;
 @property(strong) NSMutableDictionary* misc;
 
 - (id) JSONObject;

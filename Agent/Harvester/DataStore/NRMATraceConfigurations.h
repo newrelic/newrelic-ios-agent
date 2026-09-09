@@ -15,6 +15,17 @@
 /// silently drops all activity traces for the whole session.
 #define NRMA_DEFAULT_MAX_TOTAL_TRACE_COUNT 1000
 
+/// Whether a value parsed out of a collector response (or out of the NSUserDefaults round trip) can
+/// safely be sent -intValue/-doubleValue.
+///
+/// Numeric collector fields arrive as JSON numbers and are persisted as NSNumber, but JSON `null`
+/// decodes to NSNull and a reshaped field can be an array or a dictionary. None of those respond to
+/// the numeric accessors, so converting one without checking is an unrecognized-selector crash
+/// rather than a fallback to the default.
+static inline BOOL NRMAIsNumberLikeConfigurationValue(id value) {
+    return [value isKindOfClass:[NSNumber class]] || [value isKindOfClass:[NSString class]];
+}
+
 @interface NRMATraceConfigurations : NSObject
 @property(nonatomic,assign) int maxTotalTraceCount;
 @property (atomic, strong) NSMutableArray *activityTraceConfigurations;
