@@ -701,20 +701,61 @@ extern "C" {
              attributes:(NSDictionary* _Nullable)attributes;
 
 /*!
+ * Marks the start of loading the next manually-set view, so it gets a "timeToInitialDisplay"
+ * baseline the way automatically-tracked views do.
+ *
+ * Call it where the work of building the screen begins — the navigation action, the start of the
+ * fetch — and the next setCurrentView: closes it:
+ *
+ *     [NewRelic beginViewLoad];                        // user tapped through to the screen
+ *     ... build it, fetch it ...
+ *     [NewRelic setCurrentView:@"ProductDetail" attributes:nil];   // it is now on screen
+ *
+ * Optional, and only useful for manual views. The agent cannot observe a manual view's lifecycle:
+ * setCurrentView: is called when the screen is already showing, so without this the load start and
+ * the appear instant are the same and the baseline would be identically zero. Rather than record a
+ * zero — which counts as a real value in every percentile and cannot be told apart from a genuinely
+ * instant load — the agent records no baseline for manual views unless you call this.
+ *
+ * It also sets the origin for markViewTiming: on that view, so "timeToFullDisplay" measured after a
+ * beginViewLoad encloses the baseline and "timeToFullDisplay" minus "timeToInitialDisplay" is the
+ * interval the screen looked finished but was not. Without it, marks measure from the setCurrentView:
+ * instant instead, and the view has no baseline to compare them against.
+ *
+ * A begin with no matching setCurrentView: goes stale rather than attaching to whatever screen is
+ * set much later. Calling it twice before a setCurrentView: keeps only the later start.
+ *
+ * Requires NRFeatureFlag_ManualViews to be enabled.
+ */
++ (void) beginViewLoad;
+
+/*!
  * Records how long something took on the current view, as a "MobileViewTiming" event.
  *
- * The duration is measured from the moment the current view appeared until now, which is what
- * screen-timing metrics such as Time to Full Display and Time to Interactive actually are. Call it
- * at the point the screen genuinely reached that state:
+ * The duration is measured from the moment the runtime began building the current view until now,
+ * which is what screen-timing metrics such as Time to Full Display and Time to Interactive actually
+ * are. Call it at the point the screen genuinely reached that state:
  *
  *     // after the real content, not the placeholder, is on screen
  *     [NewRelic markViewTiming:@"timeToFullDisplay"];
  *
+ * That is the same origin the agent measures its own "timeToInitialDisplay" from, which is the point:
+ * the two intervals share a start, so the mark encloses the baseline and
+ * "timeToFullDisplay" minus "timeToInitialDisplay" is the interval during which the screen looked
+ * finished but was not.
+ *
+ * When the agent has no trustworthy construction start for the view — the screen resurfaced without
+ * being rebuilt, a tab was selected, the agent started mid-construction, or a manual view's
+ * beginViewLoad was never called — the duration is measured from the appear instant instead, and is
+ * therefore short by however long that screen took to build. Such a view also has no
+ * "timeToInitialDisplay" row, so the two cannot be wrongly subtracted; to tell the cases apart, check
+ * the "MobileView" appear event for the same viewInstanceId, which carries loadTime exactly when a
+ * construction start was available and loadTimeUnavailable when it was not.
+ *
  * The event carries the current view's viewName and viewInstanceId, so it joins back to that
  * specific visit, and previousView, so timings can be compared by the route taken into the screen.
  *
- * The agent already records "timeToInitialDisplay" itself, from the view's own load time; that name
- * is reserved and cannot be used here.
+ * "timeToInitialDisplay" is recorded by the agent and is reserved; it cannot be used here.
  *
  * Requires NRFeatureFlag_AutomaticMobileViews or NRFeatureFlag_ManualMobileViews.
  *
@@ -736,6 +777,9 @@ extern "C" {
  *
  * Unlike markViewTiming:, this succeeds even when no view is being tracked; the event is simply
  * recorded without view identity.
+ *
+ * Because you measured the interval, the agent cannot say which instant it started from. Do not
+ * subtract "timeToInitialDisplay" from such a row unless you know you measured from the same start.
  *
  * Requires NRFeatureFlag_AutomaticMobileViews or NRFeatureFlag_ManualMobileViews.
  *

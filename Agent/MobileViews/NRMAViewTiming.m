@@ -36,6 +36,7 @@ static NSString * const kNRAgentName           = @"iOS";
 // capped for the process lifetime. Without the window, sixteen unattributed timings early in a
 // launch would silence the path for good.
 static NSString * const kNRUnattributedBucket   = @"__nrma_unattributed__";
+
 static const CFTimeInterval kNRUnattributedWindowSeconds = 60.0;
 
 // Upper bound on tracked buckets. Every visited view instance would otherwise be remembered for the
@@ -59,6 +60,8 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
                     previousView:(NSString *)previousView
                       uiPlatform:(NSString *)uiPlatform
                       appearTime:(CFAbsoluteTime)appearTime
+                   loadStartTime:(CFAbsoluteTime)loadStartTime
+                    hasLoadStart:(BOOL)hasLoadStart
                   hasCurrentView:(BOOL)hasCurrentView {
     if ((self = [super init])) {
         _viewName       = [viewName copy];
@@ -66,6 +69,8 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
         _previousView   = [previousView copy];
         _uiPlatform     = [uiPlatform copy];
         _appearTime     = appearTime;
+        _loadStartTime  = loadStartTime;
+        _hasLoadStart   = hasLoadStart;
         _hasCurrentView = hasCurrentView;
     }
     return self;
@@ -112,7 +117,7 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
 - (BOOL)markTimingNamed:(NSString *)name {
     if (![self isEnabled]) { return NO; }
 
-    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
     NRMAViewTimingSnapshot *snapshot = [[NRMAViewContext sharedInstance] snapshotForTiming];
 
     // No current view means no zero point. Emitting a duration measured from an unknown start is
@@ -123,34 +128,51 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
         return NO;
     }
 
-    double milliseconds = [NRMAViewContext millisecondsBetween:snapshot.appearTime and:now];
-    return [self emitTimingNamed:name milliseconds:milliseconds snapshot:snapshot agentOwned:NO];
+    double milliseconds = [self millisecondsForMarkAgainstSnapshot:snapshot at:now];
+    return [self emitTimingNamed:name
+                   milliseconds:milliseconds
+                       snapshot:snapshot
+                     agentOwned:NO];
+}
+
+- (double)millisecondsForMarkAgainstSnapshot:(NRMAViewTimingSnapshot *)snapshot
+                                          at:(CFAbsoluteTime)now {
+    // Construction start when the producer vouched for one, so this row shares its origin with
+    // timeToInitialDisplay and encloses it -- that is what makes subtracting the two meaningful.
+    // Otherwise the appear time, which is the only origin available for that view.
+    //
+    // Which one was used is not stamped here. It is recoverable from the MobileView appear event for
+    // this viewInstanceId: loadTime is present exactly when a construction start was vouched for.
+    CFAbsoluteTime origin = snapshot.hasLoadStart ? snapshot.loadStartTime : snapshot.appearTime;
+    return [NRMAViewContext millisecondsBetween:origin and:now];
 }
 
 - (BOOL)recordTimingNamed:(NSString *)name milliseconds:(double)milliseconds {
     if (![self isEnabled]) { return NO; }
 
     NRMAViewTimingSnapshot *snapshot = [[NRMAViewContext sharedInstance] snapshotForTiming];
-    return [self emitTimingNamed:name milliseconds:milliseconds snapshot:snapshot agentOwned:NO];
+    return [self emitTimingNamed:name
+                   milliseconds:milliseconds
+                       snapshot:snapshot
+                     agentOwned:NO];
 }
 
 #pragma mark - Agent-owned emission
 
-- (void)recordInitialDisplayForViewNamed:(NSString *)viewName
-                              instanceId:(NSString *)instanceId
-                            previousView:(NSString *)previousView
-                                platform:(NSString *)platform
-                            milliseconds:(double)milliseconds {
+- (void)recordInitialDisplayForCurrentView {
     if (![self isEnabled]) { return; }
-    if (viewName.length == 0) { return; }
 
-    NRMAViewTimingSnapshot *snapshot =
-        [[NRMAViewTimingSnapshot alloc] initWithViewName:viewName
-                                         viewInstanceId:instanceId
-                                           previousView:previousView
-                                             uiPlatform:platform
-                                             appearTime:0
-                                         hasCurrentView:YES];
+    NRMAViewTimingSnapshot *snapshot = [[NRMAViewContext sharedInstance] snapshotForTiming];
+    if (!snapshot.hasCurrentView || snapshot.viewName.length == 0) { return; }
+
+    // No vouched construction start means there is nothing to time: the screen resurfaced without
+    // being rebuilt, the agent started mid-construction, the interval was an eager-construction
+    // artifact, or this is a manual view whose customer never called beginViewLoad. A placeholder
+    // here would be a real value in every percentile, so the row is simply absent.
+    if (!snapshot.hasLoadStart) { return; }
+
+    double milliseconds = [NRMAViewContext millisecondsBetween:snapshot.loadStartTime
+                                                          and:snapshot.appearTime];
 
     [self emitTimingNamed:kNRMAViewTimingInitialDisplay
              milliseconds:milliseconds
@@ -247,7 +269,7 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
 - (BOOL)admitTimingForSnapshot:(NRMAViewTimingSnapshot *)snapshot {
     BOOL isUnattributed = (snapshot.viewInstanceId.length == 0);
     NSString *key = isUnattributed ? kNRUnattributedBucket : snapshot.viewInstanceId;
-    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
 
     BOOL admitted = NO;
     BOOL shouldWarn = NO;

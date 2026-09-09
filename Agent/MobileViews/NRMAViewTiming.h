@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Event type emitted for every view timing.
 FOUNDATION_EXPORT NSString * const kNRMAViewTimingEventType;
 
-/// The agent-owned timing, projected from the loadTime the agent already measures. Reserved: the
+/// The agent-owned timing: construction start → the moment the screen became visible. Reserved: the
 /// public API rejects it so the out-of-the-box series stays comparable across apps.
 FOUNDATION_EXPORT NSString * const kNRMAViewTimingInitialDisplay;
 
@@ -57,8 +57,17 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 @property (nonatomic, readonly, copy, nullable) NSString *previousView;
 @property (nonatomic, readonly, copy, nullable) NSString *uiPlatform;
 
-/// When the current view became visible — the zero point markTimingNamed: measures from.
+/// When the current view became visible. The fallback zero point for markTimingNamed:, used only
+/// when no construction start is available.
 @property (nonatomic, readonly) CFAbsoluteTime appearTime;
+
+/// When the runtime began building the current view: the preferred zero point for markTimingNamed:
+/// and the only origin timeToInitialDisplay can be measured from. Meaningless unless hasLoadStart.
+@property (nonatomic, readonly) CFAbsoluteTime loadStartTime;
+
+/// NO when the producer could not vouch for a construction start — nothing was built, the agent
+/// started mid-construction, or the interval exceeded kNRMAMaxPlausibleLoadMs.
+@property (nonatomic, readonly) BOOL hasLoadStart;
 
 /// NO when no view is current, in which case appearTime is meaningless.
 @property (nonatomic, readonly) BOOL hasCurrentView;
@@ -68,6 +77,8 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
                     previousView:(nullable NSString *)previousView
                       uiPlatform:(nullable NSString *)uiPlatform
                       appearTime:(CFAbsoluteTime)appearTime
+                   loadStartTime:(CFAbsoluteTime)loadStartTime
+                    hasLoadStart:(BOOL)hasLoadStart
                   hasCurrentView:(BOOL)hasCurrentView NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)init NS_UNAVAILABLE;
@@ -84,9 +95,17 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 
 #pragma mark - Public API entry points
 
-/// Records `name` measured from the current view's appear time to now.
-/// Returns NO when view tracking is disabled, when no view is current (no zero point exists), or
-/// when the timing fails validation or the per-view cap.
+/// Records `name` measured from the current view's construction start to now — the same origin
+/// timeToInitialDisplay uses, so the resulting row encloses the baseline rather than sitting beside
+/// it and `name - timeToInitialDisplay` is a valid interval.
+///
+/// Falls back to the appear time when the producer could not vouch for a construction start. Which
+/// of the two a row used is not stamped on the timing event; it is recoverable from the `MobileView`
+/// appear event for the same `viewInstanceId`, which carries `loadTime` exactly when a construction
+/// start was vouched for and `loadTimeUnavailable` when it was not.
+///
+/// Returns NO when view tracking is disabled, when no view is current (no zero point exists at all),
+/// or when the timing fails validation or the per-view cap.
 - (BOOL)markTimingNamed:(NSString *)name;
 
 /// Records `name` with a caller-supplied duration. Unlike markTimingNamed:, this succeeds with no
@@ -95,16 +114,30 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 
 #pragma mark - Agent-owned emission
 
-/// Emits the out-of-the-box `timeToInitialDisplay` row for a view that just appeared, projected
-/// from the loadTime the caller already measured. Exempt from the reserved-name check and from the
-/// customer cap: the baseline must never be the row that gets dropped.
-- (void)recordInitialDisplayForViewNamed:(NSString *)viewName
-                              instanceId:(nullable NSString *)instanceId
-                            previousView:(nullable NSString *)previousView
-                                platform:(nullable NSString *)platform
-                            milliseconds:(double)milliseconds;
+/// Emits the out-of-the-box `timeToInitialDisplay` row for the view that just became current:
+/// construction start → appear, both read from the shared view context.
+///
+/// Deliberately takes no duration. An earlier form accepted the `loadTime` the producer had already
+/// computed, which meant the baseline and customer marks derived from two separate code paths that
+/// agreed only by convention — and they drifted, onto origins that made the headline
+/// `timeToFullDisplay - timeToInitialDisplay` subtraction change sign. Reading both origins from the
+/// one place they are stored makes that drift unrepresentable.
+///
+/// No-ops unless a view is current and its producer vouched for a construction start, so the caller
+/// does not have to repeat that test. Exempt from the reserved-name check and from the customer cap:
+/// the baseline must never be the row that gets dropped.
+- (void)recordInitialDisplayForCurrentView;
 
 #pragma mark - Decision layer
+
+/// The duration a mark against `snapshot` reports if taken at `now`.
+///
+/// Exposed for the same reason attributesForTimingNamed: is: the property that matters — that a mark
+/// *encloses* the baseline rather than sitting beside it, so subtracting them yields the interval the
+/// screen looked finished but was not — is arithmetic, and asserting it should not require a running
+/// agent or a harvester.
+- (double)millisecondsForMarkAgainstSnapshot:(NRMAViewTimingSnapshot *)snapshot
+                                          at:(CFAbsoluteTime)now;
 
 /// Validates and caps a timing, returning the attributes to emit, or nil if it must be dropped.
 /// Separated from emission so it is testable without an agent or harvester. Counts a non-nil

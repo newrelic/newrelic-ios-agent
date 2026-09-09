@@ -11,7 +11,8 @@
 | JIRA Initiative | [NR-356639](https://new-relic.atlassian.net/browse/NR-356639) |
 | Production Readiness Checklist | [Template](https://newrelic.atlassian.net/wiki/templates?template=2608824354) |
 | Reviewers | Justin Rush, Ying Wang, Mike Bruin, Nisarg Desai; AppEx: Jodi 'JBJ' Kansagor, Sara Schultz; Product: Cheryl Frankenfield (2026-05-08) |
-| Supersedes | [Mobile Views Initiative Design Doc (IDD)](https://newrelic.atlassian.net/wiki/spaces/APPEXP/pages/5548769647) rev. 2026-08-24 |
+| Supersedes | [Mobile Views Initiative Design Doc (IDD)](https://newrelic.atlassian.net/wiki/spaces/APPEXP/pages/5548769647) rev. 2026-08-24; this document rev. 2026-09-02 |
+| Revision | 2026-09-08 |
 
 ## About this revision
 
@@ -28,6 +29,28 @@ moved is catalogued in §7.
 
 It also reconciles the document with what is actually implemented on the iOS `mobile-views-2` branch, which
 has diverged from the previous revision in three ways that matter cross-platform (§5.3, §5.5, §5.6).
+
+## Changes from rev. 2026-09-02
+
+**This revision changes the timing contract in a way every agent must adopt.** Rev. 2026-09-02 specified two
+different origins without noticing: the agent-owned baseline measured *construction → appear*, while
+capability 7 measured *appear → now*. §6.3 then claimed `timeToFullDisplay` minus `timeToInitialDisplay` was
+"the interval during which the screen looked finished but was not." It is not. Those two intervals are
+**adjacent, not nested** — they share the appear instant as a boundary, not as an origin — so the difference
+is not that interval, and its sign flips depending on how long the screen took to build. A screen that
+constructs in 400 ms and reaches full display 100 ms after appearing reported TTFD (100) < TTID (400), which
+reads as full display arriving before initial display.
+
+| # | Change | Sections |
+| --- | --- | --- |
+| 1 | **Capability 7 is anchored at construction start, not appear.** A mark now encloses the baseline, so the §6.3 subtraction is valid and never negative | §6.2, §6.3 |
+| 2 | **Marks fall back to the appear origin when no construction start exists, and this is *not* stamped on the timing event.** A `timingOrigin` attribute was considered and rejected: the information is already in the data. A visit's `MobileView` appear event carries `loadTime` exactly when a construction start was vouched for, and `loadTimeUnavailable` when it was not, so the origin is recoverable by `viewInstanceId`. Such a visit also emits no baseline row, so a fallback mark cannot be wrongly subtracted from one | §6.2 |
+| 3 | **New capability 9: declare a load start.** Manual views have no observable construction phase, so they had no baseline at all. Capability 9 lets the customer declare one | §6.1, §6.3 |
+| 4 | **`kNRMAMaxPlausibleLoadMs` is now a shared constant (5000 ms).** Agents were each choosing their own artifact ceiling — iOS SwiftUI used 1500 ms while iOS UIKit had none, so the same series was right-tail-truncated on one platform and admitted multi-minute artifacts on the other | §5.4, §6.4 |
+| 5 | **`loadTime` must be omitted, never zeroed, when unmeasurable, and the reason recorded.** A `0` placeholder is a real value in every percentile | §5.4 |
+
+Change 1 is breaking for any agent that already shipped capability 7. It is worth taking: the alternative is a
+headline metric that cannot be computed from the data the agents emit.
 
 ## 1. Problem
 
@@ -202,7 +225,20 @@ the distinction be declarable rather than inferred.
 2. `loadTime` is emitted **only on appearance**, and **only for a genuine first construction**. A screen
    that resurfaced without being rebuilt has nothing to time and must omit the attribute.
 3. Values are non-negative and monotonic-clock derived. Wall-clock deltas are not acceptable — clock
-   adjustment mid-load would otherwise produce negative or absurd durations.
+   adjustment mid-load would otherwise produce negative or absurd durations. Note that flooring a negative
+   result at 0, which agents do to keep durations non-negative, converts this failure from an obvious one
+   into an invisible one: a backwards clock step surfaces as a *0 ms* load, indistinguishable from a real
+   measurement and silently dragging every percentile down. Monotonic is therefore a correctness rule.
+4. A construction start is only trustworthy when the runtime built the screen *because* it was about to show
+   it. Every runtime has a case where it did not — SwiftUI builds every tab's content struct up front,
+   UIKit loads a controller whose `view` was touched early, Compose composes off-screen — and all of them then
+   report the interval since app launch as a screen load. Above **`kNRMAMaxPlausibleLoadMs`** (§6.4) an agent
+   **must not vouch** for the start: no `loadTime`, no baseline row (§6.3), and marks fall back to the appear
+   origin (§6.2).
+5. When `loadTime` is withheld the attribute is **omitted, never zeroed**, and the appear event carries
+   `loadTimeUnavailable` naming the reason (`constructedBeforeAppear`, `noConstructionObserved`, `notRebuilt`).
+   A `0` placeholder counts as a real value in every aggregate; an omission with a reason is diagnosable in
+   NRDB rather than looking like the attribute was never implemented.
 4. All agents emit the **same unit**. Unit drift between agents is the single most likely way to corrupt a
    cross-platform percentile, and it is invisible in the data.
 
@@ -214,6 +250,7 @@ the distinction be declarable rather than inferred.
 | Android Activity | Exact |
 | Android Fragment | Exact |
 | SwiftUI | Approximate |
+| Manual (`setCurrentView`) | None, unless the customer declares a load start via capability 9 |
 | Jetpack Compose | Approximate |
 | React Native | Approximate — subject to JS-thread contention |
 | Flutter | Approximate |
@@ -275,7 +312,9 @@ Initiative-level requirements:
 | --- | --- |
 | Every timing carries `viewInstanceId` | Joins the timing to the specific *visit*, not merely the screen name |
 | Every timing carries `previousView` when known | Makes timings queryable by route, per §5.3 |
-| One agent-owned baseline timing is emitted with no customer code | Guarantees dashboards populate for every customer, and puts customer marks on the same axis as the agent's own |
+| One agent-owned baseline timing is emitted with no customer code | Guarantees dashboards populate for every customer |
+| A visit with no construction start emits no baseline row | Keeps a fallback-origin mark from being subtracted from a baseline it does not share an origin with (§6.2) |
+| Customer marks share the baseline's origin whenever one exists | Makes the marks *enclose* the baseline, which is the only arrangement in which subtracting them yields a real interval (§6.2) |
 | One event per timing, emitted as soon as its value is known | A screen's timings arrive at different moments; batching them would delay the earliest until the last is known |
 | Validation, caps, and reserved names per §6.4 | Every rejection rule is invisible in the data, so all agents must apply the same ones |
 | `loadTime` remains on `MobileView` | Additive by design; removing it breaks already-shipped panels |
@@ -342,6 +381,7 @@ form is idiomatic for its language and runtime, documented in its CDD.
 | 4 | Override display name per screen | Per-screen hook; affects `viewName` only, never `viewClass` |
 | 5 | Ignore a screen | Suppresses all events for that screen. Required for splash screens, modals, and tab containers |
 | 6 | Attach custom attributes per screen | Merged into every event for that screen. **Must not** be able to overwrite any attribute in §5.3 |
+| 9 | **Declare a load start** for the next manually-set view | No arguments. Marks "construction of the next manual view starts now"; the next capability-3 call consumes it. Optional, and only meaningful for manual views (§6.3) |
 
 Two rules that are contract, not style:
 
@@ -351,6 +391,10 @@ Two rules that are contract, not style:
 - **Reserved keys are non-overridable.** Every attribute in §5.3 must be rejected if supplied through
   capability 6. Otherwise a customer can silently corrupt the very fields the cross-platform dashboards
   depend on.
+- **Capability 9 goes stale rather than mismatching.** A declared start with no capability-3 call within
+  `kNRMAMaxPlausibleLoadMs` is discarded, not attached to whatever screen is set later. Declaring twice
+  before a set keeps only the later start. Both rules exist because the pairing is the customer's to get
+  right and the failure would otherwise be a plausible-looking wrong number.
 
 ### 6.2 Timing capabilities
 
@@ -360,12 +404,44 @@ that state. These two capabilities are how they supply it. Both emit `MobileView
 
 | # | Capability | Contract |
 | --- | --- | --- |
-| 7 | **Mark** a timing against the current view | Duration is measured by the agent, from the current view's appear time until the moment of the call. Takes a name only |
-| 8 | **Record** a timing with a caller-supplied duration | Takes a name and a duration in **milliseconds**. Used when the view's appear time is the wrong zero point |
+| 7 | **Mark** a timing against the current view | Duration is measured by the agent, from the current view's **construction start** until the moment of the call. Falls back to the appear instant when no construction start is available. Takes a name only |
+| 8 | **Record** a timing with a caller-supplied duration | Takes a name and a duration in **milliseconds**. Used when neither of the agent's origins is the right zero point |
 
-**Why two, and not one.** TTID, TTFD, and TTI are all "from view appear until X", which capability 7
+**The origin is the contract, and it is construction start.** This is the part rev. 2026-09-02 got wrong.
+A mark must be measured from the same instant the baseline is, so that the mark **encloses** the baseline:
+
+```
+loadStart              appear                    mark
+    |--------------------|----------------------->|
+    |<---- TTID -------->|                        |
+    |<---------------- TTFD ------------------->  |     TTFD - TTID = the gap.  Always >= 0.
+```
+
+Anchored at appear instead, TTFD sits *beside* TTID rather than enclosing it, their difference is not the gap,
+and its sign depends on how long construction took. Agents must not choose the appear origin for convenience:
+it is the documented fallback for when no construction start exists, not an alternative.
+
+**The fallback, and why it needs no attribute.** When the producer cannot vouch for a construction start
+(§5.4 rule 4), the mark is still recorded — dropping it would leave customers on eagerly-constructing runtimes
+with no timings at all — measured from the appear instant, and therefore short by that screen's build time.
+
+Agents **must not** add an attribute to the timing event to flag this. Two properties make one unnecessary:
+
+- **It cannot corrupt the §6.3 subtraction.** The same condition that withholds the construction start also
+  withholds the baseline row (§6.3), so there is no `timeToInitialDisplay` on that visit for a fallback mark to
+  be subtracted from.
+- **It is already recoverable.** The visit's `MobileView` appear event carries `loadTime` exactly when a
+  construction start was vouched for, and `loadTimeUnavailable` with a reason when it was not (§5.4 rule 5).
+  `viewInstanceId` joins the two.
+
+What remains is that a `timeToFullDisplay` percentile taken across *all* visits mixes construction-anchored and
+appear-anchored rows, which understates it. Scoping to construction-anchored visits is a two-step query rather
+than a `WHERE` clause (§8). That cost was accepted deliberately, in preference to an attribute on every row
+restating what the presence of `loadTime` already says.
+
+**Why two, and not one.** TTID, TTFD, and TTI all share one origin, which capability 7
 expresses in a single call with no state for the customer to manage. Capability 8 exists for the cases that
-do not share that zero point — a prefetch that began before navigation, or a duration measured by the
+do not share that origin — a prefetch that began before navigation, or a duration measured by the
 customer's own code or another SDK. Together they cover the space without a registry of open marks, which
 would drag in eviction policy, timeout semantics, and leaks on screens that vanish mid-measurement.
 
@@ -390,20 +466,32 @@ anyone asked for, and a third flag would let customers reach a state where marks
 Independently of anything the customer calls, **every agent emits one baseline timing automatically.**
 
 - **Name:** `timeToInitialDisplay` — the same string on every agent.
-- **Value:** projected from the `loadTime` the agent already measures for that appearance. This is a second
-  projection of an existing number, not a new measurement: no new hook, no new swizzle, no added cost.
-- **When:** on every `MobileView` appearance that carries `loadTime`. A screen that resurfaced without being
-  rebuilt emits no baseline row, mirroring the `loadTime` rule in §5.4 — nothing was constructed, so there is
-  nothing to time.
+- **Value:** **construction start → appear**, both read from the same stored per-view state that capability 7
+  resolves its origin against. Numerically this is the same interval as `loadTime`, but it must be *derived
+  from that shared state* rather than passed in as an already-computed number. Deriving both from one place is
+  what makes it impossible for the baseline and the marks to end up measured from different instants — which
+  is exactly how rev. 2026-09-02 came to specify two origins without anyone noticing.
+- **Origin:** always `constructionStart`. The baseline cannot exist without one, so it never carries any other
+  value.
+- **When:** on every `MobileView` appearance for which the producer vouched for a construction start (§5.4
+  rule 4). That excludes: a screen that resurfaced without being rebuilt, a tab selection, an agent that
+  started mid-construction, an interval above `kNRMAMaxPlausibleLoadMs`, and a manual view whose customer did
+  not use capability 9. In all of those, **nothing is emitted** — not a zero. A zero would be a real value in
+  every percentile and indistinguishable from a genuinely instant load.
 
 This matters for three reasons that are all cross-platform:
 
-1. **Every timing dashboard populates with zero customer code.** Without it, a customer who has not yet
-   instrumented anything sees empty charts and concludes the feature does not work.
-2. **It puts customer marks on the same axis as the agent's own.** `timeToFullDisplay` minus
-   `timeToInitialDisplay` is the interval during which the screen looked finished but was not — the single
-   most useful number this initiative produces, and it requires both series to exist in the same event type
-   with the same units.
+1. **Every timing dashboard populates with zero customer code**, on every runtime that can observe a
+   construction phase. Without it, a customer who has not yet instrumented anything sees empty charts and
+   concludes the feature does not work. Manual views are the documented exception, which is why capability 9
+   exists.
+2. **It gives customer marks an origin to share.** `timeToFullDisplay` minus `timeToInitialDisplay` is the
+   interval during which the screen looked finished but was not — the single most useful number this
+   initiative produces. It requires both series in the same event type, in the same units, **and measured from
+   the same instant**; the third requirement is the one rev. 2026-09-02 missed. Both rows come from the same
+   visit, and a visit either has a construction start — in which case both the baseline and the marks use it —
+   or has neither a baseline nor a construction-anchored mark. So the subtraction is well-formed by
+   construction, with no per-row origin check needed.
 3. **It is the coverage signal.** Screens reporting *only* `timeToInitialDisplay` are exactly the screens
    still lacking customer instrumentation, which makes the instrumentation backlog queryable (§8).
 
@@ -421,11 +509,13 @@ that look valid and aggregate wrongly against every other agent's.
 | Constant | Value | Applies to | Rationale |
 | --- | --- | --- | --- |
 | Baseline timing name | `timeToInitialDisplay` | §6.3 | Cross-app comparability; reserved from customer use |
+| Max plausible construction interval | **5000** ms | §5.4, §6.2, §6.3 | Above it a construction start is an eager-construction artifact, not a slow screen, and must not be vouched for. Shared because agents choosing their own ceilings truncate the same series at different points — one agent's p99 then means something different from another's. Deliberately loose: a tight ceiling discards the slow screens that are the whole point of looking |
 | Max customer timings per view instance | **16** | Capabilities 7, 8 | The event buffer is bounded (1000 by default). An unguarded mark inside a list-row callback would evict the customer's own real events. Warn once when exceeded, then drop silently |
 | Max timing name length | **128** characters | Capabilities 7, 8 | Bounds attribute cardinality |
 | Max accepted duration | **600000** ms (10 minutes) | Capability 8 | Catches the seconds-passed-where-milliseconds-expected mistake instead of recording it as a ten-hour screen load |
 | Minimum dwell for a real appearance | **100** ms | §5.2 | Below it, an appear/disappear pair is construction churn, not a visit |
 | Timing unit | milliseconds | Capabilities 7, 8; §5.7 | Unit drift between agents corrupts cross-platform percentiles invisibly |
+| Timing clock | monotonic | Capabilities 7, 8; §5.4 rule 3; §6.3 | Wall-clock deltas floored at 0 turn a clock step into a fabricated 0 ms row |
 | Unattributed-bucket window | **60** seconds | Capability 8 | See below — a rolling window, not a lifetime cap |
 | Max tracked cap buckets | **64** | Capabilities 7, 8 | Bounds cap bookkeeping; without it a long session retains one bucket per view instance ever visited |
 
@@ -465,7 +555,9 @@ the move.
 | Threading model: lock choice, snapshot-then-emit ordering, harvester lock-order hazard | iOS CDD |
 | Timing storage: per-view-instance cap bookkeeping, bucket lifetime, unattributed-bucket reset | All CDDs |
 | Timing signatures and failure signalling for capabilities 7 and 8 in each language | All CDDs |
-| How the baseline timing is projected from that agent's `loadTime` on the appear path | All CDDs |
+| How that agent stores the per-view construction start, and how both the baseline and capability 7 derive their origin from it | All CDDs |
+| Which runtime signal that agent treats as the construction start, and the cases where it declines to vouch for one | All CDDs |
+| Capability 9 signature, and its staleness handling | All CDDs |
 | Activity and Fragment lifecycle-callback registration, incl. recursive fragment registration | Android CDD |
 | Jetpack Compose producer: composition-effect and lifecycle-observer design; reuse of existing Compose Navigation instrumentation | Android CDD |
 | Per-instance state storage (weak-keyed map) | Android CDD |
@@ -480,7 +572,9 @@ the move.
 Existing CDDs: [iOS Implementation](https://newrelic.atlassian.net/wiki/spaces/APPEXP/pages/5536055442) ·
 [Android Implementation](https://newrelic.atlassian.net/wiki/x/A4AVTAE). Hybrid CDDs are not yet written.
 
-**Each CDD must state, explicitly, how it satisfies §5.2, §5.3, §5.4, §5.5, and §6.** A CDD that silently
+**Each CDD must state, explicitly, how it satisfies §5.2, §5.3, §5.4, §5.5, and §6** — including, for this
+revision, which instant it treats as the construction start and how it guarantees the baseline and capability 7
+cannot diverge onto different origins. A CDD that silently
 diverges from the schema is the one failure mode this split introduces, and review is the control for it.
 
 ## 8. NRDB
@@ -500,9 +594,14 @@ WHERE appName = 'MyApp' AND appeared IS false FACET viewName SINCE 1 day ago
 SELECT count(*) FROM MobileView
 WHERE appName = 'MyApp' FACET uiPlatform, agentName SINCE 1 week ago
 
--- Load percentiles compared across agents
+-- Load percentiles compared across agents. loadTime is absent, not zero, wherever it
+-- was unmeasurable (§5.4 rule 5), so percentiles are over real measurements only.
 SELECT percentile(loadTime, 50, 95, 99) FROM MobileView
 WHERE appeared IS true FACET agentName SINCE 1 day ago
+
+-- Why loadTime is missing where it is missing: coverage check for the artifact ceiling.
+SELECT count(*) FROM MobileView
+WHERE appeared IS true FACET loadTimeUnavailable, uiPlatform SINCE 1 day ago
 
 -- Navigation graph: routes, not just destinations
 SELECT count(*) FROM MobileView
@@ -515,7 +614,10 @@ The navigation-graph query is only answerable because of the referrer attributes
 
 ```sql
 -- The interval where the screen looked finished but was not.
--- Requires the agent-owned baseline (§6.3) and a customer mark on the same axis.
+-- Well-formed without an origin filter: a visit that has no construction start has
+-- no timeToInitialDisplay row either, so it contributes nothing to the subtrahend.
+-- Its timeToFullDisplay row does still land in the minuend, which biases the result
+-- low on runtimes that construct eagerly -- use the query below to size that.
 SELECT filter(percentile(timingValue, 50), WHERE timingName = 'timeToFullDisplay')
      - filter(percentile(timingValue, 50), WHERE timingName = 'timeToInitialDisplay')
        AS 'ms the screen was lying'
@@ -525,6 +627,13 @@ FROM MobileViewTiming FACET viewName SINCE 1 day ago
 -- are the screens with no customer marks yet.
 SELECT uniques(timingName) FROM MobileViewTiming FACET viewName SINCE 1 day ago
 
+-- How much of the first query's minuend is appear-anchored, per runtime. Read on
+-- MobileView rather than MobileViewTiming: loadTimeUnavailable marks exactly the
+-- visits whose marks fell back to the appear origin. A screen high here is where
+-- capability 9 (manual) or a construction-phase fix (automatic) is needed.
+SELECT percentage(count(*), WHERE loadTimeUnavailable IS NOT NULL) FROM MobileView
+WHERE appeared IS true FACET uiPlatform, viewName SINCE 1 day ago
+
 -- Timings by route rather than destination: the same screen fast from
 -- search and slow from a deeplink.
 SELECT percentile(timingValue, 50, 95) FROM MobileViewTiming
@@ -532,9 +641,11 @@ WHERE timingName = 'timeToFullDisplay' FACET previousView, viewName SINCE 1 day 
 ```
 
 The first is the number that justifies the initiative, and it is only computable because the baseline and the
-customer mark share an event type, a unit, and a `viewInstanceId` (§6.3, §6.4). The second is why the
-agent-owned baseline is required rather than optional: without it, an uninstrumented screen is
-indistinguishable from a screen with no traffic.
+customer mark share an event type, a unit, a `viewInstanceId`, **and an origin** (§6.2, §6.3, §6.4). The second
+is why the agent-owned baseline is required rather than optional: without it, an uninstrumented screen is
+indistinguishable from a screen with no traffic. The third is the honesty check on the first — it sizes the
+appear-anchored rows the first query cannot separate out, which is the price of not stamping an origin on every
+timing row (§6.2).
 
 ## 9. Customer Zero
 
@@ -563,15 +674,22 @@ indistinguishable from a screen with no traffic.
 4. **`MobileViewTiming` rollout order.** iOS is implemented. Whether it lands per-agent alongside
    `MobileView` or as a follow-on wave is unresolved, and it determines whether the timing dashboards can be
    cross-platform at launch.
-5. **Ratify the shared timing constants in §6.4.** They are lifted from the iOS implementation and are now
+5. **Ratify the capability-7 origin change, and who has already shipped the old semantics.** The change log
+   at the top of this revision re-anchors capability 7 from the appear instant to the construction start. iOS
+   has not released it (`markViewTiming:` exists only on the unreleased `mobile-views-2` branch), so iOS can
+   change freely. Any agent that *has* released capability 7 has a decision to make that this document cannot
+   make for it: change the semantics under existing customers, or stay appear-anchored indefinitely and forgo
+   the §6.3 subtraction. Recommendation is to change it — the old behaviour cannot produce the headline
+   metric — but it needs naming per agent rather than assuming.
+6. **Ratify the shared timing constants in §6.4.** They are lifted from the iOS implementation and are now
    stated normatively here rather than in an iOS-only document. Each is a value an agent could plausibly
    have chosen differently, and every one of them is invisible in the resulting data, so they need explicit
    cross-platform sign-off rather than inheritance.
-6. **Should `MobileViewTiming` carry `previousViewInstanceId`?** (§5.8). It carries `previousView`, so timings
+7. **Should `MobileViewTiming` carry `previousViewInstanceId`?** (§5.8). It carries `previousView`, so timings
    can be faceted by referrer name but not joined to the exact referrer *visit*. Adding it makes the timing
    event a first-class node in the same navigation graph as `MobileView`, at the cost of one attribute on every
    timing row. iOS has shipped without it, so this is cheapest to settle before other agents implement.
-7. **Decorate `MobileRequest`, `MobileRequestError`, and Handled Exceptions with the current/previous view**
+8. **Decorate `MobileRequest`, `MobileRequestError`, and Handled Exceptions with the current/previous view**
    (`currentView`, `currentViewInstanceId`, `previousView`, `previousViewInstanceId`), so a request, a
    request error, or a handled exception can be joined back to the screen it happened on without a
    `sessionId` + timestamp correlation at query time. This is the same referrer plumbing §5.5 already
@@ -590,3 +708,24 @@ indistinguishable from a screen with no traffic.
    snapshot captured from inside the crash handler itself — the latter reintroduces the reentrancy and
    lock-ordering hazard already known from session-start (§6, threading model). That is a materially
    different design problem and should not block sign-off on the other three.
+
+   **Implemented on iOS (`mobile-views-2`).** `MobileRequest`, `MobileRequestError`, and
+   `MobileHandledException` now all carry `currentView`/`currentViewInstanceId`/`previousView`/
+   `previousViewInstanceId` when a Mobile Views flag is on and a view is current — one shared,
+   flag-gated merge point (`NRMAViewContext`) feeding all four producers, breadcrumbs included, so the
+   four can no longer drift on attribute names the way §5.3's `uiPlatform`/`platform` history warns
+   against. **Every other agent should decorate the equivalent of these three event types identically**
+   — the requirement is the four attributes above on the request, request-error, and handled-exception
+   events, not iOS's specific mechanism.
+
+   `MobileCrash` is decorated too, but by a different, cross-platform-relevant mechanism worth stating
+   explicitly: **crash reporting and handled-exception reporting are two different pipelines on iOS**
+   (native-signal/PLCrashReporter for `MobileCrash` vs. the Hex report system for
+   `MobileHandledException`), and only the crash pipeline has the "state doesn't survive the crash"
+   problem described above. iOS solves it by persisting the referrer to disk on every view transition
+   and reading it back into the crash's attributes during next-launch crash processing, then clearing
+   it unconditionally so a clean session never leaves state a *later* crash could be misattributed to.
+   Any agent whose crash reporter is similarly out-of-process/next-launch (which is the common case,
+   not an iOS peculiarity) will need an equivalent persist-and-recover step — this is not something a
+   live in-memory accessor like `referrerAttributes` can solve on its own, and is worth a line in each
+   CDD rather than being assumed to fall out of the shared mechanism for free.

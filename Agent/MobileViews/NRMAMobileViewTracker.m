@@ -34,6 +34,9 @@ static NSString * const kNRAttr_viewName       = @"viewName";
 static NSString * const kNRAttr_viewInstanceId = @"viewInstanceId";
 static NSString * const kNRAttr_restarted      = @"restarted";
 static NSString * const kNRAttr_loadTime       = @"loadTime";
+// Why loadTime is absent, when it is. Recorded explicitly so the omission is diagnosable in NRDB
+// rather than looking like the attribute was never implemented.
+static NSString * const kNRAttr_loadTimeUnavailable = @"loadTimeUnavailable";
 static NSString * const kNRAttr_timeVisible    = @"timeVisible";
 
 // Swift mangling marker — any class name starting with _Tt is mangled
@@ -232,7 +235,7 @@ static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
     if (NRMA_ShouldSkipViewName(viewName)) return;
 
     objc_setAssociatedObject(self, &kNRLoadTimestampKey,
-                             @(CFAbsoluteTimeGetCurrent()),
+                             @([NRMAViewContext monotonicNow]),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
@@ -245,7 +248,7 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
     if (viewName == nil) return;
     if (NRMA_ShouldSkipViewName(viewName)) return;
 
-    CFAbsoluteTime appearTime = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime appearTime = [NRMAViewContext monotonicNow];
     objc_setAssociatedObject(self, &kNRAppearTimestampKey,
                              @(appearTime),
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -255,15 +258,36 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
                              uuid,
                              OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
+    // Read back rather than passed down because viewDidLoad may never have run for this appearance.
+    // Read *before* the transition: the load start is part of what the transition records, because
+    // it is the origin both the timeToInitialDisplay baseline and every markViewTiming: on this
+    // screen resolve against.
+    //
+    // Absent on every appearance after the first: viewDidLoad fires once per load, and
+    // viewDidDisappear clears this key. A screen the user returns to was not rebuilt, so it has
+    // nothing to time.
+    NSNumber *loadTimestamp = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
+
+    // viewDidLoad → viewDidAppear is an exact construction-to-visible boundary, but only when the
+    // view was loaded *because* it was about to be shown. A controller whose `view` was touched
+    // early -- a preloaded tab, an eagerly-built container child -- loaded minutes before it
+    // appeared, and the interval is an artifact of that, not a slow screen. Above the shared
+    // ceiling the agent declines to vouch for it: no loadTime, no baseline row, and marks fall
+    // back to the appear time. The absent loadTime is what tells a consumer that happened.
+    double loadTimeMs      = 0.0;
+    BOOL loadIsMeasurable  = NO;
+    if (loadTimestamp) {
+        loadTimeMs = [NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue and:appearTime];
+        loadIsMeasurable = (loadTimeMs <= kNRMAMaxPlausibleLoadMs);
+    }
+
     // Make this view current in the shared context so it becomes the referrer for the next view
     // and for breadcrumbs recorded while it is visible.
     [[NRMAViewContext sharedInstance] transitionToView:viewName
                                             instanceId:uuid
                                             appearTime:appearTime
+                                         loadStartTime:(loadIsMeasurable ? loadTimestamp : nil)
                                               platform:@"UIKit"];
-
-    // Read back rather than passed down because viewDidLoad may never have run for this appearance.
-    NSNumber *loadTimestamp = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
 
     NSString *viewClass = NRMA_DemangledName([self class], YES);
 
@@ -279,34 +303,31 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
         kNRAttr_viewInstanceId: uuid,
         @"appeared":            @YES,
         @"uiPlatform":          @"UIKit",
-        @"agentName":           @"iOS",
     }];
     // loadTime belongs here and not only on the disappear event, which is where this producer used
     // to report it alone. It also brings the UIKit schema in line with the SwiftUI producer, which
     // has always put loadTime on appear.
     //
-    // Omitted rather than zeroed when viewDidLoad was never observed for this appearance (agent
-    // started mid-session), so aggregates are not dragged toward 0 by a placeholder.
-    if (loadTimestamp) {
-        attrs[kNRAttr_loadTime] = @([NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue
-                                                                    and:appearTime]);
+    // Omitted rather than zeroed when there is no trustworthy construction start, so aggregates are
+    // not dragged toward 0 by a placeholder. The reason is recorded either way.
+    if (loadIsMeasurable) {
+        attrs[kNRAttr_loadTime] = @(loadTimeMs);
+    } else if (loadTimestamp) {
+        attrs[kNRAttr_loadTimeUnavailable] = @"constructedBeforeAppear";
+    } else {
+        attrs[kNRAttr_loadTimeUnavailable] = @"noConstructionObserved";
     }
 
     // Both halves of a view's lifetime are recorded, and they carry different things: this one
     // loadTime, the disappear event timeVisible.
     [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 
-    // Project the same number as the out-of-the-box timeToInitialDisplay timing, so MobileViewTiming
-    // dashboards populate with no customer instrumentation and customer marks such as
-    // timeToFullDisplay land on the same axis. Skipped when loadTime was omitted above: there is
-    // nothing to project, and a placeholder would drag the aggregate toward zero.
-    if (loadTimestamp) {
-        [[NRMAViewTiming sharedInstance] recordInitialDisplayForViewNamed:viewName
-                                                              instanceId:uuid
-                                                            previousView:attrs[@"previousView"]
-                                                                platform:@"UIKit"
-                                                            milliseconds:[attrs[kNRAttr_loadTime] doubleValue]];
-    }
+    // The out-of-the-box baseline, so MobileViewTiming dashboards populate with no customer
+    // instrumentation and customer marks such as timeToFullDisplay share its origin. Derived from
+    // the load start and appear time the transition above recorded rather than from a number passed
+    // in here, so the baseline and those marks cannot end up measured from different instants.
+    // No-ops on its own when no construction start was vouched for.
+    [[NRMAViewTiming sharedInstance] recordInitialDisplayForCurrentView];
 }
 
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
@@ -314,7 +335,7 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
 
     if (NRMA_ShouldSkipClass([self class])) return;
 
-    CFAbsoluteTime disappearTime = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime disappearTime = [NRMAViewContext monotonicNow];
 
     NSNumber *appearTimestamp    = objc_getAssociatedObject(self, &kNRAppearTimestampKey);
     NSNumber *loadTimestamp      = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
@@ -332,9 +353,16 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
     if (viewName == nil) return;
 
     double timeVisibleMs = [NRMAViewContext millisecondsBetween:appearTimestamp.doubleValue and:disappearTime];
-    double loadTimeMs    = 0.0;
+
+    // Same rule as the appear half: report loadTime only when there is a trustworthy construction
+    // start. This used to fall through to 0.0, which put a real zero into every percentile over
+    // loadTime for exactly the appearances that had nothing to measure -- every screen the user
+    // returned to, since viewDidLoad fires once per load.
+    double loadTimeMs     = 0.0;
+    BOOL loadIsMeasurable = NO;
     if (loadTimestamp) {
         loadTimeMs = [NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue and:appearTimestamp.doubleValue];
+        loadIsMeasurable = (loadTimeMs <= kNRMAMaxPlausibleLoadMs);
     }
 
     BOOL isRestarted = (hasAppearedBefore != nil && hasAppearedBefore.boolValue);
@@ -349,12 +377,18 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         kNRAttr_viewName:       viewName,
         kNRAttr_viewInstanceId: instanceId,
         kNRAttr_restarted:      @(isRestarted),
-        kNRAttr_loadTime:       @(loadTimeMs),
         kNRAttr_timeVisible:    @(timeVisibleMs),
         @"appeared":            @NO,
         @"uiPlatform":          @"UIKit",
-        @"agentName":           @"iOS",
     }];
+
+    if (loadIsMeasurable) {
+        attrs[kNRAttr_loadTime] = @(loadTimeMs);
+    } else if (loadTimestamp) {
+        attrs[kNRAttr_loadTimeUnavailable] = @"constructedBeforeAppear";
+    } else {
+        attrs[kNRAttr_loadTimeUnavailable] = @"noConstructionObserved";
+    }
 
     [NewRelic recordCustomEvent:kNRMobileViewEventType attributes:attrs];
 

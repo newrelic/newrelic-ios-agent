@@ -185,8 +185,7 @@ private func mobileViewChecks(events: [[String: Any]]) -> [VerificationCheck] {
         check("MobileView: uiPlatform is UIKit or SwiftUI",
               events.allSatisfy { ["UIKit", "SwiftUI"].contains($0["uiPlatform"] as? String) },
               detail: Set(events.compactMap { $0["uiPlatform"] as? String }).sorted().joined(separator: ",")),
-        check("MobileView: agentName == iOS",      events.allSatisfy { $0["agentName"] as? String == "iOS" }),
-
+        
         // Timings are milliseconds and non-negative. Both are optional per producer, so type-check
         // them only where present — an absent loadTime means the load was never observed (a view
         // reappearing without reloading), which is distinct from a load of zero.

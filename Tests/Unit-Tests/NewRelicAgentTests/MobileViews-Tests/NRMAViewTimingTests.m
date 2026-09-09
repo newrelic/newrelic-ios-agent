@@ -45,11 +45,27 @@
 #pragma mark - Helpers
 
 - (NRMAViewTimingSnapshot *)snapshotWithView {
+    CFAbsoluteTime appear = [NRMAViewContext monotonicNow];
     return [[NRMAViewTimingSnapshot alloc] initWithViewName:@"ProductDetail"
                                             viewInstanceId:@"INSTANCE-1"
                                               previousView:@"SearchResults"
                                                 uiPlatform:@"UIKit"
-                                                appearTime:CFAbsoluteTimeGetCurrent()
+                                                appearTime:appear
+                                             loadStartTime:appear - 0.300
+                                              hasLoadStart:YES
+                                            hasCurrentView:YES];
+}
+
+/// A view whose producer could not vouch for a construction start: a resurfaced screen, a tab
+/// selection, or a manual view with no beginViewLoad.
+- (NRMAViewTimingSnapshot *)snapshotWithViewLackingLoadStart {
+    return [[NRMAViewTimingSnapshot alloc] initWithViewName:@"ProductDetail"
+                                            viewInstanceId:@"INSTANCE-2"
+                                              previousView:@"SearchResults"
+                                                uiPlatform:@"UIKit"
+                                                appearTime:[NRMAViewContext monotonicNow]
+                                             loadStartTime:0
+                                              hasLoadStart:NO
                                             hasCurrentView:YES];
 }
 
@@ -59,6 +75,8 @@
                                               previousView:nil
                                                 uiPlatform:nil
                                                 appearTime:0
+                                             loadStartTime:0
+                                              hasLoadStart:NO
                                             hasCurrentView:NO];
 }
 
@@ -227,7 +245,9 @@
                                          viewInstanceId:@"INSTANCE-2"
                                            previousView:@"ProductDetail"
                                              uiPlatform:@"UIKit"
-                                             appearTime:CFAbsoluteTimeGetCurrent()
+                                             appearTime:[NRMAViewContext monotonicNow]
+                                          loadStartTime:[NRMAViewContext monotonicNow] - 0.100
+                                           hasLoadStart:YES
                                          hasCurrentView:YES];
 
     XCTAssertNotNil([_timing attributesForTimingNamed:@"timeToFullDisplay"
@@ -279,6 +299,136 @@
                    @"view timing must be gated by the same flags that gate MobileView collection");
     XCTAssertFalse([_timing recordTimingNamed:@"timeToFirstByte" milliseconds:214],
                    @"the caller-supplied path must honor the same gate");
+}
+
+#pragma mark - Timing origin: the shared axis
+
+// The headline property of the whole feature. A mark must be measured from the same instant the
+// baseline is, so it *encloses* the baseline and the difference is the interval during which the
+// screen looked finished but was not. Measured from appear instead, a mark sits *beside* the
+// baseline and the subtraction changes sign depending on how long the screen took to build.
+- (void)testMarkEnclosesTheBaselineRatherThanSittingBesideIt {
+    NRMAViewTimingSnapshot *snapshot = [self snapshotWithView];   // load start 300ms before appear
+    CFAbsoluteTime markedAt = snapshot.appearTime + 0.500;        // marked 500ms after appear
+
+    double mark = [_timing millisecondsForMarkAgainstSnapshot:snapshot at:markedAt];
+    double baseline = [NRMAViewContext millisecondsBetween:snapshot.loadStartTime
+                                                      and:snapshot.appearTime];
+
+    XCTAssertEqualWithAccuracy(baseline, 300.0, 1.0, @"timeToInitialDisplay is construction → appear");
+    XCTAssertEqualWithAccuracy(mark, 800.0, 1.0,
+                               @"the mark must span construction → now, not appear → now");
+    XCTAssertEqualWithAccuracy(mark - baseline, 500.0, 1.0,
+                               @"timeToFullDisplay - timeToInitialDisplay is the post-appear interval");
+    XCTAssertGreaterThan(mark, baseline,
+                         @"a mark can never be shorter than the baseline it encloses");
+}
+
+// When no construction start exists the mark still lands, but it says so, because a series that
+// silently mixes the two origins understates every appear-anchored row by the build time.
+// With no construction start there is no baseline row for this visit either, so the fallback cannot
+// be silently subtracted from one. Which origin a row used is recoverable from the MobileView appear
+// event for the same viewInstanceId: loadTime is present exactly when a start was vouched for.
+- (void)testMarkWithoutConstructionStartFallsBackToAppear {
+    NRMAViewTimingSnapshot *snapshot = [self snapshotWithViewLackingLoadStart];
+    CFAbsoluteTime markedAt = snapshot.appearTime + 0.500;
+
+    double mark = [_timing millisecondsForMarkAgainstSnapshot:snapshot at:markedAt];
+
+    XCTAssertEqualWithAccuracy(mark, 500.0, 1.0, @"with no construction start, appear is the origin");
+}
+
+#pragma mark - Where the construction start comes from
+
+- (void)testProducerVouchedConstructionStartReachesTheSnapshot {
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+    CFAbsoluteTime appear = [NRMAViewContext monotonicNow];
+
+    [context transitionToView:@"ProductDetail"
+                  instanceId:@"ID-1"
+                  appearTime:appear
+               loadStartTime:@(appear - 0.250)
+                    platform:@"UIKit"];
+
+    NRMAViewTimingSnapshot *snapshot = [context snapshotForTiming];
+    XCTAssertTrue(snapshot.hasLoadStart);
+    XCTAssertEqualWithAccuracy([NRMAViewContext millisecondsBetween:snapshot.loadStartTime
+                                                               and:snapshot.appearTime],
+                               250.0, 1.0);
+}
+
+- (void)testTransitionWithNoVouchedStartHasNone {
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+
+    [context transitionToView:@"ProductDetail"
+                  instanceId:@"ID-1"
+                  appearTime:[NRMAViewContext monotonicNow]
+               loadStartTime:nil
+                    platform:@"UIKit"];
+
+    XCTAssertFalse([context snapshotForTiming].hasLoadStart,
+                   @"no vouched start means no baseline row and appear-anchored marks");
+}
+
+// The leak this guards against would be silent and wrong in the worst way: marks on a screen with no
+// construction start would be measured from whenever the *previous* screen started building.
+- (void)testTransitionWithNoVouchedStartDoesNotInheritThePreviousViewsStart {
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+    CFAbsoluteTime first = [NRMAViewContext monotonicNow];
+
+    [context transitionToView:@"SearchResults"
+                  instanceId:@"ID-1"
+                  appearTime:first
+               loadStartTime:@(first - 0.400)
+                    platform:@"UIKit"];
+    [context transitionToView:@"ProductDetail"
+                  instanceId:@"ID-2"
+                  appearTime:first + 0.100
+               loadStartTime:nil
+                    platform:@"UIKit"];
+
+    XCTAssertFalse([context snapshotForTiming].hasLoadStart,
+                   @"a view with no construction start must not adopt the previous view's");
+}
+
+#pragma mark - Manual views
+
+- (void)testManualViewHasNoConstructionStartWithoutBeginViewLoad {
+    [NewRelic enableFeatures:NRFeatureFlag_ManualMobileViews];
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+
+    [context setCurrentManualView:@"Checkout" attributes:nil];
+
+    XCTAssertFalse([context snapshotForTiming].hasLoadStart,
+                   @"setCurrentView: is called once the screen is already up, so load start and "
+                   @"appear coincide; a zero baseline is a real value in every percentile");
+}
+
+- (void)testBeginViewLoadGivesAManualViewAConstructionStart {
+    [NewRelic enableFeatures:NRFeatureFlag_ManualMobileViews];
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+
+    [context beginManualViewLoad];
+    [NSThread sleepForTimeInterval:0.050];
+    [context setCurrentManualView:@"Checkout" attributes:nil];
+
+    NRMAViewTimingSnapshot *snapshot = [context snapshotForTiming];
+    XCTAssertTrue(snapshot.hasLoadStart, @"beginViewLoad is how a manual view earns a baseline");
+    XCTAssertGreaterThan([NRMAViewContext millisecondsBetween:snapshot.loadStartTime
+                                                         and:snapshot.appearTime],
+                         40.0, @"the baseline must span the declared load, not be a zero placeholder");
+}
+
+- (void)testBeginViewLoadIsIgnoredWhenManualViewsAreDisabled {
+    [NewRelic disableFeatures:NRFeatureFlag_ManualMobileViews];
+    NRMAViewContext *context = [[NRMAViewContext alloc] init];
+
+    [context beginManualViewLoad];
+    [NewRelic enableFeatures:NRFeatureFlag_ManualMobileViews];
+    [context setCurrentManualView:@"Checkout" attributes:nil];
+
+    XCTAssertFalse([context snapshotForTiming].hasLoadStart,
+                   @"a start recorded while the feature was off must not be consumed later");
 }
 
 @end

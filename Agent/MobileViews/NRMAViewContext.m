@@ -7,6 +7,7 @@
 
 #import "NRMAViewContext.h"
 #import <os/lock.h>
+#import <time.h>
 #import "NewRelic.h"
 #import "NRMAViewTiming.h"
 #import "Constants.h"
@@ -43,6 +44,11 @@ static const NSUInteger kNRMAMaxVisibleViews = 32;
 // performed, recorded every single time they switch tabs.
 const double kNRMAMinDwellMs = 100.0;
 
+// See the header for why this exists and why it is not tight. 5s keeps genuinely slow synchronous
+// loads in the baseline while still rejecting the eager-construction artifact, which is tens of
+// seconds or more because it dates from app launch.
+const double kNRMAMaxPlausibleLoadMs = 5000.0;
+
 static NSString * const kNRUIPlatformManual    = @"Manual";
 static NSString * const kNRAgentName           = @"iOS";
 
@@ -71,6 +77,18 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     CFAbsoluteTime _currentViewAppearTime;
     NRMAViewSource _currentViewSource;
 
+    // The instant the runtime began building the current view, and whether the producer vouched for
+    // it. Held next to the appear time because the two together are the timing origins every
+    // MobileViewTiming row on this view resolves against -- keeping them in one place under one lock
+    // is what stops the baseline and customer marks from drifting onto different axes.
+    CFAbsoluteTime _currentViewLoadStartTime;
+    BOOL _currentViewHasLoadStart;
+
+    // Pending construction start declared by -beginManualViewLoad, consumed by the next
+    // -setCurrentManualView:attributes:.
+    CFAbsoluteTime _pendingManualLoadStart;
+    BOOL _hasPendingManualLoadStart;
+
     NSString *_previousViewName;
     NSString *_previousViewInstanceId;
 
@@ -98,6 +116,17 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     return self;
 }
 
+#pragma mark - Clock
+
++ (CFAbsoluteTime)monotonicNow {
+    // CLOCK_UPTIME_RAW: monotonic, not adjusted by NTP or by the user changing the clock, and does
+    // not advance while the device is asleep. Nanoseconds since an arbitrary process-relative epoch,
+    // scaled to seconds so it is interchangeable with the CFAbsoluteTime-typed values these APIs
+    // already pass around (both are just doubles of seconds; only the epoch differs, and no view
+    // timestamp is ever compared across processes or persisted).
+    return (CFAbsoluteTime)clock_gettime_nsec_np(CLOCK_UPTIME_RAW) / (CFAbsoluteTime)NSEC_PER_SEC;
+}
+
 #pragma mark - Automatic producers
 
 - (void)transitionToView:(NSString *)name
@@ -109,6 +138,18 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 - (void)transitionToView:(NSString *)name
               instanceId:(NSString *)instanceId
               appearTime:(CFAbsoluteTime)appearTime
+                platform:(nullable NSString *)platform {
+    [self transitionToView:name
+                instanceId:instanceId
+                appearTime:appearTime
+             loadStartTime:nil
+                  platform:platform];
+}
+
+- (void)transitionToView:(NSString *)name
+              instanceId:(NSString *)instanceId
+              appearTime:(CFAbsoluteTime)appearTime
+           loadStartTime:(nullable NSNumber *)loadStartTime
                 platform:(nullable NSString *)platform {
     if (name.length == 0) { return; }
     os_unfair_lock_lock(&_lock);
@@ -122,6 +163,10 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewName        = [name copy];
     _currentViewInstanceId  = [instanceId copy];
     _currentViewAppearTime  = appearTime;
+    // Assigned unconditionally: a transition with no vouched load start must *clear* any start left
+    // by the previous view, or marks on this screen would silently measure from the previous one.
+    _currentViewLoadStartTime = loadStartTime ? loadStartTime.doubleValue : 0;
+    _currentViewHasLoadStart  = (loadStartTime != nil);
     _currentViewSource      = NRMAViewSourceAutomatic;
     [self pushVisibleViewLocked:name instanceId:instanceId appearTime:appearTime platform:platform];
     os_unfair_lock_unlock(&_lock);
@@ -182,7 +227,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     os_unfair_lock_lock(&_lock);
 
     // How long the departing instance was actually on screen, captured before it is removed.
-    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
     BOOL wasChurn = NO;
     for (NRMAVisibleView *entry in _visibleViews) {
         if ([entry.instanceId isEqualToString:instanceId]) {
@@ -223,6 +268,10 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
             _currentViewName        = uncovered.name;
             _currentViewInstanceId  = resurfacedInstanceId;
             _currentViewAppearTime  = uncovered.appearTime;
+            // A screen resurfacing was never rebuilt, so it has no construction start. Marks on it
+            // fall back to the appear time, and it emits no baseline row.
+            _currentViewLoadStartTime = 0;
+            _currentViewHasLoadStart  = NO;
             _currentViewSource      = NRMAViewSourceAutomatic;
         }
     }
@@ -254,9 +303,18 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
 #pragma mark - Manual producer
 
+- (void)beginManualViewLoad {
+    if (![NRMAFlags shouldEnableManualMobileViews]) { return; }
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
+    os_unfair_lock_lock(&_lock);
+    _pendingManualLoadStart    = now;
+    _hasPendingManualLoadStart = YES;
+    os_unfair_lock_unlock(&_lock);
+}
+
 - (void)setCurrentManualView:(NSString *)name attributes:(NSDictionary<NSString *, id> *)attributes {
     if (name.length == 0) { return; }
-    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
     NSString *newInstanceId = [[NSUUID UUID] UUIDString];
 
     // Capture the outgoing (current) view and its referrer, then shift, under one lock.
@@ -273,6 +331,17 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _currentViewName        = [name copy];
     _currentViewInstanceId  = newInstanceId;
     _currentViewAppearTime  = now;
+
+    // Consume any pending -beginManualViewLoad, but only if it is still plausibly about *this*
+    // screen. A begin with no matching set would otherwise attach itself to whatever the customer
+    // shows next, however much later that is.
+    BOOL pendingIsFresh = (_hasPendingManualLoadStart &&
+                           [NRMAViewContext millisecondsBetween:_pendingManualLoadStart and:now] <= kNRMAMaxPlausibleLoadMs);
+    _currentViewLoadStartTime  = pendingIsFresh ? _pendingManualLoadStart : 0;
+    _currentViewHasLoadStart   = pendingIsFresh;
+    _pendingManualLoadStart    = 0;
+    _hasPendingManualLoadStart = NO;
+
     _currentViewSource      = NRMAViewSourceManual;
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
@@ -300,7 +369,7 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 }
 
 - (void)flushCurrentManualViewOnBackground {
-    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
 
     os_unfair_lock_lock(&_lock);
     if (_currentViewSource != NRMAViewSourceManual || _currentViewName.length == 0) {
@@ -318,6 +387,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     _previousViewInstanceId = _currentViewInstanceId;
     _currentViewName        = nil;
     _currentViewInstanceId  = nil;
+    _currentViewLoadStartTime = 0;
+    _currentViewHasLoadStart  = NO;
     _currentViewSource      = NRMAViewSourceNone;
     os_unfair_lock_unlock(&_lock);
     [self persistCurrentReferrerState];
@@ -451,6 +522,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     NSString *name       = _currentViewName;
     NSString *instanceId = _currentViewInstanceId;
     CFAbsoluteTime appear = _currentViewAppearTime;
+    CFAbsoluteTime loadStart = _currentViewLoadStartTime;
+    BOOL hasLoadStart    = _currentViewHasLoadStart;
     NSString *previous   = _previousViewName;
     BOOL hasCurrent      = (_currentViewName.length > 0);
 
@@ -475,6 +548,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                                               previousView:previous
                                                 uiPlatform:platform
                                                 appearTime:appear
+                                             loadStartTime:loadStart
+                                              hasLoadStart:hasLoadStart
                                             hasCurrentView:hasCurrent];
 }
 

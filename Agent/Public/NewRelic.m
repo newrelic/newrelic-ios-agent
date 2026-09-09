@@ -774,6 +774,18 @@
     [[NRMAViewContext sharedInstance] setCurrentManualView:name attributes:attributes];
 }
 
++ (void) beginViewLoad
+{
+    // If Agent is shutdown we shouldn't respond.
+    if([NewRelicAgentInternal sharedInstance].isShutdown) {
+        return;
+    }
+
+    // The ManualViews flag gate lives in NRMAViewContext alongside the state this writes, so a
+    // begin recorded while the feature is off cannot be consumed by a later setCurrentView:.
+    [[NRMAViewContext sharedInstance] beginManualViewLoad];
+}
+
 + (BOOL) markViewTiming:(NSString* __nonnull)name
 {
     // If Agent is shutdown we shouldn't respond.
