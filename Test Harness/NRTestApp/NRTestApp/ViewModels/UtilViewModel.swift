@@ -14,6 +14,12 @@ struct UtilOption {
     let handler:(() -> Void)
 }
 
+/// A titled group of `UtilOption`s, rendered as one table section.
+struct UtilSection {
+    let title: String
+    let options: [UtilOption]
+}
+
 class UtilViewModel {
         
     var options =  [UtilOption]()

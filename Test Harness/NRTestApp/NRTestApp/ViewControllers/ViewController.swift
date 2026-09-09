@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     weak var coordinator: MainCoordinator?
     var viewModel: ApodViewModel!
     
-    var options =  [UtilOption]()
+    var sections = [UtilSection]()
     
     var spaceImageView = UIImageView()
     var zeroImageView = UIImageView()
@@ -27,11 +27,17 @@ class ViewController: UIViewController {
     private var appStartDate = Date()
     private var timer: Timer?
 
+    // The whole screen is one scrolling table: `headerContainer` holds the space
+    // image / label / button content and rides along as the table's header view.
+    private let tableView = UITableView(frame: .zero, style: .grouped)
+    private let headerContainer = UIView()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
 #if os(iOS)
         self.view.backgroundColor = .orange
+        self.title = "NRTestApp"
 #endif
         zeroImageView.image = UIImage()
         
@@ -72,10 +78,10 @@ class ViewController: UIViewController {
     }
     
     func setupSpaceStack() {
-        self.view.addSubview(zeroImageView)
+        headerContainer.addSubview(zeroImageView)
         zeroImageView.translatesAutoresizingMaskIntoConstraints = false
-        zeroImageView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
-        zeroImageView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        zeroImageView.topAnchor.constraint(equalTo: headerContainer.topAnchor).isActive = true
+        zeroImageView.leadingAnchor.constraint(equalTo: headerContainer.leadingAnchor).isActive = true
         zeroImageView.heightAnchor.constraint(lessThanOrEqualToConstant: 25.0).isActive = true
         zeroImageView.widthAnchor.constraint(lessThanOrEqualToConstant: 25.0).isActive = true
         zeroImageView.heightAnchor.constraint(greaterThanOrEqualToConstant: 10.0).isActive = true
@@ -146,33 +152,31 @@ class ViewController: UIViewController {
         spaceStack.addArrangedSubview(accessibilityBlockButton)
         spaceStack.translatesAutoresizingMaskIntoConstraints = false
         
-        self.view.addSubview(spaceStack)
+        headerContainer.addSubview(spaceStack)
 
         //Constraints
-        spaceStack.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
-        spaceStack.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor).isActive = true
-        spaceStack.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
-        spaceStack.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        spaceStack.topAnchor.constraint(equalTo: headerContainer.topAnchor, constant: 12.0).isActive = true
+        spaceStack.bottomAnchor.constraint(equalTo: headerContainer.bottomAnchor, constant: -12.0).isActive = true
+        spaceStack.leadingAnchor.constraint(equalTo: headerContainer.leadingAnchor).isActive = true
+        spaceStack.trailingAnchor.constraint(equalTo: headerContainer.trailingAnchor).isActive = true
         spaceLabel.leadingAnchor.constraint(equalTo: self.spaceStack.leadingAnchor).isActive = true
         spaceLabel.trailingAnchor.constraint(equalTo: self.spaceStack.trailingAnchor).isActive = true
     }
     
     private func setupTimeLabel() {
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
-        timeLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium)
-        timeLabel.textColor = .white
-        timeLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        timeLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 13, weight: .medium)
+        // The nav bar supplies the background, so draw the text against it.
+        timeLabel.textColor = .label
+        timeLabel.backgroundColor = .clear
         timeLabel.textAlignment = .center
-        timeLabel.layer.cornerRadius = 8
-        timeLabel.layer.masksToBounds = true
-        view.addSubview(timeLabel)
 
         NSLayoutConstraint.activate([
-            timeLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
-            timeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
             timeLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 165),
             timeLabel.heightAnchor.constraint(equalToConstant: 28)
         ])
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: timeLabel)
     }
 
     private func startTimer() {
@@ -226,87 +230,96 @@ class ViewController: UIViewController {
     }
     
     func setupButtonsTable() {
-        let tableView = UITableView()
-        
         tableView.delegate = self
         tableView.dataSource = self
         tableView.estimatedRowHeight = 45
-        tableView.bounces = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "utilitiesCell")
-        
+
         self.view.addSubview(tableView)
-        
-        tableView.heightAnchor.constraint(greaterThanOrEqualToConstant: 140.0).isActive = true
-        tableView.topAnchor.constraint(equalTo: spaceStack.bottomAnchor, constant: 30.0).isActive = true
+
+        // The table fills the screen so the space content in its header scrolls too.
+        tableView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
         tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
         tableView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         tableView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
-        
-        options.append(UtilOption(title: "SwiftUI", handler: { [self] in swiftUIViewTapped()}))
 
-        options.append(UtilOption(title: "Utilities", handler: { [self] in utilitiesAction()}))
+        tableView.tableHeaderView = headerContainer
 
-        options.append(UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction()}))
-
-        options.append(UtilOption(title: "Collection View", handler: { [self] in collectionViewAction()}))
-        
-        options.append(UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction()}))
-        
-        options.append(UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction()}))
-        
-        options.append(UtilOption(title: "Tinted Images View", handler: { [self] in tintedImagesViewController()}))
-
-        options.append(UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction()}))
-
-        options.append(UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView()}))
-        
-        options.append(UtilOption(title: "SwiftUI UITabBar", handler: { [self] in showSwiftUITabBar()}))
-
+        var controls: [UtilOption] = [
+            UtilOption(title: "Date Time Picker", handler: { [self] in dateTimePickerAction() }),
+            UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction() }),
+            UtilOption(title: "Map View (UIKit)", handler: { [self] in mapViewAction() })
+        ]
 #if os(iOS)
-        options.append(UtilOption(title: "WebView", handler: { [self] in webViewAction()}))
+        controls.append(UtilOption(title: "WebView", handler: { [self] in webViewAction() }))
 #endif
-        options.append(UtilOption(title: "Confidential View", handler: { [self] in confidentialAction()}))
 
-        options.append(UtilOption(title: "Change Image", handler: { [self] in refreshAction()}))
+        sections = [
+            UtilSection(title: "Space Image", options: [
+                UtilOption(title: "Change Image", handler: { [self] in refreshAction() }),
+                UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync() }),
+                UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction() }),
+                UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync() }),
+                UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }),
+                UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() })
+            ]),
+            UtilSection(title: "SwiftUI", options: [
+                UtilOption(title: "SwiftUI", handler: { [self] in swiftUIViewTapped() }),
+                UtilOption(title: "SwiftUICustomerViewTapped", handler: { [self] in swiftUICustomerViewTapped() }),
+                UtilOption(title: "SwiftUIViewRepresentable", handler: { [self] in swiftUIViewRepresentableTapped() }),
+                UtilOption(title: "SwiftUI UITabBar", handler: { [self] in showSwiftUITabBar() }),
+                UtilOption(title: "PerformanceContentView", handler: { [self] in performanceContentView() })
+            ]),
+            UtilSection(title: "Masking & Privacy", options: [
+                UtilOption(title: "Text Masking", handler: { [self] in textMaskingAction() }),
+                UtilOption(title: "Confidential View", handler: { [self] in confidentialAction() }),
+                UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction() }),
+                UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }),
+                UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }),
+                UtilOption(title: "BlockView Propagation Test", handler: { [self] in blockViewPropagationTest() })
+            ]),
+            UtilSection(title: "Scrolling & Collections", options: [
+                UtilOption(title: "Collection View", handler: { [self] in collectionViewAction() }),
+                UtilOption(title: "Infinite Images View", handler: { [self] in infiniteImagesViewAction() }),
+                UtilOption(title: "Infinite Scroll View", handler: { [self] in infiniteViewAction() }),
+                UtilOption(title: "Tinted Images View", handler: { [self] in tintedImagesViewController() }),
+                UtilOption(title: "Diff Test View", handler: { [self] in diffTestViewAction() })
+            ]),
+            UtilSection(title: "Controls", options: controls),
+            UtilSection(title: "Agent & Diagnostics", options: [
+                UtilOption(title: "Utilities", handler: { [self] in utilitiesAction() }),
+                // NR-566282 — exercises the Session Replay sign-out / rootViewController-swap crash repro.
+                UtilOption(title: "Sign-Out Crash Repro", handler: { [self] in signOutCrashReproAction() }),
+                // PR #691 – On the new event system, recording one event with invalid attributes drops all events at harvest time.
+                UtilOption(title: "Record an event with invalid attributes", handler: { [self] in recordEventBatchWithInvalidAttributes() }),
+                UtilOption(title: "Start Random Walk", handler: { [self] in startRandomWalk() }),
+                UtilOption(title: "Stop Random Walk", handler: { RandomWalkController.shared.stop() }),
+                UtilOption(title: "Capture Viewer", handler: { [self] in showCaptureViewer() })
+            ])
+        ]
+    }
 
-        options.append(UtilOption(title: "Change Image (Async)", handler: { [self] in refreshActionAsync()}))
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        sizeTableHeaderToFit()
+    }
 
-        options.append(UtilOption(title: "Change Image Error", handler: { [self] in brokeRefreshAction()}))
+    /// A `tableHeaderView` is frame-sized, so measure the Auto Layout content and
+    /// re-assign the header whenever that height changes (rotation, label growth).
+    private func sizeTableHeaderToFit() {
+        guard let header = tableView.tableHeaderView, tableView.bounds.width > 0 else { return }
 
-        options.append(UtilOption(title: "Change Image Error (Async)", handler: { [self] in brokeRefreshActionAsync()}))
-        
-        options.append(UtilOption(title: "SwiftUIViewRepresentable", handler: { [self] in swiftUIViewRepresentableTapped()}))
-        
-        options.append(UtilOption(title: "SwiftUICustomerViewTapped", handler: { [self] in swiftUICustomerViewTapped()}))
+        header.frame.size.width = tableView.bounds.width
+        let height = header.systemLayoutSizeFitting(
+            CGSize(width: tableView.bounds.width, height: 0),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel).height
 
-        options.append(UtilOption(title: "Attributed Text Test", handler: { [self] in attributedTextTestAction()}))
-
-        options.append(UtilOption(title: "Date Time Picker", handler: { [self] in dateTimePickerAction()}))
-
-        options.append(UtilOption(title: "UISwitch Test", handler: { [self] in switchTestAction()}))
-
-        options.append(UtilOption(title: "Map View (UIKit)", handler: { [self] in mapViewAction() }))
-
-        // BlockView examples
-        options.append(UtilOption(title: "BlockView SwiftUI Example", handler: { [self] in blockViewSwiftUIAction() }))
-        options.append(UtilOption(title: "BlockView UIKit Example", handler: { [self] in blockViewUIKitAction() }))
-        options.append(UtilOption(title: "BlockView Propagation Test", handler: { [self] in blockViewPropagationTest() }))
-
-        // In setupButtonsTable(), add these options:
-        options.append(UtilOption(title: "Add Hello World Label", handler: { [self] in addHelloWorldLabel() }))
-        options.append(UtilOption(title: "Remove Hello World Label", handler: { [self] in removeHelloWorldLabel() }))
-
-        // NR-566282 — exercises the Session Replay sign-out / rootViewController-swap crash repro.
-        options.append(UtilOption(title: "Sign-Out Crash Repro", handler: { [self] in signOutCrashReproAction() }))
-
-        // PR #691 – On the new event system, recording one event with invalid attributes drops all events at harvest time.
-        options.append(UtilOption(title: "Record an event with invalid attributes", handler: { [self] in recordEventBatchWithInvalidAttributes() }))
-
-        options.append(UtilOption(title: "Start Random Walk", handler: { [self] in startRandomWalk() }))
-        options.append(UtilOption(title: "Stop Random Walk", handler: { RandomWalkController.shared.stop() }))
-
-        options.append(UtilOption(title: "Capture Viewer", handler: { [self] in showCaptureViewer() }))
+        if abs(header.frame.height - height) > 0.5 {
+            header.frame.size.height = height
+            tableView.tableHeaderView = header
+        }
     }
 
     func signOutCrashReproAction() {
@@ -475,30 +488,39 @@ class ViewController: UIViewController {
 
 extension ViewController: UITableViewDelegate, UITableViewDataSource {
 
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return sections.count
+    }
+
+    func tableView(_ tableView: UITableView,
+                   titleForHeaderInSection section: Int) -> String? {
+        return sections[section].title
+    }
+
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
-        return options.count
+        return sections[section].options.count
     }
-    
+
     func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "utilitiesCell", for: indexPath)
+        let option = sections[indexPath.section].options[indexPath.row]
 
         if #available(iOS 14.0, tvOS 14.0, *) {
             var content = cell.defaultContentConfiguration()
-            content.text = options[indexPath.row].title
-            content.textProperties.alignment = .center
+            content.text = option.title
             cell.contentConfiguration = content
         } else {
-            cell.textLabel?.text = options[indexPath.row].title
+            cell.textLabel?.text = option.title
             cell.textLabel?.textColor = .black
         }
-        
+
         return cell
     }
-    
+
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        options[indexPath.row].handler()
+        sections[indexPath.section].options[indexPath.row].handler()
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
