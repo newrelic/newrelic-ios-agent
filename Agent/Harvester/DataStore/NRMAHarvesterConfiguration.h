@@ -91,7 +91,7 @@
 @property(nonatomic,assign) int       activity_trace_max_send_attempts;
 @property(nonatomic,strong) NRMATraceConfigurations*  at_capture;
 @property(nonatomic,assign) double    activity_trace_min_utilization;
-@property(nonatomic,assign) NSString* encoding_key;
+@property(nonatomic,copy) NSString* encoding_key;
 @property(nonatomic,assign) long long account_id;
 @property(nonatomic,assign) long long application_id;
 @property(nonatomic,strong) NSString* trusted_account_key;
@@ -99,12 +99,12 @@
 @property(nonatomic,assign) BOOL      log_reporting_enabled;
 @property(nonatomic,assign) double    sampling_rate;
 @property(nonatomic,assign) BOOL      has_log_reporting_config;
-@property(nonatomic,assign) NSDictionary* request_header_map;
+@property(nonatomic,copy) NSDictionary* request_header_map;
 
 
 // CAN BE
 // NONE < ERROR < WARN < INFO < DEBUG < AUDIT < VERBOSE
-@property(nonatomic,assign) NSString* log_reporting_level;
+@property(nonatomic,copy) NSString* log_reporting_level;
 
 // Session Replay Configuration
 
@@ -113,7 +113,7 @@
 @property(nonatomic,assign) double    session_replay_sampling_rate;
 @property(nonatomic,assign) double    session_replay_error_sampling_rate;
 // MASKING MODE
-@property(nonatomic,assign) NSString*    session_replay_mode;
+@property(nonatomic,copy) SessionReplayMaskingMode session_replay_mode;
 
 @property(nonatomic,assign) BOOL      session_replay_maskApplicationText;
 @property(nonatomic,assign) BOOL      session_replay_maskUserInputText;
@@ -154,10 +154,10 @@
 
 
 @interface SessionReplayCustomMaskingRule : NSObject
-@property(nonatomic,assign) NSString*    identifier;
-@property(nonatomic,assign) NSArray*     name;
-@property(nonatomic,assign) NSString*    operatorName;
-@property(nonatomic,assign) NSString*    type;
+@property(nonatomic,copy) NSString*    identifier;
+@property(nonatomic,copy) NSArray*     name;
+@property(nonatomic,copy) NSString*    operatorName;
+@property(nonatomic,copy) NSString*    type;
 - (id) initWithDictionary:(NSDictionary*)dict;
 
 
