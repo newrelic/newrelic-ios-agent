@@ -14,6 +14,7 @@
 #import "NRMAHarvestController.h"
 #import "NRMATaskQueue.h"
 #import "NRMASupportMetricHelper.h"
+#import <NewRelic/NewRelic-Swift.h>
 
 static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 
@@ -30,169 +31,151 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 {
     self = [super init];
     if (self) {
-        self.uploadSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
-
         _fileManager = [NSFileManager defaultManager];
-        self.applicationToken = token;
+        self.applicationToken   = token;
         self.applicationVersion = connectionInformation.applicationInformation.appVersion;
-        _crashCollectorHost = url;
-        _useSSL = useSSL;
+        _crashCollectorHost     = url;
+        _useSSL                 = useSSL;
+
+        self.httpClient = [[NRMARetryingHTTPClient alloc] init];
     }
     return self;
 }
 
 - (NSArray*) crashReportURLs:(NSError* __autoreleasing*)error
 {
-    NSString* reportPath = [NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),kNRMA_CR_ReportPath];
-
+    NSString* reportPath = [NSString stringWithFormat:@"%@/%@", NSTemporaryDirectory(), kNRMA_CR_ReportPath];
     BOOL isDir;
-
-    // If the directory doesn't even exist we shouldn't call contentsOfDirectoryAtURL on it.
-    if (![_fileManager fileExistsAtPath:reportPath isDirectory: &isDir]) {
-        if (!isDir)
-            return @[];
+    if (![_fileManager fileExistsAtPath:reportPath isDirectory:&isDir]) {
+        if (!isDir) return @[];
     }
 
     NSArray* fileList = [_fileManager contentsOfDirectoryAtURL:[NSURL fileURLWithPath:reportPath]
                                     includingPropertiesForKeys:nil
-                                                       options:NSDirectoryEnumerationSkipsHiddenFiles| NSDirectoryEnumerationSkipsPackageDescendants | NSDirectoryEnumerationSkipsSubdirectoryDescendants
+                                                       options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                               |NSDirectoryEnumerationSkipsPackageDescendants
+                                                               |NSDirectoryEnumerationSkipsSubdirectoryDescendants
                                                          error:error];
-
     NSMutableArray* crashReports = [NSMutableArray new];
     for (NSURL* url in fileList) {
         if ([url.pathExtension isEqualToString:kNRMA_CR_ReportExtension]) {
             [crashReports addObject:url];
         }
     }
-
     return crashReports;
 }
 
 - (void) uploadCrashReports
 {
     if (__NRMACrashDataUploaderInProgressRequestCount > 0) {
-        
         return;
     }
     NSError* error = nil;
     NSArray* reportURLs = [self crashReportURLs:&error];
-    if ([reportURLs count] <= 0) {
+    if (reportURLs.count == 0) {
         if (error) {
-            NRLOG_AGENT_VERBOSE(@"failed to fetch crash reports: %@",error.description);
+            NRLOG_AGENT_VERBOSE(@"failed to fetch crash reports: %@", error.description);
         } else {
             NRLOG_AGENT_VERBOSE(@"Currently no crash files to upload.");
         }
         return;
     }
-
     for (NSURL* fileURL in reportURLs) {
-        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount + 1;
+        __NRMACrashDataUploaderInProgressRequestCount++;
         [self uploadFileAtPath:fileURL];
     }
-
 }
 
 - (void) uploadFileAtPath:(NSURL*)path
 {
     if (!_crashCollectorHost.length) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash collector address was not set. Unable to upload crash.");
-        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
-
+        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash collector address was not set.");
+        __NRMACrashDataUploaderInProgressRequestCount--;
         return;
     }
-
     if (path == nil) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - CrashData path was not set. Unable to upload crash.");
-        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
-
+        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - CrashData path was not set.");
+        __NRMACrashDataUploaderInProgressRequestCount--;
         return;
     }
 
-    // Start tracking file upload attempts.
+    // Cross-launch guard: stop retrying a report that has already failed many launches.
     if (![self shouldUploadFileWithUniqueIdentifier:path.absoluteString]) {
-        NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Reached upload retry limit for a crash report. Removing crash report: %@",path.absoluteString);
-        // Enqueue supportability metric "Supportability/AgentHealth/Crash/RemovedStale".
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Cross-launch retry limit reached, removing: %@", path.absoluteString);
         [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRSupportabilityPrefix@"/Crash/RemoveStale"
                                                         value:@1
                                                         scope:nil]];
         [_fileManager removeItemAtURL:path error:nil];
-
-        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
-
+        __NRMACrashDataUploaderInProgressRequestCount--;
         return;
     }
-    // Get the size in bytes of the crash report to be uploaded via below uploadTaskWithRequest:fromFile call.
-    __block NSData* reqData = [NSData dataWithContentsOfURL:path options:0 error:nil];
-    NSURLRequest* request = [self buildPost];
 
-    if ([reqData length] > kNRMAMaxPayloadSizeLimit) {
-        NRLOG_AGENT_ERROR(@"Unable to upload crash log because payload is larger than 1 MB, discarding crash report");
+    NSData* reqData = [NSData dataWithContentsOfURL:path options:0 error:nil];
+    if (reqData.length > kNRMAMaxPayloadSizeLimit) {
+        NRLOG_AGENT_ERROR(@"Unable to upload crash log because payload is larger than 1 MB, discarding");
         [NRMASupportMetricHelper enqueueMaxPayloadSizeLimitMetric:@"mobile_crash"];
-        // Remove the crash log even though we couldn't upload so we don't try every time.
         [self removeCrashLogAtpath:path];
-        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
-
+        __NRMACrashDataUploaderInProgressRequestCount--;
         return;
     }
 
+    NSURLRequest* request = [self buildPost];
     NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Perform crash upload");
 
-    [[self.uploadSession uploadTaskWithRequest:request fromFile:path completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable responseError) {
-        __NRMACrashDataUploaderInProgressRequestCount = __NRMACrashDataUploaderInProgressRequestCount - 1;
+    __weak __typeof__(self) weakSelf = self;
+
+    // NRMARetryingHTTPClient handles all in-session retry with exponential backoff.
+    // The completion fires exactly once with the terminal outcome.
+    [self.httpClient uploadRequest:request
+                           fileURL:path
+                          endpoint:@"mobile_crash"
+                        completion:^(NSData* responseData, NSHTTPURLResponse* response, NSError* error) {
+        __NRMACrashDataUploaderInProgressRequestCount--;
 
         NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - Crash Upload Response: %@", response);
-        if(responseError) {
-            NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Crash Upload Response Error: %@", responseError);
+        if (error) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Upload Error: %@", error);
         }
 
-        if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+        NSInteger statusCode = response.statusCode;
+        BOOL success = !error && (statusCode == 200 || statusCode == 500);
 
-            unsigned long long requestLength = [reqData length];
-            reqData = nil;
-
-            NSInteger statusCode = ((NSHTTPURLResponse*)response).statusCode;
-
-            if(statusCode == 200 || statusCode == 500) {
-
-                // Enqueue Data Usage Supportability Metric for /mobile_crash is request successful.
-                [NRMASupportMetricHelper enqueueDataUseMetric:@"mobile_crash"
-                                                         size:requestLength
-                                                     received:response.expectedContentLength];
-
-                [self removeCrashLogAtpath:path];
-            } else if (statusCode == 400 || statusCode == 403) {
-                // Permanent rejection: the collector will never accept this payload, so
-                // retrying it on every harvest until the retry cap just wastes bandwidth and
-                // battery. Delete it now and record a supportability metric instead.
-                NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - crash log permanently rejected (HTTP %ld), discarding: %@", (long)statusCode, path.path);
-                [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRMACrashOfflineRejectedMetric
-                                                                value:@1
-                                                                scope:nil]];
-                [self removeCrashLogAtpath:path];
-            } else {
-                NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - failed to upload crash log: %@, to try again later.",path.path);
-            }
+        if (success) {
+            [NRMASupportMetricHelper enqueueDataUseMetric:@"mobile_crash"
+                                                     size:(long)reqData.length
+                                                 received:response.expectedContentLength];
+            [weakSelf removeCrashLogAtpath:path];
+            return;
         }
-    }] resume];
+
+        // Permanent 4xx rejection — discard the file so we don't retry across launches.
+        if (statusCode == 400 || statusCode == 403) {
+            NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - crash log permanently rejected (HTTP %ld), discarding", (long)statusCode);
+            [NRMATaskQueue queue:[[NRMAMetric alloc] initWithName:kNRMACrashOfflineRejectedMetric
+                                                            value:@1
+                                                            scope:nil]];
+            [weakSelf removeCrashLogAtpath:path];
+            return;
+        }
+
+        // All other failures: leave the file on disk for the next-launch retry.
+        NRLOG_AGENT_VERBOSE(@"NEWRELIC CRASH UPLOADER - failed to upload crash log, keeping for next launch: %@", path.path);
+    }];
 }
 
-- (void) removeCrashLogAtpath:(NSURL*) path {
-    NSError* error = nil;
-    //stop tracking the file's upload attempts.
+- (void) removeCrashLogAtpath:(NSURL*)path {
     [self stopTrackingFileUploadWithUniqueIdentifier:path.absoluteString];
-    BOOL didRemoveFile = [self->_fileManager removeItemAtURL:path error:&error];
-
-    if (error) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file :%@, %@",path.path, error.description);
-    } else if (!didRemoveFile) {
-        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file. Error unknown.");
+    NSError* error = nil;
+    if (![_fileManager removeItemAtURL:path error:&error]) {
+        NRLOG_AGENT_ERROR(@"NEWRELIC CRASH UPLOADER - Failed to remove crash file: %@, %@", path.path, error.description);
     }
 }
 
 - (NSURLRequest*) buildPost {
-    NSMutableURLRequest* request = [super newPostWithURI:[NSString stringWithFormat:@"%@%@/%@",_useSSL?@"https://":@"http://",_crashCollectorHost,kNRMA_CR_CrashCollectorPath]];
-
-    return request;
+    return [super newPostWithURI:[NSString stringWithFormat:@"%@%@/%@",
+                                  _useSSL ? @"https://" : @"http://",
+                                  _crashCollectorHost,
+                                  kNRMA_CR_CrashCollectorPath]];
 }
 
 - (void) stopTrackingFileUploadWithUniqueIdentifier:(NSString*)key {
@@ -204,19 +187,11 @@ static int __NRMACrashDataUploaderInProgressRequestCount = 0;
 - (BOOL) shouldUploadFileWithUniqueIdentifier:(NSString*)key {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     NSNumber* value = [defaults objectForKey:key];
-    if (value != nil) {
-        value = @(value.integerValue + 1);
-    } else {
-        value = @1;
-    }
-
+    value = value ? @(value.integerValue + 1) : @1;
     if (value.integerValue > kNRMAMaxCrashUploadRetry) {
         [self stopTrackingFileUploadWithUniqueIdentifier:key];
-
-
         return NO;
     }
-
     [defaults setObject:value forKey:key];
     [defaults synchronize];
     return YES;

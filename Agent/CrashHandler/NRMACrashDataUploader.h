@@ -9,7 +9,11 @@
 #import <Foundation/Foundation.h>
 #import "NRMAConnection.h"
 
+// Maximum number of launch cycles before a crash report is abandoned.
 #define kNRMAMaxCrashUploadRetry 3
+
+@class NRMARetryingHTTPClient;
+
 @interface NRMACrashDataUploader : NRMAConnection
 {
     NSFileManager* _fileManager;
@@ -17,7 +21,8 @@
     BOOL _useSSL;
 }
 
-@property(strong) NSURLSession* uploadSession;
+// Retrying HTTP client — exposed for test injection.
+@property(strong) NRMARetryingHTTPClient* httpClient;
 
 - (void) uploadCrashReports;
 
