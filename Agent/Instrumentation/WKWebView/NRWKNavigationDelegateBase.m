@@ -62,6 +62,7 @@ didFinishNavigation:(WKNavigation*)navigation
 {
     // send support metric if this is hit once
     [NRMAWebViewSupportability recordPageFinished];
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
     
     //record network details
 

@@ -16,6 +16,9 @@
 #import "NRMeasurementConsumerHelper.h"
 #import "NRMAMeasurements.h"
 #import "NRMAHTTPTransactionMeasurement.h"
+#import "NRMAWebViewSupportability.h"
+#import "NRMANamedValueMeasurement.h"
+#import "NRConstants.h"
 
 @interface NRMATaskQueue (tests)
 + (void) clear;
@@ -375,6 +378,107 @@
 
 - (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
     self.didTerminateCalled = YES;
+}
+
+@end
+
+// ---------------------------------------------------------------------------
+#pragma mark - NRMAWebViewBrowserAgentDetectionTests
+
+@interface NRMAWebViewBrowserAgentDetectionTests : XCTestCase
+@property (strong) NRMAMeasurementConsumerHelper *helper;
+@end
+
+@implementation NRMAWebViewBrowserAgentDetectionTests
+
+- (void)setUp {
+    [super setUp];
+    [NRMATaskQueue clear];
+    self.helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:self.helper];
+}
+
+- (void)tearDown {
+    [NRMAMeasurements removeMeasurementConsumer:self.helper];
+    self.helper = nil;
+    [NRMAMeasurements shutdown];
+    [super tearDown];
+}
+
+- (void)testDetectionRecordsMetricWhenBrowserAgentPresent {
+    WKWebView *webView = [[WKWebView alloc] init];
+    [webView loadHTMLString:@"<script>window.newrelic = {}</script>" baseURL:nil];
+
+    NSDate *loadDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while (webView.isLoading && [NSDate.date compare:loadDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+    XCTAssertFalse(webView.isLoading, @"WebView timed out while loading");
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    // Poll until the specific browser agent metric arrives (ignore other NRMANamedValueMeasurements
+    // such as memory/CPU produced by NRMANamedValueProducer while the run loop spins).
+    NSDate *detectDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    NRMANamedValueMeasurement *found = nil;
+    while (!found && [NSDate.date compare:detectDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+        for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+            if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+                found = m;
+                break;
+            }
+        }
+    }
+
+    XCTAssertNotNil(found, @"Browser agent detection metric should be recorded");
+    XCTAssertEqualObjects(found.name, kNRMAWebViewBrowserAgentDetectedMetric);
+}
+
+- (void)testDetectionDoesNotRecordMetricWhenBrowserAgentAbsent {
+    // Use an unloaded WKWebView — it has no JavaScript context that could define
+    // window.newrelic, eliminating the unreliable page-load wait and any chance of
+    // picking up injected scripts.  evaluateJavaScript: on an unloaded WebView either
+    // errors immediately (our handler returns early) or evaluates to false; neither
+    // path records the metric.
+    WKWebView *webView = [[WKWebView alloc] init];
+
+    [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+
+    // Spin long enough for all 8 polling attempts to exhaust (8 × 250 ms = 2 s).
+    NSDate *pollDeadline = [NSDate dateWithTimeIntervalSinceNow:2.5];
+    while ([NSDate.date compare:pollDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        [NRMATaskQueue synchronousDequeue];
+    }
+
+    BOOL browserAgentMetricRecorded = NO;
+    for (NRMANamedValueMeasurement *m in self.helper.consumedMeasurements) {
+        if ([m.name isEqualToString:kNRMAWebViewBrowserAgentDetectedMetric]) {
+            browserAgentMetricRecorded = YES;
+            break;
+        }
+    }
+    XCTAssertFalse(browserAgentMetricRecorded, @"Browser agent detection metric should not be recorded when browser agent is absent");
+}
+
+- (void)testDetectionDoesNotRetainWebView {
+    __weak WKWebView *weakRef = nil;
+
+    @autoreleasepool {
+        WKWebView *webView = [[WKWebView alloc] init];
+        weakRef = webView;
+        [NRMAWebViewSupportability startBrowserAgentDetection:webView];
+        // webView's only strong owner goes out of scope here
+    }
+
+    // Spin the run loop to let any in-flight dispatch_after blocks fire and release.
+    // The blocks capture weakWebView weakly, so they cannot keep the WKWebView alive.
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+
+    XCTAssertNil(weakRef, @"Detection polling must not hold a strong reference to WKWebView");
 }
 
 @end
