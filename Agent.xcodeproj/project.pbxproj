@@ -1611,6 +1611,9 @@
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
 		C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */; };
 		C9C28B9F284A6AF70097B433 /* NRMAKeyAttributesTest.m in Sources */ = {isa = PBXBuildFile; fileRef = C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */; };
+		CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
+		CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
+		CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		CD0107831FEAE274BBC9D009 /* NRMAViewContext.m in Sources */ = {isa = PBXBuildFile; fileRef = C9AF87A7CB68173909761538 /* NRMAViewContext.m */; };
 		CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
@@ -1652,6 +1655,7 @@
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
 		F810620E2E16D02D00B8CC81 /* UIVisualEffectViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81061FA2E16D01D00B8CC81 /* UIVisualEffectViewThingy.swift */; };
+		F81C3D223049FD410063C9C0 /* NRMAWebViewSupportability.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BD0738B2EB038AB00E3556B /* NRMAWebViewSupportability.m */; };
 		F81E70682EC7A75C00698BF8 /* UIColorHexStringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E70672EC7A75C00698BF8 /* UIColorHexStringTests.swift */; };
 		F81E707C2EC7AB4800698BF8 /* UIColor+HexString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D0401D2D86036D007BE92D /* UIColor+HexString.swift */; };
 		F824A43129AEAD63000886A6 /* NRViewModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F824A43029AEAD63000886A6 /* NRViewModifier.swift */; };
@@ -1725,6 +1729,7 @@
 		F8BF15572F3A3A8F00EF5628 /* XRayDecoderError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B34935D2E8DD6EF006DE9D0 /* XRayDecoderError.swift */; };
 		F8BF15582F3A3AC700EF5628 /* XrayDecoder+Navigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3493632E8E1438006DE9D0 /* XrayDecoder+Navigation.swift */; };
 		F8BF15592F3A3AE800EF5628 /* UIViewThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3493DF4B2D542D9900BF5BED /* UIViewThingy.swift */; };
+		F8CF3ABF3051955E003E48CA /* SessionReplayHarvestEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */; };
 		F8D23CF22F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */; };
 		F8D23CF32F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */; };
 		F8D23CF42F7C0DC9000FFD31 /* NRMASessionDurationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D23CF12F7C0DC9000FFD31 /* NRMASessionDurationManager.swift */; };
@@ -2740,6 +2745,7 @@
 		4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewEvent.h; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
+		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
 		5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewTiming.h; sourceTree = "<group>"; };
 		705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewContext.h; sourceTree = "<group>"; };
 		77C2300971F0A0B87895043D /* MobileViewEmitterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewEmitterTests.swift; sourceTree = "<group>"; };
@@ -5774,6 +5780,7 @@
 				F85ABB652F155B780098A2CF /* UIFont+CSSConversion.swift in Sources */,
 				F8BF15512F3A38B700EF5628 /* XrayDecoder+Children.swift in Sources */,
 				F8A455482AFBE31E0057B1E0 /* NRMAURLSessionHeaderTrackingTestsOldEventSystem.m in Sources */,
+				F81C3D223049FD410063C9C0 /* NRMAWebViewSupportability.m in Sources */,
 				343883562834405700B31C2E /* NRMAURLTransformerTests.m in Sources */,
 				0209AC0C24E7071500E45C90 /* APIMethodTraceTest.m in Sources */,
 				0209ABD824E706AE00E45C90 /* TestRetryTracker.m in Sources */,
@@ -5790,7 +5797,6 @@
 				2B4226FB29DB9A170068BB8A /* NRMAHTTPUtilitiesTests.m in Sources */,
 				0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */,
 				F88801E72FC734C90051DC67 /* SessionReplayReporterNetworkTests.swift in Sources */,
-				0EA0DA15A28C7FE0E98CD11E /* SessionReplayHarvestEndToEndTests.swift in Sources */,
 				F8BF15382F3A37C200EF5628 /* SwiftUIShapeThingy.swift in Sources */,
 				0209AC4A24E7078C00E45C90 /* NRMACrashDataUploaderTest.m in Sources */,
 				C94F51A12857832B00E81E01 /* NRMAActivityNameGeneratorTest.m in Sources */,
@@ -5808,6 +5814,7 @@
 				0209AC4024E7075200E45C90 /* NRHarvesterConnectionTests.m in Sources */,
 				2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */,
 				D4580CA72F563363003BAD8C /* JSErrorControllerTests.m in Sources */,
+				F8CF3ABF3051955E003E48CA /* SessionReplayHarvestEndToEndTests.swift in Sources */,
 				F85ABB642F155B6E0098A2CF /* IDGenerator.swift in Sources */,
 				F8BF14A52F3668D500EF5628 /* TextHelper.swift in Sources */,
 				0209AC9B24E7393300E45C90 /* NRCPUVitalsTest.m in Sources */,
