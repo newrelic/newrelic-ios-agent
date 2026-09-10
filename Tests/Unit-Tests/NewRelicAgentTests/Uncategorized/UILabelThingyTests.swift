@@ -2,6 +2,7 @@ import Foundation
 import Testing
 import UIKit
 
+@MainActor
 struct UILabelThingyTests {
     func makeViewDetails(isMasked: Bool? = nil) -> ViewDetails {
         // Provide a minimal ViewDetails stub for testing
