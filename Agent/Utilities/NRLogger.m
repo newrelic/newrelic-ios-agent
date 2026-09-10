@@ -26,6 +26,7 @@ NRLogger *_nr_logger = nil;
 - (void)addLogMessage:(NSDictionary *)message : (BOOL) agentLogsOn;
 - (void)setLogLevels:(unsigned int)levels;
 - (void)setRemoteLogLevel:(unsigned int)level;
++ (unsigned int)expandLevelToMask:(unsigned int)level;
 
 - (void)setLogTargets:(unsigned int)targets;
 - (void)clearLog;
@@ -403,48 +404,40 @@ withTimestamp:(NSNumber *) timestamp {
 
 - (void)setLogLevels:(unsigned int)levels {
     @synchronized(self) {
-        unsigned int l = 0;
-        switch (levels) {
-            case NRLogLevelError:
-                l = NRLogLevelError; break;
-            case NRLogLevelWarning:
-                l = NRLogLevelError | NRLogLevelWarning; break;
-            case NRLogLevelInfo:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo; break;
-            case NRLogLevelVerbose:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose; break;
-            case NRLogLevelAudit:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit ; break;
-            case NRLogLevelDebug:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit | NRLogLevelDebug ; break;
-            default:
-                l = levels; break;
-        }
-        self->logLevels = l;
+        self->logLevels = [NRLogger expandLevelToMask:levels];
     }
 }
 
 - (void)setRemoteLogLevel:(unsigned int)level {
     @synchronized(self) {
-        unsigned int l = 0;
-        switch (level) {
-            case NRLogLevelError:
-                l = NRLogLevelError; break;
-            case NRLogLevelWarning:
-                l = NRLogLevelError | NRLogLevelWarning; break;
-            case NRLogLevelInfo:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo; break;
-            case NRLogLevelVerbose:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose; break;
-            case NRLogLevelAudit:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit ; break;
-            case NRLogLevelDebug:
-                l = NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit | NRLogLevelDebug ; break;
-            default:
-                l = level; break;
-        }
+        unsigned int l = [NRLogger expandLevelToMask:level];
 
         self->remoteLogLevel = l;
+        // Keep the local (console/NSLog) verbosity in step with the remote level, so a
+        // level change pushed down by remote configuration applies to both destinations.
+        // Note this overwrites any level the host app set via +setLogLevels:.
+        self->logLevels = l;
+    }
+}
+
+// Expands a single NRLogLevels constant into a cumulative mask that also includes every
+// higher-priority level. A caller-supplied bitmask is passed through untouched.
++ (unsigned int)expandLevelToMask:(unsigned int)level {
+    switch (level) {
+        case NRLogLevelError:
+            return NRLogLevelError;
+        case NRLogLevelWarning:
+            return NRLogLevelError | NRLogLevelWarning;
+        case NRLogLevelInfo:
+            return NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo;
+        case NRLogLevelVerbose:
+            return NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose;
+        case NRLogLevelAudit:
+            return NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit;
+        case NRLogLevelDebug:
+            return NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit | NRLogLevelDebug;
+        default:
+            return level;
     }
 }
 
