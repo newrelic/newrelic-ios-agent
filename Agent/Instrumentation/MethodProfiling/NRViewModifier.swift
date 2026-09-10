@@ -192,9 +192,9 @@ internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
                 // timeVisible (ms): onAppear → onDisappear. loadTime is only included on appear.
                 let timeVisibleMs = NRMAViewContext.millisecondsBetween(appeared, and: disappearTime)
 
-                // `churn` is applied by the recorder from timeVisible, so every producer marks a
-                // construction-churn appearance the same way -- this used to be the only site that
-                // did. SwiftUI produces churn on every TabView switch.
+                // Emitted however brief the visible lifetime was. SwiftUI delivers an
+                // appear/disappear pair milliseconds apart on every TabView switch; those pairs are
+                // reported like any other rather than being suppressed or labelled by the agent.
                 MobileViewRecord(viewName: viewName,
                                  viewClass: viewClass,
                                  instanceId: id,
@@ -351,7 +351,8 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
     let name: (Tag) -> String
 
     /// The tab currently reported as selected. Needed to close it out when the selection moves on --
-    /// without it a tab has an appear event and never a disappear, so its dwell time is unknowable.
+    /// without it a tab has an appear event and never a disappear, so its time on screen is
+    /// unknowable.
     @State private var openTabName: String?
     @State private var openTabInstance: String?
     /// Monotonic seconds, from `NRMAViewContext.monotonicNow()`.
@@ -366,11 +367,10 @@ private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
             .task(id: selection) {
                 // Master switch: don't track tab switches while AutomaticMobileViews is disabled.
                 guard NRMobileViewGate.isFeatureEnabled else { return }
-                // cancelled if selection changes again within dwell window
-                do {
-                    try await Task.sleep(nanoseconds: 500_000_000)
-                } catch { return }
 
+                // Reported as soon as the selection changes. There is no settling delay: flicking
+                // through tabs to reach a distant one records every tab passed through, because the
+                // agent no longer decides which selections were "real" on the customer's behalf.
                 let now = NRMAViewContext.monotonicNow()
                 let id = UUID().uuidString
                 let viewName = name(selection)

@@ -3,9 +3,9 @@
 //  NewRelicAgent
 //
 //  Covers the schema MobileViewEmitter.swift owns. Before it existed, each of the nine
-//  emission sites assembled its own attribute dictionary, and they disagreed: `churn`
-//  reached only the SwiftUI producers, `navigationKind` only the tab ones, `agentName`
-//  only some, and the loadTime-vs-loadTimeUnavailable rule was reimplemented four times.
+//  emission sites assembled its own attribute dictionary, and they disagreed:
+//  `navigationKind` reached only the tab producers, `agentName` only some, and the
+//  loadTime-vs-loadTimeUnavailable rule was reimplemented four times.
 //
 //  Copyright © 2026 New Relic. All rights reserved.
 //
@@ -99,35 +99,40 @@ final class MobileViewEmitterTests: XCTestCase {
         XCTAssertEqual(NRViewLoadOutcome.Reason.notRebuilt.rawValue, "notRebuilt")
     }
 
-    // MARK: - timeVisible and churn
+    // MARK: - timeVisible
 
-    // churn used to be set only by the SwiftUI disappear site, so a UIKit or manual view with
-    // the same sub-dwell lifetime went unmarked and inflated screen-view counts.
-    func testShortLifetimeIsMarkedAsChurnForEveryPlatform() {
+    // The emitter used to classify a visit shorter than a 100ms minimum dwell as `churn`, so
+    // consumers could exclude it with `WHERE churn IS NULL`. That threshold is gone: a brief
+    // visit is reported with its real duration and nothing else, and whether it counts as a
+    // screen view is the consumer's decision rather than one the agent makes.
+    func testAShortLifetimeIsReportedVerbatimAndNotClassified() {
         for platform in [NRViewPlatform.uiKit, .swiftUI, .manual] {
             var record = appearRecord()
             record.phase = .disappeared
             record.platform = platform
-            record.timeVisibleMs = NRMobileViewEmitter.minimumDwellMs - 1
+            record.timeVisibleMs = 1
 
             let attrs = record.attributes()
-            XCTAssertEqual(attrs["churn"] as? NSNumber, NSNumber(value: true),
-                           "\(platform.rawValue) must mark churn like every other producer")
-            XCTAssertEqual(attrs["timeVisible"] as? NSNumber,
-                           NSNumber(value: NRMobileViewEmitter.minimumDwellMs - 1))
+            XCTAssertEqual(attrs["timeVisible"] as? NSNumber, NSNumber(value: 1.0),
+                           "\(platform.rawValue) must report the lifetime it observed")
+            XCTAssertNil(attrs["churn"],
+                         "\(platform.rawValue) must not reintroduce a churn classification")
         }
     }
 
-    func testLifetimeAtOrAboveTheDwellThresholdIsNotChurn() {
+    // A zero-millisecond visit is the extreme of the same rule: still an event, still no
+    // threshold applied. Distinguishable from "not measured" because the key is present.
+    func testAZeroLifetimeStillReportsTimeVisible() {
         var record = appearRecord()
         record.phase = .disappeared
-        record.timeVisibleMs = NRMobileViewEmitter.minimumDwellMs
+        record.timeVisibleMs = 0
 
-        XCTAssertNil(record.attributes()["churn"],
-                     "churn must be absent so `WHERE churn IS NULL` selects real visits")
+        let attrs = record.attributes()
+        XCTAssertEqual(attrs["timeVisible"] as? NSNumber, NSNumber(value: 0.0))
+        XCTAssertNil(attrs["churn"])
     }
 
-    func testNoTimeVisibleOmitsBothTimeVisibleAndChurn() {
+    func testNoTimeVisibleOmitsTimeVisible() {
         let attrs = appearRecord().attributes()
 
         XCTAssertNil(attrs["timeVisible"])

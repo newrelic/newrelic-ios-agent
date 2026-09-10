@@ -23,11 +23,6 @@ NS_ASSUME_NONNULL_BEGIN
 /// when the view covering it went away, rather than because a producer observed an appearance.
 FOUNDATION_EXPORT NSString * const kNRMAAttributeReappeared;
 
-/// Shortest visible lifetime treated as a real appearance; below it, an appear/disappear pair is
-/// construction churn. Exported so the SwiftUI producer flags the same threshold the context uses to
-/// suppress synthesis -- two copies of this number would drift.
-FOUNDATION_EXPORT const double kNRMAMinDwellMs;
-
 /// Longest construction-to-appear interval still treated as a measurement rather than an artifact.
 ///
 /// A load start is only trustworthy when the runtime built the screen *because* it was about to show

@@ -163,7 +163,7 @@ many it needs and how each hooks its runtime — that is CDD material. What ever
 | Funnel through the shared view context rather than emitting directly | Otherwise `previousView` diverges between producers |
 | Declare a `uiPlatform` value from the enumerated set | It is the discriminator every cross-platform query facets on |
 | Be inert when its gating flag is off | Goal 5 |
-| Suppress appear/disappear pairs shorter than the shared dwell minimum (§6.4) | Construction churn would otherwise dominate event volume and evict real events from the buffer. A sub-threshold disappearance must also not synthesize a `reappeared` row for whatever it was covering, or churn manufactures phantom back-navigation |
+| Report every appear/disappear pair the runtime delivers, however brief | **Amended — supersedes the minimum-dwell rule this row previously carried.** A duration threshold makes the agent decide which appearances were real, and that decision is invisible in the resulting data and unrecoverable from it. Brief visits are reported with their true `timeVisible` and are filtered downstream by whoever wants them filtered. A brief disappearance therefore also synthesizes a `reappeared` row for whatever it uncovered, like any other |
 
 Hybrid agents (Capacitor, Cordova, MAUI, Xamarin) **reuse the native iOS and Android producers** through
 their bridge layer and expose only a thin JS/C# surface. React Native and Flutter require their own
@@ -513,7 +513,6 @@ that look valid and aggregate wrongly against every other agent's.
 | Max customer timings per view instance | **16** | Capabilities 7, 8 | The event buffer is bounded (1000 by default). An unguarded mark inside a list-row callback would evict the customer's own real events. Warn once when exceeded, then drop silently |
 | Max timing name length | **128** characters | Capabilities 7, 8 | Bounds attribute cardinality |
 | Max accepted duration | **600000** ms (10 minutes) | Capability 8 | Catches the seconds-passed-where-milliseconds-expected mistake instead of recording it as a ten-hour screen load |
-| Minimum dwell for a real appearance | **100** ms | §5.2 | Below it, an appear/disappear pair is construction churn, not a visit |
 | Timing unit | milliseconds | Capabilities 7, 8; §5.7 | Unit drift between agents corrupts cross-platform percentiles invisibly |
 | Timing clock | monotonic | Capabilities 7, 8; §5.4 rule 3; §6.3 | Wall-clock deltas floored at 0 turn a clock step into a fabricated 0 ms row |
 | Unattributed-bucket window | **60** seconds | Capability 8 | See below — a rolling window, not a lifetime cap |

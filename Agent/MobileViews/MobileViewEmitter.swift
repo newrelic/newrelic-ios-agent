@@ -15,8 +15,8 @@ import Foundation
 /// These used to live as `static NSString * const` blocks duplicated across
 /// NRMAViewContext.m, NRMAViewTiming.m and NRMAMobileViewTracker.m, with the SwiftUI
 /// producers using bare literals instead. Three copies plus literals is why the schema
-/// drifted: `churn` reached only the SwiftUI sites, `navigationKind` only the tab sites,
-/// and `agentName` only some of them.
+/// drifted: `navigationKind` reached only the tab sites, and `agentName` only some of
+/// them.
 internal enum NRViewAttribute {
     static let viewClass              = "viewClass"
     static let viewName               = "viewName"
@@ -29,7 +29,6 @@ internal enum NRViewAttribute {
     static let loadTime               = "loadTime"
     static let loadTimeUnavailable    = "loadTimeUnavailable"
     static let timeVisible            = "timeVisible"
-    static let churn                  = "churn"
     static let navigationKind         = "navigationKind"
     static let timingName             = "timingName"
     static let timingValue            = "timingValue"
@@ -171,16 +170,12 @@ internal struct MobileViewRecord {
             attrs[NRViewAttribute.loadTimeUnavailable] = reason.rawValue
         }
 
+        // Reported verbatim however short it is. A minimum-dwell threshold used to label
+        // brief visits `churn` so screen-view counts could exclude them; that classification
+        // is gone, and consumers that want to filter brief visits do it from `timeVisible`
+        // itself rather than from a decision the agent baked in.
         if let timeVisibleMs = timeVisibleMs {
             attrs[NRViewAttribute.timeVisible] = NSNumber(value: timeVisibleMs)
-            // A visible lifetime this short is construction churn, not something the user
-            // saw. The event is still recorded -- hiding data is worse than labelling it --
-            // but the marker lets screen-view counts exclude the duplicate visit with
-            // `WHERE churn IS NULL`. Applied to every producer, where it used to reach only
-            // the SwiftUI ones.
-            if timeVisibleMs < kNRMAMinDwellMs {
-                attrs[NRViewAttribute.churn] = NSNumber(value: true)
-            }
         }
 
         return attrs
@@ -234,10 +229,6 @@ internal struct ViewTimingRecord {
 /// The single place view data leaves the agent.
 internal enum NRMobileViewEmitter {
 
-    /// Shortest visible lifetime treated as a real appearance; below it a disappear event is
-    /// marked as construction churn. Surfaced here because the emitter is what applies it.
-    internal static var minimumDwellMs: Double { kNRMAMinDwellMs }
-
     internal static var isViewTrackingEnabled: Bool {
         NRMAFlags.shouldEnableAutomaticMobileViews() || NRMAFlags.shouldEnableManualMobileViews()
     }
@@ -290,8 +281,7 @@ public class NRMAMobileViewFields: NSObject {
     public var loadTimeMs: NSNumber?
     /// One of "constructedBeforeAppear", "noConstructionObserved", "notRebuilt".
     public var loadTimeUnavailable: String?
-    /// Milliseconds. Setting this writes `timeVisible`, and `churn` when it is below the
-    /// minimum dwell time.
+    /// Milliseconds. Setting this writes `timeVisible`.
     public var timeVisibleMs: NSNumber?
     public var restarted: NSNumber?
     public var reappeared: Bool = false

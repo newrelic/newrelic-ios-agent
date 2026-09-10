@@ -28,16 +28,6 @@ NSString * const kNRMAAttributeReappeared      = @"reappeared";
 // discarded first; they are the least likely to be what the user is looking at.
 static const NSUInteger kNRMAMaxVisibleViews = 32;
 
-// Shortest visible lifetime treated as a real appearance. Below it, the appear/disappear pair is
-// construction churn rather than something the user saw.
-//
-// SwiftUI's TabView is the observed case: switching tabs delivers onAppear for the incoming content,
-// then onDisappear for that same content 8-16ms later, then onAppear again with a new identity. The
-// middle disappearance is not a navigation, but it *is* the top of the stack going away, so without
-// this guard it synthesizes a re-appearance of the previous tab -- a back-navigation the user never
-// performed, recorded every single time they switch tabs.
-const double kNRMAMinDwellMs = 100.0;
-
 // See the header for why this exists and why it is not tight. 5s keeps genuinely slow synchronous
 // loads in the baseline while still rejecting the eager-construction artifact, which is tens of
 // seconds or more because it dates from app launch.
@@ -146,8 +136,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                 platform:(nullable NSString *)platform {
     if (name.length == 0) { return; }
     os_unfair_lock_lock(&_lock);
-    // A view replacing itself (a new instance of the same screen, as SwiftUI produces during tab
-    // churn) keeps the referrer it already had. Shifting it here would make the screen its own
+    // A view replacing itself (a new instance of the same screen, as SwiftUI produces on a tab
+    // switch) keeps the referrer it already had. Shifting it here would make the screen its own
     // previousView, which reads as a navigation from a screen to itself.
     if (![_currentViewName isEqualToString:name]) {
         _previousViewName       = _currentViewName;
@@ -219,22 +209,20 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
 
     os_unfair_lock_lock(&_lock);
 
-    // How long the departing instance was actually on screen, captured before it is removed.
+    // The instant the departure was observed. It becomes the appear time of whatever this
+    // disappearance uncovers, so the resurfaced screen's visible lifetime restarts here.
+    //
+    // How long the departing instance had been on screen is deliberately not consulted: a
+    // short-lived appear/disappear pair is reported and synthesized from exactly like any other,
+    // with no minimum-dwell threshold suppressing it.
     CFAbsoluteTime now = [NRMAViewContext monotonicNow];
-    BOOL wasChurn = NO;
-    for (NRMAVisibleView *entry in _visibleViews) {
-        if ([entry.instanceId isEqualToString:instanceId]) {
-            wasChurn = ([NRMAViewContext millisecondsBetween:entry.appearTime and:now] < kNRMAMinDwellMs);
-            break;
-        }
-    }
 
     NSUInteger removedIndex = [self removeVisibleViewLocked:instanceId];
     // After the removal, the departing view was on top precisely when it sat at what is now the end
     // of the array. Anything else means it was buried and nothing was uncovered.
     BOOL wasTop = (removedIndex != NSNotFound && removedIndex == _visibleViews.count);
 
-    if (wasTop && !wasChurn && _visibleViews.count > 0 && _currentViewSource == NRMAViewSourceAutomatic) {
+    if (wasTop && _visibleViews.count > 0 && _currentViewSource == NRMAViewSourceAutomatic) {
         NRMAVisibleView *uncovered = _visibleViews.lastObject;
 
         // Guard against a same-name resurrection (a view replaced by another instance of itself),

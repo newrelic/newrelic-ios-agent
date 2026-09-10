@@ -2,20 +2,23 @@
 //  NRMAViewContextChurnTests.m
 //  NewRelicAgent
 //
-//  Regression tests for two bugs found by replaying a captured NRTestApp session through the flow
-//  renderer, both triggered reliably by SwiftUI TabView switches:
+//  How NRMAViewContext behaves under the rapid appear/disappear pattern SwiftUI produces on a
+//  TabView switch: onAppear for the incoming tab, onDisappear for that same view 8-16ms later, then
+//  onAppear again with a new identity.
 //
-//    A. The visible-view stack leaked. Synthesizing a re-appearance overwrote the uncovered entry's
-//       instanceId with a fresh UUID, but that id is the key -removeVisibleViewLocked: matches on and
-//       only the producer knows it. The entry became unremovable, so a screen the user had left could
-//       be "uncovered" and resurrected minutes later, stealing the referrer of whatever appeared next.
-//       Observed: ChartsView resurrected 3.3s after the tab bar was dismissed, twice.
+//  The context used to suppress re-appearance synthesis when the departing view had been visible for
+//  less than a 100ms minimum dwell, on the grounds that such a pair was construction churn and
+//  synthesizing from it manufactured a back-navigation the user never performed. That threshold has
+//  been removed: the agent no longer decides which appearances were real, so a disappearance
+//  synthesizes from whatever it uncovered however briefly the departing view was on screen. The
+//  consequence is an extra `reappeared` row per tab switch, which is deliberate -- these tests pin it
+//  so it cannot be reintroduced as a threshold by accident.
 //
-//    B. Construction churn synthesized phantom back-navigation. SwiftUI delivers onAppear for an
-//       incoming tab, onDisappear for that same view 8-16ms later, then onAppear again with a new
-//       identity. The middle disappearance is the top of the stack going away, so it synthesized a
-//       re-appearance of the previous tab -- a back-navigation the user never performed, on every
-//       single tab switch.
+//  Also covers the stack-leak bug found alongside it: synthesizing a re-appearance overwrote the
+//  uncovered entry's instanceId with a fresh UUID, but that id is the key -removeVisibleViewLocked:
+//  matches on and only the producer knows it. The entry became unremovable, so a screen the user had
+//  left could be "uncovered" and resurrected minutes later, stealing the referrer of whatever
+//  appeared next. Observed: ChartsView resurrected 3.3s after the tab bar was dismissed, twice.
 //
 //  Each test drives its own NRMAViewContext instance rather than the singleton, so a leaked stack
 //  entry cannot cross from one case into the next -- which is the very failure mode under test.
@@ -27,9 +30,6 @@
 #import "NRMAViewContext.h"
 #import "NRMAFlags.h"
 #import "NewRelic.h"
-
-/// Comfortably past kNRMAMinDwellMs, so a disappearance reads as a real one rather than as churn.
-static const NSTimeInterval kDwellPastThreshold = 0.15;
 
 @interface NRMAViewContextChurnTests : XCTestCase
 @end
@@ -52,17 +52,8 @@ static const NSTimeInterval kDwellPastThreshold = 0.15;
 
 #pragma mark - Helpers
 
-// appearTime MUST come from +monotonicNow, not CFAbsoluteTimeGetCurrent.
-//
-// -viewDidDisappearNamed: computes the dwell as millisecondsBetween(entry.appearTime, monotonicNow).
-// The two clocks have unrelated epochs -- wall clock counts from 2001, CLOCK_UPTIME_RAW from boot,
-// ~810,681,827s vs ~1,224,701s when this was written -- so a wall-clock appearTime makes that
-// subtraction hugely negative, and millisecondsBetween floors it at 0 via MAX(ms, 0.0). Every
-// disappearance then reads as 0ms, i.e. sub-dwell construction churn, and synthesis never fires.
-//
-// That is not hypothetical: seeding this helper with CFAbsoluteTimeGetCurrent() silently broke the
-// two synthesis tests below, and made testSubDwellDisappearanceDoesNotSynthesizeBackNavigation pass
-// vacuously -- it would have passed even with the churn guard removed entirely.
+// appearTime comes from +monotonicNow because that is the clock the context documents for every view
+// timestamp; a wall-clock value has an unrelated epoch and is not interchangeable with it.
 - (void)appear:(NSString *)name instance:(NSString *)instanceId {
     [_context transitionToView:name
                     instanceId:instanceId
@@ -78,57 +69,55 @@ static const NSTimeInterval kDwellPastThreshold = 0.15;
     return [_context referrerAttributes][@"previousView"];
 }
 
-#pragma mark - A: the stack must not leak resurrected entries
+#pragma mark - The stack must not leak resurrected entries
 
 // After a screen is resurrected by synthesis, its own later disappearance must still remove it.
 - (void)testResurrectedViewIsStillRemovableByItsOriginalInstanceId {
     [self appear:@"Dashboard" instance:@"ID-DASH"];
     [self appear:@"Charts" instance:@"ID-CHARTS"];
 
-    // Charts was genuinely on screen, so its disappearance uncovers Dashboard and synthesizes.
-    [NSThread sleepForTimeInterval:kDwellPastThreshold];
+    // Charts going away uncovers Dashboard, which synthesizes a re-appearance.
     [_context viewDidDisappearNamed:@"Charts" instanceId:@"ID-CHARTS"];
     XCTAssertEqualObjects([self currentView], @"Dashboard",
                           @"the uncovered screen must become current -- this is the synthesis working");
 
     // Dashboard now really goes away, reporting the id it was pushed with. If synthesis replaced that
     // key, this removal silently does nothing and the entry is stranded.
-    [NSThread sleepForTimeInterval:kDwellPastThreshold];
     [_context viewDidDisappearNamed:@"Dashboard" instanceId:@"ID-DASH"];
 
     // Nothing should remain to uncover. A stranded Dashboard would resurface here instead of Profile
     // staying current.
     [self appear:@"Profile" instance:@"ID-PROF"];
-    [NSThread sleepForTimeInterval:kDwellPastThreshold];
     [_context viewDidDisappearNamed:@"Profile" instanceId:@"ID-PROF"];
 
     XCTAssertEqualObjects([self currentView], @"Profile",
                           @"a screen removed by its original instanceId must not be resurrected later");
 }
 
-#pragma mark - B: churn must not synthesize a back-navigation
+#pragma mark - Synthesis is not gated on how long the view was visible
 
-// The observed TabView pattern: incoming tab appears, vanishes ~10ms later, appears again.
-- (void)testSubDwellDisappearanceDoesNotSynthesizeBackNavigation {
+// The observed TabView pattern: the incoming tab appears and vanishes within milliseconds. With no
+// minimum dwell, that disappearance synthesizes from what it uncovered like any other.
+- (void)testDisappearanceImmediatelyAfterAppearingStillSynthesizes {
     [self appear:@"Dashboard" instance:@"ID-DASH"];
-    [NSThread sleepForTimeInterval:kDwellPastThreshold];
 
     [self appear:@"Form" instance:@"ID-FORM-1"];
-    // No sleep: Form is gone within the dwell window, exactly as SwiftUI reports it.
+    // No delay: Form is gone within milliseconds, exactly as SwiftUI reports it.
     [_context viewDidDisappearNamed:@"Form" instanceId:@"ID-FORM-1"];
 
-    XCTAssertEqualObjects([self currentView], @"Form",
-                          @"churn must not hand the current view back to the previous tab");
-    XCTAssertNotEqualObjects([self currentView], @"Dashboard",
-                             @"a phantom return to Dashboard is the bug: the user never went back");
+    XCTAssertEqualObjects([self currentView], @"Dashboard",
+                          @"a brief visit must synthesize like any other -- no dwell threshold suppresses it");
+    XCTAssertEqualObjects([self previousView], @"Form",
+                          @"and the screen just left is its referrer");
 }
 
-// A real disappearance must still synthesize, or the SwiftUI pop case this exists for regresses.
-- (void)testDisappearancePastDwellStillSynthesizes {
+// The same for a view that was on screen long enough that no threshold would ever have applied, so a
+// reintroduced guard cannot pass this suite by making both cases behave alike.
+- (void)testDisappearanceAfterDwellingStillSynthesizes {
     [self appear:@"Dashboard" instance:@"ID-DASH"];
     [self appear:@"Form" instance:@"ID-FORM"];
 
-    [NSThread sleepForTimeInterval:kDwellPastThreshold];
+    [NSThread sleepForTimeInterval:0.15];
     [_context viewDidDisappearNamed:@"Form" instanceId:@"ID-FORM"];
 
     XCTAssertEqualObjects([self currentView], @"Dashboard",
@@ -137,9 +126,9 @@ static const NSTimeInterval kDwellPastThreshold = 0.15;
                           @"and the screen just left is its referrer");
 }
 
-#pragma mark - B: a view replacing itself keeps its referrer
+#pragma mark - A view replacing itself keeps its referrer
 
-// The second half of the churn pattern: Form appears again with a new identity. It must not become
+// The second half of the TabView pattern: Form appears again with a new identity. It must not become
 // its own previousView, which would draw a navigation from a screen to itself.
 - (void)testViewReplacingItselfKeepsItsReferrer {
     [self appear:@"Dashboard" instance:@"ID-DASH"];
