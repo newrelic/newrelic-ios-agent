@@ -1,0 +1,124 @@
+# Copy of wdio.yml that runs the LambdaTest iOS suite against the `mobile-views-2`
+# build instead of `develop`.
+#
+# The LambdaTest app ID arrives as a workflow_call INPUT from
+# uploadApp-mobile-views-2.yml, not as a downloaded artifact. That is deliberate:
+# consuming an artifact produced by another workflow run is the "artifact
+# poisoning" pattern (the artifact's bytes are attacker-controllable when the
+# upstream run can be influenced by an outside contributor), whereas a
+# workflow_call input is passed in-run from a job output in this repo.
+#
+# Runs are identified in the LambdaTest automation dashboard by LT_RUN_LABEL,
+# which wdio-config-ios.js turns into:
+#   - build name: "[mobile-views-2] Build_NRTestApp - iOS:<timestamp>"
+#   - a "mobile-views-2" tag chip on every automation row (filterable)
+
+name: "WDIO: automate iOS tests (mobile-views-2)"
+
+permissions:
+  contents: read
+
+on:
+  # Chained from uploadApp-mobile-views-2.yml once the app is uploaded.
+  workflow_call:
+    inputs:
+      app_id:
+        description: "LambdaTest custom_id of the app to test."
+        required: false
+        type: string
+        default: ""
+
+  # enables option for workflow to be manually executed in Github UI
+  workflow_dispatch:
+    inputs:
+      app_id:
+        description: "LambdaTest custom_id to test. Leave blank to use LambdaTest/last-app-id from the branch."
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  ios-data:
+    name: Generate iOS data (mobile-views-2)
+    runs-on: ubuntu-latest
+    env:
+      LT_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+      LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      # Surfaces this run as "[mobile-views-2] ..." + a tag chip in the LambdaTest dashboard
+      LT_RUN_LABEL: mobile-views-2
+    steps:
+      - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: mobile-views-2
+      - name: Setup environment
+        uses: ./.github/actions/env-setup
+
+      # Validate before use. The value is repo-controlled (job output or a
+      # dispatch by someone with write access), but a bad value would otherwise
+      # flow into $GITHUB_ENV, so keep the allowlist tight.
+      - name: Set LT_APP_ID environment variable
+        env:
+          APP_ID_INPUT: ${{ inputs.app_id }}
+        run: |
+          if [ -z "$APP_ID_INPUT" ]; then
+            echo "No app ID supplied; tests will use LambdaTest/last-app-id from the branch"
+          elif printf '%s' "$APP_ID_INPUT" | grep -Eq '^[A-Za-z0-9._:-]{1,200}$'; then
+            echo "LT_APP_ID=$APP_ID_INPUT" >> "$GITHUB_ENV"
+            echo "Using app ID: $APP_ID_INPUT"
+          else
+            echo "Supplied app ID is invalid; tests will use LambdaTest/last-app-id from the branch"
+          fi
+
+      - name: Execute iOS tests
+        run: for i in {1..1}; do echo "test run $i"; npm run test:wdio-ios; done
+
+      - name: Read test results
+        if: ${{ always() }}
+        run: |
+          RESULTS_FILE="LambdaTest/test-results.json"
+          if [ -f "$RESULTS_FILE" ]; then
+            PASSED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).passed")"
+            FAILED="$(node -pe "JSON.parse(require('fs').readFileSync('$RESULTS_FILE')).failed")"
+          else
+            PASSED="unknown"
+            FAILED="unknown"
+          fi
+          echo "TESTS_PASSED=$PASSED" >> $GITHUB_ENV
+          echo "TESTS_FAILED=$FAILED" >> $GITHUB_ENV
+
+      - name: Log success
+        if: ${{ success() }}
+        run: echo "[ RUNNER ] - successfully executed mobile-views-2 iOS tests (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Log failure
+        if: ${{ failure() || cancelled() }}
+        run: echo "[ RUNNER ] - failed to execute mobile-views-2 iOS tests (passed=$TESTS_PASSED, failed=$TESTS_FAILED)"
+
+      - name: Notify failure
+        if: ${{ failure() || cancelled() }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # pin@v2
+        with:
+          webhook-type: incoming-webhook
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            blocks:
+              - type: "header"
+                text:
+                  type: "plain_text"
+                  text: ":rotating_light: iOS LambdaTest Run Failed (mobile-views-2)"
+              - type: "divider"
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Branch:* mobile-views-2\n*Passed:* ${{ env.TESTS_PASSED }}\n*Failed:* ${{ env.TESTS_FAILED }}"
+                accessory:
+                  type: "button"
+                  text:
+                    type: "plain_text"
+                    text: "View logs"
+                    emoji: true
+                  value: "view_logs"
+                  url: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  action_id: "button-action"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
