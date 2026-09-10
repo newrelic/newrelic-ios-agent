@@ -364,14 +364,7 @@ public class JSErrorController: NSObject {
 
         payload["timestamp"] = Int64(Date().timeIntervalSince1970 * 1000)
         payload["agentName"] = NewRelicInternalUtils.agentName()
-
-        // Use platformVersion first, fallback to agentVersion
-        if let deviceInfo = connectInfo?.deviceInformation {
-            let version = deviceInfo.platformVersion ?? deviceInfo.agentVersion as String? as NSString?
-            payload["agentVersion"] = version ?? NewRelicInternalUtils.agentVersion()
-        } else {
-            payload["agentVersion"] = NewRelicInternalUtils.agentVersion()
-        }
+        payload["agentVersion"] = NewRelicInternalUtils.agentVersion()
 
         if let configuration = NRMAHarvestController.configuration(),
            let dataToken = configuration.data_token,
