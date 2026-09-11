@@ -33,6 +33,24 @@ namespace NewRelic {
         return success;
     }
 
+    EventAddResult AnalyticsController::addEventWithMetrics(std::shared_ptr <AnalyticEvent> event) {
+        EventAddResult result;
+        try {
+            result = _eventManager.addEvent(event);
+        } catch (...) {
+            LLOG_ERROR("Unable to add event.");
+        }
+        return result;
+    }
+
+    unsigned int AnalyticsController::getEventsRecordedCount() const {
+        return _eventManager.getEventsRecordedCount();
+    }
+
+    unsigned int AnalyticsController::getEventsEvictedCount() const {
+        return _eventManager.getEventsEvictedCount();
+    }
+
     unsigned long long int AnalyticsController::getCurrentTime_ms() { //throws std::logic_error
         long long epoch_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::system_clock().now().time_since_epoch()).count();
@@ -160,6 +178,10 @@ namespace NewRelic {
 
     bool AnalyticsController::didReachMaxEventBufferTime() {
         return _eventManager.didReachMaxQueueTime(getCurrentTime_ms()); //throws std::logic_error
+    }
+
+    bool AnalyticsController::didExceedMaxEventBufferTime() {
+        return _eventManager.didExceedMaxQueueTime(getCurrentTime_ms());
     }
 
     bool AnalyticsController::addSessionEndAttribute() {

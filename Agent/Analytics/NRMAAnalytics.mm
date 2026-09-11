@@ -20,6 +20,7 @@
 #import <Connectivity/Payload.hpp>
 #import "NewRelicAgentInternal.h"
 #import "NRMAEventManager.h"
+#import "NRMASupportMetricHelper.h"
 
 #import "Constants.h"
 #import "NRMAEventManager.h"
@@ -105,6 +106,22 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 - (NSUInteger) getMaxEventBufferTime {
     return [_eventManager getMaxEventBufferTimeInSeconds];
+}
+
+- (NSUInteger) getEventsRecordedCount {
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        return [_eventManager getEventsRecordedCount];
+    } else {
+        return _analyticsController->getEventsRecordedCount();
+    }
+}
+
+- (NSUInteger) getEventsEvictedCount {
+    if ([NRMAFlags shouldEnableNewEventSystem]) {
+        return [_eventManager getEventsEvictedCount];
+    } else {
+        return _analyticsController->getEventsEvictedCount();
+    }
 }
 
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime {
@@ -223,6 +240,20 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
     [_sessionStartTime release];
 
     [super dealloc];
+}
+
+- (BOOL) recordLegacyEventResult:(NewRelic::EventAddResult)result {
+    if (result.overflowed) {
+        [NRMASupportMetricHelper enqueueEventOverflowMetric];
+        [NRMASupportMetricHelper enqueueEventQueueSizeExceededMetric];
+    }
+    if (result.evicted) {
+        [NRMASupportMetricHelper enqueueEventEvictedMetric];
+    }
+    if (result.added) {
+        [NRMASupportMetricHelper enqueueEventAddedMetric];
+    }
+    return result.added;
 }
 
 - (BOOL) addInteractionEvent:(NSString*)name
@@ -753,7 +784,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
                 }
-                return _analyticsController->addEvent(event);
+                return [self recordLegacyEventResult:_analyticsController->addEventWithMetrics(event)];
             }
         } catch (std::exception& e){
             NRLOG_AGENT_ERROR(@"Failed to add event: %s",e.what());
@@ -808,7 +839,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
                 }
-                return _analyticsController->addEvent(event);
+                return [self recordLegacyEventResult:_analyticsController->addEventWithMetrics(event)];
             }
         } catch (std::exception& e){
             NRLOG_AGENT_ERROR(@"Failed to add event: %s",e.what());
@@ -867,7 +898,7 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
                 if([self checkOfflineStatus]){
                     event->addAttribute(kNRMA_Attrib_offline.UTF8String, @YES.boolValue);
                 }
-                return _analyticsController->addEvent(event);
+                return [self recordLegacyEventResult:_analyticsController->addEventWithMetrics(event)];
             }
         }
     } catch (std::exception& e){
@@ -1184,17 +1215,22 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 }
 
 - (void) onHarvestBefore {
-    if([NRMAFlags shouldEnableNewEventSystem]){
-        if (_sessionWillEnd || _newSession || [_eventManager didReachMaxQueueTime: [NRMAAnalytics currentTimeMillis]]) {
-            _newSession = NO;
-            [self handleHarvest];
-        }
+    NSTimeInterval currentTimeMs = [NRMAAnalytics currentTimeMillis];
+    BOOL queueTimeExceeded = [NRMAFlags shouldEnableNewEventSystem]
+        ? [_eventManager didReachMaxQueueTime:currentTimeMs]
+        : _analyticsController->didReachMaxEventBufferTime();
+
+    BOOL queueTimeExceededForMetric = [NRMAFlags shouldEnableNewEventSystem]
+        ? [_eventManager didExceedMaxQueueTime:currentTimeMs]
+        : _analyticsController->didExceedMaxEventBufferTime();
+
+    if (queueTimeExceededForMetric) {
+        [NRMASupportMetricHelper enqueueEventQueueTimeExceededMetric];
     }
-    else {
-        if (_sessionWillEnd || _newSession || _analyticsController->didReachMaxEventBufferTime()) {
-            _newSession = NO;
-            [self handleHarvest];
-        }
+
+    if (_sessionWillEnd || _newSession || queueTimeExceeded) {
+        _newSession = NO;
+        [self handleHarvest];
     }
 }
 

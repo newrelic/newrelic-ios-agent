@@ -4,3 +4,4 @@
 
 #import "triggerException.h"
 #import "NewRelic+Replace.h"
+#import <zlib.h>

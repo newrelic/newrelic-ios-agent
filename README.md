@@ -60,6 +60,8 @@ SCRIPT=`/usr/bin/find "${SRCROOT}" "${ARTIFACT_DIR}" -type f -name run-symbol-to
 
 - Add `--debug` as additional argument after the app token to write additional details to the `upload_dsym_results.log` file.
 
+- Add `-appVersion "<version>"` after the app token to set the reported app version explicitly (the `X-NewRelic-App-Version` header). Use this when `MARKETING_VERSION` is unset or empty — for example apps that manage versioning with `agvtool`, or multi-target apps built with `GENERATE_INFOPLIST_FILE = YES` — otherwise uploaded symbols may not match your builds. `-appVersion` and `--debug` can be combined in any order. App version precedence: `-appVersion` argument > `NEWRELIC_APP_VERSION` environment variable > `MARKETING_VERSION` environment variable.
+
 #### iOS agent 7.3.8 or lower:
 ```
 SCRIPT=`/usr/bin/find "${SRCROOT}" -name newrelic_postbuild.sh | head -n 1`
@@ -134,3 +136,4 @@ To all contributors, we thank you!  Without your contribution, this project woul
 ## License
 New Relic iOS Agent is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
 The New Relic iOS agent also uses source code from third-party libraries. Full details on which libraries are used and the terms under which they are licensed can be found  in the [third-party notices](./THIRD_PARTY_NOTICES.md).
+

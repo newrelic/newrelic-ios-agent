@@ -19,6 +19,8 @@
 - (NSUInteger) getMaxEventBufferSize;
 - (void) setMaxEventBufferSize:(unsigned int) size;
 - (NSUInteger) getMaxEventBufferTime;
+- (NSUInteger) getEventsRecordedCount;
+- (NSUInteger) getEventsEvictedCount;
 
 - (id) initWithSessionStartTimeMS:(long long) sessionStartTime;
 

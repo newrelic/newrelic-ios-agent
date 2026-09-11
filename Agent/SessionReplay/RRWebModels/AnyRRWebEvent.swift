@@ -38,3 +38,29 @@ struct AnyRRWebEvent: Codable {
         try (base as Encodable).encode(to: encoder)
     }
 }
+
+/// Test-only seams. This module builds with BUILD_LIBRARY_FOR_DISTRIBUTION
+/// (Library Evolution) enabled, under which `@testable import` cannot resolve
+/// `RRWebEvent<T>`'s conformance to `RRWebEventCommon` (a Codable-refining
+/// protocol) for a caller outside the module -- not even via a generic
+/// constraint. So these take only plain values and do the construction (and
+/// the existential boxing) entirely inside this file, where the conformance
+/// is directly visible, returning a concrete AnyRRWebEvent a test can freely
+/// inspect.
+func makeMetaAnyRRWebEvent(timestamp: TimeInterval) -> AnyRRWebEvent {
+    AnyRRWebEvent(MetaEvent(timestamp: timestamp,
+                            data: RRWebMetaData(href: "http://newrelic.com", width: 100, height: 100)))
+}
+
+func makeTouchAnyRRWebEvent(timestamp: TimeInterval) -> AnyRRWebEvent {
+    let data = RRWebIncrementalData.mouseInteraction(
+        RRWebMouseInteractionData(type: .touchStart, id: 1, x: 10, y: 10))
+    return AnyRRWebEvent(IncrementalEvent(timestamp: timestamp, data: data))
+}
+
+func makeFullSnapshotAnyRRWebEvent(timestamp: TimeInterval) -> AnyRRWebEvent {
+    let documentNode = DocumentNodeData(id: 1, childNodes: [])
+    let snapshotData = RRWebFullSnapshotData(node: .document(documentNode),
+                                              initialOffset: RRWebFullSnapshotData.InitialOffset(top: 0, left: 0))
+    return AnyRRWebEvent(FullSnapshotEvent(timestamp: timestamp, data: snapshotData))
+}

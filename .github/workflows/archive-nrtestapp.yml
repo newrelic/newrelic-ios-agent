@@ -29,6 +29,11 @@ jobs:
         with:
           xcode-version: "26.2"
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
       - name: Install Apple distribution certificate and provisioning profile
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -51,14 +56,33 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
-
           PROFILE_PLIST=$(security cms -D -i $PP_PATH)
           PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< "$PROFILE_PLIST")
           PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< "$PROFILE_PLIST")
+          # PlistBuddy exits 0 even when the key is missing, so check explicitly --
+          # otherwise an undecodable profile installs as a dotfile and the archive
+          # fails much later with an unrelated-looking signing error.
+          if [ -z "$PROFILE_NAME" ] || [ -z "$PROFILE_UUID" ]; then
+            echo "::error::Could not read Name/UUID from the provisioning profile; check APP_STORE_PROVISION_PROFILE_BASE64."
+            exit 1
+          fi
           echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
           echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
+
+          # Install under the UUID filename (what Xcode itself does) into BOTH search
+          # paths: Xcode 16+ reads UserData/Provisioning Profiles, older Xcode reads the
+          # legacy MobileDevice path. Writing only the legacy path silently yields
+          # "no profile matching ..." on newer toolchains.
+          for PROFILE_DIR in \
+            "$HOME/Library/MobileDevice/Provisioning Profiles" \
+            "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$PROFILE_DIR"
+            cp "$PP_PATH" "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          done
+
+          # Confirm signing material actually landed, so a failure later is legible.
+          echo "Installed profile: $PROFILE_NAME ($PROFILE_UUID)"
+          security find-identity -v -p codesigning $KEYCHAIN_PATH
 
       - name: Set NRTestApp plist secrets
         env:
@@ -97,7 +121,12 @@ jobs:
 
       - name: Archive NRTestApp
         run: |
-          set -o pipefail
+          # Do NOT pass PROVISIONING_PROFILE_SPECIFIER here. Command-line build settings
+          # apply to EVERY target in the build graph, and this archive pulls in JSON, Hex,
+          # Utilities, Connectivity, Analytics, and Agent_iOS -- each of which fails with
+          # "<target> does not support provisioning profiles". The NRTestApp target already
+          # sets PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*] = NRTestApp-AppStore.
+          set +e   # so a non-zero pipeline doesn't abort before PIPESTATUS is read
           xcodebuild archive \
             -workspace Agent.xcworkspace \
             -scheme NRTestApp \
@@ -106,20 +135,54 @@ jobs:
             -archivePath $RUNNER_TEMP/NRTestApp.xcarchive \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM=SU7SUNGZJP \
-            "PROVISIONING_PROFILE_SPECIFIER=${PROFILE_NAME}" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            | xcpretty || exit 1
+            2>&1 | tee $RUNNER_TEMP/archive.log | xcpretty
+          # Judge the build by xcodebuild's own status (PIPESTATUS[0]), never xcpretty's --
+          # a broken/missing formatter must not decide whether the archive passed.
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            # xcpretty swallows code-signing errors, leaving only a bare
+            # "Archiving workspace Agent with scheme NRTestApp (1 failure)" footer,
+            # so always surface the raw log on failure.
+            echo "::error::Archive failed (xcodebuild exit $STATUS) -- raw output below."
+            echo "::group::error lines"
+            grep -E "error:" $RUNNER_TEMP/archive.log || echo "(no 'error:' lines in log)"
+            echo "::endgroup::"
+            echo "::group::full xcodebuild output"
+            cat $RUNNER_TEMP/archive.log
+            echo "::endgroup::"
+            exit "$STATUS"
+          fi
 
       - name: Export IPA
         run: |
-          set -o pipefail
+          set +e   # so a non-zero pipeline doesn't abort before PIPESTATUS is read
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/NRTestApp.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
             -exportPath $RUNNER_TEMP/export \
             -allowProvisioningUpdates \
-            | xcpretty || exit 1
+            2>&1 | tee $RUNNER_TEMP/export.log | xcpretty
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error::Export failed (xcodebuild exit $STATUS) -- raw output below."
+            echo "::group::error lines"
+            grep -E "error:" $RUNNER_TEMP/export.log || echo "(no 'error:' lines in log)"
+            echo "::endgroup::"
+            echo "::group::full xcodebuild output"
+            cat $RUNNER_TEMP/export.log
+            echo "::endgroup::"
+            exit "$STATUS"
+          fi
           ls -la $RUNNER_TEMP/export/
+
+      - name: Install Bundler 2.7.2
+        run: gem install bundler:2.7.2
+
+      - name: Update gem
+        run: bundle update
 
       - name: Install gems
         run: bundle install
@@ -147,7 +210,10 @@ jobs:
           path: |
             ${{ runner.temp }}/NRTestApp.xcarchive
             ${{ runner.temp }}/export/*.ipa
+            ${{ runner.temp }}/archive.log
+            ${{ runner.temp }}/export.log
           retention-days: 7
+          if-no-files-found: warn
 
       - name: Cleanup keychain and key
         if: always()

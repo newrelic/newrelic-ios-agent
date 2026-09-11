@@ -20,6 +20,14 @@
 }
 @end
 
+@interface DropAllEventManager : NRMAEventManager
+@end
+@implementation DropAllEventManager
+- (NSUInteger)getEvictionIndex {
+    return 9999; // always out of bounds -> forces the "drop incoming event" path
+}
+@end
+
 @implementation TestIntegratedEventManager
 
     static NSString *testFilename = @"fbstest_tempStore";
@@ -280,6 +288,65 @@
                                                     options:0
                                                       error:nil];
     XCTAssertEqual(decode.count, 0);
+}
+
+- (void)testAddEventIncrementsRecordedCount {
+    NRMACustomEvent *event = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                                timestamp:3
+                                              sessionElapsedTimeInSeconds:20
+                                                   withAttributeValidator:agreeableAttributeValidator];
+    BOOL added = [sut addEvent:event];
+
+    XCTAssertTrue(added);
+    XCTAssertEqual([sut getEventsRecordedCount], 1);
+    XCTAssertEqual([sut getEventsEvictedCount], 0);
+}
+
+- (void)testOverflowEvictsAndIncrementsEvictedCount {
+    [sut setMaxEventBufferSize:1];
+    NRMACustomEvent *first = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                               timestamp:3
+                                             sessionElapsedTimeInSeconds:20
+                                                  withAttributeValidator:agreeableAttributeValidator];
+    NRMACustomEvent *second = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                timestamp:5
+                                              sessionElapsedTimeInSeconds:15
+                                                   withAttributeValidator:agreeableAttributeValidator];
+
+    XCTAssertTrue([sut addEvent:first]);
+    // Deterministic: after 1 attempted insert, getEvictionIndex() == arc4random() % 1 == 0,
+    // which evicts the only resident event and admits the new one.
+    XCTAssertTrue([sut addEvent:second]);
+
+    XCTAssertEqual([sut getEventsRecordedCount], 2);
+    XCTAssertEqual([sut getEventsEvictedCount], 1);
+}
+
+- (void)testOutOfBoundsEvictionIndexDropsIncomingEventInstead {
+    DropAllEventManager *dropSut = [[DropAllEventManager alloc] initWithPersistentStore:[[PersistentEventStore alloc] initWithFilename:@"fbstest_dropall"
+                                                                                                                        andMinimumDelay:1]];
+    [dropSut setMaxEventBufferSize:1];
+    NRMACustomEvent *first = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 1"
+                                                               timestamp:3
+                                             sessionElapsedTimeInSeconds:20
+                                                  withAttributeValidator:agreeableAttributeValidator];
+    NRMACustomEvent *second = [[NRMACustomEvent alloc] initWithEventType:@"Custom Event 2"
+                                                                timestamp:5
+                                              sessionElapsedTimeInSeconds:15
+                                                   withAttributeValidator:agreeableAttributeValidator];
+
+    XCTAssertTrue([dropSut addEvent:first]);
+    XCTAssertFalse([dropSut addEvent:second], @"Second event should be dropped, not silently accepted.");
+
+    NSError *error = nil;
+    NSString *eventJSONString = [dropSut getEventJSONStringWithError:&error clearEvents:false];
+    NSArray *decode = [NSJSONSerialization JSONObjectWithData:[eventJSONString dataUsingEncoding:NSUTF8StringEncoding]
+                                                        options:0
+                                                          error:nil];
+    XCTAssertEqual(decode.count, 1, @"Only the first event should remain in the queue.");
+
+    XCTAssertEqual([dropSut getEventsRecordedCount], 1);
+    XCTAssertEqual([dropSut getEventsEvictedCount], 1);
 }
 
 @end

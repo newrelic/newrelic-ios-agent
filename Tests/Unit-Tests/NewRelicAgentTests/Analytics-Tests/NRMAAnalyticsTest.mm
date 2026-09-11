@@ -20,6 +20,10 @@
 #import "NRMAAppToken.h"
 #import "NRTestConstants.h"
 #import "NRMAHTTPUtilities.h"
+#import "NRMeasurementConsumerHelper.h"
+#import "NRMAMeasurements.h"
+#import "NRMATaskQueue.h"
+#import "NRMANamedValueMeasurement.h"
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -48,6 +52,15 @@
 
 - (void)tearDown {
     [NRMASupportMetricHelper processDeferredMetrics];
+    // Reset the buffer size/time globals while NRFeatureFlag_NewEventSystem is still
+    // disabled (as set by -setUp above, and unchanged by any test in this class), so
+    // that NRMAAnalytics's legacy code path is exercised here and both the
+    // NRMAAgentConfiguration static defaults AND the C++ EventBufferConfig singleton
+    // (which is only reachable through that legacy path) get reset to the framework
+    // defaults (1000 events / 60 seconds). Doing this after re-enabling the feature
+    // flag below would only reset the former, leaving the latter leaked.
+    [[[NRMAAnalytics alloc] initWithSessionStartTimeMS:0] setMaxEventBufferSize:1000];
+    [[[NRMAAnalytics alloc] initWithSessionStartTimeMS:0] setMaxEventBufferTime:60];
     [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
     [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
 
@@ -851,6 +864,81 @@
 
     }
 
+}
+
+- (void) testLegacyEventSystemOverflowFiresMetrics {
+    NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setMaxEventBufferSize:1];
+
+    XCTAssertTrue([analytics addEventNamed:@"first" withAttributes:@{}]);
+    // Second insert overflows the size-1 buffer; total_attempted_inserts == 1 at that point,
+    // so the C++ random eviction index is deterministically 0 -- the resident event is evicted.
+    XCTAssertTrue([analytics addEventNamed:@"second" withAttributes:@{}]);
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    NSMutableSet<NSString*>* firedNames = [NSMutableSet set];
+    for (id measurement in helper.consumedMeasurements) {
+        if ([measurement isKindOfClass:[NRMANamedValueMeasurement class]]) {
+            [firedNames addObject:((NRMANamedValueMeasurement*)measurement).name];
+        }
+    }
+
+    XCTAssertTrue([firedNames containsObject:kNRMAEventAddedMetric]);
+    XCTAssertTrue([firedNames containsObject:kNRMAEventOverflowMetric]);
+    XCTAssertTrue([firedNames containsObject:kNRMAEventEvictedMetric]);
+    XCTAssertTrue([firedNames containsObject:kNRMAEventQueueSizeExceededMetric]);
+
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+    [NRMAMeasurements shutdown];
+}
+
+- (void) testLegacyEventSystemGetEventsRecordedAndEvictedCounts {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setMaxEventBufferSize:1];
+
+    [analytics addEventNamed:@"first" withAttributes:@{}];
+    [analytics addEventNamed:@"second" withAttributes:@{}]; // deterministic evict, see above
+
+    XCTAssertEqual([analytics getEventsRecordedCount], 2);
+    XCTAssertEqual([analytics getEventsEvictedCount], 1);
+}
+
+- (void) testMaxEventBufferTimeExceededFiresQueueTimeExceededMetric {
+    NRMAMeasurementConsumerHelper* helper = [[NRMAMeasurementConsumerHelper alloc] initWithType:NRMAMT_NamedValue];
+    [NRMAMeasurements initializeMeasurements];
+    [NRMAMeasurements addMeasurementConsumer:helper];
+
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    [analytics setMaxEventBufferTime:1];
+    [analytics addEventNamed:@"pewpew" withAttributes:@{}];
+
+    NRMAAgentConfiguration* agentConfig = [[NRMAAgentConfiguration alloc] initWithAppToken:[[NRMAAppToken alloc] initWithApplicationToken:kNRMA_ENABLED_STAGING_APP_TOKEN]
+                                                                      collectorAddress:KNRMA_TEST_COLLECTOR_HOST
+                                                                          crashAddress:nil];
+    [NRMAHarvestController initialize:agentConfig];
+    sleep(2); // exceed the 1-second buffer time
+    [analytics onHarvestBefore];
+
+    [NRMASupportMetricHelper processDeferredMetrics];
+    [NRMATaskQueue synchronousDequeue];
+
+    BOOL fired = NO;
+    for (id measurement in helper.consumedMeasurements) {
+        if ([measurement isKindOfClass:[NRMANamedValueMeasurement class]] &&
+            [((NRMANamedValueMeasurement*)measurement).name isEqualToString:kNRMAEventQueueTimeExceededMetric]) {
+            fired = YES;
+        }
+    }
+    XCTAssertTrue(fired, @"Queue/Time/Exceeded metric was not recorded.");
+
+    [NRMAMeasurements removeMeasurementConsumer:helper];
+    [NRMAMeasurements shutdown];
 }
 
 @end
@@ -1743,6 +1831,5 @@
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
 }
-
 
 @end

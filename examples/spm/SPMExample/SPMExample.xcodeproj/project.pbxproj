@@ -14,8 +14,7 @@
 		2B056E502AB9FFDB0076A314 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B056E4F2AB9FFDB0076A314 /* AppDelegate.swift */; };
 		2B2253562B4DE74B00EBFFE2 /* UtilViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2253542B4DE74B00EBFFE2 /* UtilViewModel.swift */; };
 		2B2253572B4DE74B00EBFFE2 /* UtilView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2253552B4DE74B00EBFFE2 /* UtilView.swift */; };
-		347EDF272D838CF800F0B661 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 347EDF262D838CF800F0B661 /* NewRelic.framework */; };
-		347EDF282D838CF800F0B661 /* NewRelic.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 347EDF262D838CF800F0B661 /* NewRelic.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2BD46A82302635BC009AFD1B /* NewRelic in Frameworks */ = {isa = PBXBuildFile; productRef = 2BD46A81302635BC009AFD1B /* NewRelic */; };
 		F88073202D81FB0E00C68464 /* ProgressViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073162D81FB0E00C68464 /* ProgressViewsView.swift */; };
 		F88073212D81FB0E00C68464 /* SteppersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F880731C2D81FB0E00C68464 /* SteppersView.swift */; };
 		F88073222D81FB0E00C68464 /* GridsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073132D81FB0E00C68464 /* GridsView.swift */; };
@@ -31,20 +30,6 @@
 		F880732C2D81FB0E00C68464 /* TogglesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F880731E2D81FB0E00C68464 /* TogglesView.swift */; };
 		F880732D2D81FB0E00C68464 /* ScrollViewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88073172D81FB0E00C68464 /* ScrollViewsView.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		347EDF292D838CF800F0B661 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				347EDF282D838CF800F0B661 /* NewRelic.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2B056E3D2AB9FF180076A314 /* SPMExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPMExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,7 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				347EDF272D838CF800F0B661 /* NewRelic.framework in Frameworks */,
+				2BD46A82302635BC009AFD1B /* NewRelic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -174,7 +159,6 @@
 				2B056E3A2AB9FF180076A314 /* Frameworks */,
 				2B056E3B2AB9FF180076A314 /* Resources */,
 				2B056E5C2ABA0DA90076A314 /* Run New Relic dSYM Upload Tool */,
-				347EDF292D838CF800F0B661 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -182,6 +166,7 @@
 			);
 			name = SPMExample;
 			packageProductDependencies = (
+				2BD46A81302635BC009AFD1B /* NewRelic */,
 			);
 			productName = SPMExample;
 			productReference = 2B056E3D2AB9FF180076A314 /* SPMExample.app */;
@@ -212,6 +197,7 @@
 			);
 			mainGroup = 2B056E342AB9FF180076A314;
 			packageReferences = (
+				2BD46A80302635BC009AFD1B /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */,
 			);
 			productRefGroup = 2B056E3E2AB9FF180076A314 /* Products */;
 			projectDirPath = "";
@@ -502,6 +488,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2BD46A80302635BC009AFD1B /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/newrelic/newrelic-ios-agent.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.7.5;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2BD46A81302635BC009AFD1B /* NewRelic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2BD46A80302635BC009AFD1B /* XCRemoteSwiftPackageReference "newrelic-ios-agent" */;
+			productName = NewRelic;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2B056E352AB9FF180076A314 /* Project object */;
 }

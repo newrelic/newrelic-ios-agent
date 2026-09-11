@@ -12,6 +12,8 @@
 @interface NRMAAnalytics (cppInterface)
 - (std::shared_ptr<NewRelic::AnalyticsController>&) analyticsController;
 
+- (BOOL) recordLegacyEventResult:(NewRelic::EventAddResult)result;
+
 - (BOOL)addGestureEvent:(NSString *)functionExecuted
            targetObject:(NSString *)targetObject
                   label:(NSString *)label
