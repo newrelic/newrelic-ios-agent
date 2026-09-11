@@ -893,7 +893,6 @@ static PersistentStore<std::string,AnalyticEvent>* __eventStore;
 
     if([NRMAFlags shouldEnableNewEventSystem]){
         NRMAViewEvent* event = [[NRMAViewEvent alloc] initWithEventType:eventType
-                                                               category:kNRMA_RET_mobile
                                                               timestamp:[NRMAAnalytics currentTimeMillis]
                                             sessionElapsedTimeInSeconds:[[NSDate date] timeIntervalSinceDate:_sessionStartTime]
                                                  withAttributeValidator:_attributeValidator];

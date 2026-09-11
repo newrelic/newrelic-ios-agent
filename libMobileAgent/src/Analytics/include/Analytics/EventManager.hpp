@@ -89,7 +89,6 @@ namespace NewRelic {
 
         static std::shared_ptr<ViewEvent>
         newViewEvent(const char* eventType,
-                     const char* category,
                      unsigned long long timestamp_epoch_millis,
                      double session_elapsed_time_sec,
                      AttributeValidator &attributeValidator);

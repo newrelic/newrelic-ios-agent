@@ -1968,15 +1968,6 @@
                                  expectedSubstrings:@[@"MobileViewTiming", @"timeToInitialDisplay"]];
 }
 
-// Both systems attach category at serialization time, past the attribute validator.
-- (void) testViewEventsCarryTheirCategoryUnderBothEventSystems {
-    [self assertViewEventLandsUnderBothEventSystems:@"MobileView category"
-                                              block:^BOOL(NRMAAnalytics* analytics) {
-        return [analytics addMobileViewEventWithAttributes:@{@"viewName": @"CheckoutView"}];
-    }
-                                 expectedSubstrings:@[@"category", @"Mobile"]];
-}
-
 - (void) testViewEventWithNoEventTypeIsRejected {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     XCTAssertFalse([analytics addViewEventOfType:@"" withAttributes:@{@"viewName": @"X"}]);

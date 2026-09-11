@@ -108,8 +108,8 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
 - (BOOL)markTimingNamed:(NSString *)name {
     if (![self isEnabled]) { return NO; }
 
-    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
     NRMAViewTimingSnapshot *snapshot = [[NRMAViewContext sharedInstance] snapshotForTiming];
+    CFAbsoluteTime now = [NRMAViewContext monotonicNow];
 
     // No current view means no zero point. Emitting a duration measured from an unknown start is
     // worse than emitting nothing, because it looks like real data in an aggregate.

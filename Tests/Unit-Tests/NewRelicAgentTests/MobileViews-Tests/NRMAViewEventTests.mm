@@ -8,9 +8,7 @@
 //  AnalyticsController::newCustomEvent throws on a reserved type, so while these events were
 //  emitted through -recordCustomEvent: every one of them was dropped on the default
 //  configuration -- NRFeatureFlag_NewEventSystem is not on by default. These tests pin the
-//  built-in path that replaced it, and the `category` attribute both systems attach at
-//  serialization time (the attribute validator rejects "category" as a reserved keyword, so it
-//  cannot be added as an ordinary attribute).
+//  built-in path that replaced it.
 //
 //  Copyright © 2026 New Relic. All rights reserved.
 //
@@ -33,39 +31,21 @@
 
 - (NRMAViewEvent *)eventOfType:(NSString *)eventType {
     return [[NRMAViewEvent alloc] initWithEventType:eventType
-                                           category:kNRMA_RET_mobile
-                                          timestamp:1788909568307
-                        sessionElapsedTimeInSeconds:5.25
-                             withAttributeValidator:nil];
+                                         timestamp:1788909568307
+                       sessionElapsedTimeInSeconds:5.25
+                            withAttributeValidator:nil];
 }
 
-- (void)testMobileViewEventCarriesItsEventTypeAndCategory {
+- (void)testMobileViewEventCarriesItsEventType {
     NSDictionary *json = [[self eventOfType:kNRMA_RET_mobileView] JSONObject];
 
     XCTAssertEqualObjects(json[kNRMA_RA_eventType], @"MobileView");
-    XCTAssertEqualObjects(json[kNRMA_RA_category], @"Mobile");
 }
 
-- (void)testViewTimingEventCarriesItsEventTypeAndTheSameCategory {
+- (void)testViewTimingEventCarriesItsEventType {
     NSDictionary *json = [[self eventOfType:kNRMA_RET_mobileViewTiming] JSONObject];
 
     XCTAssertEqualObjects(json[kNRMA_RA_eventType], @"MobileViewTiming");
-    XCTAssertEqualObjects(json[kNRMA_RA_category], @"Mobile",
-                          @"both view event types share one category value");
-}
-
-// category is a reserved keyword, so it can only reach the wire by being injected at
-// serialization time. If someone converts it to an ordinary addAttribute: call, the validator
-// silently drops it and this test fails.
-- (void)testCategorySurvivesEvenWithAValidatorThatRejectsEverything {
-    NRMAViewEvent *event = [[NRMAViewEvent alloc] initWithEventType:kNRMA_RET_mobileView
-                                                          category:kNRMA_RET_mobile
-                                                         timestamp:1
-                                       sessionElapsedTimeInSeconds:1
-                                            withAttributeValidator:nil];
-    [event addAttribute:kNRMA_RA_category value:@"spoofed"];
-
-    XCTAssertEqualObjects([[event JSONObject] objectForKey:kNRMA_RA_category], @"Mobile");
 }
 
 - (void)testAttributesAndTimestampsAreCarried {
@@ -80,9 +60,8 @@
 }
 
 // Offline storage archives events with NSSecureCoding. If NRMAViewEvent is not in
-// +[PersistentEventStore classList], decoding fails outright; if category is not coded, a
-// stored event ships without it while a live one ships with it.
-- (void)testSecureCodingRoundTripPreservesEventTypeAndCategory {
+// +[PersistentEventStore classList], decoding fails outright.
+- (void)testSecureCodingRoundTripPreservesEventType {
     NRMAViewEvent *event = [self eventOfType:kNRMA_RET_mobileViewTiming];
     [event addAttribute:@"timingName" value:@"timeToInitialDisplay"];
 
@@ -98,19 +77,16 @@
                                                                  error:&error];
     XCTAssertNil(error);
     XCTAssertEqualObjects(decoded.eventType, @"MobileViewTiming");
-    XCTAssertEqualObjects(decoded.category, @"Mobile");
-    XCTAssertEqualObjects([decoded JSONObject][kNRMA_RA_category], @"Mobile");
     XCTAssertEqualObjects([decoded JSONObject][@"timingName"], @"timeToInitialDisplay");
 }
 
 #pragma mark - Old event system: C++ ViewEvent
 
-- (void)testCppViewEventGeneratesEventTypeAndCategory {
+- (void)testCppViewEventGeneratesItsEventType {
     NewRelic::AttributeValidator validator{[](const char*){return true;},
                                            [](const char*){return true;},
                                            [](const char*){return true;}};
     auto event = NewRelic::EventManager::newViewEvent(__kNRMA_RET_mobileView,
-                                                     __kNRMA_RET_mobile,
                                                      1788909568307,
                                                      5.25,
                                                      validator);
@@ -122,20 +98,17 @@
     std::string out = rendered.str();
 
     XCTAssertTrue(out.find("\"MobileView\"") != std::string::npos, "event type must be on the wire");
-    XCTAssertTrue(out.find("\"Mobile\"") != std::string::npos, "category must be on the wire");
 }
 
 // The failure this guards against: without a deserializer branch, MobileView falls through to
-// deserializeCustomEvent and comes back as a plain CustomEvent, whose generateJSONObject adds
-// no category -- so an offline-stored view event would ship a different shape from a live one.
-- (void)testCppViewEventSurvivesSerializationRoundTripWithItsCategory {
+// deserializeCustomEvent and comes back as a plain CustomEvent rather than a ViewEvent.
+- (void)testCppViewEventSurvivesSerializationRoundTrip {
     NewRelic::AttributeValidator validator{[](const char*){return true;},
                                            [](const char*){return true;},
                                            [](const char*){return true;}};
 
     for (const char *eventType : {__kNRMA_RET_mobileView, __kNRMA_RET_mobileViewTiming}) {
         auto event = NewRelic::EventManager::newViewEvent(eventType,
-                                                          __kNRMA_RET_mobile,
                                                          1788909568307,
                                                          5.25,
                                                          validator);
@@ -152,8 +125,6 @@
         rendered << *(restored->generateJSONObject());
         std::string out = rendered.str();
 
-        XCTAssertTrue(out.find("\"Mobile\"") != std::string::npos,
-                      "a deserialized view event must still carry its category");
         XCTAssertTrue(out.find("CheckoutView") != std::string::npos,
                       "attributes must survive the round trip");
     }

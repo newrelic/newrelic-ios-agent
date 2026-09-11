@@ -893,7 +893,6 @@ namespace NewRelic {
             auto currentTime_ms = getCurrentTime_ms(); //throws std::logic_error
             auto sessionDuration_sec = getCurrentSessionDuration_sec(currentTime_ms);
             return EventManager::newViewEvent(eventType,
-                                              __kNRMA_RET_mobile,
                                               currentTime_ms,
                                               sessionDuration_sec,
                                               _attributeValidator);

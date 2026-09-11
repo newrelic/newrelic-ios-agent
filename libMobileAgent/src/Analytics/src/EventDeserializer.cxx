@@ -82,13 +82,8 @@ namespace NewRelic {
 
     /*
      * Reconstitutes a ViewEvent rather than letting MobileView / MobileViewTiming fall
-     * through to deserializeCustomEvent. That fallthrough would return a plain CustomEvent,
-     * whose generateJSONObject() adds no category -- so an offline-stored view event would
-     * ship without `category` while a live one shipped with it: same event type, two shapes,
-     * split on whether the device had connectivity.
-     *
-     * The category is not on the wire (ViewEvent::put writes only the event type), because
-     * it is a constant for every view event type.
+     * through to deserializeCustomEvent, so an offline-stored view event comes back as the
+     * same class a live one is emitted as.
      */
     std::shared_ptr<AnalyticEvent> EventDeserializer::deserializeViewEvent(const char* eventType, std::istream &is) {
         AttributeValidator validator{[](const char*){return true;},[](const char*){return true;},[](const char*){return true;}};
@@ -103,7 +98,6 @@ namespace NewRelic {
         is.ignore(std::numeric_limits<std::streamsize>::max(), AnalyticEvent::_delimiter);
 
         auto event = EventManager::newViewEvent(eventType,
-                                                __kNRMA_RET_mobile,
                                                 timestamp_millis,
                                                 session_elapsed_time_sec,
                                                 validator);

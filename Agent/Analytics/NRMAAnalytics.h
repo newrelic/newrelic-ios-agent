@@ -32,8 +32,7 @@
 /*
  * The built-in view events. These exist because MobileView and MobileViewTiming are
  * reserved event types: the old event system's newCustomEvent refuses them outright, so
- * -addCustomEvent: cannot be used to emit them. Both routes attach `category` at
- * serialization time, past the attribute validator.
+ * -addCustomEvent: cannot be used to emit them.
  *
  * Call these through NRMAMobileViewRecorder rather than directly -- it owns the schema.
  */

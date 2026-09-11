@@ -348,6 +348,8 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
                   appeared:YES
                timeVisible:nil
                customAttrs:attributes];
+
+    [[NRMAViewTiming sharedInstance] recordInitialDisplayForCurrentView];
 }
 
 - (void)flushCurrentManualViewOnBackground {
