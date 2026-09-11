@@ -52,6 +52,7 @@
 		0209AC3124E7073800E45C90 /* NRMADeviceInformationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC2D24E7073800E45C90 /* NRMADeviceInformationTests.m */; };
 		0209AC3224E7073800E45C90 /* NRMAHarvestableAnalyticsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC2E24E7073800E45C90 /* NRMAHarvestableAnalyticsTest.m */; };
 		0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */; };
+		CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		0209AC3D24E7075200E45C90 /* NRHarvestableVitalsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3624E7075100E45C90 /* NRHarvestableVitalsTest.m */; };
 		0209AC3E24E7075200E45C90 /* NRHarvesterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3724E7075100E45C90 /* NRHarvesterTest.m */; };
 		0209AC3F24E7075200E45C90 /* NRHarvesterStateTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3824E7075200E45C90 /* NRHarvesterStateTest.m */; };
@@ -121,6 +122,7 @@
 		0256580E24EB19BF00FE3125 /* NRMAAppTokenTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC0824E7071400E45C90 /* NRMAAppTokenTest.m */; };
 		0256580F24EB19BF00FE3125 /* TestContextAdapter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABD624E706AE00E45C90 /* TestContextAdapter.mm */; };
 		0256581024EB19BF00FE3125 /* NRMAConnectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */; };
+		CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		0256581124EB19BF00FE3125 /* NRMALastActivityTraceControllerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABE724E706F900E45C90 /* NRMALastActivityTraceControllerTest.m */; };
 		0256581224EB19BF00FE3125 /* APINetworkNoticeTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC0624E7071400E45C90 /* APINetworkNoticeTest.m */; };
 		0256581324EB19BF00FE3125 /* NRMADeviceInformationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC2D24E7073800E45C90 /* NRMADeviceInformationTests.m */; };
@@ -1127,6 +1129,7 @@
 		3431DD7E2BED4A5200FF145F /* NRHarvesterConnectionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3924E7075200E45C90 /* NRHarvesterConnectionTests.m */; };
 		3431DD7F2BED4A5200FF145F /* NRHarvesterTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3724E7075100E45C90 /* NRHarvesterTest.m */; };
 		3431DD802BED4A5200FF145F /* NRMAConnectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */; };
+		CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		3431DD812BED4A5200FF145F /* NRHarvestableVitalsTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3624E7075100E45C90 /* NRHarvestableVitalsTest.m */; };
 		3431DD822BED4A5200FF145F /* NRHarvesterStateTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC3824E7075200E45C90 /* NRHarvesterStateTest.m */; };
 		3431DD842BED4A9900FF145F /* NRMAFeatureFlagsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC4324E7078000E45C90 /* NRMAFeatureFlagsTests.m */; };
@@ -2131,6 +2134,7 @@
 		0209AC2D24E7073800E45C90 /* NRMADeviceInformationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMADeviceInformationTests.m; sourceTree = "<group>"; };
 		0209AC2E24E7073800E45C90 /* NRMAHarvestableAnalyticsTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvestableAnalyticsTest.m; sourceTree = "<group>"; };
 		0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAConnectionTest.m; sourceTree = "<group>"; };
+		CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvesterConfigurationLifetimeTests.m; sourceTree = "<group>"; };
 		0209AC3524E7075100E45C90 /* NRHarvesterStateTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRHarvesterStateTest.h; sourceTree = "<group>"; };
 		0209AC3624E7075100E45C90 /* NRHarvestableVitalsTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRHarvestableVitalsTest.m; sourceTree = "<group>"; };
 		0209AC3724E7075100E45C90 /* NRHarvesterTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRHarvesterTest.m; sourceTree = "<group>"; };
@@ -3004,6 +3008,7 @@
 				0209AC3A24E7075200E45C90 /* NRHarvesterTest.h */,
 				0209AC3724E7075100E45C90 /* NRHarvesterTest.m */,
 				0209AC3324E7074100E45C90 /* NRMAConnectionTest.m */,
+				CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */,
 				0209AC2A24E7072700E45C90 /* Harvestable-Data-Tests */,
 				F8D23CF92F840F92000FFD31 /* Agent-watchos-Tests-Bridging-Header.h */,
 			);
@@ -5633,6 +5638,7 @@
 				F85ABB602F1557EA0098A2CF /* SerializedNode.swift in Sources */,
 				0209ABDC24E706AE00E45C90 /* TestContextAdapter.mm in Sources */,
 				0209AC3424E7074100E45C90 /* NRMAConnectionTest.m in Sources */,
+				CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
 				F85ABB632F155B4B0098A2CF /* RRWebEvent.swift in Sources */,
 				0209ABF124E706FA00E45C90 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0209AC0E24E7071500E45C90 /* APINetworkNoticeTest.m in Sources */,
@@ -6047,6 +6053,7 @@
 				0256580F24EB19BF00FE3125 /* TestContextAdapter.mm in Sources */,
 				F8FBFA5A2A77FA3000CDC8C5 /* TestRequestEvents.m in Sources */,
 				0256581024EB19BF00FE3125 /* NRMAConnectionTest.m in Sources */,
+				CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
 				0256581124EB19BF00FE3125 /* NRMALastActivityTraceControllerTest.m in Sources */,
 				0256581224EB19BF00FE3125 /* APINetworkNoticeTest.m in Sources */,
 				0256581324EB19BF00FE3125 /* NRMADeviceInformationTests.m in Sources */,
@@ -6462,6 +6469,7 @@
 				3431DD7E2BED4A5200FF145F /* NRHarvesterConnectionTests.m in Sources */,
 				3431DD7F2BED4A5200FF145F /* NRHarvesterTest.m in Sources */,
 				3431DD802BED4A5200FF145F /* NRMAConnectionTest.m in Sources */,
+				CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */,
 				3431DD812BED4A5200FF145F /* NRHarvestableVitalsTest.m in Sources */,
 				3431DD822BED4A5200FF145F /* NRHarvesterStateTest.m in Sources */,
 				3431DD562BED38F400FF145F /* NRMAHTTPUtilitiesTests.m in Sources */,
@@ -6785,9 +6793,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
@@ -6805,7 +6813,7 @@
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/Tests/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -6841,9 +6849,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_GENERATE_TEST_COVERAGE_FILES = NO;
@@ -6855,7 +6863,7 @@
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/Tests/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -6919,11 +6927,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -6941,7 +6949,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MACH_O_TYPE = mh_dylib;
 				MODULEMAP_FILE = module.modulemap;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -6998,11 +7006,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development: cdillard@newrelic.com (3ZGR4484Y2)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DISABLE_MANUAL_TARGET_ORDER_BUILD_WARNING = YES;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7014,7 +7022,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MACH_O_TYPE = mh_dylib;
 				MODULEMAP_FILE = module.modulemap;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -7046,12 +7054,12 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7070,13 +7078,13 @@
 				);
 				INFOPLIST_FILE = Agent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.6;
+				MARKETING_VERSION = 7.7.7;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -7109,13 +7117,13 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -7133,13 +7141,13 @@
 				);
 				INFOPLIST_FILE = Agent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.6;
+				MARKETING_VERSION = 7.7.7;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "";
@@ -7165,9 +7173,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = RQZ9D969HD;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -7186,7 +7194,7 @@
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/Tests/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -7224,9 +7232,9 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -7239,7 +7247,7 @@
 					"$(SRCROOT)/modular-crash-reporter-ios/Source/Tests/**",
 				);
 				INFOPLIST_FILE = "Tests/Unit-Tests/Shared/tests-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -7276,16 +7284,16 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Stress-Tests/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -7318,16 +7326,16 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				HEADER_SEARCH_PATHS = (
 					"${PROJECT_DIR}/UnitTests/",
 					"${SRCROOT}/**",
 				);
 				INFOPLIST_FILE = "Tests/Stress-Tests/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -7360,12 +7368,12 @@
 				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				"DEVELOPMENT_TEAM[sdk=appletvos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7382,13 +7390,13 @@
 				);
 				INFOPLIST_FILE = "Agent/tvos-info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.6;
+				MARKETING_VERSION = 7.7.7;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -7414,11 +7422,11 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7435,13 +7443,13 @@
 				);
 				INFOPLIST_FILE = "Agent/tvos-info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 7.7.6;
+				MARKETING_VERSION = 7.7.7;
 				MODULEMAP_FILE = agent.modulemap;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.newrelic.Agent;
@@ -7468,9 +7476,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7532,9 +7540,9 @@
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEVELOPMENT_TEAM = SU7SUNGZJP;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Frameworks";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
@@ -7591,12 +7599,12 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7620,7 +7628,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.7.6;
+				MARKETING_VERSION = 7.7.7;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";
@@ -7650,12 +7658,12 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution: New Relic Inc (SU7SUNGZJP)";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 7.7.6;
+				CURRENT_PROJECT_VERSION = 7.7.7;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=watchos*]" = SU7SUNGZJP;
 				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 7.7.6;
+				DYLIB_CURRENT_VERSION = 7.7.7;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -7679,7 +7687,7 @@
 					"@loader_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
-				MARKETING_VERSION = 7.7.6;
+				MARKETING_VERSION = 7.7.7;
 				MODULEMAP_FILE = agent.modulemap;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "";

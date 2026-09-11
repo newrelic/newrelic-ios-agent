@@ -634,26 +634,18 @@ static NSString *__measurementLock = @"measurementTransmittersLock";
     return [self traceMachine] != nil;
 }
 
+// Forwarders. The trace-collection gate lives in NRMAHarvestController, which owns the harvest
+// buffer and the at_capture configuration it compares against; these duplicated the logic and had no
+// callers. Kept as thin forwarders rather than deleted outright because the declaration is in the
+// header and may be linked against out of tree.
 + (BOOL) shouldCollectTraces
 {
-    NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-    NRMAHarvester* harvester = [controller harvester];
-    NRMAHarvestData* harvestData = [harvester harvestData];
-    NRMAHarvesterConfiguration *configuration = [NRMAHarvestController configuration];
-
-    if (harvestData == nil || configuration == nil)
-        return YES;
-
-    // todo: use fine grained AT capture rules later.
-    int currentCount = harvestData.activityTraces.count;
-    int maxCount = configuration.at_capture.maxTotalTraceCount;
-    NRLOG_AGENT_VERBOSE(@"Should collect traces: %d/%d", currentCount, maxCount);
-    return harvestData.activityTraces.count < configuration.at_capture.maxTotalTraceCount;
+    return [NRMAHarvestController shouldCollectTraces];
 }
 
 + (BOOL) shouldNotCollectTraces
 {
-    return ![self shouldCollectTraces];
+    return [NRMAHarvestController shouldNotCollectTraces];
 }
 
 @end
