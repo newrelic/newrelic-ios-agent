@@ -1,0 +1,440 @@
+//
+//  NRMAMobileViewTracker.m
+//  NewRelicAgent
+//
+//  MobileViews: automatic UIViewController lifecycle tracking. Reports view lifecycle facts to
+//  NRMAMobileViewRecorder, which owns the MobileView schema, and updates NRMAViewContext so
+//  breadcrumbs and MobileView events carry a consistent currentView / previousView referrer.
+//
+//  Copyright © 2024 New Relic. All rights reserved.
+//
+
+#import "NRMAMobileViewTracker.h"
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+#import <dlfcn.h>
+#import "NRLogger.h"
+#import "NRMAMethodSwizzling.h"
+#import "NRMAViewContext.h"
+#import "NRMAViewTiming.h"
+#import "NRMAFlags.h"
+#import <NewRelic/NewRelic-Swift.h>
+
+// Associated-object keys (pointer address acts as unique key)
+static const char kNRLoadTimestampKey;
+static const char kNRAppearTimestampKey;
+static const char kNRViewInstanceIdKey;
+static const char kNRHasAppearedBeforeKey;
+
+// Attribute names, the event type, and the loadTime-vs-loadTimeUnavailable rule all live in
+// MobileViewEmitter.swift now. This file reports facts; it does not build events.
+
+// The reason string handed to the recorder when a construction interval cannot be trusted.
+static NSString * const kNRLoadUnavailableConstructedBeforeAppear = @"constructedBeforeAppear";
+static NSString * const kNRLoadUnavailableNoConstructionObserved  = @"noConstructionObserved";
+
+// Swift mangling marker — any class name starting with _Tt is mangled
+static NSString * const kSwiftManglingMarker = @"_Tt";
+
+// Returns YES if the given class or class-name prefix should be excluded from tracking.
+FOUNDATION_EXPORT BOOL NRMA_ShouldSkipClass(Class cls);
+                                                                                  
+// Canonical list of SwiftUI host/container class-name prefixes we skip.
+FOUNDATION_EXPORT NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void);
+                                                                                             
+NSArray<NSString *> * const NRMAExcludedViewClassPrefixes(void) {
+    static NSArray<NSString *> *prefixes;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        prefixes = @[
+            @"_UISceneHostingViewController",
+            @"UISystemKeyboardDockController",
+            @"UIInputWindowController",
+            @"UITrackingElementWindowController",
+            @"UIKitTabBarController",
+            // Plain UITabBarController was missing while UIKitTabBarController (the SwiftUI-backed
+            // container on newer OSes) and UINavigationController were both here -- an omission, not a
+            // decision. It is a container, not a screen: a tab switch is reported by the child view
+            // controllers' own viewDidAppear:/viewDidDisappear:, so tracking the container adds no
+            // signal. It did add harm. Because UIKit fires the outgoing tab's viewDidDisappear:
+            // *before* the incoming tab's viewDidAppear:, the container sat underneath on the visible
+            // stack and was "uncovered" on every switch -- synthesizing a re-appearance of the tab bar
+            // itself, and making it the previousView of the incoming tab instead of the tab left
+            // behind. A user's own UITabBarController subclass has its own class name and is
+            // unaffected.
+            @"UITabBarController",
+            @"TabHostingController",
+            @"UIHostingController",
+            @"UINavigationController",
+            @"NavigationStackHostingController",
+            @"StyleContextSplitViewNavigationController",
+            @"PresentationHostingController",
+            @"UICompatibilityInputViewController",
+            @"UIPredictionViewController",
+            @"UISystemInputAssistantViewController",
+            @"UICompatibilityInputViewController",
+            @"UIKitNavigationController",
+            @"_UICursorAccessoryViewController",
+            @"NotifyingMulticolumnSplitViewController",
+        ];
+    });
+    return prefixes;
+}
+
+#pragma mark - Swift name demangling
+
+/**
+ * Strips the outermost module prefix from a (possibly generic) type name.
+ *
+ * Scans for the first '.' at angle-bracket depth 0, which is the module separator.
+ * This avoids the "trailing >" bug caused by finding a '.' inside generic params.
+ *
+ *   "NRTestApp.ProductViewController"            → "ProductViewController"
+ *   "SwiftUI.UIHostingController<NRTestApp.Foo>" → "UIHostingController<NRTestApp.Foo>"
+ *   "UIViewController"                           → "UIViewController"  (no dot → unchanged)
+ */
+static NSString *NRMA_StripOuterModule(NSString *name) {
+    NSUInteger depth = 0;
+    for (NSUInteger i = 0; i < name.length; i++) {
+        unichar c = [name characterAtIndex:i];
+        if      (c == '<') depth++;
+        else if (c == '>') { if (depth > 0) depth--; }
+        else if (c == '.' && depth == 0) {
+            return [name substringFromIndex:i + 1];
+        }
+    }
+    return name;
+}
+
+/**
+ * Returns the demangled type name for `cls`.
+ *
+ * - fullName YES → "ModuleName.ClassName"  (viewClass attribute)
+ * - fullName NO  → "ClassName"             (viewName attribute)
+ *
+ * Handles three cases:
+ *   1. Mangled Swift names (_Tt…): demangled via swift_demangle, then module-stripped if needed.
+ *   2. Already-demangled module-qualified names (e.g. "NRTestApp.Foo" returned directly by
+ *      newer Swift runtimes): module-stripped without demangling step.
+ *   3. Plain ObjC names ("UIViewController"): returned as-is for fullName, or unchanged since
+ *      there is no module prefix to strip.
+ */
+static NSString *NRMA_DemangledName(Class cls, BOOL fullName) {
+    NSString *rawName = NSStringFromClass(cls);
+    NSString *qualified = rawName;
+
+    if ([rawName hasPrefix:kSwiftManglingMarker]) {
+        typedef char *(*SwiftDemangle)(const char *, size_t, char *, size_t *, uint32_t);
+        static SwiftDemangle demangle = NULL;
+        static dispatch_once_t token;
+        dispatch_once(&token, ^{
+            demangle = (SwiftDemangle)dlsym(RTLD_DEFAULT, "swift_demangle");
+        });
+        if (demangle) {
+            const char *cstr = [rawName UTF8String];
+            size_t outLen = 0;
+            char *buf = demangle(cstr, strlen(cstr), NULL, &outLen, 0);
+            if (buf) {
+                qualified = [NSString stringWithUTF8String:buf];
+                free(buf);
+            }
+        }
+    }
+
+    if (fullName) {
+        return qualified;
+    }
+
+    // Strip outermost module prefix for the simple viewName.
+    // Works on both swift_demangle output and names already returned demangled
+    // by the runtime (e.g. "NRTestApp.TextMaskingViewController").
+    return NRMA_StripOuterModule(qualified);
+}
+
+// Storage for original IMPs — set once during swizzle setup
+static void (*orig_viewDidLoad)(id, SEL);
+static void (*orig_viewDidAppear)(id, SEL, BOOL);
+static void (*orig_viewDidDisappear)(id, SEL, BOOL);
+
+#pragma mark - Helpers
+
+BOOL NRMA_ShouldSkipViewName(NSString *viewName) {
+    for (NSString *prefix in NRMAExcludedViewClassPrefixes()) {
+        if ([viewName hasPrefix:prefix]) return YES;
+    }
+    return NO;
+}
+
+BOOL NRMA_ShouldSkipClass(Class cls) {
+    return NRMA_ShouldSkipViewName(NSStringFromClass(cls));
+}
+
+// File-private — used only for a type-safe cast when calling the informal hooks.
+// Developers never need to adopt these; they exist solely to avoid compiler warnings.
+@protocol _NRMVNameHook <NSObject>
+- (nullable NSString *)nrMobileViewName;
+@end
+
+@protocol _NRMVAttrHook <NSObject>
+- (nullable NSDictionary<NSString *, id> *)nrMobileViewAttributes;
+@end
+
+#if !TARGET_OS_WATCH
+
+/**
+ * Resolves the display name for a view controller, honoring the optional
+ * nrMobileViewName hook.
+ *
+ * Returns nil to signal "ignore this view" — happens only when the VC implements
+ * nrMobileViewName and explicitly returns nil. Empty string falls back to the
+ * demangled class name (legacy behavior).
+ */
+NS_INLINE NSString * _Nullable NRMA_ViewNameForController(UIViewController *vc) {
+    SEL sel = @selector(nrMobileViewName);
+    if ([vc respondsToSelector:sel]) {
+        NSString *custom = [(id<_NRMVNameHook>)vc nrMobileViewName];
+        if (custom == nil) {
+            // Explicit nil = caller wants this view ignored.
+            return nil;
+        }
+        if (custom.length > 0) return custom;
+        // Empty string: fall through to class name.
+    }
+    // Demangled simple name, e.g. "ProductDetailViewController"
+    return NRMA_DemangledName([vc class], NO);
+}
+
+/**
+ * Returns custom attributes from the optional nrMobileViewAttributes hook, or nil.
+ * Attributes are merged into emitted MobileView events; reserved keys win.
+ */
+NS_INLINE NSDictionary<NSString *, id> * _Nullable NRMA_AttributesForController(UIViewController *vc) {
+    SEL sel = @selector(nrMobileViewAttributes);
+    if ([vc respondsToSelector:sel]) {
+        return [(id<_NRMVAttrHook>)vc nrMobileViewAttributes];
+    }
+    return nil;
+}
+
+#pragma mark - Swizzled method implementations
+
+static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
+    if (orig_viewDidLoad) orig_viewDidLoad(self, _cmd);
+
+    if (NRMA_ShouldSkipClass([self class])) return;
+
+    NSString *viewName  = NRMA_ViewNameForController(self);
+    // nil viewName = caller's nrMobileViewName returned nil → ignore this view.
+    if (viewName == nil) return;
+    if (NRMA_ShouldSkipViewName(viewName)) return;
+
+    objc_setAssociatedObject(self, &kNRLoadTimestampKey,
+                             @([NRMAViewContext monotonicNow]),
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) {
+    if (orig_viewDidAppear) orig_viewDidAppear(self, _cmd, animated);
+
+    if (NRMA_ShouldSkipClass([self class])) return;
+
+    NSString *viewName  = NRMA_ViewNameForController(self);
+    if (viewName == nil) return;
+    if (NRMA_ShouldSkipViewName(viewName)) return;
+
+    CFAbsoluteTime appearTime = [NRMAViewContext monotonicNow];
+    objc_setAssociatedObject(self, &kNRAppearTimestampKey,
+                             @(appearTime),
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    NSString *uuid = [[NSUUID UUID] UUIDString];
+    // Fresh UUID for this single visible-lifetime instance
+    objc_setAssociatedObject(self, &kNRViewInstanceIdKey,
+                             uuid,
+                             OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+    // Read back rather than passed down because viewDidLoad may never have run for this appearance.
+    // Read *before* the transition: the load start is part of what the transition records, because
+    // it is the origin both the timeToInitialDisplay baseline and every markViewTiming: on this
+    // screen resolve against.
+    //
+    // Absent on every appearance after the first: viewDidLoad fires once per load, and
+    // viewDidDisappear clears this key. A screen the user returns to was not rebuilt, so it has
+    // nothing to time.
+    NSNumber *loadTimestamp = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
+
+    // viewDidLoad → viewDidAppear is an exact construction-to-visible boundary, but only when the
+    // view was loaded *because* it was about to be shown. A controller whose `view` was touched
+    // early -- a preloaded tab, an eagerly-built container child -- loaded minutes before it
+    // appeared, and the interval is an artifact of that, not a slow screen. Above the shared
+    // ceiling the agent declines to vouch for it: no loadTime, no baseline row, and marks fall
+    // back to the appear time. The absent loadTime is what tells a consumer that happened.
+    double loadTimeMs      = 0.0;
+    BOOL loadIsMeasurable  = NO;
+    if (loadTimestamp) {
+        loadTimeMs = [NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue and:appearTime];
+        loadIsMeasurable = (loadTimeMs <= kNRMAMaxPlausibleLoadMs);
+    }
+
+    // Make this view current in the shared context so it becomes the referrer for the next view
+    // and for breadcrumbs recorded while it is visible.
+    [[NRMAViewContext sharedInstance] transitionToView:viewName
+                                            instanceId:uuid
+                                            appearTime:appearTime
+                                         loadStartTime:(loadIsMeasurable ? loadTimestamp : nil)
+                                              platform:@"UIKit"];
+
+    NSString *viewClass = NRMA_DemangledName([self class], YES);
+
+    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
+    fields.viewName   = viewName;
+    fields.viewClass  = viewClass;
+    fields.instanceId = uuid;
+    fields.platform   = @"UIKit";
+    // Referrer for this appearance (previousView / previousViewInstanceId).
+    fields.useContextReferrer = YES;
+    fields.custom     = NRMA_AttributesForController(self);
+    // loadTime belongs here and not only on the disappear event, which is where this producer used
+    // to report it alone. It also brings the UIKit schema in line with the SwiftUI producer, which
+    // has always put loadTime on appear.
+    //
+    // The recorder omits loadTime rather than zeroing it when there is no trustworthy construction
+    // start, so aggregates are not dragged toward 0 by a placeholder, and records the reason either
+    // way. Setting exactly one of these is what picks that branch.
+    if (loadIsMeasurable) {
+        fields.loadTimeMs = @(loadTimeMs);
+    } else if (loadTimestamp) {
+        fields.loadTimeUnavailable = kNRLoadUnavailableConstructedBeforeAppear;
+    } else {
+        fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
+    }
+
+    // Both halves of a view's lifetime are recorded, and they carry different things: this one
+    // loadTime, the disappear event timeVisible.
+    [NRMAMobileViewRecorder recordAppeared:fields];
+
+    // The out-of-the-box baseline, so MobileViewTiming dashboards populate with no customer
+    // instrumentation and customer marks such as timeToFullDisplay share its origin. Derived from
+    // the load start and appear time the transition above recorded rather than from a number passed
+    // in here, so the baseline and those marks cannot end up measured from different instants.
+    // No-ops on its own when no construction start was vouched for.
+    [[NRMAViewTiming sharedInstance] recordInitialDisplayForCurrentView];
+}
+
+static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
+    if (orig_viewDidDisappear) orig_viewDidDisappear(self, _cmd, animated);
+
+    if (NRMA_ShouldSkipClass([self class])) return;
+
+    CFAbsoluteTime disappearTime = [NRMAViewContext monotonicNow];
+
+    NSNumber *appearTimestamp    = objc_getAssociatedObject(self, &kNRAppearTimestampKey);
+    NSNumber *loadTimestamp      = objc_getAssociatedObject(self, &kNRLoadTimestampKey);
+    NSString *instanceId         = objc_getAssociatedObject(self, &kNRViewInstanceIdKey);
+    NSNumber *hasAppearedBefore  = objc_getAssociatedObject(self, &kNRHasAppearedBeforeKey);
+
+    if (!appearTimestamp || !instanceId) {
+        // viewDidAppear was never observed for this instance (agent started mid-session,
+        // or the view was ignored on appear).
+        return;
+    }
+
+    // viewName: simple demangled name (or custom override), e.g. "ProductDetailViewController"
+    NSString *viewName  = NRMA_ViewNameForController(self);
+    if (viewName == nil) return;
+
+    double timeVisibleMs = [NRMAViewContext millisecondsBetween:appearTimestamp.doubleValue and:disappearTime];
+
+    // Same rule as the appear half: report loadTime only when there is a trustworthy construction
+    // start. This used to fall through to 0.0, which put a real zero into every percentile over
+    // loadTime for exactly the appearances that had nothing to measure -- every screen the user
+    // returned to, since viewDidLoad fires once per load.
+    double loadTimeMs     = 0.0;
+    BOOL loadIsMeasurable = NO;
+    if (loadTimestamp) {
+        loadTimeMs = [NRMAViewContext millisecondsBetween:loadTimestamp.doubleValue and:appearTimestamp.doubleValue];
+        loadIsMeasurable = (loadTimeMs <= kNRMAMaxPlausibleLoadMs);
+    }
+
+    BOOL isRestarted = (hasAppearedBefore != nil && hasAppearedBefore.boolValue);
+    // viewClass: fully-qualified demangled name, e.g. "MyApp.ProductDetailViewController"
+    NSString *viewClass = NRMA_DemangledName([self class], YES);
+
+    NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
+    fields.viewName      = viewName;
+    fields.viewClass     = viewClass;
+    fields.instanceId    = instanceId;
+    fields.platform      = @"UIKit";
+    fields.restarted     = @(isRestarted);
+    fields.timeVisibleMs = @(timeVisibleMs);
+    fields.custom        = NRMA_AttributesForController(self);
+
+    if (loadIsMeasurable) {
+        fields.loadTimeMs = @(loadTimeMs);
+    } else if (loadTimestamp) {
+        fields.loadTimeUnavailable = kNRLoadUnavailableConstructedBeforeAppear;
+    } else {
+        fields.loadTimeUnavailable = kNRLoadUnavailableNoConstructionObserved;
+    }
+
+    [NRMAMobileViewRecorder recordDisappeared:fields];
+
+    // Drop this instance from the visible-view stack. For UIKit this is bookkeeping rather than a
+    // fix: viewDidAppear: fires on pop, so the uncovered screen reports a real appearance moments
+    // from now, which supersedes anything synthesized here. Keeping the stack accurate matters
+    // because a UIKit controller can be what a *SwiftUI* view was covering.
+    [[NRMAViewContext sharedInstance] viewDidDisappearNamed:viewName instanceId:instanceId];
+
+    //NRLOG_AGENT_VERBOSE(@"[MobileViews] %@ — loadTime=%.1fms timeVisible=%.1fms restarted=%@",
+    //                    viewName, loadTimeSec, timeVisibleSec, isRestarted ? @"YES" : @"NO");
+
+    // Mark that this VC has appeared at least once (restarted = YES on next display)
+    objc_setAssociatedObject(self, &kNRHasAppearedBeforeKey,
+                             @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    // Clear per-instance timing so stale data isn't carried forward
+    objc_setAssociatedObject(self, &kNRLoadTimestampKey,   nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &kNRAppearTimestampKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(self, &kNRViewInstanceIdKey,  nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+#endif
+
+#pragma mark - NRMAMobileViewTracker
+
+@implementation NRMAMobileViewTracker
+
++ (instancetype)sharedInstance {
+    static NRMAMobileViewTracker *instance;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[NRMAMobileViewTracker alloc] init];
+    });
+    return instance;
+}
+
+- (void)start {
+    static dispatch_once_t swizzleOnce;
+    dispatch_once(&swizzleOnce, ^{
+#if !TARGET_OS_WATCH
+
+        Class vcClass = [UIViewController class];
+
+        orig_viewDidLoad = (void(*)(id,SEL))
+            NRMAReplaceInstanceMethod(vcClass,
+                                     @selector(viewDidLoad),
+                                     (IMP)NRMA_ViewDidLoad);
+
+        orig_viewDidAppear = (void(*)(id,SEL,BOOL))
+            NRMAReplaceInstanceMethod(vcClass,
+                                     @selector(viewDidAppear:),
+                                     (IMP)NRMA_ViewDidAppear);
+
+        orig_viewDidDisappear = (void(*)(id,SEL,BOOL))
+            NRMAReplaceInstanceMethod(vcClass,
+                                     @selector(viewDidDisappear:),
+                                     (IMP)NRMA_ViewDidDisappear);
+        NRLOG_AGENT_INFO(@"[MobileViews] UIViewController lifecycle tracking started.");
+#endif
+
+    });
+}
+
+@end

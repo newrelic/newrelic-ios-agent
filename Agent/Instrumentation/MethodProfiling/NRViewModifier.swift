@@ -10,6 +10,8 @@
 // This is an experimental feature to better track SwiftUI.
 //
 
+@_implementationOnly import NewRelicPrivate
+
 #if canImport(SwiftUI)
 import SwiftUI
 
@@ -19,7 +21,7 @@ internal struct NRViewModifier: SwiftUI.ViewModifier {
     let name: String
     
     @State private var uniqueInteractionTraceIdentifier: String?
-
+    
     func body(content: Content) -> some View {
         content.onAppear {
             uniqueInteractionTraceIdentifier = NewRelic.startInteraction(withName: name)
@@ -38,6 +40,406 @@ internal struct NRViewModifier: SwiftUI.ViewModifier {
 public extension SwiftUI.View {
     func NRTrackView(name: String? = nil) -> some View {
         modifier(NRViewModifier(name: name ?? String(describing: type(of: self))))
+    }
+}
+
+// MARK: - MobileViews: SwiftUI support
+
+/// Feature-flag gate for the SwiftUI MobileView producers.
+///
+/// MobileView collection is opt-in via `NRFeatureFlag_AutomaticMobileViews`. The UIKit producer is
+/// gated at swizzle-install time (see `-[NewRelicAgentInternal initialize]`) and the manual
+/// `setCurrentView:` producer is gated at its API boundary (see `+[NewRelic setCurrentView:attributes:]`).
+/// The SwiftUI modifiers below are compiled into the host app's view tree, so they must consult the
+/// flag at emit time — otherwise merely attaching `.NRMobileView(...)` would send data even with the
+/// feature disabled, which is the bug this gate closes. Keeping the decision here means the flag is a
+/// true master switch for every SwiftUI entry point (`NRMobileView`, `NRMobileDestination`,
+/// `NRMobileSheet`, `NRMobileFullScreenCover`, `NRMobilePopover`, `NRMobileNavigationLink`,
+/// `NRMobileTabTracking`).
+internal enum NRMobileViewGate {
+
+    /// The master switch for SwiftUI MobileView collection.
+    static var isFeatureEnabled: Bool {
+        NRMAFlags.shouldEnableAutomaticMobileViews()
+    }
+
+    /// Whether a MobileView event should be recorded for this view: only when the feature flag is
+    /// enabled, the view is not explicitly ignored, and its name is not on the skip list.
+    static func shouldRecord(ignored: Bool, viewName: String) -> Bool {
+        guard isFeatureEnabled else { return false }
+        if ignored { return false }
+        if NRMA_ShouldSkipViewName(viewName) { return false }
+        return true
+    }
+}
+
+/// NRMobileViewModifier emits a MobileView custom event on appear and disappear.
+/// Tracks loadTime (onAppear - modifier init), timeVisible (disappear - appear), and
+/// viewInstanceId per appearance, matching the UIKit NRMAMobileViewTracker schema.
+@available(iOS 13, tvOS 13, *)
+internal struct NRMobileViewModifier: SwiftUI.ViewModifier {
+
+    let viewName: String
+    let viewClass: String
+    let customAttributes: [String: Any]?
+    let ignored: Bool
+
+    /// Monotonic seconds, from `NRMAViewContext.monotonicNow()`. Never `Date` — see that method for
+    /// why a wall-clock step surfaces here as a fabricated 0 ms rather than as an obvious error.
+    @State private var appearTime: Double?
+    @State private var instanceId: String?
+    @State private var hasAppearedBefore: Bool = false
+
+    // Approximation of "load time": modifier creation → onAppear.
+    //
+    // The approximation breaks for any view SwiftUI *constructs* long before it *shows*. TabView is
+    // the clearest case: it builds every tab's content struct up front to resolve the tab items, so a
+    // tab the user selects five minutes later would report a five-minute load. Container views that
+    // build their children eagerly behave the same way. kNRMAMaxPlausibleLoadMs is what rejects
+    // those, and `hasAppearedBefore` is what rejects the other direction (below).
+    private let modifierCreatedAt = NRMAViewContext.monotonicNow()
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                // Master switch: emit (and touch the shared view context) only when the
+                // AutomaticMobileViews feature flag is enabled and this view is trackable.
+                guard NRMobileViewGate.shouldRecord(ignored: ignored, viewName: viewName) else { return }
+
+                let now = NRMAViewContext.monotonicNow()
+                let id = UUID().uuidString
+                appearTime = now
+                instanceId = id
+
+                // Construction start: modifier init → onAppear, and only on a genuine first
+                // construction.
+                //
+                // `hasAppearedBefore` lives in @State, so it is `true` here precisely when SwiftUI
+                // preserved this view's identity — which means the view was *not* rebuilt and has no
+                // construction to time. (Had it been rebuilt, @State would have reset and this would
+                // read `false`.) That check replaces an earlier "measure from the last time it was
+                // hidden" fallback, which reported the interval the user spent on some *other*
+                // screen as this screen's load time whenever they came back within the ceiling.
+                var loadStart: NSNumber?
+                var unavailableReason: String?
+                var loadTimeMs: Double = 0
+
+                if hasAppearedBefore {
+                    unavailableReason = "notRebuilt"
+                } else {
+                    let measured = NRMAViewContext.millisecondsBetween(modifierCreatedAt, and: now)
+                    if measured <= kNRMAMaxPlausibleLoadMs {
+                        loadStart  = NSNumber(value: modifierCreatedAt)
+                        loadTimeMs = measured
+                    } else {
+                        unavailableReason = "constructedBeforeAppear"
+                    }
+                }
+                let loadIsMeasurable = (loadStart != nil)
+
+                // Make this view current in the shared context so it becomes the referrer for the
+                // next view and for breadcrumbs recorded while it is visible. The load start rides
+                // along because it is the origin both timeToInitialDisplay and every
+                // markViewTiming: on this screen are measured from.
+                NRMAViewContext.sharedInstance().transition(
+                    toView: viewName,
+                    instanceId: id,
+                    appearTime: now,
+                    loadStartTime: loadStart,
+                    platform: "SwiftUI")
+
+                // Reserved keys overwrite any caller-supplied values, and the referrer for this
+                // appearance is merged in, by the shared recorder -- which owns the schema.
+                //
+                // The load outcome is a single value rather than two independent attributes, so
+                // loadTime and loadTimeUnavailable cannot both be written or both be missed. An
+                // absent loadTime is recorded with its reason, so it is diagnosable in NRDB rather
+                // than looking like the attribute was never implemented.
+                let load: NRViewLoadOutcome = loadIsMeasurable
+                    ? .measured(loadTimeMs)
+                    : .unavailable(unavailableReason.flatMap { NRViewLoadOutcome.Reason(rawValue: $0) }
+                                   ?? .noConstructionObserved)
+
+                // Recorded on both appear and disappear, carrying different things. This one is
+                // the only event that can hold loadTime (measured above); the disappear event
+                // carries timeVisible instead.
+                MobileViewRecord(viewName: viewName,
+                                 viewClass: viewClass,
+                                 instanceId: id,
+                                 platform: .swiftUI,
+                                 phase: .appeared,
+                                 referrer: .fromContext,
+                                 load: load,
+                                 restarted: hasAppearedBefore,
+                                 custom: customAttributes).emit()
+
+                // The out-of-the-box baseline, so MobileViewTiming dashboards populate with no
+                // customer instrumentation and customer marks such as timeToFullDisplay share its
+                // origin. Derived from the load start and appear time the transition above recorded,
+                // not from a number passed in here, so the baseline and those marks cannot end up
+                // measured from different instants. No-ops on its own when no construction start was
+                // vouched for, which is the same condition that withheld loadTime.
+                NRMAViewTiming.sharedInstance().recordInitialDisplayForCurrentView()
+            }
+            .onDisappear {
+                // Master switch: honor the AutomaticMobileViews feature flag here too, so a view
+                // never emits a disappear event while the feature is disabled.
+                guard NRMobileViewGate.shouldRecord(ignored: ignored, viewName: viewName) else { return }
+
+                let disappearTime = NRMAViewContext.monotonicNow()
+                guard let appeared = appearTime, let id = instanceId else { return }
+
+                // timeVisible (ms): onAppear → onDisappear. loadTime is only included on appear.
+                let timeVisibleMs = NRMAViewContext.millisecondsBetween(appeared, and: disappearTime)
+
+                // Emitted however brief the visible lifetime was. SwiftUI delivers an
+                // appear/disappear pair milliseconds apart on every TabView switch; those pairs are
+                // reported like any other rather than being suppressed or labelled by the agent.
+                MobileViewRecord(viewName: viewName,
+                                 viewClass: viewClass,
+                                 instanceId: id,
+                                 platform: .swiftUI,
+                                 phase: .disappeared,
+                                 timeVisibleMs: timeVisibleMs,
+                                 restarted: hasAppearedBefore,
+                                 custom: customAttributes).emit()
+
+                // Tell the shared context this instance is gone. This is the SwiftUI-specific half
+                // of the fix: popping a NavigationStack back to a view does not re-fire its
+                // onAppear, so if this disappearance uncovered something, the context synthesizes
+                // the appear event SwiftUI never delivers. Called before `instanceId` is cleared,
+                // since that is the key the stack is keyed by.
+                NRMAViewContext.sharedInstance().viewDidDisappearNamed(viewName, instanceId: id)
+
+                // Marks this identity as one SwiftUI preserved: the next onAppear on this same @State
+                // is a re-appearance with nothing rebuilt, so it reports no construction start.
+                hasAppearedBefore = true
+                appearTime = nil
+                instanceId = nil
+            }
+    }
+}
+
+/// Attach this modifier to SwiftUI views to emit MobileView events.
+/// Enable via NRFeatureFlag_AutomaticMobileViews.
+///
+/// - Parameters:
+///   - name: Display name for the view. Defaults to the SwiftUI view type name.
+///   - attributes: Optional custom attributes merged into every MobileView event emitted
+///     for this view. Reserved keys (viewClass, viewName, viewInstanceId, restarted,
+///     loadTime, timeVisible, appeared, uiPlatform, agentName) are not overridden.
+///   - ignored: When true, no MobileView events are emitted for this view. Default false.
+@available(iOS 13, tvOS 13, *)
+public extension SwiftUI.View {
+    func NRMobileView(name: String? = nil,
+                      attributes: [String: Any]? = nil,
+                      ignored: Bool = false) -> some View {
+        // String(reflecting:) produces a noisy generic modifier stack when views are chained
+        // (e.g. "SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<...>>"), so we use
+        // String(describing:) for a clean simple name, or the caller-supplied name if given.
+        let simpleName = String(describing: type(of: self))
+        let resolved   = name ?? simpleName
+        return modifier(NRMobileViewModifier(
+            viewName:          resolved,
+            viewClass:         resolved,
+            customAttributes:  attributes,
+            ignored:           ignored
+        ))
+    }
+    
+    // NavigationStack / NavigationLink + navigationDestination(for:)
+    @available(iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+    func NRMobileDestination<D: Hashable, C: View>(
+        for data: D.Type,
+        name: @escaping (D) -> String = { String(describing: $0) },
+        @ViewBuilder destination: @escaping (D) -> C
+    ) -> some View {
+        return navigationDestination(for: D.self) { value in
+            destination(value).NRMobileView(name: name(value))
+        }
+        
+    }
+    
+    // sheet(isPresented:)
+    func NRMobileSheet<C: View>(
+        isPresented: Binding<Bool>,
+        name: String,
+        onDismiss: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> C
+    ) -> some View {
+        sheet(isPresented: isPresented, onDismiss: onDismiss) {
+            content().NRMobileView(name: name)
+        }
+    }
+    
+    // sheet(item:)
+    func NRMobileSheet<Item: Identifiable, C: View>(
+        item: Binding<Item?>,
+        name: @escaping (Item) -> String = { String(describing: $0) },
+        onDismiss: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping (Item) -> C
+    ) -> some View {
+        sheet(item: item, onDismiss: onDismiss) { value in
+            content(value).NRMobileView(name: name(value))
+        }
+    }
+    
+    // Same shape for .fullScreenCover and .popover
+    func NRMobileFullScreenCover<C: View>(
+        isPresented: Binding<Bool>, name: String,
+        onDismiss: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> C
+    ) -> some View {
+        fullScreenCover(isPresented: isPresented, onDismiss: onDismiss) {
+            content().NRMobileView(name: name)
+        }
+    }
+    #if os(iOS) || targetEnvironment(macCatalyst)
+    func NRMobilePopover<C: View>(
+        isPresented: Binding<Bool>, name: String,
+        attachmentAnchor: PopoverAttachmentAnchor = .rect(.bounds),
+        arrowEdge: Edge = .top,
+        @ViewBuilder content: @escaping () -> C
+    ) -> some View {
+        popover(isPresented: isPresented, attachmentAnchor: attachmentAnchor) {
+            content().NRMobileView(name: name)
+        }
+    }
+    #endif
+}
+
+// NavigationLink helper (value-less destination form).
+// Uses the pre-iOS 16 NavigationLink(destination:label:) initializer so the
+// wrapper is usable anywhere NavigationLink is, not just in iOS 16 stacks.
+@available(iOS 13, tvOS 13, *)
+public struct NRMobileNavigationLink<Label: View, Destination: View>: View {
+    let name: String
+    @ViewBuilder let destination: () -> Destination
+    @ViewBuilder let label: () -> Label
+
+    public init(
+        name: String,
+        @ViewBuilder destination: @escaping () -> Destination,
+        @ViewBuilder label: @escaping () -> Label
+    ) {
+        self.name = name
+        self.destination = destination
+        self.label = label
+    }
+
+    public var body: some View {
+        NavigationLink(destination: destination().NRMobileView(name: name)) {
+            label()
+        }
+    }
+}
+
+// TabView tracking
+@available(iOS 15, tvOS 15, *)
+public extension SwiftUI.View {
+    func NRMobileTabTracking<Tag: Hashable>(
+        selection: Binding<Tag>,
+        name: @escaping (Tag) -> String = { String(describing: $0) }
+    ) -> some View {
+        modifier(NRMobileTabTrackingModifier(selection: selection, name: name))
+    }
+}
+
+@available(iOS 15, tvOS 15, *)
+private struct NRMobileTabTrackingModifier<Tag: Hashable>: ViewModifier {
+    @Binding var selection: Tag
+    let name: (Tag) -> String
+
+    /// The tab currently reported as selected. Needed to close it out when the selection moves on --
+    /// without it a tab has an appear event and never a disappear, so its time on screen is
+    /// unknowable.
+    @State private var openTabName: String?
+    @State private var openTabInstance: String?
+    /// Monotonic seconds, from `NRMAViewContext.monotonicNow()`.
+    @State private var openTabSince: Double?
+
+    /// Tabs selected at least once, so re-selecting one reports restarted: true the way every other
+    /// producer does.
+    @State private var seenTabs: Set<String> = []
+
+    func body(content: Content) -> some View {
+        content
+            .task(id: selection) {
+                // Master switch: don't track tab switches while AutomaticMobileViews is disabled.
+                guard NRMobileViewGate.isFeatureEnabled else { return }
+
+                // Reported as soon as the selection changes. There is no settling delay: flicking
+                // through tabs to reach a distant one records every tab passed through, because the
+                // agent no longer decides which selections were "real" on the customer's behalf.
+                let now = NRMAViewContext.monotonicNow()
+                let id = UUID().uuidString
+                let viewName = name(selection)
+                let restarted = seenTabs.contains(viewName)
+
+                // Make the tab current *before* closing the previous one. Two reasons: the new tab
+                // then lands on top of the visible stack, so the outgoing tab is buried by the time it
+                // is removed and cannot synthesize a phantom re-appearance; and previousViewAttributes
+                // below resolves to the tab just left, which is what makes tab-to-tab navigation
+                // visible at all. Previously this modifier never touched the context, so every tab
+                // event had no previousView and read as a fresh session entry point.
+                // loadStartTime is nil: selecting a tab constructs nothing, so there is no
+                // construction start to time. That withholds the timeToInitialDisplay baseline for
+                // tab switches and makes marks on a tab measure from the appear instant.
+                NRMAViewContext.sharedInstance().transition(
+                    toView: viewName,
+                    instanceId: id,
+                    appearTime: now,
+                    loadStartTime: nil,
+                    platform: "SwiftUI")
+
+                // No loadTime: selecting a tab constructs nothing measurable here. Omitted rather
+                // than zeroed so it does not drag load-time aggregates toward 0; the reason is
+                // recorded so the omission is diagnosable.
+                MobileViewRecord(viewName: viewName,
+                                 viewClass: String(describing: Tag.self),
+                                 instanceId: id,
+                                 platform: .swiftUI,
+                                 phase: .appeared,
+                                 referrer: .fromContext,
+                                 load: .unavailable(.noConstructionObserved),
+                                 restarted: restarted,
+                                 navigationKind: "tab").emit()
+
+                closeOpenTab(at: now)
+
+                openTabName     = viewName
+                openTabInstance = id
+                openTabSince    = now
+                seenTabs.insert(viewName)
+            }
+            // The whole TabView going away must still close the tab that was open, or the last tab of
+            // every session silently loses its timeVisible.
+            .onDisappear {
+                guard NRMobileViewGate.isFeatureEnabled else { return }
+                closeOpenTab(at: NRMAViewContext.monotonicNow())
+                openTabName     = nil
+                openTabInstance = nil
+                openTabSince    = nil
+            }
+    }
+
+    /// Emits the disappear half for whichever tab is currently open.
+    private func closeOpenTab(at when: Double) {
+        guard let priorName = openTabName,
+              let priorId = openTabInstance,
+              let priorSince = openTabSince else { return }
+
+        let timeVisibleMs = NRMAViewContext.millisecondsBetween(priorSince, and: when)
+
+        MobileViewRecord(viewName: priorName,
+                         viewClass: String(describing: Tag.self),
+                         instanceId: priorId,
+                         platform: .swiftUI,
+                         phase: .disappeared,
+                         timeVisibleMs: timeVisibleMs,
+                         navigationKind: "tab").emit()
+
+        NRMAViewContext.sharedInstance().viewDidDisappearNamed(priorName, instanceId: priorId)
     }
 }
 

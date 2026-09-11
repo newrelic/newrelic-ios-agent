@@ -1,0 +1,339 @@
+{
+  "listings": [
+    {
+      "id": "L-1001",
+      "address": "1428 Fremont Ave N",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98103",
+      "price": 875000,
+      "beds": 3,
+      "baths": 2.0,
+      "sqft": 1840,
+      "yearBuilt": 1926,
+      "propertyType": "House",
+      "status": "New",
+      "daysOnMarket": 2,
+      "summary": "Craftsman bungalow with a wraparound porch, original fir floors, and a detached studio off the alley. Two blocks to the Sunday market.",
+      "photoCount": 6,
+      "hue": 0.08,
+      "agent": {
+        "id": "A-1",
+        "name": "Dana Whitfield",
+        "brokerage": "Cascade & Pine Realty",
+        "phone": "206-555-0147"
+      }
+    },
+    {
+      "id": "L-1002",
+      "address": "905 Dexter Ave N #402",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98109",
+      "price": 612000,
+      "beds": 2,
+      "baths": 1.0,
+      "sqft": 980,
+      "yearBuilt": 2004,
+      "propertyType": "Condo",
+      "status": "For Sale",
+      "daysOnMarket": 19,
+      "summary": "Corner unit with south-facing windows over Lake Union. Deeded parking, in-unit laundry, and a building that actually funded its reserves.",
+      "photoCount": 5,
+      "hue": 0.55,
+      "agent": {
+        "id": "A-2",
+        "name": "Marcus Oyelaran",
+        "brokerage": "Union Bay Group",
+        "phone": "206-555-0182"
+      }
+    },
+    {
+      "id": "L-1003",
+      "address": "3312 E Denny Way",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98122",
+      "price": 1425000,
+      "beds": 4,
+      "baths": 3.5,
+      "sqft": 2960,
+      "yearBuilt": 2019,
+      "propertyType": "House",
+      "status": "For Sale",
+      "daysOnMarket": 34,
+      "summary": "Modern build on a quiet block: chef's kitchen, heated floors on the lower level, and a rooftop deck with a clear shot at the Cascades.",
+      "photoCount": 8,
+      "hue": 0.33,
+      "agent": {
+        "id": "A-1",
+        "name": "Dana Whitfield",
+        "brokerage": "Cascade & Pine Realty",
+        "phone": "206-555-0147"
+      }
+    },
+    {
+      "id": "L-1004",
+      "address": "7719 15th Ave NW",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98117",
+      "price": 749500,
+      "beds": 3,
+      "baths": 2.5,
+      "sqft": 1620,
+      "yearBuilt": 1998,
+      "propertyType": "Townhouse",
+      "status": "Pending",
+      "daysOnMarket": 46,
+      "summary": "End-unit townhome with a fenced patch of yard, garage parking, and a heat pump installed last spring.",
+      "photoCount": 4,
+      "hue": 0.74,
+      "agent": {
+        "id": "A-3",
+        "name": "Priya Raghunathan",
+        "brokerage": "Ballard Home Co.",
+        "phone": "206-555-0163"
+      }
+    },
+    {
+      "id": "L-1005",
+      "address": "204 Summit Ave E #6",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98102",
+      "price": 439000,
+      "beds": 1,
+      "baths": 1.0,
+      "sqft": 685,
+      "yearBuilt": 1929,
+      "propertyType": "Condo",
+      "status": "For Sale",
+      "daysOnMarket": 11,
+      "summary": "Top-floor one bedroom in a brick co-op with arched doorways and a claw-foot tub. Walk score of ninety-eight.",
+      "photoCount": 5,
+      "hue": 0.95,
+      "agent": {
+        "id": "A-2",
+        "name": "Marcus Oyelaran",
+        "brokerage": "Union Bay Group",
+        "phone": "206-555-0182"
+      }
+    },
+    {
+      "id": "L-1006",
+      "address": "11420 Rainier Ave S",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98178",
+      "price": 565000,
+      "beds": 4,
+      "baths": 2.0,
+      "sqft": 2140,
+      "yearBuilt": 1961,
+      "propertyType": "House",
+      "status": "New",
+      "daysOnMarket": 1,
+      "summary": "Mid-century split level on a deep lot with mature apples and a garage the previous owner wired as a shop.",
+      "photoCount": 7,
+      "hue": 0.14,
+      "agent": {
+        "id": "A-4",
+        "name": "Terrence Okafor",
+        "brokerage": "Rainier South Partners",
+        "phone": "206-555-0199"
+      }
+    },
+    {
+      "id": "L-1007",
+      "address": "628 Bellevue Ave E #1201",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98102",
+      "price": 1180000,
+      "beds": 2,
+      "baths": 2.0,
+      "sqft": 1395,
+      "yearBuilt": 2016,
+      "propertyType": "Condo",
+      "status": "For Sale",
+      "daysOnMarket": 27,
+      "summary": "High-floor corner with floor-to-ceiling glass, a proper second bedroom, and concierge service downstairs.",
+      "photoCount": 6,
+      "hue": 0.62,
+      "agent": {
+        "id": "A-3",
+        "name": "Priya Raghunathan",
+        "brokerage": "Ballard Home Co.",
+        "phone": "206-555-0163"
+      }
+    },
+    {
+      "id": "L-1008",
+      "address": "9043 35th Ave SW",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98126",
+      "price": 698000,
+      "beds": 3,
+      "baths": 1.75,
+      "sqft": 1510,
+      "yearBuilt": 1947,
+      "propertyType": "House",
+      "status": "For Sale",
+      "daysOnMarket": 8,
+      "summary": "Updated cape with a finished basement, new roof in 2023, and a west-facing deck that catches the ferry lights.",
+      "photoCount": 5,
+      "hue": 0.42,
+      "agent": {
+        "id": "A-4",
+        "name": "Terrence Okafor",
+        "brokerage": "Rainier South Partners",
+        "phone": "206-555-0199"
+      }
+    },
+    {
+      "id": "L-1009",
+      "address": "1512 NW 62nd St",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98107",
+      "price": 2340000,
+      "beds": 5,
+      "baths": 4.0,
+      "sqft": 4120,
+      "yearBuilt": 2021,
+      "propertyType": "House",
+      "status": "For Sale",
+      "daysOnMarket": 63,
+      "summary": "Architect's own house: board-formed concrete, a courtyard that works in the rain, and a garage that fits the boat.",
+      "photoCount": 9,
+      "hue": 0.02,
+      "agent": {
+        "id": "A-1",
+        "name": "Dana Whitfield",
+        "brokerage": "Cascade & Pine Realty",
+        "phone": "206-555-0147"
+      }
+    },
+    {
+      "id": "L-1010",
+      "address": "4407 Interlake Ave N #C",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98103",
+      "price": 524000,
+      "beds": 2,
+      "baths": 1.5,
+      "sqft": 1080,
+      "yearBuilt": 2007,
+      "propertyType": "Townhouse",
+      "status": "New",
+      "daysOnMarket": 3,
+      "summary": "Quiet back unit off the courtyard with a bonus room that fits a desk and a bike stand both.",
+      "photoCount": 4,
+      "hue": 0.68,
+      "agent": {
+        "id": "A-2",
+        "name": "Marcus Oyelaran",
+        "brokerage": "Union Bay Group",
+        "phone": "206-555-0182"
+      }
+    },
+    {
+      "id": "L-1011",
+      "address": "812 N 80th St",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98103",
+      "price": 935000,
+      "beds": 4,
+      "baths": 2.5,
+      "sqft": 2280,
+      "yearBuilt": 1936,
+      "propertyType": "House",
+      "status": "Pending",
+      "daysOnMarket": 52,
+      "summary": "Tudor with leaded glass, a dining room that seats ten, and a basement already framed for a fourth bedroom.",
+      "photoCount": 6,
+      "hue": 0.21,
+      "agent": {
+        "id": "A-3",
+        "name": "Priya Raghunathan",
+        "brokerage": "Ballard Home Co.",
+        "phone": "206-555-0163"
+      }
+    },
+    {
+      "id": "L-1012",
+      "address": "2201 Alaskan Way #708",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98121",
+      "price": 1650000,
+      "beds": 3,
+      "baths": 2.5,
+      "sqft": 1870,
+      "yearBuilt": 2013,
+      "propertyType": "Condo",
+      "status": "For Sale",
+      "daysOnMarket": 41,
+      "summary": "Waterfront unit facing the sound, two parking stalls, and a balcony deep enough to actually use.",
+      "photoCount": 7,
+      "hue": 0.50,
+      "agent": {
+        "id": "A-4",
+        "name": "Terrence Okafor",
+        "brokerage": "Rainier South Partners",
+        "phone": "206-555-0199"
+      }
+    }
+  ],
+  "threads": [
+    {
+      "id": "T-1",
+      "correspondent": "Dana Whitfield",
+      "brokerage": "Cascade & Pine Realty",
+      "preview": "I can get you in Saturday at 11 if that still works.",
+      "unread": true,
+      "messages": [
+        { "id": "M-1", "body": "Hi! Saw you saved the Fremont bungalow — happy to walk it with you this weekend.", "fromAgent": true, "sentAgo": "2d ago" },
+        { "id": "M-2", "body": "Yes, Saturday morning would be great. Is 11 possible?", "fromAgent": false, "sentAgo": "1d ago" },
+        { "id": "M-3", "body": "I can get you in Saturday at 11 if that still works.", "fromAgent": true, "sentAgo": "4h ago" }
+      ]
+    },
+    {
+      "id": "T-2",
+      "correspondent": "Marcus Oyelaran",
+      "brokerage": "Union Bay Group",
+      "preview": "The seller countered — sending the numbers over now.",
+      "unread": true,
+      "messages": [
+        { "id": "M-4", "body": "We submitted at asking with a 20 day close.", "fromAgent": true, "sentAgo": "3d ago" },
+        { "id": "M-5", "body": "The seller countered — sending the numbers over now.", "fromAgent": true, "sentAgo": "6h ago" }
+      ]
+    },
+    {
+      "id": "T-3",
+      "correspondent": "Priya Raghunathan",
+      "brokerage": "Ballard Home Co.",
+      "preview": "Inspection report is back, nothing structural.",
+      "unread": false,
+      "messages": [
+        { "id": "M-6", "body": "Inspection is scheduled for Thursday at 9.", "fromAgent": true, "sentAgo": "1w ago" },
+        { "id": "M-7", "body": "Inspection report is back, nothing structural.", "fromAgent": true, "sentAgo": "5d ago" },
+        { "id": "M-8", "body": "That's a relief. Let's talk through the roof item.", "fromAgent": false, "sentAgo": "5d ago" }
+      ]
+    },
+    {
+      "id": "T-4",
+      "correspondent": "Terrence Okafor",
+      "brokerage": "Rainier South Partners",
+      "preview": "Two more just came on that fit your range.",
+      "unread": false,
+      "messages": [
+        { "id": "M-9", "body": "Two more just came on that fit your range.", "fromAgent": true, "sentAgo": "2w ago" }
+      ]
+    }
+  ]
+}

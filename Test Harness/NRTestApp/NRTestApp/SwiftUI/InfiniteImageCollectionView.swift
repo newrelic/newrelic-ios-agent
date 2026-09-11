@@ -1,4 +1,21 @@
+//
+//  InfiniteImageCollectionView.swift
+//  NRTestApp
+//
+//  The SwiftUI counterpart to InfiniteImageCollectionViewController, instrumented with
+//  MobileViewTiming:
+//
+//    * markViewTiming("timeToFullDisplay") once the first screenful of images has actually rendered.
+//      The .NRMobileView modifier's timeToInitialDisplay stops at onAppear, where the grid is still
+//      empty placeholders, so this is the only report of when the screen showed something.
+//
+//    * recordViewTiming("nextPageLoad", milliseconds:) for each appended page, whose zero point is
+//      when that page's fetch started -- not when the view appeared, which is the only origin
+//      markViewTiming can use.
+//
+
 import SwiftUI
+import NewRelic
 
 struct InfiniteImageCollectionView: View {
     @StateObject private var viewModel = InfiniteImageViewModel()
@@ -13,7 +30,12 @@ struct InfiniteImageCollectionView: View {
             ScrollView {
                 LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(viewModel.images.indices, id: \.self) { index in
-                        AsyncImageView(imageURL: viewModel.images[index])
+                        AsyncImageView(imageURL: viewModel.images[index],
+                                       // Reported per image so the view model can tell when the
+                                       // first screenful is real. The mark itself happens once, in
+                                       // the view model -- marking per image would exhaust the
+                                       // per-view cap on the first scroll.
+                                       onLoaded: { viewModel.imageDidLoad(at: index) })
                             .frame(width: 150, height: 150)
                             .onAppear {
                                 if index == viewModel.images.count - 5 {
@@ -39,6 +61,7 @@ struct InfiniteImageCollectionView: View {
             .padding()
         }
         .navigationTitle("Infinite Images")
+        .NRMobileView(name: "Infinite Images")
         .onAppear {
             viewModel.loadInitialImages()
         }
@@ -48,6 +71,23 @@ struct InfiniteImageCollectionView: View {
 class InfiniteImageViewModel: ObservableObject {
     @Published var images: [String] = []
     @Published var isLoading = false
+
+    // MARK: - MobileViewTiming state
+
+    /// Stand-in for "one screenful" on a two-column grid. The UIKit version derives this from the
+    /// collection view's visible cells; SwiftUI does not hand out that information, so this is an
+    /// approximation kept deliberately below the real fold rather than above it -- waiting on images
+    /// the user cannot see would time the network instead of the screen.
+    private static let firstScreenfulCount = 6
+
+    /// Deduplicated by index, because SwiftUI re-runs onAppear whenever a lazy cell scrolls back in.
+    private var firstScreenfulLoaded = Set<Int>()
+    private var didMarkFullDisplay = false
+
+    /// The agent caps customer timings at 16 per view instance. Appended pages are unbounded, the
+    /// mark above is not, so the appends are the ones that get a budget.
+    private static let pageTimingBudget = 8
+    private var pageTimingsRecorded = 0
     
     private let imageURLs = [
         "https://picsum.photos/300/300?random=1",
@@ -67,6 +107,9 @@ class InfiniteImageViewModel: ObservableObject {
     func loadMoreImages() {
         guard !isLoading else { return }
         isLoading = true
+
+        // Zero point for this page, which is unrelated to when the view appeared.
+        let pageStart = ProcessInfo.processInfo.systemUptime
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             let startIndex = self.images.count
@@ -75,12 +118,46 @@ class InfiniteImageViewModel: ObservableObject {
             }
             self.images.append(contentsOf: newImages)
             self.isLoading = false
+            self.recordPageLoad(startedAt: pageStart)
         }
+    }
+
+    // MARK: - MobileViewTiming
+
+    /// One image finished rendering. Once the first screenful has, the screen is genuinely displayed,
+    /// and the mark is measured from the same instant the .NRMobileView modifier used for
+    /// timeToInitialDisplay -- which is what makes subtracting the two meaningful.
+    ///
+    /// A failed download simply leaves the set short and no timeToFullDisplay is recorded: the screen
+    /// never fully displayed, and a stand-in value would count as real in every percentile.
+    func imageDidLoad(at index: Int) {
+        guard !didMarkFullDisplay, index < Self.firstScreenfulCount else { return }
+        firstScreenfulLoaded.insert(index)
+
+        let awaited = min(Self.firstScreenfulCount, images.count)
+        guard awaited > 0, firstScreenfulLoaded.count >= awaited else { return }
+        didMarkFullDisplay = true
+
+        let marked = NewRelic.markViewTiming("timeToFullDisplay")
+        NewRelic.logVerbose("markViewTiming(timeToFullDisplay) -> \(marked)  [\(awaited) images rendered]")
+    }
+
+    /// A page was appended, timed by this screen rather than from the view's zero point.
+    private func recordPageLoad(startedAt start: TimeInterval) {
+        guard pageTimingsRecorded < Self.pageTimingBudget else { return }
+        pageTimingsRecorded += 1
+
+        let elapsedMs = (ProcessInfo.processInfo.systemUptime - start) * 1000
+        let recorded = NewRelic.recordViewTiming("nextPageLoad", milliseconds: elapsedMs)
+        NewRelic.logVerbose("recordViewTiming(nextPageLoad, \(Int(elapsedMs))ms) -> \(recorded)  [\(images.count) images]")
     }
 }
 
 struct AsyncImageView: View {
     let imageURL: String
+    /// Called when a real image -- not the placeholder -- is on screen. Optional and defaulted so the
+    /// other screens using this view are unaffected.
+    var onLoaded: (() -> Void)? = nil
     @State private var image: UIImage?
     @State private var isLoading = false
     
@@ -94,6 +171,9 @@ struct AsyncImageView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
+                    // Reported from the Image's own onAppear rather than from the assignment in
+                    // loadImage(), so the callback means "rendered" and not "decoded".
+                    .onAppear { onLoaded?() }
             } else if isLoading {
                 ProgressView()
             }

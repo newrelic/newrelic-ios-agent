@@ -10,6 +10,7 @@
 #include <Analytics/InteractionAnalyticEvent.hpp>
 #include <Analytics/SessionAnalyticEvent.hpp>
 #include <Analytics/UserActionEvent.hpp>
+#include <Analytics/ViewEvent.hpp>
 #include <Analytics/CustomEvent.hpp>
 #include <Analytics/PersistentStore.hpp>
 
@@ -85,6 +86,12 @@ namespace NewRelic {
         newUserActionEvent(unsigned long long timestamp_epoch_millis,
                            double session_elapsed_time_sec,
                            AttributeValidator &attributeValidator);
+
+        static std::shared_ptr<ViewEvent>
+        newViewEvent(const char* eventType,
+                     unsigned long long timestamp_epoch_millis,
+                     double session_elapsed_time_sec,
+                     AttributeValidator &attributeValidator);
 
 
         static std::shared_ptr<NetworkErrorEvent> newNetworkErrorEvent(unsigned long long timestamp_epoch_millis,

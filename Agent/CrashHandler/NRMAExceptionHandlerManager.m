@@ -27,6 +27,7 @@
 #import "NRMAMetric.h"
 #import "NRMACrashReporterRecorder.h"
 #import "Constants.h"
+#import "NRMAViewContext.h"
 
 @interface NRMAExceptionHandlerManager  ()
 #if !TARGET_OS_WATCH
@@ -119,6 +120,14 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
                 modifiedAttributes[kNRMA_RA_hasReplay] = @YES;
             }
 
+            // The crashed session's in-memory NRMAViewContext is gone, but every view transition
+            // wrote through to disk, so the view it was last on is still there to read.
+            NSDictionary<NSString *, NSString *> *lastKnownView = [NRMAViewContext persistedReferrerAttributes];
+            if (lastKnownView.count > 0) {
+                NRLOG_AGENT_DEBUG(@"Found persisted view state for crashed session - decorating crash with last known view");
+                [modifiedAttributes addEntriesFromDictionary:lastKnownView];
+            }
+
             [_reportManager processReportsWithSessionAttributes:modifiedAttributes
                                                 analyticsEvents:events];
 
@@ -139,6 +148,12 @@ static const NSString* NRMAManagerAccessorLock = @"managerLock";
                 [self clearSessionReplayFrames];
             }
         }
+
+        // Always start this session with no leftover view state, whether or not it was just
+        // consumed above -- a stale file from a session that exited cleanly must never be
+        // attributed to a crash several sessions later.
+        [NRMAViewContext clearPersistedReferrerAttributes];
+
         self.handler = [[NRMAUncaughtExceptionHandler alloc] initWithCrashReporter:_crashReporter];
 #endif
     }
