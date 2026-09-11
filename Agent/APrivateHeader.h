@@ -32,5 +32,13 @@
 #import "NRMAHarvesterConfiguration.h"
 #import "NRMAFlags.h"
 #import "NRMAOfflineStorage.h"
+#import "NRExceptionCatcher.h"
+#import "NRMATraceMachineAgentUserInterface.h"
+#import "NRMATraceController.h"
+#import "NRMACustomTrace.h"
+#import "NRMAURLTransformer.h"
+#import "NRMANetworkFacade.h"
+#import "NRMAHTTPUtilities.h"
+#import "NRMAKeyAttributes.h"
 
 #endif /* APrivateHeader_h */
