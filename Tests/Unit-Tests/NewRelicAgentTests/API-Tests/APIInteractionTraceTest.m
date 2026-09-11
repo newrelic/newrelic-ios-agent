@@ -20,6 +20,7 @@
 #import "NewRelic.h"
 #import "NewRelicAgentInternal.h"
 #import "NRMAAnalytics.h"
+#import "NRMAFlags.h"
 #import <OCMock/OCMock.h>
 
 
@@ -356,6 +357,60 @@ static IMP NRMATraceMachine_completeActivityTrace_Orig;
     XCTAssertTrue([NRMATraceController isTracingActive], @"interaction trace shouldn't have stopped because we didn't pass the guid.");
 
     [NRMATraceController completeActivityTrace];
+}
+
+// Regression guard for the Swift-migrated +[NewRelic endTracingMethodWithTimer:].
+//
+// That method reaches the trace association with a key it derives in Swift:
+//     Unmanaged.passUnretained(kNRTraceAssociatedKey as NSString).toOpaque()
+// which must be pointer-identical to the `(__bridge const void *)kNRTraceAssociatedKey`
+// that NRMATraceController.m and NRMACustomTrace.m use. If Swift's NSString bridging ever
+// returns a different instance, the lookup silently misses — no crash, no exception, the
+// association just never clears. Nothing else in this suite covers it: the sibling tests
+// call NRMACustomTrace directly (ObjC -> ObjC) and so never touch the Swift-derived key.
+//
+// Note the Swift key is only reached on the tracing-INACTIVE cleanup path; while tracing is
+// active +[NewRelic endTracingMethodWithTimer:] delegates to NRMACustomTrace. Hence the
+// deliberate [NRMATraceController cleanup] below — without it this test would exercise the
+// pure-ObjC path and prove nothing about the migration.
+- (void) testSwiftEndTracingMethodWithTimerClearsObjCAssociatedKey
+{
+    // Interaction tracing must be on, or +[NewRelic endTracingMethodWithTimer:] returns
+    // before it ever touches the key and the final assertion would fail misleadingly.
+    XCTAssertTrue([NRMAFlags shouldEnableInteractionTracing],
+                  @"precondition: interaction tracing must be enabled for this test to be meaningful");
+
+    [NRMATraceController startTracing:YES];
+    XCTAssertTrue([NRMATraceController isTracingActive], @"precondition: trace machine should be running");
+
+    NRTimer* timer = [NRTimer new];
+    [NRMACustomTrace startTracingMethod:_cmd
+                             objectName:NSStringFromClass(self.class)
+                                  timer:timer
+                               category:NRTraceTypeNone];
+
+    // Control 1: ObjC really did associate a trace under its own key. Without this the final
+    // nil assertion could pass vacuously (nothing was ever set).
+    XCTAssertNotNil(objc_getAssociatedObject(timer, (__bridge const void *)kNRTraceAssociatedKey),
+                    @"precondition: ObjC startTracingMethod should associate a trace under kNRTraceAssociatedKey");
+
+    // Force the cleanup branch: nils the trace machine without touching associated objects.
+    [NRMATraceController cleanup];
+    XCTAssertFalse([NRMATraceController isTracingActive], @"precondition: tracing should now be inactive");
+
+    // Control 2: cleanup left the association in place, so clearing it below is attributable
+    // solely to the Swift key.
+    XCTAssertNotNil(objc_getAssociatedObject(timer, (__bridge const void *)kNRTraceAssociatedKey),
+                    @"precondition: cleanup must not itself clear the timer's association");
+
+    // The Swift implementation, entered through its @objc selector.
+    [NewRelic endTracingMethodWithTimer:timer];
+
+    // Decisive: Swift cleared the exact slot ObjC wrote, so both keys are the same pointer.
+    XCTAssertNil(objc_getAssociatedObject(timer, (__bridge const void *)kNRTraceAssociatedKey),
+                 @"+[NewRelic endTracingMethodWithTimer:] left the ObjC-set association in place — "
+                 @"the Swift-derived associated-object key no longer matches kNRTraceAssociatedKey, "
+                 @"so custom method traces silently fail to resolve");
 }
 
 @end
