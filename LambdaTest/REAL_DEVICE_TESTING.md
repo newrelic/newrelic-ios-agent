@@ -10,9 +10,10 @@ Runs the same 9 iOS specs as the virtual-device suite, on real hardware.
 | Upload endpoint    | `/app/upload/virtualDevice`             | `/app/upload/realDevice`                               |
 | Upload script      | `uploadAppToLambdaTest.mjs`             | `uploadAppToLambdaTest-realDevice.mjs`                 |
 | App-id file        | `last-app-id`                           | `last-app-id-realdevice`                               |
+| App id form        | upload `custom_id`                      | **`lt://APP...` URL** returned by the upload           |
 | WDIO config        | `wdio-config-ios.js`                    | `wdio-config-ios-realdevice.js`                        |
 | Concurrency        | `maxInstances: 10`                      | `maxInstances: 1`                                      |
-| Default target     | iPhone 17 / iOS 26.0                    | iPhone 15 / iOS 18                                     |
+| Default target     | iPhone 17 / iOS 26.0                    | iPhone 17 / iOS 26.0                                   |
 | npm script         | `test:wdio-ios`                         | `test:wdio-ios-realdevice`                             |
 | Build workflow     | `uploadApp-mobile-views-2.yml` (daily)  | `uploadApp-mobile-views-2-realdevice.yml` (dispatch)   |
 | Test workflow      | `wdio-mobile-views-2.yml`               | `wdio-mobile-views-2-realdevice.yml`                   |
@@ -53,7 +54,7 @@ node LambdaTest/uploadAppToLambdaTest-realDevice.mjs
 npm run test:wdio-ios-realdevice
 
 # Optional: retarget hardware
-LT_DEVICE_NAME="iPhone 14" LT_PLATFORM_VERSION=17 npm run test:wdio-ios-realdevice
+LT_DEVICE_NAME="iPhone 16" LT_PLATFORM_VERSION=18 npm run test:wdio-ios-realdevice
 ```
 
 `last-app-id-realdevice` is not tracked in git, so `LT_APP_ID` (or a local upload)
@@ -122,6 +123,45 @@ thing to swap for their device-log REST API.
 
 `LT_BUNDLE_ID` overrides the bundle id used for relaunch. By default it is read
 off the live session, because LambdaTest's resigning can rewrite it.
+
+## If session creation times out (UND_ERR_HEADERS_TIMEOUT)
+
+Symptom: `POST /wd/hub/session` fails after ~180s (matching
+`connectionRetryTimeout`) with `UND_ERR_HEADERS_TIMEOUT`, before any test runs.
+That error is client-side: LambdaTest never answered. It means device/app
+allocation never completed, so look upstream of the specs.
+
+**Most likely cause: the wrong `app` identifier.** The real-device cloud
+identifies builds by the `lt://APP...` URL returned from the upload, not by the
+`custom_id` the virtual pipeline uses. Given an id it cannot resolve, LambdaTest
+hangs rather than returning an error. `uploadAppToLambdaTest-realDevice.mjs` now
+prefers the returned URL and writes it to `last-app-id-realdevice`; it logs the
+full upload response so you can see what came back.
+
+Note the app-id allowlist in both workflows accepts two shapes only --
+`lt://APP...` or a dotted `custom_id`. The virtual pipeline's pattern had no `/`
+and silently rejected every `lt://` id, falling back instead of failing loudly.
+
+**Next most likely: the device is not in the real fleet.** The real-device
+catalogue is not the same as the virtual one, so a device/OS pair that works
+virtually may not exist as hardware. Check with:
+
+```sh
+LT_USERNAME=... LT_ACCESSKEY=... node LambdaTest/scripts/diagnose-realdevice.mjs
+```
+
+It reports whether the requested device/OS is offered as a real device, whether
+LambdaTest created a session at all (and that session's own error, which beats
+guessing), and whether the uploaded app resolves. It only reads.
+
+**Also possible: signing.** The documented real-device recipe exports
+`method: ad-hoc`; this pipeline uses `app-store-connect` and relies on
+LambdaTest resigning. If the diagnostic shows the app failing to prepare, switch
+to the ad-hoc fallback described above.
+
+Raising `connectionRetryTimeout` is only a fix if the session was genuinely
+progressing and just needed longer. Confirm that from the session list first --
+otherwise a longer timeout just fails more slowly.
 
 ## Expect some spec churn on the first run
 
