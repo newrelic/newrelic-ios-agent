@@ -2,13 +2,29 @@ const dayjs = require("dayjs");
 const fs = require("fs");
 const path = require("path");
 
-function generateDynamicBuildName() {
-  const now = dayjs().format("YYYY-MM-DD_HH-mm");
-
-  return `Build_NRTestApp - iOS:${now}`;
+// Optional label identifying which branch/variant this run came from. CI sets it
+// (e.g. LT_RUN_LABEL=mobile-views-2) so the run is obvious in the LambdaTest
+// automation dashboard. Unset => build names stay exactly as they were.
+function resolveRunLabel() {
+  const label = (process.env.LT_RUN_LABEL || "").trim();
+  // Keep it dashboard-safe: no brackets/pipes that would fight the build-name format.
+  return label.replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 40);
 }
 
-generateDynamicBuildName(); // Call the function to ensure it runs and logs the output
+function generateDynamicBuildName() {
+  const now = dayjs().format("YYYY-MM-DD_HH-mm");
+  const label = resolveRunLabel();
+
+  return label
+    ? `[${label}] Build_NRTestApp - iOS:${now}`
+    : `Build_NRTestApp - iOS:${now}`;
+}
+
+// Tags show up as filterable chips on each automation row in LambdaTest.
+function generateTags() {
+  const label = resolveRunLabel();
+  return label ? [label] : [];
+}
 
 function resolveAppId() {
   if (process.env.LT_APP_ID) {
@@ -38,6 +54,7 @@ exports.config = {
     {
       "lt:options": {
         build: generateDynamicBuildName(),
+        tags: generateTags(),
         network: true,
         devicelog: true,
         visual: true,

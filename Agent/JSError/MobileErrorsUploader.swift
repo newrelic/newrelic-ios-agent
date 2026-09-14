@@ -86,6 +86,7 @@ class MobileErrorsUploader: NSObject {
     // MARK: - Public Methods
 
     func sendPayload(_ payload: [String: Any],
+                     platform: String,
                      sessionId: String?,
                      entityGuid: String?,
                      accountId: NSNumber?,
@@ -113,7 +114,7 @@ class MobileErrorsUploader: NSObject {
         // Add required query parameters
         urlComponents.queryItems = [
             URLQueryItem(name: "protocol_version", value: "1"),
-            URLQueryItem(name: "platform", value: "reactnative")
+            URLQueryItem(name: "platform", value: platform)
         ]
 
         guard let url = urlComponents.url else {

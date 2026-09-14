@@ -102,6 +102,7 @@ final class RandomWalkController {
             { coordinator.showSwiftUITestView() },
             { coordinator.showSwiftUIViewRepresentableTestView() },
             { coordinator.showMapViewController() },
+            { coordinator.showWebViewController() },
             { coordinator.showCaptureViewer() },
         ]
 
