@@ -183,7 +183,19 @@ platform :ios do
         sh("export DWARF_DSYM_FOLDER_PATH=\".\" && /usr/bin/xcrun --sdk macosx swift \"./dsym-upload-tools/run-symbol-tool.swift\" \"API-KEY\" --debug")
 
         # shouldn't fail
-        sh("./dsym-upload-tools/run-symbol-tool \"API-KEY\"")        
+        sh("./dsym-upload-tools/run-symbol-tool \"API-KEY\"")
+
+        # NR-417639: verify the optional -appVersion argument overrides the reported app version.
+        # A block is passed to sh so a non-zero exit (e.g. when no dSYM is present locally) does not
+        # fail the lane; the resolved-version line is printed before dSYM processing regardless.
+        appVersionOutput = ""
+        sh("export DWARF_DSYM_FOLDER_PATH=\".\" && /usr/bin/xcrun --sdk macosx swift \"./dsym-upload-tools/run-symbol-tool.swift\" \"API-KEY\" --debug -appVersion 9.9.9") do |status, result, command|
+          appVersionOutput = result
+        end
+        unless appVersionOutput.include?("Using app version 9.9.9 (source: -appVersion argument)")
+          UI.user_error!("run-symbol-tool did not honor -appVersion override (NR-417639). Output:\n#{appVersionOutput}")
+        end
+        UI.success("run-symbol-tool honored -appVersion override (NR-417639).")        
     end
   end
 end

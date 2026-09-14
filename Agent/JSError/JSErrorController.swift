@@ -99,6 +99,13 @@ public class JSErrorController: NSObject {
         loadPersistedErrorsOnStartup()
     }
 
+    deinit {
+        // URLSession retains its delegate strongly, so MobileErrorsUploader.deinit is
+        // never reached via ARC alone. Invalidating here breaks the retain cycle before
+        // JSErrorController releases the uploader property.
+        uploader?.invalidate()
+    }
+
     // MARK: - Public Methods
 
     @objc public func recordJSError(_ name: String,
@@ -310,6 +317,7 @@ public class JSErrorController: NSObject {
 
         // Send to uploader
         uploader.sendPayload(payload,
+                           platform: platform,
                            sessionId: sessionId,
                            entityGuid: configuration.entity_guid,
                            accountId: NSNumber(value: configuration.account_id),
@@ -357,14 +365,7 @@ public class JSErrorController: NSObject {
 
         payload["timestamp"] = Int64(Date().timeIntervalSince1970 * 1000)
         payload["agentName"] = NewRelicInternalUtils.agentName()
-
-        // Use platformVersion first, fallback to agentVersion
-        if let deviceInfo = connectInfo?.deviceInformation {
-            let version = deviceInfo.platformVersion ?? deviceInfo.agentVersion as String? as NSString?
-            payload["agentVersion"] = version ?? NewRelicInternalUtils.agentVersion()
-        } else {
-            payload["agentVersion"] = NewRelicInternalUtils.agentVersion()
-        }
+        payload["agentVersion"] = NewRelicInternalUtils.agentVersion()
 
         if let configuration = NRMAHarvestController.configuration(),
            let dataToken = configuration.data_token,

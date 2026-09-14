@@ -136,6 +136,8 @@ typedef NSString NRMetricUnit;
 // KMP Detection (Kotlin Multiplatform)
 #define kNRMAKMMDetectionMetric @"Supportability/Mobile/iOS/HybridPlatform/KMP"
 
+#define kNRMAWebViewBrowserAgentDetectedMetric @"Supportability/Mobile/iOS/WebView/BrowserAgentDetected"
+
 #define kNRMABytesOutConnectAPIString     @"/connect/Output/Bytes"
 #define kNRMABytesOutDataAPIString        @"/data/Output/Bytes"
 #define kNRMABytesOutFAPIString           @"/f/Output/Bytes"
@@ -205,6 +207,18 @@ typedef NSString NRMetricUnit;
 // SUPPORTABILITY_CRASH_UPLOAD_REJECTED_DEVICE_OFFLINE metric
 // ("Supportability/AgentHealth/Crash/Offline/Rejected") for cross-platform parity.
 #define kNRMACrashOfflineRejectedMetric     kNRAgentHealthPrefix @"/Crash/Offline/Rejected"
+
+// Events (queue lifecycle) — matches the Android agent's MetricNames.SUPPORTABILITY_EVENT_*
+// constants for cross-platform parity (NR-478730). Flat literal names (no platform
+// placeholder substitution), unlike most Supportability metrics in this file, so the
+// names are byte-for-byte identical to Android's.
+#define kNRMAEventAddedMetric               @"Supportability/Events/Added"
+#define kNRMAEventOverflowMetric            @"Supportability/Events/Overflow"
+#define kNRMAEventEvictedMetric             @"Supportability/Events/Evicted"
+#define kNRMAEventRecordedMetric            @"Supportability/Events/Recorded"
+#define kNRMAEventQueueSizeExceededMetric   @"Supportability/Events/Queue/Size/Exceeded"
+#define kNRMAEventQueueTimeExceededMetric   @"Supportability/Events/Queue/Time/Exceeded"
+#define kNRMAEventSizeUncompressedMetric    @"Supportability/Events/Size/Uncompressed"
 
 #define NRMAHandledRequestKey @"NRMAHandledRequest"
 

@@ -38,6 +38,10 @@
 
 - (void) deinitialize;
 
+/// Whether the harvest buffer has room for another activity trace: `retained < at_capture max`.
+/// The buffer is cleared on a successful harvest, so a failing or rate-limited harvest keeps it full.
++ (BOOL) shouldCollectTraces;
+
 + (BOOL) shouldNotCollectTraces;
 
 + (void) setMaxOfflineStorageSize:(NSUInteger) size;

@@ -14,6 +14,9 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: ButtonsView()) {
                         Text("Buttons")
                     }
+                    NavigationLink(destination: CoreDataView()) {
+                        Text("Core Data")
+                    }
                     NavigationLink(destination: TextFieldsView()) {
                         Text("Text Fields")
 
@@ -96,6 +99,9 @@ struct SwiftUIContentView: View {
                         NavigationLink(destination: MapViewSwiftUI()) {
                             Text("Map View")
                         }
+                    }
+                    NavigationLink(destination: NavigationLinkLabelLayoutTestCase()) {
+                        Text("NavigationLink Labels")
                     }
                 }
                 .navigationBarTitle("SwiftUI Elements")

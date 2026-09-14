@@ -65,7 +65,15 @@ class SessionReplayCapture {
         // Handle SwiftUI hosting views.
         if let viewController = extractVC(from: currentView) {
             let vcType = ControllerTypeDetector(from: NSStringFromClass(type(of: viewController)))
-            if vcType == .hostingController || vcType == .navigationStackHostingController {
+            // .modal is SwiftUI's PresentationHostingController, which hosts .sheet /
+            // .fullScreenCover / .popover content. Its hosting view exposes the same
+            // _base.viewGraph.renderer chain as a plain hosting controller, so it must run
+            // through the same SwiftUI extraction path. Without it the modal's container
+            // views are captured but the SwiftUI content inside (text, buttons, …) is never
+            // extracted, so the replay shows an empty modal. The `_UIHostingView` guard below
+            // intentionally does not match a modal's `HostingView`, leaving rootSwiftUIViewID
+            // and navigationStackDepth pinned to the app's root hosting view.
+            if vcType == .hostingController || vcType == .navigationStackHostingController || vcType == .modal {
             let className = NSStringFromClass(type(of: currentView))
             if className.contains("_UIHostingView") {
                 rootSwiftUIViewID = parentThingy.viewDetails.viewId
@@ -119,7 +127,7 @@ class SessionReplayCapture {
                     parentThingy.subviews.append(contentsOf: otherViews)
                 }
             }
-            } // if vcType == .hostingController || .navigationStackHostingController
+            } // if vcType == .hostingController || .navigationStackHostingController || .modal
         } // if let viewController
 
         // Handle UITextField custom text overlay

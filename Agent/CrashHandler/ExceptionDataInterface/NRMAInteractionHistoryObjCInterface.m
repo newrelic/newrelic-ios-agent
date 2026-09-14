@@ -11,6 +11,9 @@
 @implementation NRMAInteractionHistoryObjCInterface
 
 
+// The C layer synchronizes its own writers and needs no lock to be read, so
+// this lock no longer protects the history itself. It is kept only to preserve
+// the ordering callers have always observed between an insert and a clear.
 static const NSString* kNRMAIteractionLock = @"interactionLock";
 + (void) insertInteraction:(NSString*)name startTime:(long long)epochMillis
 {
@@ -22,7 +25,7 @@ static const NSString* kNRMAIteractionLock = @"interactionLock";
 + (void) deallocInteractionHistory
 {
     @synchronized(kNRMAIteractionLock) {
-        NRMA__deallocInteractionHistoryList();
+        NRMA__clearInteractionHistory();
     }
 }
 @end

@@ -13,6 +13,7 @@
 #import "NRMAAnalytics.h"
 #import "Constants.h"
 #import "NRMABool.h"
+#import "NRMAAttributeValidator.h"
 
 @interface NRMASAMTest : XCTestCase
 {
@@ -38,8 +39,18 @@
 }
 
 - (void) tearDown {
-    [super tearDown];
     [manager removeAllSessionAttributes];
+
+    // PersistentEventStore debounces disk writes (minimum delay of .025s). Give
+    // the pending writes triggered by -removeAllSessionAttributes time to settle
+    // before the next test's -setUp deletes the backing files, otherwise a
+    // straggling async write can recreate a file the next test also uses.
+    NSDate *settleDeadline = [NSDate dateWithTimeIntervalSinceNow:0.1];
+    while ([NSDate.date compare:settleDeadline] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
+
+    [super tearDown];
 }
 
 - (NRMASAM*) samTest {
@@ -413,6 +424,24 @@
     // valid attrib was added
     XCTAssertEqual(decode.count, 1);
 
+}
+
+- (NRMASAM *)samWithProductionValidator {
+    return [[NRMASAM alloc] initWithAttributeValidator:[[NRMAAttributeValidator alloc] init]];
+}
+
+- (void)testSetSessionAttributeWithArrayFails {
+    NRMASAM *sam = [self samWithProductionValidator];
+    NSArray *arrayValue = @[@"one", @"two"];
+    XCTAssertFalse([sam setSessionAttribute:@"arrayAttr" value:arrayValue],
+                   @"Should reject NSArray as a session attribute value");
+}
+
+- (void)testSetSessionAttributeWithDictionaryFails {
+    NRMASAM *sam = [self samWithProductionValidator];
+    NSDictionary *dictValue = @{@"key": @"value"};
+    XCTAssertFalse([sam setSessionAttribute:@"dictAttr" value:dictValue],
+                   @"Should reject NSDictionary as a session attribute value");
 }
 
 - (void)testIncrementIntegerValueWithDouble {

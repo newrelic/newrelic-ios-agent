@@ -8,9 +8,12 @@
 
 #import <Foundation/Foundation.h>
 
+@class WKWebView;
+
 @interface NRMAWebViewSupportability : NSObject
 
 + (void)recordPageFinished;
++ (void)startBrowserAgentDetection:(WKWebView *)webView;
 
 @end
 

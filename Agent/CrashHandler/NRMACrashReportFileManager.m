@@ -96,8 +96,18 @@ static NSString* __processLock = @"NRMAProcessLock";
 {
 
     NSMutableDictionary* dict = [[NSMutableDictionary alloc] init];
-    const char* tempDir = NRMA_getTempDir();
-    NSString* path = [NSString stringWithFormat:@"%s/%@",tempDir,@"/metadata.nr.crash"];
+
+    // Build the path with the same helper the crash handler writes through, so
+    // the reader and the writer cannot disagree about where the metadata lives.
+    // This also covers the case where the temp directory was never set, which
+    // previously formatted a NULL pointer into the path.
+    const char* metaDataPath = NRMA_createTempFileName();
+    if (metaDataPath == NULL) {
+        return dict;
+    }
+    NSString* path = [NSString stringWithUTF8String:metaDataPath];
+    free((void*)metaDataPath);
+
     NSData* data = [NSData dataWithContentsOfFile:path];
     
     if (data == nil) {

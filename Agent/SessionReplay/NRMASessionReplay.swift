@@ -448,9 +448,28 @@ public class NRMASessionReplay: NSObject {
         let firstTimestamp: TimeInterval = TimeInterval(firstFrame.date.timeIntervalSince1970 * 1000).rounded()
         let lastTimestamp: TimeInterval = TimeInterval(processedFrame.timestamp)
         
-        var container: [AnyRRWebEvent] = []
-        
-        // Only add meta event for first frame or when frame size changes
+        // Only add a meta event for the first frame or when frame size changes.
+        // Touches are captured on an independent timeline (UIApplication event
+        // swizzling) and can be timestamped at or before this frame, so a plain
+        // timestamp sort across meta+frame+touches can displace either of these
+        // leading events:
+        //   - Meta must be first so the rrweb player can initialize the
+        //     viewport/document (otherwise: "First event didn't include meta").
+        //   - When this frame IS a full snapshot (isFullSnapshot), processedFrame
+        //     itself is the FullSnapshot -- incremental/touch events can
+        //     reference DOM node IDs that only exist once it's been applied, so
+        //     it must never be sorted after a touch either.
+        // Both are built separately and prepended in order (meta, then full
+        // snapshot); only touches -- and, when this frame is NOT a full
+        // snapshot, the frame's own ordinary incremental update -- get sorted
+        // amongst themselves, since normal incremental mutations and touches
+        // are meant to interleave chronologically.
+        //
+        // This frame file backs crash-recovery replay (see
+        // SessionReplayManager.processSessionReplayFile), so the rrweb player
+        // hits the same failure on recovery as it would on the live upload
+        // path if this isn't preserved.
+        var leadingEvents: [AnyRRWebEvent] = []
         if lastFrameSize != frame.size || isFullSnapshot {
             NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Size change detected - Adding meta event")
             let metaEventData = RRWebMetaData(
@@ -459,15 +478,22 @@ public class NRMASessionReplay: NSObject {
                 height: Int(frame.size.height)
             )
             let metaEvent = MetaEvent(timestamp: TimeInterval(lastTimestamp), data: metaEventData)
-            container.append(AnyRRWebEvent(metaEvent))
+            leadingEvents.append(AnyRRWebEvent(metaEvent))
         }
-        
-        container.append(AnyRRWebEvent(processedFrame))
-        container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
+
+        var container: [AnyRRWebEvent]
+        if isFullSnapshot {
+            leadingEvents.append(AnyRRWebEvent(processedFrame))
+            container = processedTouches.map(AnyRRWebEvent.init)
+        } else {
+            container = [AnyRRWebEvent(processedFrame)]
+            container.append(contentsOf: processedTouches.map(AnyRRWebEvent.init))
+        }
         container.sort { (lhs: AnyRRWebEvent, rhs: AnyRRWebEvent) -> Bool in
             lhs.base.timestamp < rhs.base.timestamp
         }
-        
+        container.insert(contentsOf: leadingEvents, at: 0)
+
         //        NRLOG_AGENT_DEBUG("💾 [processFrameToFile] Container events: \(container.count)")
         
         // Extract URL generation logic from createReplayUpload

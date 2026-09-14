@@ -59,6 +59,10 @@ class UtilViewModel {
         options.append(UtilOption(title: "End Interaction Trace", handler: { [self] in stopInteractionTrace()}))
         options.append(UtilOption(title: "Notice Network Request", handler: { [self] in noticeNWRequest()}))
         options.append(UtilOption(title: "Notice Network Failure", handler: { [self] in noticeFailedNWRequest()}))
+        
+        // NR-323614 — NSArray/NSDictionary values must be rejected as attribute values.
+        options.append(UtilOption(title: "Try Collection Session Attributes", handler: { [self] in setCollectionSessionAttributes()}))
+        options.append(UtilOption(title: "Try Collection Event Attributes", handler: { [self] in setCollectionEventAttributes()}))
 
         options.append(UtilOption(title: "Test System Logs", handler: { [self] in testSystemLogs()}))
         options.append(UtilOption(title: "Notice Network Request w headers/params", handler: { [self] in 
@@ -345,6 +349,51 @@ class UtilViewModel {
 
     func shutDown() {
         NewRelic.shutdown()
+    }
+    
+    private var collectionAttributeValues: [(label: String, value: Any)] {
+        let nsArray: NSArray = NSArray(array: ["one", "two"])
+        let nsMutableArray = NSMutableArray(array: ["one", "two"])
+        let nsDictionary: NSDictionary = NSDictionary(dictionary: ["key": "value"])
+        let nsMutableDictionary = NSMutableDictionary(dictionary: ["key": "value"])
+
+        return [
+            ("NSArray", nsArray),
+            ("NSMutableArray", nsMutableArray),
+            ("NSDictionary", nsDictionary),
+            ("NSMutableDictionary", nsMutableDictionary),
+            ("SwiftArray_bridgedToNSArray", ["one", "two"]),
+            ("SwiftDictionary_bridgedToNSDictionary", ["key": "value"]),
+        ]
+    }
+
+    func setCollectionSessionAttributes() {
+        for sample in collectionAttributeValues {
+            let name = "collectionUserAttr_\(sample.label)"
+            _ = NewRelic.setAttribute(name, value: sample.value)
+        }
+
+        // Control case: a valid value must still be accepted after the rejected ones.
+        _ = NewRelic.setAttribute("collectionUserAttr_validString", value: "good attribute")
+    }
+
+    func setCollectionEventAttributes() {
+        for sample in collectionAttributeValues {
+            let eventAttributes: [String: Any] = [
+                "collectionSessionAttr": sample.value,
+                "validSessionAttr": "good attribute"
+            ]
+
+            _ = NewRelic.recordCustomEvent("CollectionAttributeTest",
+                                                            attributes: eventAttributes)
+            _ = NewRelic.recordBreadcrumb("CollectionAttributeTest",
+                                                                attributes: eventAttributes)
+            do {
+                try errorMethod()
+            } catch {
+                NewRelic.recordError(error, attributes: eventAttributes)
+            }
+        }
     }
 }
 

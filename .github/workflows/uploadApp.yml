@@ -15,13 +15,14 @@ on:
  # enables option for workflow to be manually executed in Github UI
  workflow_dispatch:
 
-#  push:
-#    branches:
-#      - main
+ # Runs whenever a PR is merged into develop (GitHub Actions emits a push event to the base branch on merge)
+ push:
+   branches:
+     - develop
 
-#  # Runs on the 1st of every month
-#  schedule:
-#    - cron: "0 0 1 * *"
+ # Runs daily to build, upload, and refresh the LambdaTest app (which otherwise expires after 60 days)
+ schedule:
+   - cron: "13 6 * * *"
 
 jobs:
 
@@ -33,6 +34,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2
         with:
+          ref: develop
           submodules: true
 
       - name: Setup environment
@@ -96,6 +98,8 @@ jobs:
       LT_ACCESSKEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@1e31de5234b9f8995739874a8ce0492dc87873e2 # pin@v4
+        with:
+          ref: develop
 
       - name: Setup environment
         uses: ./.github/actions/env-setup

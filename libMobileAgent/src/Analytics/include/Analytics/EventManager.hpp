@@ -24,6 +24,13 @@ namespace NewRelic {
         Session
     };
 
+    struct EventAddResult {
+        bool added = false;
+        bool overflowed = false;
+        bool evicted = false;
+        operator bool() const { return added; }
+    };
+
     class EventManager {
     friend class AnalyticsController;
     private :
@@ -37,13 +44,17 @@ namespace NewRelic {
         // 0 is a special case that results in "false" for didReachMaxQueueTime();
         unsigned long long _oldest_event_timestamp_ms = 0; //special case!
         int _total_attempted_inserts = 0;
+        unsigned int _events_recorded = 0;
+        unsigned int _events_evicted = 0;
 
     public:
         EventManager(PersistentStore<std::string,AnalyticEvent>& store);
 
         virtual ~EventManager();
 
-        bool addEvent(std::shared_ptr<AnalyticEvent> event);
+        EventAddResult addEvent(std::shared_ptr<AnalyticEvent> event);
+        unsigned int getEventsRecordedCount() const { return _events_recorded; }
+        unsigned int getEventsEvictedCount() const { return _events_evicted; }
 
 
         //deprecated, replaced with newCustomEvent
@@ -101,6 +112,7 @@ namespace NewRelic {
         void setMaxBufferTime(unsigned int seconds); //sets max buffer time
         void setMaxBufferSize(unsigned int size); //sets max buffer size
         bool didReachMaxQueueTime(unsigned long long currentTimestamp_ms); //checks if oldest event timestamp exceededs max queue time
+        bool didExceedMaxQueueTime(unsigned long long currentTimestamp_ms); //strict check (no leeway) used for supportability metrics
         void empty(); //removes all events in _events;
         void resetTimestamp(); //resets _oldest_event_timestamp_ms to 0 (for session clear)
     };
