@@ -47,6 +47,7 @@ struct TextFieldsView: View {
         }
         .navigationBarTitle("Text Fields")
         .NRTrackView(name: "TextFieldsView")
+        .NRMobileView(name: "TextFieldsView")
     }
 }
 

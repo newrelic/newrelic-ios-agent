@@ -152,6 +152,7 @@ struct CoreDataView: View {
         .padding()
         .onAppear { NRCoreDataStack.seedIfNeeded() }
         .NRTrackView(name: "CoreDataView")
+        .NRMobileView(name: "CoreDataView")
     }
 
     private func runFetch(nested: Bool) {
@@ -178,11 +179,5 @@ struct CoreDataView: View {
         }
 
         NRCoreDataItem.triggerNestedFetch = false
-    }
-}
-
-struct CoreDataView_Previews: PreviewProvider {
-    static var previews: some View {
-        CoreDataView()
     }
 }

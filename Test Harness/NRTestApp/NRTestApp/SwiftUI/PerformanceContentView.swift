@@ -18,39 +18,51 @@ struct PerformanceContentView: View {
     @State private var testResults = ""
 
     var body: some View {
-        VStack {
-            // Performance Test Controls
-            VStack(spacing: 12) {
-                Text("New Relic Performance Test")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                Button(isRunningTest ? "Testing..." : "🧪 Run Rapid Tab Switch Test") {
-                    runPerformanceTest()
+        NRConditionalMaskView {
+            VStack {
+                // Performance Test Controls
+                VStack(spacing: 12) {
+                    Text("New Relic Performance Test")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Button(isRunningTest ? "Testing..." : "🧪 Run Rapid Tab Switch Test") {
+                        runPerformanceTest()
+                    }
+                    .disabled(isRunningTest)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                    if !testResults.isEmpty {
+                        Text(testResults)
+                            .font(.system(.caption, design: .monospaced))
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
+                    }
                 }
-                .disabled(isRunningTest)
                 .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(8)
-                if !testResults.isEmpty {
-                    Text(testResults)
-                        .font(.system(.caption, design: .monospaced))
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
+                Divider()
+                // Tab View demonstrating performance architecture
+                TabView(selection: $tabViewModel.selectedTab) {
+                    HeavyUIKitTab(tabIndex: 0).tag(0)
+                    HeavyUIKitTab(tabIndex: 1).tag(1)
+                    HeavyUIKitTab(tabIndex: 2).tag(2)
+                    HeavyUIKitTab(tabIndex: 3).tag(3)
+                    HeavyUIKitTab(tabIndex: 4).tag(4)
                 }
-            }
-            .padding()
-            Divider()
-            // Tab View demonstrating performance architecture
-            TabView(selection: $tabViewModel.selectedTab) {
-                HeavyUIKitTab(tabIndex: 0).tag(0)
-                HeavyUIKitTab(tabIndex: 1).tag(1)
-                HeavyUIKitTab(tabIndex: 2).tag(2)
-                HeavyUIKitTab(tabIndex: 3).tag(3)
-                HeavyUIKitTab(tabIndex: 4).tag(4)
+                // MobileViews: tab switches are not view lifecycle events, so a tab change emits
+                // nothing on its own — NRMobileTabTracking is what turns a selection change into a
+                // MobileView event. This screen is the one worth attaching it to: "Run Rapid Tab
+                // Switch Test" drives selectedTab in a tight loop, which is exactly what the
+                // modifier's 500ms dwell window exists to absorb. Only the tab the user settles on
+                // should produce an event; the ones flicked past should be cancelled.
+                .NRMobileTabTracking(selection: $tabViewModel.selectedTab) { tag in
+                    "PerformanceTab \(tag)"
+                }
             }
         }
+        .NRMobileView(name: "PerformanceContentView")
     }
 
     private func runPerformanceTest() {
@@ -137,34 +149,39 @@ class TabPerformanceViewModel {
 struct HeavyUIKitTab: View {
     let tabIndex: Int
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(0..<50, id: \.self) { index in
-                    HStack {
-                        ComplexUIKitView(itemIndex: index)
-                            .frame(width: 60, height: 60)
-                        VStack(alignment: .leading) {
-                            Text("Tab \(tabIndex) - Item \(index)")
-                                .font(.headline)
-                            Text("Complex UIKit integration")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+            ScrollView {
+                    
+                LazyVStack(spacing: 8) {
+                    ForEach(0..<50, id: \.self) { index in
+                        NRConditionalMaskView {
+                            HStack {
+                                
+                                ComplexUIKitView(itemIndex: index)
+                                    .frame(width: 60, height: 60)
+                                VStack(alignment: .leading) {
+                                    Text("Tab \(tabIndex) - Item \(index)")
+                                        .font(.headline)
+                                    Text("Complex UIKit integration")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                ComplexUIKitView(itemIndex: index + 1000)
+                                    .frame(width: 40, height: 40)
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
                         }
-                        Spacer()
-                        ComplexUIKitView(itemIndex: index + 1000)
-                            .frame(width: 40, height: 40)
+            
                     }
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
                 }
+                .padding()
             }
-            .padding()
-        }
-        .navigationTitle("Tab \(tabIndex)")
-        .tabItem {
-            Label("Tab \(tabIndex)", systemImage: "\(tabIndex).circle")
-        }
+            .navigationTitle("Tab \(tabIndex)")
+            .tabItem {
+                Label("Tab \(tabIndex)", systemImage: "\(tabIndex).circle")
+            }
     }
 }
 

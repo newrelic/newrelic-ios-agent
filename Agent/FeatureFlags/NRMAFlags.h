@@ -59,6 +59,10 @@
 
 + (BOOL) shouldEnableAutoCollectLogs;
 
++ (BOOL) shouldEnableAutomaticMobileViews;
+
++ (BOOL) shouldEnableManualMobileViews;
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
 // Private Setting

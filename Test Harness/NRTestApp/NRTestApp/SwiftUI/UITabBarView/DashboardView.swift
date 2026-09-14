@@ -48,6 +48,7 @@ struct DashboardView: View {
                 viewModel.loadData()
             }
         }
+        .NRMobileView(name: "DashboardView")
     }
 
     private func refreshData() {

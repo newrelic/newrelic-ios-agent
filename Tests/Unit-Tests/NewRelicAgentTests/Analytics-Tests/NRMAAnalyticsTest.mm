@@ -24,6 +24,7 @@
 #import "NRMAMeasurements.h"
 #import "NRMATaskQueue.h"
 #import "NRMANamedValueMeasurement.h"
+#import "NRMAViewContext.h"
 
 @interface NRMAAnalyticsTest : XCTestCase
 {
@@ -33,6 +34,7 @@
 
 @interface NRMAAnalytics ()
 - (NSString*) sessionAttributeJSONString;
+- (BOOL) addViewEventOfType:(NSString*)eventType withAttributes:(NSDictionary*)attributes;
 @end
 @implementation NRMAAnalyticsTest
 
@@ -1108,6 +1110,77 @@
 
 }
 
+- (void) testRequestEventIncludesReferrerAttributesWhenMobileViewsEnabled {
+    [NRMAFlags enableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    [NRMAFlags enableFeatures:NRFeatureFlag_AutomaticMobileViews];
+    [[NRMAViewContext sharedInstance] transitionToView:@"CheckoutScreen"
+                                             instanceId:@"REQ-TEST-VIEW"
+                                             appearTime:CFAbsoluteTimeGetCurrent()];
+
+    NRTimer* timer = [NRTimer new];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSURL* url = [NSURL URLWithString:@"https://api.newrelic.com/api/v1/mobile"];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:100];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithSuccessfulResponse:200
+                                                                                          bytesReceived:200
+                                                                                           responseTime:[timer timeElapsedInSeconds]];
+
+    XCTAssertTrue([analytics addNetworkRequestEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertEqualObjects(decode[0][@"currentView"], @"CheckoutScreen");
+    XCTAssertEqualObjects(decode[0][@"currentViewInstanceId"], @"REQ-TEST-VIEW");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_NetworkRequestEvents];
+    [NRMAFlags disableFeatures:NRFeatureFlag_AutomaticMobileViews];
+}
+
+- (void) testRequestErrorEventIncludesReferrerAttributesWhenMobileViewsEnabled {
+    [NRMAFlags enableFeatures:NRFeatureFlag_AutomaticMobileViews];
+    [[NRMAViewContext sharedInstance] transitionToView:@"CartScreen"
+                                             instanceId:@"ERR-TEST-VIEW"
+                                             appearTime:CFAbsoluteTimeGetCurrent()];
+
+    NRTimer* timer = [NRTimer new];
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    NSURL* url = [NSURL URLWithString:@"https://api.newrelic.com/api/v1/mobile"];
+    [timer stopTimer];
+
+    NRMANetworkRequestData* requestData = [[NRMANetworkRequestData alloc] initWithRequestUrl:url
+                                                                                  httpMethod:@"GET"
+                                                                              connectionType:@"wifi"
+                                                                                 contentType:@"application/json"
+                                                                                   bytesSent:200];
+
+    NRMANetworkResponseData* responseData = [[NRMANetworkResponseData alloc] initWithNetworkError:-1001
+                                                                                    bytesReceived:100
+                                                                                     responseTime:[timer timeElapsedInSeconds]
+                                                                              networkErrorMessage:@"network failure"];
+
+    XCTAssertTrue([analytics addNetworkErrorEvent:requestData withResponse:responseData withNRMAPayload:nullptr]);
+
+    NSString* json = [analytics analyticsJSONString];
+    NSArray* decode = [NSJSONSerialization JSONObjectWithData:[json dataUsingEncoding:NSUTF8StringEncoding]
+                                                      options:0
+                                                        error:nil];
+
+    XCTAssertEqualObjects(decode[0][@"currentView"], @"CartScreen");
+    XCTAssertEqualObjects(decode[0][@"currentViewInstanceId"], @"ERR-TEST-VIEW");
+
+    [NRMAFlags disableFeatures:NRFeatureFlag_AutomaticMobileViews];
+}
+
 - (void) testSetLastInteraction {
     NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
     XCTAssertTrue([analytics setLastInteraction:@"Display Banana"]);
@@ -1830,6 +1903,111 @@
 
    XCTAssertTrue([analytics addSessionEvent], @"failed to successfully add session event");
 
+}
+
+#pragma mark - Built-in view events
+
+/*
+ * The regression these guard.
+ *
+ * MobileView is in AnalyticsController's _reserved_eventTypes, and newCustomEvent throws on a
+ * reserved type. NRFeatureFlag_NewEventSystem is not enabled by default, so while view data was
+ * emitted through -recordCustomEvent: EVERY MobileView event was dropped on the default
+ * configuration -- and accepted under the new event system, so the same call behaved differently
+ * depending on a flag.
+ *
+ * Each of these therefore runs under BOTH event systems. -setUp leaves NewEventSystem disabled,
+ * which is the case that used to fail.
+ */
+
+- (void) assertViewEventLandsUnderBothEventSystems:(NSString*)description
+                                             block:(BOOL(^)(NRMAAnalytics*))record
+                                     expectedSubstrings:(NSArray<NSString*>*)expected {
+    for (NSNumber* useNewSystem in @[@NO, @YES]) {
+        if (useNewSystem.boolValue) {
+            [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+        } else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+        }
+
+        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+        XCTAssertTrue(record(analytics),
+                      @"%@ must be recorded with NewEventSystem %@",
+                      description, useNewSystem.boolValue ? @"enabled" : @"disabled");
+
+        NSString* json = [analytics analyticsJSONString];
+        for (NSString* substring in expected) {
+            XCTAssertTrue([json containsString:substring],
+                          @"%@ payload missing \"%@\" with NewEventSystem %@ -- got: %@",
+                          description, substring,
+                          useNewSystem.boolValue ? @"enabled" : @"disabled", json);
+        }
+    }
+    // Leave the flag as -setUp had it; -tearDown re-enables it for the rest of the suite.
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+}
+
+- (void) testMobileViewEventIsRecordedUnderBothEventSystems {
+    [self assertViewEventLandsUnderBothEventSystems:@"MobileView"
+                                              block:^BOOL(NRMAAnalytics* analytics) {
+        return [analytics addMobileViewEventWithAttributes:@{@"viewName": @"CheckoutView",
+                                                             @"viewInstanceId": @"instance-1",
+                                                             @"appeared": @YES,
+                                                             @"uiPlatform": @"UIKit"}];
+    }
+                                 expectedSubstrings:@[@"MobileView", @"CheckoutView", @"instance-1"]];
+}
+
+- (void) testViewTimingEventIsRecordedUnderBothEventSystems {
+    [self assertViewEventLandsUnderBothEventSystems:@"MobileViewTiming"
+                                              block:^BOOL(NRMAAnalytics* analytics) {
+        return [analytics addViewTimingEventWithAttributes:@{@"timingName": @"timeToInitialDisplay",
+                                                             @"timingValue": @(250.5),
+                                                             @"viewName": @"CheckoutView"}];
+    }
+                                 expectedSubstrings:@[@"MobileViewTiming", @"timeToInitialDisplay"]];
+}
+
+- (void) testViewEventWithNoEventTypeIsRejected {
+    NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+    XCTAssertFalse([analytics addViewEventOfType:@"" withAttributes:@{@"viewName": @"X"}]);
+}
+
+#pragma mark - Reserved event types
+
+/*
+ * The old event system has always rejected reserved event types; the new one did not, so the
+ * same -recordCustomEvent: call was dropped or accepted depending on a feature flag. Both now
+ * reject.
+ */
+- (void) testReservedEventTypesAreRejectedUnderBothEventSystems {
+    for (NSNumber* useNewSystem in @[@NO, @YES]) {
+        if (useNewSystem.boolValue) {
+            [NRMAFlags enableFeatures:NRFeatureFlag_NewEventSystem];
+        } else {
+            [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+        }
+
+        NRMAAnalytics* analytics = [[NRMAAnalytics alloc] initWithSessionStartTimeMS:0];
+        for (NSString* reserved in [NRMAAnalytics reservedEventTypes]) {
+            XCTAssertFalse([analytics addCustomEvent:reserved withAttributes:@{@"a": @"b"}],
+                           @"reserved event type \"%@\" must be rejected with NewEventSystem %@",
+                           reserved, useNewSystem.boolValue ? @"enabled" : @"disabled");
+        }
+
+        XCTAssertTrue([analytics addCustomEvent:@"MyCustomEvent" withAttributes:@{@"a": @"b"}],
+                      @"a non-reserved event type must still be accepted");
+    }
+    [NRMAFlags disableFeatures:NRFeatureFlag_NewEventSystem];
+}
+
+- (void) testReservedEventTypesMatchTheLegacyControllerList {
+    // Kept identical on purpose: if the two lists diverge, a customer's call succeeds under one
+    // event system and fails under the other -- the bug this change removed.
+    XCTAssertEqualObjects([NRMAAnalytics reservedEventTypes],
+                          (@[@"Mobile", @"MobileCrash", @"MobileRequest", @"MobileRequestError",
+                             @"MobileSession", @"MobileBreadcrumb", @"MobileView",
+                             @"MobileViewTiming"]));
 }
 
 @end

@@ -47,6 +47,8 @@ struct PickersView: View {
         }
         .navigationBarTitle("Pickers Example")
         .NRTrackView(name: "PickersView")
+        .NRMobileView(name: "PickersView")
+
     }
     
     private var dateFormatter: DateFormatter {

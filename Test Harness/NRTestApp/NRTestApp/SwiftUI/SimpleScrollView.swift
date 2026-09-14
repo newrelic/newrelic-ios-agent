@@ -56,6 +56,7 @@ struct SimpleScrollView: View {
             .padding()
         }
         .navigationTitle("Simple Scroll View")
+        .NRMobileView(name: "SimpleScrollView")
     }
 }
 

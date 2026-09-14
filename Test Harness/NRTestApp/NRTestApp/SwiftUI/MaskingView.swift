@@ -190,6 +190,7 @@ struct MaskingView: View {
         }
         .navigationTitle("Masking Permutations")
         .NRTrackView(name: "MaskingPermutationsView")
+        .NRMobileView(name: "MaskingPermutationsView")
     }
 
     private func sectionTitle(_ text: String) -> some View {

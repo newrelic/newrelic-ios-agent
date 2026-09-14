@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00D3C8A763625C06E61485F0 /* NRMobileViewFeatureFlagGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */; };
 		0209ABBD24E7054900E45C90 /* NewRelic.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 021A15BA24C9EEE700E8DFD5 /* NewRelic.framework */; };
 		0209ABC324E7057900E45C90 /* NRAgentTestBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAC24E7042C00E45C90 /* NRAgentTestBase.m */; };
 		0209ABC424E7058500E45C90 /* NRMeasurementConsumerHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 0209ABAD24E7042C00E45C90 /* NRMeasurementConsumerHelper.m */; };
@@ -868,6 +869,14 @@
 		02FF4C9724E3201400115469 /* NRMAHTTPUtilities.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF4ACC24DC657B00115469 /* NRMAHTTPUtilities.mm */; };
 		02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF49D424DC636100115469 /* NRMATraceSegment.m */; };
 		02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF48B124DC61F600115469 /* NRMAClassNode.m */; };
+		0BD6AE1D6CEE587F9E50A386 /* NRMAViewEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */; };
+		0CC6CA92F421F62B64BB231F /* MobileViewEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED1CF759619790A1FAA361A /* MobileViewEmitter.swift */; };
+		0EA0DA15A28C7FE0E98CD11E /* SessionReplayHarvestEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */; };
+		1183B75ADC60F29EB1127411 /* NRMAViewContext.m in Sources */ = {isa = PBXBuildFile; fileRef = C9AF87A7CB68173909761538 /* NRMAViewContext.m */; };
+		1351CD874BF57B220BDFF22A /* NRMAViewEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D330758817C970ED5E5ABA2 /* NRMAViewEvent.m */; };
+		15BE174BBE450E969F8E2DFB /* NRMAViewContextChurnTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 20D736AEDA503A49D6B601F7 /* NRMAViewContextChurnTests.m */; };
+		19EEB81DBA68AE0F78342CB5 /* NRMAMobileViewTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */; };
+		27E29A70A9D13E487A66CD67 /* NRMAMobileViewTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = F4EEF97D517682AD73B31BED /* NRMAMobileViewTracker.h */; };
 		2B02DB86293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B02DB87293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */; };
 		2B0340632E87366900182A70 /* GetViewRendererByKeyPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */; };
@@ -1003,6 +1012,7 @@
 		2B81C3502E99800F002F5593 /* UIVIewAssociations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B81C34E2E99800F002F5593 /* UIVIewAssociations.swift */; };
 		2B81C3512E99800F002F5593 /* UIVIewAssociations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B81C34E2E99800F002F5593 /* UIVIewAssociations.swift */; };
 		2B81E34C28624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */; };
+		2B8C3B26304B0C79000933F2 /* NRMAViewContextPersistenceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2B8C3B25304B0C79000933F2 /* NRMAViewContextPersistenceTests.m */; };
 		2B8FF6242EE2324200D86577 /* SessionReplayRecordingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */; };
 		2BA9CA43280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
 		2BA9CA44280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */; };
@@ -1020,6 +1030,8 @@
 		2BAE5C762E85F714001D2B88 /* SwiftUIImageRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C752E85F70D001D2B88 /* SwiftUIImageRepresentable.swift */; };
 		2BAE5C782E85FA62001D2B88 /* SwiftUIDrawingThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C772E85FA5F001D2B88 /* SwiftUIDrawingThingy.swift */; };
 		2BAE5C7A2E85FAB6001D2B88 /* MakeCFTypeSafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BAE5C792E85FAB6001D2B88 /* MakeCFTypeSafe.swift */; };
+		2BB0303D2FA954760076F6BC /* NRMAMobileViewTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = F4EEF97D517682AD73B31BED /* NRMAMobileViewTracker.h */; };
+		2BB0303E2FA9547A0076F6BC /* NRMAMobileViewTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */; };
 		2BBBE70E28BD528F003CADF3 /* NRMAStartTimerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBBE70D28BD528F003CADF3 /* NRMAStartTimerTests.m */; };
 		2BBC1A552DEDF61A00F5C584 /* SessionReplayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BBC1A532DEDF61A00F5C584 /* SessionReplayTest.m */; };
 		2BCA57B42B7E85AD00991C5E /* NRLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BCA57B32B7E85AD00991C5E /* NRLoggerTests.m */; };
@@ -1044,6 +1056,7 @@
 		2BF42C6D28B8106F006E9C27 /* NRMAStartTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */; };
 		2BFFB1EB28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
 		2BFFB1EC28CA683F00392E3B /* NRMASupportMetricHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */; };
+		2C1C322EA52555C01AE2CEF0 /* NRMAMobileViewTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = F4EEF97D517682AD73B31BED /* NRMAMobileViewTracker.h */; };
 		340A8CE42DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */; };
 		340D64142AA92FCE00E63CC1 /* PersistentEventStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */; };
 		340D64152AA92FCE00E63CC1 /* PersistentEventStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */; };
@@ -1371,19 +1384,19 @@
 		348232FB2BC5F20B0070FAC3 /* NRMAHarvesterConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF495C24DC628F00115469 /* NRMAHarvesterConfiguration.h */; };
 		348232FC2BC5F20B0070FAC3 /* NRMATraceConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF496024DC629000115469 /* NRMATraceConfiguration.m */; };
 		348232FD2BC5F20B0070FAC3 /* NRMAHarvestData.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF495824DC628F00115469 /* NRMAHarvestData.m */; };
-		348232FE2BC5F2140070FAC3 /* (null) in Headers */ = {isa = PBXBuildFile; };
+		348232FE2BC5F2140070FAC3 /* BuildFile in Headers */ = {isa = PBXBuildFile; };
 		348232FF2BC5F2140070FAC3 /* HexUploadPublisher.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492724DC625A00115469 /* HexUploadPublisher.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		348233002BC5F2140070FAC3 /* (null) in Sources */ = {isa = PBXBuildFile; };
+		348233002BC5F2140070FAC3 /* BuildFile in Sources */ = {isa = PBXBuildFile; };
 		348233012BC5F2140070FAC3 /* NRMAExceptionReportAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492924DC625A00115469 /* NRMAExceptionReportAdaptor.h */; };
 		348233022BC5F2140070FAC3 /* NRMARetryTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492D24DC625A00115469 /* NRMARetryTracker.h */; };
-		348233032BC5F2140070FAC3 /* (null) in Headers */ = {isa = PBXBuildFile; };
+		348233032BC5F2140070FAC3 /* BuildFile in Headers */ = {isa = PBXBuildFile; };
 		348233042BC5F2140070FAC3 /* NRMAHexUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492524DC625A00115469 /* NRMAHexUploader.m */; };
 		348233052BC5F2140070FAC3 /* NRMARetryTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492624DC625A00115469 /* NRMARetryTracker.m */; };
 		348233062BC5F2140070FAC3 /* NRMAHandledExceptions.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492824DC625A00115469 /* NRMAHandledExceptions.h */; };
 		348233072BC5F2140070FAC3 /* NRMAHexUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492B24DC625A00115469 /* NRMAHexUploader.h */; };
 		348233082BC5F2140070FAC3 /* NRMAExceptionReportAdaptor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492A24DC625A00115469 /* NRMAExceptionReportAdaptor.mm */; };
 		348233092BC5F2140070FAC3 /* NRMAHandledExceptions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 02FF492F24DC625A00115469 /* NRMAHandledExceptions.mm */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		3482330A2BC5F2140070FAC3 /* (null) in Sources */ = {isa = PBXBuildFile; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		3482330A2BC5F2140070FAC3 /* BuildFile in Sources */ = {isa = PBXBuildFile; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		3482330B2BC5F2140070FAC3 /* HexUploadPublisher.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 02FF492324DC625A00115469 /* HexUploadPublisher.hpp */; };
 		3482330D2BC5F21B0070FAC3 /* NRMAExceptionHandlerManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D524DC622600115469 /* NRMAExceptionHandlerManager.h */; };
 		3482330E2BC5F21B0070FAC3 /* NRMACrashDataUploader.h in Headers */ = {isa = PBXBuildFile; fileRef = 02FF48D724DC622700115469 /* NRMACrashDataUploader.h */; };
@@ -1576,6 +1589,23 @@
 		34EA78CA2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78CB2A39221E0071CC95 /* NRMACustomEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */; };
 		34EA78E02A3924CC0071CC95 /* TestCustomEvents.m in Sources */ = {isa = PBXBuildFile; fileRef = 34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */; };
+		37F1B0DF9A9C13558ED499A6 /* NRMAViewEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D330758817C970ED5E5ABA2 /* NRMAViewEvent.m */; };
+		3AB97ABFFC8D50D7E77776F1 /* NRMAViewEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */; };
+		507B2C259DD5885F94F7B3B7 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
+		513AFF7D087E395D440DE57B /* NRMAViewEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 8D330758817C970ED5E5ABA2 /* NRMAViewEvent.m */; };
+		5714AD89C591DAD07C83787B /* MobileViewEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED1CF759619790A1FAA361A /* MobileViewEmitter.swift */; };
+		59104F300408B0460C29B7DE /* NRMAViewTimingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B12958E8548110C3E741E0F1 /* NRMAViewTimingTests.m */; };
+		6678BB36FD70D670CEBCB1D6 /* NRMAViewTiming.m in Sources */ = {isa = PBXBuildFile; fileRef = F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */; };
+		818AFF06F0BFB7F95EB7FCE8 /* NRMAViewTiming.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */; };
+		93C8868778F013C21F19F5B8 /* NRMAViewTiming.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */; };
+		9653014BC99284AE44B75148 /* NRMAViewEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */; };
+		A05B32D10732915D2D8DCA3B /* NRMAMobileViewTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */; };
+		A903DFFF8DD414A0CE83E72F /* NRMAViewEventTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = E82A412D801937F59940F53C /* NRMAViewEventTests.mm */; };
+		AD5B1B2261682AEEAA17D236 /* NRMAViewContext.m in Sources */ = {isa = PBXBuildFile; fileRef = C9AF87A7CB68173909761538 /* NRMAViewContext.m */; };
+		B8C98B3428B46926D9F3083F /* NRMAViewTiming.m in Sources */ = {isa = PBXBuildFile; fileRef = F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */; };
+		C29396C345FFB1967E5E69E4 /* NRMAViewTiming.m in Sources */ = {isa = PBXBuildFile; fileRef = F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */; };
+		C6EBCA8F96D37B1FE792B222 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
+		C8E9F3E9FA5715DCF5E90668 /* NRMAViewContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */; };
 		C94590EE289AC0EC0062A4DE /* SwiftTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209ACA424E7393B00E45C90 /* SwiftTestHelper.swift */; };
 		C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209AC8324E7393200E45C90 /* NRMASwiftInstrumentationTests.swift */; };
 		C94F518D28577E0000E81E01 /* InstrumentationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C94F518C28577E0000E81E01 /* InstrumentationTests.m */; };
@@ -1584,6 +1614,11 @@
 		CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
 		CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
+		CD0107831FEAE274BBC9D009 /* NRMAViewContext.m in Sources */ = {isa = PBXBuildFile; fileRef = C9AF87A7CB68173909761538 /* NRMAViewContext.m */; };
+		CD11FE0002000000000000A2 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
+		CD11FE0003000000000000A3 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
+		CD11FE0004000000000000A4 /* NRMAHarvesterConfigurationLifetimeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */; };
+		D24CF0D18763D6FD19E9F0DD /* MobileViewEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77C2300971F0A0B87895043D /* MobileViewEmitterTests.swift */; };
 		D4580CA72F563363003BAD8C /* JSErrorControllerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */; };
 		D46F91C02F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
 		D46F91C12F69CD5600FD2EBE /* UISwitchThingy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46F91BF2F69CD5600FD2EBE /* UISwitchThingy.swift */; };
@@ -1596,6 +1631,7 @@
 		D4C36C972FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4C36C982FC902B7001DD597 /* TestGuidUniqueness.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */; };
 		D4DCC24030192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DCC23F30192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift */; };
+		E7FC7DABF0C5A9130C32CC67 /* MobileViewEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED1CF759619790A1FAA361A /* MobileViewEmitter.swift */; };
 		F6E79C7325A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7425A65347006277FB /* W3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79C6D25A65346006277FB /* W3CTraceState.mm */; };
 		F6E79C7525A65347006277FB /* W3CTraceState.h in Headers */ = {isa = PBXBuildFile; fileRef = F6E79C6E25A65346006277FB /* W3CTraceState.h */; };
@@ -1614,6 +1650,7 @@
 		F6E79D2B25A788AB006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
 		F6E79D3A25A78B42006277FB /* TestW3CTraceParent.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D1A25A78689006277FB /* TestW3CTraceParent.mm */; };
 		F6E79D4225A78B4A006277FB /* TestW3CTraceState.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6E79D2A25A788AB006277FB /* TestW3CTraceState.mm */; };
+		F737248B2761F81BA09717C7 /* NRMAViewTiming.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */; };
 		F806E4132D9C7D150003B9D6 /* SessionReplayReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4122D9C7D150003B9D6 /* SessionReplayReporter.swift */; };
 		F806E4282D9C7E3F0003B9D6 /* SessionReplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F806E4272D9C7E3F0003B9D6 /* SessionReplayManager.swift */; };
 		F80C1D6A2DA07691007C0F52 /* ViewDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80C1D692DA07691007C0F52 /* ViewDetails.swift */; };
@@ -1934,7 +1971,7 @@
 		};
 		34666B252924556A005A7010 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -1969,7 +2006,7 @@
 		};
 		34A9292D2912D72F001449B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 34BF4DDD29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2018,7 +2055,7 @@
 		};
 		34DD72F42912F04700481FA9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2046,7 +2083,7 @@
 		};
 		F89167402BC9D1CB0085BCFC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 34A929292912D72F001449B6 /* JSON.xcodeproj */;
+			containerPortal = 34A929292912D72F001449B6 /* json.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 34BF4DDC29108DE200E4D170;
 			remoteInfo = JSON;
@@ -2578,6 +2615,8 @@
 		02FF4AFA24DC8CB200115469 /* reflection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reflection.h; sourceTree = "<group>"; };
 		02FF4AFB24DC8CB200115469 /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
 		02FF4CAC24E3201400115469 /* NewRelic.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NewRelic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0ED1CF759619790A1FAA361A /* MobileViewEmitter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewEmitter.swift; sourceTree = "<group>"; };
+		20D736AEDA503A49D6B601F7 /* NRMAViewContextChurnTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewContextChurnTests.m; sourceTree = "<group>"; };
 		2B02DB85293E630B001A59D6 /* NRMAURLSessionAsyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NRMAURLSessionAsyncTests.swift; sourceTree = "<group>"; };
 		2B03404F2E87366600182A70 /* GetViewRendererByKeyPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetViewRendererByKeyPath.swift; sourceTree = "<group>"; };
 		2B0340672E874A9900182A70 /* ControllerTypeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerTypeDetector.swift; sourceTree = "<group>"; };
@@ -2610,6 +2649,7 @@
 		2B81C3432E996300002F5593 /* MaskedContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaskedContainerView.swift; sourceTree = "<group>"; };
 		2B81C34E2E99800F002F5593 /* UIVIewAssociations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIVIewAssociations.swift; sourceTree = "<group>"; };
 		2B81E33928624B2700A4525A /* NRMAAnalyticsControllerCustomEventStressor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAAnalyticsControllerCustomEventStressor.m; sourceTree = "<group>"; };
+		2B8C3B25304B0C79000933F2 /* NRMAViewContextPersistenceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAViewContextPersistenceTests.m; sourceTree = "<group>"; };
 		2B8FF6102EE2323900D86577 /* SessionReplayRecordingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayRecordingMode.swift; sourceTree = "<group>"; };
 		2BA9CA2F280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NRMAHarvesterConnection+GZip.h"; sourceTree = "<group>"; };
 		2BA9CA42280DF87A00FDCD00 /* NRMAHarvesterConnection+GZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NRMAHarvesterConnection+GZip.m"; sourceTree = "<group>"; };
@@ -2642,6 +2682,7 @@
 		2BF42C6B28B8106F006E9C27 /* NRMAStartTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAStartTimer.m; sourceTree = "<group>"; };
 		2BFFB1D728CA683F00392E3B /* NRMASupportMetricHelperTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NRMASupportMetricHelperTests.h; sourceTree = "<group>"; };
 		2BFFB1EA28CA683F00392E3B /* NRMASupportMetricHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMASupportMetricHelperTests.m; sourceTree = "<group>"; };
+		3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NRMobileViewFeatureFlagGateTests.swift; sourceTree = "<group>"; };
 		340A8CE32DAD8EAB00BC2B01 /* IncrementalDiffGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncrementalDiffGenerator.swift; sourceTree = "<group>"; };
 		340D64122AA92FCE00E63CC1 /* PersistentEventStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistentEventStore.h; sourceTree = "<group>"; };
 		340D64132AA92FCE00E63CC1 /* PersistentEventStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistentEventStore.m; sourceTree = "<group>"; };
@@ -2701,11 +2742,20 @@
 		34EA78C62A39221E0071CC95 /* NRMACustomEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMACustomEvent.h; sourceTree = "<group>"; };
 		34EA78C72A39221E0071CC95 /* NRMACustomEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMACustomEvent.m; sourceTree = "<group>"; };
 		34EA78DF2A3924CC0071CC95 /* TestCustomEvents.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestCustomEvents.m; sourceTree = "<group>"; };
+		4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewEvent.h; sourceTree = "<group>"; };
 		59AA4543706D6BB36459A6C5 /* NewRelicAgent.podspec.template */ = {isa = PBXFileReference; lastKnownFileType = file.podspec; name = NewRelicAgent.podspec.template; path = cocoapods/NewRelicAgent.podspec.template; sourceTree = "<group>"; };
 		59AA4F6AF53601FEA41A1303 /* dev_build_xcframework.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dev_build_xcframework.sh; sourceTree = "<group>"; };
 		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
+		5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewTiming.h; sourceTree = "<group>"; };
+		705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAViewContext.h; sourceTree = "<group>"; };
+		77C2300971F0A0B87895043D /* MobileViewEmitterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewEmitterTests.swift; sourceTree = "<group>"; };
+		8D330758817C970ED5E5ABA2 /* NRMAViewEvent.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewEvent.m; sourceTree = "<group>"; };
+		9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAMobileViewTracker.m; sourceTree = "<group>"; };
+		B12958E8548110C3E741E0F1 /* NRMAViewTimingTests.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewTimingTests.m; sourceTree = "<group>"; };
+		C15109B42FC49AA5B0AE1D31 /* SessionReplayHarvestEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayHarvestEndToEndTests.swift; sourceTree = "<group>"; };
 		C94F518C28577E0000E81E01 /* InstrumentationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstrumentationTests.m; sourceTree = "<group>"; };
 		C94F51A02857832B00E81E01 /* NRMAActivityNameGeneratorTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAActivityNameGeneratorTest.m; sourceTree = "<group>"; };
+		C9AF87A7CB68173909761538 /* NRMAViewContext.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewContext.m; sourceTree = "<group>"; };
 		C9C28B9E284A6AF70097B433 /* NRMAKeyAttributesTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAKeyAttributesTest.m; sourceTree = "<group>"; };
 		CD11FE0001000000000000A1 /* NRMAHarvesterConfigurationLifetimeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NRMAHarvesterConfigurationLifetimeTests.m; sourceTree = "<group>"; };
 		D4580CA52F563363003BAD8C /* JSErrorControllerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JSErrorControllerTests.m; sourceTree = "<group>"; };
@@ -2716,6 +2766,8 @@
 		D48D551C2F4E63B9003BE3AB /* NRMAJSErrorHarvestAdapter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAJSErrorHarvestAdapter.m; sourceTree = "<group>"; };
 		D4C36C952FC902B7001DD597 /* TestGuidUniqueness.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TestGuidUniqueness.mm; sourceTree = "<group>"; };
 		D4DCC23F30192068008B5C59 /* UIHostingViewRecordOrchestratorWidthOffsetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHostingViewRecordOrchestratorWidthOffsetTests.swift; sourceTree = "<group>"; };
+		E82A412D801937F59940F53C /* NRMAViewEventTests.mm */ = {isa = PBXFileReference; includeInIndex = 1; path = NRMAViewEventTests.mm; sourceTree = "<group>"; };
+		F4EEF97D517682AD73B31BED /* NRMAMobileViewTracker.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = NRMAMobileViewTracker.h; sourceTree = "<group>"; };
 		F6E79C6D25A65346006277FB /* W3CTraceState.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceState.mm; sourceTree = "<group>"; };
 		F6E79C6E25A65346006277FB /* W3CTraceState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = W3CTraceState.h; sourceTree = "<group>"; };
 		F6E79C7025A65346006277FB /* W3CTraceParent.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = W3CTraceParent.mm; sourceTree = "<group>"; };
@@ -2737,6 +2789,7 @@
 		F848CDBF2AA133EA0082052F /* NRMAInteractionEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAInteractionEvent.m; sourceTree = "<group>"; };
 		F848CDD52AA133FB0082052F /* NRMAInteractionEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NRMAInteractionEvent.h; sourceTree = "<group>"; };
 		F85558522DE7C4F6008B6EDD /* SessionReplayData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReplayData.swift; sourceTree = "<group>"; };
+		F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = NRMAViewTiming.m; sourceTree = "<group>"; };
 		F858F35F2AE04B0C00CF9EB5 /* NRMAURLSessionHeaderTrackingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NRMAURLSessionHeaderTrackingTests.m; sourceTree = "<group>"; };
 		F85ABB482F1557150098A2CF /* UILabelThingyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UILabelThingyTests.swift; sourceTree = "<group>"; };
 		F8672AB42EB11B2C0055FA51 /* UIFont+CSSConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+CSSConversion.swift"; sourceTree = "<group>"; };
@@ -2943,6 +2996,7 @@
 				0209ABC824E705B500E45C90 /* Analytics-Tests */,
 				0209ABC724E705AB00E45C90 /* Agent-Health-Tests */,
 				0209ABC624E7059900E45C90 /* User-Action-Tests */,
+				E5F8D5F1C2502826F3FD69AE /* MobileViews-Tests */,
 			);
 			path = NewRelicAgentTests;
 			sourceTree = "<group>";
@@ -2993,6 +3047,7 @@
 			children = (
 				0209AC4324E7078000E45C90 /* NRMAFeatureFlagsTests.m */,
 				0209AC4224E7078000E45C90 /* NRMAInteractionTraceFeatureFlag.m */,
+				3044C591FF629A6505BEC8CE /* NRMobileViewFeatureFlagGateTests.swift */,
 			);
 			path = "Feature-Flags-Tests";
 			sourceTree = "<group>";
@@ -3288,6 +3343,7 @@
 				02FF47DC24DB566700115469 /* Public */,
 				021A15BE24C9EEE700E8DFD5 /* Info.plist */,
 				344E494A2D93288F008174A1 /* APrivateHeader.h */,
+				10BA5FBBE9EB9701CF3DF426 /* MobileViews */,
 			);
 			path = Agent;
 			sourceTree = "<group>";
@@ -4070,6 +4126,20 @@
 			path = flatbuffers;
 			sourceTree = "<group>";
 		};
+		10BA5FBBE9EB9701CF3DF426 /* MobileViews */ = {
+			isa = PBXGroup;
+			children = (
+				F4EEF97D517682AD73B31BED /* NRMAMobileViewTracker.h */,
+				9E661A2BE0D13360A95C81A6 /* NRMAMobileViewTracker.m */,
+				C9AF87A7CB68173909761538 /* NRMAViewContext.m */,
+				705CC98B0BFF164ECC441A86 /* NRMAViewContext.h */,
+				5A93F4E393A973FA48E954AD /* NRMAViewTiming.h */,
+				F85603AA0CBFCFD2072DDE84 /* NRMAViewTiming.m */,
+				0ED1CF759619790A1FAA361A /* MobileViewEmitter.swift */,
+			);
+			path = MobileViews;
+			sourceTree = "<group>";
+		};
 		2B0340642E873D5C00182A70 /* XRAY */ = {
 			isa = PBXGroup;
 			children = (
@@ -4301,6 +4371,18 @@
 			path = JSError;
 			sourceTree = "<group>";
 		};
+		E5F8D5F1C2502826F3FD69AE /* MobileViews-Tests */ = {
+			isa = PBXGroup;
+			children = (
+				B12958E8548110C3E741E0F1 /* NRMAViewTimingTests.m */,
+				20D736AEDA503A49D6B601F7 /* NRMAViewContextChurnTests.m */,
+				2B8C3B25304B0C79000933F2 /* NRMAViewContextPersistenceTests.m */,
+				E82A412D801937F59940F53C /* NRMAViewEventTests.mm */,
+				77C2300971F0A0B87895043D /* MobileViewEmitterTests.swift */,
+			);
+			path = "MobileViews-Tests";
+			sourceTree = "<group>";
+		};
 		F6E79C6C25A65346006277FB /* DistributedTracing */ = {
 			isa = PBXGroup;
 			children = (
@@ -4363,6 +4445,8 @@
 				F8FBFA612A78416300CDC8C5 /* NRMAMobileEvent.m */,
 				F8BF13B72F2BB85100EF5628 /* NRMAUserActionEvent.m */,
 				F8BF13CE2F2BB88B00EF5628 /* NRMAUserActionEvent.h */,
+				4787C96D62C2271D6F71F4F5 /* NRMAViewEvent.h */,
+				8D330758817C970ED5E5ABA2 /* NRMAViewEvent.m */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -4584,6 +4668,10 @@
 				02FF484C24DC614200115469 /* NRMAThreadLocalStore.h in Headers */,
 				02FF47FA24DB56B100115469 /* NRMAAgentVersion.h in Headers */,
 				02FF485B24DC615A00115469 /* NRMANetworkRequestData.h in Headers */,
+				2C1C322EA52555C01AE2CEF0 /* NRMAMobileViewTracker.h in Headers */,
+				C6EBCA8F96D37B1FE792B222 /* NRMAViewContext.h in Headers */,
+				818AFF06F0BFB7F95EB7FCE8 /* NRMAViewTiming.h in Headers */,
+				9653014BC99284AE44B75148 /* NRMAViewEvent.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4799,6 +4887,24 @@
 				02FF4BEB24E3201400115469 /* NRMAThreadLocalStore.h in Headers */,
 				02FF4BEC24E3201400115469 /* NRMAAgentVersion.h in Headers */,
 				02FF4BED24E3201400115469 /* NRMANetworkRequestData.h in Headers */,
+				27E29A70A9D13E487A66CD67 /* NRMAMobileViewTracker.h in Headers */,
+				C8E9F3E9FA5715DCF5E90668 /* NRMAViewContext.h in Headers */,
+				93C8868778F013C21F19F5B8 /* NRMAViewTiming.h in Headers */,
+				0BD6AE1D6CEE587F9E50A386 /* NRMAViewEvent.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D95B317487B4305A9785D0B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		10B249E90453C0766352308C /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4882,7 +4988,7 @@
 				348233842BC5F3120070FAC3 /* NRMALastActivityTraceController.h in Headers */,
 				348232D52BC5F2050070FAC3 /* NRMAHarvestableMethodMetric.h in Headers */,
 				348232B42BC5F1F60070FAC3 /* NRMAHarvesterConnection+GZip.h in Headers */,
-				348232FE2BC5F2140070FAC3 /* (null) in Headers */,
+				348232FE2BC5F2140070FAC3 /* BuildFile in Headers */,
 				3482336E2BC5F3040070FAC3 /* NRMANetworkResponseData+CppInterface.h in Headers */,
 				348233782BC5F3040070FAC3 /* NRMANetworkRequestData.h in Headers */,
 				348232962BC5F1D70070FAC3 /* NRMAMeasurementException.h in Headers */,
@@ -4918,6 +5024,7 @@
 				348233432BC5F2500070FAC3 /* NRMAWKWebViewDelegateBase_Private.h in Headers */,
 				348233A52BC5F32B0070FAC3 /* NRMAExceptionHandlerStartupManager.h in Headers */,
 				348232B72BC5F1F60070FAC3 /* NRMAHarvesterConnection.h in Headers */,
+				2BB0303D2FA954760076F6BC /* NRMAMobileViewTracker.h in Headers */,
 				F8BF13CF2F2BB89100EF5628 /* NRMAUserActionEvent.h in Headers */,
 				348232D32BC5F2050070FAC3 /* NRMAConnectInformation.h in Headers */,
 				348232F62BC5F20B0070FAC3 /* NRMAHarvestResponse.h in Headers */,
@@ -4965,7 +5072,7 @@
 				3482323E2BC5F0DC0070FAC3 /* NRMAHTTPUtilities.h in Headers */,
 				3482325A2BC5F16E0070FAC3 /* NRMAFileCleanup.h in Headers */,
 				348233832BC5F3120070FAC3 /* NRMATraceMachineAgentUserInterface.h in Headers */,
-				348233032BC5F2140070FAC3 /* (null) in Headers */,
+				348233032BC5F2140070FAC3 /* BuildFile in Headers */,
 				348233672BC5F3040070FAC3 /* NRMAAnalyticEventProtocol.h in Headers */,
 				348233072BC5F2140070FAC3 /* NRMAHexUploader.h in Headers */,
 				348233A72BC5F32B0070FAC3 /* NewRelicCustomInteractionInterface.h in Headers */,
@@ -5010,6 +5117,23 @@
 				3482329F2BC5F1DD0070FAC3 /* NRMAMeasurementProducer.h in Headers */,
 				348232A92BC5F1E30070FAC3 /* NRCustomMetrics+private.h in Headers */,
 				348232EC2BC5F2050070FAC3 /* NRMAHarvestableMetric.h in Headers */,
+				507B2C259DD5885F94F7B3B7 /* NRMAViewContext.h in Headers */,
+				F737248B2761F81BA09717C7 /* NRMAViewTiming.h in Headers */,
+				3AB97ABFFC8D50D7E77776F1 /* NRMAViewEvent.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		39DA460E7E7F2716DB023D00 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63358B0874DDE8C7A61E6B35 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5023,6 +5147,7 @@
 				0209ABB424E7054800E45C90 /* Sources */,
 				0209ABB524E7054800E45C90 /* Frameworks */,
 				0209ABB624E7054800E45C90 /* Resources */,
+				63358B0874DDE8C7A61E6B35 /* Headers */,
 			);
 			buildRules = (
 				020DEC30251A59A100BF7309 /* PBXBuildRule */,
@@ -5070,6 +5195,7 @@
 				025657F424EB19BF00FE3125 /* Sources */,
 				0256584E24EB19BF00FE3125 /* Frameworks */,
 				0256585A24EB19BF00FE3125 /* Resources */,
+				39DA460E7E7F2716DB023D00 /* Headers */,
 			);
 			buildRules = (
 			);
@@ -5089,6 +5215,7 @@
 				025658A524EB2AAC00FE3125 /* Frameworks */,
 				025658A624EB2AAC00FE3125 /* Resources */,
 				2B30CFAC283BFBAB002341DA /* CopyFiles */,
+				10B249E90453C0766352308C /* Headers */,
 			);
 			buildRules = (
 			);
@@ -5134,6 +5261,7 @@
 				3431DD132BED375E00FF145F /* Sources */,
 				3431DD142BED375E00FF145F /* Frameworks */,
 				3431DD152BED375E00FF145F /* Resources */,
+				0D95B317487B4305A9785D0B /* Headers */,
 			);
 			buildRules = (
 			);
@@ -5706,6 +5834,7 @@
 				F8B30FC12EEB3D3A008E74FB /* UIImage+PngData.swift in Sources */,
 				0209AC0F24E7071500E45C90 /* NewRelicAPITest.m in Sources */,
 				C94590EF289AC0F00062A4DE /* NRMASwiftInstrumentationTests.swift in Sources */,
+				2B8C3B26304B0C79000933F2 /* NRMAViewContextPersistenceTests.m in Sources */,
 				F8BF15532F3A38F300EF5628 /* XrayConvertible.swift in Sources */,
 				0209AC0D24E7071500E45C90 /* NewRelicTests.m in Sources */,
 				0209ABF324E706FA00E45C90 /* NRTraceTest.m in Sources */,
@@ -5747,6 +5876,11 @@
 				0209AC9424E7393300E45C90 /* NRMethodProfilerTests.m in Sources */,
 				0209AC2124E7071F00E45C90 /* MachineMeasurementsTest.m in Sources */,
 				0209ABF424E706FA00E45C90 /* NRThreadInfoTests.m in Sources */,
+				00D3C8A763625C06E61485F0 /* NRMobileViewFeatureFlagGateTests.swift in Sources */,
+				59104F300408B0460C29B7DE /* NRMAViewTimingTests.m in Sources */,
+				15BE174BBE450E969F8E2DFB /* NRMAViewContextChurnTests.m in Sources */,
+				A903DFFF8DD414A0CE83E72F /* NRMAViewEventTests.mm in Sources */,
+				D24CF0D18763D6FD19E9F0DD /* MobileViewEmitterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6014,6 +6148,11 @@
 				02FF48BB24DC61F600115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7925A65347006277FB /* W3CTraceParent.mm in Sources */,
 				2BDCA8AA2A8C41160005740D /* NRMASAM.mm in Sources */,
+				19EEB81DBA68AE0F78342CB5 /* NRMAMobileViewTracker.m in Sources */,
+				1183B75ADC60F29EB1127411 /* NRMAViewContext.m in Sources */,
+				C29396C345FFB1967E5E69E4 /* NRMAViewTiming.m in Sources */,
+				513AFF7D087E395D440DE57B /* NRMAViewEvent.m in Sources */,
+				5714AD89C591DAD07C83787B /* MobileViewEmitter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6396,6 +6535,11 @@
 				02FF4C9824E3201400115469 /* NRMATraceSegment.m in Sources */,
 				02FF4C9924E3201400115469 /* NRMAClassNode.m in Sources */,
 				F6E79C7A25A65347006277FB /* W3CTraceParent.mm in Sources */,
+				A05B32D10732915D2D8DCA3B /* NRMAMobileViewTracker.m in Sources */,
+				AD5B1B2261682AEEAA17D236 /* NRMAViewContext.m in Sources */,
+				6678BB36FD70D670CEBCB1D6 /* NRMAViewTiming.m in Sources */,
+				1351CD874BF57B220BDFF22A /* NRMAViewEvent.m in Sources */,
+				E7FC7DABF0C5A9130C32CC67 /* MobileViewEmitter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6591,6 +6735,7 @@
 				348232B52BC5F1F60070FAC3 /* NRMAHarvester.mm in Sources */,
 				348233152BC5F21B0070FAC3 /* NRMATimestampContainer.m in Sources */,
 				348232F12BC5F2050070FAC3 /* NRMAActivityTraces.m in Sources */,
+				2BB0303E2FA9547A0076F6BC /* NRMAMobileViewTracker.m in Sources */,
 				348233642BC5F2DD0070FAC3 /* NRMASessionEvent.m in Sources */,
 				3482325C2BC5F16E0070FAC3 /* NRMACPUVitals.m in Sources */,
 				348232502BC5F14D0070FAC3 /* NRMADEBUG_Reachability.m in Sources */,
@@ -6599,7 +6744,7 @@
 				3482325D2BC5F16E0070FAC3 /* NRMABool.m in Sources */,
 				348233212BC5F2270070FAC3 /* NRMACrashReport_CodeType.m in Sources */,
 				3482328B2BC5F1B30070FAC3 /* NRMAMetric.m in Sources */,
-				348233002BC5F2140070FAC3 /* (null) in Sources */,
+				348233002BC5F2140070FAC3 /* BuildFile in Sources */,
 				3482337E2BC5F3120070FAC3 /* NRMAActivityTrace.m in Sources */,
 				348232732BC5F1A80070FAC3 /* NRMAMeasurementEngine.m in Sources */,
 				348232462BC5F0F60070FAC3 /* NRMAPayloadContainer.mm in Sources */,
@@ -6644,7 +6789,7 @@
 				348232E92BC5F2050070FAC3 /* NRMAHTTPTransactions.m in Sources */,
 				348232C62BC5F1FE0070FAC3 /* NRMAHarvestable.m in Sources */,
 				348233142BC5F21B0070FAC3 /* NRMAUncaughtExceptionHandler.m in Sources */,
-				3482330A2BC5F2140070FAC3 /* (null) in Sources */,
+				3482330A2BC5F2140070FAC3 /* BuildFile in Sources */,
 				348233622BC5F2DD0070FAC3 /* NRMANetworkErrorEvent.m in Sources */,
 				2B3BA8522EF1C7B0007B798A /* SessionReplayFrame.swift in Sources */,
 				348232972BC5F1D70070FAC3 /* NRMAMethodSummaryMeasurement.m in Sources */,
@@ -6673,6 +6818,10 @@
 				3482327D2BC5F1AE0070FAC3 /* NRMAMeasurementConsumer.m in Sources */,
 				348232C02BC5F1FE0070FAC3 /* NRMAHarvestableArray.m in Sources */,
 				348233382BC5F2490070FAC3 /* NRMAMethodProfiler.m in Sources */,
+				CD0107831FEAE274BBC9D009 /* NRMAViewContext.m in Sources */,
+				B8C98B3428B46926D9F3083F /* NRMAViewTiming.m in Sources */,
+				37F1B0DF9A9C13558ED499A6 /* NRMAViewEvent.m in Sources */,
+				0CC6CA92F421F62B64BB231F /* MobileViewEmitter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
