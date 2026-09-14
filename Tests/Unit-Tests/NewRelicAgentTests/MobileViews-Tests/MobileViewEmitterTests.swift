@@ -268,15 +268,13 @@ final class MobileViewEmitterTests: XCTestCase {
                                      timingValueMs: 250.5,
                                      viewName: "CheckoutView",
                                      viewInstanceId: "instance-1",
-                                     previousView: "CartView",
-                                     platform: .uiKit).attributes()
+                                     previousView: "CartView").attributes()
 
         XCTAssertEqual(attrs["timingName"] as? String, "timeToInitialDisplay")
         XCTAssertEqual(attrs["timingValue"] as? NSNumber, NSNumber(value: 250.5))
         XCTAssertEqual(attrs["viewName"] as? String, "CheckoutView")
         XCTAssertEqual(attrs["viewInstanceId"] as? String, "instance-1")
         XCTAssertEqual(attrs["previousView"] as? String, "CartView")
-        XCTAssertEqual(attrs["uiPlatform"] as? String, "UIKit")
         XCTAssertEqual(attrs["agentName"] as? String, "iOS")
     }
 
@@ -292,13 +290,11 @@ final class MobileViewEmitterTests: XCTestCase {
                                      timingValueMs: 1,
                                      viewName: "",
                                      viewInstanceId: nil,
-                                     previousView: "",
-                                     platform: nil).attributes()
+                                     previousView: "").attributes()
 
         XCTAssertNil(attrs["viewName"])
         XCTAssertNil(attrs["viewInstanceId"])
         XCTAssertNil(attrs["previousView"])
-        XCTAssertNil(attrs["uiPlatform"])
         XCTAssertEqual(attrs["timingName"] as? String, "custom")
     }
 

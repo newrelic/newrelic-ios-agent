@@ -507,26 +507,11 @@ typedef NS_ENUM(NSUInteger, NRMAViewSource) {
     NSString *previous   = _previousViewName;
     BOOL hasCurrent      = (_currentViewName.length > 0);
 
-    // Platform is not held alongside _currentView*: automatic producers keep it on their visible-view
-    // stack entry, and the manual producer has no entry at all. Resolve it here so the timing event
-    // reports the same uiPlatform the MobileView event did.
-    NSString *platform = nil;
-    if (_currentViewSource == NRMAViewSourceManual) {
-        platform = kNRUIPlatformManual;
-    } else if (instanceId.length > 0) {
-        for (NRMAVisibleView *entry in _visibleViews.reverseObjectEnumerator) {
-            if ([entry.instanceId isEqualToString:instanceId]) {
-                platform = entry.platform;
-                break;
-            }
-        }
-    }
     os_unfair_lock_unlock(&_lock);
 
     return [[NRMAViewTimingSnapshot alloc] initWithViewName:name
                                             viewInstanceId:instanceId
                                               previousView:previous
-                                                uiPlatform:platform
                                                 appearTime:appear
                                              loadStartTime:loadStart
                                               hasLoadStart:hasLoadStart

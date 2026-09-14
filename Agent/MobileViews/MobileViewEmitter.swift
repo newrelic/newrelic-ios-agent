@@ -197,7 +197,6 @@ internal struct ViewTimingRecord {
     var viewName: String?
     var viewInstanceId: String?
     var previousView: String?
-    var platform: NRViewPlatform?
 
     internal func attributes() -> [String: Any] {
         var attrs: [String: Any] = [
@@ -215,9 +214,6 @@ internal struct ViewTimingRecord {
         }
         if let previousView = previousView, !previousView.isEmpty {
             attrs[NRViewAttribute.previousView] = previousView
-        }
-        if let platform = platform {
-            attrs[NRViewAttribute.uiPlatform] = platform.rawValue
         }
         return attrs
     }
@@ -358,15 +354,13 @@ public class NRMAMobileViewRecorder: NSObject {
                                         milliseconds: Double,
                                         viewName: String?,
                                         viewInstanceId: String?,
-                                        previousView: String?,
-                                        platform: String?) -> [String: Any] {
+                                        previousView: String?) -> [String: Any] {
         ViewTimingRecord(
             timingName: timingName,
             timingValueMs: milliseconds,
             viewName: viewName,
             viewInstanceId: viewInstanceId,
-            previousView: previousView,
-            platform: platform.flatMap { NRViewPlatform(rawValue: $0) }).attributes()
+            previousView: previousView).attributes()
     }
 
     /// Emits attributes built by `timingAttributes(...)`. Timing rows describe a view, so either

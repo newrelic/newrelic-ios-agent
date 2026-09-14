@@ -49,7 +49,6 @@
     return [[NRMAViewTimingSnapshot alloc] initWithViewName:@"ProductDetail"
                                             viewInstanceId:@"INSTANCE-1"
                                               previousView:@"SearchResults"
-                                                uiPlatform:@"UIKit"
                                                 appearTime:appear
                                              loadStartTime:appear - 0.300
                                               hasLoadStart:YES
@@ -62,7 +61,6 @@
     return [[NRMAViewTimingSnapshot alloc] initWithViewName:@"ProductDetail"
                                             viewInstanceId:@"INSTANCE-2"
                                               previousView:@"SearchResults"
-                                                uiPlatform:@"UIKit"
                                                 appearTime:[NRMAViewContext monotonicNow]
                                              loadStartTime:0
                                               hasLoadStart:NO
@@ -73,7 +71,6 @@
     return [[NRMAViewTimingSnapshot alloc] initWithViewName:nil
                                             viewInstanceId:nil
                                               previousView:nil
-                                                uiPlatform:nil
                                                 appearTime:0
                                              loadStartTime:0
                                               hasLoadStart:NO
@@ -97,7 +94,6 @@
                           @"viewInstanceId is what joins MobileViewTiming back to its MobileView visit");
     XCTAssertEqualObjects(attrs[@"previousView"], @"SearchResults",
                           @"previousView makes timings queryable by route, not only by destination");
-    XCTAssertEqualObjects(attrs[@"uiPlatform"], @"UIKit");
     XCTAssertEqualObjects(attrs[@"agentName"], @"iOS");
 }
 
@@ -244,7 +240,6 @@
         [[NRMAViewTimingSnapshot alloc] initWithViewName:@"Checkout"
                                          viewInstanceId:@"INSTANCE-2"
                                            previousView:@"ProductDetail"
-                                             uiPlatform:@"UIKit"
                                              appearTime:[NRMAViewContext monotonicNow]
                                           loadStartTime:[NRMAViewContext monotonicNow] - 0.100
                                            hasLoadStart:YES

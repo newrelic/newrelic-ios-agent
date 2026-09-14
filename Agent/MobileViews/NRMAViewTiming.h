@@ -55,7 +55,6 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 @property (nonatomic, readonly, copy, nullable) NSString *viewName;
 @property (nonatomic, readonly, copy, nullable) NSString *viewInstanceId;
 @property (nonatomic, readonly, copy, nullable) NSString *previousView;
-@property (nonatomic, readonly, copy, nullable) NSString *uiPlatform;
 
 /// When the current view became visible. The fallback zero point for markTimingNamed:, used only
 /// when no construction start is available.
@@ -75,7 +74,6 @@ FOUNDATION_EXPORT const double kNRMAViewTimingMaxMilliseconds;
 - (instancetype)initWithViewName:(nullable NSString *)viewName
                   viewInstanceId:(nullable NSString *)viewInstanceId
                     previousView:(nullable NSString *)previousView
-                      uiPlatform:(nullable NSString *)uiPlatform
                       appearTime:(CFAbsoluteTime)appearTime
                    loadStartTime:(CFAbsoluteTime)loadStartTime
                     hasLoadStart:(BOOL)hasLoadStart

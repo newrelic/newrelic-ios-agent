@@ -49,7 +49,6 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
 - (instancetype)initWithViewName:(NSString *)viewName
                   viewInstanceId:(NSString *)viewInstanceId
                     previousView:(NSString *)previousView
-                      uiPlatform:(NSString *)uiPlatform
                       appearTime:(CFAbsoluteTime)appearTime
                    loadStartTime:(CFAbsoluteTime)loadStartTime
                     hasLoadStart:(BOOL)hasLoadStart
@@ -58,7 +57,6 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
         _viewName       = [viewName copy];
         _viewInstanceId = [viewInstanceId copy];
         _previousView   = [previousView copy];
-        _uiPlatform     = [uiPlatform copy];
         _appearTime     = appearTime;
         _loadStartTime  = loadStartTime;
         _hasLoadStart   = hasLoadStart;
@@ -208,8 +206,7 @@ static const NSUInteger kNRMaxTrackedBuckets = 64;
                                       milliseconds:milliseconds
                                           viewName:snapshot.viewName
                                     viewInstanceId:snapshot.viewInstanceId
-                                      previousView:snapshot.previousView
-                                          platform:snapshot.uiPlatform];
+                                      previousView:snapshot.previousView];
 }
 
 #pragma mark - Validation

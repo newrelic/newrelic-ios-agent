@@ -127,7 +127,7 @@ struct MobileViewRecord {
     func emit()
 }
 
-struct ViewTimingRecord { /* timingName, timingValueMs, viewName, viewInstanceId, previousView, uiPlatform */ }
+struct ViewTimingRecord { /* timingName, timingValueMs, viewName, viewInstanceId, previousView */ }
 ```
 
 `LoadOutcome` is the point of the type: it makes "exactly one of `loadTime` /

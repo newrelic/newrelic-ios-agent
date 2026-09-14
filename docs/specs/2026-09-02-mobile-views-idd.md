@@ -340,7 +340,6 @@ aggregate wrongly against every other agent's.
 | `viewName` | string | when a view is current | The screen the timing is about |
 | `viewInstanceId` | string (UUID) | when a view is current | Join key back to the exact `MobileView` **visit** that produced it |
 | `previousView` | string | when known | Referrer, so timings are queryable by route rather than only by destination |
-| `uiPlatform` | string | when a view is current | UI runtime — same enum as §5.3 |
 
 Four properties of this schema are load-bearing and are the ones an agent is most likely to get wrong:
 
@@ -537,6 +536,55 @@ unattributed timings early in a launch silence the path for the whole session.
 
 Cap bookkeeping is itself bounded to 64 buckets, oldest-inserted evicted first. Eviction re-admits a view to
 its cap, which is acceptable: an evicted bucket belongs to a screen the user left long ago.
+
+### 6.5 Components — composition, not a capability
+
+A **component** is a part of a screen a customer wants reported in its own right: the recommendation
+carousel, the price block, the review list. The motivation is the same one behind the whole initiative — a
+slow screen should be attributable to the part of it that was slow, not just to the screen.
+
+**There is no component capability, and this revision does not add one.** The agent's unit of observation is
+the screen, because that is the granularity every runtime actually announces; no runtime tells the agent
+"this subview is now on screen" in a form a producer can trust. What customers have today is **composition of
+capabilities 4, 6, and 7**, and it works. It also costs something, and this section states the cost plainly
+rather than leaving it to be discovered in a dashboard.
+
+**The pattern, per runtime.** One rule everywhere: make the component into something the producer already
+recognises as a view. No agent change is required for either row.
+
+| Runtime | How |
+| --- | --- |
+| Declarative (SwiftUI, Compose) | Attach the same per-view hook the screen uses to the subview. A component is not a special case here — the modifier does not care how large its content is |
+| Imperative (UIKit, Android Views / Fragments) | Wrap the section in the smallest unit the producer *can* see: a child view controller, a fragment. The existing lifecycle hook then reports it unchanged |
+
+**Components must be labelled by the customer, through capability 6.** `viewName` cannot separate a
+component from a screen — to the agent a component *is* a screen — so the convention is the pair
+`component: true` and `componentOf: <screen viewName>` on every component. These are customer attributes, not
+schema: §5.3 stays closed, and an agent must not start emitting them on its own, because it cannot know which
+of its views the customer considers a part rather than a whole.
+
+**Component names are fixed strings, never per-item.** `viewName` is a facet, and a name derived from the
+item on screen makes it useless. Anything that varies belongs in capability-6 attributes. Agents should
+document a separator convention in their CDD; the constraint is that the collector's string cleansing and the
+existing metric-name grammar both reserve characters, so the safe choice is not the same on every platform
+(iOS uses dots).
+
+**What it costs today.** Verified against the iOS implementation on `mobile-views-2`, on a UIKit screen
+carrying five components:
+
+| Behaviour | Consequence for the customer |
+| --- | --- |
+| A component emits ordinary `MobileView` appear and disappear rows | Any screen-level count or dwell aggregate over `MobileView` must exclude `component = true`, or a screen with five sections counts as six visits |
+| A component gets its own `timeToInitialDisplay` (§6.3), because its producer vouched for a construction start like any other view | Baseline percentiles mix whole screens with sections. The `MobileViewTiming` schema (§5.8) carries no custom attributes, so `component` does not reach the timing rows: scoping to screens is a join back to `MobileView` on `viewInstanceId`, the same two-step §8 already describes for origin filtering |
+| Each component becomes the current view as it appears, so `previousView` chains component → component | The navigation graph gains intra-screen hops, and the next real screen reports the *last component* as its referrer rather than the screen the user came from |
+| Capability 7 marks resolve against the current view, which after layout is the last component that appeared | A customer instrumenting `timeToFullDisplay` for the *screen* must mark before its components appear, or accept that the mark lands on a component. This is the sharpest edge of the pattern |
+
+**What would replace it.** A first-class component capability is a **fast-follow, not in scope here** (§4).
+The shape the costs above point to is a way to report a component *without making it current*: emit its
+appear, disappear, and baseline rows, label them as component rows in the schema so the timing event can
+carry the label too, and leave `currentView` / `previousView` referring to the containing screen. That is a
+schema change and a producer change in every agent, which is why it is not being smuggled in as guidance.
+Until then, the composition above is the supported answer, with the four consequences above understood.
 
 ## 7. Delegated to the CDDs
 

@@ -53,7 +53,7 @@ This design adds a second *reader* of that state and a second *emitter*; it adds
 | Change | File | Responsibility |
 |---|---|---|
 | New | `Agent/MobileViews/NRMAViewTiming.{h,m}` | Validate, cap, and emit `MobileViewTiming`. No UIKit dependency, unit-testable in isolation. |
-| Edit | `Agent/MobileViews/NRMAViewContext.{h,m}` | Add a `snapshotForTiming` accessor returning name / instanceId / appearTime / previousView / uiPlatform as one value. |
+| Edit | `Agent/MobileViews/NRMAViewContext.{h,m}` | Add a `snapshotForTiming` accessor returning name / instanceId / appearTime / previousView as one value. |
 | Edit | `Agent/Public/NewRelic.{h,m}` | Two public class methods. |
 | Edit | appear path (`NRMAViewContext` / `NRMAMobileViewTracker`) | Emit the OOTB `timeToInitialDisplay` row alongside the existing `MobileView` appear event. |
 | New | Tests | Unit tests for `NRMAViewTiming`; an `NRTestApp` screen exercising a real async TTFD. |
@@ -115,7 +115,6 @@ Event type: `MobileViewTiming`. One event per timing, streamed as soon as the va
 | `viewName` | string | Snapshot; omitted if no view is current |
 | `viewInstanceId` | string | Snapshot; omitted if no view is current |
 | `previousView` | string | Snapshot, when present |
-| `uiPlatform` | string | Snapshot, when present |
 | `agentName`, `sessionId` | standard | Analytics pipeline |
 
 `viewInstanceId` is the key design element: it makes `MobileViewTiming` joinable to the specific
