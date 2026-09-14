@@ -235,10 +235,10 @@ public class NewRelic: NSObject {
         // currentSessionId() above, applied one level up to the class accessor itself.
         guard let controller = (NRMAHarvestController.self as AnyObject).value(forKey: "harvestController") as? NRMAHarvestController,
               let harvester = controller.harvester(),
-              let crossProcessId = harvester.value(forKey: "crossProcessID") as? NSString else {
+              let crossProcessId = harvester.crossProcessID() as String? else {
             return nil
         }
-        return crossProcessId.copy() as? NSString
+        return (crossProcessId as NSString).copy() as? NSString
     }
 
     @objc(shutdown)
