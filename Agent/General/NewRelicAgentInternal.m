@@ -101,6 +101,15 @@ static NRMAURLTransformer* urlTransformer;
 @property(nonatomic, strong) NRMAAppInstallMetricGenerator* appInstallMetricGenerator;
 @property(nonatomic, strong) NRMAAppUpgradeMetricGenerator* appUpgradeMetricGenerator;
 
+#if TARGET_OS_IOS
+// Moved here from NewRelicAgentInternal.h. JSErrorController is a Swift type, and this file can
+// name it because it imports the generated NewRelic-Swift.h; the public header cannot, because
+// Swift itself imports that header and would only ever see an incomplete type. Kept as an atomic
+// property rather than a bare ivar so the accessor semantics are unchanged from the declaration
+// this replaces. Reached from outside via -recordJavascriptErrorWithName:...
+@property(atomic, strong, nullable) JSErrorController* jsErrorController;
+#endif
+
 - (void) applicationWillEnterForeground;
 #if !TARGET_OS_WATCH
 - (void) applicationWillEnterForeground:(UIApplication*)application;
@@ -776,6 +785,35 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
     }
 #endif
 }
+
+#if TARGET_OS_IOS
+- (BOOL) recordJavascriptErrorWithName:(NSString*)name
+                               message:(NSString*)message
+                            stackTrace:(NSString*)stackTrace
+                               isFatal:(BOOL)isFatal
+                  additionalAttributes:(NSDictionary* _Nullable)additionalAttributes {
+    // Lifted verbatim from +[NewRelic recordJavascriptError:...]'s TARGET_OS_IOS branch, so the
+    // observable result is unchanged. Only the controller interaction lives here; the caller keeps
+    // its own shutdown and feature-flag checks, which is what preserves the public API's return
+    // values exactly.
+    JSErrorController* controller = self.jsErrorController;
+
+    if (controller == nil) {
+        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
+        return NO;
+    }
+
+    [self sessionReplayOnError:nil];
+
+    [controller recordJSError:name
+                     message:message
+                  stackTrace:stackTrace
+                     isFatal:isFatal
+        additionalAttributes:additionalAttributes];
+
+    return YES;
+}
+#endif
 
 static const NSString *kNRMA_BGFG_MUTEX = @"com.newrelic.bgfg.mutex";
 static const NSString *kNRMA_APPLICATION_WILL_TERMINATE =

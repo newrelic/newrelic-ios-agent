@@ -763,24 +763,14 @@
     }
 
 #if TARGET_OS_IOS
-    // Get the JS Error Controller (iOS only - for React Native)
-    JSErrorController* jsErrorController = [NewRelicAgentInternal sharedInstance].jsErrorController;
-
-    if (jsErrorController == nil) {
-        NRLOG_AGENT_ERROR(@"JS Error Controller is not initialized. Cannot record JS error.");
-        return false;
-    }
-    
-    [[NewRelicAgentInternal sharedInstance] sessionReplayOnError:nil];
-
-    // Route to JS Error Controller for Mobile Errors Protocol
-    [jsErrorController recordJSError:name
-                             message:message
-                          stackTrace:stackTrace
-                             isFatal:isFatal
-               additionalAttributes:additionalAttributes];
-
-    return true;
+    // Route to the JS Error Controller for the Mobile Errors Protocol (iOS only - for React
+    // Native). The controller is a Swift type held privately by NewRelicAgentInternal, so it is
+    // reached through this Foundation-typed facade rather than being exposed on the header.
+    return [[NewRelicAgentInternal sharedInstance] recordJavascriptErrorWithName:name
+                                                                        message:message
+                                                                     stackTrace:stackTrace
+                                                                        isFatal:isFatal
+                                                           additionalAttributes:additionalAttributes];
 #else
     // JS Error reporting is only available on iOS (for React Native)
     NRLOG_AGENT_ERROR(@"JS Error reporting is only available on iOS. Cannot record JS error.");

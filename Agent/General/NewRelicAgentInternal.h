@@ -32,19 +32,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-#if TARGET_OS_IOS
-@class JSErrorController;
-#endif
-
 // Defines the internal agent api.
 @interface NewRelicAgentInternal : NSObject
 
 @property (nonatomic, readonly, assign) BOOL enabled;
 @property(atomic, strong, nullable) NRMAAnalytics* analyticsController;
 @property(atomic, strong, nullable) NRMAHandledExceptions* handledExceptionsController;
-#if TARGET_OS_IOS
-@property(atomic, strong, nullable) JSErrorController* jsErrorController;
-#endif
 @property(atomic, strong, nullable) NRMAUserActionFacade* gestureFacade;
 @property(atomic, strong, nullable) NSString* userId;
 @property(assign) double sampleSeed;
@@ -110,6 +103,27 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL) isSessionReplayErrorSampled;
 
 - (BOOL) isSessionReplayEnabled;
+
+#if TARGET_OS_IOS
+// JS ERROR SECTION
+//
+// Records a JavaScript error through the agent's JS error controller, returning NO when that
+// controller has not been initialized (JS error events disabled by feature flag, or the agent
+// has not started). The caller is responsible for its own shutdown and feature-flag policy;
+// this only owns the controller interaction.
+//
+// Declared purely in Foundation types on purpose. The controller is a Swift type, and naming a
+// Swift type in this header does not work: Clang builds the ObjC half as its own module with no
+// visibility into the Swift half, so the type stays incomplete and the Swift importer drops the
+// declaration entirely — which is what previously forced Swift callers to reach the controller
+// by KVC. Keeping the Swift type confined to the .m is the same approach SessionReplayManager
+// already uses.
+- (BOOL) recordJavascriptErrorWithName:(NSString*)name
+                               message:(NSString*)message
+                            stackTrace:(NSString*)stackTrace
+                               isFatal:(BOOL)isFatal
+                  additionalAttributes:(NSDictionary* _Nullable)additionalAttributes;
+#endif
 
 // SESSION REPLAY SECTION Methods to manage masked elements for SessionReplay
 
