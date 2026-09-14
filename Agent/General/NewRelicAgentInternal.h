@@ -78,7 +78,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void) startNewSessionForUserId:(NSString* _Nullable)userId;
 + (NewRelicAgentInternal* _Nullable) sharedInstance;
 
-- (NSString*) currentSessionId;
+// Explicitly nullable: this sits inside the NS_ASSUME_NONNULL region above, so leaving it
+// unannotated promised a non-nil result that the implementation cannot keep. It returns
+// [self agentConfiguration].sessionIdentifier, which is only assigned in -onSessionStart and is
+// therefore nil until a session begins. Swift trusts the annotation, so under the implicit
+// nonnull a nil came back across the bridge as a seemingly valid String rather than as nil.
+- (NSString* _Nullable) currentSessionId;
 
 // Returns whether or not we should be collecting HTTP errors. Exposed for ASI support.
 - (BOOL) collectNetworkErrors;
