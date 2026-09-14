@@ -40,7 +40,9 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 // else should call these directly.
 @interface NRMAHandledExceptions (CrashBoundary)
 - (void) nrma_recordErrorUnguarded:(NSError* _Nonnull)error
-                        attributes:(NSDictionary* _Nullable)attributes;
+                        attributes:(NSDictionary* _Nullable)attributes
+                         callstack:(void* _Nonnull * _Nonnull)callstack
+                            length:(int)length;
 - (void) nrma_recordHandledExceptionUnguarded:(NSException*)exception
                                    attributes:(NSDictionary*)attributes;
 - (void) nrma_recordHandledExceptionWithStackTraceUnguarded:(NSDictionary*)exceptionDictionary;
@@ -240,8 +242,18 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 - (void) recordError:(NSError * _Nonnull)error
           attributes:(NSDictionary* _Nullable)attributes
 {
+    // Capture the backtrace in the public entry point, not in the unguarded
+    // body. -createThreadVector:length: discards a fixed number of leading
+    // agent frames (kNRMARecordErrorAgentFrames), so the capture point has to
+    // sit at a fixed depth below the customer's call site.
+    void* callstack[1024];
+    int frames = backtrace(callstack, 1024);
+
     try {
-        [self nrma_recordErrorUnguarded:error attributes:attributes];
+        [self nrma_recordErrorUnguarded:error
+                             attributes:attributes
+                              callstack:callstack
+                                 length:frames];
     } catch (id objcException) {
         @throw objcException;   // API misuse — not ours to swallow
     } catch (const std::exception& e) {
@@ -280,10 +292,9 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
 
 - (void) nrma_recordErrorUnguarded:(NSError * _Nonnull)error
                         attributes:(NSDictionary* _Nullable)attributes
+                         callstack:(void* _Nonnull * _Nonnull)callstack
+                            length:(int)frames
 {
-    void* callstack[1024];
-    int frames = backtrace(callstack,1024);
-
     if([NRMAFlags shouldEnableNewEventSystem]){
         auto resultMap = [self getSessionAttributesResultMap];
 
@@ -398,11 +409,17 @@ const NSString* kHexBackupStoreFolder = @"hexbkup/";
                       attributes:nil];
 }
 
+// Leading frames to discard from a backtrace() captured in
+// -recordError:attributes:: [0] is -recordError:attributes: itself and [1] is
+// the +[NewRelic recordError:...] class method above it. The customer's call
+// site is frame [2]. Callers must capture the backtrace at exactly that depth.
+static const int kNRMARecordErrorAgentFrames = 2;
+
 - (std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>>) createThreadVector:(void**)stack length:(int)length {
     std::vector<std::shared_ptr<NewRelic::Hex::Report::Thread>> threadVector;
     std::vector<NewRelic::Hex::Report::Frame> frameVector;
 
-    for(int i = 2; i < length; i++) {
+    for(int i = kNRMARecordErrorAgentFrames; i < length; i++) {
         frameVector.push_back(NewRelic::Hex::Report::Frame(" ", (uint64_t)stack[i]));
     }
     threadVector.push_back(std::make_shared<NewRelic::Hex::Report::Thread>(frameVector));
