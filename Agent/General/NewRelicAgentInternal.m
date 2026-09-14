@@ -102,11 +102,6 @@ static NRMAURLTransformer* urlTransformer;
 @property(nonatomic, strong) NRMAAppUpgradeMetricGenerator* appUpgradeMetricGenerator;
 
 #if TARGET_OS_IOS
-// Moved here from NewRelicAgentInternal.h. JSErrorController is a Swift type, and this file can
-// name it because it imports the generated NewRelic-Swift.h; the public header cannot, because
-// Swift itself imports that header and would only ever see an incomplete type. Kept as an atomic
-// property rather than a bare ivar so the accessor semantics are unchanged from the declaration
-// this replaces. Reached from outside via -recordJavascriptErrorWithName:...
 @property(atomic, strong, nullable) JSErrorController* jsErrorController;
 #endif
 
@@ -792,10 +787,6 @@ static NSString* kNRMAAnalyticsInitializationLock = @"AnalyticsInitializationLoc
                             stackTrace:(NSString*)stackTrace
                                isFatal:(BOOL)isFatal
                   additionalAttributes:(NSDictionary* _Nullable)additionalAttributes {
-    // Lifted verbatim from +[NewRelic recordJavascriptError:...]'s TARGET_OS_IOS branch, so the
-    // observable result is unchanged. Only the controller interaction lives here; the caller keeps
-    // its own shutdown and feature-flag checks, which is what preserves the public API's return
-    // values exactly.
     JSErrorController* controller = self.jsErrorController;
 
     if (controller == nil) {

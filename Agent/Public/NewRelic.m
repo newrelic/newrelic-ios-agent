@@ -763,9 +763,6 @@
     }
 
 #if TARGET_OS_IOS
-    // Route to the JS Error Controller for the Mobile Errors Protocol (iOS only - for React
-    // Native). The controller is a Swift type held privately by NewRelicAgentInternal, so it is
-    // reached through this Foundation-typed facade rather than being exposed on the header.
     return [[NewRelicAgentInternal sharedInstance] recordJavascriptErrorWithName:name
                                                                         message:message
                                                                      stackTrace:stackTrace

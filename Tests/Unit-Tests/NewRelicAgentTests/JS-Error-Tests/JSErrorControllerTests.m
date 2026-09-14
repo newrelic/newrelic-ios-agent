@@ -20,10 +20,6 @@
 #import "NewRelicAgentInternal.h"
 #import "NRMAFlags.h"
 
-// The agent holds its JSErrorController privately, in NewRelicAgentInternal.m's class extension,
-// so it is deliberately absent from the header. Re-declaring it here lets these tests install a
-// controller through a compiler-checked property access rather than a stringly-typed KVC poke —
-// if the property is ever renamed this fails to build instead of failing at runtime.
 @interface NewRelicAgentInternal (JSErrorFacadeTesting)
 @property(atomic, strong, nullable) JSErrorController* jsErrorController;
 @end
@@ -628,11 +624,6 @@
 
 #pragma mark - Public API facade: +[NewRelic recordJavascriptError:...]
 
-// +[NewRelic recordJavascriptError:...] is the only JS-error entry point any hybrid agent uses
-// (React Native, at NRMModularAgent.mm and NRMAFatalJSErrorHandler.mm), yet nothing covered it:
-// every test above drives JSErrorController directly and so never crosses the public API or the
-// NewRelicAgentInternal facade it forwards through. These two close that gap.
-
 - (void) testRecordJavascriptErrorReturnsNOWhenControllerNotInitialized {
     XCTAssertTrue([NRMAFlags shouldEnableJSErrorEvents],
                   @"precondition: JS error events must be enabled, or this would return NO for the wrong reason");
@@ -663,8 +654,6 @@
 
     NSDictionary* attributes = @{@"screen": @"HomeScreen"};
 
-    // Expect the exact arguments through, so this asserts the facade's parameter mapping rather
-    // than merely that it returned YES.
     id mockController = [OCMockObject niceMockForClass:[JSErrorController class]];
     [[mockController expect] recordJSError:@"TypeError"
                                   message:@"message"
