@@ -453,7 +453,13 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 -(void) testCrossProcessId {
-    XCTAssertEqual([[[[NRMAHarvestController harvestController] harvester] crossProcessID] copy], [NewRelic crossProcessId]);
+    // XCTAssertEqual on two object pointers compares with ==, so this previously asserted that
+    // +[NewRelic crossProcessId] returned the *same NSString instance* the harvester holds. That
+    // is an allocation detail, not part of the API contract, and it only held because the old
+    // implementation read the string through KVC — which hands back the raw object untouched.
+    // Reading the getter directly round-trips through Swift's String, which is free to hand back
+    // an equal-but-distinct NSString. Assert on the value, which is what callers actually rely on.
+    XCTAssertEqualObjects([[[[NRMAHarvestController harvestController] harvester] crossProcessID] copy], [NewRelic crossProcessId]);
 }
 
 -(void) testCurrentSessionId {
