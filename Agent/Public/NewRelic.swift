@@ -316,13 +316,25 @@ public class NewRelic: NSObject {
     // MARK: - Method Tracing
 
     @objc(startTracingMethod:object:timer:category:)
-    public static func startTracingMethod(_ selector: Selector, object: Any, timer: NRTimer!, category: NRTraceType) {
+    public static func startTracingMethod(_ selector: Selector!, object: Any!, timer: NRTimer!, category: NRTraceType) {
+        // The original header annotated selector, object and timer `_Null_unspecified`, which
+        // the Swift importer surfaced to callers as Selector!/Any!/NRTimer!. Declaring the
+        // first two non-optional narrowed that and broke existing Swift callers (a value read
+        // out of an IUO-returning call infers as a plain Optional, so it no longer binds), so
+        // the implicitly-unwrapped optionals are restored here.
+        //
+        // Guard rather than implicitly unwrap: the ObjC implementation tolerated nil arguments,
+        // so trapping on them would be a behaviour change in the opposite direction.
+        guard let selector = selector, let object = object else {
+            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) called with a nil selector or object; ignoring.", withAgentLogsOn: true)
+            return
+        }
         startTracingMethodNamed(NSStringFromSelector(selector), objectNamed: NSStringFromClass(type(of: object as AnyObject)), timer: timer, category: category)
     }
 
     // Hidden selector (manifest: startTracingMethodNamed:objectNamed:timer:category:) — consumed directly by Unity.
     @objc(startTracingMethodNamed:objectNamed:timer:category:)
-    public static func startTracingMethodNamed(_ methodName: String, objectNamed objectName: String, timer: NRTimer, category: NRTraceType) {
+    public static func startTracingMethodNamed(_ methodName: String!, objectNamed objectName: String!, timer: NRTimer!, category: NRTraceType) {
         if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
             return
         }
@@ -330,11 +342,18 @@ public class NewRelic: NSObject {
             NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
             return
         }
+        // methodName is `_Null_unspecified` in the original ObjC declaration, so it arrives here
+        // as an IUO. Guard explicitly rather than letting the unwrap below trap, matching the
+        // ObjC implementation's tolerance of a nil name.
+        guard let methodName = methodName else {
+            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) called with a nil methodName; ignoring.", withAgentLogsOn: true)
+            return
+        }
         // NewRelicInternalUtils.h isn't wrapped in NS_ASSUME_NONNULL, so cleanseString(forCollector:)
         // imports as an implicitly-unwrapped optional; type inference into a `let` collapses that
         // to a plain String?, requiring an explicit unwrap here. cleanseStringForCollector: only ever
         // does in-place character replacement on a non-nil input, so this never actually returns nil
-        // for the non-optional `methodName` we always pass in — same assumption the original ObjC made.
+        // for the now-unwrapped `methodName` — same assumption the original ObjC made.
         let cleanSelectorString = NewRelicInternalUtils.cleanseString(forCollector: methodName)!
         if !NRMATraceController.isTracingActive() {
             NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) attempted to start tracing method without active Interaction Trace", withAgentLogsOn: true)
