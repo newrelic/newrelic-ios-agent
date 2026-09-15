@@ -463,7 +463,9 @@ static NewRelicAgentInternal* _sharedInstance;
 }
 
 -(void) testCurrentSessionId {
-    XCTAssertEqual([[[NewRelicAgentInternal sharedInstance] currentSessionId] copy], [NewRelic currentSessionId]);
+    // Value, not pointer identity — see testCrossProcessId above. currentSessionId() now reads the
+    // getter directly rather than through KVC, so it can return an equal-but-distinct NSString.
+    XCTAssertEqualObjects([[[NewRelicAgentInternal sharedInstance] currentSessionId] copy], [NewRelic currentSessionId]);
 }
 
 -(void) testRecordBreadcrumb {

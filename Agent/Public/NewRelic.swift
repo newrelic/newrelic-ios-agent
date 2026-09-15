@@ -190,50 +190,16 @@ public class NewRelic: NSObject {
 
     @objc(currentSessionId)
     public static func currentSessionId() -> NSString! {
-        // The original ObjC implementation returned `[[[NewRelicAgentInternal sharedInstance]
-        // currentSessionId] copy]` and existing tests (NewRelicTests.m's testCurrentSessionId)
-        // compare that exact expression against this method using pointer equality (XCTAssertEqual
-        // on Objective-C object pointers does `==`, not `-isEqual:`).
-        //
-        // -currentSessionId is declared NONNULL in NewRelicAgentInternal.h, but its actual
-        // implementation (`return [self agentConfiguration].sessionIdentifier;`) can genuinely
-        // return nil before a session has started. Calling it directly from Swift trusts that
-        // (incorrect, for this case) nonnull annotation, silently wrapping the nil pointer as if
-        // it were a valid String — producing garbage rather than a real nil. Going through
-        // Objective-C KVC (value(forKey:)) instead dispatches dynamically and reports the actual
-        // runtime nil-ness faithfully as an Optional, exactly like the original's message-to-nil
-        // ([nil currentSessionId] / [nil copy]) semantics.
         guard let agent = NewRelicAgentInternal.sharedInstance(),
-              let sessionId = agent.value(forKey: "currentSessionId") as? NSString else {
+              let sessionId = agent.currentSessionId() else {
             return nil
         }
-        return sessionId.copy() as? NSString
+        return (sessionId as NSString).copy() as? NSString
     }
 
     @objc(crossProcessId)
     public static func crossProcessId() -> NSString? {
-        // The original ObjC implementation was:
-        //   NRMAHarvestController* controller = [NRMAHarvestController harvestController];
-        //   NRMAHarvester* harvester = [controller harvester];
-        //   NSString* crossProcessId = [harvester crossProcessID];
-        //   return crossProcessId ? [crossProcessId copy] : nil;
-        // and existing tests (NewRelicTests.m's testCrossProcessId) compare that exact
-        // expression against this method using pointer equality (XCTAssertEqual on
-        // Objective-C object pointers does `==`, not `-isEqual:`).
-        //
-        // +harvestController is a singleton accessor (returns a `@synchronized`-guarded
-        // static variable, populated by +initialize:), NOT a plain alloc/init factory.
-        // Swift renames it to `init()` (the compiler insists: "'harvestController()' has
-        // been replaced by 'init()'"), but calling NRMAHarvestController() actually invokes
-        // a genuine fresh NSObject -init, allocating a brand-new, never-initialized
-        // instance completely unrelated to the shared singleton (confirmed empirically:
-        // its pointer differs from the real singleton's, and its .harvester() is nil).
-        // Reading the class method dynamically via KVC on the class object itself
-        // sidesteps Swift's static rename/unavailability and reaches the real singleton
-        // (confirmed empirically: identical pointer to the real +[NRMAHarvestController
-        // harvestController]/harvester() chain) — the same technique used for
-        // currentSessionId() above, applied one level up to the class accessor itself.
-        guard let controller = (NRMAHarvestController.self as AnyObject).value(forKey: "harvestController") as? NRMAHarvestController,
+        guard let controller = NRMAHarvestController.shared(),
               let harvester = controller.harvester(),
               let crossProcessId = harvester.crossProcessID() as String? else {
             return nil
@@ -679,23 +645,11 @@ public class NewRelic: NSObject {
             return false
         }
         #if os(iOS)
-        // NewRelicAgentInternal.jsErrorController is declared in NewRelicPrivate's ObjC headers
-        // as a forward-declared `@class JSErrorController` — a Swift type defined in this same
-        // module. Clang precompiles NewRelicPrivate as its own explicit module with no visibility
-        // into the Swift side, so it treats JSErrorController as an incomplete/opaque type and the
-        // Swift importer drops the property entirely from NewRelicAgentInternal's imported
-        // interface. KVC access sidesteps that: it reads the same underlying ObjC property by name
-        // and returns `Any?`, which we can then cast to the Swift-visible JSErrorController type
-        // directly (no cross-module type resolution needed for the cast itself).
-        guard let jsErrorController = agent.value(forKey: "jsErrorController") as? JSErrorController else {
-            NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "JS Error Controller is not initialized. Cannot record JS error.", withAgentLogsOn: true)
-            return false
-        }
-        agent.sessionReplay(onError: nil)
-        // JSErrorController.recordJSError expects [String: Any]?, not the public API's
-        // [AnyHashable: Any]? — narrow with an explicit cast at this call boundary.
-        jsErrorController.recordJSError(name, message: message, stackTrace: stackTrace, isFatal: isFatal, additionalAttributes: additionalAttributes as? [String: Any])
-        return true
+        return agent.recordJavascriptError(withName: name,
+                                           message: message,
+                                           stackTrace: stackTrace,
+                                           isFatal: isFatal,
+                                           additionalAttributes: additionalAttributes)
         #else
         NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "JS Error reporting is only available on iOS. Cannot record JS error.", withAgentLogsOn: true)
         return false
