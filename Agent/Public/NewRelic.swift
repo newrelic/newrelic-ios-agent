@@ -337,6 +337,10 @@ public class NewRelic: NSObject {
         if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
             return
         }
+        guard let timer = timer else {
+            NRLOG_AGENT_VERBOSE("\(#function) called with a nil timer; ignoring.")
+            return
+        }
         timer.stop()
         if !NRMAFlags.shouldEnableInteractionTracing() {
             NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: "\(#function) not executing; Interaction tracing is disabled.", withAgentLogsOn: true)
@@ -412,6 +416,10 @@ public class NewRelic: NSObject {
         traceHeaders: [String: String]?,
         andParams params: [AnyHashable: Any]?
     ) {
+        guard let url = url else {
+            NRLOG_AGENT_VERBOSE("\(#function) called with a nil URL; ignoring.")
+            return
+        }
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
         // HTTPURLResponse's initializer is failable in Swift, but NRMANetworkFacade's
@@ -441,6 +449,10 @@ public class NewRelic: NSObject {
         traceHeaders: [AnyHashable: Any]?,
         andParams params: [AnyHashable: Any]?
     ) {
+        guard let url = url else {
+            NRLOG_AGENT_VERBOSE("\(#function) called with a nil URL; ignoring.")
+            return
+        }
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
         // See the force-unwrap note in the sibling overload above: NRMANetworkFacade's
@@ -460,6 +472,10 @@ public class NewRelic: NSObject {
     @objc(noticeNetworkFailureForURL:httpMethod:withTimer:andFailureCode:)
     public static func noticeNetworkFailure(for url: URL!, httpMethod: String!, with timer: NRTimer!, andFailureCode iOSFailureCode: Int) {
         let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
+        guard let url = url else {
+            NRLOG_AGENT_VERBOSE("\(#function) called with a nil URL; ignoring.")
+            return
+        }
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
         NRMANetworkFacade.noticeNetworkFailure(request, with: timer, withError: error)
@@ -469,6 +485,10 @@ public class NewRelic: NSObject {
     @objc(noticeNetworkFailureForURL:httpMethod:startTime:endTime:andFailureCode:)
     public static func noticeNetworkFailure(for url: URL!, httpMethod: String!, startTime: Double, endTime: Double, andFailureCode iOSFailureCode: Int) {
         let error = NSError(domain: NSURLErrorDomain, code: iOSFailureCode, userInfo: nil)
+        guard let url = url else {
+            NRLOG_AGENT_VERBOSE("\(#function) called with a nil URL; ignoring.")
+            return
+        }
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
         // See the force-unwrap note in noticeNetworkRequest(forURL:...startTime:endTime:...) above.
