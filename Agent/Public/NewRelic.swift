@@ -9,28 +9,28 @@ public class NewRelic: NSObject {
 
     @objc(logInfo:)
     public static func logInfo(_ message: String) {
-        NRLogger.log(NRLogLevelInfo.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+        NRLOG_INFO(message)
     }
 
     @objc(logError:)
     public static func logError(_ message: String) {
-        NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+        NRLOG_ERROR(message)
         NewRelicAgentInternal.sharedInstance()?.sessionReplay(onError: nil)
     }
 
     @objc(logVerbose:)
     public static func logVerbose(_ message: String) {
-        NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+        NRLOG_VERBOSE(message)
     }
 
     @objc(logWarning:)
     public static func logWarning(_ message: String) {
-        NRLogger.log(NRLogLevelWarning.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+        NRLOG_WARNING(message)
     }
 
     @objc(logAudit:)
     public static func logAudit(_ message: String) {
-        NRLogger.log(NRLogLevelAudit.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+        NRLOG_AUDIT(message)
     }
 
     @objc(logDebug:)
@@ -42,15 +42,15 @@ public class NewRelic: NSObject {
     public static func log(_ message: String, level: NRLogLevels) {
         switch level {
         case NRLogLevelError:
-            NRLogger.log(NRLogLevelError.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+            NRLOG_ERROR(message)
         case NRLogLevelWarning:
-            NRLogger.log(NRLogLevelWarning.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+            NRLOG_WARNING(message)
         case NRLogLevelInfo:
-            NRLogger.log(NRLogLevelInfo.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+            NRLOG_INFO(message)
         case NRLogLevelVerbose:
-            NRLogger.log(NRLogLevelVerbose.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+            NRLOG_VERBOSE(message)
         case NRLogLevelAudit:
-            NRLogger.log(NRLogLevelAudit.rawValue, inFile: #fileID, atLine: UInt32(#line), inMethod: #function, withMessage: message, withAgentLogsOn: false)
+            NRLOG_AUDIT(message)
         case NRLogLevelDebug:
             NRLOG_DEBUG(message)
         default:
