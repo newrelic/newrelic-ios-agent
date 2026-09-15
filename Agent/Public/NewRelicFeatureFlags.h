@@ -122,4 +122,9 @@ typedef NS_OPTIONS(unsigned long long, NRMAFeatureFlags){
     NRFeatureFlag_JSErrorEvents                         = 1 << 24, // Enabled by default
     NRFeatureFlag_AutomaticMobileViews                  = 1 << 25, // Enabled by default
     NRFeatureFlag_ManualMobileViews                     = 1 << 26, // Disabled by default
+    // Automatic SwiftUI screen tracking, with no `.NRMobileView(...)` in the app. Separate from
+    // AutomaticMobileViews because it resolves screen names by reflecting into SwiftUI's runtime
+    // representation, so it carries a different risk profile from the UIKit swizzle and needs to
+    // be switchable on its own.
+    NRFeatureFlag_AutomaticSwiftUIViews                 = 1 << 27, // Disabled by default
 };

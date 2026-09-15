@@ -25,6 +25,10 @@ static const char kNRLoadTimestampKey;
 static const char kNRAppearTimestampKey;
 static const char kNRViewInstanceIdKey;
 static const char kNRHasAppearedBeforeKey;
+// Caches the resolved SwiftUI screen for a hosting controller. Cached rather than re-resolved so
+// the disappear event cannot report a different viewName than its appear event -- and so the
+// mirror walk in the resolver runs once per screen instead of once per appearance.
+static const char kNRSwiftUIScreenKey;
 
 // Attribute names, the event type, and the loadTime-vs-loadTimeUnavailable rule all live in
 // MobileViewEmitter.swift now. This file reports facts; it does not build events.
@@ -216,10 +220,58 @@ NS_INLINE NSDictionary<NSString *, id> * _Nullable NRMA_AttributesForController(
     return nil;
 }
 
+#pragma mark - Automatic SwiftUI screens
+
+/**
+ * YES when this controller is a SwiftUI hosting controller and automatic SwiftUI collection is on.
+ *
+ * The looser of the two gates. Used by viewDidLoad, which must record a construction start
+ * *before* the host has a parent -- at that point it cannot yet be known whether the host will
+ * turn out to be a navigated-to screen, and a timestamp on a host that never becomes one is
+ * harmless.
+ */
+NS_INLINE BOOL NRMA_IsAutomaticSwiftUIHost(UIViewController *vc) {
+    if (![NRMAFlags shouldEnableAutomaticSwiftUIViews]) return NO;
+    return [NRMASwiftUIScreenResolver isSwiftUIHost:vc];
+}
+
+/**
+ * The resolved screen for a SwiftUI host, or nil when this host is not a screen.
+ *
+ * nil covers every "emit nothing" case the resolver owns: a decorative sub-host such as the one
+ * SwiftUI creates for a navigation title, a content type that could not be recovered from inside
+ * AnyView, and a view already carrying .NRMobileView(...) -- which owns its own reporting.
+ */
+NS_INLINE NRMASwiftUIScreen * _Nullable NRMA_SwiftUIScreenForController(UIViewController *vc) {
+    if (!NRMA_IsAutomaticSwiftUIHost(vc)) return nil;
+
+    NRMASwiftUIScreen *cached = objc_getAssociatedObject(vc, &kNRSwiftUIScreenKey);
+    if (cached) return cached;
+
+    NRMASwiftUIScreen *resolved = [NRMASwiftUIScreenResolver screenFor:vc];
+    if (resolved) {
+        objc_setAssociatedObject(vc, &kNRSwiftUIScreenKey, resolved,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return resolved;
+}
+
 #pragma mark - Swizzled method implementations
 
 static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
     if (orig_viewDidLoad) orig_viewDidLoad(self, _cmd);
+
+    // SwiftUI hosts are excluded by class prefix for the UIKit path, but under automatic SwiftUI
+    // collection their construction start is exactly what makes loadTime measurable, so they are
+    // let through here. Their class-derived viewName is a generic modifier stack and is not
+    // consulted: whether this host is a screen, and what it is called, is decided at appear time
+    // once it has a parent.
+    if (NRMA_IsAutomaticSwiftUIHost(self)) {
+        objc_setAssociatedObject(self, &kNRLoadTimestampKey,
+                                 @([NRMAViewContext monotonicNow]),
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        return;
+    }
 
     if (NRMA_ShouldSkipClass([self class])) return;
 
@@ -236,9 +288,14 @@ static void NRMA_ViewDidLoad(UIViewController *self, SEL _cmd) {
 static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) {
     if (orig_viewDidAppear) orig_viewDidAppear(self, _cmd, animated);
 
-    if (NRMA_ShouldSkipClass([self class])) return;
+    // A SwiftUI host reports as a screen only when the resolver vouches for it. Resolved first
+    // because it is what lifts the class-prefix exclusion that would otherwise drop every
+    // hosting controller.
+    NRMASwiftUIScreen *swiftUIScreen = NRMA_SwiftUIScreenForController(self);
 
-    NSString *viewName  = NRMA_ViewNameForController(self);
+    if (!swiftUIScreen && NRMA_ShouldSkipClass([self class])) return;
+
+    NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(self);
     if (viewName == nil) return;
     if (NRMA_ShouldSkipViewName(viewName)) return;
 
@@ -277,19 +334,26 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
 
     // Make this view current in the shared context so it becomes the referrer for the next view
     // and for breadcrumbs recorded while it is visible.
+    // The toolkit that observed this view. A resolved SwiftUI host reports "SwiftUI" so its
+    // events are indistinguishable from what the .NRMobileView modifier produces for the same
+    // screen -- consumers should not be able to tell which producer saw it.
+    NSString *platform = swiftUIScreen ? @"SwiftUI" : @"UIKit";
+
     [[NRMAViewContext sharedInstance] transitionToView:viewName
                                             instanceId:uuid
                                             appearTime:appearTime
                                          loadStartTime:(loadIsMeasurable ? loadTimestamp : nil)
-                                              platform:@"UIKit"];
+                                              platform:platform];
 
-    NSString *viewClass = NRMA_DemangledName([self class], YES);
+    // For a SwiftUI host the class name is a generic modifier stack, so the resolved concrete
+    // type is the only usable viewClass.
+    NSString *viewClass = swiftUIScreen ? swiftUIScreen.viewClass : NRMA_DemangledName([self class], YES);
 
     NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
     fields.viewName   = viewName;
     fields.viewClass  = viewClass;
     fields.instanceId = uuid;
-    fields.platform   = @"UIKit";
+    fields.platform   = platform;
     // Referrer for this appearance (previousView / previousViewInstanceId).
     fields.useContextReferrer = YES;
     fields.custom     = NRMA_AttributesForController(self);
@@ -323,7 +387,11 @@ static void NRMA_ViewDidAppear(UIViewController *self, SEL _cmd, BOOL animated) 
 static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animated) {
     if (orig_viewDidDisappear) orig_viewDidDisappear(self, _cmd, animated);
 
-    if (NRMA_ShouldSkipClass([self class])) return;
+    // Read from the cache the appear event populated, so both halves of a screen's lifetime carry
+    // the same viewName even if the host's content has since changed.
+    NRMASwiftUIScreen *swiftUIScreen = NRMA_SwiftUIScreenForController(self);
+
+    if (!swiftUIScreen && NRMA_ShouldSkipClass([self class])) return;
 
     CFAbsoluteTime disappearTime = [NRMAViewContext monotonicNow];
 
@@ -338,8 +406,9 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
         return;
     }
 
-    // viewName: simple demangled name (or custom override), e.g. "ProductDetailViewController"
-    NSString *viewName  = NRMA_ViewNameForController(self);
+    // viewName: the resolved SwiftUI screen name, or the simple demangled name (or custom
+    // override) for UIKit, e.g. "ProductDetailViewController"
+    NSString *viewName = swiftUIScreen ? swiftUIScreen.viewName : NRMA_ViewNameForController(self);
     if (viewName == nil) return;
 
     double timeVisibleMs = [NRMAViewContext millisecondsBetween:appearTimestamp.doubleValue and:disappearTime];
@@ -357,13 +426,13 @@ static void NRMA_ViewDidDisappear(UIViewController *self, SEL _cmd, BOOL animate
 
     BOOL isRestarted = (hasAppearedBefore != nil && hasAppearedBefore.boolValue);
     // viewClass: fully-qualified demangled name, e.g. "MyApp.ProductDetailViewController"
-    NSString *viewClass = NRMA_DemangledName([self class], YES);
+    NSString *viewClass = swiftUIScreen ? swiftUIScreen.viewClass : NRMA_DemangledName([self class], YES);
 
     NRMAMobileViewFields *fields = [NRMAMobileViewFields new];
     fields.viewName      = viewName;
     fields.viewClass     = viewClass;
     fields.instanceId    = instanceId;
-    fields.platform      = @"UIKit";
+    fields.platform      = swiftUIScreen ? @"SwiftUI" : @"UIKit";
     fields.restarted     = @(isRestarted);
     fields.timeVisibleMs = @(timeVisibleMs);
     fields.custom        = NRMA_AttributesForController(self);

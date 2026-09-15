@@ -149,6 +149,11 @@ struct SwiftUIContentView: View {
                     NavigationLink(destination: NavigationLinkLabelLayoutTestCase()) {
                         Text("NavigationLink Labels")
                     }
+                    // Automatic SwiftUI collection: nothing under this row uses any New Relic
+                    // API, so any MobileView events from it came from the resolver.
+                    NavigationLink(destination: AutoInstrumentedDemoView()) {
+                        Text("MobileView · Automatic (no modifier)")
+                    }
                 }
                 .navigationBarTitle("SwiftUI Elements")
             }

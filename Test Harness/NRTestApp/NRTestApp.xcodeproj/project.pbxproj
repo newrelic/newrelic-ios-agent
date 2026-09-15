@@ -115,6 +115,7 @@
 		AA0001602F9000000000AA01 /* VerificationResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001502F9000000000AA01 /* VerificationResult.swift */; };
 		AA0001612F9000000000AA01 /* PayloadVerifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001512F9000000000AA01 /* PayloadVerifiers.swift */; };
 		AD7807FD8A2F077901675368 /* ViewsAndInteractionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */; };
+		B219E6FE582D6D68871A112E /* AutoInstrumentedDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A67A7F4F0DB59EE620F8CF6E /* AutoInstrumentedDemoView.swift */; };
 		BB4CD17744738F61C09F10D3 /* MobileViewModalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */; };
 		C1A950386607A36BDB695E63 /* MobileViewModalsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFB4D0AB33C1C8760AD7C5 /* MobileViewModalsViewController.swift */; };
 		C9C82CAFAD5787BE3D7DF493 /* ViewsAndInteractionsDemoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52FE8658C674963EDE1CC225 /* ViewsAndInteractionsDemoView.swift */; };
@@ -460,6 +461,7 @@
 		52FE8658C674963EDE1CC225 /* ViewsAndInteractionsDemoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewsAndInteractionsDemoView.swift; sourceTree = "<group>"; };
 		5D848C7D2646CBDE17F195C3 /* ViewsAndInteractionsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewsAndInteractionsViewController.swift; sourceTree = "<group>"; };
 		60678335A23F3298A7E5E74F /* MobileViewRestartedViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileViewRestartedViewController.swift; sourceTree = "<group>"; };
+		A67A7F4F0DB59EE620F8CF6E /* AutoInstrumentedDemoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutoInstrumentedDemoView.swift; sourceTree = "<group>"; };
 		AA0001202F9000000000AA01 /* CapturedRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedRequest.swift; sourceTree = "<group>"; };
 		AA0001212F9000000000AA01 /* NRCaptureServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRCaptureServer.swift; sourceTree = "<group>"; };
 		AA0001222F9000000000AA01 /* CaptureViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewerView.swift; sourceTree = "<group>"; };
@@ -660,6 +662,7 @@
 				ABCDE10010000000000001A2 /* MobileViewAttributesDemoView.swift */,
 				ABCDE10010000000000001B2 /* MobileViewIgnoredDemoView.swift */,
 				52FE8658C674963EDE1CC225 /* ViewsAndInteractionsDemoView.swift */,
+				A67A7F4F0DB59EE620F8CF6E /* AutoInstrumentedDemoView.swift */,
 			);
 			path = SwiftUI;
 			sourceTree = "<group>";
@@ -1549,6 +1552,7 @@
 				964FC24FBB221FAF8BD9CD60 /* MobileViewRestartedViewController.swift in Sources */,
 				5902FF58E44E1AAA7B12EB92 /* MobileViewComponent.swift in Sources */,
 				6B7A632DDA9119E541B8BB48 /* MobileViewTimingViewController.swift in Sources */,
+				B219E6FE582D6D68871A112E /* AutoInstrumentedDemoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

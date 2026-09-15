@@ -198,6 +198,13 @@ static NSString* __deviceIdentifierReplacement = NULL;
     return ([NRMAFlags featureFlags] & NRFeatureFlag_ManualMobileViews) != 0;
 }
 
++ (BOOL) shouldEnableAutomaticSwiftUIViews {
+    // Gated on AutomaticMobileViews as well: this flag adds a SwiftUI producer to automatic view
+    // collection, so it cannot be meaningfully on while automatic collection is off.
+    return ([NRMAFlags featureFlags] & NRFeatureFlag_AutomaticSwiftUIViews) != 0
+        && [NRMAFlags shouldEnableAutomaticMobileViews];
+}
+
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags {
     NSMutableArray *retArray = [NSMutableArray array];
     if ((flags & NRFeatureFlag_InteractionTracing) == NRFeatureFlag_InteractionTracing) {
@@ -268,6 +275,9 @@ static NSString* __deviceIdentifierReplacement = NULL;
     }
     if ((flags & NRFeatureFlag_ManualMobileViews) == NRFeatureFlag_ManualMobileViews) {
         [retArray addObject:@"ManualViews"];
+    }
+    if ((flags & NRFeatureFlag_AutomaticSwiftUIViews) == NRFeatureFlag_AutomaticSwiftUIViews) {
+        [retArray addObject:@"AutomaticSwiftUIViews"];
     }
 
     return retArray;

@@ -37,7 +37,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                  // MobileViews: automatic UIKit/SwiftUI tracking + the manual
                                  // setCurrentView API (both disabled by default in the agent).
                                  NRMAFeatureFlags.NRFeatureFlag_AutomaticMobileViews,
-                                 NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews])
+                                 NRMAFeatureFlags.NRFeatureFlag_ManualMobileViews,
+                                 // Automatic SwiftUI screens, with no .NRMobileView(...) in the
+                                 // app. Exercised by AutoInstrumentedDemoView, whose screens use
+                                 // no New Relic API at all.
+                                 NRMAFeatureFlags.NRFeatureFlag_AutomaticSwiftUIViews])
         
         // Note: Disabled by default. Enable or disable (default) flag to enable background reporting.
 //        // NewRelic.enableFeatures([NRMAFeatureFlags.NRFeatureFlag_BackgroundReporting])

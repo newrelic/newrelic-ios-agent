@@ -62,6 +62,7 @@
 + (BOOL) shouldEnableAutomaticMobileViews;
 
 + (BOOL) shouldEnableManualMobileViews;
++ (BOOL) shouldEnableAutomaticSwiftUIViews;
 
 + (NSArray<NSString*>*) namesForFlags:(NRMAFeatureFlags)flags;
 
