@@ -28,6 +28,12 @@
 
 static NewRelicAgentInternal* _sharedInstance;
 
+// +deinitialize is the harvest controller's teardown entry point; it is not in the
+// public header but is used the same way by other unit tests (see MachineMeasurementsTest).
+@interface NRMAHarvestController ()
++ (void) deinitialize;
+@end
+
 @interface NRMANetworkFacadeTraceHeaderTests : XCTestCase {
     NRMAFeatureFlags _originalFlags;
 }
@@ -63,6 +69,17 @@ static NewRelicAgentInternal* _sharedInstance;
 - (void)tearDown {
     [self.mockNewRelicInternals stopMocking];
     [NRMAFlags setFeatureFlags:_originalFlags];
+
+    // setUp installs a real, fully configured harvester into the process-wide
+    // NRMAHarvestController singleton. That configuration outlives this class and is
+    // read by unrelated tests: NRMAActivityTrace -shouldRecord compares against
+    // [NRMAHarvestController configuration].activity_trace_min_utilization, which the
+    // default harvester configuration sets to 0.3. Leaving it installed makes the
+    // activity-trace tests (NRMATraceMachineTests) silently drop their traces. Tear the
+    // controller back down so the global state matches what it was before setUp ran.
+    [NRMAHarvestController deinitialize];
+    _sharedInstance = nil;
+
     [super tearDown];
 }
 
