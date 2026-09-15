@@ -499,4 +499,44 @@ static NewRelicAgentInternal* _sharedInstance;
 
     XCTAssertEqual(foundCount, 5, @"Five remote messages should be found.");
 }
+
+- (void) testRemoteLogLevelAlsoSetsLocalLogLevel {
+    // A level applied by remote configuration should govern console output too.
+    [NRLogger setLogLevels:NRLogLevelError];
+    [NRLogger setRemoteLogLevel:NRLogLevelInfo];
+
+    XCTAssertEqual([NRLogger logLevels],
+                   NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo,
+                   @"setRemoteLogLevel: should apply the same cumulative mask to the local log levels.");
+
+    // Remote levels can lower local verbosity as well as raise it.
+    [NRLogger setLogLevels:NRLogLevelDebug];
+    [NRLogger setRemoteLogLevel:NRLogLevelWarning];
+
+    XCTAssertEqual([NRLogger logLevels],
+                   NRLogLevelError | NRLogLevelWarning,
+                   @"setRemoteLogLevel: should overwrite a more verbose local log level.");
+}
+
+- (void) testRemoteLogLevelExpandsEveryLevelLocally {
+    NSDictionary<NSNumber*, NSNumber*> *expectedMasks = @{
+        @(NRLogLevelError):   @(NRLogLevelError),
+        @(NRLogLevelWarning): @(NRLogLevelError | NRLogLevelWarning),
+        @(NRLogLevelInfo):    @(NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo),
+        @(NRLogLevelVerbose): @(NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose),
+        @(NRLogLevelAudit):   @(NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit),
+        @(NRLogLevelDebug):   @(NRLogLevelError | NRLogLevelWarning | NRLogLevelInfo | NRLogLevelVerbose | NRLogLevelAudit | NRLogLevelDebug),
+    };
+
+    for (NSNumber *level in expectedMasks) {
+        [NRLogger setRemoteLogLevel:(unsigned int)[level unsignedIntValue]];
+        XCTAssertEqual([NRLogger logLevels], (NRLogLevels)[expectedMasks[level] unsignedIntValue],
+                       @"Local log levels wrong for remote level %@", level);
+    }
+
+    // An explicit bitmask is passed through untouched rather than expanded.
+    [NRLogger setRemoteLogLevel:NRLogLevelError | NRLogLevelDebug];
+    XCTAssertEqual([NRLogger logLevels], NRLogLevelError | NRLogLevelDebug,
+                   @"A caller-supplied bitmask should not be expanded.");
+}
 @end

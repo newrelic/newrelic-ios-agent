@@ -152,6 +152,10 @@ withTimestamp:(NSNumber *)timestamp;
 
  Note:  a single constant, e.g. NRLogLevelInfo, all higher priority info will also be output.
 
+ Note:  this also sets the local log level (see setLogLevels:) to the same value, so a level
+        applied from remote configuration governs both the network and console output. Because
+        remote configuration is applied when the agent connects to the collector, this will
+        overwrite a level the app set via setLogLevels: before calling NewRelic start.
  */
 + (void)setRemoteLogLevel:(unsigned int)level;
 
