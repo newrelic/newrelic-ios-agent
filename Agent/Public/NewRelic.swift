@@ -105,16 +105,6 @@ public class NewRelic: NSObject {
         NewRelicAgentInternal.sharedInstance()?.sessionReplay(onError: nil)
     }
 
-    // Swift-only convenience overload. Objective-C callers only ever have an
-    // NSError, but Swift callers commonly hold a `catch`-bound `any Error`
-    // (e.g. from a `do`/`catch` around a `throws` call). When this API was
-    // Objective-C, the compiler implicitly bridged `any Error` to `NSError`
-    // at Swift call sites; now that the declaration itself is native Swift,
-    // that implicit bridging no longer applies, so callers passing a
-    // non-NSError `Error` would otherwise fail to compile. `as NSError`
-    // performs the same bridging explicitly. Not exposed to Objective-C
-    // (the `Error` protocol has no ObjC representation), so it can't collide
-    // with the selector above.
     @nonobjc
     public static func logErrorObject(_ error: Error) {
         logErrorObject(error as NSError)
@@ -283,14 +273,6 @@ public class NewRelic: NSObject {
 
     @objc(startTracingMethod:object:timer:category:)
     public static func startTracingMethod(_ selector: Selector!, object: Any!, timer: NRTimer!, category: NRTraceType) {
-        // The original header annotated selector, object and timer `_Null_unspecified`, which
-        // the Swift importer surfaced to callers as Selector!/Any!/NRTimer!. Declaring the
-        // first two non-optional narrowed that and broke existing Swift callers (a value read
-        // out of an IUO-returning call infers as a plain Optional, so it no longer binds), so
-        // the implicitly-unwrapped optionals are restored here.
-        //
-        // Guard rather than implicitly unwrap: the ObjC implementation tolerated nil arguments,
-        // so trapping on them would be a behaviour change in the opposite direction.
         guard let selector = selector, let object = object else {
             NRLOG_AGENT_VERBOSE("\(#function) called with a nil selector or object; ignoring.")
             return
@@ -308,18 +290,10 @@ public class NewRelic: NSObject {
             NRLOG_AGENT_VERBOSE("\(#function) not executing; Interaction tracing is disabled.")
             return
         }
-        // methodName is `_Null_unspecified` in the original ObjC declaration, so it arrives here
-        // as an IUO. Guard explicitly rather than letting the unwrap below trap, matching the
-        // ObjC implementation's tolerance of a nil name.
         guard let methodName = methodName else {
             NRLOG_AGENT_VERBOSE("\(#function) called with a nil methodName; ignoring.")
             return
         }
-        // NewRelicInternalUtils.h isn't wrapped in NS_ASSUME_NONNULL, so cleanseString(forCollector:)
-        // imports as an implicitly-unwrapped optional; type inference into a `let` collapses that
-        // to a plain String?, requiring an explicit unwrap here. cleanseStringForCollector: only ever
-        // does in-place character replacement on a non-nil input, so this never actually returns nil
-        // for the now-unwrapped `methodName` — same assumption the original ObjC made.
         let cleanSelectorString = NewRelicInternalUtils.cleanseString(forCollector: methodName)!
         if !NRMATraceController.isTracingActive() {
             NRLOG_AGENT_VERBOSE("\(#function) attempted to start tracing method without active Interaction Trace")
@@ -328,10 +302,6 @@ public class NewRelic: NSObject {
         NRMACustomTrace.startTracingMethod(NSSelectorFromString(cleanSelectorString), objectName: objectName, timer: timer, category: category)
     }
 
-    // See the labeling note on noticeNetworkRequest(for:httpMethod:with:...) above —
-    // `with:` matches the importer-generated label for the original header's
-    // `endTracingMethodWithTimer:` selector ("Timer" is dropped because it's
-    // redundant with the NRTimer parameter type).
     @objc(endTracingMethodWithTimer:)
     public static func endTracingMethod(with timer: NRTimer!) {
         if NewRelicAgentInternal.sharedInstance()?.isShutdown ?? false {
@@ -348,11 +318,8 @@ public class NewRelic: NSObject {
         }
         if !NRMATraceController.isTracingActive() {
             NRLOG_AGENT_VERBOSE("\(#function) attempted to end tracing method without active Interaction Trace")
-            // kNRTraceAssociatedKey is a shared extern NSString* constant also used as the
-            // objc_setAssociatedObject/objc_getAssociatedObject key by NRMATraceController.m
-            // and NRMACustomTrace.m. Bridging it through NSString and taking its Unmanaged
-            // pointer reproduces the same object identity as their `(__bridge const void *)`
-            // casts, so this clears the same associated-object slot they read/write.
+            // kNRTraceAssociatedKey must yield the same pointer as NRMATraceController.m and
+            // NRMACustomTrace.m's `(__bridge const void *)` casts, or this clears a different slot.
             let traceAssociatedKey = Unmanaged.passUnretained(kNRTraceAssociatedKey as NSString).toOpaque()
             objc_setAssociatedObject(timer, traceAssociatedKey, nil, .OBJC_ASSOCIATION_ASSIGN)
             return
@@ -396,13 +363,6 @@ public class NewRelic: NSObject {
         NewRelicAgentInternal.setURLTransformer(transformer)
     }
 
-    // External labels are `for:`/`with:`, not `forURL:`/`withTimer:` — matching what
-    // Swift's Objective-C importer generated for the original header (it drops the
-    // "URL"/"Timer" words from the label because they're redundant with the NSURL/
-    // NRTimer parameter types — "Omit Needless Words"). Existing Swift callers (e.g.
-    // the test harness) were written against that importer-generated interface, so
-    // matching it here keeps them source-compatible; the @objc selector below is
-    // unchanged, so Objective-C callers are unaffected either way.
     @objc(noticeNetworkRequestForURL:httpMethod:withTimer:responseHeaders:statusCode:bytesSent:bytesReceived:responseData:traceHeaders:andParams:)
     public static func noticeNetworkRequest(
         for url: URL!,
@@ -422,12 +382,6 @@ public class NewRelic: NSObject {
         }
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
-        // HTTPURLResponse's initializer is failable in Swift, but NRMANetworkFacade's
-        // `response:` parameter is non-optional (NRMANetworkFacade.h is inside
-        // NS_ASSUME_NONNULL_BEGIN and doesn't mark it nullable). The original ObjC code
-        // never checked this initializer's result for nil either, so force-unwrapping here
-        // preserves that same "assume it always succeeds" behavior; a fixed-format URL/HTTP
-        // version like this realistically never fails the initializer.
         let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])!
         // NRMANetworkFacade's `request:` parameter is Swift-imported as URLRequest, not NSURLRequest.
         NRMANetworkFacade.noticeNetworkRequest(request, response: response, with: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders, params: params)
@@ -455,13 +409,7 @@ public class NewRelic: NSObject {
         }
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
-        // See the force-unwrap note in the sibling overload above: NRMANetworkFacade's
-        // `response:` parameter is non-optional, and the original ObjC never checked this
-        // failable initializer's result for nil either.
         let response = HTTPURLResponse(url: url, statusCode: httpStatusCode, httpVersion: "1.1", headerFields: headers as? [String: String])!
-        // NRTimer's initWithStartTime:andEndTime: returns `id` (not `instancetype`) in the ObjC
-        // header, so Swift imports it as a failable init. The original ObjC never checked this for
-        // nil either, so force-unwrapping preserves that same "assume it always succeeds" behavior.
         let timer = NRTimer(startTime: startTime, andEndTime: endTime)!
         // NRMANetworkFacade's `request:` parameter is Swift-imported as URLRequest, not NSURLRequest.
         NRMANetworkFacade.noticeNetworkRequest(request, response: response, with: timer, bytesSent: bytesSent, bytesReceived: bytesReceived, responseData: responseData, traceHeaders: traceHeaders as? [String: String], params: params)
@@ -514,10 +462,6 @@ public class NewRelic: NSObject {
 
     @objc(httpHeadersAddedForTracking)
     public static func httpHeadersAddedForTracking() -> [String] {
-        // NRMAHTTPUtilities.trackedHeaderFields is declared as bare `NSArray*` (no generic
-        // parameter), so it imports into Swift as [Any], not [String]. The underlying array
-        // is always header-name strings in practice, so compactMap is a safe, non-crashing
-        // narrowing to the public API's [String] return type.
         return NRMAHTTPUtilities.trackedHeaderFields().compactMap { $0 as? String }
     }
 
@@ -620,16 +564,6 @@ public class NewRelic: NSObject {
 
     // MARK: - Custom events
 
-    // `attributes: ... = nil` below restores a Swift-caller convenience that came for
-    // free with the original Objective-C header: Swift's Clang importer infers a
-    // default value of `nil` for a trailing NSDictionary parameter named `attributes`
-    // (also `withAttributes`/`additionalAttributes`; this is a specific, allowlisted
-    // set of recognized dictionary-parameter names, not a general nullable-dictionary
-    // rule — confirmed empirically, e.g. a trailing `andParams:`/`traceHeaders:`
-    // parameter does NOT get this treatment). Now that these declarations are native
-    // Swift, that inference no longer happens automatically, so omitting the argument
-    // (as existing Swift callers like the test harness do) would fail to compile
-    // without an explicit default here.
     @objc(recordCustomEvent:name:attributes:)
     public static func recordCustomEvent(_ eventType: String, name: String?, attributes: [AnyHashable: Any]? = nil) -> Bool {
         var mutableAttributes = attributes ?? [:]
@@ -725,10 +659,6 @@ public class NewRelic: NSObject {
         agent.handledExceptionsController?.recordError(error, attributes: attributes)
     }
 
-    // Swift-only convenience overloads — see the comment on the
-    // logErrorObject(_: Error) overload above for why these are needed
-    // now that this API is implemented in native Swift rather than
-    // Objective-C. Not exposed to Objective-C.
     @nonobjc
     public static func recordError(_ error: Error) {
         recordError(error as NSError)
